@@ -18,7 +18,9 @@ package com.squareup.moshi;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.Reader;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.Source;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>)
@@ -166,26 +168,12 @@ import java.io.Reader;
  * precision loss, extremely large values should be written and read as strings
  * in JSON.
  *
- * <a name="nonexecuteprefix"/><h3>Non-Execute Prefix</h3>
- * Web servers that serve private data using JSON may be vulnerable to <a
- * href="http://en.wikipedia.org/wiki/JSON#Cross-site_request_forgery">Cross-site
- * request forgery</a> attacks. In such an attack, a malicious site gains access
- * to a private JSON file by executing it with an HTML {@code <script>} tag.
- *
- * <p>Prefixing JSON files with <code>")]}'\n"</code> makes them non-executable
- * by {@code <script>} tags, disarming the attack. Since the prefix is malformed
- * JSON, strict parsing fails when it is encountered. This class permits the
- * non-execute prefix when {@link #setLenient(boolean) lenient parsing} is
- * enabled.
- *
  * <p>Each {@code JsonReader} may be used to read a single JSON stream. Instances
  * of this class are not thread safe.
  *
  * @author Jesse Wilson
  */
 public class JsonReader implements Closeable {
-  /** The only non-execute prefix this parser permits */
-  private static final char[] NON_EXECUTE_PREFIX = ")]}'\n".toCharArray();
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
   private static final int PEEKED_NONE = 0;
@@ -219,24 +207,13 @@ public class JsonReader implements Closeable {
   private static final int NUMBER_CHAR_EXP_SIGN = 6;
   private static final int NUMBER_CHAR_EXP_DIGIT = 7;
 
-  /** The input JSON. */
-  private final Reader in;
 
   /** True to accept non-spec compliant JSON */
   private boolean lenient = false;
 
-  /**
-   * Use a manual buffer to easily read and unread upcoming characters, and
-   * also so we can create strings without an intermediate StringBuilder.
-   * We decode literals directly out of this buffer, so it must be at least as
-   * long as the longest token that can be reported as a number.
-   */
-  private final char[] buffer = new char[1024];
-  private int pos = 0;
-  private int limit = 0;
-
-  private int lineNumber = 0;
-  private int lineStart = 0;
+  /** The input JSON. */
+  private final BufferedSource source;
+  private final Buffer buffer;
 
   private int peeked = PEEKED_NONE;
 
@@ -282,11 +259,19 @@ public class JsonReader implements Closeable {
   /**
    * Creates a new instance that reads a JSON-encoded stream from {@code in}.
    */
-  public JsonReader(Reader in) {
-    if (in == null) {
-      throw new NullPointerException("in == null");
+  public JsonReader(Source source) {
+    if (source == null) {
+      throw new NullPointerException("source == null");
     }
-    this.in = in;
+    throw new UnsupportedOperationException("TODO");
+  }
+
+  /**
+   * Creates a new instance that reads a JSON-encoded value {@code s}.
+   */
+  public JsonReader(String s) {
+    this.source = new Buffer().writeUtf8(s);
+    this.buffer = new Buffer();
   }
 
   /**
@@ -344,7 +329,7 @@ public class JsonReader implements Closeable {
       peeked = PEEKED_NONE;
     } else {
       throw new IllegalStateException("Expected BEGIN_ARRAY but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
   }
 
@@ -362,7 +347,7 @@ public class JsonReader implements Closeable {
       peeked = PEEKED_NONE;
     } else {
       throw new IllegalStateException("Expected END_ARRAY but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
   }
 
@@ -380,7 +365,7 @@ public class JsonReader implements Closeable {
       peeked = PEEKED_NONE;
     } else {
       throw new IllegalStateException("Expected BEGIN_OBJECT but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
   }
 
@@ -399,7 +384,7 @@ public class JsonReader implements Closeable {
       peeked = PEEKED_NONE;
     } else {
       throw new IllegalStateException("Expected END_OBJECT but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
   }
 
@@ -463,6 +448,7 @@ public class JsonReader implements Closeable {
     } else if (peekStack == JsonScope.NONEMPTY_ARRAY) {
       // Look for a comma before the next element.
       int c = nextNonWhitespace(true);
+      buffer.readByte(); // consume ']' or ','.
       switch (c) {
         case ']':
           return peeked = PEEKED_END_ARRAY;
@@ -478,6 +464,7 @@ public class JsonReader implements Closeable {
       // Look for a comma before the next element.
       if (peekStack == JsonScope.NONEMPTY_OBJECT) {
         int c = nextNonWhitespace(true);
+        buffer.readByte(); // Consume '}' or ','.
         switch (c) {
           case '}':
             return peeked = PEEKED_END_OBJECT;
@@ -492,19 +479,21 @@ public class JsonReader implements Closeable {
       int c = nextNonWhitespace(true);
       switch (c) {
         case '"':
+          buffer.readByte(); // consume the '\"'.
           return peeked = PEEKED_DOUBLE_QUOTED_NAME;
         case '\'':
+          buffer.readByte(); // consume the '\''.
           checkLenient();
           return peeked = PEEKED_SINGLE_QUOTED_NAME;
         case '}':
           if (peekStack != JsonScope.NONEMPTY_OBJECT) {
+            buffer.readByte(); // consume the '}'.
             return peeked = PEEKED_END_OBJECT;
           } else {
             throw syntaxError("Expected name");
           }
         default:
           checkLenient();
-          pos--; // Don't consume the first character in an unquoted string.
           if (isLiteral((char) c)) {
             return peeked = PEEKED_UNQUOTED_NAME;
           } else {
@@ -515,22 +504,20 @@ public class JsonReader implements Closeable {
       stack[stackSize - 1] = JsonScope.NONEMPTY_OBJECT;
       // Look for a colon before the value.
       int c = nextNonWhitespace(true);
+      buffer.readByte(); // Consume ':'.
       switch (c) {
         case ':':
           break;
         case '=':
           checkLenient();
-          if ((pos < limit || fillBuffer(1)) && buffer[pos] == '>') {
-            pos++;
+          if (fillBuffer(1) && buffer.getByte(0) == '>') {
+            buffer.readByte(); // Consume '>'.
           }
           break;
         default:
           throw syntaxError("Expected ':'");
       }
     } else if (peekStack == JsonScope.EMPTY_DOCUMENT) {
-      if (lenient) {
-        consumeNonExecutePrefix();
-      }
       stack[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT;
     } else if (peekStack == JsonScope.NONEMPTY_DOCUMENT) {
       int c = nextNonWhitespace(false);
@@ -538,7 +525,6 @@ public class JsonReader implements Closeable {
         return peeked = PEEKED_EOF;
       } else {
         checkLenient();
-        pos--;
       }
     } else if (peekStack == JsonScope.CLOSED) {
       throw new IllegalStateException("JsonReader is closed");
@@ -548,6 +534,7 @@ public class JsonReader implements Closeable {
     switch (c) {
       case ']':
         if (peekStack == JsonScope.EMPTY_ARRAY) {
+          buffer.readByte(); // Consume ']'.
           return peeked = PEEKED_END_ARRAY;
         }
         // fall-through to handle ",]"
@@ -556,25 +543,27 @@ public class JsonReader implements Closeable {
         // In lenient mode, a 0-length literal in an array means 'null'.
         if (peekStack == JsonScope.EMPTY_ARRAY || peekStack == JsonScope.NONEMPTY_ARRAY) {
           checkLenient();
-          pos--;
           return peeked = PEEKED_NULL;
         } else {
           throw syntaxError("Unexpected value");
         }
       case '\'':
         checkLenient();
+        buffer.readByte(); // Consume '\''.
         return peeked = PEEKED_SINGLE_QUOTED;
       case '"':
         if (stackSize == 1) {
           checkLenient();
         }
+        buffer.readByte(); // Consume '\"'.
         return peeked = PEEKED_DOUBLE_QUOTED;
       case '[':
+        buffer.readByte(); // Consume '['.
         return peeked = PEEKED_BEGIN_ARRAY;
       case '{':
+        buffer.readByte(); // Consume ']'.
         return peeked = PEEKED_BEGIN_OBJECT;
       default:
-        pos--; // Don't consume the first character in a literal value.
     }
 
     if (stackSize == 1) {
@@ -591,7 +580,7 @@ public class JsonReader implements Closeable {
       return result;
     }
 
-    if (!isLiteral(buffer[pos])) {
+    if (!isLiteral(buffer.getByte(0))) {
       throw syntaxError("Expected value");
     }
 
@@ -601,7 +590,7 @@ public class JsonReader implements Closeable {
 
   private int peekKeyword() throws IOException {
     // Figure out which keyword we're matching against by its first character.
-    char c = buffer[pos];
+    byte c = buffer.getByte(0);
     String keyword;
     String keywordUpper;
     int peeking;
@@ -624,31 +613,25 @@ public class JsonReader implements Closeable {
     // Confirm that chars [1..length) match the keyword.
     int length = keyword.length();
     for (int i = 1; i < length; i++) {
-      if (pos + i >= limit && !fillBuffer(i + 1)) {
+      if (!fillBuffer(i + 1)) {
         return PEEKED_NONE;
       }
-      c = buffer[pos + i];
+      c = buffer.getByte(i);
       if (c != keyword.charAt(i) && c != keywordUpper.charAt(i)) {
         return PEEKED_NONE;
       }
     }
 
-    if ((pos + length < limit || fillBuffer(length + 1))
-        && isLiteral(buffer[pos + length])) {
+    if (fillBuffer(length + 1) && isLiteral(buffer.getByte(length))) {
       return PEEKED_NONE; // Don't match trues, falsey or nullsoft!
     }
 
     // We've found the keyword followed either by EOF or by a non-literal character.
-    pos += length;
+    buffer.skip(length);
     return peeked = peeking;
   }
 
   private int peekNumber() throws IOException {
-    // Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop field access.
-    char[] buffer = this.buffer;
-    int p = pos;
-    int l = limit;
-
     long value = 0; // Negative to accommodate Long.MIN_VALUE more easily.
     boolean negative = false;
     boolean fitsInLong = true;
@@ -658,20 +641,11 @@ public class JsonReader implements Closeable {
 
     charactersOfNumber:
     for (; true; i++) {
-      if (p + i == l) {
-        if (i == buffer.length) {
-          // Though this looks like a well-formed number, it's too long to continue reading. Give up
-          // and let the application handle this as an unquoted literal.
-          return PEEKED_NONE;
-        }
-        if (!fillBuffer(i + 1)) {
-          break;
-        }
-        p = pos;
-        l = limit;
+      if (!fillBuffer(i + 1)) {
+        break;
       }
 
-      char c = buffer[p + i];
+      byte c = buffer.getByte(i);
       switch (c) {
         case '-':
           if (last == NUMBER_CHAR_NONE) {
@@ -735,7 +709,7 @@ public class JsonReader implements Closeable {
     // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
     if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
       peekedLong = negative ? value : -value;
-      pos += i;
+      buffer.skip(i);
       return peeked = PEEKED_LONG;
     } else if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT
         || last == NUMBER_CHAR_EXP_DIGIT) {
@@ -746,7 +720,7 @@ public class JsonReader implements Closeable {
     }
   }
 
-  private boolean isLiteral(char c) throws IOException {
+  private boolean isLiteral(int c) throws IOException {
     switch (c) {
       case '/':
       case '\\':
@@ -792,7 +766,7 @@ public class JsonReader implements Closeable {
       result = nextQuotedValue('"');
     } else {
       throw new IllegalStateException("Expected a name but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
     peeked = PEEKED_NONE;
     pathNames[stackSize - 1] = result;
@@ -825,11 +799,10 @@ public class JsonReader implements Closeable {
     } else if (p == PEEKED_LONG) {
       result = Long.toString(peekedLong);
     } else if (p == PEEKED_NUMBER) {
-      result = new String(buffer, pos, peekedNumberLength);
-      pos += peekedNumberLength;
+      result = buffer.readUtf8(peekedNumberLength);
     } else {
       throw new IllegalStateException("Expected a string but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
@@ -858,7 +831,7 @@ public class JsonReader implements Closeable {
       return false;
     }
     throw new IllegalStateException("Expected a boolean but was " + peek()
-        + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+        + " at path " + getPath());
   }
 
   /**
@@ -878,7 +851,7 @@ public class JsonReader implements Closeable {
       pathIndices[stackSize - 1]++;
     } else {
       throw new IllegalStateException("Expected null but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
   }
 
@@ -904,22 +877,21 @@ public class JsonReader implements Closeable {
     }
 
     if (p == PEEKED_NUMBER) {
-      peekedString = new String(buffer, pos, peekedNumberLength);
-      pos += peekedNumberLength;
+      peekedString = buffer.readUtf8(peekedNumberLength);
     } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
       peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
     } else if (p == PEEKED_UNQUOTED) {
       peekedString = nextUnquotedValue();
     } else if (p != PEEKED_BUFFERED) {
       throw new IllegalStateException("Expected a double but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
     double result = Double.parseDouble(peekedString); // don't catch this NumberFormatException.
     if (!lenient && (Double.isNaN(result) || Double.isInfinite(result))) {
       throw new IOException("JSON forbids NaN and infinities: " + result
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
     peekedString = null;
     peeked = PEEKED_NONE;
@@ -950,8 +922,7 @@ public class JsonReader implements Closeable {
     }
 
     if (p == PEEKED_NUMBER) {
-      peekedString = new String(buffer, pos, peekedNumberLength);
-      pos += peekedNumberLength;
+      peekedString = buffer.readUtf8(peekedNumberLength);
     } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
       peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
       try {
@@ -964,7 +935,7 @@ public class JsonReader implements Closeable {
       }
     } else {
       throw new IllegalStateException("Expected a long but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
@@ -972,7 +943,7 @@ public class JsonReader implements Closeable {
     long result = (long) asDouble;
     if (result != asDouble) { // Make sure no precision was lost casting to 'long'.
       throw new NumberFormatException("Expected a long but was " + peekedString
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
     peekedString = null;
     peeked = PEEKED_NONE;
@@ -991,40 +962,24 @@ public class JsonReader implements Closeable {
    *     malformed.
    */
   private String nextQuotedValue(char quote) throws IOException {
-    // Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop field access.
-    char[] buffer = this.buffer;
     StringBuilder builder = new StringBuilder();
-    while (true) {
-      int p = pos;
-      int l = limit;
-      /* the index of the first character not yet appended to the builder. */
-      int start = p;
-      while (p < l) {
-        int c = buffer[p++];
+    int p = 0;
+    while (fillBuffer(p + 1)) {
+      int c = buffer.getByte(p++);
 
-        if (c == quote) {
-          pos = p;
-          builder.append(buffer, start, p - start - 1);
-          return builder.toString();
-        } else if (c == '\\') {
-          pos = p;
-          builder.append(buffer, start, p - start - 1);
-          builder.append(readEscapeCharacter());
-          p = pos;
-          l = limit;
-          start = p;
-        } else if (c == '\n') {
-          lineNumber++;
-          lineStart = p;
-        }
-      }
-
-      builder.append(buffer, start, p - start);
-      pos = p;
-      if (!fillBuffer(1)) {
-        throw syntaxError("Unterminated string");
+      if (c == quote) {
+        builder.append(buffer.readUtf8(p - 1));
+        buffer.readByte();
+        return builder.toString();
+      } else if (c == '\\') {
+        builder.append(buffer.readUtf8(p - 1));
+        buffer.readByte(); // '\'
+        builder.append(readEscapeCharacter());
+        p = 0;
       }
     }
+
+    throw syntaxError("Unterminated string");
   }
 
   /**
@@ -1032,121 +987,79 @@ public class JsonReader implements Closeable {
    */
   @SuppressWarnings("fallthrough")
   private String nextUnquotedValue() throws IOException {
-    StringBuilder builder = null;
     int i = 0;
 
-    findNonLiteralCharacter:
-    while (true) {
-      for (; pos + i < limit; i++) {
-        switch (buffer[pos + i]) {
-          case '/':
-          case '\\':
-          case ';':
-          case '#':
-          case '=':
-            checkLenient(); // fall-through
-          case '{':
-          case '}':
-          case '[':
-          case ']':
-          case ':':
-          case ',':
-          case ' ':
-          case '\t':
-          case '\f':
-          case '\r':
-          case '\n':
-            break findNonLiteralCharacter;
-        }
-      }
-
-      // Attempt to load the entire literal into the buffer at once.
-      if (i < buffer.length) {
-        if (fillBuffer(i + 1)) {
-          continue;
-        } else {
-          break;
-        }
-      }
-
-      // use a StringBuilder when the value is too long. This is too long to be a number!
-      if (builder == null) {
-        builder = new StringBuilder();
-      }
-      builder.append(buffer, pos, i);
-      pos += i;
-      i = 0;
-      if (!fillBuffer(1)) {
-        break;
+    findNonStringChar:
+    for (; fillBuffer(i + 1); i++) {
+      switch (buffer.getByte(i)) {
+        case '/':
+        case '\\':
+        case ';':
+        case '#':
+        case '=':
+          checkLenient(); // fall-through
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case ':':
+        case ',':
+        case ' ':
+        case '\t':
+        case '\f':
+        case '\r':
+        case '\n':
+          break findNonStringChar;
       }
     }
 
-    String result;
-    if (builder == null) {
-      result = new String(buffer, pos, i);
-    } else {
-      builder.append(buffer, pos, i);
-      result = builder.toString();
-    }
-    pos += i;
-    return result;
+    return buffer.readUtf8(i);
   }
 
   private void skipQuotedValue(char quote) throws IOException {
-    // Like nextNonWhitespace, this uses locals 'p' and 'l' to save inner-loop field access.
-    char[] buffer = this.buffer;
-    do {
-      int p = pos;
-      int l = limit;
-      /* the index of the first character not yet appended to the builder. */
-      while (p < l) {
-        int c = buffer[p++];
-        if (c == quote) {
-          pos = p;
-          return;
-        } else if (c == '\\') {
-          pos = p;
-          readEscapeCharacter();
-          p = pos;
-          l = limit;
-        } else if (c == '\n') {
-          lineNumber++;
-          lineStart = p;
-        }
+    int p = 0;
+    while (fillBuffer(p + 1)) {
+      int c = buffer.getByte(p++);
+      if (c == quote) {
+        buffer.skip(p);
+        return;
+      } else if (c == '\\') {
+        buffer.skip(p);
+        readEscapeCharacter();
+        p = 0;
       }
-      pos = p;
-    } while (fillBuffer(1));
+    }
     throw syntaxError("Unterminated string");
   }
 
   private void skipUnquotedValue() throws IOException {
-    do {
-      int i = 0;
-      for (; pos + i < limit; i++) {
-        switch (buffer[pos + i]) {
-          case '/':
-          case '\\':
-          case ';':
-          case '#':
-          case '=':
-            checkLenient(); // fall-through
-          case '{':
-          case '}':
-          case '[':
-          case ']':
-          case ':':
-          case ',':
-          case ' ':
-          case '\t':
-          case '\f':
-          case '\r':
-          case '\n':
-            pos += i;
-            return;
-        }
+    int i = 0;
+
+    findNonStringChar:
+    for (; fillBuffer(i + 1); i++) {
+      switch (buffer.getByte(i)) {
+        case '/':
+        case '\\':
+        case ';':
+        case '#':
+        case '=':
+          checkLenient(); // fall-through
+        case '{':
+        case '}':
+        case '[':
+        case ']':
+        case ':':
+        case ',':
+        case ' ':
+        case '\t':
+        case '\f':
+        case '\r':
+        case '\n':
+          break findNonStringChar;
       }
-      pos += i;
-    } while (fillBuffer(1));
+    }
+
+    buffer.skip(i);
   }
 
   /**
@@ -1170,7 +1083,7 @@ public class JsonReader implements Closeable {
       result = (int) peekedLong;
       if (peekedLong != result) { // Make sure no precision was lost casting to 'int'.
         throw new NumberFormatException("Expected an int but was " + peekedLong
-            + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+            + " at path " + getPath());
       }
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
@@ -1178,8 +1091,7 @@ public class JsonReader implements Closeable {
     }
 
     if (p == PEEKED_NUMBER) {
-      peekedString = new String(buffer, pos, peekedNumberLength);
-      pos += peekedNumberLength;
+      peekedString = buffer.readUtf8(peekedNumberLength);
     } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
       peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
       try {
@@ -1192,7 +1104,7 @@ public class JsonReader implements Closeable {
       }
     } else {
       throw new IllegalStateException("Expected an int but was " + peek()
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
@@ -1200,7 +1112,7 @@ public class JsonReader implements Closeable {
     result = (int) asDouble;
     if (result != asDouble) { // Make sure no precision was lost casting to 'int'.
       throw new NumberFormatException("Expected an int but was " + peekedString
-          + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
+          + " at path " + getPath());
     }
     peekedString = null;
     peeked = PEEKED_NONE;
@@ -1215,7 +1127,8 @@ public class JsonReader implements Closeable {
     peeked = PEEKED_NONE;
     stack[0] = JsonScope.CLOSED;
     stackSize = 1;
-    in.close();
+    buffer.clear();
+    source.close();
   }
 
   /**
@@ -1250,7 +1163,7 @@ public class JsonReader implements Closeable {
       } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
         skipQuotedValue('"');
       } else if (p == PEEKED_NUMBER) {
-        pos += peekedNumberLength;
+        buffer.skip(peekedNumberLength);
       }
       peeked = PEEKED_NONE;
     } while (count != 0);
@@ -1280,40 +1193,10 @@ public class JsonReader implements Closeable {
    * false.
    */
   private boolean fillBuffer(int minimum) throws IOException {
-    char[] buffer = this.buffer;
-    lineStart -= pos;
-    if (limit != pos) {
-      limit -= pos;
-      System.arraycopy(buffer, pos, buffer, 0, limit);
-    } else {
-      limit = 0;
+    while (buffer.size() < minimum) {
+      if (source.read(buffer, 2048) == -1) return false;
     }
-
-    pos = 0;
-    int total;
-    while ((total = in.read(buffer, limit, buffer.length - limit)) != -1) {
-      limit += total;
-
-      // if this is the first read, consume an optional byte order mark (BOM) if it exists
-      if (lineNumber == 0 && lineStart == 0 && limit > 0 && buffer[0] == '\ufeff') {
-        pos++;
-        lineStart++;
-        minimum++;
-      }
-
-      if (limit >= minimum) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private int getLineNumber() {
-    return lineNumber + 1;
-  }
-
-  private int getColumnNumber() {
-    return pos - lineStart + 1;
+    return true;
   }
 
   /**
@@ -1331,65 +1214,46 @@ public class JsonReader implements Closeable {
      * before any (potentially indirect) call to fillBuffer() and reread both
      * 'p' and 'l' after any (potentially indirect) call to the same method.
      */
-    char[] buffer = this.buffer;
-    int p = pos;
-    int l = limit;
-    while (true) {
-      if (p == l) {
-        pos = p;
-        if (!fillBuffer(1)) {
-          break;
-        }
-        p = pos;
-        l = limit;
-      }
-
-      int c = buffer[p++];
-      if (c == '\n') {
-        lineNumber++;
-        lineStart = p;
-        continue;
-      } else if (c == ' ' || c == '\r' || c == '\t') {
+    int p = 0;
+    while (fillBuffer(p + 1)) {
+      int c = buffer.getByte(p++);
+      if (c == '\n' || c == ' ' || c == '\r' || c == '\t') {
         continue;
       }
 
+      buffer.skip(p - 1);
       if (c == '/') {
-        pos = p;
-        if (p == l) {
-          pos--; // push back '/' so it's still in the buffer when this method returns
-          boolean charsLoaded = fillBuffer(2);
-          pos++; // consume the '/' again
-          if (!charsLoaded) {
-            return c;
-          }
+        if (!fillBuffer(2)) {
+          return c;
         }
 
         checkLenient();
-        char peek = buffer[pos];
+        byte peek = buffer.getByte(1);
         switch (peek) {
           case '*':
             // skip a /* c-style comment */
-            pos++;
+            buffer.readByte(); // '/'
+            buffer.readByte(); // '*'
             if (!skipTo("*/")) {
               throw syntaxError("Unterminated comment");
             }
-            p = pos + 2;
-            l = limit;
+            buffer.readByte(); // '*'
+            buffer.readByte(); // '/'
+            p = 0;
             continue;
 
           case '/':
             // skip a // end-of-line comment
-            pos++;
+            buffer.readByte(); // '/'
+            buffer.readByte(); // '/'
             skipToEndOfLine();
-            p = pos;
-            l = limit;
+            p = 0;
             continue;
 
           default:
             return c;
         }
       } else if (c == '#') {
-        pos = p;
         /*
          * Skip a # hash end-of-line comment. The JSON RFC doesn't
          * specify this behaviour, but it's required to parse
@@ -1397,16 +1261,13 @@ public class JsonReader implements Closeable {
          */
         checkLenient();
         skipToEndOfLine();
-        p = pos;
-        l = limit;
+        p = 0;
       } else {
-        pos = p;
         return c;
       }
     }
     if (throwOnEof) {
-      throw new EOFException("End of input"
-          + " at line " + getLineNumber() + " column " + getColumnNumber());
+      throw new EOFException("End of input");
     } else {
       return -1;
     }
@@ -1424,13 +1285,9 @@ public class JsonReader implements Closeable {
    * caller.
    */
   private void skipToEndOfLine() throws IOException {
-    while (pos < limit || fillBuffer(1)) {
-      char c = buffer[pos++];
-      if (c == '\n') {
-        lineNumber++;
-        lineStart = pos;
-        break;
-      } else if (c == '\r') {
+    while (fillBuffer(1)) {
+      byte c = buffer.readByte();
+      if (c == '\n' || c == '\r') {
         break;
       }
     }
@@ -1441,14 +1298,10 @@ public class JsonReader implements Closeable {
    */
   private boolean skipTo(String toFind) throws IOException {
     outer:
-    for (; pos + toFind.length() <= limit || fillBuffer(toFind.length()); pos++) {
-      if (buffer[pos] == '\n') {
-        lineNumber++;
-        lineStart = pos + 1;
-        continue;
-      }
+    for (; fillBuffer(toFind.length());) {
       for (int c = 0; c < toFind.length(); c++) {
-        if (buffer[pos + c] != toFind.charAt(c)) {
+        if (buffer.getByte(c) != toFind.charAt(c)) {
+          buffer.readByte();
           continue outer;
         }
       }
@@ -1458,8 +1311,7 @@ public class JsonReader implements Closeable {
   }
 
   @Override public String toString() {
-    return getClass().getSimpleName()
-        + " at line " + getLineNumber() + " column " + getColumnNumber();
+    return getClass().getSimpleName();
   }
 
   /**
@@ -1503,20 +1355,20 @@ public class JsonReader implements Closeable {
    *     malformed.
    */
   private char readEscapeCharacter() throws IOException {
-    if (pos == limit && !fillBuffer(1)) {
+    if (!fillBuffer(1)) {
       throw syntaxError("Unterminated escape sequence");
     }
 
-    char escaped = buffer[pos++];
+    byte escaped = buffer.readByte();
     switch (escaped) {
       case 'u':
-        if (pos + 4 > limit && !fillBuffer(4)) {
+        if (!fillBuffer(4)) {
           throw syntaxError("Unterminated escape sequence");
         }
         // Equivalent to Integer.parseInt(stringPool.get(buffer, pos, 4), 16);
         char result = 0;
-        for (int i = pos, end = i + 4; i < end; i++) {
-          char c = buffer[i];
+        for (int i = 0, end = i + 4; i < end; i++) {
+          byte c = buffer.getByte(i);
           result <<= 4;
           if (c >= '0' && c <= '9') {
             result += (c - '0');
@@ -1525,10 +1377,10 @@ public class JsonReader implements Closeable {
           } else if (c >= 'A' && c <= 'F') {
             result += (c - 'A' + 10);
           } else {
-            throw new NumberFormatException("\\u" + new String(buffer, pos, 4));
+            throw new NumberFormatException("\\u" + buffer.readUtf8(4));
           }
         }
-        pos += 4;
+        buffer.skip(4);
         return result;
 
       case 't':
@@ -1547,15 +1399,11 @@ public class JsonReader implements Closeable {
         return '\f';
 
       case '\n':
-        lineNumber++;
-        lineStart = pos;
-        // fall-through
-
       case '\'':
       case '"':
       case '\\':
       default:
-        return escaped;
+        return (char) escaped;
     }
   }
 
@@ -1564,29 +1412,6 @@ public class JsonReader implements Closeable {
    * with this reader's content.
    */
   private IOException syntaxError(String message) throws IOException {
-    throw new IOException(message
-        + " at line " + getLineNumber() + " column " + getColumnNumber() + " path " + getPath());
-  }
-
-  /**
-   * Consumes the non-execute prefix if it exists.
-   */
-  private void consumeNonExecutePrefix() throws IOException {
-    // fast forward through the leading whitespace
-    nextNonWhitespace(true);
-    pos--;
-
-    if (pos + NON_EXECUTE_PREFIX.length > limit && !fillBuffer(NON_EXECUTE_PREFIX.length)) {
-      return;
-    }
-
-    for (int i = 0; i < NON_EXECUTE_PREFIX.length; i++) {
-      if (buffer[pos + i] != NON_EXECUTE_PREFIX[i]) {
-        return; // not a security token!
-      }
-    }
-
-    // we consumed a security token!
-    pos += NON_EXECUTE_PREFIX.length;
+    throw new IOException(message + " at path " + getPath());
   }
 }
