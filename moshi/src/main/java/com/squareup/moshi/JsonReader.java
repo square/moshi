@@ -20,6 +20,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import okio.Buffer;
 import okio.BufferedSource;
+import okio.ByteString;
 import okio.Source;
 
 /**
@@ -176,6 +177,12 @@ import okio.Source;
 public class JsonReader implements Closeable {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
+  private static final ByteString SINGLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("'\\");
+  private static final ByteString DOUBLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("\"\\");
+  private static final ByteString UNQUOTED_STRING_TERMINALS
+      = ByteString.encodeUtf8("{}[]:, \n\t\r\f/\\;#=");
+  private static final ByteString LINEFEED_OR_CARRIAGE_RETURN = ByteString.encodeUtf8("\n\r");
+
   private static final int PEEKED_NONE = 0;
   private static final int PEEKED_BEGIN_OBJECT = 1;
   private static final int PEEKED_END_OBJECT = 2;
@@ -271,7 +278,7 @@ public class JsonReader implements Closeable {
    */
   public JsonReader(String s) {
     this.source = new Buffer().writeUtf8(s);
-    this.buffer = new Buffer();
+    this.buffer = source.buffer();
   }
 
   /**
@@ -561,7 +568,7 @@ public class JsonReader implements Closeable {
         buffer.readByte(); // Consume '['.
         return peeked = PEEKED_BEGIN_ARRAY;
       case '{':
-        buffer.readByte(); // Consume ']'.
+        buffer.readByte(); // Consume '{'.
         return peeked = PEEKED_BEGIN_OBJECT;
       default:
     }
@@ -760,10 +767,10 @@ public class JsonReader implements Closeable {
     String result;
     if (p == PEEKED_UNQUOTED_NAME) {
       result = nextUnquotedValue();
-    } else if (p == PEEKED_SINGLE_QUOTED_NAME) {
-      result = nextQuotedValue('\'');
     } else if (p == PEEKED_DOUBLE_QUOTED_NAME) {
-      result = nextQuotedValue('"');
+      result = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+    } else if (p == PEEKED_SINGLE_QUOTED_NAME) {
+      result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
     } else {
       throw new IllegalStateException("Expected a name but was " + peek()
           + " at path " + getPath());
@@ -789,10 +796,10 @@ public class JsonReader implements Closeable {
     String result;
     if (p == PEEKED_UNQUOTED) {
       result = nextUnquotedValue();
-    } else if (p == PEEKED_SINGLE_QUOTED) {
-      result = nextQuotedValue('\'');
     } else if (p == PEEKED_DOUBLE_QUOTED) {
-      result = nextQuotedValue('"');
+      result = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+    } else if (p == PEEKED_SINGLE_QUOTED) {
+      result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
     } else if (p == PEEKED_BUFFERED) {
       result = peekedString;
       peekedString = null;
@@ -878,8 +885,10 @@ public class JsonReader implements Closeable {
 
     if (p == PEEKED_NUMBER) {
       peekedString = buffer.readUtf8(peekedNumberLength);
-    } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
-      peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
+    } else if (p == PEEKED_DOUBLE_QUOTED) {
+      peekedString = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+    } else if (p == PEEKED_SINGLE_QUOTED) {
+      peekedString = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
     } else if (p == PEEKED_UNQUOTED) {
       peekedString = nextUnquotedValue();
     } else if (p != PEEKED_BUFFERED) {
@@ -923,8 +932,10 @@ public class JsonReader implements Closeable {
 
     if (p == PEEKED_NUMBER) {
       peekedString = buffer.readUtf8(peekedNumberLength);
-    } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
-      peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
+    } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED) {
+      peekedString = p == PEEKED_DOUBLE_QUOTED
+          ? nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+          : nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
       try {
         long result = Long.parseLong(peekedString);
         peeked = PEEKED_NONE;
@@ -957,109 +968,61 @@ public class JsonReader implements Closeable {
    * should have already been read. This consumes the closing quote, but does
    * not include it in the returned string.
    *
-   * @param quote either ' or ".
    * @throws NumberFormatException if any unicode escape sequences are
    *     malformed.
    */
-  private String nextQuotedValue(char quote) throws IOException {
-    StringBuilder builder = new StringBuilder();
-    int p = 0;
-    while (fillBuffer(p + 1)) {
-      int c = buffer.getByte(p++);
+  private String nextQuotedValue(ByteString runTerminator) throws IOException {
+    StringBuilder builder = null;
+    while (true) {
+      long index = source.indexOfElement(runTerminator);
+      if (index == -1L) throw syntaxError("Unterminated string");
 
-      if (c == quote) {
-        builder.append(buffer.readUtf8(p - 1));
-        buffer.readByte();
-        return builder.toString();
-      } else if (c == '\\') {
-        builder.append(buffer.readUtf8(p - 1));
+      // If we've got an escape character, we're going to need a string builder.
+      if (buffer.getByte(index) == '\\') {
+        if (builder == null) builder = new StringBuilder();
+        builder.append(buffer.readUtf8(index));
         buffer.readByte(); // '\'
         builder.append(readEscapeCharacter());
-        p = 0;
+        continue;
+      }
+
+      // If it isn't the escape character, it's the quote. Return the string.
+      if (builder == null) {
+        String result = buffer.readUtf8(index);
+        buffer.readByte(); // Consume the quote character.
+        return result;
+      } else {
+        builder.append(buffer.readUtf8(index));
+        buffer.readByte(); // Consume the quote character.
+        return builder.toString();
       }
     }
-
-    throw syntaxError("Unterminated string");
   }
 
-  /**
-   * Returns an unquoted value as a string.
-   */
-  @SuppressWarnings("fallthrough")
+  /** Returns an unquoted value as a string. */
   private String nextUnquotedValue() throws IOException {
-    int i = 0;
-
-    findNonStringChar:
-    for (; fillBuffer(i + 1); i++) {
-      switch (buffer.getByte(i)) {
-        case '/':
-        case '\\':
-        case ';':
-        case '#':
-        case '=':
-          checkLenient(); // fall-through
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case ':':
-        case ',':
-        case ' ':
-        case '\t':
-        case '\f':
-        case '\r':
-        case '\n':
-          break findNonStringChar;
-      }
-    }
-
-    return buffer.readUtf8(i);
+    long i = source.indexOfElement(UNQUOTED_STRING_TERMINALS);
+    return i != -1 ? buffer.readUtf8(i) : buffer.readUtf8();
   }
 
-  private void skipQuotedValue(char quote) throws IOException {
-    int p = 0;
-    while (fillBuffer(p + 1)) {
-      int c = buffer.getByte(p++);
-      if (c == quote) {
-        buffer.skip(p);
-        return;
-      } else if (c == '\\') {
-        buffer.skip(p);
+  private void skipQuotedValue(ByteString runTerminator) throws IOException {
+    while (true) {
+      long index = source.indexOfElement(runTerminator);
+      if (index == -1L) throw syntaxError("Unterminated string");
+
+      if (buffer.getByte(index) == '\\') {
+        buffer.skip(index + 1);
         readEscapeCharacter();
-        p = 0;
+      } else {
+        buffer.skip(index + 1);
+        return;
       }
     }
-    throw syntaxError("Unterminated string");
   }
 
   private void skipUnquotedValue() throws IOException {
-    int i = 0;
-
-    findNonStringChar:
-    for (; fillBuffer(i + 1); i++) {
-      switch (buffer.getByte(i)) {
-        case '/':
-        case '\\':
-        case ';':
-        case '#':
-        case '=':
-          checkLenient(); // fall-through
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case ':':
-        case ',':
-        case ' ':
-        case '\t':
-        case '\f':
-        case '\r':
-        case '\n':
-          break findNonStringChar;
-      }
-    }
-
-    buffer.skip(i);
+    long i = source.indexOfElement(UNQUOTED_STRING_TERMINALS);
+    buffer.skip(i != -1L ? i : buffer.size());
   }
 
   /**
@@ -1092,8 +1055,10 @@ public class JsonReader implements Closeable {
 
     if (p == PEEKED_NUMBER) {
       peekedString = buffer.readUtf8(peekedNumberLength);
-    } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_DOUBLE_QUOTED) {
-      peekedString = nextQuotedValue(p == PEEKED_SINGLE_QUOTED ? '\'' : '"');
+    } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED) {
+      peekedString = p == PEEKED_DOUBLE_QUOTED
+          ? nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+          : nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
       try {
         result = Integer.parseInt(peekedString);
         peeked = PEEKED_NONE;
@@ -1158,10 +1123,10 @@ public class JsonReader implements Closeable {
         count--;
       } else if (p == PEEKED_UNQUOTED_NAME || p == PEEKED_UNQUOTED) {
         skipUnquotedValue();
-      } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_SINGLE_QUOTED_NAME) {
-        skipQuotedValue('\'');
       } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
-        skipQuotedValue('"');
+        skipQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+      } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_SINGLE_QUOTED_NAME) {
+        skipQuotedValue(SINGLE_QUOTE_OR_SLASH);
       } else if (p == PEEKED_NUMBER) {
         buffer.skip(peekedNumberLength);
       }
@@ -1193,10 +1158,7 @@ public class JsonReader implements Closeable {
    * false.
    */
   private boolean fillBuffer(int minimum) throws IOException {
-    while (buffer.size() < minimum) {
-      if (source.read(buffer, 2048) == -1) return false;
-    }
-    return true;
+    return source.request(minimum);
   }
 
   /**
@@ -1285,12 +1247,8 @@ public class JsonReader implements Closeable {
    * caller.
    */
   private void skipToEndOfLine() throws IOException {
-    while (fillBuffer(1)) {
-      byte c = buffer.readByte();
-      if (c == '\n' || c == '\r') {
-        break;
-      }
-    }
+    long index = source.indexOfElement(LINEFEED_OR_CARRIAGE_RETURN);
+    buffer.skip(index != -1 ? index + 1 : buffer.size());
   }
 
   /**
