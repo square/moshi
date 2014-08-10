@@ -17,8 +17,6 @@ package com.squareup.moshi;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Arrays;
 import okio.Source;
 import org.junit.Ignore;
@@ -895,6 +893,11 @@ public final class JsonReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertEquals(true, reader.nextBoolean());
+
+    reader = new JsonReader("a//");
+    reader.setLenient(true);
+    assertEquals("a", reader.nextString());
+    assertEquals(JsonToken.END_DOCUMENT, reader.peek());
   }
 
   @Test public void strictCommentsWithSkipValue() throws IOException {
@@ -1009,6 +1012,14 @@ public final class JsonReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertEquals("a", reader.nextString());
+  }
+
+  @Test public void lenientUnquotedStringsDelimitedByComment() throws IOException {
+    JsonReader reader = new JsonReader("[a#comment\n]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertEquals("a", reader.nextString());
+    reader.endArray();
   }
 
   @Test public void strictSingleQuotedStrings() throws IOException {
