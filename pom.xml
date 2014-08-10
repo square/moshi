@@ -30,6 +30,7 @@
 
     <!-- Test Dependencies -->
     <junit.version>4.11</junit.version>
+    <assertj.version>1.6.1</assertj.version>
   </properties>
 
   <scm>
@@ -62,6 +63,11 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
