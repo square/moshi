@@ -138,7 +138,6 @@ public class JsonWriter implements Closeable, Flushable {
    * error. http://code.google.com/p/google-gson/issues/detail?id=341
    */
   private static final String[] REPLACEMENT_CHARS;
-  private static final String[] HTML_SAFE_REPLACEMENT_CHARS;
   static {
     REPLACEMENT_CHARS = new String[128];
     for (int i = 0; i <= 0x1f; i++) {
@@ -151,12 +150,6 @@ public class JsonWriter implements Closeable, Flushable {
     REPLACEMENT_CHARS['\n'] = "\\n";
     REPLACEMENT_CHARS['\r'] = "\\r";
     REPLACEMENT_CHARS['\f'] = "\\f";
-    HTML_SAFE_REPLACEMENT_CHARS = REPLACEMENT_CHARS.clone();
-    HTML_SAFE_REPLACEMENT_CHARS['<'] = "\\u003c";
-    HTML_SAFE_REPLACEMENT_CHARS['>'] = "\\u003e";
-    HTML_SAFE_REPLACEMENT_CHARS['&'] = "\\u0026";
-    HTML_SAFE_REPLACEMENT_CHARS['='] = "\\u003d";
-    HTML_SAFE_REPLACEMENT_CHARS['\''] = "\\u0027";
   }
 
   /** The output data, containing at most one top-level array or object. */
@@ -181,11 +174,9 @@ public class JsonWriter implements Closeable, Flushable {
 
   private boolean lenient;
 
-  private boolean htmlSafe;
-
   private String deferredName;
 
-  private boolean serializeNulls = true;
+  private boolean serializeNulls;
 
   /**
    * Creates a new instance that writes a JSON-encoded stream to {@code out}.
@@ -238,25 +229,6 @@ public class JsonWriter implements Closeable, Flushable {
    */
   public boolean isLenient() {
     return lenient;
-  }
-
-  /**
-   * Configure this writer to emit JSON that's safe for direct inclusion in HTML
-   * and XML documents. This escapes the HTML characters {@code <}, {@code >},
-   * {@code &} and {@code =} before writing them to the stream. Without this
-   * setting, your XML/HTML encoder should replace these characters with the
-   * corresponding escape sequences.
-   */
-  public final void setHtmlSafe(boolean htmlSafe) {
-    this.htmlSafe = htmlSafe;
-  }
-
-  /**
-   * Returns true if this writer writes JSON that's safe for inclusion in HTML
-   * and XML documents.
-   */
-  public final boolean isHtmlSafe() {
-    return htmlSafe;
   }
 
   /**
@@ -528,7 +500,7 @@ public class JsonWriter implements Closeable, Flushable {
   }
 
   private void string(String value) throws IOException {
-    String[] replacements = htmlSafe ? HTML_SAFE_REPLACEMENT_CHARS : REPLACEMENT_CHARS;
+    String[] replacements = REPLACEMENT_CHARS;
     out.write("\"");
     int last = 0;
     int length = value.length();
