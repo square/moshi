@@ -187,11 +187,7 @@ public class JsonWriter implements Closeable, Flushable {
     if (sink == null) {
       throw new NullPointerException("sink == null");
     }
-    if (sink instanceof BufferedSink) {
-      this.sink = (BufferedSink) sink;
-    } else {
-      this.sink = Okio.buffer(sink);
-    }
+    this.sink = Okio.buffer(sink);
   }
 
   /**
