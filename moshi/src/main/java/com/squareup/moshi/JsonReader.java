@@ -214,7 +214,6 @@ public class JsonReader implements Closeable {
   private static final int NUMBER_CHAR_EXP_SIGN = 6;
   private static final int NUMBER_CHAR_EXP_DIGIT = 7;
 
-
   /** True to accept non-spec compliant JSON */
   private boolean lenient = false;
 
@@ -843,12 +842,12 @@ public class JsonReader implements Closeable {
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is a
-   * literal null.
+   * literal null. Returns null.
    *
    * @throws IllegalStateException if the next token is not null or if this
    *     reader is closed.
    */
-  public void nextNull() throws IOException {
+  public <T> T nextNull() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
@@ -856,6 +855,7 @@ public class JsonReader implements Closeable {
     if (p == PEEKED_NULL) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      return null;
     } else {
       throw new IllegalStateException("Expected null but was " + peek()
           + " at path " + getPath());
