@@ -34,7 +34,9 @@ public abstract class JsonAdapter<T> {
 
   public final String toJson(T value) throws IOException {
     Buffer buffer = new Buffer();
-    toJson(new JsonWriter(buffer), value);
+    JsonWriter writer = new JsonWriter(buffer);
+    toJson(writer, value);
+    writer.close();
     return buffer.readUtf8();
   }
 

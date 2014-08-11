@@ -147,6 +147,7 @@ public final class JsonWriterTest {
     jsonWriter.name("a");
     jsonWriter.value((String) null);
     jsonWriter.endObject();
+    jsonWriter.close();
     assertEquals("{\"a\":null}", buffer.readUtf8());
   }
 
@@ -259,6 +260,7 @@ public final class JsonWriterTest {
     jsonWriter.value(true);
     jsonWriter.value(false);
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[true,false]", buffer.readUtf8());
   }
 
@@ -268,6 +270,7 @@ public final class JsonWriterTest {
     jsonWriter.beginArray();
     jsonWriter.nullValue();
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[null]", buffer.readUtf8());
   }
 
@@ -294,6 +297,7 @@ public final class JsonWriterTest {
     jsonWriter.value("\0");
     jsonWriter.value("\u0019");
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[\"a\","
         + "\"a\\\"\","
         + "\"\\\"\","
@@ -320,6 +324,7 @@ public final class JsonWriterTest {
     jsonWriter.beginArray();
     jsonWriter.value("\u2028 \u2029");
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[\"\\u2028 \\u2029\"]", buffer.readUtf8());
   }
 
@@ -328,6 +333,7 @@ public final class JsonWriterTest {
     JsonWriter jsonWriter = new JsonWriter(buffer);
     jsonWriter.beginArray();
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[]", buffer.readUtf8());
   }
 
@@ -336,6 +342,7 @@ public final class JsonWriterTest {
     JsonWriter jsonWriter = new JsonWriter(buffer);
     jsonWriter.beginObject();
     jsonWriter.endObject();
+    jsonWriter.close();
     assertEquals("{}", buffer.readUtf8());
   }
 
@@ -352,6 +359,7 @@ public final class JsonWriterTest {
     jsonWriter.name("d").value(true);
     jsonWriter.endObject();
     jsonWriter.endArray();
+    jsonWriter.close();
     assertEquals("[{\"a\":5,\"b\":false},"
         + "{\"c\":6,\"d\":true}]", buffer.readUtf8());
   }
@@ -371,6 +379,7 @@ public final class JsonWriterTest {
     jsonWriter.value(true);
     jsonWriter.endArray();
     jsonWriter.endObject();
+    jsonWriter.close();
     assertEquals("{\"a\":[5,false],"
         + "\"b\":[6,true]}", buffer.readUtf8());
   }
@@ -384,6 +393,7 @@ public final class JsonWriterTest {
     for (int i = 0; i < 20; i++) {
       jsonWriter.endArray();
     }
+    jsonWriter.close();
     assertEquals("[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]", buffer.readUtf8());
   }
 
@@ -399,6 +409,7 @@ public final class JsonWriterTest {
       jsonWriter.endObject();
     }
     jsonWriter.endObject();
+    jsonWriter.close();
     assertEquals("{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{"
         + "}}}}}}}}}}}}}}}}}}}}}", buffer.readUtf8());
@@ -411,6 +422,7 @@ public final class JsonWriterTest {
     jsonWriter.name("a").value(true);
     jsonWriter.name("a").value(false);
     jsonWriter.endObject();
+    jsonWriter.close();
     // JsonWriter doesn't attempt to detect duplicate names
     assertEquals("{\"a\":true,\"a\":false}", buffer.readUtf8());
   }
@@ -435,6 +447,7 @@ public final class JsonWriterTest {
     jsonWriter.name("i").value(9.0);
     jsonWriter.endObject();
     jsonWriter.endObject();
+    jsonWriter.close();
 
     String expected = "{\n"
         + "   \"a\": true,\n"
@@ -472,6 +485,7 @@ public final class JsonWriterTest {
     jsonWriter.value(9.0);
     jsonWriter.endArray();
     jsonWriter.endArray();
+    jsonWriter.close();
 
     String expected = "[\n"
         + "   true,\n"
