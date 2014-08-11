@@ -16,9 +16,9 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import okio.Buffer;
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -33,9 +33,9 @@ public abstract class JsonAdapter<T> {
   public abstract void toJson(JsonWriter writer, T value) throws IOException;
 
   public final String toJson(T value) throws IOException {
-    StringWriter stringWriter = new StringWriter();
-    toJson(new JsonWriter(stringWriter), value);
-    return stringWriter.toString();
+    Buffer buffer = new Buffer();
+    toJson(new JsonWriter(buffer), value);
+    return buffer.readUtf8();
   }
 
   /**
