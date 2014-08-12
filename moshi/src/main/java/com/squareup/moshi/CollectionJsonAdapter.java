@@ -30,9 +30,9 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (rawType == List.class || rawType == Collection.class) {
-        return newArrayListAdapter(type, annotations, moshi).nullSafe();
+        return newArrayListAdapter(type, moshi).nullSafe();
       } else if (rawType == Set.class) {
-        return newLinkedHashSetAdapter(type, annotations, moshi).nullSafe();
+        return newLinkedHashSetAdapter(type, moshi).nullSafe();
       }
       return null;
     }
@@ -44,10 +44,9 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     this.elementAdapter = elementAdapter;
   }
 
-  private static <T> JsonAdapter<Collection<T>> newArrayListAdapter(
-      Type type, AnnotatedElement annotations, Moshi moshi) {
+  private static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type, Moshi moshi) {
     Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType, annotations);
+    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
       @Override Collection<T> newCollection() {
         return new ArrayList<T>();
@@ -55,10 +54,9 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     };
   }
 
-  private static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(
-      Type type, AnnotatedElement annotations, Moshi moshi) {
+  private static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type, Moshi moshi) {
     Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType, annotations);
+    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {
       @Override Set<T> newCollection() {
         return new LinkedHashSet<T>();
