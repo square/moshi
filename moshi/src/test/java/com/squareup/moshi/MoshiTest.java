@@ -18,8 +18,15 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import org.junit.Test;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -104,6 +111,52 @@ public final class MoshiTest {
     JsonAdapter<String> adapter = moshi.<String>adapter(String.class, annotations).lenient();
     assertThat(adapter.toJson("a")).isEqualTo("\"A\"");
     assertThat(adapter.fromJson("\"b\"")).isEqualTo("B");
+  }
+
+  @Test public void listJsonAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<List<String>> adapter = moshi.adapter(new TypeLiteral<List<String>>() {
+    }.getType());
+    assertThat(adapter.toJson(Arrays.asList("a", "b"))).isEqualTo("[\"a\",\"b\"]");
+    assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(Arrays.asList("a", "b"));
+  }
+
+  @Test public void setJsonAdapter() throws Exception {
+    Set<String> set = new LinkedHashSet<String>();
+    set.add("a");
+    set.add("b");
+
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Set<String>> adapter = moshi.adapter(new TypeLiteral<Set<String>>() {}.getType());
+    assertThat(adapter.toJson(set)).isEqualTo("[\"a\",\"b\"]");
+    assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(set);
+  }
+
+  @Test public void collectionJsonAdapter() throws Exception {
+    Collection<String> collection = new ArrayDeque<String>();
+    collection.add("a");
+    collection.add("b");
+
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Collection<String>> adapter = moshi.adapter(
+        new TypeLiteral<Collection<String>>() {}.getType());
+    assertThat(adapter.toJson(collection)).isEqualTo("[\"a\",\"b\"]");
+    assertThat(adapter.fromJson("[\"a\",\"b\"]")).containsExactly("a", "b");
+  }
+
+  @Uppercase
+  static List<String> uppercaseStrings;
+
+  @Test public void collectionsKeepAnnotations() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new UppercaseAdapterFactory())
+        .build();
+
+    Field uppercaseStringsField = MoshiTest.class.getDeclaredField("uppercaseStrings");
+    JsonAdapter<List<String>> adapter = moshi.adapter(uppercaseStringsField.getGenericType(),
+        uppercaseStringsField);
+    assertThat(adapter.toJson(Arrays.asList("a"))).isEqualTo("[\"A\"]");
+    assertThat(adapter.fromJson("[\"b\"]")).isEqualTo(Arrays.asList("B"));
   }
 
   static class Pizza {
