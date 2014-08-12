@@ -19,7 +19,22 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
-final class StandardJsonAdapterFactory implements JsonAdapter.Factory {
+final class StandardJsonAdapters {
+  public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
+    @Override public JsonAdapter<?> create(
+        Type type, AnnotatedElement annotations, Moshi moshi) {
+      // TODO: support all 8 primitive types.
+      if (type == boolean.class) return BOOLEAN_JSON_ADAPTER;
+      if (type == double.class) return DOUBLE_JSON_ADAPTER;
+      if (type == int.class) return INTEGER_JSON_ADAPTER;
+      if (type == Boolean.class) return BOOLEAN_JSON_ADAPTER.nullSafe();
+      if (type == Double.class) return DOUBLE_JSON_ADAPTER.nullSafe();
+      if (type == Integer.class) return INTEGER_JSON_ADAPTER.nullSafe();
+      if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
+      return null;
+    }
+  };
+
   static final JsonAdapter<Boolean> BOOLEAN_JSON_ADAPTER = new JsonAdapter<Boolean>() {
     @Override public Boolean fromJson(JsonReader reader) throws IOException {
       return reader.nextBoolean();
@@ -55,17 +70,4 @@ final class StandardJsonAdapterFactory implements JsonAdapter.Factory {
       writer.value(value);
     }
   };
-
-  @Override public JsonAdapter<?> create(
-      Type type, AnnotatedElement annotations, Moshi moshi) {
-    // TODO: support all 8 primitive types.
-    if (type == boolean.class) return BOOLEAN_JSON_ADAPTER;
-    if (type == double.class) return DOUBLE_JSON_ADAPTER;
-    if (type == int.class) return INTEGER_JSON_ADAPTER;
-    if (type == Boolean.class) return BOOLEAN_JSON_ADAPTER.nullSafe();
-    if (type == Double.class) return DOUBLE_JSON_ADAPTER.nullSafe();
-    if (type == Integer.class) return INTEGER_JSON_ADAPTER.nullSafe();
-    if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
-    return null;
-  }
 }

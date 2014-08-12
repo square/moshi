@@ -19,7 +19,6 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import okio.BufferedSink;
-import okio.Okio;
 import okio.Sink;
 
 import static com.squareup.moshi.JsonScope.DANGLING_NAME;
@@ -183,11 +182,11 @@ public class JsonWriter implements Closeable, Flushable {
   /**
    * Creates a new instance that writes a JSON-encoded stream to {@code sink}.
    */
-  public JsonWriter(Sink sink) {
+  public JsonWriter(BufferedSink sink) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
     }
-    this.sink = Okio.buffer(sink);
+    this.sink = sink;
   }
 
   /**

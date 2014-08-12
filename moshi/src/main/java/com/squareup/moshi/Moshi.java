@@ -30,7 +30,8 @@ public final class Moshi {
   private Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<JsonAdapter.Factory>();
     factories.addAll(builder.factories);
-    factories.add(new StandardJsonAdapterFactory());
+    factories.add(StandardJsonAdapters.FACTORY);
+    factories.add(CollectionJsonAdapter.FACTORY);
     this.factories = Collections.unmodifiableList(factories);
   }
 
