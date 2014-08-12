@@ -245,13 +245,17 @@ final class Types {
   }
 
   /**
-   * Returns the component type of this array type.
-   * @throws ClassCastException if this type is not an array.
+   * Returns the element type of {@code type} if it is an array type, or null if it is not an
+   * array type.
    */
-  public static Type arrayComponentType(Type array) {
-    return array instanceof GenericArrayType
-        ? ((GenericArrayType) array).getGenericComponentType()
-        : ((Class<?>) array).getComponentType();
+  public static Type arrayComponentType(Type type) {
+    if (type instanceof GenericArrayType) {
+      return ((GenericArrayType) type).getGenericComponentType();
+    } else if (type instanceof Class) {
+      return ((Class<?>) type).getComponentType();
+    } else {
+      return null;
+    }
   }
 
   /**

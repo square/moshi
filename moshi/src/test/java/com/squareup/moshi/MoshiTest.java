@@ -147,7 +147,7 @@ public final class MoshiTest {
   @Uppercase
   static List<String> uppercaseStrings;
 
-  @Test public void collectionsKeepAnnotations() throws Exception {
+  @Test public void collectionsDoNotKeepAnnotations() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(new UppercaseAdapterFactory())
         .build();
@@ -155,8 +155,22 @@ public final class MoshiTest {
     Field uppercaseStringsField = MoshiTest.class.getDeclaredField("uppercaseStrings");
     JsonAdapter<List<String>> adapter = moshi.adapter(uppercaseStringsField.getGenericType(),
         uppercaseStringsField);
-    assertThat(adapter.toJson(Arrays.asList("a"))).isEqualTo("[\"A\"]");
-    assertThat(adapter.fromJson("[\"b\"]")).isEqualTo(Arrays.asList("B"));
+    assertThat(adapter.toJson(Arrays.asList("a"))).isEqualTo("[\"a\"]");
+    assertThat(adapter.fromJson("[\"b\"]")).isEqualTo(Arrays.asList("b"));
+  }
+
+  @Test public void objectArray() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<String[]> adapter = moshi.adapter(String[].class);
+    assertThat(adapter.toJson(new String[] {"a", "b"})).isEqualTo("[\"a\",\"b\"]");
+    assertThat(adapter.fromJson("[\"a\",\"b\"]")).containsExactly("a", "b");
+  }
+
+  @Test public void primitiveArray() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<int[]> adapter = moshi.adapter(int[].class);
+    assertThat(adapter.toJson(new int[] {1, 2})).isEqualTo("[1,2]");
+    assertThat(adapter.fromJson("[2,3]")).containsExactly(2, 3);
   }
 
   static class Pizza {
