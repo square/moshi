@@ -189,10 +189,12 @@ public final class JsonReaderTest {
   @Test public void emptyString() {
     try {
       new JsonReader("").beginArray();
+      fail();
     } catch (IOException expected) {
     }
     try {
       new JsonReader("").beginObject();
+      fail();
     } catch (IOException expected) {
     }
   }
@@ -200,6 +202,7 @@ public final class JsonReaderTest {
   @Test public void noTopLevelObject() {
     try {
       new JsonReader("true").nextBoolean();
+      fail();
     } catch (IOException expected) {
     }
   }

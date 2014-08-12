@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class TypesTest {
   @Test public void newParameterizedTypeWithoutOwner() throws Exception {
@@ -41,6 +42,7 @@ public class TypesTest {
     try {
       // D<A> is not allowed since D is not a static inner class.
       Types.newParameterizedTypeWithOwner(null, D.class, A.class);
+      fail();
     } catch (IllegalArgumentException expected) {
     }
 
