@@ -34,6 +34,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
+  /** No nulls for byte.class. */
+  @Test public void byteAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Byte> adapter = moshi.adapter(byte.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo((byte) 1);
+    assertThat(adapter.toJson((byte) 2)).isEqualTo("2");
+
+    try {
+      adapter.fromJson("200");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was 200 at path $");
+    }
+
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected an int but was NULL at path $");
+    }
+
+    try {
+      moshi.adapter(int.class).toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+  }
+
   /** No nulls for int.class. */
   @Test public void intAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
