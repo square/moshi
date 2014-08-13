@@ -34,20 +34,76 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
-  /** No nulls for byte.class. */
+
+  @Test public void booleanAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Boolean> adapter = moshi.adapter(boolean.class).lenient();
+    assertThat(adapter.fromJson("true")).isTrue();
+    assertThat(adapter.fromJson("TRUE")).isTrue();
+    assertThat(adapter.toJson(true)).isEqualTo("true");
+    assertThat(adapter.fromJson("false")).isFalse();
+    assertThat(adapter.fromJson("FALSE")).isFalse();
+    assertThat(adapter.toJson(false)).isEqualTo("false");
+
+    // Nulls not allowed for boolean.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a boolean but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+  }
+
+  @Test public void BooleanAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Boolean> adapter = moshi.adapter(Boolean.class).lenient();
+    assertThat(adapter.fromJson("true")).isTrue();
+    assertThat(adapter.toJson(true)).isEqualTo("true");
+    assertThat(adapter.fromJson("false")).isFalse();
+    assertThat(adapter.toJson(false)).isEqualTo("false");
+    // Allow nulls for Boolean.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
   @Test public void byteAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Byte> adapter = moshi.adapter(byte.class).lenient();
     assertThat(adapter.fromJson("1")).isEqualTo((byte) 1);
-    assertThat(adapter.toJson((byte) 2)).isEqualTo("2");
+    assertThat(adapter.toJson((byte) -2)).isEqualTo("254");
+
+    // Canonical byte representation is unsigned, but parse the whole range -128..255
+    assertThat(adapter.fromJson("-128")).isEqualTo((byte) -128);
+    assertThat(adapter.fromJson("128")).isEqualTo((byte) -128);
+    assertThat(adapter.toJson((byte) -128)).isEqualTo("128");
+
+    assertThat(adapter.fromJson("255")).isEqualTo((byte) -1);
+    assertThat(adapter.toJson((byte) -1)).isEqualTo("255");
+
+    assertThat(adapter.fromJson("127")).isEqualTo((byte) 127);
+    assertThat(adapter.toJson((byte) 127)).isEqualTo("127");
 
     try {
-      adapter.fromJson("200");
+      adapter.fromJson("256");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was 200 at path $");
+      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was 256 at path $");
     }
 
+    try {
+      adapter.fromJson("-129");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was -129 at path $");
+    }
+
+    // Nulls not allowed for byte.class
     try {
       adapter.fromJson("null");
       fail();
@@ -56,19 +112,288 @@ public final class MoshiTest {
     }
 
     try {
-      moshi.adapter(int.class).toJson(null);
+      adapter.toJson(null);
       fail();
     } catch (NullPointerException expected) {
     }
   }
 
-  /** No nulls for int.class. */
+  @Test public void ByteAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Byte> adapter = moshi.adapter(Byte.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo((byte) 1);
+    assertThat(adapter.toJson((byte) -2)).isEqualTo("254");
+    // Allow nulls for Byte.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void charAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Character> adapter = moshi.adapter(char.class).lenient();
+    assertThat(adapter.fromJson("\"a\"")).isEqualTo('a');
+    assertThat(adapter.fromJson("'a'")).isEqualTo('a');
+    assertThat(adapter.toJson('b')).isEqualTo("\"b\"");
+
+    // Exhaustively test all valid characters.  Use an int to loop so we can check termination.
+    for (int i = 0; i <= Character.MAX_VALUE; ++i) {
+      final char c = (char) i;
+      String s;
+      switch (c) {
+        // TODO: make JsonWriter.REPLACEMENT_CHARS visible for testing?
+        case '\"':
+          s = "\\\"";
+          break;
+        case '\\':
+          s = "\\\\";
+          break;
+        case '\t':
+          s = "\\t";
+          break;
+        case '\b':
+          s = "\\b";
+          break;
+        case '\n':
+          s = "\\n";
+          break;
+        case '\r':
+          s = "\\r";
+          break;
+        case '\f':
+          s = "\\f";
+          break;
+        case '\u2028':
+          s = "\\u2028";
+          break;
+        case '\u2029':
+          s = "\\u2029";
+          break;
+        default:
+          if (c <= 0x1f) {
+            s = String.format("\\u%04x", (int) c);
+          } else if (c >= Character.MIN_SURROGATE && c <= Character.MAX_SURROGATE) {
+            // TODO: not handled properly; do we need to?
+            continue;
+          } else {
+            s = String.valueOf(c);
+          }
+          break;
+      }
+      s = '"' + s + '"';
+      assertThat(adapter.toJson(c)).isEqualTo(s);
+      assertThat(adapter.fromJson(s)).isEqualTo(c);
+    }
+
+    try {
+      // Only a single character is allowed.
+      adapter.fromJson("'ab'");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a char but was \"ab\" at path $");
+    }
+
+    // Nulls not allowed for char.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a string but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+  }
+
+  @Test public void CharacterAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Character> adapter = moshi.adapter(Character.class).lenient();
+    assertThat(adapter.fromJson("\"a\"")).isEqualTo('a');
+    assertThat(adapter.fromJson("'a'")).isEqualTo('a');
+    assertThat(adapter.toJson('b')).isEqualTo("\"b\"");
+
+    try {
+      // Only a single character is allowed.
+      adapter.fromJson("'ab'");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a char but was \"ab\" at path $");
+    }
+
+    // Allow nulls for Character.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void doubleAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Double> adapter = moshi.adapter(double.class).lenient();
+    assertThat(adapter.fromJson("1.0")).isEqualTo(1.0);
+    assertThat(adapter.fromJson("1")).isEqualTo(1.0);
+    assertThat(adapter.fromJson("1e0")).isEqualTo(1.0);
+    assertThat(adapter.toJson(-2.0)).isEqualTo("-2.0");
+
+    // Test min/max values.
+    assertThat(adapter.fromJson("-1.7976931348623157E308")).isEqualTo(-Double.MAX_VALUE);
+    assertThat(adapter.toJson(-Double.MAX_VALUE)).isEqualTo("-1.7976931348623157E308");
+    assertThat(adapter.fromJson("1.7976931348623157E308")).isEqualTo(Double.MAX_VALUE);
+    assertThat(adapter.toJson(Double.MAX_VALUE)).isEqualTo("1.7976931348623157E308");
+
+    // Lenient reader converts too large values to infinities.
+    assertThat(adapter.fromJson("1E309")).isEqualTo(Double.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("-1E309")).isEqualTo(Double.NEGATIVE_INFINITY);
+    assertThat(adapter.fromJson("+Infinity")).isEqualTo(Double.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("Infinity")).isEqualTo(Double.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("-Infinity")).isEqualTo(Double.NEGATIVE_INFINITY);
+
+    // Nulls not allowed for double.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a double but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+
+    // Non-lenient adapter won't allow values outside of range.
+    adapter = moshi.adapter(double.class);
+    JsonReader reader = new JsonReader("[1E309]");
+    reader.beginArray();
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (IOException expected) {
+      // TODO: should this really be NumberFormatException?
+      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[0]");
+    }
+
+    reader = new JsonReader("[-1E309]");
+    reader.beginArray();
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (IOException expected) {
+      // TODO: should this really be NumberFormatException?
+      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[0]");
+    }
+  }
+
+  @Test public void DoubleAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Double> adapter = moshi.adapter(Double.class).lenient();
+    assertThat(adapter.fromJson("1.0")).isEqualTo(1.0);
+    assertThat(adapter.fromJson("1")).isEqualTo(1.0);
+    assertThat(adapter.fromJson("1e0")).isEqualTo(1.0);
+    assertThat(adapter.toJson(-2.0)).isEqualTo("-2.0");
+    // Allow nulls for Double.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void floatAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Float> adapter = moshi.adapter(float.class).lenient();
+    assertThat(adapter.fromJson("1.0")).isEqualTo(1.0f);
+    assertThat(adapter.fromJson("1")).isEqualTo(1.0f);
+    assertThat(adapter.fromJson("1e0")).isEqualTo(1.0f);
+    assertThat(adapter.toJson(-2.0f)).isEqualTo("-2.0");
+
+    // Test min/max values.
+    assertThat(adapter.fromJson("-3.4028235E38")).isEqualTo(-Float.MAX_VALUE);
+    assertThat(adapter.toJson(-Float.MAX_VALUE)).isEqualTo("-3.4028235E38");
+    assertThat(adapter.fromJson("3.4028235E38")).isEqualTo(Float.MAX_VALUE);
+    assertThat(adapter.toJson(Float.MAX_VALUE)).isEqualTo("3.4028235E38");
+
+    // Lenient reader converts too large values to infinities.
+    assertThat(adapter.fromJson("1E39")).isEqualTo(Float.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("-1E39")).isEqualTo(Float.NEGATIVE_INFINITY);
+    assertThat(adapter.fromJson("+Infinity")).isEqualTo(Float.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("Infinity")).isEqualTo(Float.POSITIVE_INFINITY);
+    assertThat(adapter.fromJson("-Infinity")).isEqualTo(Float.NEGATIVE_INFINITY);
+
+    // Nulls not allowed for float.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a double but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+
+    // Non-lenient adapter won't allow values outside of range.
+    adapter = moshi.adapter(float.class);
+    JsonReader reader = new JsonReader("[1E39]");
+    reader.beginArray();
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (IOException expected) {
+      // TODO: should this really be NumberFormatException?
+      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[1]");
+    }
+
+    reader = new JsonReader("[-1E39]");
+    reader.beginArray();
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (IOException expected) {
+      // TODO: should this really be NumberFormatException?
+      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[1]");
+    }
+  }
+
+  @Test public void FloatAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Float> adapter = moshi.adapter(Float.class).lenient();
+    assertThat(adapter.fromJson("1.0")).isEqualTo(1.0f);
+    assertThat(adapter.fromJson("1")).isEqualTo(1.0f);
+    assertThat(adapter.fromJson("1e0")).isEqualTo(1.0f);
+    assertThat(adapter.toJson(-2.0f)).isEqualTo("-2.0");
+    // Allow nulls for Float.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
   @Test public void intAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Integer> adapter = moshi.adapter(int.class).lenient();
     assertThat(adapter.fromJson("1")).isEqualTo(1);
-    assertThat(adapter.toJson(2)).isEqualTo("2");
+    assertThat(adapter.toJson(-2)).isEqualTo("-2");
 
+    // Test min/max values
+    assertThat(adapter.fromJson("-2147483648")).isEqualTo(Integer.MIN_VALUE);
+    assertThat(adapter.toJson(Integer.MIN_VALUE)).isEqualTo("-2147483648");
+    assertThat(adapter.fromJson("2147483647")).isEqualTo(Integer.MAX_VALUE);
+    assertThat(adapter.toJson(Integer.MAX_VALUE)).isEqualTo("2147483647");
+
+    try {
+      adapter.fromJson("2147483648");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected an int but was 2147483648 at path $");
+    }
+
+    try {
+      adapter.fromJson("-2147483649");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected an int but was -2147483649 at path $");
+    }
+
+    // Nulls not allowed for int.class
     try {
       adapter.fromJson("null");
       fail();
@@ -77,18 +402,122 @@ public final class MoshiTest {
     }
 
     try {
-      moshi.adapter(int.class).toJson(null);
+      adapter.toJson(null);
       fail();
     } catch (NullPointerException expected) {
     }
   }
 
-  /** Moshi supports nulls for Integer.class. */
-  @Test public void integerAdapter() throws Exception {
+  @Test public void IntegerAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Integer> adapter = moshi.adapter(Integer.class).lenient();
     assertThat(adapter.fromJson("1")).isEqualTo(1);
-    assertThat(adapter.toJson(2)).isEqualTo("2");
+    assertThat(adapter.toJson(-2)).isEqualTo("-2");
+    // Allow nulls for Integer.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void longAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Long> adapter = moshi.adapter(long.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo(1L);
+    assertThat(adapter.toJson(-2L)).isEqualTo("-2");
+
+    // Test min/max values
+    assertThat(adapter.fromJson("-9223372036854775808")).isEqualTo(Long.MIN_VALUE);
+    assertThat(adapter.toJson(Long.MIN_VALUE)).isEqualTo("-9223372036854775808");
+    assertThat(adapter.fromJson("9223372036854775807")).isEqualTo(Long.MAX_VALUE);
+    assertThat(adapter.toJson(Long.MAX_VALUE)).isEqualTo("9223372036854775807");
+
+    // TODO: This is a bug?
+    assertThat(adapter.fromJson("9223372036854775808")).isEqualTo(Long.MAX_VALUE); // wtf?
+    //try {
+    //  adapter.fromJson("9223372036854775808");
+    //  fail();
+    //} catch (NumberFormatException expected) {
+    //  assertThat(expected.getMessage()).isEqualTo("Expected a long but was 9223372036854775808 at path $");
+    //}
+    //
+    //try {
+    //  adapter.fromJson("-9223372036854775809");
+    //  fail();
+    //} catch (NumberFormatException expected) {
+    //  assertThat(expected.getMessage()).isEqualTo("Expected a long but was -9223372036854775809 at path $");
+    //}
+
+    // Nulls not allowed for long.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a long but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+  }
+
+  @Test public void LongAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Long> adapter = moshi.adapter(Long.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo(1L);
+    assertThat(adapter.toJson(-2L)).isEqualTo("-2");
+    // Allow nulls for Integer.class
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void shortAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Short> adapter = moshi.adapter(short.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo((short) 1);
+    assertThat(adapter.toJson((short) -2)).isEqualTo("-2");
+
+    // Test min/max values.
+    assertThat(adapter.fromJson("-32768")).isEqualTo(Short.MIN_VALUE);
+    assertThat(adapter.toJson(Short.MIN_VALUE)).isEqualTo("-32768");
+    assertThat(adapter.fromJson("32767")).isEqualTo(Short.MAX_VALUE);
+    assertThat(adapter.toJson(Short.MAX_VALUE)).isEqualTo("32767");
+
+    try {
+      adapter.fromJson("32768");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a short but was 32768 at path $");
+    }
+
+    try {
+      adapter.fromJson("-32769");
+      fail();
+    } catch (NumberFormatException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected a short but was -32769 at path $");
+    }
+
+    // Nulls not allowed for short.class
+    try {
+      adapter.fromJson("null");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Expected an int but was NULL at path $");
+    }
+
+    try {
+      adapter.toJson(null);
+      fail();
+    } catch (NullPointerException expected) {
+    }
+  }
+
+  @Test public void ShortAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Short> adapter = moshi.adapter(Short.class).lenient();
+    assertThat(adapter.fromJson("1")).isEqualTo((short) 1);
+    assertThat(adapter.toJson((short) -2)).isEqualTo("-2");
+    // Allow nulls for Byte.class
     assertThat(adapter.fromJson("null")).isEqualTo(null);
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
