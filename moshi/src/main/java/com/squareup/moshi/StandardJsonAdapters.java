@@ -103,18 +103,20 @@ final class StandardJsonAdapters {
   static final JsonAdapter<Float> FLOAT_JSON_ADAPTER = new JsonAdapter<Float>() {
     @Override public Float fromJson(JsonReader reader) throws IOException {
       float value = (float) reader.nextDouble();
+      // Double check for infinity after float conversion; many doubles > Float.MAX
       if (!reader.isLenient() && Float.isInfinite(value)) {
-        throw new IOException("JSON forbids NaN and infinities: " + value
+        throw new NumberFormatException("JSON forbids NaN and infinities: " + value
             + " at path " + reader.getPath());
       }
       return value;
     }
 
     @Override public void toJson(JsonWriter writer, Float value) throws IOException {
-      // Use the Number overload.
+      // Manual null pointer check for the float.class adapter.
       if (value == null) {
         throw new NullPointerException();
       }
+      // Use the Number overload so we write out float precision instead of double precision.
       writer.value(value);
     }
   };
