@@ -42,11 +42,21 @@ final class Types {
   }
 
   /**
+   * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}.
+   */
+  public static ParameterizedType newParameterizedType(Type rawType, Type... typeArguments) {
+    return new ParameterizedTypeImpl(null, rawType, typeArguments);
+  }
+
+  /**
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType} and
    * enclosed by {@code ownerType}.
    */
   public static ParameterizedType newParameterizedTypeWithOwner(
       Type ownerType, Type rawType, Type... typeArguments) {
+    if (ownerType == null) {
+      throw new NullPointerException("ownerType");
+    }
     return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
   }
 
@@ -334,7 +344,7 @@ final class Types {
         }
 
         return changed
-            ? newParameterizedTypeWithOwner(newOwnerType, original.getRawType(), args)
+            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
             : original;
 
       } else if (toResolve instanceof WildcardType) {

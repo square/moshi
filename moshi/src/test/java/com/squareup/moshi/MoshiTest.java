@@ -568,8 +568,8 @@ public final class MoshiTest {
 
   @Test public void listJsonAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
-    JsonAdapter<List<String>> adapter = moshi.adapter(new TypeLiteral<List<String>>() {
-    }.getType());
+    JsonAdapter<List<String>> adapter =
+        moshi.adapter(Types.newParameterizedType(List.class, String.class));
     assertThat(adapter.toJson(Arrays.asList("a", "b"))).isEqualTo("[\"a\",\"b\"]");
     assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(Arrays.asList("a", "b"));
   }
@@ -580,7 +580,8 @@ public final class MoshiTest {
     set.add("b");
 
     Moshi moshi = new Moshi.Builder().build();
-    JsonAdapter<Set<String>> adapter = moshi.adapter(new TypeLiteral<Set<String>>() {}.getType());
+    JsonAdapter<Set<String>> adapter =
+        moshi.adapter(Types.newParameterizedType(Set.class, String.class));
     assertThat(adapter.toJson(set)).isEqualTo("[\"a\",\"b\"]");
     assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(set);
   }
@@ -591,8 +592,8 @@ public final class MoshiTest {
     collection.add("b");
 
     Moshi moshi = new Moshi.Builder().build();
-    JsonAdapter<Collection<String>> adapter = moshi.adapter(
-        new TypeLiteral<Collection<String>>() {}.getType());
+    JsonAdapter<Collection<String>> adapter =
+        moshi.adapter(Types.newParameterizedType(Collection.class, String.class));
     assertThat(adapter.toJson(collection)).isEqualTo("[\"a\",\"b\"]");
     assertThat(adapter.fromJson("[\"a\",\"b\"]")).containsExactly("a", "b");
   }

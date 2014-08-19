@@ -31,6 +31,7 @@ import static com.squareup.moshi.JsonToken.NAME;
 import static com.squareup.moshi.JsonToken.NULL;
 import static com.squareup.moshi.JsonToken.NUMBER;
 import static com.squareup.moshi.JsonToken.STRING;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -337,7 +338,8 @@ public final class JsonReaderTest {
     try {
       reader.nextDouble();
       fail();
-    } catch (IOException expected) {
+    } catch (NumberFormatException expected) {
+      assertThat(expected).hasMessageContaining("NaN");
     }
   }
 
