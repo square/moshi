@@ -28,34 +28,51 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 public class TypesTest {
-  @Test public void newParameterizedTypeWithoutOwner() throws Exception {
+
+  @Test public void newParameterizedType() throws Exception {
     // List<A>. List is a top-level class.
-    Type type = Types.newParameterizedTypeWithOwner(null, List.class, A.class);
+    Type type = Types.newParameterizedType(List.class, A.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(A.class);
 
     // A<B>. A is a static inner class.
-    type = Types.newParameterizedTypeWithOwner(null, A.class, B.class);
+    type = Types.newParameterizedType(A.class, B.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
 
     final class D {
     }
     try {
       // D<A> is not allowed since D is not a static inner class.
-      Types.newParameterizedTypeWithOwner(null, D.class, A.class);
+      Types.newParameterizedType(D.class, A.class);
       fail();
     } catch (IllegalArgumentException expected) {
     }
 
     // A<D> is allowed.
-    type = Types.newParameterizedTypeWithOwner(null, A.class, D.class);
+    type = Types.newParameterizedType(A.class, D.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(D.class);
   }
 
   @Test public void getFirstTypeArgument() throws Exception {
     assertNull(getFirstTypeArgument(A.class));
 
-    Type type = Types.newParameterizedTypeWithOwner(null, A.class, B.class, C.class);
+    Type type = Types.newParameterizedType(A.class, B.class, C.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
+  }
+
+  @Test public void newParameterizedTypeObjectMethods() throws Exception {
+    Type mapOfStringIntegerType = TypesTest.class.getDeclaredField(
+        "mapOfStringInteger").getGenericType();
+    ParameterizedType newMapType = Types.newParameterizedType(Map.class, String.class, Integer.class);
+    assertThat(newMapType).isEqualTo(mapOfStringIntegerType);
+    assertThat(newMapType.hashCode()).isEqualTo(mapOfStringIntegerType.hashCode());
+    assertThat(newMapType.toString()).isEqualTo(mapOfStringIntegerType.toString());
+
+    Type arrayListOfMapOfStringIntegerType = TypesTest.class.getDeclaredField(
+        "arrayListOfMapOfStringInteger").getGenericType();
+    ParameterizedType newListType = Types.newParameterizedType(ArrayList.class, newMapType);
+    assertThat(newListType).isEqualTo(arrayListOfMapOfStringIntegerType);
+    assertThat(newListType.hashCode()).isEqualTo(arrayListOfMapOfStringIntegerType.hashCode());
+    assertThat(newListType.toString()).isEqualTo(arrayListOfMapOfStringIntegerType.toString());
   }
 
   private static final class A {
@@ -83,17 +100,6 @@ public class TypesTest {
   Map<String, Integer>[] arrayOfMapOfStringInteger;
   ArrayList<Map<String, Integer>> arrayListOfMapOfStringInteger;
   interface StringIntegerMap extends Map<String, Integer> {
-  }
-
-  @Test public void typeLiteral() throws Exception {
-    TypeLiteral<Map<String, Integer>> typeLiteral = new TypeLiteral<Map<String, Integer>>() {};
-    TypeLiteral<?> fromReflection = TypeLiteral.get(
-        TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType());
-    assertThat(typeLiteral).isEqualTo(fromReflection);
-    assertThat(typeLiteral.hashCode()).isEqualTo(fromReflection.hashCode());
-    assertThat(typeLiteral.toString())
-        .isEqualTo("java.util.Map<java.lang.String, java.lang.Integer>");
-    assertThat(typeLiteral.getRawType()).isEqualTo(Map.class);
   }
 
   @Test public void arrayComponentType() throws Exception {
