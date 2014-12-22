@@ -18,6 +18,8 @@ package com.squareup.moshi;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
+import okio.Buffer;
+import okio.ForwardingSource;
 import okio.Source;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -57,6 +59,31 @@ public final class JsonReaderTest {
 
   @Test public void readObject() throws IOException {
     JsonReader reader = new JsonReader("{\"a\": \"android\", \"b\": \"banana\"}");
+    reader.beginObject();
+    assertEquals("a", reader.nextName());
+    assertEquals("android", reader.nextString());
+    assertEquals("b", reader.nextName());
+    assertEquals("banana", reader.nextString());
+    reader.endObject();
+    assertEquals(JsonToken.END_DOCUMENT, reader.peek());
+  }
+
+  @Test public void readObjectBuffer() throws IOException {
+    Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
+    JsonReader reader = new JsonReader(buffer);
+    reader.beginObject();
+    assertEquals("a", reader.nextName());
+    assertEquals("android", reader.nextString());
+    assertEquals("b", reader.nextName());
+    assertEquals("banana", reader.nextString());
+    reader.endObject();
+    assertEquals(JsonToken.END_DOCUMENT, reader.peek());
+  }
+
+  @Test public void readObjectSource() throws IOException {
+    Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
+    Source source = new ForwardingSource(buffer) {}; // Mask the Buffer as an unbuffered Source.
+    JsonReader reader = new JsonReader(source);
     reader.beginObject();
     assertEquals("a", reader.nextName());
     assertEquals("android", reader.nextString());
