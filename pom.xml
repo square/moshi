@@ -26,11 +26,11 @@
     <java.version>1.6</java.version>
 
     <!-- Dependencies -->
-    <okio.version>1.0.2-SNAPSHOT</okio.version>
+    <okio.version>1.1.0</okio.version>
 
     <!-- Test Dependencies -->
-    <junit.version>4.11</junit.version>
-    <assertj.version>1.6.1</assertj.version>
+    <junit.version>4.12</junit.version>
+    <assertj.version>1.7.0</assertj.version>
   </properties>
 
   <scm>
