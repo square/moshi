@@ -21,6 +21,7 @@ import java.io.IOException;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
+import okio.Okio;
 import okio.Source;
 
 /**
@@ -263,13 +264,15 @@ public class JsonReader implements Closeable {
   private int[] pathIndices = new int[32];
 
   /**
-   * Creates a new instance that reads a JSON-encoded stream from {@code in}.
+   * Creates a new instance that reads a JSON-encoded stream from {@code source}.
    */
   public JsonReader(Source source) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }
-    throw new UnsupportedOperationException("TODO");
+    BufferedSource bufferedSource = Okio.buffer(source);
+    this.source = bufferedSource;
+    this.buffer = bufferedSource.buffer();
   }
 
   /**
