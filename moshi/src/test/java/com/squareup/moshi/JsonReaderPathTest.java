@@ -47,16 +47,56 @@ public class JsonReaderPathTest {
     reader.nextString();
     assertEquals("$.a[5].c", reader.getPath());
     reader.endObject();
-    assertEquals("$.a[5]", reader.getPath());
+    assertEquals("$.a[6]", reader.getPath());
     reader.beginArray();
-    assertEquals("$.a[5][0]", reader.getPath());
+    assertEquals("$.a[6][0]", reader.getPath());
     reader.nextInt();
-    assertEquals("$.a[5][1]", reader.getPath());
+    assertEquals("$.a[6][1]", reader.getPath());
     reader.endArray();
-    assertEquals("$.a[5]", reader.getPath());
+    assertEquals("$.a[7]", reader.getPath());
     reader.endArray();
     assertEquals("$.a", reader.getPath());
     reader.endObject();
+    assertEquals("$", reader.getPath());
+  }
+
+  @Test public void arrayOfObjects() throws IOException {
+    JsonReader reader = new JsonReader("[{},{},{}]");
+    reader.beginArray();
+    assertEquals("$[0]", reader.getPath());
+    reader.beginObject();
+    assertEquals("$[0].", reader.getPath());
+    reader.endObject();
+    assertEquals("$[1]", reader.getPath());
+    reader.beginObject();
+    assertEquals("$[1].", reader.getPath());
+    reader.endObject();
+    assertEquals("$[2]", reader.getPath());
+    reader.beginObject();
+    assertEquals("$[2].", reader.getPath());
+    reader.endObject();
+    assertEquals("$[3]", reader.getPath());
+    reader.endArray();
+    assertEquals("$", reader.getPath());
+  }
+
+  @Test public void arrayOfArrays() throws IOException {
+    JsonReader reader = new JsonReader("[[],[],[]]");
+    reader.beginArray();
+    assertEquals("$[0]", reader.getPath());
+    reader.beginArray();
+    assertEquals("$[0][0]", reader.getPath());
+    reader.endArray();
+    assertEquals("$[1]", reader.getPath());
+    reader.beginArray();
+    assertEquals("$[1][0]", reader.getPath());
+    reader.endArray();
+    assertEquals("$[2]", reader.getPath());
+    reader.beginArray();
+    assertEquals("$[2][0]", reader.getPath());
+    reader.endArray();
+    assertEquals("$[3]", reader.getPath());
+    reader.endArray();
     assertEquals("$", reader.getPath());
   }
 
