@@ -123,8 +123,6 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  * <p>Each {@code JsonWriter} may be used to write a single JSON stream.
  * Instances of this class are not thread safe. Calls that would result in a
  * malformed JSON string will fail with an {@link IllegalStateException}.
- *
- * @author Jesse Wilson
  */
 public class JsonWriter implements Closeable, Flushable {
 

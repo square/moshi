@@ -17,9 +17,6 @@ package com.squareup.moshi;
 
 /**
  * Lexical scoping elements within a JSON reader or writer.
- *
- * @author Jesse Wilson
- * @since 1.6
  */
 final class JsonScope {
 
