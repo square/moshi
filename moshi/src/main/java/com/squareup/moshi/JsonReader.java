@@ -172,8 +172,6 @@ import okio.Source;
  *
  * <p>Each {@code JsonReader} may be used to read a single JSON stream. Instances
  * of this class are not thread safe.
- *
- * @author Jesse Wilson
  */
 public class JsonReader implements Closeable {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
