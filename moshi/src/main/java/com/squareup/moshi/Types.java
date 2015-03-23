@@ -254,6 +254,11 @@ final class Types {
         getGenericSupertype(context, contextRawType, supertype));
   }
 
+  public static Type getGenericSuperclass(Type type) {
+    Class<?> rawType = Types.getRawType(type);
+    return resolve(type, rawType, rawType.getGenericSuperclass());
+  }
+
   /**
    * Returns the element type of {@code type} if it is an array type, or null if it is not an
    * array type.
