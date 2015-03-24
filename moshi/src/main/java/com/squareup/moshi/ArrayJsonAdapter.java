@@ -46,7 +46,7 @@ class ArrayJsonAdapter extends JsonAdapter<Object> {
   }
 
   @Override public Object fromJson(JsonReader reader) throws IOException {
-    List<Object> list = new ArrayList<Object>();
+    List<Object> list = new ArrayList<>();
     reader.beginArray();
     while (reader.hasNext()) {
       list.add(elementAdapter.fromJson(reader));

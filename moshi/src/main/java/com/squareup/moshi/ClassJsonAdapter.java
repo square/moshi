@@ -29,7 +29,7 @@ import java.util.TreeMap;
  * of classes in {@code java.*}, {@code javax.*} and {@code android.*} are omitted from both
  * serialization and deserialization unless they are either public or protected.
  */
-final class ClassAdapter<T> extends JsonAdapter<T> {
+final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
@@ -54,7 +54,7 @@ final class ClassAdapter<T> extends JsonAdapter<T> {
       for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
         createFieldBindings(moshi, t, fields);
       }
-      return new ClassAdapter<>(classFactory, fields).nullSafe();
+      return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
     }
 
     /** Creates a field binding for each of declared field of {@code type}. */
@@ -103,7 +103,7 @@ final class ClassAdapter<T> extends JsonAdapter<T> {
   private final ClassFactory<T> classFactory;
   private final Map<String, FieldBinding<?>> jsonFields;
 
-  private ClassAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> jsonFields) {
+  private ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> jsonFields) {
     this.classFactory = classFactory;
     this.jsonFields = jsonFields;
   }

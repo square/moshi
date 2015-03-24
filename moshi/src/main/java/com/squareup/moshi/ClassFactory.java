@@ -46,7 +46,7 @@ abstract class ClassFactory<T> {
           return (T) constructor.newInstance(args);
         }
       };
-    } catch (NoSuchMethodException noNoArgsConstructor) {
+    } catch (NoSuchMethodException ignored) {
       // No no-args constructor. Fall back to something more magical...
     }
 
@@ -68,7 +68,7 @@ abstract class ClassFactory<T> {
       };
     } catch (IllegalAccessException e) {
       throw new AssertionError();
-    } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException notJvm) {
+    } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignored) {
       // Not the expected version of the Oracle Java library!
     }
 
@@ -95,7 +95,7 @@ abstract class ClassFactory<T> {
       throw new AssertionError();
     } catch (InvocationTargetException e) {
       throw new RuntimeException(e);
-    } catch (NoSuchMethodException notLibcore) {
+    } catch (NoSuchMethodException ignored) {
       // Not the expected version of Dalvik/libcore!
     }
 

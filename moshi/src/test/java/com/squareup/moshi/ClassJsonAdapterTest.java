@@ -28,7 +28,7 @@ import static com.squareup.moshi.Util.NO_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class ClassAdapterTest {
+public final class ClassJsonAdapterTest {
   private final Moshi moshi = new Moshi.Builder().build();
 
   static class BasicPizza {
@@ -156,12 +156,12 @@ public final class ClassAdapterTest {
 
   @Test public void fieldNameCollision() throws Exception {
     try {
-      ClassAdapter.FACTORY.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.FACTORY.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("field name collision: 'a' declared by both "
-          + "com.squareup.moshi.ClassAdapterTest$ExtendsBaseA and "
-          + "superclass com.squareup.moshi.ClassAdapterTest$BaseA");
+          + "com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA and "
+          + "superclass com.squareup.moshi.ClassJsonAdapterTest$BaseA");
     }
   }
 
@@ -302,17 +302,17 @@ public final class ClassAdapterTest {
 
   @Test public void nonStaticNestedClassNotSupported() throws Exception {
     try {
-      ClassAdapter.FACTORY.create(NonStatic.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.FACTORY.create(NonStatic.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot serialize non-static nested class "
-          + "com.squareup.moshi.ClassAdapterTest$NonStatic");
+          + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
     }
   }
 
   @Test public void platformClassNotSupported() throws Exception {
-    assertThat(ClassAdapter.FACTORY.create(UUID.class, NO_ANNOTATIONS, moshi)).isNull();
-    assertThat(ClassAdapter.FACTORY.create(KeyGenerator.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertThat(ClassJsonAdapter.FACTORY.create(UUID.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertThat(ClassJsonAdapter.FACTORY.create(KeyGenerator.class, NO_ANNOTATIONS, moshi)).isNull();
   }
 
   @Test public void anonymousClassNotSupported() throws Exception {
@@ -322,7 +322,7 @@ public final class ClassAdapterTest {
       }
     };
     try {
-      ClassAdapter.FACTORY.create(c.getClass(), NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.FACTORY.create(c.getClass(), NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot serialize anonymous class " + c.getClass().getName());
@@ -330,7 +330,7 @@ public final class ClassAdapterTest {
   }
 
   @Test public void interfaceNotSupported() throws Exception {
-    assertThat(ClassAdapter.FACTORY.create(Runnable.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertThat(ClassJsonAdapter.FACTORY.create(Runnable.class, NO_ANNOTATIONS, moshi)).isNull();
   }
 
   static abstract class Abstract {
@@ -338,11 +338,11 @@ public final class ClassAdapterTest {
 
   @Test public void abstractClassNotSupported() throws Exception {
     try {
-      ClassAdapter.FACTORY.create(Abstract.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.FACTORY.create(Abstract.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot serialize abstract class "
-          + "com.squareup.moshi.ClassAdapterTest$Abstract");
+          + "com.squareup.moshi.ClassJsonAdapterTest$Abstract");
     }
   }
 
@@ -390,7 +390,7 @@ public final class ClassAdapterTest {
 
   private <T> String toJson(Class<T> type, T value) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassAdapter.FACTORY.create(
+    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
         type, NO_ANNOTATIONS, moshi);
 
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
@@ -408,7 +408,7 @@ public final class ClassAdapterTest {
 
   private <T> T fromJson(Class<T> type, String json) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassAdapter.FACTORY.create(
+    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
         type, NO_ANNOTATIONS, moshi);
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
     JsonReader jsonReader = new JsonReader("[" + json + "]");
