@@ -49,7 +49,7 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
       @Override Collection<T> newCollection() {
-        return new ArrayList<T>();
+        return new ArrayList<>();
       }
     };
   }
@@ -59,7 +59,7 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {
       @Override Set<T> newCollection() {
-        return new LinkedHashSet<T>();
+        return new LinkedHashSet<>();
       }
     };
   }
