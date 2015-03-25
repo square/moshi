@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-public class TypesTest {
+public final class TypesTest {
 
   @Test public void newParameterizedType() throws Exception {
     // List<A>. List is a top-level class.

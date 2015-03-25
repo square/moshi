@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class JsonReaderPathTest {
+public final class JsonReaderPathTest {
   @Test public void path() throws IOException {
     JsonReader reader = new JsonReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
     assertEquals("$", reader.getPath());

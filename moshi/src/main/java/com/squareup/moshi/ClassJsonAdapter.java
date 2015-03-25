@@ -48,7 +48,6 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         throw new IllegalArgumentException("cannot serialize abstract class " + rawType.getName());
       }
 
-
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);
       Map<String, FieldBinding<?>> fields = new TreeMap<>();
       for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {

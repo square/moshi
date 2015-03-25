@@ -552,6 +552,36 @@ public final class MoshiTest {
         .isEqualTo(new MealDeal(new Pizza(18, true), "Coke"));
   }
 
+  static class Message {
+    String speak;
+    @Uppercase String shout;
+  }
+
+  @Test public void registerJsonAdapterForAnnotatedType() throws Exception {
+    JsonAdapter<String> uppercaseAdapter = new JsonAdapter<String>() {
+      @Override public String fromJson(JsonReader reader) throws IOException {
+        throw new AssertionError();
+      }
+
+      @Override public void toJson(JsonWriter writer, String value) throws IOException {
+        writer.value(value.toUpperCase(Locale.US));
+      }
+    };
+
+    Moshi moshi = new Moshi.Builder()
+        .add(String.class, Uppercase.class, uppercaseAdapter)
+        .build();
+
+    JsonAdapter<Message> messageAdapter = moshi.adapter(Message.class);
+
+    Message message = new Message();
+    message.speak = "Yo dog";
+    message.shout = "What's up";
+
+    assertThat(messageAdapter.toJson(message))
+        .isEqualTo("{\"shout\":\"WHAT'S UP\",\"speak\":\"Yo dog\"}");
+  }
+
   @Uppercase
   static String uppercaseString;
 
