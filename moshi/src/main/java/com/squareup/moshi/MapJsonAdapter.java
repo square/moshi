@@ -33,7 +33,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
       Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
       if (keyAndValue[0] != String.class) return null;
       return new MapJsonAdapter<>(moshi, keyAndValue[1]).nullSafe();
-    };
+    }
   };
 
   private final JsonAdapter<V> valueAdapter;
