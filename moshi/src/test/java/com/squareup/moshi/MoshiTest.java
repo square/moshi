@@ -605,7 +605,7 @@ public final class MoshiTest {
   }
 
   @Test public void setJsonAdapter() throws Exception {
-    Set<String> set = new LinkedHashSet<String>();
+    Set<String> set = new LinkedHashSet<>();
     set.add("a");
     set.add("b");
 
@@ -617,7 +617,7 @@ public final class MoshiTest {
   }
 
   @Test public void collectionJsonAdapter() throws Exception {
-    Collection<String> collection = new ArrayDeque<String>();
+    Collection<String> collection = new ArrayDeque<>();
     collection.add("a");
     collection.add("b");
 
