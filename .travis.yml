@@ -9,8 +9,8 @@ after_success:
 
 env:
   global:
-    - secure: "TODO get me!"
-    - secure: "TODO get me!"
+    - secure: "TM2N/yo3azbA7+J6WG0W1RmK4vvS7b4JzvJP8NcXpoZCQw2Je1nQqmKS3F/04/DEUf8+SKVh2thKEeUxLN8knCO0OQLxeKIFj9PLvtgHnV8beB+pPxUdpEvMlB6ISeDsOZ098zoax28zfMwR7+uMeGe2VbtTSpwtqt4jkWx3ooA="
+    - secure: "A5flBI/PCmmxuHjqG73CIXqHYg8X1GWloA3jv0zrhCAuK5m3nAvt7JY2qom22ttEY9JI32dlArxhusrKib18gKNgZbxzoN5PydkG6T0uuGZw+uZM6jPiTlvkC0F4ikL6lg1dBap4BoakDMwAPfb11UpETamBGKOWdopLqw6T6w0="
 
 branches:
   except:
