@@ -18,11 +18,12 @@ package com.squareup.moshi;
 import java.io.IOException;
 import org.junit.Test;
 
+import static com.squareup.moshi.TestUtil.newReader;
 import static org.junit.Assert.assertEquals;
 
 public final class JsonReaderPathTest {
   @Test public void path() throws IOException {
-    JsonReader reader = new JsonReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
+    JsonReader reader = newReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
     assertEquals("$", reader.getPath());
     reader.beginObject();
     assertEquals("$.", reader.getPath());
@@ -61,7 +62,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void arrayOfObjects() throws IOException {
-    JsonReader reader = new JsonReader("[{},{},{}]");
+    JsonReader reader = newReader("[{},{},{}]");
     reader.beginArray();
     assertEquals("$[0]", reader.getPath());
     reader.beginObject();
@@ -81,7 +82,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void arrayOfArrays() throws IOException {
-    JsonReader reader = new JsonReader("[[],[],[]]");
+    JsonReader reader = newReader("[[],[],[]]");
     reader.beginArray();
     assertEquals("$[0]", reader.getPath());
     reader.beginArray();
@@ -101,7 +102,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void objectPath() throws IOException {
-    JsonReader reader = new JsonReader("{\"a\":1,\"b\":2}");
+    JsonReader reader = newReader("{\"a\":1,\"b\":2}");
     assertEquals("$", reader.getPath());
 
     reader.peek();
@@ -141,7 +142,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void arrayPath() throws IOException {
-    JsonReader reader = new JsonReader("[1,2]");
+    JsonReader reader = newReader("[1,2]");
     assertEquals("$", reader.getPath());
 
     reader.peek();
@@ -171,7 +172,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    JsonReader reader = new JsonReader("[][]");
+    JsonReader reader = newReader("[][]");
     reader.setLenient(true);
     reader.beginArray();
     reader.endArray();
@@ -182,7 +183,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void skipArrayElements() throws IOException {
-    JsonReader reader = new JsonReader("[1,2,3]");
+    JsonReader reader = newReader("[1,2,3]");
     reader.beginArray();
     reader.skipValue();
     reader.skipValue();
@@ -190,14 +191,14 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void skipObjectNames() throws IOException {
-    JsonReader reader = new JsonReader("{\"a\":1}");
+    JsonReader reader = newReader("{\"a\":1}");
     reader.beginObject();
     reader.skipValue();
     assertEquals("$.null", reader.getPath());
   }
 
   @Test public void skipObjectValues() throws IOException {
-    JsonReader reader = new JsonReader("{\"a\":1,\"b\":2}");
+    JsonReader reader = newReader("{\"a\":1,\"b\":2}");
     reader.beginObject();
     reader.nextName();
     reader.skipValue();
@@ -207,7 +208,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void skipNestedStructures() throws IOException {
-    JsonReader reader = new JsonReader("[[1,2,3],4]");
+    JsonReader reader = newReader("[[1,2,3],4]");
     reader.beginArray();
     reader.skipValue();
     assertEquals("$[1]", reader.getPath());

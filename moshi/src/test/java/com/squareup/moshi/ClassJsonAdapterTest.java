@@ -24,6 +24,7 @@ import javax.crypto.KeyGenerator;
 import okio.Buffer;
 import org.junit.Test;
 
+import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.Util.NO_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -411,7 +412,7 @@ public final class ClassJsonAdapterTest {
     JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
         type, NO_ANNOTATIONS, moshi);
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
-    JsonReader jsonReader = new JsonReader("[" + json + "]");
+    JsonReader jsonReader = newReader("[" + json + "]");
     jsonReader.beginArray();
     T result = jsonAdapter.fromJson(jsonReader);
     jsonReader.endArray();
