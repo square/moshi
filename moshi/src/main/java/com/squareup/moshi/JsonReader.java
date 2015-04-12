@@ -21,8 +21,6 @@ import java.io.IOException;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
-import okio.Okio;
-import okio.Source;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>)
@@ -264,20 +262,11 @@ public final class JsonReader implements Closeable {
   /**
    * Creates a new instance that reads a JSON-encoded stream from {@code source}.
    */
-  public JsonReader(Source source) {
+  public JsonReader(BufferedSource source) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }
-    BufferedSource bufferedSource = Okio.buffer(source);
-    this.source = bufferedSource;
-    this.buffer = bufferedSource.buffer();
-  }
-
-  /**
-   * Creates a new instance that reads a JSON-encoded value {@code s}.
-   */
-  public JsonReader(String s) {
-    this.source = new Buffer().writeUtf8(s);
+    this.source = source;
     this.buffer = source.buffer();
   }
 

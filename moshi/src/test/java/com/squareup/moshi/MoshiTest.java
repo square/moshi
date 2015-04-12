@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Set;
 import org.junit.Test;
 
+import static com.squareup.moshi.TestUtil.newReader;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -264,7 +265,7 @@ public final class MoshiTest {
 
     // Non-lenient adapter won't allow values outside of range.
     adapter = moshi.adapter(double.class);
-    JsonReader reader = new JsonReader("[1E309]");
+    JsonReader reader = newReader("[1E309]");
     reader.beginArray();
     try {
       adapter.fromJson(reader);
@@ -273,7 +274,7 @@ public final class MoshiTest {
       assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[0]");
     }
 
-    reader = new JsonReader("[-1E309]");
+    reader = newReader("[-1E309]");
     reader.beginArray();
     try {
       adapter.fromJson(reader);
@@ -332,7 +333,7 @@ public final class MoshiTest {
 
     // Non-lenient adapter won't allow values outside of range.
     adapter = moshi.adapter(float.class);
-    JsonReader reader = new JsonReader("[1E39]");
+    JsonReader reader = newReader("[1E39]");
     reader.beginArray();
     try {
       adapter.fromJson(reader);
@@ -341,7 +342,7 @@ public final class MoshiTest {
       assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[1]");
     }
 
-    reader = new JsonReader("[-1E39]");
+    reader = newReader("[-1E39]");
     reader.beginArray();
     try {
       adapter.fromJson(reader);

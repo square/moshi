@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import okio.Buffer;
+import okio.BufferedSource;
+import okio.Sink;
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -26,15 +28,25 @@ import okio.Buffer;
 public abstract class JsonAdapter<T> {
   public abstract T fromJson(JsonReader reader) throws IOException;
 
+  public final T fromJson(BufferedSource source) throws IOException {
+    return fromJson(new JsonReader(source));
+  }
+
   public final T fromJson(String string) throws IOException {
-    return fromJson(new JsonReader(string));
+    return fromJson(new Buffer().writeUtf8(string));
   }
 
   public abstract void toJson(JsonWriter writer, T value) throws IOException;
 
+  public final void toJson(Sink sink, T value) throws IOException {
+    JsonWriter writer = new JsonWriter(sink);
+    toJson(writer, value);
+    writer.flush();
+  }
+
   public final String toJson(T value) throws IOException {
     Buffer buffer = new Buffer();
-    toJson(new JsonWriter(buffer), value);
+    toJson(buffer, value);
     return buffer.readUtf8();
   }
 

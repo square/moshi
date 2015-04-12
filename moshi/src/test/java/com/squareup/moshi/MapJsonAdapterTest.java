@@ -25,6 +25,7 @@ import okio.Buffer;
 import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 
+import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.Util.NO_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -77,7 +78,7 @@ public final class MapJsonAdapterTest {
     jsonAdapter.toJson(jsonWriter, null);
     assertThat(buffer.readUtf8()).isEqualTo("null");
 
-    JsonReader jsonReader = new JsonReader("null");
+    JsonReader jsonReader = newReader("null");
     jsonReader.setLenient(true);
     assertThat(jsonAdapter.fromJson(jsonReader)).isEqualTo(null);
   }
