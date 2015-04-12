@@ -124,7 +124,7 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  * Instances of this class are not thread safe. Calls that would result in a
  * malformed JSON string will fail with an {@link IllegalStateException}.
  */
-public class JsonWriter implements Closeable, Flushable {
+public final class JsonWriter implements Closeable, Flushable {
 
   /*
    * From RFC 4627, "All Unicode characters may be placed within the
