@@ -26,7 +26,7 @@ import java.util.List;
  * Converts arrays to JSON arrays containing their converted contents. This
  * supports both primitive and object arrays.
  */
-class ArrayJsonAdapter extends JsonAdapter<Object> {
+final class ArrayJsonAdapter extends JsonAdapter<Object> {
   public static final Factory FACTORY = new Factory() {
     @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
       Type elementType = Types.arrayComponentType(type);
