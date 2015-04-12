@@ -411,7 +411,7 @@ public class JsonReader implements Closeable {
   /**
    * Returns the type of the next token without consuming it.
    */
-  public JsonToken peek() throws IOException {
+  public Token peek() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
@@ -419,32 +419,32 @@ public class JsonReader implements Closeable {
 
     switch (p) {
       case PEEKED_BEGIN_OBJECT:
-        return JsonToken.BEGIN_OBJECT;
+        return Token.BEGIN_OBJECT;
       case PEEKED_END_OBJECT:
-        return JsonToken.END_OBJECT;
+        return Token.END_OBJECT;
       case PEEKED_BEGIN_ARRAY:
-        return JsonToken.BEGIN_ARRAY;
+        return Token.BEGIN_ARRAY;
       case PEEKED_END_ARRAY:
-        return JsonToken.END_ARRAY;
+        return Token.END_ARRAY;
       case PEEKED_SINGLE_QUOTED_NAME:
       case PEEKED_DOUBLE_QUOTED_NAME:
       case PEEKED_UNQUOTED_NAME:
-        return JsonToken.NAME;
+        return Token.NAME;
       case PEEKED_TRUE:
       case PEEKED_FALSE:
-        return JsonToken.BOOLEAN;
+        return Token.BOOLEAN;
       case PEEKED_NULL:
-        return JsonToken.NULL;
+        return Token.NULL;
       case PEEKED_SINGLE_QUOTED:
       case PEEKED_DOUBLE_QUOTED:
       case PEEKED_UNQUOTED:
       case PEEKED_BUFFERED:
-        return JsonToken.STRING;
+        return Token.STRING;
       case PEEKED_LONG:
       case PEEKED_NUMBER:
-        return JsonToken.NUMBER;
+        return Token.NUMBER;
       case PEEKED_EOF:
-        return JsonToken.END_DOCUMENT;
+        return Token.END_DOCUMENT;
       default:
         throw new AssertionError();
     }
@@ -755,7 +755,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the next token, a {@link JsonToken#NAME property name}, and
+   * Returns the next token, a {@link Token#NAME property name}, and
    * consumes it.
    *
    * @throws java.io.IOException if the next token in the stream is not a property
@@ -783,7 +783,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link JsonToken#STRING string} value of the next token,
+   * Returns the {@link Token#STRING string} value of the next token,
    * consuming it. If the next token is a number, this method will return its
    * string form.
    *
@@ -819,7 +819,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link JsonToken#BOOLEAN boolean} value of the next token,
+   * Returns the {@link Token#BOOLEAN boolean} value of the next token,
    * consuming it.
    *
    * @throws IllegalStateException if the next token is not a boolean or if
@@ -866,7 +866,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link JsonToken#NUMBER double} value of the next token,
+   * Returns the {@link Token#NUMBER double} value of the next token,
    * consuming it. If the next token is a string, this method will attempt to
    * parse it as a double using {@link Double#parseDouble(String)}.
    *
@@ -912,7 +912,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link JsonToken#NUMBER long} value of the next token,
+   * Returns the {@link Token#NUMBER long} value of the next token,
    * consuming it. If the next token is a string, this method will attempt to
    * parse it as a long. If the next token's numeric value cannot be exactly
    * represented by a Java {@code long}, this method throws.
@@ -1029,7 +1029,7 @@ public class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link JsonToken#NUMBER int} value of the next token,
+   * Returns the {@link Token#NUMBER int} value of the next token,
    * consuming it. If the next token is a string, this method will attempt to
    * parse it as an int. If the next token's numeric value cannot be exactly
    * represented by a Java {@code int}, this method throws.
@@ -1374,5 +1374,70 @@ public class JsonReader implements Closeable {
    */
   private IOException syntaxError(String message) throws IOException {
     throw new IOException(message + " at path " + getPath());
+  }
+
+  /**
+   * A structure, name, or value type in a JSON-encoded string.
+   */
+  public enum Token {
+
+    /**
+     * The opening of a JSON array. Written using {@link JsonWriter#beginArray}
+     * and read using {@link JsonReader#beginArray}.
+     */
+    BEGIN_ARRAY,
+
+    /**
+     * The closing of a JSON array. Written using {@link JsonWriter#endArray}
+     * and read using {@link JsonReader#endArray}.
+     */
+    END_ARRAY,
+
+    /**
+     * The opening of a JSON object. Written using {@link JsonWriter#beginObject}
+     * and read using {@link JsonReader#beginObject}.
+     */
+    BEGIN_OBJECT,
+
+    /**
+     * The closing of a JSON object. Written using {@link JsonWriter#endObject}
+     * and read using {@link JsonReader#endObject}.
+     */
+    END_OBJECT,
+
+    /**
+     * A JSON property name. Within objects, tokens alternate between names and
+     * their values. Written using {@link JsonWriter#name} and read using {@link
+     * JsonReader#nextName}
+     */
+    NAME,
+
+    /**
+     * A JSON string.
+     */
+    STRING,
+
+    /**
+     * A JSON number represented in this API by a Java {@code double}, {@code
+     * long}, or {@code int}.
+     */
+    NUMBER,
+
+    /**
+     * A JSON {@code true} or {@code false}.
+     */
+    BOOLEAN,
+
+    /**
+     * A JSON {@code null}.
+     */
+    NULL,
+
+    /**
+     * The end of the JSON stream. This sentinel value is returned by {@link
+     * JsonReader#peek()} to signal that the JSON-encoded value has no more
+     * tokens.
+     */
+    END_DOCUMENT
   }
 }

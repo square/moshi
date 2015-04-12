@@ -46,7 +46,7 @@ public abstract class JsonAdapter<T> {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public T fromJson(JsonReader reader) throws IOException {
-        if (reader.peek() == JsonToken.NULL) {
+        if (reader.peek() == JsonReader.Token.NULL) {
           return reader.nextNull();
         } else {
           return delegate.fromJson(reader);
