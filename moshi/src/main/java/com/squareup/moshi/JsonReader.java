@@ -85,8 +85,8 @@ import okio.Source;
  * ]}</pre>
  * This code implements the parser for the above structure: <pre>   {@code
  *
- *   public List<Message> readJsonStream(InputStream in) throws IOException {
- *     JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+ *   public List<Message> readJsonStream(Source source) throws IOException {
+ *     JsonReader reader = new JsonReader(source);
  *     try {
  *       return readMessagesArray(reader);
  *     } finally {
