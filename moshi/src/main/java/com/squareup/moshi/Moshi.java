@@ -34,6 +34,7 @@ public final class Moshi {
     List<JsonAdapter.Factory> factories = new ArrayList<>();
     factories.addAll(builder.factories);
     factories.add(StandardJsonAdapters.FACTORY);
+    factories.add(EnumJsonAdapter.FACTORY);
     factories.add(CollectionJsonAdapter.FACTORY);
     factories.add(MapJsonAdapter.FACTORY);
     factories.add(ArrayJsonAdapter.FACTORY);
