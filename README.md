@@ -8,7 +8,7 @@ A modern JSON library for Android and Java.
 Download
 --------
 
-Moshi is currently under development.
+**Moshi is currently under development.** The API is not stable and neither is the feature set. It should not be used.
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
