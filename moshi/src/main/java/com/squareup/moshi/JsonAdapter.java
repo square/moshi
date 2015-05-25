@@ -19,8 +19,8 @@ import java.io.IOException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import okio.Buffer;
+import okio.BufferedSink;
 import okio.BufferedSource;
-import okio.Sink;
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -38,10 +38,9 @@ public abstract class JsonAdapter<T> {
 
   public abstract void toJson(JsonWriter writer, T value) throws IOException;
 
-  public final void toJson(Sink sink, T value) throws IOException {
+  public final void toJson(BufferedSink sink, T value) throws IOException {
     JsonWriter writer = new JsonWriter(sink);
     toJson(writer, value);
-    writer.flush();
   }
 
   public final String toJson(T value) throws IOException {
