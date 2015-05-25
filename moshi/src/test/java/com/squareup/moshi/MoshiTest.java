@@ -32,6 +32,7 @@ import org.junit.Test;
 import static com.squareup.moshi.TestUtil.newReader;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
@@ -656,6 +657,38 @@ public final class MoshiTest {
     JsonAdapter<int[]> adapter = moshi.adapter(int[].class);
     assertThat(adapter.toJson(new int[] {1, 2})).isEqualTo("[1,2]");
     assertThat(adapter.fromJson("[2,3]")).containsExactly(2, 3);
+  }
+
+  @Test public void enumValue() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Suit> suitAdapter = moshi.adapter(Suit.class).lenient();
+    assertThat(suitAdapter.toJson(Suit.CLUBS)).isEqualTo("\"CLUBS\"");
+    assertThat(suitAdapter.toJson(Suit.SPADES)).isEqualTo("\"SPADES\"");
+    assertThat(suitAdapter.fromJson("\"DIAMONDS\"")).isEqualTo(Suit.DIAMONDS);
+    assertThat(suitAdapter.fromJson("\"HEARTS\"")).isEqualTo(Suit.HEARTS);
+  }
+
+  @Test public void enumMismatch() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Suit> suitAdapter = moshi.adapter(Suit.class).lenient();
+    try {
+      suitAdapter.fromJson("\"SHIPS\"");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertEquals("Expected one of [CLUBS, DIAMONDS, HEARTS, SPADES] but was SHIPS at path $",
+          expected.getMessage());
+    }
+  }
+
+  @Test public void enumNull() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Suit> suitAdapter = moshi.adapter(Suit.class).lenient();
+    assertThat(suitAdapter.fromJson("null")).isNull();
+    assertThat(suitAdapter.toJson(null)).isEqualTo("null");
+  }
+
+  enum Suit {
+    CLUBS, DIAMONDS, HEARTS, SPADES
   }
 
   static class Pizza {
