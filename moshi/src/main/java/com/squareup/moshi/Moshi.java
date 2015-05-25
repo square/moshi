@@ -131,6 +131,10 @@ public final class Moshi {
       return this;
     }
 
+    public Builder add(Object adapter) {
+      return add(AdapterMethodsFactory.get(adapter));
+    }
+
     public Moshi build() {
       return new Moshi(this);
     }
