@@ -47,12 +47,10 @@ public final class Moshi {
 
   /** Returns a JSON adapter for {@code type}, creating it if necessary. */
   public <T> JsonAdapter<T> adapter(Class<T> type) {
-    // TODO: cache created JSON adapters.
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
   public <T> JsonAdapter<T> adapter(Type type, AnnotatedElement annotations) {
-    // TODO: support re-entrant calls.
     return createAdapter(0, type, annotations);
   }
 
@@ -64,6 +62,7 @@ public final class Moshi {
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   private <T> JsonAdapter<T> createAdapter(
       int firstIndex, Type type, AnnotatedElement annotations) {
+    // TODO: cache created JSON adapters.
     List<DeferredAdapter<?>> deferredAdapters = reentrantCalls.get();
     if (deferredAdapters == null) {
       deferredAdapters = new ArrayList<>();
