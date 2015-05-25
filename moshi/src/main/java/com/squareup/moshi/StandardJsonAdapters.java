@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 final class StandardJsonAdapters {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
@@ -39,6 +40,12 @@ final class StandardJsonAdapters {
       if (type == Long.class) return LONG_JSON_ADAPTER.nullSafe();
       if (type == Short.class) return SHORT_JSON_ADAPTER.nullSafe();
       if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
+
+      Class<?> rawType = Types.getRawType(type);
+      if (rawType.isEnum()) {
+        //noinspection unchecked
+        return enumAdapter((Class<? extends Enum>) rawType).nullSafe();
+      }
       return null;
     }
   };
@@ -160,4 +167,23 @@ final class StandardJsonAdapters {
       writer.value(value);
     }
   };
+
+  static <T extends Enum<T>> JsonAdapter<T> enumAdapter(final Class<T> enumType) {
+    return new JsonAdapter<T>() {
+      @Override public T fromJson(JsonReader reader) throws IOException {
+        String name = reader.nextString();
+        try {
+          return Enum.valueOf(enumType, name);
+        } catch (IllegalArgumentException e) {
+          throw new IllegalStateException("Expected one of "
+              + Arrays.toString(enumType.getEnumConstants()) + " but was " + name + " at path "
+              + reader.getPath());
+        }
+      }
+
+      @Override public void toJson(JsonWriter writer, T value) throws IOException {
+        writer.value(value.name());
+      }
+    };
+  }
 }

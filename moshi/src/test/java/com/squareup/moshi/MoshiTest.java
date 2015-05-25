@@ -658,6 +658,32 @@ public final class MoshiTest {
     assertThat(adapter.fromJson("[2,3]")).containsExactly(2, 3);
   }
 
+  @Test public void enumAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
+    assertThat(adapter.fromJson("\"ROCK\"")).isEqualTo(Roshambo.ROCK);
+    assertThat(adapter.toJson(Roshambo.PAPER)).isEqualTo("\"PAPER\"");
+  }
+
+  @Test public void invalidEnum() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
+    try {
+      adapter.fromJson("\"SPOCK\"");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("Expected one of [ROCK, PAPER, SCISSORS] but was SPOCK at path $");
+    }
+  }
+
+  @Test public void nullEnum() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
+    assertThat(adapter.fromJson("null")).isNull();
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;
@@ -773,5 +799,11 @@ public final class MoshiTest {
         }
       };
     }
+  }
+
+  enum Roshambo {
+    ROCK,
+    PAPER,
+    SCISSORS
   }
 }
