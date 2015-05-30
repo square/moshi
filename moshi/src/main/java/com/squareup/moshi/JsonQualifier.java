@@ -15,20 +15,16 @@
  */
 package com.squareup.moshi;
 
-/** Thrown when a JSON document doesn't match the expected format. */
-public final class JsonDataException extends RuntimeException {
-  public JsonDataException() {
-  }
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-  public JsonDataException(String message) {
-    super(message);
-  }
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-  public JsonDataException(Throwable cause) {
-    super(cause);
-  }
-
-  public JsonDataException(String message, Throwable cause) {
-    super(message, cause);
-  }
+/** Annotates another annotation, causing it to specialize how values are encoded and decoded. */
+@Target(ANNOTATION_TYPE)
+@Retention(RUNTIME)
+@Documented
+public @interface JsonQualifier {
 }

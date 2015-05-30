@@ -391,7 +391,7 @@ public final class ClassJsonAdapterTest {
 
   private <T> String toJson(Class<T> type, T value) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
+        JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
         type, NO_ANNOTATIONS, moshi);
 
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
@@ -409,7 +409,7 @@ public final class ClassJsonAdapterTest {
 
   private <T> T fromJson(Class<T> type, String json) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
+        JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
         type, NO_ANNOTATIONS, moshi);
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
     JsonReader jsonReader = newReader("[" + json + "]");

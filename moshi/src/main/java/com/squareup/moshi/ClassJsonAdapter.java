@@ -16,12 +16,13 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -31,9 +32,11 @@ import java.util.TreeMap;
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum() || isPlatformType(rawType)) return null;
+      if (!annotations.isEmpty()) return null;
 
       if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
         if (rawType.getSimpleName().isEmpty()) {
@@ -66,7 +69,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
         // Look up a type adapter for this type.
         Type fieldType = Types.resolve(type, rawType, field.getGenericType());
-        JsonAdapter<Object> adapter = moshi.adapter(fieldType, field);
+        Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
+        JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations);
 
         // Create the binding between field and JSON.
         field.setAccessible(true);

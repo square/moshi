@@ -17,11 +17,11 @@ package com.squareup.moshi;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -51,19 +51,22 @@ public final class Moshi {
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
-  public <T> JsonAdapter<T> adapter(Type type, AnnotatedElement annotations) {
-    // TODO: support re-entrant calls.
+  public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
     return createAdapter(0, type, annotations);
   }
 
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
-      AnnotatedElement annotations) {
+      Set<? extends Annotation> annotations) {
     return createAdapter(factories.indexOf(skipPast) + 1, type, annotations);
+  }
+
+  public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type) {
+    return nextAdapter(skipPast, type, Util.NO_ANNOTATIONS);
   }
 
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   private <T> JsonAdapter<T> createAdapter(
-      int firstIndex, Type type, AnnotatedElement annotations) {
+      int firstIndex, Type type, Set<? extends Annotation> annotations) {
     List<DeferredAdapter<?>> deferredAdapters = reentrantCalls.get();
     if (deferredAdapters == null) {
       deferredAdapters = new ArrayList<>();
@@ -91,7 +94,7 @@ public final class Moshi {
       deferredAdapters.remove(deferredAdapters.size() - 1);
     }
 
-    throw new IllegalArgumentException("no JsonAdapter for " + type);
+    throw new IllegalArgumentException("no JsonAdapter for " + type + " annotated " + annotations);
   }
 
   public static final class Builder {
@@ -103,8 +106,8 @@ public final class Moshi {
 
       return add(new JsonAdapter.Factory() {
         @Override public JsonAdapter<?> create(
-            Type targetType, AnnotatedElement annotations, Moshi moshi) {
-          return Util.typesMatch(type, targetType) ? jsonAdapter : null;
+            Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
+          return annotations.isEmpty() && Util.typesMatch(type, targetType) ? jsonAdapter : null;
         }
       });
     }
@@ -114,13 +117,16 @@ public final class Moshi {
       if (type == null) throw new IllegalArgumentException("type == null");
       if (annotation == null) throw new IllegalArgumentException("annotation == null");
       if (jsonAdapter == null) throw new IllegalArgumentException("jsonAdapter == null");
+      if (!annotation.isAnnotationPresent(JsonQualifier.class)) {
+        throw new IllegalArgumentException(annotation + " does not have @JsonQualifier");
+      }
 
       return add(new JsonAdapter.Factory() {
         @Override public JsonAdapter<?> create(
-            Type targetType, AnnotatedElement annotations, Moshi moshi) {
-          return Util.typesMatch(type, targetType) && annotations.isAnnotationPresent(annotation)
-              ? jsonAdapter
-              : null;
+            Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
+          if (!Util.typesMatch(type, targetType)) return null;
+          if (!Util.isAnnotationPresent(annotations, annotation)) return null;
+          return jsonAdapter;
         }
       });
     }
@@ -150,10 +156,10 @@ public final class Moshi {
    */
   private static class DeferredAdapter<T> extends JsonAdapter<T> {
     private Type type;
-    private AnnotatedElement annotations;
+    private Set<? extends Annotation> annotations;
     private JsonAdapter<T> delegate;
 
-    public DeferredAdapter(Type type, AnnotatedElement annotations) {
+    public DeferredAdapter(Type type, Set<? extends Annotation> annotations) {
       this.type = type;
       this.annotations = annotations;
     }

@@ -18,27 +18,39 @@ package com.squareup.moshi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 final class Util {
-  public static final Annotation[] EMPTY_ANNOTATIONS_ARRAY = new Annotation[0];
-
-  public static final AnnotatedElement NO_ANNOTATIONS = new AnnotatedElement() {
-    @Override public boolean isAnnotationPresent(Class<? extends Annotation> aClass) {
-      return false;
-    }
-    @Override public <T extends Annotation> T getAnnotation(Class<T> tClass) {
-      return null;
-    }
-    @Override public Annotation[] getAnnotations() {
-      return EMPTY_ANNOTATIONS_ARRAY;
-    }
-    @Override public Annotation[] getDeclaredAnnotations() {
-      return EMPTY_ANNOTATIONS_ARRAY;
-    }
-  };
+  public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
 
   public static boolean typesMatch(Type pattern, Type candidate) {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
     return pattern.equals(candidate);
+  }
+
+  public static Set<? extends Annotation> jsonAnnotations(AnnotatedElement annotatedElement) {
+    return jsonAnnotations(annotatedElement.getAnnotations());
+  }
+
+  public static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
+    Set<Annotation> result = null;
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
+        if (result == null) result = new LinkedHashSet<>();
+        result.add(annotation);
+      }
+    }
+    return result != null ? Collections.unmodifiableSet(result) : Util.NO_ANNOTATIONS;
+  }
+
+  public static boolean isAnnotationPresent(
+      Set<? extends Annotation> annotations, Class<? extends Annotation> annotationClass) {
+    if (annotations.isEmpty()) return false; // Save an iterator in the common case.
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType() == annotationClass) return true;
+    }
+    return false;
   }
 }
