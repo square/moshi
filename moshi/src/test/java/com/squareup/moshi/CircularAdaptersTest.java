@@ -16,9 +16,10 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
+import java.util.Set;
 import org.junit.Test;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -63,10 +64,12 @@ public final class CircularAdaptersTest {
   }
 
   @Retention(RUNTIME)
+  @JsonQualifier
   public @interface Left {
   }
 
   @Retention(RUNTIME)
+  @JsonQualifier
   public @interface Right {
   }
 
@@ -97,19 +100,20 @@ public final class CircularAdaptersTest {
    * work.
    */
   static class PrefixingNodeFactory implements JsonAdapter.Factory {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (type != Node.class) return null;
 
       final String prefix;
-      if (annotations.isAnnotationPresent(Left.class)) {
+      if (Util.isAnnotationPresent(annotations, Left.class)) {
         prefix = "L ";
-      } else if (annotations.isAnnotationPresent(Right.class)) {
+      } else if (Util.isAnnotationPresent(annotations, Right.class)) {
         prefix = "R ";
       } else {
         return null;
       }
 
-      final JsonAdapter<Node> delegate = moshi.nextAdapter(this, Node.class, annotations);
+      final JsonAdapter<Node> delegate = moshi.nextAdapter(this, Node.class);
 
       return new JsonAdapter<Node>() {
         @Override public void toJson(JsonWriter writer, Node value) throws IOException {

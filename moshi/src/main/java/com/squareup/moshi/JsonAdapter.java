@@ -16,8 +16,9 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Set;
 import okio.Buffer;
 import okio.BufferedSink;
 import okio.BufferedSource;
@@ -107,6 +108,6 @@ public abstract class JsonAdapter<T> {
      * <p>Implementations may use to {@link Moshi#adapter} to compose adapters of other types, or
      * {@link Moshi#nextAdapter} to delegate to the underlying adapter of the same type.
      */
-    JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi);
+    JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi);
   }
 }

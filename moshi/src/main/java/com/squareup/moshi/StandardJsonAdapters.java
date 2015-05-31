@@ -16,13 +16,16 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Set;
 
 final class StandardJsonAdapters {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      if (!annotations.isEmpty()) return null;
       if (type == boolean.class) return BOOLEAN_JSON_ADAPTER;
       if (type == byte.class) return BYTE_JSON_ADAPTER;
       if (type == char.class) return CHARACTER_JSON_ADAPTER;

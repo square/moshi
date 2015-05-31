@@ -16,8 +16,8 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
@@ -32,6 +32,7 @@ import org.junit.Test;
 import static com.squareup.moshi.TestUtil.newReader;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
@@ -591,7 +592,8 @@ public final class MoshiTest {
         .add(new UppercaseAdapterFactory())
         .build();
 
-    AnnotatedElement annotations = MoshiTest.class.getDeclaredField("uppercaseString");
+    Field uppercaseString = MoshiTest.class.getDeclaredField("uppercaseString");
+    Set<? extends Annotation> annotations = Util.jsonAnnotations(uppercaseString);
     JsonAdapter<String> adapter = moshi.<String>adapter(String.class, annotations).lenient();
     assertThat(adapter.toJson("a")).isEqualTo("\"A\"");
     assertThat(adapter.fromJson("\"b\"")).isEqualTo("B");
@@ -638,10 +640,14 @@ public final class MoshiTest {
         .build();
 
     Field uppercaseStringsField = MoshiTest.class.getDeclaredField("uppercaseStrings");
-    JsonAdapter<List<String>> adapter = moshi.adapter(uppercaseStringsField.getGenericType(),
-        uppercaseStringsField);
-    assertThat(adapter.toJson(Arrays.asList("a"))).isEqualTo("[\"a\"]");
-    assertThat(adapter.fromJson("[\"b\"]")).isEqualTo(Arrays.asList("b"));
+    try {
+      moshi.adapter(uppercaseStringsField.getGenericType(),
+          Util.jsonAnnotations(uppercaseStringsField));
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertEquals("no JsonAdapter for java.util.List<java.lang.String> annotated "
+          + "[@com.squareup.moshi.MoshiTest$Uppercase()]", expected.getMessage());
+    }
   }
 
   @Test public void objectArray() throws Exception {
@@ -753,9 +759,8 @@ public final class MoshiTest {
 
   static class MealDealAdapterFactory implements JsonAdapter.Factory {
     @Override public JsonAdapter<?> create(
-        Type type, AnnotatedElement annotations, Moshi moshi) {
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!type.equals(MealDeal.class)) return null;
-
       final JsonAdapter<Pizza> pizzaAdapter = moshi.adapter(Pizza.class);
       final JsonAdapter<String> drinkAdapter = moshi.adapter(String.class);
       return new JsonAdapter<MealDeal>() {
@@ -778,16 +783,17 @@ public final class MoshiTest {
   }
 
   @Retention(RUNTIME)
+  @JsonQualifier
   public @interface Uppercase {
   }
 
   static class UppercaseAdapterFactory implements JsonAdapter.Factory {
     @Override public JsonAdapter<?> create(
-        Type type, AnnotatedElement annotations, Moshi moshi) {
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!type.equals(String.class)) return null;
-      if (!annotations.isAnnotationPresent(Uppercase.class)) return null;
+      if (!Util.isAnnotationPresent(annotations, Uppercase.class)) return null;
 
-      final JsonAdapter<String> stringAdapter = moshi.nextAdapter(this, String.class, annotations);
+      final JsonAdapter<String> stringAdapter = moshi.nextAdapter(this, String.class);
       return new JsonAdapter<String>() {
         @Override public String fromJson(JsonReader reader) throws IOException {
           String s = stringAdapter.fromJson(reader);

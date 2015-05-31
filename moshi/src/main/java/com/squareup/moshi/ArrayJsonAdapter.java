@@ -16,11 +16,12 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This
@@ -28,9 +29,11 @@ import java.util.List;
  */
 final class ArrayJsonAdapter extends JsonAdapter<Object> {
   public static final Factory FACTORY = new Factory() {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Type elementType = Types.arrayComponentType(type);
       if (elementType == null) return null;
+      if (!annotations.isEmpty()) return null;
       Class<?> elementClass = Types.getRawType(elementType);
       JsonAdapter<Object> elementAdapter = moshi.adapter(elementType);
       return new ArrayJsonAdapter(elementClass, elementAdapter).nullSafe();

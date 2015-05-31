@@ -16,9 +16,10 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Converts maps with string keys to JSON objects.
@@ -27,7 +28,9 @@ import java.util.Map;
  */
 final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   public static final Factory FACTORY = new Factory() {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      if (!annotations.isEmpty()) return null;
       Class<?> rawType = Types.getRawType(type);
       if (rawType != Map.class) return null;
       Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);

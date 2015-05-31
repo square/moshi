@@ -16,7 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.lang.reflect.AnnotatedElement;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,8 +27,10 @@ import java.util.Set;
 /** Converts collection types to JSON arrays containing their converted contents. */
 abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public JsonAdapter<?> create(Type type, AnnotatedElement annotations, Moshi moshi) {
+    @Override public JsonAdapter<?> create(
+        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
+      if (!annotations.isEmpty()) return null;
       if (rawType == List.class || rawType == Collection.class) {
         return newArrayListAdapter(type, moshi).nullSafe();
       } else if (rawType == Set.class) {
