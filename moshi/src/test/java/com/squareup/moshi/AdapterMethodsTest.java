@@ -16,6 +16,8 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -179,6 +181,56 @@ public final class AdapterMethodsTest {
     @FromJson Point pointFromJson2(String point) {
       throw new AssertionError();
     }
+  }
+
+  /**
+   * Simple adapter methods are not invoked for null values unless they're annotated {@code
+   * @Nullable}. (The specific annotation class doesn't matter; just its simple name.)
+   */
+  @Test public void toAndFromNullNotNullable() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new NotNullablePointAsListOfIntegersJsonAdapter())
+        .build();
+    JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class).lenient();
+    assertThat(pointAdapter.toJson(null)).isEqualTo("null");
+    assertThat(pointAdapter.fromJson("null")).isNull();
+  }
+
+  static class NotNullablePointAsListOfIntegersJsonAdapter {
+    @ToJson List<Integer> pointToJson(Point point) {
+      throw new AssertionError();
+    }
+
+    @FromJson Point pointFromJson(List<Integer> o) throws Exception {
+      throw new AssertionError();
+    }
+  }
+
+  @Test public void toAndFromNullNullable() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new NullablePointAsListOfIntegersJsonAdapter())
+        .build();
+    JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class).lenient();
+    assertThat(pointAdapter.toJson(null)).isEqualTo("[0,0]");
+    assertThat(pointAdapter.fromJson("null")).isEqualTo(new Point(0, 0));
+  }
+
+  static class NullablePointAsListOfIntegersJsonAdapter {
+    @ToJson List<Integer> pointToJson(@Nullable Point point) {
+      return point != null
+          ? Arrays.asList(point.x, point.y)
+          : Arrays.asList(0, 0);
+    }
+
+    @FromJson Point pointFromJson(@Nullable List<Integer> o) throws Exception {
+      if (o == null) return new Point(0, 0);
+      if (o.size() == 2) return new Point(o.get(0), o.get(1));
+      throw new Exception("Expected null or 2 elements but was " + o);
+    }
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @interface Nullable {
   }
 
   static class Point {

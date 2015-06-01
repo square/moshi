@@ -53,4 +53,14 @@ final class Util {
     }
     return false;
   }
+
+  /** Returns true if {@code annotations} has any annotation whose simple name is Nullable. */
+  public static boolean hasNullable(Annotation[] annotations) {
+    for (Annotation annotation : annotations) {
+      if (annotation.annotationType().getSimpleName().equals("Nullable")) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

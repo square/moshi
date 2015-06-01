@@ -50,6 +50,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       @Override public void toJson(JsonWriter writer, Object value) throws IOException {
         if (toAdapter == null) {
           delegate.toJson(writer, value);
+        } else if (!toAdapter.nullable && value == null) {
+          writer.nullValue();
         } else {
           try {
             toAdapter.toJson(moshi, writer, value);
@@ -65,6 +67,9 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       @Override public Object fromJson(JsonReader reader) throws IOException {
         if (fromAdapter == null) {
           return delegate.fromJson(reader);
+        } else if (!fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL) {
+          reader.nextNull();
+          return null;
         } else {
           try {
             return fromAdapter.fromJson(moshi, reader);
@@ -132,7 +137,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       // public void pointToJson(JsonWriter jsonWriter, Point point) throws Exception {
       Set<? extends Annotation> parameterAnnotations
           = Util.jsonAnnotations(method.getParameterAnnotations()[1]);
-      return new AdapterMethod(parameterTypes[1], parameterAnnotations, adapter, method) {
+      return new AdapterMethod(parameterTypes[1], parameterAnnotations, adapter, method, false) {
         @Override public void toJson(Moshi moshi, JsonWriter writer, Object value)
             throws IOException, InvocationTargetException, IllegalAccessException {
           method.invoke(adapter, writer, value);
@@ -142,9 +147,11 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // public List<Integer> pointToJson(Point point) throws Exception {
       final Set<? extends Annotation> returnTypeAnnotations = Util.jsonAnnotations(method);
-      Set<? extends Annotation> parameterAnnotations =
-          Util.jsonAnnotations(method.getParameterAnnotations()[0]);
-      return new AdapterMethod(parameterTypes[0], parameterAnnotations, adapter, method) {
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      Set<? extends Annotation> qualifierAnnotations =
+          Util.jsonAnnotations(parameterAnnotations[0]);
+      boolean nullable = Util.hasNullable(parameterAnnotations[0]);
+      return new AdapterMethod(parameterTypes[0], qualifierAnnotations, adapter, method, nullable) {
         @Override public void toJson(Moshi moshi, JsonWriter writer, Object value)
             throws IOException, InvocationTargetException, IllegalAccessException {
           JsonAdapter<Object> delegate = moshi.adapter(returnType, returnTypeAnnotations);
@@ -175,7 +182,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         && returnType != void.class) {
       // public Point pointFromJson(JsonReader jsonReader) throws Exception {
       Set<? extends Annotation> returnTypeAnnotations = Util.jsonAnnotations(method);
-      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method) {
+      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method, false) {
         @Override public Object fromJson(Moshi moshi, JsonReader reader)
             throws IOException, IllegalAccessException, InvocationTargetException {
           return method.invoke(adapter, reader);
@@ -185,12 +192,14 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // public Point pointFromJson(List<Integer> o) throws Exception {
       Set<? extends Annotation> returnTypeAnnotations = Util.jsonAnnotations(method);
-      final Set<? extends Annotation> parameterAnnotations
-          = Util.jsonAnnotations(method.getParameterAnnotations()[0]);
-      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method) {
+      Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      final Set<? extends Annotation> qualifierAnnotations
+          = Util.jsonAnnotations(parameterAnnotations[0]);
+      boolean nullable = Util.hasNullable(parameterAnnotations[0]);
+      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method, nullable) {
         @Override public Object fromJson(Moshi moshi, JsonReader reader)
             throws IOException, IllegalAccessException, InvocationTargetException {
-          JsonAdapter<Object> delegate = moshi.adapter(parameterTypes[0], parameterAnnotations);
+          JsonAdapter<Object> delegate = moshi.adapter(parameterTypes[0], qualifierAnnotations);
           Object intermediate = delegate.fromJson(reader);
           return method.invoke(adapter, intermediate);
         }
@@ -221,13 +230,15 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     final Set<? extends Annotation> annotations;
     final Object adapter;
     final Method method;
+    final boolean nullable;
 
     public AdapterMethod(Type type,
-        Set<? extends Annotation> annotations, Object adapter, Method method) {
+        Set<? extends Annotation> annotations, Object adapter, Method method, boolean nullable) {
       this.type = type;
       this.annotations = annotations;
       this.adapter = adapter;
       this.method = method;
+      this.nullable = nullable;
     }
 
     public void toJson(Moshi moshi, JsonWriter writer, Object value)
