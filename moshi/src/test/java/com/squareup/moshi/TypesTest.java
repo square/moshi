@@ -24,7 +24,6 @@ import java.util.Properties;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 public final class TypesTest {
@@ -53,7 +52,7 @@ public final class TypesTest {
   }
 
   @Test public void getFirstTypeArgument() throws Exception {
-    assertNull(getFirstTypeArgument(A.class));
+    assertThat(getFirstTypeArgument(A.class)).isNull();
 
     Type type = Types.newParameterizedType(A.class, B.class, C.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);

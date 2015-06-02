@@ -32,7 +32,6 @@ import org.junit.Test;
 import static com.squareup.moshi.TestUtil.newReader;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
@@ -52,7 +51,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a boolean but was NULL at path $");
+      assertThat(expected).hasMessage("Expected a boolean but was NULL at path $");
     }
 
     try {
@@ -95,14 +94,14 @@ public final class MoshiTest {
       adapter.fromJson("256");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was 256 at path $");
+      assertThat(expected).hasMessage("Expected a byte but was 256 at path $");
     }
 
     try {
       adapter.fromJson("-129");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a byte but was -129 at path $");
+      assertThat(expected).hasMessage("Expected a byte but was -129 at path $");
     }
 
     // Nulls not allowed for byte.class
@@ -110,7 +109,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessage("Expected an int but was NULL at path $");
     }
 
     try {
@@ -191,7 +190,7 @@ public final class MoshiTest {
       adapter.fromJson("'ab'");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a char but was \"ab\" at path $");
+      assertThat(expected).hasMessage("Expected a char but was \"ab\" at path $");
     }
 
     // Nulls not allowed for char.class
@@ -199,7 +198,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a string but was NULL at path $");
+      assertThat(expected).hasMessage("Expected a string but was NULL at path $");
     }
 
     try {
@@ -221,7 +220,7 @@ public final class MoshiTest {
       adapter.fromJson("'ab'");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a char but was \"ab\" at path $");
+      assertThat(expected).hasMessage("Expected a char but was \"ab\" at path $");
     }
 
     // Allow nulls for Character.class
@@ -255,7 +254,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a double but was NULL at path $");
+      assertThat(expected).hasMessage("Expected a double but was NULL at path $");
     }
 
     try {
@@ -272,7 +271,7 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[0]");
+      assertThat(expected).hasMessage("JSON forbids NaN and infinities: Infinity at path $[0]");
     }
 
     reader = newReader("[-1E309]");
@@ -281,7 +280,7 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[0]");
+      assertThat(expected).hasMessage("JSON forbids NaN and infinities: -Infinity at path $[0]");
     }
   }
 
@@ -323,7 +322,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a double but was NULL at path $");
+      assertThat(expected).hasMessage("Expected a double but was NULL at path $");
     }
 
     try {
@@ -340,7 +339,7 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: Infinity at path $[1]");
+      assertThat(expected).hasMessage("JSON forbids NaN and infinities: Infinity at path $[1]");
     }
 
     reader = newReader("[-1E39]");
@@ -349,7 +348,7 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[1]");
+      assertThat(expected).hasMessage("JSON forbids NaN and infinities: -Infinity at path $[1]");
     }
   }
 
@@ -381,14 +380,14 @@ public final class MoshiTest {
       adapter.fromJson("2147483648");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected an int but was 2147483648 at path $");
+      assertThat(expected).hasMessage("Expected an int but was 2147483648 at path $");
     }
 
     try {
       adapter.fromJson("-2147483649");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected an int but was -2147483649 at path $");
+      assertThat(expected).hasMessage("Expected an int but was -2147483649 at path $");
     }
 
     // Nulls not allowed for int.class
@@ -396,7 +395,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessage("Expected an int but was NULL at path $");
     }
 
     try {
@@ -434,14 +433,14 @@ public final class MoshiTest {
     //  adapter.fromJson("9223372036854775808");
     //  fail();
     //} catch (NumberFormatException expected) {
-    //  assertThat(expected.getMessage()).isEqualTo("Expected a long but was 9223372036854775808 at path $");
+    //  assertThat(expected).hasMessage("Expected a long but was 9223372036854775808 at path $");
     //}
     //
     //try {
     //  adapter.fromJson("-9223372036854775809");
     //  fail();
     //} catch (NumberFormatException expected) {
-    //  assertThat(expected.getMessage()).isEqualTo("Expected a long but was -9223372036854775809 at path $");
+    //  assertThat(expected).hasMessage("Expected a long but was -9223372036854775809 at path $");
     //}
 
     // Nulls not allowed for long.class
@@ -449,7 +448,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a long but was NULL at path $");
+      assertThat(expected).hasMessage("Expected a long but was NULL at path $");
     }
 
     try {
@@ -485,14 +484,14 @@ public final class MoshiTest {
       adapter.fromJson("32768");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a short but was 32768 at path $");
+      assertThat(expected).hasMessage("Expected a short but was 32768 at path $");
     }
 
     try {
       adapter.fromJson("-32769");
       fail();
     } catch (NumberFormatException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected a short but was -32769 at path $");
+      assertThat(expected).hasMessage("Expected a short but was -32769 at path $");
     }
 
     // Nulls not allowed for short.class
@@ -500,7 +499,7 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessage("Expected an int but was NULL at path $");
     }
 
     try {
@@ -645,8 +644,8 @@ public final class MoshiTest {
           Util.jsonAnnotations(uppercaseStringsField));
       fail();
     } catch (IllegalArgumentException expected) {
-      assertEquals("no JsonAdapter for java.util.List<java.lang.String> annotated "
-          + "[@com.squareup.moshi.MoshiTest$Uppercase()]", expected.getMessage());
+      assertThat(expected).hasMessage( "no JsonAdapter for java.util.List<java.lang.String> "
+          + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }
 
@@ -678,8 +677,8 @@ public final class MoshiTest {
       adapter.fromJson("\"SPOCK\"");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage())
-          .isEqualTo("Expected one of [ROCK, PAPER, SCISSORS] but was SPOCK at path $");
+      assertThat(expected).hasMessage(
+          "Expected one of [ROCK, PAPER, SCISSORS] but was SPOCK at path $");
     }
   }
 
