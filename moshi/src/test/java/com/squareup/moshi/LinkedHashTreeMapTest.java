@@ -18,18 +18,12 @@ package com.squareup.moshi;
 import com.squareup.moshi.LinkedHashTreeMap.AvlBuilder;
 import com.squareup.moshi.LinkedHashTreeMap.AvlIterator;
 import com.squareup.moshi.LinkedHashTreeMap.Node;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class LinkedHashTreeMapTest {
@@ -38,8 +32,8 @@ public final class LinkedHashTreeMapTest {
     map.put("a", "android");
     map.put("c", "cola");
     map.put("b", "bbq");
-    assertIterationOrder(map.keySet(), "a", "c", "b");
-    assertIterationOrder(map.values(), "android", "cola", "bbq");
+    assertThat(map.keySet()).containsExactly("a", "c", "b");
+    assertThat(map.values()).containsExactly("android", "cola", "bbq");
   }
 
   @Test public void removeRootDoesNotDoubleUnlink() {
@@ -52,7 +46,7 @@ public final class LinkedHashTreeMapTest {
     it.next();
     it.next();
     it.remove();
-    assertIterationOrder(map.keySet(), "a", "c");
+    assertThat(map.keySet()).containsExactly("a", "c");
   }
 
   @Test public void putNullKeyFails() {
@@ -73,34 +67,34 @@ public final class LinkedHashTreeMapTest {
   }
 
   @Test public void ContainsNonComparableKeyReturnsFalse() {
-    LinkedHashTreeMap<String, String> map = new LinkedHashTreeMap<>();
+    LinkedHashTreeMap<Object, String> map = new LinkedHashTreeMap<>();
     map.put("a", "android");
-    assertFalse(map.containsKey(new Object()));
+    assertThat(map).doesNotContainKey(new Object());
   }
 
   @Test public void containsNullKeyIsAlwaysFalse() {
     LinkedHashTreeMap<String, String> map = new LinkedHashTreeMap<>();
     map.put("a", "android");
-    assertFalse(map.containsKey(null));
+    assertThat(map).doesNotContainKey(null);
   }
 
   @Test public void putOverrides() throws Exception {
     LinkedHashTreeMap<String, String> map = new LinkedHashTreeMap<>();
-    assertNull(map.put("d", "donut"));
-    assertNull(map.put("e", "eclair"));
-    assertNull(map.put("f", "froyo"));
-    assertEquals(3, map.size());
+    assertThat(map.put("d", "donut")).isNull();
+    assertThat(map.put("e", "eclair")).isNull();
+    assertThat(map.put("f", "froyo")).isNull();
+    assertThat(map.size()).isEqualTo(3);
 
-    assertEquals("donut", map.get("d"));
-    assertEquals("donut", map.put("d", "done"));
-    assertEquals(3, map.size());
+    assertThat(map.get("d")).isEqualTo("donut");
+    assertThat(map.put("d", "done")).isEqualTo("donut");
+    assertThat(map).hasSize(3);
   }
 
   @Test public void emptyStringValues() {
     LinkedHashTreeMap<String, String> map = new LinkedHashTreeMap<>();
     map.put("a", "");
-    assertTrue(map.containsKey("a"));
-    assertEquals("", map.get("a"));
+    assertThat(map.containsKey("a")).isTrue();
+    assertThat(map.get("a")).isEqualTo("");
   }
 
   // NOTE that this does not happen every time, but given the below predictable random,
@@ -117,8 +111,8 @@ public final class LinkedHashTreeMapTest {
 
     for (int i = 0; i < keys.length; i++) {
       String key = keys[i];
-      assertTrue(map.containsKey(key));
-      assertEquals("" + i, map.get(key));
+      assertThat(map.containsKey(key)).isTrue();
+      assertThat(map.get(key)).isEqualTo("" + i);
     }
   }
 
@@ -128,8 +122,8 @@ public final class LinkedHashTreeMapTest {
     map.put("c", "cola");
     map.put("b", "bbq");
     map.clear();
-    assertIterationOrder(map.keySet());
-    assertEquals(0, map.size());
+    assertThat(map.keySet()).containsExactly();
+    assertThat(map).isEmpty();
   }
 
   @Test public void equalsAndHashCode() throws Exception {
@@ -145,8 +139,8 @@ public final class LinkedHashTreeMapTest {
     map2.put("D", 4);
     map2.put("A", 1);
 
-    assertEquals(map1, map2);
-    assertEquals(map1.hashCode(), map2.hashCode());
+    assertThat(map2).isEqualTo(map1);
+    assertThat(map2.hashCode()).isEqualTo(map1.hashCode());
   }
 
   @Test public void avlWalker() {
@@ -166,9 +160,9 @@ public final class LinkedHashTreeMapTest {
     AvlIterator<String, String> iterator = new AvlIterator<>();
     iterator.reset(root);
     for (String value : values) {
-      assertEquals(value, iterator.next().getKey());
+      assertThat(iterator.next().getKey()).isEqualTo(value);
     }
-    assertNull(iterator.next());
+    assertThat(iterator.next()).isNull();
   }
 
   @Test public void avlBuilder() {
@@ -221,7 +215,7 @@ public final class LinkedHashTreeMapTest {
 
     Node<String, String>[] newTable = LinkedHashTreeMap.doubleCapacity(oldTable);
     assertTree("(b d f)", newTable[0]); // Even hash codes!
-    assertNull(newTable[1]); // Odd hash codes!
+    assertThat(newTable[1]).isNull();
 
     for (Node<?, ?> node : newTable) {
       if (node != null) {
@@ -251,7 +245,7 @@ public final class LinkedHashTreeMapTest {
   }
 
   private void assertTree(String expected, Node<?, ?> root) {
-    assertEquals(expected, toString(root));
+    assertThat(toString(root)).isEqualTo(expected);
     assertConsistent(root);
   }
 
@@ -259,17 +253,17 @@ public final class LinkedHashTreeMapTest {
     int leftHeight = 0;
     if (node.left != null) {
       assertConsistent(node.left);
-      assertSame(node, node.left.parent);
+      assertThat(node.left.parent).isSameAs(node);
       leftHeight = node.left.height;
     }
     int rightHeight = 0;
     if (node.right != null) {
       assertConsistent(node.right);
-      assertSame(node, node.right.parent);
+      assertThat(node.right.parent).isSameAs(node);
       rightHeight = node.right.height;
     }
     if (node.parent != null) {
-      assertTrue(node.parent.left == node || node.parent.right == node);
+      assertThat(node.parent.left == node || node.parent.right == node).isTrue();
     }
     if (Math.max(leftHeight, rightHeight) + 1 != node.height) {
       fail();
@@ -284,13 +278,5 @@ public final class LinkedHashTreeMapTest {
     } else {
       return String.format("(%s %s %s)", toString(root.left), root.key, toString(root.right));
     }
-  }
-
-  private <T> void assertIterationOrder(Iterable<T> actual, T... expected) {
-    ArrayList<T> actualList = new ArrayList<>();
-    for (T t : actual) {
-      actualList.add(t);
-    }
-    assertEquals(Arrays.asList(expected), actualList);
   }
 }

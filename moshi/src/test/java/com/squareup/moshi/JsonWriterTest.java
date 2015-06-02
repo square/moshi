@@ -21,7 +21,7 @@ import java.math.BigInteger;
 import okio.Buffer;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class JsonWriterTest {
@@ -33,7 +33,7 @@ public final class JsonWriterTest {
     jsonWriter.nullValue();
     jsonWriter.endObject();
     jsonWriter.close();
-    assertEquals("{}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{}");
   }
 
   @Test public void nullsValuesSerializedWhenConfigured() throws IOException {
@@ -45,7 +45,7 @@ public final class JsonWriterTest {
     jsonWriter.nullValue();
     jsonWriter.endObject();
     jsonWriter.close();
-    assertEquals("{\"a\":null}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":null}");
   }
 
   @Test public void wrongTopLevelType() throws IOException {
@@ -147,7 +147,7 @@ public final class JsonWriterTest {
     jsonWriter.name("a");
     jsonWriter.value((String) null);
     jsonWriter.endObject();
-    assertEquals("{\"a\":null}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":null}");
   }
 
   @Test public void nonFiniteDoubles() throws IOException {
@@ -207,7 +207,7 @@ public final class JsonWriterTest {
     jsonWriter.value(Math.E);
     jsonWriter.endArray();
     jsonWriter.close();
-    assertEquals("[-0.0,"
+    assertThat(buffer.readUtf8()).isEqualTo("[-0.0,"
         + "1.0,"
         + "1.7976931348623157E308,"
         + "4.9E-324,"
@@ -215,7 +215,7 @@ public final class JsonWriterTest {
         + "-0.5,"
         + "2.2250738585072014E-308,"
         + "3.141592653589793,"
-        + "2.718281828459045]", buffer.readUtf8());
+        + "2.718281828459045]");
   }
 
   @Test public void longs() throws IOException {
@@ -229,11 +229,11 @@ public final class JsonWriterTest {
     jsonWriter.value(Long.MAX_VALUE);
     jsonWriter.endArray();
     jsonWriter.close();
-    assertEquals("[0,"
+    assertThat(buffer.readUtf8()).isEqualTo("[0,"
         + "1,"
         + "-1,"
         + "-9223372036854775808,"
-        + "9223372036854775807]", buffer.readUtf8());
+        + "9223372036854775807]");
   }
 
   @Test public void numbers() throws IOException {
@@ -246,10 +246,10 @@ public final class JsonWriterTest {
     jsonWriter.value(new BigDecimal("3.141592653589793238462643383"));
     jsonWriter.endArray();
     jsonWriter.close();
-    assertEquals("[0,"
+    assertThat(buffer.readUtf8()).isEqualTo("[0,"
         + "9223372036854775808,"
         + "-9223372036854775809,"
-        + "3.141592653589793238462643383]", buffer.readUtf8());
+        + "3.141592653589793238462643383]");
   }
 
   @Test public void booleans() throws IOException {
@@ -259,7 +259,7 @@ public final class JsonWriterTest {
     jsonWriter.value(true);
     jsonWriter.value(false);
     jsonWriter.endArray();
-    assertEquals("[true,false]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[true,false]");
   }
 
   @Test public void nulls() throws IOException {
@@ -268,7 +268,7 @@ public final class JsonWriterTest {
     jsonWriter.beginArray();
     jsonWriter.nullValue();
     jsonWriter.endArray();
-    assertEquals("[null]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[null]");
   }
 
   @Test public void strings() throws IOException {
@@ -294,7 +294,7 @@ public final class JsonWriterTest {
     jsonWriter.value("\0");
     jsonWriter.value("\u0019");
     jsonWriter.endArray();
-    assertEquals("[\"a\","
+    assertThat(buffer.readUtf8()).isEqualTo("[\"a\","
         + "\"a\\\"\","
         + "\"\\\"\","
         + "\":\","
@@ -311,7 +311,7 @@ public final class JsonWriterTest {
         + "\"[\","
         + "\"]\","
         + "\"\\u0000\","
-        + "\"\\u0019\"]", buffer.readUtf8());
+        + "\"\\u0019\"]");
   }
 
   @Test public void unicodeLineBreaksEscaped() throws IOException {
@@ -320,7 +320,7 @@ public final class JsonWriterTest {
     jsonWriter.beginArray();
     jsonWriter.value("\u2028 \u2029");
     jsonWriter.endArray();
-    assertEquals("[\"\\u2028 \\u2029\"]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[\"\\u2028 \\u2029\"]");
   }
 
   @Test public void emptyArray() throws IOException {
@@ -328,7 +328,7 @@ public final class JsonWriterTest {
     JsonWriter jsonWriter = new JsonWriter(buffer);
     jsonWriter.beginArray();
     jsonWriter.endArray();
-    assertEquals("[]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[]");
   }
 
   @Test public void emptyObject() throws IOException {
@@ -336,7 +336,7 @@ public final class JsonWriterTest {
     JsonWriter jsonWriter = new JsonWriter(buffer);
     jsonWriter.beginObject();
     jsonWriter.endObject();
-    assertEquals("{}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{}");
   }
 
   @Test public void objectsInArrays() throws IOException {
@@ -352,8 +352,8 @@ public final class JsonWriterTest {
     jsonWriter.name("d").value(true);
     jsonWriter.endObject();
     jsonWriter.endArray();
-    assertEquals("[{\"a\":5,\"b\":false},"
-        + "{\"c\":6,\"d\":true}]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[{\"a\":5,\"b\":false},"
+        + "{\"c\":6,\"d\":true}]");
   }
 
   @Test public void arraysInObjects() throws IOException {
@@ -371,8 +371,8 @@ public final class JsonWriterTest {
     jsonWriter.value(true);
     jsonWriter.endArray();
     jsonWriter.endObject();
-    assertEquals("{\"a\":[5,false],"
-        + "\"b\":[6,true]}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":[5,false],"
+        + "\"b\":[6,true]}");
   }
 
   @Test public void deepNestingArrays() throws IOException {
@@ -384,7 +384,7 @@ public final class JsonWriterTest {
     for (int i = 0; i < 20; i++) {
       jsonWriter.endArray();
     }
-    assertEquals("[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]");
   }
 
   @Test public void deepNestingObjects() throws IOException {
@@ -399,9 +399,10 @@ public final class JsonWriterTest {
       jsonWriter.endObject();
     }
     jsonWriter.endObject();
-    assertEquals("{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+    assertThat(buffer.readUtf8()).isEqualTo(
+        "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{"
-        + "}}}}}}}}}}}}}}}}}}}}}", buffer.readUtf8());
+        + "}}}}}}}}}}}}}}}}}}}}}");
   }
 
   @Test public void repeatedName() throws IOException {
@@ -412,7 +413,7 @@ public final class JsonWriterTest {
     jsonWriter.name("a").value(false);
     jsonWriter.endObject();
     // JsonWriter doesn't attempt to detect duplicate names
-    assertEquals("{\"a\":true,\"a\":false}", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":true,\"a\":false}");
   }
 
   @Test public void prettyPrintObject() throws IOException {
@@ -450,7 +451,7 @@ public final class JsonWriterTest {
         + "      \"i\": 9.0\n"
         + "   }\n"
         + "}";
-    assertEquals(expected, buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo(expected);
   }
 
   @Test public void prettyPrintArray() throws IOException {
@@ -487,7 +488,7 @@ public final class JsonWriterTest {
         + "      9.0\n"
         + "   ]\n"
         + "]";
-    assertEquals(expected, buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo(expected);
   }
 
   @Test public void lenientWriterPermitsMultipleTopLevelValues() throws IOException {
@@ -499,7 +500,7 @@ public final class JsonWriterTest {
     writer.beginArray();
     writer.endArray();
     writer.close();
-    assertEquals("[][]", buffer.readUtf8());
+    assertThat(buffer.readUtf8()).isEqualTo("[][]");
   }
 
   @Test public void strictWriterDoesNotPermitMultipleTopLevelValues() throws IOException {
