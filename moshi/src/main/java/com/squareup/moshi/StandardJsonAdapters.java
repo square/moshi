@@ -59,7 +59,7 @@ final class StandardJsonAdapters {
       throws IOException {
     int value = reader.nextInt();
     if (value < min || value > max) {
-      throw new NumberFormatException(
+      throw new JsonDataException(
           String.format(ERROR_FORMAT, typeMessage, value, reader.getPath()));
     }
     return value;
@@ -89,7 +89,7 @@ final class StandardJsonAdapters {
     @Override public Character fromJson(JsonReader reader) throws IOException {
       String value = reader.nextString();
       if (value.length() > 1) {
-        throw new IllegalStateException(
+        throw new JsonDataException(
             String.format(ERROR_FORMAT, "a char", '"' + value + '"', reader.getPath()));
       }
       return value.charAt(0);
@@ -115,7 +115,7 @@ final class StandardJsonAdapters {
       float value = (float) reader.nextDouble();
       // Double check for infinity after float conversion; many doubles > Float.MAX
       if (!reader.isLenient() && Float.isInfinite(value)) {
-        throw new NumberFormatException("JSON forbids NaN and infinities: " + value
+        throw new JsonDataException("JSON forbids NaN and infinities: " + value
             + " at path " + reader.getPath());
       }
       return value;
@@ -178,7 +178,7 @@ final class StandardJsonAdapters {
         try {
           return Enum.valueOf(enumType, name);
         } catch (IllegalArgumentException e) {
-          throw new IllegalStateException("Expected one of "
+          throw new JsonDataException("Expected one of "
               + Arrays.toString(enumType.getEnumConstants()) + " but was " + name + " at path "
               + reader.getPath());
         }

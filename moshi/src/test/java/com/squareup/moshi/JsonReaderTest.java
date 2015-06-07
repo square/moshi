@@ -216,16 +216,16 @@ public final class JsonReaderTest {
     }
   }
 
-  @Test public void emptyString() {
+  @Test public void emptyString() throws Exception {
     try {
       newReader("").beginArray();
       fail();
-    } catch (IOException expected) {
+    } catch (EOFException expected) {
     }
     try {
       newReader("").beginObject();
       fail();
-    } catch (IOException expected) {
+    } catch (EOFException expected) {
     }
   }
 
@@ -290,7 +290,7 @@ public final class JsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (IOException expected) {
     }
   }
 
@@ -301,7 +301,7 @@ public final class JsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (EOFException expected) {
     }
   }
 
@@ -367,7 +367,7 @@ public final class JsonReaderTest {
     try {
       reader.nextDouble();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (IOException expected) {
       assertThat(expected).hasMessageContaining("NaN");
     }
   }
@@ -425,13 +425,13 @@ public final class JsonReaderTest {
     try {
       reader.nextInt();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextLong()).isEqualTo(Long.MIN_VALUE);
     try {
       reader.nextInt();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextLong()).isEqualTo(Long.MAX_VALUE);
     reader.endArray();
@@ -484,7 +484,7 @@ public final class JsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextString()).isEqualTo("truey");
     reader.endArray();
@@ -544,7 +544,7 @@ public final class JsonReaderTest {
     try {
       reader.nextInt();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextString()).isEqualTo("12.34e5x");
   }
@@ -573,7 +573,7 @@ public final class JsonReaderTest {
     try {
       reader.nextLong();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -585,7 +585,7 @@ public final class JsonReaderTest {
     try {
       reader.nextLong();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -601,7 +601,7 @@ public final class JsonReaderTest {
     try {
       reader.nextLong();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -617,7 +617,7 @@ public final class JsonReaderTest {
     try {
       reader.nextLong();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextDouble()).isEqualTo(-9223372036854775809d);
   }
@@ -642,7 +642,7 @@ public final class JsonReaderTest {
     try {
       reader.nextLong();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextDouble()).isEqualTo(-92233720368547758080d);
   }
@@ -687,7 +687,7 @@ public final class JsonReaderTest {
     try {
       reader.nextName();
       fail();
-    } catch (IOException expected) {
+    } catch (EOFException expected) {
     }
   }
 
@@ -727,54 +727,54 @@ public final class JsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextName()).isEqualTo("a");
     try {
       reader.nextName();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.beginArray();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.endArray();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.beginObject();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.endObject();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextBoolean()).isTrue();
     try {
       reader.nextString();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.nextName();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.beginArray();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     try {
       reader.endArray();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
     reader.endObject();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -787,7 +787,7 @@ public final class JsonReaderTest {
     try {
       reader.nextInt();
       fail();
-    } catch (NumberFormatException expected) {
+    } catch (JsonDataException expected) {
     }
     assertThat(reader.nextDouble()).isEqualTo(1.5d);
     reader.endArray();
@@ -799,7 +799,7 @@ public final class JsonReaderTest {
     try {
       reader.nextNull();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -809,7 +809,7 @@ public final class JsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IllegalStateException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 

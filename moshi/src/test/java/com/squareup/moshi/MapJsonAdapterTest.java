@@ -103,7 +103,7 @@ public final class MapJsonAdapterTest {
     try {
       fromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("object property 'c' has multiple values");
     }
   }

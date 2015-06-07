@@ -311,8 +311,8 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Consumes the next token from the JSON stream and asserts that it is the
-   * beginning of a new array.
+   * Consumes the next token from the JSON stream and asserts that it is the beginning of a new
+   * array.
    */
   public void beginArray() throws IOException {
     int p = peeked;
@@ -324,7 +324,7 @@ public final class JsonReader implements Closeable {
       pathIndices[stackSize - 1] = 0;
       peeked = PEEKED_NONE;
     } else {
-      throw new IllegalStateException("Expected BEGIN_ARRAY but was " + peek()
+      throw new JsonDataException("Expected BEGIN_ARRAY but was " + peek()
           + " at path " + getPath());
     }
   }
@@ -343,14 +343,14 @@ public final class JsonReader implements Closeable {
       pathIndices[stackSize - 1]++;
       peeked = PEEKED_NONE;
     } else {
-      throw new IllegalStateException("Expected END_ARRAY but was " + peek()
+      throw new JsonDataException("Expected END_ARRAY but was " + peek()
           + " at path " + getPath());
     }
   }
 
   /**
-   * Consumes the next token from the JSON stream and asserts that it is the
-   * beginning of a new object.
+   * Consumes the next token from the JSON stream and asserts that it is the beginning of a new
+   * object.
    */
   public void beginObject() throws IOException {
     int p = peeked;
@@ -361,14 +361,14 @@ public final class JsonReader implements Closeable {
       push(JsonScope.EMPTY_OBJECT);
       peeked = PEEKED_NONE;
     } else {
-      throw new IllegalStateException("Expected BEGIN_OBJECT but was " + peek()
+      throw new JsonDataException("Expected BEGIN_OBJECT but was " + peek()
           + " at path " + getPath());
     }
   }
 
   /**
-   * Consumes the next token from the JSON stream and asserts that it is the
-   * end of the current object.
+   * Consumes the next token from the JSON stream and asserts that it is the end of the current
+   * object.
    */
   public void endObject() throws IOException {
     int p = peeked;
@@ -381,7 +381,7 @@ public final class JsonReader implements Closeable {
       pathIndices[stackSize - 1]++;
       peeked = PEEKED_NONE;
     } else {
-      throw new IllegalStateException("Expected END_OBJECT but was " + peek()
+      throw new JsonDataException("Expected END_OBJECT but was " + peek()
           + " at path " + getPath());
     }
   }
@@ -744,11 +744,9 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the next token, a {@link Token#NAME property name}, and
-   * consumes it.
+   * Returns the next token, a {@link Token#NAME property name}, and consumes it.
    *
-   * @throws java.io.IOException if the next token in the stream is not a property
-   *     name.
+   * @throws JsonDataException if the next token in the stream is not a property name.
    */
   public String nextName() throws IOException {
     int p = peeked;
@@ -763,8 +761,7 @@ public final class JsonReader implements Closeable {
     } else if (p == PEEKED_SINGLE_QUOTED_NAME) {
       result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
     } else {
-      throw new IllegalStateException("Expected a name but was " + peek()
-          + " at path " + getPath());
+      throw new JsonDataException("Expected a name but was " + peek() + " at path " + getPath());
     }
     peeked = PEEKED_NONE;
     pathNames[stackSize - 1] = result;
@@ -772,12 +769,10 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#STRING string} value of the next token,
-   * consuming it. If the next token is a number, this method will return its
-   * string form.
+   * Returns the {@link Token#STRING string} value of the next token, consuming it. If the next
+   * token is a number, this method will return its string form.
    *
-   * @throws IllegalStateException if the next token is not a string or if
-   *     this reader is closed.
+   * @throws JsonDataException if the next token is not a string or if this reader is closed.
    */
   public String nextString() throws IOException {
     int p = peeked;
@@ -799,8 +794,7 @@ public final class JsonReader implements Closeable {
     } else if (p == PEEKED_NUMBER) {
       result = buffer.readUtf8(peekedNumberLength);
     } else {
-      throw new IllegalStateException("Expected a string but was " + peek()
-          + " at path " + getPath());
+      throw new JsonDataException("Expected a string but was " + peek() + " at path " + getPath());
     }
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
@@ -808,11 +802,9 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#BOOLEAN boolean} value of the next token,
-   * consuming it.
+   * Returns the {@link Token#BOOLEAN boolean} value of the next token, consuming it.
    *
-   * @throws IllegalStateException if the next token is not a boolean or if
-   *     this reader is closed.
+   * @throws JsonDataException if the next token is not a boolean or if this reader is closed.
    */
   public boolean nextBoolean() throws IOException {
     int p = peeked;
@@ -828,16 +820,14 @@ public final class JsonReader implements Closeable {
       pathIndices[stackSize - 1]++;
       return false;
     }
-    throw new IllegalStateException("Expected a boolean but was " + peek()
-        + " at path " + getPath());
+    throw new JsonDataException("Expected a boolean but was " + peek() + " at path " + getPath());
   }
 
   /**
-   * Consumes the next token from the JSON stream and asserts that it is a
-   * literal null. Returns null.
+   * Consumes the next token from the JSON stream and asserts that it is a literal null. Returns
+   * null.
    *
-   * @throws IllegalStateException if the next token is not null or if this
-   *     reader is closed.
+   * @throws JsonDataException if the next token is not null or if this reader is closed.
    */
   public <T> T nextNull() throws IOException {
     int p = peeked;
@@ -849,19 +839,17 @@ public final class JsonReader implements Closeable {
       pathIndices[stackSize - 1]++;
       return null;
     } else {
-      throw new IllegalStateException("Expected null but was " + peek()
-          + " at path " + getPath());
+      throw new JsonDataException("Expected null but was " + peek() + " at path " + getPath());
     }
   }
 
   /**
-   * Returns the {@link Token#NUMBER double} value of the next token,
-   * consuming it. If the next token is a string, this method will attempt to
-   * parse it as a double using {@link Double#parseDouble(String)}.
+   * Returns the {@link Token#NUMBER double} value of the next token, consuming it. If the next
+   * token is a string, this method will attempt to parse it as a double using {@link
+   * Double#parseDouble(String)}.
    *
-   * @throws IllegalStateException if the next token is not a literal value.
-   * @throws NumberFormatException if the next literal value cannot be parsed
-   *     as a double, or is non-finite.
+   * @throws JsonDataException if the next token is not a literal value, or if the next literal
+   *     value cannot be parsed as a double, or is non-finite.
    */
   public double nextDouble() throws IOException {
     int p = peeked;
@@ -884,14 +872,19 @@ public final class JsonReader implements Closeable {
     } else if (p == PEEKED_UNQUOTED) {
       peekedString = nextUnquotedValue();
     } else if (p != PEEKED_BUFFERED) {
-      throw new IllegalStateException("Expected a double but was " + peek()
-          + " at path " + getPath());
+      throw new JsonDataException("Expected a double but was " + peek() + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
-    double result = Double.parseDouble(peekedString); // don't catch this NumberFormatException.
+    double result;
+    try {
+      result = Double.parseDouble(peekedString);
+    } catch (NumberFormatException e) {
+      throw new JsonDataException("Expected a double but was " + peekedString
+          + " at path " + getPath());
+    }
     if (!lenient && (Double.isNaN(result) || Double.isInfinite(result))) {
-      throw new NumberFormatException("JSON forbids NaN and infinities: " + result
+      throw new IOException("JSON forbids NaN and infinities: " + result
           + " at path " + getPath());
     }
     peekedString = null;
@@ -901,14 +894,12 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#NUMBER long} value of the next token,
-   * consuming it. If the next token is a string, this method will attempt to
-   * parse it as a long. If the next token's numeric value cannot be exactly
-   * represented by a Java {@code long}, this method throws.
+   * Returns the {@link Token#NUMBER long} value of the next token, consuming it. If the next token
+   * is a string, this method will attempt to parse it as a long. If the next token's numeric value
+   * cannot be exactly represented by a Java {@code long}, this method throws.
    *
-   * @throws IllegalStateException if the next token is not a literal value.
-   * @throws NumberFormatException if the next literal value cannot be parsed
-   *     as a number, or exactly represented as a long.
+   * @throws JsonDataException if the next token is not a literal value, if the next literal value
+   *     cannot be parsed as a number, or exactly represented as a long.
    */
   public long nextLong() throws IOException {
     int p = peeked;
@@ -937,15 +928,21 @@ public final class JsonReader implements Closeable {
         // Fall back to parse as a double below.
       }
     } else {
-      throw new IllegalStateException("Expected a long but was " + peek()
+      throw new JsonDataException("Expected a long but was " + peek()
           + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
-    double asDouble = Double.parseDouble(peekedString); // don't catch this NumberFormatException.
+    double asDouble;
+    try {
+      asDouble = Double.parseDouble(peekedString);
+    } catch (NumberFormatException e) {
+      throw new JsonDataException("Expected a long but was " + peekedString
+          + " at path " + getPath());
+    }
     long result = (long) asDouble;
     if (result != asDouble) { // Make sure no precision was lost casting to 'long'.
-      throw new NumberFormatException("Expected a long but was " + peekedString
+      throw new JsonDataException("Expected a long but was " + peekedString
           + " at path " + getPath());
     }
     peekedString = null;
@@ -955,13 +952,11 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the string up to but not including {@code quote}, unescaping any
-   * character escape sequences encountered along the way. The opening quote
-   * should have already been read. This consumes the closing quote, but does
-   * not include it in the returned string.
+   * Returns the string up to but not including {@code quote}, unescaping any character escape
+   * sequences encountered along the way. The opening quote should have already been read. This
+   * consumes the closing quote, but does not include it in the returned string.
    *
-   * @throws NumberFormatException if any unicode escape sequences are
-   *     malformed.
+   * @throws IOException if any unicode escape sequences are malformed.
    */
   private String nextQuotedValue(ByteString runTerminator) throws IOException {
     StringBuilder builder = null;
@@ -1018,14 +1013,12 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#NUMBER int} value of the next token,
-   * consuming it. If the next token is a string, this method will attempt to
-   * parse it as an int. If the next token's numeric value cannot be exactly
-   * represented by a Java {@code int}, this method throws.
+   * Returns the {@link Token#NUMBER int} value of the next token, consuming it. If the next token
+   * is a string, this method will attempt to parse it as an int. If the next token's numeric value
+   * cannot be exactly represented by a Java {@code int}, this method throws.
    *
-   * @throws IllegalStateException if the next token is not a literal value.
-   * @throws NumberFormatException if the next literal value cannot be parsed
-   *     as a number, or exactly represented as an int.
+   * @throws JsonDataException if the next token is not a literal value, if the next literal value
+   *     cannot be parsed as a number, or exactly represented as an int.
    */
   public int nextInt() throws IOException {
     int p = peeked;
@@ -1037,7 +1030,7 @@ public final class JsonReader implements Closeable {
     if (p == PEEKED_LONG) {
       result = (int) peekedLong;
       if (peekedLong != result) { // Make sure no precision was lost casting to 'int'.
-        throw new NumberFormatException("Expected an int but was " + peekedLong
+        throw new JsonDataException("Expected an int but was " + peekedLong
             + " at path " + getPath());
       }
       peeked = PEEKED_NONE;
@@ -1060,15 +1053,20 @@ public final class JsonReader implements Closeable {
         // Fall back to parse as a double below.
       }
     } else {
-      throw new IllegalStateException("Expected an int but was " + peek()
-          + " at path " + getPath());
+      throw new JsonDataException("Expected an int but was " + peek() + " at path " + getPath());
     }
 
     peeked = PEEKED_BUFFERED;
-    double asDouble = Double.parseDouble(peekedString); // don't catch this NumberFormatException.
+    double asDouble;
+    try {
+      asDouble = Double.parseDouble(peekedString);
+    } catch (NumberFormatException e) {
+      throw new JsonDataException("Expected an int but was " + peekedString
+          + " at path " + getPath());
+    }
     result = (int) asDouble;
     if (result != asDouble) { // Make sure no precision was lost casting to 'int'.
-      throw new NumberFormatException("Expected an int but was " + peekedString
+      throw new JsonDataException("Expected an int but was " + peekedString
           + " at path " + getPath());
     }
     peekedString = null;
@@ -1089,9 +1087,9 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Skips the next value recursively. If it is an object or array, all nested
-   * elements are skipped. This method is intended for use when the JSON token
-   * stream contains unrecognized or unhandled values.
+   * Skips the next value recursively. If it is an object or array, all nested elements are skipped.
+   * This method is intended for use when the JSON token stream contains unrecognized or unhandled
+   * values.
    */
   public void skipValue() throws IOException {
     int count = 0;
@@ -1296,13 +1294,11 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Unescapes the character identified by the character or characters that
-   * immediately follow a backslash. The backslash '\' should have already
-   * been read. This supports both unicode escapes "u000A" and two-character
-   * escapes "\n".
+   * Unescapes the character identified by the character or characters that immediately follow a
+   * backslash. The backslash '\' should have already been read. This supports both unicode escapes
+   * "u000A" and two-character escapes "\n".
    *
-   * @throws NumberFormatException if any unicode escape sequences are
-   *     malformed.
+   * @throws IOException if any unicode escape sequences are malformed.
    */
   private char readEscapeCharacter() throws IOException {
     if (!fillBuffer(1)) {
@@ -1313,7 +1309,7 @@ public final class JsonReader implements Closeable {
     switch (escaped) {
       case 'u':
         if (!fillBuffer(4)) {
-          throw syntaxError("Unterminated escape sequence");
+          throw new EOFException("Unterminated escape sequence at path " + getPath());
         }
         // Equivalent to Integer.parseInt(stringPool.get(buffer, pos, 4), 16);
         char result = 0;
@@ -1327,7 +1323,7 @@ public final class JsonReader implements Closeable {
           } else if (c >= 'A' && c <= 'F') {
             result += (c - 'A' + 10);
           } else {
-            throw new NumberFormatException("\\u" + buffer.readUtf8(4));
+            throw syntaxError("\\u" + buffer.readUtf8(4));
           }
         }
         buffer.skip(4);

@@ -353,11 +353,11 @@ public final class JsonWriter implements Closeable, Flushable {
     if (name == null) {
       throw new NullPointerException("name == null");
     }
-    if (deferredName != null) {
-      throw new IllegalStateException();
-    }
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
+    }
+    if (deferredName != null) {
+      throw new IllegalStateException();
     }
     deferredName = name;
     return this;
@@ -484,7 +484,7 @@ public final class JsonWriter implements Closeable, Flushable {
   /**
    * Flushes and closes this writer and the underlying {@link Sink}.
    *
-   * @throws IOException if the JSON document is incomplete.
+   * @throws JsonDataException if the JSON document is incomplete.
    */
   public void close() throws IOException {
     sink.close();
