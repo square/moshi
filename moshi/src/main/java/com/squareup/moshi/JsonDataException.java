@@ -15,7 +15,14 @@
  */
 package com.squareup.moshi;
 
-/** Thrown when a JSON document doesn't match the expected format. */
+/**
+ * Thrown when the data in a JSON document doesn't match the data expected by the caller. For
+ * example, suppose the application expects a boolean but the JSON document contains a string. When
+ * the call to {@link JsonReader#nextBoolean} is made, a {@code JsonDataException} is thrown.
+ *
+ * <p>Exceptions of this type should be fixed by either changing the application code to accept
+ * the unexpected JSON, or by changing the JSON to conform to the application's expectations.
+ */
 public final class JsonDataException extends RuntimeException {
   public JsonDataException() {
   }
