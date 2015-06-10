@@ -248,14 +248,6 @@ public final class JsonReader implements Closeable {
     stack[stackSize++] = JsonScope.EMPTY_DOCUMENT;
   }
 
-  /*
-   * The path members. It corresponds directly to stack: At indices where the
-   * stack contains an object (EMPTY_OBJECT, DANGLING_NAME or NONEMPTY_OBJECT),
-   * pathNames contains the name at this scope. Where it contains an array
-   * (EMPTY_ARRAY, NONEMPTY_ARRAY) pathIndices contains the current index in
-   * that array. Otherwise the value is undefined, and we take advantage of that
-   * by incrementing pathIndices when doing so isn't useful.
-   */
   private String[] pathNames = new String[32];
   private int[] pathIndices = new int[32];
 
@@ -1269,30 +1261,7 @@ public final class JsonReader implements Closeable {
    * the current location in the JSON value.
    */
   public String getPath() {
-    StringBuilder result = new StringBuilder().append('$');
-    for (int i = 0, size = stackSize; i < size; i++) {
-      switch (stack[i]) {
-        case JsonScope.EMPTY_ARRAY:
-        case JsonScope.NONEMPTY_ARRAY:
-          result.append('[').append(pathIndices[i]).append(']');
-          break;
-
-        case JsonScope.EMPTY_OBJECT:
-        case JsonScope.DANGLING_NAME:
-        case JsonScope.NONEMPTY_OBJECT:
-          result.append('.');
-          if (pathNames[i] != null) {
-            result.append(pathNames[i]);
-          }
-          break;
-
-        case JsonScope.NONEMPTY_DOCUMENT:
-        case JsonScope.EMPTY_DOCUMENT:
-        case JsonScope.CLOSED:
-          break;
-      }
-    }
-    return result.toString();
+    return JsonScope.getPath(stackSize, stack, pathNames, pathIndices);
   }
 
   /**

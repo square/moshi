@@ -233,6 +233,37 @@ public final class AdapterMethodsTest {
   @interface Nullable {
   }
 
+  @Test public void adapterThrows() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new ExceptionThrowingPointJsonAdapter())
+        .build();
+    JsonAdapter<Point[]> arrayOfPointAdapter = moshi.adapter(Point[].class).lenient();
+    try {
+      arrayOfPointAdapter.toJson(new Point[] { null, null, new Point(0, 0) });
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("java.lang.Exception: pointToJson fail! at $[2]");
+    }
+    try {
+      arrayOfPointAdapter.fromJson("[null,null,[0,0]]");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("java.lang.Exception: pointFromJson fail! at $[2]");
+    }
+  }
+
+  static class ExceptionThrowingPointJsonAdapter {
+    @ToJson void pointToJson(JsonWriter writer, Point point) throws Exception {
+      throw new Exception("pointToJson fail!");
+    }
+
+    @FromJson Point pointFromJson(JsonReader reader) throws Exception {
+      throw new Exception("pointFromJson fail!");
+    }
+  }
+
   static class Point {
     final int x;
     final int y;
