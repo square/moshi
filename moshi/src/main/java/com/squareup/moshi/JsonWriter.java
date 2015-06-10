@@ -160,6 +160,9 @@ public final class JsonWriter implements Closeable, Flushable {
     push(EMPTY_DOCUMENT);
   }
 
+  private String[] pathNames = new String[32];
+  private int[] pathIndices = new int[32];
+
   /**
    * A string containing a full set of spaces for a single level of
    * indentation, or null for no pretty printing.
@@ -290,6 +293,7 @@ public final class JsonWriter implements Closeable, Flushable {
    */
   private JsonWriter open(int empty, String openBracket) throws IOException {
     beforeValue(true);
+    pathIndices[stackSize] = 0;
     push(empty);
     sink.writeUtf8(openBracket);
     return this;
@@ -310,6 +314,8 @@ public final class JsonWriter implements Closeable, Flushable {
     }
 
     stackSize--;
+    pathNames[stackSize] = null; // Free the last path name so that it can be garbage collected!
+    pathIndices[stackSize - 1]++;
     if (context == nonempty) {
       newline();
     }
@@ -360,6 +366,7 @@ public final class JsonWriter implements Closeable, Flushable {
       throw new IllegalStateException();
     }
     deferredName = name;
+    pathNames[stackSize - 1] = name;
     return this;
   }
 
@@ -384,6 +391,7 @@ public final class JsonWriter implements Closeable, Flushable {
     writeDeferredName();
     beforeValue(false);
     string(value);
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -403,6 +411,7 @@ public final class JsonWriter implements Closeable, Flushable {
     }
     beforeValue(false);
     sink.writeUtf8("null");
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -415,6 +424,7 @@ public final class JsonWriter implements Closeable, Flushable {
     writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(value ? "true" : "false");
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -432,6 +442,7 @@ public final class JsonWriter implements Closeable, Flushable {
     writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(Double.toString(value));
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -444,6 +455,7 @@ public final class JsonWriter implements Closeable, Flushable {
     writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(Long.toString(value));
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -467,6 +479,7 @@ public final class JsonWriter implements Closeable, Flushable {
     }
     beforeValue(false);
     sink.writeUtf8(string);
+    pathIndices[stackSize - 1]++;
     return this;
   }
 
@@ -597,5 +610,13 @@ public final class JsonWriter implements Closeable, Flushable {
       default:
         throw new IllegalStateException("Nesting problem.");
     }
+  }
+
+  /**
+   * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
+   * the current location in the JSON value.
+   */
+  public String getPath() {
+    return JsonScope.getPath(stackSize, stack, pathNames, pathIndices);
   }
 }
