@@ -48,18 +48,6 @@ final class Types {
     return new ParameterizedTypeImpl(null, rawType, typeArguments);
   }
 
-  /**
-   * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType} and
-   * enclosed by {@code ownerType}.
-   */
-  public static ParameterizedType newParameterizedTypeWithOwner(
-      Type ownerType, Type rawType, Type... typeArguments) {
-    if (ownerType == null) {
-      throw new NullPointerException("ownerType");
-    }
-    return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
-  }
-
   /** Returns an array type whose elements are all instances of {@code componentType}. */
   public static GenericArrayType arrayOf(Type componentType) {
     return new GenericArrayTypeImpl(componentType);

@@ -1206,11 +1206,8 @@ public final class JsonReader implements Closeable {
             return c;
         }
       } else if (c == '#') {
-        /*
-         * Skip a # hash end-of-line comment. The JSON RFC doesn't
-         * specify this behaviour, but it's required to parse
-         * existing documents. See http://b/2571423.
-         */
+        // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but it's
+        // required to parse existing documents. See http://b/2571423.
         checkLenient();
         skipToEndOfLine();
         p = 0;

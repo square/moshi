@@ -41,11 +41,11 @@ public final class Moshi {
     this.factories = Collections.unmodifiableList(factories);
   }
 
+  /** Returns a JSON adapter for {@code type}, creating it if necessary. */
   public <T> JsonAdapter<T> adapter(Type type) {
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
-  /** Returns a JSON adapter for {@code type}, creating it if necessary. */
   public <T> JsonAdapter<T> adapter(Class<T> type) {
     // TODO: cache created JSON adapters.
     return adapter(type, Util.NO_ANNOTATIONS);
@@ -58,10 +58,6 @@ public final class Moshi {
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
       Set<? extends Annotation> annotations) {
     return createAdapter(factories.indexOf(skipPast) + 1, type, annotations);
-  }
-
-  public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type) {
-    return nextAdapter(skipPast, type, Util.NO_ANNOTATIONS);
   }
 
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
@@ -125,7 +121,10 @@ public final class Moshi {
         @Override public JsonAdapter<?> create(
             Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
           if (!Util.typesMatch(type, targetType)) return null;
+
+          // TODO: check for an annotations exact match.
           if (!Util.isAnnotationPresent(annotations, annotation)) return null;
+
           return jsonAdapter;
         }
       });

@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-// TODO: support @Nullable
-// TODO: path in JsonWriter.
-
 final class AdapterMethodsFactory implements JsonAdapter.Factory {
   private final List<AdapterMethod> toAdapters;
   private final List<AdapterMethod> fromAdapters;

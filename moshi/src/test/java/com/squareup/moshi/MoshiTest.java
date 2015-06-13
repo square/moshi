@@ -35,7 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
-
   @Test public void booleanAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Boolean> adapter = moshi.adapter(boolean.class).lenient();
@@ -792,7 +791,8 @@ public final class MoshiTest {
       if (!type.equals(String.class)) return null;
       if (!Util.isAnnotationPresent(annotations, Uppercase.class)) return null;
 
-      final JsonAdapter<String> stringAdapter = moshi.nextAdapter(this, String.class);
+      final JsonAdapter<String> stringAdapter
+          = moshi.nextAdapter(this, String.class, Util.NO_ANNOTATIONS);
       return new JsonAdapter<String>() {
         @Override public String fromJson(JsonReader reader) throws IOException {
           String s = stringAdapter.fromJson(reader);
