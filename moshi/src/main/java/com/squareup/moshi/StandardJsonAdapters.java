@@ -18,7 +18,11 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 final class StandardJsonAdapters {
@@ -43,6 +47,7 @@ final class StandardJsonAdapters {
       if (type == Long.class) return LONG_JSON_ADAPTER.nullSafe();
       if (type == Short.class) return SHORT_JSON_ADAPTER.nullSafe();
       if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
+      if (type == Object.class) return new ObjectJsonAdapter(moshi).nullSafe();
 
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isEnum()) {
@@ -188,5 +193,80 @@ final class StandardJsonAdapters {
         writer.value(value.name());
       }
     };
+  }
+
+  /**
+   * This adapter is used when the declared type is {@code java.lang.Object}. Typically the runtime
+   * type is something else, and when encoding JSON this delegates to the runtime type's adapter.
+   * For decoding (where there is no runtime type to inspect), this uses maps and lists.
+   *
+   * <p>This adapter needs a Moshi instance to look up the appropriate adapter for runtime types as
+   * they are encountered.
+   */
+  static final class ObjectJsonAdapter extends JsonAdapter<Object> {
+    private final Moshi moshi;
+
+    public ObjectJsonAdapter(Moshi moshi) {
+      this.moshi = moshi;
+    }
+
+    @Override public Object fromJson(JsonReader reader) throws IOException {
+      switch (reader.peek()) {
+        case BEGIN_ARRAY:
+          List<Object> list = new ArrayList<>();
+          reader.beginArray();
+          while (reader.hasNext()) {
+            list.add(fromJson(reader));
+          }
+          reader.endArray();
+          return list;
+
+        case BEGIN_OBJECT:
+          Map<String, Object> map = new LinkedHashTreeMap<>();
+          reader.beginObject();
+          while (reader.hasNext()) {
+            map.put(reader.nextName(), fromJson(reader));
+          }
+          reader.endObject();
+          return map;
+
+        case STRING:
+          return reader.nextString();
+
+        case NUMBER:
+          return reader.nextDouble();
+
+        case BOOLEAN:
+          return reader.nextBoolean();
+
+        default:
+          throw new IllegalStateException("Expected a value but was " + reader.peek()
+              + " at path " + reader.getPath());
+      }
+    }
+
+    @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+      Class<?> valueClass = value.getClass();
+      if (valueClass == Object.class) {
+        // Don't recurse infinitely when the runtime type is also Object.class.
+        writer.beginObject();
+        writer.endObject();
+      } else {
+        moshi.adapter(toJsonType(valueClass), Util.NO_ANNOTATIONS).toJson(writer, value);
+      }
+    }
+
+    /**
+     * Returns the type to look up a type adapter for when writing {@code value} to JSON. Without
+     * this, attempts to emit standard types like `LinkedHashMap` would fail because Moshi doesn't
+     * provide built-in adapters for implementation types. It knows how to <strong>write</strong>
+     * those types, but lacks a mechanism to read them because it doesn't know how to find the
+     * appropriate constructor.
+     */
+    private Class<?> toJsonType(Class<?> valueClass) {
+      if (Map.class.isAssignableFrom(valueClass)) return Map.class;
+      if (Collection.class.isAssignableFrom(valueClass)) return Collection.class;
+      return valueClass;
+    }
   }
 }

@@ -113,7 +113,7 @@ public final class CircularAdaptersTest {
         return null;
       }
 
-      final JsonAdapter<Node> delegate = moshi.nextAdapter(this, Node.class);
+      final JsonAdapter<Node> delegate = moshi.nextAdapter(this, Node.class, Util.NO_ANNOTATIONS);
 
       return new JsonAdapter<Node>() {
         @Override public void toJson(JsonWriter writer, Node value) throws IOException {
