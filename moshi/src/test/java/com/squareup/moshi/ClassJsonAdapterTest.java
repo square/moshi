@@ -160,7 +160,7 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("field name collision: 'a' declared by both "
+      assertThat(expected).hasMessage("Field name collision: 'a' declared by both "
           + "com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA and "
           + "superclass com.squareup.moshi.ClassJsonAdapterTest$BaseA");
     }
@@ -306,7 +306,7 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(NonStatic.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot serialize non-static nested class "
+      assertThat(expected).hasMessage("Cannot serialize non-static nested class "
           + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
     }
   }
@@ -326,7 +326,7 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(c.getClass(), NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot serialize anonymous class " + c.getClass().getName());
+      assertThat(expected).hasMessage("Cannot serialize anonymous class " + c.getClass().getName());
     }
   }
 
@@ -342,7 +342,7 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(Abstract.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot serialize abstract class "
+      assertThat(expected).hasMessage("Cannot serialize abstract class "
           + "com.squareup.moshi.ClassJsonAdapterTest$Abstract");
     }
   }

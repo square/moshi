@@ -919,7 +919,7 @@ public final class JsonReader implements Closeable {
       } catch (NumberFormatException ignored) {
         // Fall back to parse as a double below.
       }
-    } else {
+    } else if (p != PEEKED_BUFFERED) {
       throw new JsonDataException("Expected a long but was " + peek()
           + " at path " + getPath());
     }
@@ -1044,7 +1044,7 @@ public final class JsonReader implements Closeable {
       } catch (NumberFormatException ignored) {
         // Fall back to parse as a double below.
       }
-    } else {
+    } else if (p != PEEKED_BUFFERED) {
       throw new JsonDataException("Expected an int but was " + peek() + " at path " + getPath());
     }
 
@@ -1325,6 +1325,17 @@ public final class JsonReader implements Closeable {
    */
   private IOException syntaxError(String message) throws IOException {
     throw new IOException(message + " at path " + getPath());
+  }
+
+  /**
+   * Changes the reader to treat the next name as a string value. This is useful for map adapters so
+   * that arbitrary type adapters can use {@link #nextString} to read a name value.
+   */
+  void promoteNameToValue() throws IOException {
+    if (hasNext()) {
+      peekedString = nextName();
+      peeked = PEEKED_BUFFERED;
+    }
   }
 
   /**

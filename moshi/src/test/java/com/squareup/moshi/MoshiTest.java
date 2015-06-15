@@ -643,7 +643,7 @@ public final class MoshiTest {
           Util.jsonAnnotations(uppercaseStringsField));
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage( "no JsonAdapter for java.util.List<java.lang.String> "
+      assertThat(expected).hasMessage("No JsonAdapter for java.util.List<java.lang.String> "
           + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }

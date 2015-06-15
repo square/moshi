@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import okio.Buffer;
 import org.assertj.core.data.MapEntry;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
@@ -55,7 +56,8 @@ public final class MapJsonAdapterTest {
     try {
       toJson(String.class, Boolean.class, map);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Map key is null at path $.");
     }
   }
 
@@ -104,8 +106,24 @@ public final class MapJsonAdapterTest {
       fromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("object property 'c' has multiple values");
+      assertThat(expected).hasMessage("Map key 'c' has multiple values at path $.c");
     }
+  }
+
+  /** This leans on {@code promoteNameToValue} to do the heavy lifting. */
+  @Test public void mapWithNonStringKeys() throws Exception {
+    Map<Integer, Boolean> map = new LinkedHashMap<>();
+    map.put(5, true);
+    map.put(6, false);
+    map.put(7, null);
+
+    String toJson = toJson(Integer.class, Boolean.class, map);
+    assertThat(toJson).isEqualTo("{\"5\":true,\"6\":false,\"7\":null}");
+
+    Map<String, Boolean> fromJson = fromJson(
+        Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
+    assertThat(fromJson).containsExactly(
+        MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
   }
 
   private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {
