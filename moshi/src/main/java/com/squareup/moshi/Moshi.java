@@ -90,7 +90,7 @@ public final class Moshi {
       deferredAdapters.remove(deferredAdapters.size() - 1);
     }
 
-    throw new IllegalArgumentException("no JsonAdapter for " + type + " annotated " + annotations);
+    throw new IllegalArgumentException("No JsonAdapter for " + type + " annotated " + annotations);
   }
 
   public static final class Builder {
@@ -172,12 +172,12 @@ public final class Moshi {
     }
 
     @Override public T fromJson(JsonReader reader) throws IOException {
-      if (delegate == null) throw new IllegalStateException("type adapter isn't ready");
+      if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
       return delegate.fromJson(reader);
     }
 
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
-      if (delegate == null) throw new IllegalStateException("type adapter isn't ready");
+      if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
       delegate.toJson(writer, value);
     }
   }

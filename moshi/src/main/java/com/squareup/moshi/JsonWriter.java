@@ -180,6 +180,8 @@ public final class JsonWriter implements Closeable, Flushable {
 
   private boolean serializeNulls;
 
+  private boolean promoteNameToValue;
+
   /**
    * Creates a new instance that writes a JSON-encoded stream to {@code sink}.
    */
@@ -284,6 +286,7 @@ public final class JsonWriter implements Closeable, Flushable {
    * @return this writer.
    */
   public JsonWriter endObject() throws IOException {
+    promoteNameToValue = false;
     return close(EMPTY_OBJECT, NONEMPTY_OBJECT, "}");
   }
 
@@ -367,6 +370,7 @@ public final class JsonWriter implements Closeable, Flushable {
     }
     deferredName = name;
     pathNames[stackSize - 1] = name;
+    promoteNameToValue = false;
     return this;
   }
 
@@ -387,6 +391,9 @@ public final class JsonWriter implements Closeable, Flushable {
   public JsonWriter value(String value) throws IOException {
     if (value == null) {
       return nullValue();
+    }
+    if (promoteNameToValue) {
+      return name(value);
     }
     writeDeferredName();
     beforeValue(false);
@@ -439,6 +446,9 @@ public final class JsonWriter implements Closeable, Flushable {
     if (Double.isNaN(value) || Double.isInfinite(value)) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
+    if (promoteNameToValue) {
+      return name(Double.toString(value));
+    }
     writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(Double.toString(value));
@@ -452,6 +462,9 @@ public final class JsonWriter implements Closeable, Flushable {
    * @return this writer.
    */
   public JsonWriter value(long value) throws IOException {
+    if (promoteNameToValue) {
+      return name(Long.toString(value));
+    }
     writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(Long.toString(value));
@@ -471,12 +484,15 @@ public final class JsonWriter implements Closeable, Flushable {
       return nullValue();
     }
 
-    writeDeferredName();
     String string = value.toString();
     if (!lenient
         && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
+    if (promoteNameToValue) {
+      return name(string);
+    }
+    writeDeferredName();
     beforeValue(false);
     sink.writeUtf8(string);
     pathIndices[stackSize - 1]++;
@@ -610,6 +626,18 @@ public final class JsonWriter implements Closeable, Flushable {
       default:
         throw new IllegalStateException("Nesting problem.");
     }
+  }
+
+  /**
+   * Changes the reader to treat the next string value as a name. This is useful for map adapters so
+   * that arbitrary type adapters can use {@link #value(String)} to write a name value.
+   */
+  void promoteNameToValue() throws IOException {
+    int context = peek();
+    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
+      throw new IllegalStateException("Nesting problem.");
+    }
+    promoteNameToValue = true;
   }
 
   /**

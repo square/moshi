@@ -34,21 +34,26 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
       Class<?> rawType = Types.getRawType(type);
       if (rawType != Map.class) return null;
       Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
-      if (keyAndValue[0] != String.class) return null;
-      return new MapJsonAdapter<>(moshi, keyAndValue[1]).nullSafe();
+      return new MapJsonAdapter<>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe();
     }
   };
 
+  private final JsonAdapter<K> keyAdapter;
   private final JsonAdapter<V> valueAdapter;
 
-  public MapJsonAdapter(Moshi moshi, Type valueType) {
+  public MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
+    this.keyAdapter = moshi.adapter(keyType);
     this.valueAdapter = moshi.adapter(valueType);
   }
 
   @Override public void toJson(JsonWriter writer, Map<K, V> map) throws IOException {
     writer.beginObject();
     for (Map.Entry<K, V> entry : map.entrySet()) {
-      writer.name((String) entry.getKey());
+      if (entry.getKey() == null) {
+        throw new JsonDataException("Map key is null at path " + writer.getPath());
+      }
+      writer.promoteNameToValue();
+      keyAdapter.toJson(writer, entry.getKey());
       valueAdapter.toJson(writer, entry.getValue());
     }
     writer.endObject();
@@ -58,12 +63,13 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
     LinkedHashTreeMap<K, V> result = new LinkedHashTreeMap<>();
     reader.beginObject();
     while (reader.hasNext()) {
-      @SuppressWarnings("unchecked") // Currently 'K' is always 'String'.
-      K name = (K) reader.nextName();
+      reader.promoteNameToValue();
+      K name = keyAdapter.fromJson(reader);
       V value = valueAdapter.fromJson(reader);
       V replaced = result.put(name, value);
       if (replaced != null) {
-        throw new JsonDataException("object property '" + name + "' has multiple values");
+        throw new JsonDataException("Map key '" + name + "' has multiple values at path "
+            + reader.getPath());
       }
     }
     reader.endObject();

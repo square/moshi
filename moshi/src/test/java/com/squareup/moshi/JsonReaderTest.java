@@ -781,11 +781,35 @@ public final class JsonReaderTest {
     reader.close();
   }
 
-  @Test public void integerMismatchFailuresDoNotAdvance() throws IOException {
+  @Test public void integerMismatchWithDoubleDoesNotAdvance() throws IOException {
     JsonReader reader = newReader("[1.5]");
     reader.beginArray();
     try {
       reader.nextInt();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertThat(reader.nextDouble()).isEqualTo(1.5d);
+    reader.endArray();
+  }
+
+  @Test public void integerMismatchWithLongDoesNotAdvance() throws IOException {
+    JsonReader reader = newReader("[9223372036854775807]");
+    reader.beginArray();
+    try {
+      reader.nextInt();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertThat(reader.nextLong()).isEqualTo(9223372036854775807L);
+    reader.endArray();
+  }
+
+  @Test public void longMismatchWithDoubleDoesNotAdvance() throws IOException {
+    JsonReader reader = newReader("[1.5]");
+    reader.beginArray();
+    try {
+      reader.nextLong();
       fail();
     } catch (JsonDataException expected) {
     }

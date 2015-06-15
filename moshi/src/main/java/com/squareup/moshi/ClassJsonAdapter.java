@@ -41,14 +41,14 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
         if (rawType.getSimpleName().isEmpty()) {
           throw new IllegalArgumentException(
-              "cannot serialize anonymous class " + rawType.getName());
+              "Cannot serialize anonymous class " + rawType.getName());
         } else {
           throw new IllegalArgumentException(
-              "cannot serialize non-static nested class " + rawType.getName());
+              "Cannot serialize non-static nested class " + rawType.getName());
         }
       }
       if (Modifier.isAbstract(rawType.getModifiers())) {
-        throw new IllegalArgumentException("cannot serialize abstract class " + rawType.getName());
+        throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
       }
 
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);
@@ -79,7 +79,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         // Store it using the field's name. If there was already a field with this name, fail!
         FieldBinding<?> replaced = fieldBindings.put(field.getName(), fieldBinding);
         if (replaced != null) {
-          throw new IllegalArgumentException("field name collision: '" + field.getName() + "'"
+          throw new IllegalArgumentException("Field name collision: '" + field.getName() + "'"
               + " declared by both " + replaced.field.getDeclaringClass().getName()
               + " and superclass " + fieldBinding.field.getDeclaringClass().getName());
         }
@@ -172,8 +172,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     }
 
     @SuppressWarnings("unchecked") // We require that field's values are of type T.
-    private void write(JsonWriter writer, Object value)
-        throws IllegalAccessException, IOException {
+    private void write(JsonWriter writer, Object value) throws IllegalAccessException, IOException {
       T fieldValue = (T) field.get(value);
       adapter.toJson(writer, fieldValue);
     }

@@ -1,0 +1,303 @@
+/*
+ * Copyright (C) 2015 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.squareup.moshi;
+
+import okio.Buffer;
+import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
+public final class PromoteNameToValueTest {
+  @Test public void readerStringValue() throws Exception {
+    JsonReader reader = newReader("{\"a\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertThat(reader.nextString()).isEqualTo("a");
+    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    assertThat(reader.getPath()).isEqualTo("$.a");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerIntegerValue() throws Exception {
+    JsonReader reader = newReader("{\"5\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertThat(reader.nextInt()).isEqualTo(5);
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerDoubleValue() throws Exception {
+    JsonReader reader = newReader("{\"5.5\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.5.5");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertThat(reader.nextDouble()).isEqualTo(5.5d);
+    assertThat(reader.getPath()).isEqualTo("$.5.5");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    assertThat(reader.getPath()).isEqualTo("$.5.5");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerBooleanValue() throws Exception {
+    JsonReader reader = newReader("{\"true\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.true");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    try {
+      reader.nextBoolean();
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("Expected a boolean but was STRING at path $.true");
+    }
+    assertThat(reader.getPath()).isEqualTo("$.true");
+    assertThat(reader.nextString()).isEqualTo("true");
+    assertThat(reader.getPath()).isEqualTo("$.true");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerLongValue() throws Exception {
+    JsonReader reader = newReader("{\"5\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertThat(reader.nextLong()).isEqualTo(5L);
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    assertThat(reader.getPath()).isEqualTo("$.5");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerNullValue() throws Exception {
+    JsonReader reader = newReader("{\"null\":1}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    try {
+      reader.nextNull();
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("Expected null but was STRING at path $.null");
+    }
+    assertThat(reader.nextString()).isEqualTo("null");
+    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    assertThat(reader.getPath()).isEqualTo("$.null");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerMultipleValueObject() throws Exception {
+    JsonReader reader = newReader("{\"a\":1,\"b\":2}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertThat(reader.nextString()).isEqualTo("b");
+    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertThat(reader.nextInt()).isEqualTo(2);
+    assertThat(reader.getPath()).isEqualTo("$.b");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerEmptyValueObject() throws Exception {
+    JsonReader reader = newReader("{}");
+    reader.beginObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_OBJECT);
+    reader.promoteNameToValue();
+    assertThat(reader.getPath()).isEqualTo("$.");
+    reader.endObject();
+    assertThat(reader.getPath()).isEqualTo("$");
+  }
+
+  @Test public void readerUnusedPromotionDoesntPersist() throws Exception {
+    JsonReader reader = new JsonReader(new Buffer().writeUtf8("[{},{\"a\":5}]"));
+    reader.beginArray();
+    reader.beginObject();
+    reader.promoteNameToValue();
+    reader.endObject();
+    reader.beginObject();
+    try {
+      reader.nextString();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertThat(reader.nextName()).isEqualTo("a");
+  }
+
+  private JsonReader newReader(String s) {
+    return new JsonReader(new Buffer().writeUtf8(s));
+  }
+
+  @Test public void writerStringValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    writer.value("a");
+    assertThat(writer.getPath()).isEqualTo("$.a");
+    writer.value(1);
+    assertThat(writer.getPath()).isEqualTo("$.a");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":1}");
+  }
+
+  @Test public void writerIntegerValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    writer.value(5);
+    assertThat(writer.getPath()).isEqualTo("$.5");
+    writer.value(1);
+    assertThat(writer.getPath()).isEqualTo("$.5");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"5\":1}");
+  }
+
+  @Test public void writerDoubleValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    writer.value(5.5d);
+    assertThat(writer.getPath()).isEqualTo("$.5.5");
+    writer.value(1);
+    assertThat(writer.getPath()).isEqualTo("$.5.5");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"5.5\":1}");
+  }
+
+  @Test public void writerBooleanValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    try {
+      writer.value(true);
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Nesting problem.");
+    }
+    writer.value("true");
+    assertThat(writer.getPath()).isEqualTo("$.true");
+    writer.value(1);
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"true\":1}");
+  }
+
+  @Test public void writerLongValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    writer.value(5L);
+    assertThat(writer.getPath()).isEqualTo("$.5");
+    writer.value(1);
+    assertThat(writer.getPath()).isEqualTo("$.5");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"5\":1}");
+  }
+
+  @Test public void writerNullValue() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    try {
+      writer.nullValue();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Nesting problem.");
+    }
+    writer.value("null");
+    assertThat(writer.getPath()).isEqualTo("$.null");
+    writer.value(1);
+    assertThat(writer.getPath()).isEqualTo("$.null");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"null\":1}");
+  }
+
+  @Test public void writerMultipleValueObject() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.name("a");
+    writer.value(1);
+    writer.promoteNameToValue();
+    writer.value("b");
+    assertThat(writer.getPath()).isEqualTo("$.b");
+    writer.value(2);
+    assertThat(writer.getPath()).isEqualTo("$.b");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":1,\"b\":2}");
+  }
+
+  @Test public void writerEmptyValueObject() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginObject();
+    writer.promoteNameToValue();
+    assertThat(writer.getPath()).isEqualTo("$.");
+    writer.endObject();
+    assertThat(writer.getPath()).isEqualTo("$");
+    assertThat(buffer.readUtf8()).isEqualTo("{}");
+  }
+
+  @Test public void writerUnusedPromotionDoesntPersist() throws Exception {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = new JsonWriter(buffer);
+    writer.beginArray();
+    writer.beginObject();
+    writer.promoteNameToValue();
+    writer.endObject();
+    writer.beginObject();
+    try {
+      writer.value("a");
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+    writer.name("a");
+  }
+}
