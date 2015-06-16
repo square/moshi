@@ -145,7 +145,7 @@ public final class PromoteNameToValueTest {
   }
 
   @Test public void readerUnusedPromotionDoesntPersist() throws Exception {
-    JsonReader reader = new JsonReader(new Buffer().writeUtf8("[{},{\"a\":5}]"));
+    JsonReader reader = newReader("[{},{\"a\":5}]");
     reader.beginArray();
     reader.beginObject();
     reader.promoteNameToValue();
