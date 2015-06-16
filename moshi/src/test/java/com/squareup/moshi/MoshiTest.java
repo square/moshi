@@ -658,7 +658,7 @@ public final class MoshiTest {
   @Test public void primitiveArray() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<int[]> adapter = moshi.adapter(int[].class);
-    assertThat(adapter.toJson(new int[] {1, 2})).isEqualTo("[1,2]");
+    assertThat(adapter.toJson(new int[] { 1, 2 })).isEqualTo("[1,2]");
     assertThat(adapter.fromJson("[2,3]")).containsExactly(2, 3);
   }
 
