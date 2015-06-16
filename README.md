@@ -79,6 +79,8 @@ to read and write this JSON:
 }
 ```
 
+The [Javadoc][javadoc] catalogs the complete Moshi API, which we explore below.
+
 ### Custom Type Adapters
 
 With Moshi, it’s particularly easy to customize how values are converted to and from JSON. A type
@@ -175,14 +177,25 @@ But the two libraries have a few important differences:
    the HTML encoder – if there is one – will do its job.
 
 
-
 Download
 --------
 
-**Moshi is under development.** The API is not final.
+**Moshi is under development.** The API is not final. Download [the latest .jar][dl] or depend via
+Maven:
+
+```xml
+<dependency>
+  <groupId>com.squareup.moshi</groupId>
+  <artifactId>moshi</artifactId>
+  <version>0.9.0</version>
+</dependency>
+```
+or Gradle:
+```groovy
+compile 'com.squareup.moshi:moshi:0.9.0'
+```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
-
 
 
 License
@@ -203,7 +216,9 @@ License
     limitations under the License.
 
 
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [dl]: https://search.maven.org/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
+ [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/
  [okio]: https://github.com/square/okio/
  [okhttp]: https://github.com/square/okhttp
  [gson]: https://github.com/google/gson
+ [javadoc]: https://square.github.io/moshi/
