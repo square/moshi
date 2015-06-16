@@ -60,7 +60,7 @@ enum Suit {
 
 to read and write this JSON:
 
-```
+```json
 {
   "hidden_card": {
     "rank": "6",
