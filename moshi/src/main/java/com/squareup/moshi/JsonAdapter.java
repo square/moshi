@@ -44,9 +44,13 @@ public abstract class JsonAdapter<T> {
     toJson(writer, value);
   }
 
-  public final String toJson(T value) throws IOException {
+  public final String toJson(T value) {
     Buffer buffer = new Buffer();
-    toJson(buffer, value);
+    try {
+      toJson(buffer, value);
+    } catch (IOException e) {
+      throw new AssertionError(e); // No I/O writing to a Buffer.
+    }
     return buffer.readUtf8();
   }
 
