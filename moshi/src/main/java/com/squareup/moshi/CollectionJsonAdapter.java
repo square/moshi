@@ -31,10 +31,10 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (!annotations.isEmpty()) return null;
-      if (rawType == List.class || rawType == Collection.class) {
-        return newArrayListAdapter(type, moshi).nullSafe();
-      } else if (rawType == Set.class) {
+      if (Set.class.isAssignableFrom(rawType)) {
         return newLinkedHashSetAdapter(type, moshi).nullSafe();
+      } else if (Collection.class.isAssignableFrom(rawType)) {
+        return newArrayListAdapter(type, moshi).nullSafe();
       }
       return null;
     }
