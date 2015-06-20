@@ -83,7 +83,7 @@ import okio.ByteString;
  * ]}</pre>
  * This code implements the parser for the above structure: <pre>   {@code
  *
- *   public List<Message> readJsonStream(Source source) throws IOException {
+ *   public List<Message> readJsonStream(BufferedSource source) throws IOException {
  *     JsonReader reader = new JsonReader(source);
  *     try {
  *       return readMessagesArray(reader);

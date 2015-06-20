@@ -75,7 +75,7 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  *   }
  * ]}</pre>
  * This code encodes the above structure: <pre>   {@code
- *   public void writeJsonStream(Sink sink, List<Message> messages) throws IOException {
+ *   public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
  *     JsonWriter writer = new JsonWriter(sink);
  *     writer.setIndentSpaces(4);
  *     writeMessagesArray(writer, messages);
