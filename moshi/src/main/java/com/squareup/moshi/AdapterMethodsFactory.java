@@ -39,9 +39,18 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     final AdapterMethod fromAdapter = get(fromAdapters, type, annotations);
     if (toAdapter == null && fromAdapter == null) return null;
 
-    final JsonAdapter<Object> delegate = toAdapter == null || fromAdapter == null
-        ? moshi.nextAdapter(this, type, annotations)
-        : null;
+    final JsonAdapter<Object> delegate;
+    if (toAdapter == null || fromAdapter == null) {
+      try {
+        delegate = moshi.nextAdapter(this, type, annotations);
+      } catch (IllegalArgumentException e) {
+        String missingAnnotation = toAdapter == null ? "@ToJson" : "@FromJson";
+        throw new IllegalArgumentException("No " + missingAnnotation + " adapter for "
+            + type + " annotated " + annotations);
+      }
+    } else {
+      delegate = null;
+    }
 
     return new JsonAdapter<Object>() {
       @Override public void toJson(JsonWriter writer, Object value) throws IOException {
