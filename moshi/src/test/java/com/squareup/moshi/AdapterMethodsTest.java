@@ -264,6 +264,44 @@ public final class AdapterMethodsTest {
     }
   }
 
+  @Test public void adapterDoesToJsonOnly() throws Exception {
+    Object shapeToJsonAdapter = new Object() {
+      @ToJson String shapeToJson(Shape shape) {
+        throw new AssertionError();
+      }
+    };
+
+    Moshi toJsonMoshi = new Moshi.Builder()
+        .add(shapeToJsonAdapter)
+        .build();
+    try {
+      toJsonMoshi.adapter(Shape.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No @FromJson adapter for interface "
+          + "com.squareup.moshi.AdapterMethodsTest$Shape annotated []");
+    }
+  }
+
+  @Test public void adapterDoesFromJsonOnly() throws Exception {
+    Object shapeFromJsonAdapter = new Object() {
+      @FromJson Shape shapeFromJson(String shape) {
+        throw new AssertionError();
+      }
+    };
+
+    Moshi fromJsonMoshi = new Moshi.Builder()
+        .add(shapeFromJsonAdapter)
+        .build();
+    try {
+      fromJsonMoshi.adapter(Shape.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No @ToJson adapter for interface "
+          + "com.squareup.moshi.AdapterMethodsTest$Shape annotated []");
+    }
+  }
+
   static class Point {
     final int x;
     final int y;
@@ -280,5 +318,9 @@ public final class AdapterMethodsTest {
     @Override public int hashCode() {
       return x * 37 + y;
     }
+  }
+
+  interface Shape {
+    String draw();
   }
 }
