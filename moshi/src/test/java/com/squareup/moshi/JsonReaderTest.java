@@ -19,7 +19,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import okio.Buffer;
-import org.assertj.core.data.Offset;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -188,6 +187,42 @@ public final class JsonReaderTest {
     assertThat(reader.nextName()).isEqualTo("b");
     reader.skipValue();
     reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void failOnUnknownFailsOnUnknownObjectValue() throws IOException {
+    JsonReader reader = newReader("{\"a\": 123}");
+    reader.setFailOnUnknown(true);
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try {
+      reader.skipValue();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Cannot skip unexpected NUMBER at $.a");
+    }
+    // Confirm that the reader is left in a consistent state after the exception.
+    reader.setFailOnUnknown(false);
+    assertThat(reader.nextInt()).isEqualTo(123);
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void failOnUnknownFailsOnUnknownArrayElement() throws IOException {
+    JsonReader reader = newReader("[\"a\", 123]");
+    reader.setFailOnUnknown(true);
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("a");
+    try {
+      reader.skipValue();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Cannot skip unexpected NUMBER at $[1]");
+    }
+    // Confirm that the reader is left in a consistent state after the exception.
+    reader.setFailOnUnknown(false);
+    assertThat(reader.nextInt()).isEqualTo(123);
+    reader.endArray();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 

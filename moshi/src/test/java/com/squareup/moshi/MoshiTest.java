@@ -688,6 +688,25 @@ public final class MoshiTest {
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
+  @Test public void byDefaultUnknownFieldsAreIgnored() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Pizza> adapter = moshi.adapter(Pizza.class);
+    Pizza pizza = adapter.fromJson("{\"diameter\":5,\"crust\":\"thick\",\"extraCheese\":true}");
+    assertThat(pizza.diameter).isEqualTo(5);
+    assertThat(pizza.extraCheese).isEqualTo(true);
+  }
+
+  @Test public void failOnUnknownThrowsOnUnknownFields() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Pizza> adapter = moshi.adapter(Pizza.class).failOnUnknown();
+    try {
+      adapter.fromJson("{\"diameter\":5,\"crust\":\"thick\",\"extraCheese\":true}");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Cannot skip unexpected STRING at $.crust");
+    }
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;
