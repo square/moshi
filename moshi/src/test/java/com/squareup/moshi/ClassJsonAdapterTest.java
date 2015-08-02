@@ -160,9 +160,25 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Field name collision: 'a' declared by both "
-          + "com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA and "
-          + "superclass com.squareup.moshi.ClassJsonAdapterTest$BaseA");
+      assertThat(expected).hasMessage("Conflicting fields:\n"
+          + "    int com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA.a\n"
+          + "    int com.squareup.moshi.ClassJsonAdapterTest$BaseA.a");
+    }
+  }
+
+  static class NameCollision {
+    String foo;
+    @Json(name = "foo") String bar;
+  }
+
+  @Test public void jsonAnnotationNameCollision() throws Exception {
+    try {
+      ClassJsonAdapter.FACTORY.create(NameCollision.class, NO_ANNOTATIONS, moshi);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Conflicting fields:\n"
+          + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.foo\n"
+          + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.bar");
     }
   }
 
@@ -387,6 +403,35 @@ public final class ClassJsonAdapterTest {
         ExtendsPlatformClassWithProtectedField.class, "{\"a\":4,\"buf\":[5,6],\"count\":2}");
     assertThat(fromJson.a).isEqualTo(4);
     assertThat(fromJson.toByteArray()).contains((byte) 5, (byte) 6);
+  }
+
+  static class NamedFields {
+    @Json(name = "#") String phoneNumber;
+    @Json(name = "@") String emailAddress;
+    @Json(name = "zip code") String zipCode;
+  }
+
+  @Test public void jsonAnnotationHonored() throws Exception {
+    NamedFields value = new NamedFields();
+    value.phoneNumber = "8005553333";
+    value.emailAddress = "cash@square.com";
+    value.zipCode = "94043";
+
+    String toJson = toJson(NamedFields.class, value);
+    assertThat(toJson).isEqualTo("{"
+        + "\"#\":\"8005553333\","
+        + "\"@\":\"cash@square.com\","
+        + "\"zip code\":\"94043\""
+        + "}");
+
+    NamedFields fromJson = fromJson(NamedFields.class, "{"
+        + "\"#\":\"8005553333\","
+        + "\"@\":\"cash@square.com\","
+        + "\"zip code\":\"94043\""
+        + "}");
+    assertThat(fromJson.phoneNumber).isEqualTo("8005553333");
+    assertThat(fromJson.emailAddress).isEqualTo("cash@square.com");
+    assertThat(fromJson.zipCode).isEqualTo("94043");
   }
 
   private <T> String toJson(Class<T> type, T value) throws IOException {

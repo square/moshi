@@ -77,11 +77,13 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         FieldBinding<Object> fieldBinding = new FieldBinding<>(field, adapter);
 
         // Store it using the field's name. If there was already a field with this name, fail!
-        FieldBinding<?> replaced = fieldBindings.put(field.getName(), fieldBinding);
+        Json jsonAnnotation = field.getAnnotation(Json.class);
+        String name = jsonAnnotation != null ? jsonAnnotation.name() : field.getName();
+        FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
         if (replaced != null) {
-          throw new IllegalArgumentException("Field name collision: '" + field.getName() + "'"
-              + " declared by both " + replaced.field.getDeclaringClass().getName()
-              + " and superclass " + fieldBinding.field.getDeclaringClass().getName());
+          throw new IllegalArgumentException("Conflicting fields:\n"
+              + "    " + replaced.field + "\n"
+              + "    " + fieldBinding.field);
         }
       }
     }
