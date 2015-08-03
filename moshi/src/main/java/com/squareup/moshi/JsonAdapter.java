@@ -78,7 +78,7 @@ public abstract class JsonAdapter<T> {
     };
   }
 
-  /** Returns a JSON adapter equal to this JSON adapter, but is lenient when reading and writing. */
+  /** Returns a JSON adapter equal to this, but is lenient when reading and writing. */
   public final JsonAdapter<T> lenient() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
@@ -99,6 +99,29 @@ public abstract class JsonAdapter<T> {
         } finally {
           writer.setLenient(lenient);
         }
+      }
+    };
+  }
+
+  /**
+   * Returns a JSON adapter equal to this, but that throws a {@link JsonDataException} when {@link
+   * JsonReader#setSkipForbidden(boolean) unknown values} are encountered. This constraint applies
+   * to both the top-level message handled by this type adapter as well as to nested messages.
+   */
+  public final JsonAdapter<T> failOnUnknown() {
+    final JsonAdapter<T> delegate = this;
+    return new JsonAdapter<T>() {
+      @Override public T fromJson(JsonReader reader) throws IOException {
+        boolean skipForbidden = reader.isSkipForbidden();
+        reader.setSkipForbidden(true);
+        try {
+          return delegate.fromJson(reader);
+        } finally {
+          reader.setSkipForbidden(skipForbidden);
+        }
+      }
+      @Override public void toJson(JsonWriter writer, T value) throws IOException {
+        delegate.toJson(writer, value);
       }
     };
   }

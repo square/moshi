@@ -214,6 +214,9 @@ public final class JsonReader implements Closeable {
   /** True to accept non-spec compliant JSON */
   private boolean lenient = false;
 
+  /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
+  private boolean skipForbidden = false;
+
   /** The input JSON. */
   private final BufferedSource source;
   private final Buffer buffer;
@@ -263,7 +266,7 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Configure this parser to be  be liberal in what it accepts. By default,
+   * Configure this parser to be liberal in what it accepts. By default
    * this parser is strict and only accepts JSON as specified by <a
    * href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>. Setting the
    * parser to lenient causes it to ignore the following syntax errors:
@@ -300,6 +303,25 @@ public final class JsonReader implements Closeable {
    */
   public final boolean isLenient() {
     return lenient;
+  }
+
+  /**
+   * Configure whether this parser throws a {@link JsonDataException} when {@link #skipValue} is
+   * called. By default this parser permits values to be skipped.
+   *
+   * <p>Forbid skipping to prevent unrecognized values from being silently ignored. This option is
+   * useful in development and debugging because it means a typo like "locatiom" will be detected
+   * early. It's potentially harmful in production because it complicates revising a JSON schema.
+   */
+  public void setSkipForbidden(boolean skipForbidden) {
+    this.skipForbidden = skipForbidden;
+  }
+
+  /**
+   * Returns true if this parser forbids skipping values.
+   */
+  public boolean isSkipForbidden() {
+    return skipForbidden;
   }
 
   /**
@@ -1084,6 +1106,9 @@ public final class JsonReader implements Closeable {
    * values.
    */
   public void skipValue() throws IOException {
+    if (skipForbidden) {
+      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+    }
     int count = 0;
     do {
       int p = peeked;
