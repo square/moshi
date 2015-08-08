@@ -21,8 +21,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.SimpleTimeZone;
-import java.util.UUID;
-import javax.crypto.KeyGenerator;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -327,11 +325,6 @@ public final class ClassJsonAdapterTest {
       assertThat(expected).hasMessage("Cannot serialize non-static nested class "
           + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
     }
-  }
-
-  @Test public void platformClassNotSupported() throws Exception {
-    assertThat(ClassJsonAdapter.FACTORY.create(UUID.class, NO_ANNOTATIONS, moshi)).isNull();
-    assertThat(ClassJsonAdapter.FACTORY.create(KeyGenerator.class, NO_ANNOTATIONS, moshi)).isNull();
   }
 
   @Test public void anonymousClassNotSupported() throws Exception {
