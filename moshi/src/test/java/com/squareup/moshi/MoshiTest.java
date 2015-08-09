@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import android.util.Pair;
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -27,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import javax.crypto.KeyGenerator;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
@@ -704,6 +707,31 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Cannot skip unexpected STRING at $.crust");
+    }
+  }
+
+  @Test public void platformTypeThrows() throws IOException {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(File.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform class java.io.File annotated [] requires explicit JsonAdapter to be registered");
+    }
+    try {
+      moshi.adapter(KeyGenerator.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform class javax.crypto.KeyGenerator annotated [] requires explicit JsonAdapter to be registered");
+    }
+    try {
+      moshi.adapter(Pair.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform class android.util.Pair annotated [] requires explicit JsonAdapter to be registered");
     }
   }
 

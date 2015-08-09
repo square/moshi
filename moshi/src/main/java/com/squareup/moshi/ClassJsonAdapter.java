@@ -35,7 +35,14 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
-      if (rawType.isInterface() || rawType.isEnum() || isPlatformType(rawType)) return null;
+      if (rawType.isInterface() || rawType.isEnum()) return null;
+      if (isPlatformType(rawType)) {
+        throw new IllegalArgumentException("Platform "
+            + type
+            + " annotated "
+            + annotations
+            + " requires explicit JsonAdapter to be registered");
+      }
       if (!annotations.isEmpty()) return null;
 
       if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
