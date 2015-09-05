@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 import javax.crypto.KeyGenerator;
 import org.junit.Test;
 
@@ -526,6 +527,17 @@ public final class MoshiTest {
     JsonAdapter<String> adapter = moshi.adapter(String.class).lenient();
     assertThat(adapter.fromJson("\"a\"")).isEqualTo("a");
     assertThat(adapter.toJson("b")).isEqualTo("\"b\"");
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+  }
+
+  @Test public void uuidAdapter() throws Exception {
+    UUID uuid = UUID.randomUUID();
+
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<UUID> adapter = moshi.adapter(UUID.class).lenient();
+    assertThat(adapter.fromJson("\"" + uuid + "\"")).isEqualTo(uuid);
+    assertThat(adapter.toJson(uuid)).isEqualTo("\"" + uuid + "\"");
     assertThat(adapter.fromJson("null")).isEqualTo(null);
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
