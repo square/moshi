@@ -239,6 +239,9 @@ final class StandardJsonAdapters {
         case BOOLEAN:
           return reader.nextBoolean();
 
+        case NULL:
+          return reader.nextNull();
+
         default:
           throw new IllegalStateException("Expected a value but was " + reader.peek()
               + " at path " + reader.getPath());
