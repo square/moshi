@@ -84,6 +84,17 @@ public final class ObjectAdapterTest {
     assertThat(adapter.fromJson("[0, 1]")).isEqualTo(Arrays.asList(0d, 1d));
   }
 
+  @Test public void fromJsonDoesNotFailOnNullValues() throws Exception {
+    Map<Object, Object> emptyDelivery = new LinkedHashMap<>();
+    emptyDelivery.put("address", null);
+    emptyDelivery.put("items", null);
+
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Object> adapter = moshi.adapter(Object.class);
+    assertThat(adapter.fromJson("{\"address\":null, \"items\":null}"))
+        .isEqualTo(emptyDelivery);
+  }
+
   @Test public void toJsonCoercesRuntimeTypeForCollections() throws Exception {
     Collection<String> collection = new AbstractCollection<String>() {
       @Override public Iterator<String> iterator() {
