@@ -20,7 +20,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -29,6 +31,7 @@ import java.util.Set;
 public final class Moshi {
   private final List<JsonAdapter.Factory> factories;
   private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
+  private final Map<Integer, JsonAdapter> adapterCache = new LinkedHashMap<>();
 
   private Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<>();
@@ -47,12 +50,18 @@ public final class Moshi {
   }
 
   public <T> JsonAdapter<T> adapter(Class<T> type) {
-    // TODO: cache created JSON adapters.
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
+  @SuppressWarnings("unchecked")
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
-    return createAdapter(0, type, annotations);
+    int hashCode = Util.hashCodeOf(type, annotations);
+    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapterCache.get(hashCode);
+    if (jsonAdapter == null) {
+      jsonAdapter = createAdapter(0, type, annotations);
+      adapterCache.put(hashCode, jsonAdapter);
+    }
+    return jsonAdapter;
   }
 
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,

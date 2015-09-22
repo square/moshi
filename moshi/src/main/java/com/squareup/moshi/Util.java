@@ -63,4 +63,15 @@ final class Util {
     }
     return false;
   }
+
+  /** Calculates an unique hash code for the type and annotations set pair */
+  public static int hashCodeOf(Type type, Set<? extends Annotation> annotations) {
+    int result = type != null ? type.hashCode() : 0;
+    if (annotations != null) {
+      for (Annotation annotation : annotations) {
+        result = 31 * result + (annotation != null ? annotation.getClass().hashCode() : 0);
+      }
+    }
+    return result;
+  }
 }
