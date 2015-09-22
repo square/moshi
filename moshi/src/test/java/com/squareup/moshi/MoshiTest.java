@@ -735,6 +735,19 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void adaptersAreNotCreatedTwice() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new UppercaseAdapterFactory()).build();
+
+    assertThat(moshi.adapter(String.class)).isEqualTo(moshi.adapter(String.class));
+    assertThat(moshi.adapter(Object.class)).isEqualTo(moshi.adapter(Object.class));
+    assertThat(moshi.adapter(Boolean.class)).isEqualTo(moshi.adapter(Boolean.class));
+
+    Field uppercaseString = MoshiTest.class.getDeclaredField("uppercaseString");
+    Set<? extends Annotation> annotations = Util.jsonAnnotations(uppercaseString);
+    JsonAdapter<String> jsonAdapter2 = moshi.adapter(String.class, annotations);
+    assertThat(jsonAdapter2).isNotEqualTo(moshi.adapter(String.class));
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;
