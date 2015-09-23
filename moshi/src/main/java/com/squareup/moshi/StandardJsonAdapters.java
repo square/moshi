@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 final class StandardJsonAdapters {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
@@ -47,6 +48,7 @@ final class StandardJsonAdapters {
       if (type == Long.class) return LONG_JSON_ADAPTER.nullSafe();
       if (type == Short.class) return SHORT_JSON_ADAPTER.nullSafe();
       if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
+      if (type == UUID.class) return UUID_JSON_ADAPTER.nullSafe();
       if (type == Object.class) return new ObjectJsonAdapter(moshi).nullSafe();
 
       Class<?> rawType = Types.getRawType(type);
@@ -173,6 +175,16 @@ final class StandardJsonAdapters {
 
     @Override public void toJson(JsonWriter writer, String value) throws IOException {
       writer.value(value);
+    }
+  };
+
+  static final JsonAdapter<UUID> UUID_JSON_ADAPTER = new JsonAdapter<UUID>() {
+    @Override public UUID fromJson(JsonReader reader) throws IOException {
+      return UUID.fromString(STRING_JSON_ADAPTER.fromJson(reader));
+    }
+
+    @Override public void toJson(JsonWriter writer, UUID value) throws IOException {
+      STRING_JSON_ADAPTER.toJson(writer, value.toString());
     }
   };
 
