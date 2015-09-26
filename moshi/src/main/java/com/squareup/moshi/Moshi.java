@@ -19,8 +19,11 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -29,6 +32,7 @@ import java.util.Set;
 public final class Moshi {
   private final List<JsonAdapter.Factory> factories;
   private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
+  private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
   private Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<>();
@@ -47,50 +51,75 @@ public final class Moshi {
   }
 
   public <T> JsonAdapter<T> adapter(Class<T> type) {
-    // TODO: cache created JSON adapters.
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
-  public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
-    return createAdapter(0, type, annotations);
-  }
-
-  public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
-      Set<? extends Annotation> annotations) {
-    return createAdapter(factories.indexOf(skipPast) + 1, type, annotations);
-  }
-
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
-  private <T> JsonAdapter<T> createAdapter(
-      int firstIndex, Type type, Set<? extends Annotation> annotations) {
+  public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
+    // If there's an equivalent adapter in the cache, we're done!
+    Object cacheKey = cacheKey(type, annotations);
+    synchronized (adapterCache) {
+      JsonAdapter<?> result = adapterCache.get(cacheKey);
+      if (result != null) return (JsonAdapter<T>) result;
+    }
+
+    // Short-circuit if this is a reentrant call.
     List<DeferredAdapter<?>> deferredAdapters = reentrantCalls.get();
-    if (deferredAdapters == null) {
-      deferredAdapters = new ArrayList<>();
-      reentrantCalls.set(deferredAdapters);
-    } else if (firstIndex == 0) {
-      // If this is a regular adapter lookup, check that this isn't a reentrant call.
-      for (DeferredAdapter<?> deferredAdapter : deferredAdapters) {
-        if (deferredAdapter.type.equals(type) && deferredAdapter.annotations.equals(annotations)) {
+    if (deferredAdapters != null) {
+      for (int i = 0, size = deferredAdapters.size(); i < size; i++) {
+        DeferredAdapter<?> deferredAdapter = deferredAdapters.get(i);
+        if (deferredAdapter.cacheKey.equals(cacheKey)) {
           return (JsonAdapter<T>) deferredAdapter;
         }
       }
+    } else {
+      deferredAdapters = new ArrayList<>();
+      reentrantCalls.set(deferredAdapters);
     }
 
-    DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(type, annotations);
+    // Prepare for re-entrant calls, then ask each factory to create a type adapter.
+    DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(cacheKey);
     deferredAdapters.add(deferredAdapter);
     try {
-      for (int i = firstIndex, size = factories.size(); i < size; i++) {
+      for (int i = 0, size = factories.size(); i < size; i++) {
         JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
         if (result != null) {
           deferredAdapter.ready(result);
+          synchronized (adapterCache) {
+            adapterCache.put(cacheKey, result);
+          }
           return result;
         }
       }
     } finally {
       deferredAdapters.remove(deferredAdapters.size() - 1);
+      if (deferredAdapters.isEmpty()) {
+        reentrantCalls.remove();
+      }
     }
 
     throw new IllegalArgumentException("No JsonAdapter for " + type + " annotated " + annotations);
+  }
+
+  @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
+  public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
+      Set<? extends Annotation> annotations) {
+    int skipPastIndex = factories.indexOf(skipPast);
+    if (skipPastIndex == -1) {
+      throw new IllegalArgumentException("Unable to skip past unknown factory " + skipPast);
+    }
+    for (int i = skipPastIndex + 1, size = factories.size(); i < size; i++) {
+      JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
+      if (result != null) return result;
+    }
+    throw new IllegalArgumentException("No next JsonAdapter for "
+        + type + " annotated " + annotations);
+  }
+
+  /** Returns an opaque object that's equal if the type and annotations are equal. */
+  private Object cacheKey(Type type, Set<? extends Annotation> annotations) {
+    if (annotations.isEmpty()) return type;
+    return Arrays.asList(type, annotations);
   }
 
   public static final class Builder {
@@ -116,22 +145,24 @@ public final class Moshi {
       if (!annotation.isAnnotationPresent(JsonQualifier.class)) {
         throw new IllegalArgumentException(annotation + " does not have @JsonQualifier");
       }
+      if (annotation.getDeclaredMethods().length > 0) {
+        throw new IllegalArgumentException("Use JsonAdapter.Factory for annotations with elements");
+      }
 
       return add(new JsonAdapter.Factory() {
         @Override public JsonAdapter<?> create(
             Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
-          if (!Util.typesMatch(type, targetType)) return null;
-
-          // TODO: check for an annotations exact match.
-          if (!Util.isAnnotationPresent(annotations, annotation)) return null;
-
-          return jsonAdapter;
+          if (Util.typesMatch(type, targetType)
+              && annotations.size() == 1
+              && Util.isAnnotationPresent(annotations, annotation)) {
+            return jsonAdapter;
+          }
+          return null;
         }
       });
     }
 
     public Builder add(JsonAdapter.Factory jsonAdapter) {
-      // TODO: define precedence order. Last added wins? First added wins?
       factories.add(jsonAdapter);
       return this;
     }
@@ -154,21 +185,16 @@ public final class Moshi {
    * class that has a {@code List<Employee>} field for an organization's management hierarchy.
    */
   private static class DeferredAdapter<T> extends JsonAdapter<T> {
-    private Type type;
-    private Set<? extends Annotation> annotations;
+    private Object cacheKey;
     private JsonAdapter<T> delegate;
 
-    public DeferredAdapter(Type type, Set<? extends Annotation> annotations) {
-      this.type = type;
-      this.annotations = annotations;
+    public DeferredAdapter(Object cacheKey) {
+      this.cacheKey = cacheKey;
     }
 
     public void ready(JsonAdapter<T> delegate) {
       this.delegate = delegate;
-
-      // Null out the type and annotations so they can be garbage collected.
-      this.type = null;
-      this.annotations = null;
+      this.cacheKey = null;
     }
 
     @Override public T fromJson(JsonReader reader) throws IOException {

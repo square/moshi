@@ -85,4 +85,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     }
     writer.endArray();
   }
+
+  @Override public String toString() {
+    return elementAdapter + ".collection()";
+  }
 }

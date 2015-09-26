@@ -78,15 +78,23 @@ final class StandardJsonAdapters {
     @Override public void toJson(JsonWriter writer, Boolean value) throws IOException {
       writer.value(value);
     }
+
+    @Override public String toString() {
+      return "JsonAdapter(Boolean)";
+    }
   };
 
   static final JsonAdapter<Byte> BYTE_JSON_ADAPTER = new JsonAdapter<Byte>() {
     @Override public Byte fromJson(JsonReader reader) throws IOException {
-      return (byte) rangeCheckNextInt(reader, "a byte", Byte.MIN_VALUE, 0xFF);
+      return (byte) rangeCheckNextInt(reader, "a byte", Byte.MIN_VALUE, 0xff);
     }
 
     @Override public void toJson(JsonWriter writer, Byte value) throws IOException {
-      writer.value(value.intValue() & 0xFF);
+      writer.value(value.intValue() & 0xff);
+    }
+
+    @Override public String toString() {
+      return "JsonAdapter(Byte)";
     }
   };
 
@@ -103,6 +111,10 @@ final class StandardJsonAdapters {
     @Override public void toJson(JsonWriter writer, Character value) throws IOException {
       writer.value(value.toString());
     }
+
+    @Override public String toString() {
+      return "JsonAdapter(Character)";
+    }
   };
 
   static final JsonAdapter<Double> DOUBLE_JSON_ADAPTER = new JsonAdapter<Double>() {
@@ -112,6 +124,10 @@ final class StandardJsonAdapters {
 
     @Override public void toJson(JsonWriter writer, Double value) throws IOException {
       writer.value(value.doubleValue());
+    }
+
+    @Override public String toString() {
+      return "JsonAdapter(Double)";
     }
   };
 
@@ -134,6 +150,10 @@ final class StandardJsonAdapters {
       // Use the Number overload so we write out float precision instead of double precision.
       writer.value(value);
     }
+
+    @Override public String toString() {
+      return "JsonAdapter(Float)";
+    }
   };
 
   static final JsonAdapter<Integer> INTEGER_JSON_ADAPTER = new JsonAdapter<Integer>() {
@@ -143,6 +163,10 @@ final class StandardJsonAdapters {
 
     @Override public void toJson(JsonWriter writer, Integer value) throws IOException {
       writer.value(value.intValue());
+    }
+
+    @Override public String toString() {
+      return "JsonAdapter(Integer)";
     }
   };
 
@@ -154,6 +178,10 @@ final class StandardJsonAdapters {
     @Override public void toJson(JsonWriter writer, Long value) throws IOException {
       writer.value(value.longValue());
     }
+
+    @Override public String toString() {
+      return "JsonAdapter(Long)";
+    }
   };
 
   static final JsonAdapter<Short> SHORT_JSON_ADAPTER = new JsonAdapter<Short>() {
@@ -164,6 +192,10 @@ final class StandardJsonAdapters {
     @Override public void toJson(JsonWriter writer, Short value) throws IOException {
       writer.value(value.intValue());
     }
+
+    @Override public String toString() {
+      return "JsonAdapter(Short)";
+    }
   };
 
   static final JsonAdapter<String> STRING_JSON_ADAPTER = new JsonAdapter<String>() {
@@ -173,6 +205,10 @@ final class StandardJsonAdapters {
 
     @Override public void toJson(JsonWriter writer, String value) throws IOException {
       writer.value(value);
+    }
+
+    @Override public String toString() {
+      return "JsonAdapter(String)";
     }
   };
 
@@ -191,6 +227,10 @@ final class StandardJsonAdapters {
 
       @Override public void toJson(JsonWriter writer, T value) throws IOException {
         writer.value(value.name());
+      }
+
+      @Override public String toString() {
+        return "JsonAdapter(" + enumType.getName() + ")";
       }
     };
   }
@@ -270,6 +310,10 @@ final class StandardJsonAdapters {
       if (Map.class.isAssignableFrom(valueClass)) return Map.class;
       if (Collection.class.isAssignableFrom(valueClass)) return Collection.class;
       return valueClass;
+    }
+
+    @Override public String toString() {
+      return "JsonAdapter(Object)";
     }
   }
 }

@@ -75,4 +75,8 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
     reader.endObject();
     return result;
   }
+
+  @Override public String toString() {
+    return "JsonAdapter(" + keyAdapter + "=" + valueAdapter + ")";
+  }
 }

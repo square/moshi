@@ -75,6 +75,9 @@ public abstract class JsonAdapter<T> {
           delegate.toJson(writer, value);
         }
       }
+      @Override public String toString() {
+        return delegate + ".nullSafe()";
+      }
     };
   }
 
@@ -100,6 +103,9 @@ public abstract class JsonAdapter<T> {
           writer.setLenient(lenient);
         }
       }
+      @Override public String toString() {
+        return delegate + ".lenient()";
+      }
     };
   }
 
@@ -123,6 +129,9 @@ public abstract class JsonAdapter<T> {
       }
       @Override public void toJson(JsonWriter writer, T value) throws IOException {
         delegate.toJson(writer, value);
+      }
+      @Override public String toString() {
+        return delegate + ".failOnUnknown()";
       }
     };
   }

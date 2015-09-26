@@ -166,6 +166,10 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     }
   }
 
+  @Override public String toString() {
+    return "JsonAdapter(" + classFactory + ")";
+  }
+
   static class FieldBinding<T> {
     private final Field field;
     private final JsonAdapter<T> adapter;
