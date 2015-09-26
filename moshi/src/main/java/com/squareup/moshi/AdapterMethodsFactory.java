@@ -34,7 +34,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   }
 
   @Override public JsonAdapter<?> create(
-      Type type, Set<? extends Annotation> annotations, final Moshi moshi) {
+      final Type type, final Set<? extends Annotation> annotations, final Moshi moshi) {
     final AdapterMethod toAdapter = get(toAdapters, type, annotations);
     final AdapterMethod fromAdapter = get(fromAdapters, type, annotations);
     if (toAdapter == null && fromAdapter == null) return null;
@@ -86,6 +86,10 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
             throw new JsonDataException(e.getCause() + " at " + reader.getPath());
           }
         }
+      }
+
+      @Override public String toString() {
+        return "JsonAdapter" + annotations + "(" + type + ")";
       }
     };
   }

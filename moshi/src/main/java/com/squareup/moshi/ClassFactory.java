@@ -44,6 +44,9 @@ abstract class ClassFactory<T> {
           Object[] args = null;
           return (T) constructor.newInstance(args);
         }
+        @Override public String toString() {
+          return rawType.getName();
+        }
       };
     } catch (NoSuchMethodException ignored) {
       // No no-args constructor. Fall back to something more magical...
@@ -63,6 +66,9 @@ abstract class ClassFactory<T> {
         @SuppressWarnings("unchecked")
         @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) allocateInstance.invoke(unsafe, rawType);
+        }
+        @Override public String toString() {
+          return rawType.getName();
         }
       };
     } catch (IllegalAccessException e) {
@@ -88,6 +94,9 @@ abstract class ClassFactory<T> {
         @SuppressWarnings("unchecked")
         @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) newInstance.invoke(null, rawType, constructorId);
+        }
+        @Override public String toString() {
+          return rawType.getName();
         }
       };
     } catch (IllegalAccessException e) {

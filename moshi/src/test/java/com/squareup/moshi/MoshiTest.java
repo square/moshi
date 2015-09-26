@@ -735,6 +735,70 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void qualifierWithElementsMayNotBeDirectlyRegistered() throws IOException {
+    try {
+      new Moshi.Builder()
+          .add(Boolean.class, Localized.class, StandardJsonAdapters.BOOLEAN_JSON_ADAPTER);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Use JsonAdapter.Factory for annotations with elements");
+    }
+  }
+
+  @Test public void qualifierWithElements() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(LocalizedBooleanAdapter.FACTORY)
+        .build();
+
+    Baguette baguette = new Baguette();
+    baguette.avecBeurre = true;
+    baguette.withButter = true;
+
+    JsonAdapter<Baguette> adapter = moshi.adapter(Baguette.class);
+    assertThat(adapter.toJson(baguette))
+        .isEqualTo("{\"avecBeurre\":\"oui\",\"withButter\":\"yes\"}");
+
+    Baguette decoded = adapter.fromJson("{\"avecBeurre\":\"oui\",\"withButter\":\"yes\"}");
+    assertThat(decoded.avecBeurre).isTrue();
+    assertThat(decoded.withButter).isTrue();
+  }
+
+  /** Note that this is the opposite of Gson's behavior, where later adapters are preferred. */
+  @Test public void adaptersRegisteredInOrderOfPrecedence() throws Exception {
+    JsonAdapter<String> adapter1 = new JsonAdapter<String>() {
+      @Override public String fromJson(JsonReader reader) throws IOException {
+        throw new AssertionError();
+      }
+      @Override public void toJson(JsonWriter writer, String value) throws IOException {
+        writer.value("one!");
+      }
+    };
+
+    JsonAdapter<String> adapter2 = new JsonAdapter<String>() {
+      @Override public String fromJson(JsonReader reader) throws IOException {
+        throw new AssertionError();
+      }
+      @Override public void toJson(JsonWriter writer, String value) throws IOException {
+        writer.value("two!");
+      }
+    };
+
+    Moshi moshi = new Moshi.Builder()
+        .add(String.class, adapter1)
+        .add(String.class, adapter2)
+        .build();
+    JsonAdapter<String> adapter = moshi.adapter(String.class).lenient();
+    assertThat(adapter.toJson("a")).isEqualTo("\"one!\"");
+  }
+
+  @Test public void cachingJsonAdapters() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+
+    JsonAdapter<MealDeal> adapter1 = moshi.adapter(MealDeal.class);
+    JsonAdapter<MealDeal> adapter2 = moshi.adapter(MealDeal.class);
+    assertThat(adapter1).isSameAs(adapter2);
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;
@@ -857,5 +921,53 @@ public final class MoshiTest {
     ROCK,
     PAPER,
     SCISSORS
+  }
+
+  @Retention(RUNTIME)
+  @JsonQualifier
+  @interface Localized {
+    String value();
+  }
+
+  static class Baguette {
+    @Localized("en") boolean withButter;
+    @Localized("fr") boolean avecBeurre;
+  }
+
+  static class LocalizedBooleanAdapter extends JsonAdapter<Boolean> {
+    private static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
+      @Override public JsonAdapter<?> create(
+          Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+        if (type == boolean.class) {
+          for (Annotation annotation : annotations) {
+            if (annotation instanceof Localized) {
+              return new LocalizedBooleanAdapter(((Localized) annotation).value());
+            }
+          }
+        }
+        return null;
+      }
+    };
+
+    private final String trueString;
+    private final String falseString;
+
+    public LocalizedBooleanAdapter(String language) {
+      if (language.equals("fr")) {
+        trueString = "oui";
+        falseString = "non";
+      } else {
+        trueString = "yes";
+        falseString = "no";
+      }
+    }
+
+    @Override public Boolean fromJson(JsonReader reader) throws IOException {
+      return reader.nextString().equals(trueString);
+    }
+
+    @Override public void toJson(JsonWriter writer, Boolean value) throws IOException {
+      writer.value(value ? trueString : falseString);
+    }
   }
 }
