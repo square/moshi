@@ -436,7 +436,7 @@ public final class ClassJsonAdapterTest {
 
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
     Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = new JsonWriter(buffer);
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
     jsonWriter.setSerializeNulls(true);
     jsonWriter.beginArray();
     jsonAdapter.toJson(jsonWriter, value);

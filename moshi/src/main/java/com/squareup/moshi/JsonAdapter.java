@@ -30,7 +30,7 @@ public abstract class JsonAdapter<T> {
   public abstract T fromJson(JsonReader reader) throws IOException;
 
   public final T fromJson(BufferedSource source) throws IOException {
-    return fromJson(new JsonReader(source));
+    return fromJson(JsonReader.of(source));
   }
 
   public final T fromJson(String string) throws IOException {
@@ -40,7 +40,7 @@ public abstract class JsonAdapter<T> {
   public abstract void toJson(JsonWriter writer, T value) throws IOException;
 
   public final void toJson(BufferedSink sink, T value) throws IOException {
-    JsonWriter writer = new JsonWriter(sink);
+    JsonWriter writer = JsonWriter.of(sink);
     toJson(writer, value);
   }
 

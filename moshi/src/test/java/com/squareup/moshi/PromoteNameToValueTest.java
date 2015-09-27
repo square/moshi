@@ -160,12 +160,12 @@ public final class PromoteNameToValueTest {
   }
 
   private JsonReader newReader(String s) {
-    return new JsonReader(new Buffer().writeUtf8(s));
+    return JsonReader.of(new Buffer().writeUtf8(s));
   }
 
   @Test public void writerStringValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     writer.value("a");
@@ -179,7 +179,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerIntegerValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     writer.value(5);
@@ -193,7 +193,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerDoubleValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     writer.value(5.5d);
@@ -207,7 +207,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerBooleanValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     try {
@@ -226,7 +226,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerLongValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     writer.value(5L);
@@ -240,7 +240,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerNullValue() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     try {
@@ -260,7 +260,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerMultipleValueObject() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.name("a");
     writer.value(1);
@@ -276,7 +276,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerEmptyValueObject() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.promoteNameToValue();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -287,7 +287,7 @@ public final class PromoteNameToValueTest {
 
   @Test public void writerUnusedPromotionDoesntPersist() throws Exception {
     Buffer buffer = new Buffer();
-    JsonWriter writer = new JsonWriter(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginArray();
     writer.beginObject();
     writer.promoteNameToValue();

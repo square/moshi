@@ -84,7 +84,7 @@ import okio.ByteString;
  * This code implements the parser for the above structure: <pre>   {@code
  *
  *   public List<Message> readJsonStream(BufferedSource source) throws IOException {
- *     JsonReader reader = new JsonReader(source);
+ *     JsonReader reader = JsonReader.of(source);
  *     try {
  *       return readMessagesArray(reader);
  *     } finally {
@@ -171,7 +171,7 @@ import okio.ByteString;
  * <p>Each {@code JsonReader} may be used to read a single JSON stream. Instances
  * of this class are not thread safe.
  */
-public final class JsonReader implements Closeable {
+public class JsonReader implements Closeable {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
   private static final ByteString SINGLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("'\\");
@@ -254,15 +254,19 @@ public final class JsonReader implements Closeable {
   private String[] pathNames = new String[32];
   private int[] pathIndices = new int[32];
 
-  /**
-   * Creates a new instance that reads a JSON-encoded stream from {@code source}.
-   */
-  public JsonReader(BufferedSource source) {
+  private JsonReader(BufferedSource source) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }
     this.source = source;
     this.buffer = source.buffer();
+  }
+
+  /**
+   * Returns a new instance that reads a JSON-encoded stream from {@code source}.
+   */
+  public static JsonReader of(BufferedSource source) {
+    return new JsonReader(source);
   }
 
   /**

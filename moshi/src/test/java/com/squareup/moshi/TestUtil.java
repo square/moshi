@@ -20,7 +20,7 @@ import okio.Buffer;
 final class TestUtil {
   static JsonReader newReader(String json) {
     Buffer buffer = new Buffer().writeUtf8(json);
-    return new JsonReader(buffer);
+    return JsonReader.of(buffer);
   }
 
   private TestUtil() {
