@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.recipes;
+package com.squareup.moshi.recipes.models;
 
-import java.util.List;
-
-public final class BlackjackHand {
-  public final Card hidden_card;
-  public final List<Card> visible_cards;
-
-  public BlackjackHand(Card hidden_card, List<Card> visible_cards) {
-    this.hidden_card = hidden_card;
-    this.visible_cards = visible_cards;
-  }
+public enum Suit {
+  CLUBS, DIAMONDS, HEARTS, SPADES;
 
   @Override public String toString() {
-    return "hidden=" + hidden_card + ",visible=" + visible_cards;
+    return name().substring(0, 1);
   }
 }

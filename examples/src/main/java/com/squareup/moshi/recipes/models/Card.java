@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.recipes;
+package com.squareup.moshi.recipes.models;
 
-public enum Suit {
-  CLUBS, DIAMONDS, HEARTS, SPADES;
+public final class Card {
+  public final char rank;
+  public final Suit suit;
+
+  public Card(char rank, Suit suit) {
+    this.rank = rank;
+    this.suit = suit;
+  }
 
   @Override public String toString() {
-    return name().substring(0, 1);
+    return String.format("%s%s", rank, suit);
   }
 }

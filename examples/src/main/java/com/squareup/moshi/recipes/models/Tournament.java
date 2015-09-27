@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.recipes;
+package com.squareup.moshi.recipes.models;
 
-public final class Card {
-  public final char rank;
-  public final Suit suit;
+import java.util.Date;
 
-  public Card(char rank, Suit suit) {
-    this.rank = rank;
-    this.suit = suit;
+public final class Tournament {
+  public final String name;
+  public final String location;
+  public final Date start;
+
+  public Tournament(String name, String location, Date start) {
+    this.name = name;
+    this.location = location;
+    this.start = start;
   }
 
   @Override public String toString() {
-    return String.format("%s%s", rank, suit);
+    return name + " at " + location + " on " + start;
   }
 }

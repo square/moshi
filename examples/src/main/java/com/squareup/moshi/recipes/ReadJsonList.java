@@ -18,12 +18,14 @@ package com.squareup.moshi.recipes;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+import com.squareup.moshi.recipes.models.Card;
 import java.lang.reflect.Type;
 import java.util.List;
 
 public final class ReadJsonList {
   public void run() throws Exception {
-    String json = "[\n"
+    String json = ""
+        + "[\n"
         + "  {\n"
         + "    \"rank\": \"4\",\n"
         + "    \"suit\": \"CLUBS\"\n"
