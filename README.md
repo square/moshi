@@ -187,12 +187,12 @@ Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>0.9.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.moshi:moshi:0.9.0'
+compile 'com.squareup.moshi:moshi:1.0.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
