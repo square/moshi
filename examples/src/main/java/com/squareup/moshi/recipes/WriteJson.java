@@ -17,11 +17,13 @@ package com.squareup.moshi.recipes;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.recipes.models.BlackjackHand;
+import com.squareup.moshi.recipes.models.Card;
 import java.util.Arrays;
 
-import static com.squareup.moshi.recipes.Suit.CLUBS;
-import static com.squareup.moshi.recipes.Suit.HEARTS;
-import static com.squareup.moshi.recipes.Suit.SPADES;
+import static com.squareup.moshi.recipes.models.Suit.CLUBS;
+import static com.squareup.moshi.recipes.models.Suit.HEARTS;
+import static com.squareup.moshi.recipes.models.Suit.SPADES;
 
 public final class WriteJson {
   public void run() throws Exception {

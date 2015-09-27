@@ -17,6 +17,7 @@ package com.squareup.moshi.recipes;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.recipes.models.BlackjackHand;
 
 public final class CustomTypeAdapter {
   public void run() throws Exception {

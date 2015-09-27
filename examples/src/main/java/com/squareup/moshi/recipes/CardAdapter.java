@@ -18,6 +18,8 @@ package com.squareup.moshi.recipes;
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.ToJson;
+import com.squareup.moshi.recipes.models.Card;
+import com.squareup.moshi.recipes.models.Suit;
 
 public final class CardAdapter {
   @ToJson String toJson(Card card) {
