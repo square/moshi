@@ -75,7 +75,7 @@ public final class MapJsonAdapterTest {
     JsonAdapter<?> jsonAdapter = mapAdapter(String.class, Boolean.class);
 
     Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = new JsonWriter(buffer);
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
     jsonWriter.setLenient(true);
     jsonAdapter.toJson(jsonWriter, null);
     assertThat(buffer.readUtf8()).isEqualTo("null");
@@ -129,7 +129,7 @@ public final class MapJsonAdapterTest {
   private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {
     JsonAdapter<Map<K, V>> jsonAdapter = mapAdapter(keyType, valueType);
     Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = new JsonWriter(buffer);
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
     jsonWriter.setSerializeNulls(true);
     jsonAdapter.toJson(jsonWriter, value);
     return buffer.readUtf8();

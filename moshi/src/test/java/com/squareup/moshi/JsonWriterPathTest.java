@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public final class JsonWriterPathTest {
   @Test public void path() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -63,7 +63,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayOfObjects() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
     writer.beginObject();
@@ -83,7 +83,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayOfArrays() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
     writer.beginArray();
@@ -103,7 +103,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void objectPath() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -122,7 +122,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void nestedObjects() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -147,7 +147,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayPath() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
@@ -168,7 +168,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void nestedArrays() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
@@ -189,7 +189,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     writer.setLenient(true);
     writer.beginArray();
     writer.endArray();
@@ -200,7 +200,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void skipNulls() throws IOException {
-    JsonWriter writer = new JsonWriter(new Buffer());
+    JsonWriter writer = JsonWriter.of(new Buffer());
     writer.setSerializeNulls(false);
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();

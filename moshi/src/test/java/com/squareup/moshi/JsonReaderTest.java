@@ -39,12 +39,12 @@ public final class JsonReaderTest {
   @Test public void readingDoesNotBuffer() throws IOException {
     Buffer buffer = new Buffer().writeUtf8("{}{}");
 
-    JsonReader reader1 = new JsonReader(buffer);
+    JsonReader reader1 = JsonReader.of(buffer);
     reader1.beginObject();
     reader1.endObject();
     assertThat(buffer.size()).isEqualTo(2);
 
-    JsonReader reader2 = new JsonReader(buffer);
+    JsonReader reader2 = JsonReader.of(buffer);
     reader2.beginObject();
     reader2.endObject();
     assertThat(buffer.size()).isEqualTo(0);
@@ -80,7 +80,7 @@ public final class JsonReaderTest {
 
   @Test public void readObjectBuffer() throws IOException {
     Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
-    JsonReader reader = new JsonReader(buffer);
+    JsonReader reader = JsonReader.of(buffer);
     reader.beginObject();
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.nextString()).isEqualTo("android");
@@ -92,7 +92,7 @@ public final class JsonReaderTest {
 
   @Test public void readObjectSource() throws IOException {
     Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
-    JsonReader reader = new JsonReader(buffer);
+    JsonReader reader = JsonReader.of(buffer);
     reader.beginObject();
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.nextString()).isEqualTo("android");
@@ -245,7 +245,7 @@ public final class JsonReaderTest {
 
   @Test public void nullSource() {
     try {
-      new JsonReader(null);
+      JsonReader.of(null);
       fail();
     } catch (NullPointerException expected) {
     }

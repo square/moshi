@@ -76,7 +76,7 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  * ]}</pre>
  * This code encodes the above structure: <pre>   {@code
  *   public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
- *     JsonWriter writer = new JsonWriter(sink);
+ *     JsonWriter writer = JsonWriter.of(sink);
  *     writer.setIndentSpaces(4);
  *     writeMessagesArray(writer, messages);
  *     writer.close();
@@ -124,7 +124,7 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  * Instances of this class are not thread safe. Calls that would result in a
  * malformed JSON string will fail with an {@link IllegalStateException}.
  */
-public final class JsonWriter implements Closeable, Flushable {
+public class JsonWriter implements Closeable, Flushable {
 
   /*
    * From RFC 4627, "All Unicode characters may be placed within the
@@ -182,14 +182,18 @@ public final class JsonWriter implements Closeable, Flushable {
 
   private boolean promoteNameToValue;
 
-  /**
-   * Creates a new instance that writes a JSON-encoded stream to {@code sink}.
-   */
-  public JsonWriter(BufferedSink sink) {
+  private JsonWriter(BufferedSink sink) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
     }
     this.sink = sink;
+  }
+
+  /**
+   * Returns a new instance that writes a JSON-encoded stream to {@code sink}.
+   */
+  public static JsonWriter of(BufferedSink sink) {
+    return new JsonWriter(sink);
   }
 
   /**
