@@ -218,7 +218,7 @@ public final class JsonWriter implements Closeable, Flushable {
    * <ul>
    *   <li>Top-level values of any type. With strict writing, the top-level
    *       value must be an object or an array.
-   *   <li>Numbers may be {@link Double#isNaN() NaNs} or {@link
+   *   <li>Numbers may be {@linkplain Double#isNaN() NaNs} or {@linkplain
    *       Double#isInfinite() infinities}.
    * </ul>
    */
@@ -438,8 +438,8 @@ public final class JsonWriter implements Closeable, Flushable {
   /**
    * Encodes {@code value}.
    *
-   * @param value a finite value. May not be {@link Double#isNaN() NaNs} or
-   *     {@link Double#isInfinite() infinities}.
+   * @param value a finite value. May not be {@linkplain Double#isNaN() NaNs} or
+   *     {@linkplain Double#isInfinite() infinities}.
    * @return this writer.
    */
   public JsonWriter value(double value) throws IOException {
@@ -475,8 +475,8 @@ public final class JsonWriter implements Closeable, Flushable {
   /**
    * Encodes {@code value}.
    *
-   * @param value a finite value. May not be {@link Double#isNaN() NaNs} or
-   *     {@link Double#isInfinite() infinities}.
+   * @param value a finite value. May not be {@linkplain Double#isNaN() NaNs} or
+   *     {@linkplain Double#isInfinite() infinities}.
    * @return this writer.
    */
   public JsonWriter value(Number value) throws IOException {

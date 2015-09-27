@@ -278,7 +278,7 @@ public final class JsonReader implements Closeable {
    *       each stream must contain exactly one top-level value.
    *   <li>Top-level values of any type. With strict parsing, the top-level
    *       value must be an object or an array.
-   *   <li>Numbers may be {@link Double#isNaN() NaNs} or {@link
+   *   <li>Numbers may be {@linkplain Double#isNaN() NaNs} or {@link
    *       Double#isInfinite() infinities}.
    *   <li>End of line comments starting with {@code //} or {@code #} and
    *       ending with a newline character.
@@ -758,7 +758,7 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the next token, a {@link Token#NAME property name}, and consumes it.
+   * Returns the next token, a {@linkplain Token#NAME property name}, and consumes it.
    *
    * @throws JsonDataException if the next token in the stream is not a property name.
    */
@@ -783,7 +783,7 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#STRING string} value of the next token, consuming it. If the next
+   * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next
    * token is a number, this method will return its string form.
    *
    * @throws JsonDataException if the next token is not a string or if this reader is closed.
@@ -816,7 +816,7 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#BOOLEAN boolean} value of the next token, consuming it.
+   * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.
    *
    * @throws JsonDataException if the next token is not a boolean or if this reader is closed.
    */
@@ -858,7 +858,7 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#NUMBER double} value of the next token, consuming it. If the next
+   * Returns the {@linkplain Token#NUMBER double} value of the next token, consuming it. If the next
    * token is a string, this method will attempt to parse it as a double using {@link
    * Double#parseDouble(String)}.
    *
@@ -908,9 +908,9 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#NUMBER long} value of the next token, consuming it. If the next token
-   * is a string, this method will attempt to parse it as a long. If the next token's numeric value
-   * cannot be exactly represented by a Java {@code long}, this method throws.
+   * Returns the {@linkplain Token#NUMBER long} value of the next token, consuming it. If the next
+   * token is a string, this method will attempt to parse it as a long. If the next token's numeric
+   * value cannot be exactly represented by a Java {@code long}, this method throws.
    *
    * @throws JsonDataException if the next token is not a literal value, if the next literal value
    *     cannot be parsed as a number, or exactly represented as a long.
@@ -1027,9 +1027,9 @@ public final class JsonReader implements Closeable {
   }
 
   /**
-   * Returns the {@link Token#NUMBER int} value of the next token, consuming it. If the next token
-   * is a string, this method will attempt to parse it as an int. If the next token's numeric value
-   * cannot be exactly represented by a Java {@code int}, this method throws.
+   * Returns the {@linkplain Token#NUMBER int} value of the next token, consuming it. If the next
+   * token is a string, this method will attempt to parse it as an int. If the next token's numeric
+   * value cannot be exactly represented by a Java {@code int}, this method throws.
    *
    * @throws JsonDataException if the next token is not a literal value, if the next literal value
    *     cannot be parsed as a number, or exactly represented as an int.
