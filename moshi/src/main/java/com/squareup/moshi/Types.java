@@ -93,7 +93,7 @@ public final class Types {
     }
   }
 
-  static Class<?> getRawType(Type type) {
+  public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // type is a normal class.
       return (Class<?>) type;
@@ -260,7 +260,7 @@ public final class Types {
    * Returns the element type of this collection type.
    * @throws IllegalArgumentException if this type is not a collection.
    */
-  static Type collectionElementType(Type context, Class<?> contextRawType) {
+  public static Type collectionElementType(Type context, Class<?> contextRawType) {
     Type collectionType = getSupertype(context, contextRawType, Collection.class);
 
     if (collectionType instanceof WildcardType) {
