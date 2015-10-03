@@ -239,7 +239,7 @@ public class JsonWriter implements Closeable, Flushable {
 
   /**
    * Sets whether object members are serialized when their value is null.
-   * This has no impact on array elements. The default is true.
+   * This has no impact on array elements. The default is false.
    */
   public final void setSerializeNulls(boolean serializeNulls) {
     this.serializeNulls = serializeNulls;
@@ -247,7 +247,7 @@ public class JsonWriter implements Closeable, Flushable {
 
   /**
    * Returns true if object members are serialized when their value is null.
-   * This has no impact on array elements. The default is true.
+   * This has no impact on array elements. The default is false.
    */
   public final boolean getSerializeNulls() {
     return serializeNulls;
