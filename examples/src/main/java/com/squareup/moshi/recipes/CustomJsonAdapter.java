@@ -21,27 +21,17 @@ import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public final class CustomJsonAdapter {
-
-    private static final DateFormat FORMAT_DATE_AND_TIME = new SimpleDateFormat("yyyyMMddHH:mm");
-    private static final DateFormat FORMAT_DATE = new SimpleDateFormat("yyyyMMdd");
-    private static final DateFormat FORMAT_TIME = new SimpleDateFormat("HH:mm");
 
     public void run() throws Exception {
         // for some reason our JSON has date and time as separate fields -
         // we will use a custom JsonAdapter<Event> to clean that up during parsing
-        // also, we are not interested in "fooToken", so we'll ignore that
         String json = ""
                 + "{\n"
                 + "  \"title\": \"Blackjack tournament\",\n"
-                + "  \"beginDateAndTime\": \"20151006\",\n"
-                + "  \"beginTime\": \"15:59\",\n"
-                + "  \"fooToken\": \"zih7wenvkqyqwer099qr\"\n"
+                + "  \"beginDate\": \"20151006\",\n"
+                + "  \"beginTime\": \"15:59\"\n"
                 + "}\n";
 
         Moshi moshi = new Moshi.Builder()
@@ -70,27 +60,18 @@ public final class CustomJsonAdapter {
                 String name = jsonReader.nextName();
                 if (name.equals("title")) {
                     title = jsonReader.nextString();
-                } else if (name.equals("beginDateAndTime")) {
+                } else if (name.equals("beginDate")) {
                     beginDate = jsonReader.nextString();
                 } else if (name.equals("beginTime")) {
                     beginTime = jsonReader.nextString();
                 } else {
-                    // skip (e.g.) "fooToken"
                     jsonReader.skipValue();
                 }
             }
             jsonReader.endObject();
 
-            Date beginDateAndTime;
-            if ((beginDate != null) && (beginTime != null)) {
-                try {
-                    beginDateAndTime = FORMAT_DATE_AND_TIME.parse(beginDate + beginTime);
-                } catch (ParseException e) {
-                    beginDateAndTime = null;
-                }
-            } else {
-                beginDateAndTime = null;
-            }
+            final String beginDateAndTime = (beginDate != null) && (beginTime != null) ?
+                    beginDate + " " + beginTime : null;
 
             return new Event(title, beginDateAndTime);
         }
@@ -105,11 +86,11 @@ public final class CustomJsonAdapter {
             }
 
             if (event.beginDateAndTime != null) {
-                jsonWriter.name("beginDateAndTime");
-                jsonWriter.value(FORMAT_DATE.format(event.beginDateAndTime));
+                jsonWriter.name("beginDate");
+                jsonWriter.value(event.beginDateAndTime.substring(0, 8));
 
                 jsonWriter.name("beginTime");
-                jsonWriter.value(FORMAT_TIME.format(event.beginDateAndTime));
+                jsonWriter.value(event.beginDateAndTime.substring(9, 14));
             }
 
             jsonWriter.endObject();
@@ -118,9 +99,9 @@ public final class CustomJsonAdapter {
 
     public static final class Event {
         public final String title;
-        public final Date beginDateAndTime;
+        public final String beginDateAndTime;
 
-        public Event(String title, Date beginDateAndTime) {
+        public Event(String title, String beginDateAndTime) {
             this.title = title;
             this.beginDateAndTime = beginDateAndTime;
         }
