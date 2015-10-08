@@ -132,6 +132,8 @@ Voila:
 }
 ```
 
+#### Another example
+
 Note that the method annotated with `@FromJson` does not need to take a String as an argument. Rather it can take
 input of any type and Moshi will first parse the JSON to an object of that type and then use the `@FromJson`
 method to produce the desired final value. Conversely, the method annotated with `@ToJson` does not have to produce
@@ -149,9 +151,18 @@ separate strings.
 ```
 
 We would like to combine these two fields into one string to facilitate the date parsing at a
-later point. That is, while the `EventJson` class corresponds to the JSON structure directly, we would rather
-have an `Event` that looks like below (while we are at it, we are also changing the variable names to
-CamelCase).
+later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event` class we
+want Moshi to produce like this:
+
+```java
+class Event {
+    String title;
+    String beginDateAndTime;
+}
+```
+
+Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi
+do the transformation automatically. We simply define another class `EventJson` that directly corresponds to the JSON structure:
 
 ```java
 class EventJson {
@@ -159,16 +170,11 @@ class EventJson {
     String begin_date;
     String begin_time;
 }
-
-class Event {
-    String title;
-    String beginDateAndTime;
-}
-
 ```
 
-To enable Moshi to do that transformation automatically we define a class with the `@FromJson`
-(and `@ToJson`) methods:
+And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how to convert
+an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to serialize an `Event` Moshi will first
+create an `EventJson` object and then serialize that object as usual.
 
 ```java
 class EventJsonAdapter {
@@ -193,7 +199,7 @@ class EventJsonAdapter {
 }
 ```
 
-And register it with Moshi.
+Again we register the adapter with Moshi.
 
 ```java
 Moshi moshi = new Moshi.Builder()
