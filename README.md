@@ -132,6 +132,82 @@ Voila:
 }
 ```
 
+Note that the method annotated with `@FromJson` does not need to take a String as an argument. Rather it can take
+input of any type and Moshi will first parse the JSON to an object of that type and then use the `@FromJson`
+method to produce the desired final value. Conversely, the method annotated with `@ToJson` does not have to produce
+a String.
+
+Assume, for example, that we have to parse a JSON in which the date and time of an event are represented as two
+separate strings.
+
+```json
+{
+  "title": "Blackjack tournament",
+  "begin_date": "20151010",
+  "begin_time": "17:04"
+}
+```
+
+We would like to combine these two fields into one string to facilitate the date parsing at a
+later point. That is, while the `EventJson` class corresponds to the JSON structure directly, we would rather
+have an `Event` that looks like below (while we are at it, we are also changing the variable names to
+CamelCase).
+
+```java
+class EventJson {
+    String title;
+    String begin_date;
+    String begin_time;
+}
+
+class Event {
+    String title;
+    String beginDateAndTime;
+}
+
+```
+
+To enable Moshi to do that transformation automatically we define a class with the `@FromJson`
+(and `@ToJson`) methods:
+
+```java
+class EventJsonAdapter {
+
+    @FromJson
+    Event eventFromJson(EventJson eventJson) {
+        Event event = new Event();
+        event.title = eventJson.title;
+        event.beginDateAndTime = eventJson.begin_date + " " + eventJson.begin_time;
+        return event;
+    }
+
+    @ToJson
+    EventJson eventToJson(Event event) {
+        EventJson json = new EventJson();
+        json.title = event.title;
+        json.begin_date = event.beginDateAndTime.substring(0, 8);
+        json.begin_time = event.beginDateAndTime.substring(9, 14);
+        return json;
+    }
+
+}
+```
+
+And register it with Moshi.
+
+```java
+Moshi moshi = new Moshi.Builder()
+    .add(new EventJsonAdapter())
+    .build();
+```
+
+We can now use Moshi to parse the JSON directly to an `Event`.
+
+```java
+JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
+Event event = jsonAdapter.fromJson(json);
+```
+
 ### Fails Gracefully
 
 Automatic databinding almost feels like magic. But unlike the black magic that typically accompanies
