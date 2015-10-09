@@ -132,6 +132,88 @@ Voila:
 }
 ```
 
+#### Another example
+
+Note that the method annotated with `@FromJson` does not need to take a String as an argument. Rather it can take
+input of any type and Moshi will first parse the JSON to an object of that type and then use the `@FromJson`
+method to produce the desired final value. Conversely, the method annotated with `@ToJson` does not have to produce
+a String.
+
+Assume, for example, that we have to parse a JSON in which the date and time of an event are represented as two
+separate strings.
+
+```json
+{
+  "title": "Blackjack tournament",
+  "begin_date": "20151010",
+  "begin_time": "17:04"
+}
+```
+
+We would like to combine these two fields into one string to facilitate the date parsing at a
+later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event` class we
+want Moshi to produce like this:
+
+```java
+class Event {
+    String title;
+    String beginDateAndTime;
+}
+```
+
+Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi
+do the transformation automatically. We simply define another class `EventJson` that directly corresponds to the JSON structure:
+
+```java
+class EventJson {
+    String title;
+    String begin_date;
+    String begin_time;
+}
+```
+
+And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how to convert
+an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to serialize an `Event` Moshi will first
+create an `EventJson` object and then serialize that object as usual.
+
+```java
+class EventJsonAdapter {
+
+    @FromJson
+    Event eventFromJson(EventJson eventJson) {
+        Event event = new Event();
+        event.title = eventJson.title;
+        event.beginDateAndTime = eventJson.begin_date + " " + eventJson.begin_time;
+        return event;
+    }
+
+    @ToJson
+    EventJson eventToJson(Event event) {
+        EventJson json = new EventJson();
+        json.title = event.title;
+        json.begin_date = event.beginDateAndTime.substring(0, 8);
+        json.begin_time = event.beginDateAndTime.substring(9, 14);
+        return json;
+    }
+
+}
+```
+
+Again we register the adapter with Moshi.
+
+```java
+Moshi moshi = new Moshi.Builder()
+    .add(new EventJsonAdapter())
+    .build();
+```
+
+We can now use Moshi to parse the JSON directly to an `Event`.
+
+```java
+JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
+Event event = jsonAdapter.fromJson(json);
+```
+
 ### Fails Gracefully
 
 Automatic databinding almost feels like magic. But unlike the black magic that typically accompanies
