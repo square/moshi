@@ -251,7 +251,7 @@ But the two libraries have a few important differences:
  * **Moshi is less configurable.** There’s no field naming strategy, versioning, instance creators,
    or long serialization policy. Instead of naming a field `visibleCards` and using a policy class
    to convert that to `visible_cards`, Moshi wants you to just name the field `visible_cards` as it
-   appears in the JSON.
+   appears in the JSON or use the `@Json` annotation.
  * **Moshi doesn’t have a `JsonElement` model.** Instead it just uses built-in types like `List` and
    `Map`.
  * **No HTML-safe escaping.** Gson encodes `=` as `\u003d` by default so that it can be safely
