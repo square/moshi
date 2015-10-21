@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,16 @@ import java.util.Set;
  * Coordinates binding between JSON values and Java objects.
  */
 public final class Moshi {
+  static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>();
+
+  static {
+    BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
+    BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
+  }
+
   private final List<JsonAdapter.Factory> factories;
   private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
@@ -37,11 +48,7 @@ public final class Moshi {
   private Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<>();
     factories.addAll(builder.factories);
-    factories.add(StandardJsonAdapters.FACTORY);
-    factories.add(CollectionJsonAdapter.FACTORY);
-    factories.add(MapJsonAdapter.FACTORY);
-    factories.add(ArrayJsonAdapter.FACTORY);
-    factories.add(ClassJsonAdapter.FACTORY);
+    factories.addAll(BUILT_IN_FACTORIES);
     this.factories = Collections.unmodifiableList(factories);
   }
 
@@ -116,6 +123,14 @@ public final class Moshi {
         + type + " annotated " + annotations);
   }
 
+  /** Returns a new builder containing all custom factories used by the current instance. */
+  public Moshi.Builder newBuilder() {
+    int fullSize = factories.size();
+    int tailSize = BUILT_IN_FACTORIES.size();
+    List<JsonAdapter.Factory> customFactories = factories.subList(0, fullSize - tailSize);
+    return new Builder().addAll(customFactories);
+  }
+
   /** Returns an opaque object that's equal if the type and annotations are equal. */
   private Object cacheKey(Type type, Set<? extends Annotation> annotations) {
     if (annotations.isEmpty()) return type;
@@ -123,7 +138,7 @@ public final class Moshi {
   }
 
   public static final class Builder {
-    private final List<JsonAdapter.Factory> factories = new ArrayList<>();
+    final List<JsonAdapter.Factory> factories = new ArrayList<>();
 
     public <T> Builder add(final Type type, final JsonAdapter<T> jsonAdapter) {
       if (type == null) throw new IllegalArgumentException("type == null");
@@ -162,13 +177,18 @@ public final class Moshi {
       });
     }
 
-    public Builder add(JsonAdapter.Factory jsonAdapter) {
-      factories.add(jsonAdapter);
+    public Builder add(JsonAdapter.Factory factory) {
+      factories.add(factory);
       return this;
     }
 
     public Builder add(Object adapter) {
       return add(AdapterMethodsFactory.get(adapter));
+    }
+
+    private Builder addAll(List<JsonAdapter.Factory> factories) {
+      this.factories.addAll(factories);
+      return this;
     }
 
     public Moshi build() {
