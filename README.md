@@ -262,9 +262,7 @@ But the two libraries have a few important differences:
 Download
 --------
 
-**Moshi is under development.** The API is not final. Download [the latest .jar][dl] or depend via
-Maven:
-
+Download [the latest JAR][dl] or depend via Maven:
 ```xml
 <dependency>
   <groupId>com.squareup.moshi</groupId>
@@ -301,6 +299,6 @@ License
  [dl]: https://search.maven.org/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/
  [okio]: https://github.com/square/okio/
- [okhttp]: https://github.com/square/okhttp
- [gson]: https://github.com/google/gson
- [javadoc]: https://square.github.io/moshi/
+ [okhttp]: https://github.com/square/okhttp/
+ [gson]: https://github.com/google/gson/
+ [javadoc]: http://square.github.io/moshi/1.0.0/moshi/
