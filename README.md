@@ -301,4 +301,4 @@ License
  [okio]: https://github.com/square/okio/
  [okhttp]: https://github.com/square/okhttp/
  [gson]: https://github.com/google/gson/
- [javadoc]: http://square.github.io/moshi/1.0.0/moshi/
+ [javadoc]: http://square.github.io/moshi/1.x/moshi/
