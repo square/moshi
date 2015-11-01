@@ -31,7 +31,7 @@ import java.util.Set;
  * Coordinates binding between JSON values and Java objects.
  */
 public final class Moshi {
-  static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>();
+  static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(5);
 
   static {
     BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
@@ -46,7 +46,7 @@ public final class Moshi {
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
   private Moshi(Builder builder) {
-    List<JsonAdapter.Factory> factories = new ArrayList<>();
+    List<JsonAdapter.Factory> factories = new ArrayList<>(builder.factories.size() + BUILT_IN_FACTORIES.size());
     factories.addAll(builder.factories);
     factories.addAll(BUILT_IN_FACTORIES);
     this.factories = Collections.unmodifiableList(factories);
