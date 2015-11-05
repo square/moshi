@@ -183,6 +183,61 @@ public final class AdapterMethodsTest {
     }
   }
 
+  @Test public void emptyAdapters() throws Exception {
+    Moshi.Builder builder = new Moshi.Builder();
+    try {
+      builder.add(new EmptyJsonAdapter()).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "Expected at least one @ToJson or @FromJson method on "
+          + "com.squareup.moshi.AdapterMethodsTest$EmptyJsonAdapter");
+    }
+  }
+
+  static class EmptyJsonAdapter {
+  }
+
+  @Test public void unexpectedSignatureToAdapters() throws Exception {
+    Moshi.Builder builder = new Moshi.Builder();
+    try {
+      builder.add(new UnexpectedSignatureToJsonAdapter()).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unexpected signature for void "
+          + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureToJsonAdapter.pointToJson"
+          + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
+          + "@ToJson method signatures may have one of the following structures:\n"
+          + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
+          + "    <any access modifier> R toJson(T value) throws <any>;\n");
+    }
+  }
+
+  static class UnexpectedSignatureToJsonAdapter {
+    @ToJson void pointToJson(Point point) {
+    }
+  }
+
+  @Test public void unexpectedSignatureFromAdapters() throws Exception {
+    Moshi.Builder builder = new Moshi.Builder();
+    try {
+      builder.add(new UnexpectedSignatureFromJsonAdapter()).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unexpected signature for void "
+          + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
+          + "(java.lang.String).\n"
+          + "@FromJson method signatures may have one of the following structures:\n"
+          + "    <any access modifier> void fromJson(JsonReader jsonReader) throws <any>;\n"
+          + "    <any access modifier> R fromJson(T value) throws <any>;\n");
+    }
+  }
+
+  static class UnexpectedSignatureFromJsonAdapter {
+    @FromJson void pointFromJson(String point) {
+    }
+  }
+
   /**
    * Simple adapter methods are not invoked for null values unless they're annotated {@code
    * @Nullable}. (The specific annotation class doesn't matter; just its simple name.)
