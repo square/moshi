@@ -755,7 +755,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
     }
   }
 
-  private abstract class LinkedTreeMapIterator<T> implements Iterator<T> {
+  abstract class LinkedTreeMapIterator<T> implements Iterator<T> {
     Node<K, V> next = header.next;
     Node<K, V> lastReturned = null;
     int expectedModCount = modCount;

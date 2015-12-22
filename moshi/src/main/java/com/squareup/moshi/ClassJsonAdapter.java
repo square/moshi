@@ -115,7 +115,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   private final ClassFactory<T> classFactory;
   private final Map<String, FieldBinding<?>> jsonFields;
 
-  private ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> jsonFields) {
+  ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> jsonFields) {
     this.classFactory = classFactory;
     this.jsonFields = jsonFields;
   }
@@ -179,13 +179,13 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       this.adapter = adapter;
     }
 
-    private void read(JsonReader reader, Object value) throws IOException, IllegalAccessException {
+    void read(JsonReader reader, Object value) throws IOException, IllegalAccessException {
       T fieldValue = adapter.fromJson(reader);
       field.set(value, fieldValue);
     }
 
     @SuppressWarnings("unchecked") // We require that field's values are of type T.
-    private void write(JsonWriter writer, Object value) throws IllegalAccessException, IOException {
+    void write(JsonWriter writer, Object value) throws IllegalAccessException, IOException {
       T fieldValue = (T) field.get(value);
       adapter.toJson(writer, fieldValue);
     }

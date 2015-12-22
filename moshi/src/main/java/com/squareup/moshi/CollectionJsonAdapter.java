@@ -46,7 +46,7 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     this.elementAdapter = elementAdapter;
   }
 
-  private static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type, Moshi moshi) {
+  static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type, Moshi moshi) {
     Type elementType = Types.collectionElementType(type, Collection.class);
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
@@ -56,7 +56,7 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     };
   }
 
-  private static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type, Moshi moshi) {
+  static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type, Moshi moshi) {
     Type elementType = Types.collectionElementType(type, Collection.class);
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {

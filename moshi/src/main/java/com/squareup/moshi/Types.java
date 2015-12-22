@@ -177,7 +177,7 @@ public final class Types {
     }
   }
 
-  private static int hashCodeOrZero(Object o) {
+  static int hashCodeOrZero(Object o) {
     return o != null ? o.hashCode() : 0;
   }
 
@@ -390,7 +390,7 @@ public final class Types {
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
   }
 
-  private static void checkNotPrimitive(Type type) {
+  static void checkNotPrimitive(Type type) {
     if ((type instanceof Class<?>) && ((Class<?>) type).isPrimitive()) {
       throw new IllegalArgumentException();
     }
@@ -399,9 +399,9 @@ public final class Types {
   private static final class ParameterizedTypeImpl implements ParameterizedType {
     private final Type ownerType;
     private final Type rawType;
-    private final Type[] typeArguments;
+    final Type[] typeArguments;
 
-    public ParameterizedTypeImpl(Type ownerType, Type rawType, Type... typeArguments) {
+    ParameterizedTypeImpl(Type ownerType, Type rawType, Type... typeArguments) {
       // require an owner type if the raw type needs it
       if (rawType instanceof Class<?>) {
         Class<?> rawTypeAsClass = (Class<?>) rawType;
