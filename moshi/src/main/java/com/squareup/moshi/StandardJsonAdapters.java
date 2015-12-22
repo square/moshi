@@ -60,7 +60,7 @@ final class StandardJsonAdapters {
 
   private static final String ERROR_FORMAT = "Expected %s but was %s at path %s";
 
-  private static int rangeCheckNextInt(JsonReader reader, String typeMessage, int min, int max)
+  static int rangeCheckNextInt(JsonReader reader, String typeMessage, int min, int max)
       throws IOException {
     int value = reader.nextInt();
     if (value < min || value > max) {

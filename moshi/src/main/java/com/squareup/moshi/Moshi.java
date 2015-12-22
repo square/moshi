@@ -45,7 +45,7 @@ public final class Moshi {
   private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
-  private Moshi(Builder builder) {
+  Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<>(builder.factories.size() + BUILT_IN_FACTORIES.size());
     factories.addAll(builder.factories);
     factories.addAll(BUILT_IN_FACTORIES);
@@ -186,7 +186,7 @@ public final class Moshi {
       return add(AdapterMethodsFactory.get(adapter));
     }
 
-    private Builder addAll(List<JsonAdapter.Factory> factories) {
+    Builder addAll(List<JsonAdapter.Factory> factories) {
       this.factories.addAll(factories);
       return this;
     }
@@ -205,14 +205,14 @@ public final class Moshi {
    * class that has a {@code List<Employee>} field for an organization's management hierarchy.
    */
   private static class DeferredAdapter<T> extends JsonAdapter<T> {
-    private Object cacheKey;
+    Object cacheKey;
     private JsonAdapter<T> delegate;
 
-    public DeferredAdapter(Object cacheKey) {
+    DeferredAdapter(Object cacheKey) {
       this.cacheKey = cacheKey;
     }
 
-    public void ready(JsonAdapter<T> delegate) {
+    void ready(JsonAdapter<T> delegate) {
       this.delegate = delegate;
       this.cacheKey = null;
     }
