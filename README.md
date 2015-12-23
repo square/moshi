@@ -172,6 +172,19 @@ class EventJson {
 }
 ```
 
+Moshi also provides a `@Json` annotation which allows users to map the corresponding key value to a field. The above example could become:
+
+```java
+class EventJson {
+    @Json(name = "title")
+    String eventTitle;
+    @Json(name = "begin_date")
+    String beginDate;
+    @Json(name = "begin_time")
+    String beginTime;
+}
+```
+
 And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how to convert
 an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to serialize an `Event` Moshi will first
 create an `EventJson` object and then serialize that object as usual.
@@ -248,10 +261,9 @@ But the two libraries have a few important differences:
    serialize platform types (`java.*`, `javax.*`, and `android.*`) without a user-provided type
    adapter. This is intended to prevent you from accidentally locking yourself to a specific JDK or
    Android release.
- * **Moshi is less configurable.** There’s no field naming strategy, versioning, instance creators,
-   or long serialization policy. Instead of naming a field `visibleCards` and using a policy class
-   to convert that to `visible_cards`, Moshi wants you to just name the field `visible_cards` as it
-   appears in the JSON.
+ * **Moshi is less configurable.** Moshi provides a `@Json` annotation which acts as an analogous to 
+   `@SerializedName` field naming strategy. But there's no versioning, instance creators,
+   or long serialization policy provided.
  * **Moshi doesn’t have a `JsonElement` model.** Instead it just uses built-in types like `List` and
    `Map`.
  * **No HTML-safe escaping.** Gson encodes `=` as `\u003d` by default so that it can be safely
