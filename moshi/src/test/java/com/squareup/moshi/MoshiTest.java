@@ -672,6 +672,13 @@ public final class MoshiTest {
     assertThat(adapter.toJson(Roshambo.PAPER)).isEqualTo("\"PAPER\"");
   }
 
+  @Test public void annotatedEnum() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
+    assertThat(adapter.fromJson("\"scr\"")).isEqualTo(Roshambo.SCISSORS);
+    assertThat(adapter.toJson(Roshambo.SCISSORS)).isEqualTo("\"scr\"");
+  }
+
   @Test public void invalidEnum() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
@@ -680,7 +687,7 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage(
-          "Expected one of [ROCK, PAPER, SCISSORS] but was SPOCK at path $");
+          "Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
   }
 
@@ -930,7 +937,7 @@ public final class MoshiTest {
   enum Roshambo {
     ROCK,
     PAPER,
-    SCISSORS
+    @Json(name = "scr") SCISSORS
   }
 
   @Retention(RUNTIME)
