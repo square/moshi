@@ -134,13 +134,13 @@ Voila:
 
 #### Another example
 
-Note that the method annotated with `@FromJson` does not need to take a String as an argument. Rather it can take
-input of any type and Moshi will first parse the JSON to an object of that type and then use the `@FromJson`
-method to produce the desired final value. Conversely, the method annotated with `@ToJson` does not have to produce
-a String.
+Note that the method annotated with `@FromJson` does not need to take a String as an argument.
+Rather it can take input of any type and Moshi will first parse the JSON to an object of that type
+and then use the `@FromJson` method to produce the desired final value. Conversely, the method
+annotated with `@ToJson` does not have to produce a String.
 
-Assume, for example, that we have to parse a JSON in which the date and time of an event are represented as two
-separate strings.
+Assume, for example, that we have to parse a JSON in which the date and time of an event are
+represented as two separate strings.
 
 ```json
 {
@@ -151,51 +151,50 @@ separate strings.
 ```
 
 We would like to combine these two fields into one string to facilitate the date parsing at a
-later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event` class we
-want Moshi to produce like this:
+later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event`
+class we want Moshi to produce like this:
 
 ```java
 class Event {
-    String title;
-    String beginDateAndTime;
+  String title;
+  String beginDateAndTime;
 }
 ```
 
-Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi
-do the transformation automatically. We simply define another class `EventJson` that directly corresponds to the JSON structure:
+Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi do the
+transformation automatically. We simply define another class `EventJson` that directly corresponds
+to the JSON structure:
 
 ```java
 class EventJson {
-    String title;
-    String begin_date;
-    String begin_time;
+  String title;
+  String begin_date;
+  String begin_time;
 }
 ```
 
-And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how to convert
-an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to serialize an `Event` Moshi will first
-create an `EventJson` object and then serialize that object as usual.
+And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how
+to convert an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON
+to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to
+serialize an `Event` Moshi will first create an `EventJson` object and then serialize that object as
+usual.
 
 ```java
 class EventJsonAdapter {
+  @FromJson Event eventFromJson(EventJson eventJson) {
+    Event event = new Event();
+    event.title = eventJson.title;
+    event.beginDateAndTime = eventJson.begin_date + " " + eventJson.begin_time;
+    return event;
+  }
 
-    @FromJson
-    Event eventFromJson(EventJson eventJson) {
-        Event event = new Event();
-        event.title = eventJson.title;
-        event.beginDateAndTime = eventJson.begin_date + " " + eventJson.begin_time;
-        return event;
-    }
-
-    @ToJson
-    EventJson eventToJson(Event event) {
-        EventJson json = new EventJson();
-        json.title = event.title;
-        json.begin_date = event.beginDateAndTime.substring(0, 8);
-        json.begin_time = event.beginDateAndTime.substring(9, 14);
-        return json;
-    }
-
+  @ToJson EventJson eventToJson(Event event) {
+    EventJson json = new EventJson();
+    json.title = event.title;
+    json.begin_date = event.beginDateAndTime.substring(0, 8);
+    json.begin_time = event.beginDateAndTime.substring(9, 14);
+    return json;
+  }
 }
 ```
 
@@ -258,6 +257,108 @@ But the two libraries have a few important differences:
    encoded in HTML without additional escaping. Moshi encodes it naturally (as `=`) and assumes that
    the HTML encoder – if there is one – will do its job.
 
+### Custom field names with @Json
+
+Moshi works best when your JSON objects and Java objects have the same structure. But when they
+don't, Moshi has annotations to customize data binding.
+
+Use `@Json` to specify how Java fields map to JSON names. This is necessary when the JSON name
+contains spaces or other characters that aren’t permitted in Java field names. For example, this
+JSON has a field name containing a space:
+
+```json
+{
+  "username": "jesse",
+  "lucky number": 32
+}
+```
+
+With `@Json` its corresponding Java class is easy:
+
+```java
+class Player {
+  String username;
+  @Json(name = "lucky number") int luckyNumber;
+
+  ...
+}
+```
+
+Because JSON field names are always defined with their Java fields, Moshi makes it easy to find
+fields when navigating between Java and JSON.
+
+### Alternate type adapters with @JsonQualifier
+
+Use `@JsonQualifier` to customize how a type is encoded for some fields without changing its
+encoding everywhere. This works similarly to the qualifier annotations in dependency injection
+tools like Dagger and Guice.
+
+Here’s a JSON message with two integers and a color:
+
+```json
+{
+  "width": 1024,
+  "height": 768,
+  "color": "#ff0000"
+}
+```
+
+By convention, Android programs also use `int` for colors:
+
+```java
+class Rectangle {
+  int width;
+  int height;
+  int color;
+}
+```
+
+But if we encoded the above Java class as JSON, the color isn't encoded properly!
+
+```json
+{
+  "width": 1024,
+  "height": 768,
+  "color": 16711680
+}
+```
+
+The fix is to define a qualifier annotation, itself annotated `@JsonQualifier`:
+
+```java
+@Retention(RUNTIME)
+@JsonQualifier
+public @interface HexColor {
+}
+```
+
+Next apply this `@HexColor` annotation to the appropriate field:
+
+```
+class Rectangle {
+  int width;
+  int height;
+  @HexColor int color;
+}
+```
+
+And finally define a type adapter to handle it:
+
+```
+/** Converts strings like #ff0000 to the corresponding color ints. */
+class ColorAdapter {
+  @ToJson String toJson(@HexColor int rgb) {
+    return String.format("#%06x", rgb);
+  }
+
+  @FromJson @HexColor int fromJson(String rgb) {
+    return Integer.parseInt(rgb.substring(1), 16);
+  }
+}
+```
+
+Use `@JsonQualifier` when you need different JSON encodings for the same type. Most programs
+shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 
 Download
 --------
