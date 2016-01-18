@@ -21,6 +21,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,7 @@ final class StandardJsonAdapters {
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isEnum()) {
         //noinspection unchecked
-        return enumAdapter((Class<? extends Enum>) rawType).nullSafe();
+        return new EnumJsonAdapter<>((Class<? extends Enum>) rawType).nullSafe();
       }
       return null;
     }
@@ -212,27 +213,46 @@ final class StandardJsonAdapters {
     }
   };
 
-  static <T extends Enum<T>> JsonAdapter<T> enumAdapter(final Class<T> enumType) {
-    return new JsonAdapter<T>() {
-      @Override public T fromJson(JsonReader reader) throws IOException {
-        String name = reader.nextString();
-        try {
-          return Enum.valueOf(enumType, name);
-        } catch (IllegalArgumentException e) {
-          throw new JsonDataException("Expected one of "
-              + Arrays.toString(enumType.getEnumConstants()) + " but was " + name + " at path "
-              + reader.getPath());
+  static final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
+    private final Class<T> enumType;
+    private final Map<String, T> nameConstantMap = new LinkedHashMap<>();
+
+    public EnumJsonAdapter(Class<T> enumType) {
+      this.enumType = enumType;
+      try {
+        T[] constants = enumType.getEnumConstants();
+        for (T constant : constants) {
+          Json annotation = enumType.getField(constant.name()).getAnnotation(Json.class);
+          String name = annotation != null ? annotation.name() : constant.name();
+          nameConstantMap.put(name, constant);
+        }
+      } catch (NoSuchFieldException e) {
+        throw new AssertionError("Missing field in " + enumType.getName(), e);
+      }
+
+    }
+
+    @Override public T fromJson(JsonReader reader) throws IOException {
+      String name = reader.nextString();
+      T constant = nameConstantMap.get(name);
+      if (constant != null) return constant;
+      throw new JsonDataException("Expected one of "
+          + nameConstantMap.keySet() + " but was " + name + " at path "
+          + reader.getPath());
+    }
+
+    @Override public void toJson(JsonWriter writer, T value) throws IOException {
+      for (Map.Entry<String, T> entry : nameConstantMap.entrySet()) {
+        if (entry.getValue() == value) {
+          writer.value(entry.getKey());
+          break;
         }
       }
+    }
 
-      @Override public void toJson(JsonWriter writer, T value) throws IOException {
-        writer.value(value.name());
-      }
-
-      @Override public String toString() {
-        return "JsonAdapter(" + enumType.getName() + ")";
-      }
-    };
+    @Override public String toString() {
+      return "JsonAdapter(" + enumType.getName() + ")";
+    }
   }
 
   /**
