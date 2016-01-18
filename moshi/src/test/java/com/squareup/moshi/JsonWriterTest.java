@@ -48,11 +48,41 @@ public final class JsonWriterTest {
     assertThat(buffer.readUtf8()).isEqualTo("{\"a\":null}");
   }
 
-  @Test public void wrongTopLevelType() throws IOException {
+  @Test public void topLevelValueTypes() throws IOException {
     Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
+
+    JsonWriter writer1 = JsonWriter.of(buffer);
+    writer1.value(true);
+    writer1.close();
+    assertThat(buffer.readUtf8()).isEqualTo("true");
+
+    JsonWriter writer2 = JsonWriter.of(buffer);
+    writer2.nullValue();
+    writer2.close();
+    assertThat(buffer.readUtf8()).isEqualTo("null");
+
+    JsonWriter writer3 = JsonWriter.of(buffer);
+    writer3.value(123);
+    writer3.close();
+    assertThat(buffer.readUtf8()).isEqualTo("123");
+
+    JsonWriter writer4 = JsonWriter.of(buffer);
+    writer4.value(123.4);
+    writer4.close();
+    assertThat(buffer.readUtf8()).isEqualTo("123.4");
+
+    JsonWriter writer5 = JsonWriter.of(buffer);
+    writer5.value("a");
+    writer5.close();
+    assertThat(buffer.readUtf8()).isEqualTo("\"a\"");
+  }
+
+  @Test public void invalidTopLevelTypes() throws IOException {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = JsonWriter.of(buffer);
+    writer.name("hello");
     try {
-      jsonWriter.value("a");
+      writer.value("world");
       fail();
     } catch (IllegalStateException expected) {
     }
