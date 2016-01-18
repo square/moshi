@@ -264,14 +264,6 @@ public final class JsonReaderTest {
     }
   }
 
-  @Test public void noTopLevelObject() {
-    try {
-      newReader("true").nextBoolean();
-      fail();
-    } catch (IOException expected) {
-    }
-  }
-
   @Test public void characterUnescaping() throws IOException {
     String json = "[\"a\","
         + "\"a\\\"\","
@@ -1341,44 +1333,36 @@ public final class JsonReaderTest {
     }
   }
 
-  @Test public void strictTopLevelString() {
-    JsonReader reader = newReader("\"a\"");
-    try {
-      reader.nextString();
-      fail();
-    } catch (IOException expected) {
-    }
+  @Test public void topLevelValueTypes() throws IOException {
+    JsonReader reader1 = newReader("true");
+    assertThat(reader1.nextBoolean()).isTrue();
+    assertThat(reader1.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    JsonReader reader2 = newReader("false");
+    assertThat(reader2.nextBoolean()).isFalse();
+    assertThat(reader2.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    JsonReader reader3 = newReader("null");
+    assertThat(reader3.nextNull()).isNull();
+    assertThat(reader3.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    JsonReader reader4 = newReader("123");
+    assertThat(reader4.nextInt()).isEqualTo(123);
+    assertThat(reader4.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    JsonReader reader5 = newReader("123.4");
+    assertThat(reader5.nextDouble()).isEqualTo(123.4);
+    assertThat(reader5.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    JsonReader reader6 = newReader("\"a\"");
+    assertThat(reader6.nextString()).isEqualTo("a");
+    assertThat(reader6.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void lenientTopLevelString() throws IOException {
-    JsonReader reader = newReader("\"a\"");
-    reader.setLenient(true);
-    assertThat(reader.nextString()).isEqualTo("a");
+  @Test public void topLevelValueTypeWithSkipValue() throws IOException {
+    JsonReader reader = newReader("true");
+    reader.skipValue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
-  }
-
-  @Test public void strictTopLevelValueType() {
-    JsonReader reader = newReader("true");
-    try {
-      reader.nextBoolean();
-      fail();
-    } catch (IOException expected) {
-    }
-  }
-
-  @Test public void lenientTopLevelValueType() throws IOException {
-    JsonReader reader = newReader("true");
-    reader.setLenient(true);
-    assertThat(reader.nextBoolean()).isTrue();
-  }
-
-  @Test public void strictTopLevelValueTypeWithSkipValue() {
-    JsonReader reader = newReader("true");
-    try {
-      reader.skipValue();
-      fail();
-    } catch (IOException expected) {
-    }
   }
 
   @Test @Ignore public void bomIgnoredAsFirstCharacterOfDocument() throws IOException {

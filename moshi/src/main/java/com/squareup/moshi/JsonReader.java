@@ -23,7 +23,7 @@ import okio.BufferedSource;
 import okio.ByteString;
 
 /**
- * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>)
+ * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
  * encoded value as a stream of tokens. This stream includes both literal
  * values (strings, numbers, booleans, and nulls) as well as the begin and
  * end delimiters of objects and arrays. The tokens are traversed in
@@ -272,7 +272,7 @@ public class JsonReader implements Closeable {
   /**
    * Configure this parser to be liberal in what it accepts. By default
    * this parser is strict and only accepts JSON as specified by <a
-   * href="http://www.ietf.org/rfc/rfc4627.txt">RFC 4627</a>. Setting the
+   * href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>. Setting the
    * parser to lenient causes it to ignore the following syntax errors:
    *
    * <ul>
@@ -568,9 +568,6 @@ public class JsonReader implements Closeable {
         buffer.readByte(); // Consume '\''.
         return peeked = PEEKED_SINGLE_QUOTED;
       case '"':
-        if (stackSize == 1) {
-          checkLenient();
-        }
         buffer.readByte(); // Consume '\"'.
         return peeked = PEEKED_DOUBLE_QUOTED;
       case '[':
@@ -580,10 +577,6 @@ public class JsonReader implements Closeable {
         buffer.readByte(); // Consume '{'.
         return peeked = PEEKED_BEGIN_OBJECT;
       default:
-    }
-
-    if (stackSize == 1) {
-      checkLenient(); // Top-level value isn't an array or an object.
     }
 
     int result = peekKeyword();
