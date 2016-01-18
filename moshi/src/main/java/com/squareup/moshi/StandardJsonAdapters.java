@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -215,21 +214,25 @@ final class StandardJsonAdapters {
 
   static final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     private final Class<T> enumType;
-    private final Map<String, T> nameConstantMap = new LinkedHashMap<>();
+    private final Map<String, T> nameConstantMap;
+    private final String[] nameStrings;
 
     public EnumJsonAdapter(Class<T> enumType) {
       this.enumType = enumType;
       try {
         T[] constants = enumType.getEnumConstants();
-        for (T constant : constants) {
+        nameConstantMap = new LinkedHashMap<>();
+        nameStrings = new String[constants.length];
+        for (int i = 0; i < constants.length; i++) {
+          T constant = constants[i];
           Json annotation = enumType.getField(constant.name()).getAnnotation(Json.class);
           String name = annotation != null ? annotation.name() : constant.name();
           nameConstantMap.put(name, constant);
+          nameStrings[i] = name;
         }
       } catch (NoSuchFieldException e) {
         throw new AssertionError("Missing field in " + enumType.getName(), e);
       }
-
     }
 
     @Override public T fromJson(JsonReader reader) throws IOException {
@@ -242,12 +245,7 @@ final class StandardJsonAdapters {
     }
 
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
-      for (Map.Entry<String, T> entry : nameConstantMap.entrySet()) {
-        if (entry.getValue() == value) {
-          writer.value(entry.getKey());
-          break;
-        }
-      }
+      writer.value(nameStrings[value.ordinal()]);
     }
 
     @Override public String toString() {
