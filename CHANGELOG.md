@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+## Version 1.1.0
+
+_2016-01-19_
+
+ * New: Support [RFC 7159][rfc_7159], the latest JSON specification. This removes the constraint
+   that the root value must be an array or an object. It may now take any value: array, object,
+   string, number, boolean, or null. Previously this was only permitted if the adapter was
+   configured to be lenient.
+ * New: Enum constants may be annotated with `@Json` to customize their encoded value.
+ * New: Create new builder from Moshi instance with `Moshi.newBuilder()`.
+ * New: `Types.getRawType()` and `Types.collectionElementType()` APIs to assist in defining generic
+   type adapter factories.
+
 ## Version 1.0.0
 
 _2015-09-27_
@@ -41,3 +54,4 @@ _2015-06-16_
 
 
  [dates_example]: https://github.com/square/moshi/blob/master/examples/src/main/java/com/squareup/moshi/recipes/ReadAndWriteRfc3339Dates.java
+ [rfc_7159]: https://tools.ietf.org/html/rfc7159
