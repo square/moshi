@@ -35,7 +35,7 @@ import static com.squareup.moshi.TestUtil.newReader;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class JsonReaderTest {
+public final class BufferedSourceJsonReaderTest {
   @Test public void readingDoesNotBuffer() throws IOException {
     Buffer buffer = new Buffer().writeUtf8("{}{}");
 

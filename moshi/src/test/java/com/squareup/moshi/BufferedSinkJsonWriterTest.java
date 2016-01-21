@@ -24,7 +24,7 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class JsonWriterTest {
+public final class BufferedSinkJsonWriterTest {
   @Test public void nullsValuesNotSerializedByDefault() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter jsonWriter = JsonWriter.of(buffer);
