@@ -309,7 +309,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    * Ensures all buffered data is written to the underlying {@link Sink}
    * and flushes that writer.
    */
-  public void flush() throws IOException {
+  @Override public void flush() throws IOException {
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
     }
@@ -321,7 +321,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    *
    * @throws JsonDataException if the JSON document is incomplete.
    */
-  public void close() throws IOException {
+  @Override public void close() throws IOException {
     sink.close();
 
     int size = stackSize;
