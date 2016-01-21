@@ -52,7 +52,7 @@ final class JsonScope {
    */
   static String getPath(int stackSize, int[] stack, String[] pathNames, int[] pathIndices) {
     StringBuilder result = new StringBuilder().append('$');
-    for (int i = 0, size = stackSize; i < size; i++) {
+    for (int i = 0; i < stackSize; i++) {
       switch (stack[i]) {
         case EMPTY_ARRAY:
         case NONEMPTY_ARRAY:
