@@ -124,7 +124,7 @@ public final class MapJsonAdapterTest {
     Map<String, Boolean> fromJson = fromJson(
         Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
     assertThat(fromJson).containsExactly(
-            MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
+        MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
   }
 
   class Base32Adapter extends JsonAdapter<byte[]>  {

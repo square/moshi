@@ -93,6 +93,30 @@ public final class Types {
     }
   }
 
+  static Type canonicalizePlatformTypes(Type type) {
+    if (type instanceof GenericArrayType) {
+      Type c = ((GenericArrayType) type).getGenericComponentType();
+      if (c.equals(Byte.TYPE)) {
+        return byte[].class;
+      } else if (c.equals(Long.TYPE)) {
+        return long[].class;
+      } else if (c.equals(Integer.TYPE)) {
+        return int[].class;
+      } else if (c.equals(Short.TYPE)) {
+        return short[].class;
+      } else if (c.equals(Character.TYPE)) {
+        return char[].class;
+      } else if (c.equals(Boolean.TYPE)) {
+        return boolean[].class;
+      } else if (c.equals(Float.TYPE)) {
+        return float[].class;
+      } else if (c.equals(Double.TYPE)) {
+        return double[].class;
+      }
+    }
+    return type;
+  }
+
   public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // type is a normal class.

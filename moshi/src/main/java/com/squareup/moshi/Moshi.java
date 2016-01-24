@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,9 +86,10 @@ public final class Moshi {
     // Prepare for re-entrant calls, then ask each factory to create a type adapter.
     DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(cacheKey);
     deferredAdapters.add(deferredAdapter);
+    Type canonicalType = Types.canonicalizePlatformTypes(type);
     try {
       for (int i = 0, size = factories.size(); i < size; i++) {
-        JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
+        JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(canonicalType, annotations, this);
         if (result != null) {
           deferredAdapter.ready(result);
           synchronized (adapterCache) {
