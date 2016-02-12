@@ -719,30 +719,30 @@ public final class BufferedSourceJsonReaderTest {
   }
 
   @Test public void prematurelyClosed() throws IOException {
+    JsonReader reader1 = newReader("{\"a\":[]}");
+    reader1.beginObject();
+    reader1.close();
     try {
-      JsonReader reader = newReader("{\"a\":[]}");
-      reader.beginObject();
-      reader.close();
-      reader.nextName();
+      reader1.nextName();
       fail();
     } catch (IllegalStateException expected) {
     }
 
+    JsonReader reader2 = newReader("{\"a\":[]}");
+    reader2.close();
     try {
-      JsonReader reader = newReader("{\"a\":[]}");
-      reader.close();
-      reader.beginObject();
+      reader2.beginObject();
       fail();
     } catch (IllegalStateException expected) {
     }
 
+    JsonReader reader3 = newReader("{\"a\":true}");
+    reader3.beginObject();
+    reader3.nextName();
+    reader3.peek();
+    reader3.close();
     try {
-      JsonReader reader = newReader("{\"a\":true}");
-      reader.beginObject();
-      reader.nextName();
-      reader.peek();
-      reader.close();
-      reader.nextBoolean();
+      reader3.nextBoolean();
       fail();
     } catch (IllegalStateException expected) {
     }

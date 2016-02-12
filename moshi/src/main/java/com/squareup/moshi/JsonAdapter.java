@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import okio.Buffer;
 import okio.BufferedSink;
 import okio.BufferedSource;
@@ -30,11 +31,19 @@ public abstract class JsonAdapter<T> {
   public abstract T fromJson(JsonReader reader) throws IOException;
 
   public final T fromJson(BufferedSource source) throws IOException {
-    return fromJson(JsonReader.of(source));
+    return fromJson(new BufferedSourceJsonReader(source));
   }
 
   public final T fromJson(String string) throws IOException {
     return fromJson(new Buffer().writeUtf8(string));
+  }
+
+  public final T fromJsonTree(Object o) {
+    try {
+      return fromJson(new ObjectJsonReader(o));
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public abstract void toJson(JsonWriter writer, T value) throws IOException;
@@ -52,6 +61,16 @@ public abstract class JsonAdapter<T> {
       throw new AssertionError(e); // No I/O writing to a Buffer.
     }
     return buffer.readUtf8();
+  }
+
+  public final Object toJsonTree(T value) {
+    AtomicReference<Object> sink = new AtomicReference<>();
+    try {
+      toJson(new ObjectJsonWriter(sink), value);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+    return sink.get();
   }
 
   /**
