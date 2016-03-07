@@ -334,7 +334,7 @@ public @interface HexColor {
 
 Next apply this `@HexColor` annotation to the appropriate field:
 
-```
+```java
 class Rectangle {
   int width;
   int height;
@@ -344,7 +344,7 @@ class Rectangle {
 
 And finally define a type adapter to handle it:
 
-```
+```java
 /** Converts strings like #ff0000 to the corresponding color ints. */
 class ColorAdapter {
   @ToJson String toJson(@HexColor int rgb) {
