@@ -159,6 +159,36 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextName()).isEqualTo("a");
   }
 
+  @Test public void readerUnquotedIntegerValue() throws Exception {
+    JsonReader reader = newReader("{5:1}");
+    reader.setLenient(true);
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.nextInt()).isEqualTo(5);
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.endObject();
+  }
+
+  @Test public void readerUnquotedLongValue() throws Exception {
+    JsonReader reader = newReader("{5:1}");
+    reader.setLenient(true);
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.nextLong()).isEqualTo(5L);
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.endObject();
+  }
+
+  @Test public void readerUnquotedDoubleValue() throws Exception {
+    JsonReader reader = newReader("{5:1}");
+    reader.setLenient(true);
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.nextDouble()).isEqualTo(5d);
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.endObject();
+  }
+
   private JsonReader newReader(String s) {
     return JsonReader.of(new Buffer().writeUtf8(s));
   }
