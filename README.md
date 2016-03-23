@@ -360,6 +360,93 @@ class ColorAdapter {
 Use `@JsonQualifier` when you need different JSON encodings for the same type. Most programs
 shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 
+### Omit fields with `transient`
+
+Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
+hand has a `total` field with the sum of the cards:
+
+```
+public final class BlackjackHand {
+  private int total;
+
+  ...
+}
+```
+
+By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
+JSON. Prevent a field from being included by adding Java’s `transient` keyword:
+
+```
+public final class BlackjackHand {
+  private transient int total;
+
+  ...
+}
+```
+
+Transient fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
+JSON contains a value for the field. Instead it will get a default value.
+
+
+### Default Values & Constructors
+
+When reading JSON that is missing a field, Moshi relies on the the Java or Android runtime to assign
+the field’s value. Which value it uses depends on whether the class has a no-arguments constructor.
+
+If the class has a no-arguments constructor, Moshi will call that constructor and whatever value
+it assigns will be used. For example, because this class has a no-arguments constructor the `total`
+field is initialized to `-1`.
+
+```
+public final class BlackjackHand {
+  private int total = -1;
+  ...
+
+  private BlackjackHand() {
+  }
+
+  public BlackjackHand(Card hidden_card, List<Card> visible_cards) {
+    ...
+  }
+}
+```
+
+If the class doesn’t have a no-arguments constructor, Moshi can’t assign the field’s default value,
+**even if it’s specified in the field declaration**. Instead, the field’s default is always `0` for
+numbers, `false` for booleans, and `null` for references. In this example, the default value of
+`total` is `0`!
+
+```
+public final class BlackjackHand {
+  private int total = -1;
+  ...
+
+  public BlackjackHand(Card hidden_card, List<Card> visible_cards) {
+    ...
+  }
+}
+```
+
+This is surprising and is a potential source of bugs! For this reason consider defining a
+no-arguments constructor in classes that you use with Moshi, using `@SuppressWarnings("unused")` to
+prevent it from being inadvertently deleted later:
+
+```
+public final class BlackjackHand {
+  private int total = -1;
+  ...
+
+  @SuppressWarnings("unused") // Moshi uses this!
+  private BlackjackHand() {
+  }
+
+  public BlackjackHand(Card hidden_card, List<Card> visible_cards) {
+    ...
+  }
+}
+```
+
+
 Download
 --------
 
