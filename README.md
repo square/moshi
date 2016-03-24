@@ -365,7 +365,7 @@ shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
 hand has a `total` field with the sum of the cards:
 
-```
+```java
 public final class BlackjackHand {
   private int total;
 
@@ -376,7 +376,7 @@ public final class BlackjackHand {
 By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
 JSON. Prevent a field from being included by adding Java’s `transient` keyword:
 
-```
+```java
 public final class BlackjackHand {
   private transient int total;
 
@@ -397,7 +397,7 @@ If the class has a no-arguments constructor, Moshi will call that constructor an
 it assigns will be used. For example, because this class has a no-arguments constructor the `total`
 field is initialized to `-1`.
 
-```
+```java
 public final class BlackjackHand {
   private int total = -1;
   ...
@@ -416,7 +416,7 @@ If the class doesn’t have a no-arguments constructor, Moshi can’t assign the
 numbers, `false` for booleans, and `null` for references. In this example, the default value of
 `total` is `0`!
 
-```
+```java
 public final class BlackjackHand {
   private int total = -1;
   ...
@@ -431,7 +431,7 @@ This is surprising and is a potential source of bugs! For this reason consider d
 no-arguments constructor in classes that you use with Moshi, using `@SuppressWarnings("unused")` to
 prevent it from being inadvertently deleted later:
 
-```
+```java
 public final class BlackjackHand {
   private int total = -1;
   ...
