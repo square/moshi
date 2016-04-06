@@ -304,7 +304,7 @@ final class BufferedSourceJsonReader extends JsonReader {
           break;
         case '=':
           checkLenient();
-          if (fillBuffer(1) && buffer.getByte(0) == '>') {
+          if (source.request(1) && buffer.getByte(0) == '>') {
             buffer.readByte(); // Consume '>'.
           }
           break;
@@ -400,7 +400,7 @@ final class BufferedSourceJsonReader extends JsonReader {
     // Confirm that chars [1..length) match the keyword.
     int length = keyword.length();
     for (int i = 1; i < length; i++) {
-      if (!fillBuffer(i + 1)) {
+      if (!source.request(i + 1)) {
         return PEEKED_NONE;
       }
       c = buffer.getByte(i);
@@ -409,7 +409,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       }
     }
 
-    if (fillBuffer(length + 1) && isLiteral(buffer.getByte(length))) {
+    if (source.request(length + 1) && isLiteral(buffer.getByte(length))) {
       return PEEKED_NONE; // Don't match trues, falsey or nullsoft!
     }
 
@@ -428,7 +428,7 @@ final class BufferedSourceJsonReader extends JsonReader {
 
     charactersOfNumber:
     for (; true; i++) {
-      if (!fillBuffer(i + 1)) {
+      if (!source.request(i + 1)) {
         break;
       }
 
@@ -881,15 +881,6 @@ final class BufferedSourceJsonReader extends JsonReader {
   }
 
   /**
-   * Returns true once {@code limit - pos >= minimum}. If the data is
-   * exhausted before that many characters are available, this returns
-   * false.
-   */
-  private boolean fillBuffer(int minimum) throws IOException {
-    return source.request(minimum);
-  }
-
-  /**
    * Returns the next character in the stream that is neither whitespace nor a
    * part of a comment. When this returns, the returned character is always at
    * {@code buffer[pos-1]}; this means the caller can always push back the
@@ -905,7 +896,7 @@ final class BufferedSourceJsonReader extends JsonReader {
      * 'p' and 'l' after any (potentially indirect) call to the same method.
      */
     int p = 0;
-    while (fillBuffer(p + 1)) {
+    while (source.request(p + 1)) {
       int c = buffer.getByte(p++);
       if (c == '\n' || c == ' ' || c == '\r' || c == '\t') {
         continue;
@@ -913,7 +904,7 @@ final class BufferedSourceJsonReader extends JsonReader {
 
       buffer.skip(p - 1);
       if (c == '/') {
-        if (!fillBuffer(2)) {
+        if (!source.request(2)) {
           return c;
         }
 
@@ -981,7 +972,7 @@ final class BufferedSourceJsonReader extends JsonReader {
    */
   private boolean skipTo(String toFind) throws IOException {
     outer:
-    for (; fillBuffer(toFind.length());) {
+    for (; source.request(toFind.length());) {
       for (int c = 0; c < toFind.length(); c++) {
         if (buffer.getByte(c) != toFind.charAt(c)) {
           buffer.readByte();
@@ -1009,14 +1000,14 @@ final class BufferedSourceJsonReader extends JsonReader {
    * @throws IOException if any unicode escape sequences are malformed.
    */
   private char readEscapeCharacter() throws IOException {
-    if (!fillBuffer(1)) {
+    if (!source.request(1)) {
       throw syntaxError("Unterminated escape sequence");
     }
 
     byte escaped = buffer.readByte();
     switch (escaped) {
       case 'u':
-        if (!fillBuffer(4)) {
+        if (!source.request(4)) {
           throw new EOFException("Unterminated escape sequence at path " + getPath());
         }
         // Equivalent to Integer.parseInt(stringPool.get(buffer, pos, 4), 16);

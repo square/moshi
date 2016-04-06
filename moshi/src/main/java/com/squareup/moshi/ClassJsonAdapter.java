@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -81,11 +82,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
         // Create the binding between field and JSON.
         field.setAccessible(true);
-        FieldBinding<Object> fieldBinding = new FieldBinding<>(field, adapter);
 
         // Store it using the field's name. If there was already a field with this name, fail!
         Json jsonAnnotation = field.getAnnotation(Json.class);
         String name = jsonAnnotation != null ? jsonAnnotation.name() : field.getName();
+        FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
         FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
         if (replaced != null) {
           throw new IllegalArgumentException("Conflicting fields:\n"
@@ -113,11 +114,13 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   };
 
   private final ClassFactory<T> classFactory;
-  private final Map<String, FieldBinding<?>> jsonFields;
+  private final Map<String, FieldBinding<?>> fieldsMap;
+  private final FieldBinding<?>[] fieldsArray;
 
-  ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> jsonFields) {
+  ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
-    this.jsonFields = jsonFields;
+    this.fieldsMap = new LinkedHashMap<>(fieldsMap);
+    this.fieldsArray = fieldsMap.values().toArray(new FieldBinding[fieldsMap.size()]);
   }
 
   @Override public T fromJson(JsonReader reader) throws IOException {
@@ -139,7 +142,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       reader.beginObject();
       while (reader.hasNext()) {
         String name = reader.nextName();
-        FieldBinding<?> fieldBinding = jsonFields.get(name);
+        FieldBinding<?> fieldBinding = fieldsMap.get(name);
         if (fieldBinding != null) {
           fieldBinding.read(reader, result);
         } else {
@@ -156,9 +159,9 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   @Override public void toJson(JsonWriter writer, T value) throws IOException {
     try {
       writer.beginObject();
-      for (Map.Entry<String, FieldBinding<?>> entry : jsonFields.entrySet()) {
-        writer.name(entry.getKey());
-        entry.getValue().write(writer, value);
+      for (FieldBinding<?> fieldBinding : fieldsArray) {
+        writer.name(fieldBinding.name);
+        fieldBinding.write(writer, value);
       }
       writer.endObject();
     } catch (IllegalAccessException e) {
@@ -171,10 +174,12 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   }
 
   static class FieldBinding<T> {
-    private final Field field;
-    private final JsonAdapter<T> adapter;
+    final String name;
+    final Field field;
+    final JsonAdapter<T> adapter;
 
-    public FieldBinding(Field field, JsonAdapter<T> adapter) {
+    public FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
+      this.name = name;
       this.field = field;
       this.adapter = adapter;
     }
