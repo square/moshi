@@ -1,0 +1,25 @@
+allprojects  {
+  apply plugin: 'maven'
+
+  group = 'com.squareup.moshi'
+version = '1.2.0-SNAPSHOT'
+}
+
+subprojects {
+  apply plugin: 'java'
+  sourceCompatibility = 1.7
+  targetCompatibility = 1.7
+
+  
+  repositories {
+    mavenLocal()
+    
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+  }
+
+  configurations.all {
+}
+  
+  
+}

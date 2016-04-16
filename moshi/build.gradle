@@ -1,0 +1,7 @@
+
+description = 'Moshi'
+dependencies {
+    compile group: 'com.squareup.okio', name: 'okio', version:'1.6.0'
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+    testCompile group: 'org.assertj', name: 'assertj-core', version:'1.7.0'
+}

@@ -1,0 +1,8 @@
+rootProject.name = 'moshi-parent'
+include ':moshi'
+include ':moshi-examples'
+include ':moshi-adapters'
+
+project(':moshi').projectDir = "$rootDir/moshi" as File
+project(':moshi-examples').projectDir = "$rootDir/examples" as File
+project(':moshi-adapters').projectDir = "$rootDir/adapters" as File

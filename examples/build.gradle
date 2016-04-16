@@ -1,0 +1,6 @@
+
+description = ''
+dependencies {
+  compile project(':moshi')
+  compile project(':moshi-adapters')
+}
