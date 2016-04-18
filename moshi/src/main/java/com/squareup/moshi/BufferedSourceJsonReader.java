@@ -552,6 +552,23 @@ final class BufferedSourceJsonReader extends JsonReader {
     return result;
   }
 
+  @Override int selectName(Selection selection) throws IOException {
+    int p = peeked;
+    if (p == PEEKED_NONE) {
+      p = doPeek();
+    }
+    if (p != PEEKED_DOUBLE_QUOTED_NAME) {
+      return -1;
+    }
+
+    int result = source.select(selection.doubleQuoteSuffix);
+    if (result != -1) {
+      peeked = PEEKED_NONE;
+      pathNames[stackSize - 1] = selection.strings[result];
+    }
+    return result;
+  }
+
   @Override public String nextString() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
@@ -576,6 +593,23 @@ final class BufferedSourceJsonReader extends JsonReader {
     }
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
+    return result;
+  }
+
+  @Override int selectString(Selection selection) throws IOException {
+    int p = peeked;
+    if (p == PEEKED_NONE) {
+      p = doPeek();
+    }
+    if (p != PEEKED_DOUBLE_QUOTED) {
+      return -1;
+    }
+
+    int result = source.select(selection.doubleQuoteSuffix);
+    if (result != -1) {
+      peeked = PEEKED_NONE;
+      pathIndices[stackSize - 1]++;
+    }
     return result;
   }
 

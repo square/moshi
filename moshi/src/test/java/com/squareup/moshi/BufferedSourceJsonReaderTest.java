@@ -33,6 +33,7 @@ import static com.squareup.moshi.JsonReader.Token.NUMBER;
 import static com.squareup.moshi.JsonReader.Token.STRING;
 import static com.squareup.moshi.TestUtil.newReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class BufferedSourceJsonReaderTest {
@@ -1768,6 +1769,121 @@ public final class BufferedSourceJsonReaderTest {
       fail();
     } catch (IOException expected) {
     }
+  }
+
+  @Test public void selectName() throws IOException {
+    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+
+    JsonReader reader = newReader("{\"a\": 5, \"b\": 5, \"c\": 5, \"d\": 5}");
+    reader.beginObject();
+    assertEquals("$.", reader.getPath());
+
+    assertEquals(0, reader.selectName(abc));
+    assertEquals("$.a", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.a", reader.getPath());
+
+    assertEquals(1, reader.selectName(abc));
+    assertEquals("$.b", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.b", reader.getPath());
+
+    assertEquals(2, reader.selectName(abc));
+    assertEquals("$.c", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.c", reader.getPath());
+
+    // A missed selectName() doesn't advance anything, not even the path.
+    assertEquals(-1, reader.selectName(abc));
+    assertEquals("$.c", reader.getPath());
+    assertEquals(JsonReader.Token.NAME, reader.peek());
+
+    assertEquals("d", reader.nextName());
+    assertEquals("$.d", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.d", reader.getPath());
+
+    reader.endObject();
+  }
+
+  @Test public void selectString() throws IOException {
+    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+
+    JsonReader reader = newReader("[\"a\", \"b\", \"c\", \"d\"]");
+    reader.beginArray();
+    assertEquals("$[0]", reader.getPath());
+
+    assertEquals(0, reader.selectString(abc));
+    assertEquals("$[1]", reader.getPath());
+
+    assertEquals(1, reader.selectString(abc));
+    assertEquals("$[2]", reader.getPath());
+
+    assertEquals(2, reader.selectString(abc));
+    assertEquals("$[3]", reader.getPath());
+
+    // A missed selectName() doesn't advance anything, not even the path.
+    assertEquals(-1, reader.selectString(abc));
+    assertEquals("$[3]", reader.getPath());
+    assertEquals(JsonReader.Token.STRING, reader.peek());
+
+    assertEquals("d", reader.nextString());
+    assertEquals("$[4]", reader.getPath());
+
+    reader.endArray();
+  }
+
+  /** Select doesn't match unquoted strings. */
+  @Test public void selectStringUnquoted() throws IOException {
+    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+
+    JsonReader reader = newReader("[a]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertEquals(-1, reader.selectString(abc));
+    assertEquals("a", reader.nextString());
+    reader.endArray();
+  }
+
+  /** Select doesn't match single quoted strings. */
+  @Test public void selectStringSingleQuoted() throws IOException {
+    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+
+    JsonReader reader = newReader("['a']");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertEquals(-1, reader.selectString(abc));
+    assertEquals("a", reader.nextString());
+    reader.endArray();
+  }
+
+  /** Select doesn't match unnecessarily-escaped strings. */
+  @Test public void selectUnnecessaryEscaping() throws IOException {
+    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+
+    JsonReader reader = newReader("[\"\\u0061\"]");
+    reader.beginArray();
+    assertEquals(-1, reader.selectString(abc));
+    assertEquals("a", reader.nextString());
+    reader.endArray();
+  }
+
+  /** Select does match necessarily escaping. The decoded value is used in the path. */
+  @Test public void selectNecessaryEscaping() throws IOException {
+    JsonReader.Selection selection = JsonReader.Selection.of("\n", "\u0000", "\"");
+
+    JsonReader reader = newReader("{\"\\n\": 5,\"\\u0000\": 5, \"\\\"\": 5}");
+    reader.beginObject();
+    assertEquals(0, reader.selectName(selection));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\n", reader.getPath());
+    assertEquals(1, reader.selectName(selection));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\u0000", reader.getPath());
+    assertEquals(2, reader.selectName(selection));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\"", reader.getPath());
+    reader.endObject();
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {
