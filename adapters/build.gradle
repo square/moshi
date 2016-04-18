@@ -1,7 +1,11 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 description = ''
 dependencies {
-  compile project(':moshi')
-    testCompile group: 'junit', name: 'junit', version:'4.12'
-    testCompile group: 'org.assertj', name: 'assertj-core', version:'1.7.0'
+    compile project(':moshi')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '1.7.0'
 }

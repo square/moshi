@@ -1,5 +1,5 @@
-rootProject.name = 'moshi-parent'
-include ':moshi'
+//rootProject.name = 'moshi-parent'
+include ':moshi', ':android'
 include ':moshi-examples'
 include ':moshi-adapters'
 

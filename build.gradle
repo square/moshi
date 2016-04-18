@@ -1,25 +1,31 @@
-allprojects  {
-  apply plugin: 'maven'
+buildscript {
+    repositories {
+//        TODO use https
+        jcenter { url "http://jcenter.bintray.com/" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.0-beta1'
+    }
+}
 
-  group = 'com.squareup.moshi'
-version = '1.2.0-SNAPSHOT'
+allprojects {
+//  apply plugin: 'maven'
+//
+//  group = 'com.squareup.moshi'
+//version = '1.2.0-SNAPSHOT'
 }
 
 subprojects {
-  apply plugin: 'java'
-  sourceCompatibility = 1.7
-  targetCompatibility = 1.7
 
-  
-  repositories {
-    mavenLocal()
-    
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url "http://repo.maven.apache.org/maven2" }
-  }
+    repositories {
+        mavenLocal()
 
-  configurations.all {
-}
-  
-  
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+        maven { url "http://repo.maven.apache.org/maven2" }
+    }
+
+    configurations.all {
+    }
+
+
 }
