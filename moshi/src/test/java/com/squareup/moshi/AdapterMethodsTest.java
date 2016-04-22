@@ -18,6 +18,8 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -354,6 +356,50 @@ public final class AdapterMethodsTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("No @ToJson adapter for interface "
           + "com.squareup.moshi.AdapterMethodsTest$Shape annotated []");
+    }
+  }
+
+  /**
+   * Unfortunately in some versions of Android the implementations of {@link ParameterizedType}
+   * doesn't implement equals and hashCode. Confirm that we work around that.
+   */
+  @Test public void parameterizedTypeEqualsNotUsed() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new ListOfStringJsonAdapter())
+        .build();
+
+    // This class doesn't implement equals() and hashCode() as it should.
+    ParameterizedType listOfStringType = new ParameterizedType() {
+      @Override public Type[] getActualTypeArguments() {
+        return new Type[] { String.class };
+      }
+
+      @Override public Type getRawType() {
+        return List.class;
+      }
+
+      @Override public Type getOwnerType() {
+        return null;
+      }
+    };
+
+    JsonAdapter<List<String>> jsonAdapter = moshi.adapter(listOfStringType);
+    assertThat(jsonAdapter.toJson(Arrays.asList("a", "b", "c"))).isEqualTo("\"a|b|c\"");
+    assertThat(jsonAdapter.fromJson("\"a|b|c\"")).isEqualTo(Arrays.asList("a", "b", "c"));
+  }
+
+  static class ListOfStringJsonAdapter {
+    @ToJson String listOfStringToJson(List<String> list) {
+      StringBuilder result = new StringBuilder();
+      for (int i = 0; i < list.size(); i++) {
+        if (i > 0) result.append('|');
+        result.append(list.get(i));
+      }
+      return result.toString();
+    }
+
+    @FromJson List<String> listOfStringFromJson(String string) {
+      return Arrays.asList(string.split("\\|"));
     }
   }
 
