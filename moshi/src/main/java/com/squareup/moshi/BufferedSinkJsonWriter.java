@@ -218,7 +218,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   private void writeDeferredName() throws IOException {
     if (deferredName != null) {
       beforeName();
-      string(deferredName);
+      string(sink, deferredName);
       deferredName = null;
     }
   }
@@ -232,7 +232,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     }
     writeDeferredName();
     beforeValue();
-    string(value);
+    string(sink, value);
     pathIndices[stackSize - 1]++;
     return this;
   }
@@ -331,7 +331,11 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     stackSize = 0;
   }
 
-  private void string(String value) throws IOException {
+  /**
+   * Writes {@code value} as a string literal to {@code sink}. This wraps the value in double quotes
+   * and escapes those characters that require it.
+   */
+  static void string(BufferedSink sink, String value) throws IOException {
     String[] replacements = REPLACEMENT_CHARS;
     sink.writeByte('"');
     int last = 0;

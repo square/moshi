@@ -17,7 +17,11 @@ package com.squareup.moshi;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import okio.Buffer;
 import okio.BufferedSource;
+import okio.ByteString;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
@@ -273,12 +277,24 @@ public abstract class JsonReader implements Closeable {
   public abstract String nextName() throws IOException;
 
   /**
+   * If the next token is a {@linkplain Token#NAME property name} that's in {@code selection}, this
+   * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
+   */
+  abstract int selectName(Selection selection) throws IOException;
+
+  /**
    * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next
    * token is a number, this method will return its string form.
    *
    * @throws JsonDataException if the next token is not a string or if this reader is closed.
    */
   public abstract String nextString() throws IOException;
+
+  /**
+   * If the next token is a {@linkplain Token#STRING string} that's in {@code selection}, this
+   * consumes it and returns its index. Otherwise this returns -1 and no string is consumed.
+   */
+  abstract int selectString(Selection selection) throws IOException;
 
   /**
    * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.
@@ -346,6 +362,39 @@ public abstract class JsonReader implements Closeable {
    * that arbitrary type adapters can use {@link #nextString} to read a name value.
    */
   abstract void promoteNameToValue() throws IOException;
+
+  /**
+   * A set of strings to be chosen with {@link #selectName} or {@link #selectString}. This prepares
+   * the encoded values of the strings so they can be read directly from the input source. It cannot
+   * read arbitrary encodings of the strings: if any of a string's characters are unnecessarily
+   * escaped in the source JSON, that string will not be selected. Similarly, if the string is
+   * unquoted or uses single quotes in the source JSON, it will not be selected. Client code that
+   * uses this class should fall back to another mechanism to accommodate this possibility.
+   */
+  static final class Selection {
+    final String[] strings;
+    final List<ByteString> doubleQuoteSuffix;
+
+    public Selection(String[] strings, List<ByteString> doubleQuoteSuffix) {
+      this.strings = strings;
+      this.doubleQuoteSuffix = doubleQuoteSuffix;
+    }
+
+    public static Selection of(String... strings) {
+      try {
+        ByteString[] result = new ByteString[strings.length];
+        Buffer buffer = new Buffer();
+        for (int i = 0; i < strings.length; i++) {
+          BufferedSinkJsonWriter.string(buffer, strings[i]);
+          buffer.readByte(); // Skip the leading double quote (but leave the trailing one).
+          result[i] = buffer.readByteString();
+        }
+        return new Selection(strings.clone(), Arrays.asList(result));
+      } catch (IOException e) {
+        throw new AssertionError(e);
+      }
+    }
+  }
 
   /**
    * A structure, name, or value type in a JSON-encoded string.

@@ -116,11 +116,14 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   private final ClassFactory<T> classFactory;
   private final Map<String, FieldBinding<?>> fieldsMap;
   private final FieldBinding<?>[] fieldsArray;
+  private final JsonReader.Selection selection;
 
   ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
     this.fieldsMap = new LinkedHashMap<>(fieldsMap);
     this.fieldsArray = fieldsMap.values().toArray(new FieldBinding[fieldsMap.size()]);
+    this.selection = JsonReader.Selection.of(
+        fieldsMap.keySet().toArray(new String[fieldsMap.size()]));
   }
 
   @Override public T fromJson(JsonReader reader) throws IOException {
@@ -141,13 +144,19 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     try {
       reader.beginObject();
       while (reader.hasNext()) {
-        String name = reader.nextName();
-        FieldBinding<?> fieldBinding = fieldsMap.get(name);
-        if (fieldBinding != null) {
-          fieldBinding.read(reader, result);
+        int index = reader.selectName(selection);
+        FieldBinding<?> fieldBinding;
+        if (index != -1) {
+          fieldBinding = fieldsArray[index];
         } else {
-          reader.skipValue();
+          String name = reader.nextName();
+          fieldBinding = fieldsMap.get(name);
+          if (fieldBinding == null) {
+            reader.skipValue();
+            continue;
+          }
         }
+        fieldBinding.read(reader, result);
       }
       reader.endObject();
       return result;
