@@ -228,7 +228,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       List<AdapterMethod> adapterMethods, Type type, Set<? extends Annotation> annotations) {
     for (int i = 0, size = adapterMethods.size(); i < size; i++) {
       AdapterMethod adapterMethod = adapterMethods.get(i);
-      if (adapterMethod.type.equals(type) && adapterMethod.annotations.equals(annotations)) {
+      if (Types.equals(adapterMethod.type, type) && adapterMethod.annotations.equals(annotations)) {
         return adapterMethod;
       }
     }
