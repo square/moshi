@@ -1772,7 +1772,7 @@ public final class BufferedSourceJsonReaderTest {
   }
 
   @Test public void selectName() throws IOException {
-    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
     JsonReader reader = newReader("{\"a\": 5, \"b\": 5, \"c\": 5, \"d\": 5}");
     reader.beginObject();
@@ -1807,7 +1807,7 @@ public final class BufferedSourceJsonReaderTest {
   }
 
   @Test public void selectString() throws IOException {
-    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
     JsonReader reader = newReader("[\"a\", \"b\", \"c\", \"d\"]");
     reader.beginArray();
@@ -1835,7 +1835,7 @@ public final class BufferedSourceJsonReaderTest {
 
   /** Select doesn't match unquoted strings. */
   @Test public void selectStringUnquoted() throws IOException {
-    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
     JsonReader reader = newReader("[a]");
     reader.setLenient(true);
@@ -1847,7 +1847,7 @@ public final class BufferedSourceJsonReaderTest {
 
   /** Select doesn't match single quoted strings. */
   @Test public void selectStringSingleQuoted() throws IOException {
-    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
     JsonReader reader = newReader("['a']");
     reader.setLenient(true);
@@ -1859,7 +1859,7 @@ public final class BufferedSourceJsonReaderTest {
 
   /** Select doesn't match unnecessarily-escaped strings. */
   @Test public void selectUnnecessaryEscaping() throws IOException {
-    JsonReader.Selection abc = JsonReader.Selection.of("a", "b", "c");
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
     JsonReader reader = newReader("[\"\\u0061\"]");
     reader.beginArray();
@@ -1870,17 +1870,17 @@ public final class BufferedSourceJsonReaderTest {
 
   /** Select does match necessarily escaping. The decoded value is used in the path. */
   @Test public void selectNecessaryEscaping() throws IOException {
-    JsonReader.Selection selection = JsonReader.Selection.of("\n", "\u0000", "\"");
+    JsonReader.Options options = JsonReader.Options.of("\n", "\u0000", "\"");
 
     JsonReader reader = newReader("{\"\\n\": 5,\"\\u0000\": 5, \"\\\"\": 5}");
     reader.beginObject();
-    assertEquals(0, reader.selectName(selection));
+    assertEquals(0, reader.selectName(options));
     assertEquals(5, reader.nextInt());
     assertEquals("$.\n", reader.getPath());
-    assertEquals(1, reader.selectName(selection));
+    assertEquals(1, reader.selectName(options));
     assertEquals(5, reader.nextInt());
     assertEquals("$.\u0000", reader.getPath());
-    assertEquals(2, reader.selectName(selection));
+    assertEquals(2, reader.selectName(options));
     assertEquals(5, reader.nextInt());
     assertEquals("$.\"", reader.getPath());
     reader.endObject();

@@ -217,7 +217,7 @@ final class StandardJsonAdapters {
     private final Map<String, T> nameConstantMap;
     private final String[] nameStrings;
     private final T[] constants;
-    private final JsonReader.Selection selection;
+    private final JsonReader.Options options;
 
     public EnumJsonAdapter(Class<T> enumType) {
       this.enumType = enumType;
@@ -232,14 +232,14 @@ final class StandardJsonAdapters {
           nameConstantMap.put(name, constant);
           nameStrings[i] = name;
         }
-        selection = JsonReader.Selection.of(nameStrings);
+        options = JsonReader.Options.of(nameStrings);
       } catch (NoSuchFieldException e) {
         throw new AssertionError("Missing field in " + enumType.getName(), e);
       }
     }
 
     @Override public T fromJson(JsonReader reader) throws IOException {
-      int index = reader.selectString(selection);
+      int index = reader.selectString(options);
       if (index != -1) return constants[index];
 
       String name = reader.nextString();

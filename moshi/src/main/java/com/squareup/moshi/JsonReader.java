@@ -17,8 +17,6 @@ package com.squareup.moshi;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -277,10 +275,10 @@ public abstract class JsonReader implements Closeable {
   public abstract String nextName() throws IOException;
 
   /**
-   * If the next token is a {@linkplain Token#NAME property name} that's in {@code selection}, this
+   * If the next token is a {@linkplain Token#NAME property name} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
    */
-  abstract int selectName(Selection selection) throws IOException;
+  abstract int selectName(Options options) throws IOException;
 
   /**
    * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next
@@ -291,10 +289,10 @@ public abstract class JsonReader implements Closeable {
   public abstract String nextString() throws IOException;
 
   /**
-   * If the next token is a {@linkplain Token#STRING string} that's in {@code selection}, this
+   * If the next token is a {@linkplain Token#STRING string} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no string is consumed.
    */
-  abstract int selectString(Selection selection) throws IOException;
+  abstract int selectString(Options options) throws IOException;
 
   /**
    * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.
@@ -371,16 +369,16 @@ public abstract class JsonReader implements Closeable {
    * unquoted or uses single quotes in the source JSON, it will not be selected. Client code that
    * uses this class should fall back to another mechanism to accommodate this possibility.
    */
-  static final class Selection {
+  static final class Options {
     final String[] strings;
-    final List<ByteString> doubleQuoteSuffix;
+    final okio.Options doubleQuoteSuffix;
 
-    public Selection(String[] strings, List<ByteString> doubleQuoteSuffix) {
+    private Options(String[] strings, okio.Options doubleQuoteSuffix) {
       this.strings = strings;
       this.doubleQuoteSuffix = doubleQuoteSuffix;
     }
 
-    public static Selection of(String... strings) {
+    public static Options of(String... strings) {
       try {
         ByteString[] result = new ByteString[strings.length];
         Buffer buffer = new Buffer();
@@ -389,7 +387,7 @@ public abstract class JsonReader implements Closeable {
           buffer.readByte(); // Skip the leading double quote (but leave the trailing one).
           result[i] = buffer.readByteString();
         }
-        return new Selection(strings.clone(), Arrays.asList(result));
+        return new Options(strings.clone(), okio.Options.of(result));
       } catch (IOException e) {
         throw new AssertionError(e);
       }

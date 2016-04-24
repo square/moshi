@@ -552,7 +552,7 @@ final class BufferedSourceJsonReader extends JsonReader {
     return result;
   }
 
-  @Override int selectName(Selection selection) throws IOException {
+  @Override int selectName(Options options) throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
@@ -561,10 +561,10 @@ final class BufferedSourceJsonReader extends JsonReader {
       return -1;
     }
 
-    int result = source.select(selection.doubleQuoteSuffix);
+    int result = source.select(options.doubleQuoteSuffix);
     if (result != -1) {
       peeked = PEEKED_NONE;
-      pathNames[stackSize - 1] = selection.strings[result];
+      pathNames[stackSize - 1] = options.strings[result];
     }
     return result;
   }
@@ -596,7 +596,7 @@ final class BufferedSourceJsonReader extends JsonReader {
     return result;
   }
 
-  @Override int selectString(Selection selection) throws IOException {
+  @Override int selectString(Options options) throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
@@ -605,7 +605,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       return -1;
     }
 
-    int result = source.select(selection.doubleQuoteSuffix);
+    int result = source.select(options.doubleQuoteSuffix);
     if (result != -1) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
