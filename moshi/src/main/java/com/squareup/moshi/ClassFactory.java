@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -77,7 +78,7 @@ abstract class ClassFactory<T> {
       // Not the expected version of the Oracle Java library!
     }
 
-    // Try Dalvik/libcore's ObjectStreamClass mechanism.
+    // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
     // public class ObjectStreamClass {
     //   private static native int getConstructorId(Class<?> c);
     //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
@@ -105,6 +106,27 @@ abstract class ClassFactory<T> {
       throw new RuntimeException(e);
     } catch (NoSuchMethodException ignored) {
       // Not the expected version of Dalvik/libcore!
+    }
+
+    // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
+    // public class ObjectInputStream {
+    //   private static native Object newInstance(
+    //     Class<?> instantiationClass, Class<?> constructorClass);
+    // }
+    try {
+      final Method newInstance = ObjectInputStream.class.getDeclaredMethod(
+          "newInstance", Class.class, Class.class);
+      newInstance.setAccessible(true);
+      return new ClassFactory<T>() {
+        @SuppressWarnings("unchecked")
+        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+          return (T) newInstance.invoke(null, rawType, Object.class);
+        }
+        @Override public String toString() {
+          return rawType.getName();
+        }
+      };
+    } catch (Exception ignored) {
     }
 
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
