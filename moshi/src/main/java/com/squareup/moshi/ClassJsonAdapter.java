@@ -116,13 +116,13 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   private final ClassFactory<T> classFactory;
   private final Map<String, FieldBinding<?>> fieldsMap;
   private final FieldBinding<?>[] fieldsArray;
-  private final JsonReader.Selection selection;
+  private final JsonReader.Options options;
 
   ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
     this.fieldsMap = new LinkedHashMap<>(fieldsMap);
     this.fieldsArray = fieldsMap.values().toArray(new FieldBinding[fieldsMap.size()]);
-    this.selection = JsonReader.Selection.of(
+    this.options = JsonReader.Options.of(
         fieldsMap.keySet().toArray(new String[fieldsMap.size()]));
   }
 
@@ -144,7 +144,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     try {
       reader.beginObject();
       while (reader.hasNext()) {
-        int index = reader.selectName(selection);
+        int index = reader.selectName(options);
         FieldBinding<?> fieldBinding;
         if (index != -1) {
           fieldBinding = fieldsArray[index];
