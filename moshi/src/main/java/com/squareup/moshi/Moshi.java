@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,6 +62,8 @@ public final class Moshi {
 
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
+    type = Types.canonicalize(type);
+
     // If there's an equivalent adapter in the cache, we're done!
     Object cacheKey = cacheKey(type, annotations);
     synchronized (adapterCache) {
@@ -111,6 +112,8 @@ public final class Moshi {
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
       Set<? extends Annotation> annotations) {
+    type = Types.canonicalize(type);
+
     int skipPastIndex = factories.indexOf(skipPast);
     if (skipPastIndex == -1) {
       throw new IllegalArgumentException("Unable to skip past unknown factory " + skipPast);

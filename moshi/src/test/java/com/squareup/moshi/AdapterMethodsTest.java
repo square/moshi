@@ -369,19 +369,7 @@ public final class AdapterMethodsTest {
         .build();
 
     // This class doesn't implement equals() and hashCode() as it should.
-    ParameterizedType listOfStringType = new ParameterizedType() {
-      @Override public Type[] getActualTypeArguments() {
-        return new Type[] { String.class };
-      }
-
-      @Override public Type getRawType() {
-        return List.class;
-      }
-
-      @Override public Type getOwnerType() {
-        return null;
-      }
-    };
+    ParameterizedType listOfStringType = brokenParameterizedType(0, List.class, String.class);
 
     JsonAdapter<List<String>> jsonAdapter = moshi.adapter(listOfStringType);
     assertThat(jsonAdapter.toJson(Arrays.asList("a", "b", "c"))).isEqualTo("\"a|b|c\"");
@@ -401,6 +389,21 @@ public final class AdapterMethodsTest {
     @FromJson List<String> listOfStringFromJson(String string) {
       return Arrays.asList(string.split("\\|"));
     }
+  }
+
+  /**
+   * Even when the types we use to look up JSON adapters are not equal, if they're equivalent they
+   * should return the same JsonAdapter instance.
+   */
+  @Test public void parameterizedTypeCacheKey() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+
+    Type a = brokenParameterizedType(0, List.class, String.class);
+    Type b = brokenParameterizedType(1, List.class, String.class);
+    Type c = brokenParameterizedType(2, List.class, String.class);
+
+    assertThat(moshi.adapter(b)).isSameAs(moshi.adapter(a));
+    assertThat(moshi.adapter(c)).isSameAs(moshi.adapter(a));
   }
 
   static class Point {
@@ -423,5 +426,35 @@ public final class AdapterMethodsTest {
 
   interface Shape {
     String draw();
+  }
+
+  /**
+   * Returns a new parameterized type that doesn't implement {@link Object#equals} or {@link
+   * Object#hashCode} by value. These implementation defects are consistent with the parameterized
+   * type that shipped in some older versions of Android.
+   */
+  ParameterizedType brokenParameterizedType(
+      final int hashCode, final Class<?> rawType, final Type... typeArguments) {
+    return new ParameterizedType() {
+      @Override public Type[] getActualTypeArguments() {
+        return typeArguments;
+      }
+
+      @Override public Type getRawType() {
+        return rawType;
+      }
+
+      @Override public Type getOwnerType() {
+        return null;
+      }
+
+      @Override public boolean equals(Object other) {
+        return other == this;
+      }
+
+      @Override public int hashCode() {
+        return hashCode;
+      }
+    };
   }
 }

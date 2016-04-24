@@ -76,15 +76,18 @@ public final class Types {
       return c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
 
     } else if (type instanceof ParameterizedType) {
+      if (type instanceof ParameterizedTypeImpl) return type;
       ParameterizedType p = (ParameterizedType) type;
       return new ParameterizedTypeImpl(p.getOwnerType(),
           p.getRawType(), p.getActualTypeArguments());
 
     } else if (type instanceof GenericArrayType) {
+      if (type instanceof GenericArrayTypeImpl) return type;
       GenericArrayType g = (GenericArrayType) type;
       return new GenericArrayTypeImpl(g.getGenericComponentType());
 
     } else if (type instanceof WildcardType) {
+      if (type instanceof WildcardTypeImpl) return type;
       WildcardType w = (WildcardType) type;
       return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
 
@@ -172,7 +175,7 @@ public final class Types {
           && va.getName().equals(vb.getName());
 
     } else {
-      // This isn't a supported type. Could be a generic array type, wildcard type, etc.
+      // This isn't a supported type.
       return false;
     }
   }
