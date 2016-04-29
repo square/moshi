@@ -231,6 +231,13 @@ public abstract class JsonWriter implements Closeable, Flushable {
   /**
    * Encodes {@code value}.
    *
+   * @return this writer.
+   */
+  public abstract JsonWriter value(Boolean value) throws IOException;
+
+  /**
+   * Encodes {@code value}.
+   *
    * @param value a finite value. May not be {@linkplain Double#isNaN() NaNs} or
    *     {@linkplain Double#isInfinite() infinities}.
    * @return this writer.

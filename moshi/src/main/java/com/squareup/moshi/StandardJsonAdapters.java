@@ -76,7 +76,7 @@ final class StandardJsonAdapters {
     }
 
     @Override public void toJson(JsonWriter writer, Boolean value) throws IOException {
-      writer.value(value);
+      writer.value(value.booleanValue());
     }
 
     @Override public String toString() {

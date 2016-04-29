@@ -292,6 +292,17 @@ public final class BufferedSinkJsonWriterTest {
     assertThat(buffer.readUtf8()).isEqualTo("[true,false]");
   }
 
+  @Test public void boxedBooleans() throws IOException {
+    Buffer buffer = new Buffer();
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    jsonWriter.beginArray();
+    jsonWriter.value((Boolean) true);
+    jsonWriter.value((Boolean) false);
+    jsonWriter.value((Boolean) null);
+    jsonWriter.endArray();
+    assertThat(buffer.readUtf8()).isEqualTo("[true,false,null]");
+  }
+
   @Test public void nulls() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter jsonWriter = JsonWriter.of(buffer);
