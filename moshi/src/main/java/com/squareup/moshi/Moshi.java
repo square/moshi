@@ -45,7 +45,8 @@ public final class Moshi {
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
   Moshi(Builder builder) {
-    List<JsonAdapter.Factory> factories = new ArrayList<>(builder.factories.size() + BUILT_IN_FACTORIES.size());
+    List<JsonAdapter.Factory> factories = new ArrayList<>(
+        builder.factories.size() + BUILT_IN_FACTORIES.size());
     factories.addAll(builder.factories);
     factories.addAll(BUILT_IN_FACTORIES);
     this.factories = Collections.unmodifiableList(factories);

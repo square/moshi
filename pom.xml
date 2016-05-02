@@ -28,7 +28,7 @@
     <java.version>1.7</java.version>
 
     <!-- Dependencies -->
-    <okio.version>1.8.0-SNAPSHOT</okio.version>
+    <okio.version>1.8.0</okio.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
