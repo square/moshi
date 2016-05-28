@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.0</version>
   </parent>
 
   <artifactId>moshi-examples</artifactId>
