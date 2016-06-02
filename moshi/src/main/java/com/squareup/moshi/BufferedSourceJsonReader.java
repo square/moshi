@@ -1081,7 +1081,10 @@ final class BufferedSourceJsonReader extends JsonReader {
       case '\'':
       case '"':
       case '\\':
+        return (char) escaped;
+
       default:
+        if (!lenient) throw syntaxError("Invalid escape sequence: \\" + (char) escaped);
         return (char) escaped;
     }
   }

@@ -1771,6 +1771,24 @@ public final class BufferedSourceJsonReaderTest {
     }
   }
 
+  @Test public void invalidEscape() throws IOException {
+    JsonReader reader = newReader("[\"str\\ing\"]");
+    reader.beginArray();
+    try {
+      reader.nextString();
+      fail();
+    } catch (IOException expected) {
+      assertThat(expected).hasMessage("Invalid escape sequence: \\i at path $[0]");
+    }
+  }
+
+  @Test public void lenientInvalidEscape() throws IOException {
+    JsonReader reader = newReader("[\"str\\ing\"]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("string");
+  }
+
   @Test public void selectName() throws IOException {
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
