@@ -238,7 +238,7 @@ final class BufferedSourceJsonReader extends JsonReader {
 
   private int doPeek() throws IOException {
     if (stackSize == 1 && buffer.indexOf(BYTE_ORDER_MARK) == 0) {
-      this.buffer.skip(BYTE_ORDER_MARK.size());
+      buffer.skip(BYTE_ORDER_MARK.size());
     }
     int peekStack = stack[stackSize - 1];
     if (peekStack == JsonScope.EMPTY_ARRAY) {
