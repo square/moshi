@@ -1421,7 +1421,7 @@ public final class BufferedSourceJsonReaderTest {
     testFailWithPosition("Expected value at path $[1]", "[\n\n\"\\\n\n\",}");
   }
 
-  @Test @Ignore public void failWithPositionIsOffsetByBom() throws IOException {
+  @Test public void failWithPositionIsOffsetByBom() throws IOException {
     testFailWithPosition("Expected value at path $[1]", "\ufeff[\"a\",}]");
   }
 
