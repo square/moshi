@@ -27,7 +27,7 @@ import java.util.Set;
  * TODO: support maps with other key types and convert to/from strings.
  */
 final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
-  public static final Factory FACTORY = new Factory() {
+  static final Factory FACTORY = new Factory() {
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!annotations.isEmpty()) return null;
@@ -41,7 +41,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   private final JsonAdapter<K> keyAdapter;
   private final JsonAdapter<V> valueAdapter;
 
-  public MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
+  MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
     this.keyAdapter = moshi.adapter(keyType);
     this.valueAdapter = moshi.adapter(valueType);
   }

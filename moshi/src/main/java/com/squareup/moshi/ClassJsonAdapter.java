@@ -32,7 +32,7 @@ import java.util.TreeMap;
  * serialization and deserialization unless they are either public or protected.
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
-  public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
+  static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
@@ -187,7 +187,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     final Field field;
     final JsonAdapter<T> adapter;
 
-    public FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
+    FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
       this.name = name;
       this.field = field;
       this.adapter = adapter;

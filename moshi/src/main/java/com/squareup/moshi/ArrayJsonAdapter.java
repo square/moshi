@@ -28,7 +28,7 @@ import java.util.Set;
  * supports both primitive and object arrays.
  */
 final class ArrayJsonAdapter extends JsonAdapter<Object> {
-  public static final Factory FACTORY = new Factory() {
+  static final Factory FACTORY = new Factory() {
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Type elementType = Types.arrayComponentType(type);

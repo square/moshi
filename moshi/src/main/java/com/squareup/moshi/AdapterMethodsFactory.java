@@ -28,7 +28,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   private final List<AdapterMethod> toAdapters;
   private final List<AdapterMethod> fromAdapters;
 
-  public AdapterMethodsFactory(List<AdapterMethod> toAdapters, List<AdapterMethod> fromAdapters) {
+  AdapterMethodsFactory(List<AdapterMethod> toAdapters, List<AdapterMethod> fromAdapters) {
     this.toAdapters = toAdapters;
     this.fromAdapters = fromAdapters;
   }
@@ -244,7 +244,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     final Method method;
     final boolean nullable;
 
-    public AdapterMethod(Type type,
+    AdapterMethod(Type type,
         Set<? extends Annotation> annotations, Object adapter, Method method, boolean nullable) {
       this.type = Types.canonicalize(type);
       this.annotations = annotations;
