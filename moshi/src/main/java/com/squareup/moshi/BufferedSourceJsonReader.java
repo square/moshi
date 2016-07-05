@@ -240,8 +240,7 @@ final class BufferedSourceJsonReader extends JsonReader {
     int peekStack = stack[stackSize - 1];
 
     if (peekStack == JsonScope.EMPTY_DOCUMENT
-            && source.request(BYTE_ORDER_MARK.size())
-            && buffer.indexOf(BYTE_ORDER_MARK) == 0) {
+            && source.rangeEquals(0, BYTE_ORDER_MARK)) {
       buffer.skip(BYTE_ORDER_MARK.size());
     }
 
