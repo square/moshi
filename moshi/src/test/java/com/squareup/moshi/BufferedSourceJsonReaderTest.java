@@ -318,7 +318,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -340,7 +340,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -384,7 +384,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextDouble();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -395,7 +395,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextDouble();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
       assertThat(expected).hasMessageContaining("NaN");
     }
   }
@@ -429,7 +429,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -473,22 +473,22 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
     try {
       reader.nextInt();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
     try {
       reader.nextLong();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
     try {
       reader.nextDouble();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
     assertThat(reader.nextString()).isEqualTo("01");
     reader.endArray();
@@ -703,7 +703,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -872,7 +872,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("{\"a\"=>true}");
@@ -881,7 +881,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -906,7 +906,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("{\"a\"=>true}");
@@ -915,7 +915,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -944,7 +944,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[# comment \n true]");
@@ -952,7 +952,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[/* comment */ true]");
@@ -960,7 +960,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -992,7 +992,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[# comment \n true]");
@@ -1000,7 +1000,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[/* comment */ true]");
@@ -1008,7 +1008,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1018,7 +1018,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextName();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1042,7 +1042,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1052,7 +1052,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextName();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1069,7 +1069,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1079,7 +1079,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1089,7 +1089,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1114,7 +1114,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1131,7 +1131,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1142,7 +1142,7 @@ public final class BufferedSourceJsonReaderTest {
       reader.nextBoolean();
       reader.nextBoolean();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1161,7 +1161,7 @@ public final class BufferedSourceJsonReaderTest {
       reader.skipValue();
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1173,7 +1173,7 @@ public final class BufferedSourceJsonReaderTest {
       reader.nextBoolean();
       reader.nextName();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1194,7 +1194,7 @@ public final class BufferedSourceJsonReaderTest {
       reader.skipValue();
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1205,7 +1205,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextNull();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[,true]");
@@ -1213,7 +1213,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextNull();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[true,]");
@@ -1222,7 +1222,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextNull();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[,]");
@@ -1230,7 +1230,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextNull();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1272,7 +1272,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[,true]");
@@ -1280,7 +1280,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[true,]");
@@ -1289,7 +1289,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
 
     reader = newReader("[,]");
@@ -1297,7 +1297,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1308,7 +1308,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1330,7 +1330,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.skipValue();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1378,7 +1378,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.endArray();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1434,7 +1434,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader1.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
       assertThat(expected).hasMessage(message);
     }
 
@@ -1446,7 +1446,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader2.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
       assertThat(expected).hasMessage(message);
     }
   }
@@ -1463,7 +1463,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
       assertThat(expected).hasMessage("Expected value at path $[1].a[2]");
     }
   }
@@ -1474,7 +1474,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       assertThat(reader.nextDouble()).isEqualTo(1d);
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1542,7 +1542,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1552,7 +1552,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1562,7 +1562,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1575,7 +1575,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1690,7 +1690,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1703,7 +1703,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.peek();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1714,45 +1714,44 @@ public final class BufferedSourceJsonReaderTest {
   }
 
   @Test public void malformedDocuments() throws IOException {
-    assertDocument("{]", BEGIN_OBJECT, IOException.class);
-    assertDocument("{,", BEGIN_OBJECT, IOException.class);
-    assertDocument("{{", BEGIN_OBJECT, IOException.class);
-    assertDocument("{[", BEGIN_OBJECT, IOException.class);
-    assertDocument("{:", BEGIN_OBJECT, IOException.class);
-    assertDocument("{\"name\",", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\",", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\":}", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\"::", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\":,", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\"=}", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\"=>}", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\"=>\"string\":", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\"=>\"string\"=", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\"=>\"string\"=>", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\"=>\"string\",", BEGIN_OBJECT, NAME, STRING, IOException.class);
+    assertDocument("{]", BEGIN_OBJECT, JsonEncodingException.class);
+    assertDocument("{,", BEGIN_OBJECT, JsonEncodingException.class);
+    assertDocument("{{", BEGIN_OBJECT, JsonEncodingException.class);
+    assertDocument("{[", BEGIN_OBJECT, JsonEncodingException.class);
+    assertDocument("{:", BEGIN_OBJECT, JsonEncodingException.class);
+    assertDocument("{\"name\",", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\":}", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\"::", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\":,", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\"=}", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\"=>}", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\":", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\"=", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\"=>", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\",", BEGIN_OBJECT, NAME, STRING, EOFException.class);
     assertDocument("{\"name\"=>\"string\",\"name\"", BEGIN_OBJECT, NAME, STRING, NAME);
-    assertDocument("[}", BEGIN_ARRAY, IOException.class);
+    assertDocument("[}", BEGIN_ARRAY, JsonEncodingException.class);
     assertDocument("[,]", BEGIN_ARRAY, NULL, NULL, END_ARRAY);
-    assertDocument("{", BEGIN_OBJECT, IOException.class);
-    assertDocument("{\"name\"", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{\"name\",", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{'name'", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{'name',", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("{name", BEGIN_OBJECT, NAME, IOException.class);
-    assertDocument("[", BEGIN_ARRAY, IOException.class);
-    assertDocument("[string", BEGIN_ARRAY, STRING, IOException.class);
-    assertDocument("[\"string\"", BEGIN_ARRAY, STRING, IOException.class);
-    assertDocument("['string'", BEGIN_ARRAY, STRING, IOException.class);
-    assertDocument("[123", BEGIN_ARRAY, NUMBER, IOException.class);
-    assertDocument("[123,", BEGIN_ARRAY, NUMBER, IOException.class);
-    assertDocument("{\"name\":123", BEGIN_OBJECT, NAME, NUMBER, IOException.class);
-    assertDocument("{\"name\":123,", BEGIN_OBJECT, NAME, NUMBER, IOException.class);
-    assertDocument("{\"name\":\"string\"", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\":\"string\",", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\":'string'", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\":'string',", BEGIN_OBJECT, NAME, STRING, IOException.class);
-    assertDocument("{\"name\":false", BEGIN_OBJECT, NAME, BOOLEAN, IOException.class);
-    assertDocument("{\"name\":false,,", BEGIN_OBJECT, NAME, BOOLEAN, IOException.class);
+    assertDocument("{", BEGIN_OBJECT, EOFException.class);
+    assertDocument("{\"name\"", BEGIN_OBJECT, NAME, EOFException.class);
+    assertDocument("{\"name\",", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{'name'", BEGIN_OBJECT, NAME, EOFException.class);
+    assertDocument("{'name',", BEGIN_OBJECT, NAME, JsonEncodingException.class);
+    assertDocument("{name", BEGIN_OBJECT, NAME, EOFException.class);
+    assertDocument("[", BEGIN_ARRAY, EOFException.class);
+    assertDocument("[string", BEGIN_ARRAY, STRING, EOFException.class);
+    assertDocument("[\"string\"", BEGIN_ARRAY, STRING, EOFException.class);
+    assertDocument("['string'", BEGIN_ARRAY, STRING, EOFException.class);
+    assertDocument("[123", BEGIN_ARRAY, NUMBER, EOFException.class);
+    assertDocument("[123,", BEGIN_ARRAY, NUMBER, EOFException.class);
+    assertDocument("{\"name\":123", BEGIN_OBJECT, NAME, NUMBER, EOFException.class);
+    assertDocument("{\"name\":123,", BEGIN_OBJECT, NAME, NUMBER, EOFException.class);
+    assertDocument("{\"name\":\"string\"", BEGIN_OBJECT, NAME, STRING, EOFException.class);
+    assertDocument("{\"name\":\"string\",", BEGIN_OBJECT, NAME, STRING, EOFException.class);
+    assertDocument("{\"name\":'string'", BEGIN_OBJECT, NAME, STRING, EOFException.class);
+    assertDocument("{\"name\":'string',", BEGIN_OBJECT, NAME, STRING, EOFException.class);
+    assertDocument("{\"name\":false", BEGIN_OBJECT, NAME, BOOLEAN, EOFException.class);
+    assertDocument("{\"name\":false,,", BEGIN_OBJECT, NAME, BOOLEAN, JsonEncodingException.class);
   }
 
   /**
@@ -1767,7 +1766,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
     }
   }
 
@@ -1777,7 +1776,7 @@ public final class BufferedSourceJsonReaderTest {
     try {
       reader.nextString();
       fail();
-    } catch (IOException expected) {
+    } catch (JsonEncodingException expected) {
       assertThat(expected).hasMessage("Invalid escape sequence: \\i at path $[0]");
     }
   }
@@ -1926,11 +1925,13 @@ public final class BufferedSourceJsonReaderTest {
         assertThat(reader.nextInt()).isEqualTo(123);
       } else if (expectation == NULL) {
         reader.nextNull();
-      } else if (expectation == IOException.class) {
+      } else if (expectation instanceof Class
+          && Exception.class.isAssignableFrom((Class<?>) expectation)) {
         try {
           reader.peek();
           fail();
-        } catch (IOException expected) {
+        } catch (Exception expected) {
+          assertEquals(expected.toString(), expectation, expected.getClass());
         }
       } else {
         throw new AssertionError();
