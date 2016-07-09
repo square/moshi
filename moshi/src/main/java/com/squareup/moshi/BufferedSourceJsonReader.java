@@ -677,7 +677,7 @@ final class BufferedSourceJsonReader extends JsonReader {
           + " at path " + getPath());
     }
     if (!lenient && (Double.isNaN(result) || Double.isInfinite(result))) {
-      throw new IOException("JSON forbids NaN and infinities: " + result
+      throw new JsonEncodingException("JSON forbids NaN and infinities: " + result
           + " at path " + getPath());
     }
     peekedString = null;
@@ -1093,8 +1093,8 @@ final class BufferedSourceJsonReader extends JsonReader {
    * Throws a new IO exception with the given message and a context snippet
    * with this reader's content.
    */
-  private IOException syntaxError(String message) throws IOException {
-    throw new IOException(message + " at path " + getPath());
+  private JsonEncodingException syntaxError(String message) throws JsonEncodingException {
+    throw new JsonEncodingException(message + " at path " + getPath());
   }
 
   @Override void promoteNameToValue() throws IOException {
