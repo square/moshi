@@ -1366,7 +1366,7 @@ public final class BufferedSourceJsonReaderTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test @Ignore public void bomIgnoredAsFirstCharacterOfDocument() throws IOException {
+  @Test public void bomIgnoredAsFirstCharacterOfDocument() throws IOException {
     JsonReader reader = newReader("\ufeff[]");
     reader.beginArray();
     reader.endArray();
@@ -1421,7 +1421,7 @@ public final class BufferedSourceJsonReaderTest {
     testFailWithPosition("Expected value at path $[1]", "[\n\n\"\\\n\n\",}");
   }
 
-  @Test @Ignore public void failWithPositionIsOffsetByBom() throws IOException {
+  @Test public void failWithPositionIsOffsetByBom() throws IOException {
     testFailWithPosition("Expected value at path $[1]", "\ufeff[\"a\",}]");
   }
 

@@ -29,6 +29,7 @@ final class BufferedSourceJsonReader extends JsonReader {
   private static final ByteString UNQUOTED_STRING_TERMINALS
       = ByteString.encodeUtf8("{}[]:, \n\t\r\f/\\;#=");
   private static final ByteString LINEFEED_OR_CARRIAGE_RETURN = ByteString.encodeUtf8("\n\r");
+  private static final ByteString BYTE_ORDER_MARK = ByteString.encodeUtf8("\ufeff");
 
   private static final int PEEKED_NONE = 0;
   private static final int PEEKED_BEGIN_OBJECT = 1;
@@ -237,6 +238,12 @@ final class BufferedSourceJsonReader extends JsonReader {
 
   private int doPeek() throws IOException {
     int peekStack = stack[stackSize - 1];
+
+    if (peekStack == JsonScope.EMPTY_DOCUMENT
+            && source.rangeEquals(0, BYTE_ORDER_MARK)) {
+      buffer.skip(BYTE_ORDER_MARK.size());
+    }
+
     if (peekStack == JsonScope.EMPTY_ARRAY) {
       stack[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
     } else if (peekStack == JsonScope.NONEMPTY_ARRAY) {
