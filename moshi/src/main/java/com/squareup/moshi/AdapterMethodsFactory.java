@@ -65,7 +65,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
             throw new AssertionError();
           } catch (InvocationTargetException e) {
             if (e.getCause() instanceof IOException) throw (IOException) e.getCause();
-            throw new JsonDataException(e.getCause() + " at " + writer.getPath());
+            throw new JsonDataException(e.getCause() + " at " + writer.getPath(), e.getCause());
           }
         }
       }
@@ -83,7 +83,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
             throw new AssertionError();
           } catch (InvocationTargetException e) {
             if (e.getCause() instanceof IOException) throw (IOException) e.getCause();
-            throw new JsonDataException(e.getCause() + " at " + reader.getPath());
+            throw new JsonDataException(e.getCause() + " at " + reader.getPath(), e.getCause());
           }
         }
       }

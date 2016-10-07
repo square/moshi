@@ -133,10 +133,10 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     } catch (InstantiationException e) {
       throw new RuntimeException(e);
     } catch (InvocationTargetException e) {
-      Throwable targetException = e.getTargetException();
-      if (targetException instanceof RuntimeException) throw (RuntimeException) targetException;
-      if (targetException instanceof Error) throw (Error) targetException;
-      throw new RuntimeException(targetException);
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+      if (cause instanceof Error) throw (Error) cause;
+      throw new RuntimeException(cause);
     } catch (IllegalAccessException e) {
       throw new AssertionError();
     }
