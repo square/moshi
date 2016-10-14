@@ -27,9 +27,19 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Emits a regular class as a JSON object by mapping Java fields to JSON object properties. Fields
- * of classes in {@code java.*}, {@code javax.*} and {@code android.*} are omitted from both
- * serialization and deserialization unless they are either public or protected.
+ * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
+ *
+ * <h3>Platform Types</h3>
+ * Fields from platform classes are omitted from both serialization and deserialization unless
+ * they are either public or protected. This includes the following packages and their subpackages:
+ *
+ * <ul>
+ *   <li>android.*
+ *   <li>java.*
+ *   <li>javax.*
+ *   <li>kotlin.*
+ *   <li>scala.*
+ * </ul>
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
@@ -101,9 +111,12 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
      * types because they're unspecified and likely to be different on Java vs. Android.
      */
     private boolean isPlatformType(Class<?> rawType) {
-      return rawType.getName().startsWith("java.")
-          || rawType.getName().startsWith("javax.")
-          || rawType.getName().startsWith("android.");
+      String name = rawType.getName();
+      return name.startsWith("android.")
+          || name.startsWith("java.")
+          || name.startsWith("javax.")
+          || name.startsWith("kotlin.")
+          || name.startsWith("scala.");
     }
 
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
