@@ -44,18 +44,18 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
     }
   };
 
-  Comparator<? super K> comparator;
-  Node<K, V>[] table;
-  final Node<K, V> header;
+  private Comparator<? super K> comparator;
+  private Node<K, V>[] table;
+  private final Node<K, V> header;
   int size = 0;
-  int modCount = 0;
-  int threshold;
+  private int modCount = 0;
+  private int threshold;
 
   /**
    * Create a natural order, empty tree map whose keys must be mutually
    * comparable and non-null.
    */
-  public LinkedHashTreeMap() {
+  LinkedHashTreeMap() {
     this(null);
   }
 
@@ -67,7 +67,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
    *     use the natural ordering.
    */
   @SuppressWarnings({ "unchecked", "rawtypes" }) // unsafe! if comparator is null, this assumes K is comparable
-  public LinkedHashTreeMap(Comparator<? super K> comparator) {
+  LinkedHashTreeMap(Comparator<? super K> comparator) {
     this.comparator = comparator != null
         ? comparator
         : (Comparator) NATURAL_ORDER;

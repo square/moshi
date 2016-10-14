@@ -23,18 +23,18 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 final class Util {
-  public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
+  static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
 
-  public static boolean typesMatch(Type pattern, Type candidate) {
+  static boolean typesMatch(Type pattern, Type candidate) {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
     return pattern.equals(candidate);
   }
 
-  public static Set<? extends Annotation> jsonAnnotations(AnnotatedElement annotatedElement) {
+  static Set<? extends Annotation> jsonAnnotations(AnnotatedElement annotatedElement) {
     return jsonAnnotations(annotatedElement.getAnnotations());
   }
 
-  public static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
+  static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
     Set<Annotation> result = null;
     for (Annotation annotation : annotations) {
       if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
@@ -45,7 +45,7 @@ final class Util {
     return result != null ? Collections.unmodifiableSet(result) : Util.NO_ANNOTATIONS;
   }
 
-  public static boolean isAnnotationPresent(
+  static boolean isAnnotationPresent(
       Set<? extends Annotation> annotations, Class<? extends Annotation> annotationClass) {
     if (annotations.isEmpty()) return false; // Save an iterator in the common case.
     for (Annotation annotation : annotations) {
@@ -55,7 +55,7 @@ final class Util {
   }
 
   /** Returns true if {@code annotations} has any annotation whose simple name is Nullable. */
-  public static boolean hasNullable(Annotation[] annotations) {
+  static boolean hasNullable(Annotation[] annotations) {
     for (Annotation annotation : annotations) {
       if (annotation.annotationType().getSimpleName().equals("Nullable")) {
         return true;
