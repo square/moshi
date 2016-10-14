@@ -970,7 +970,7 @@ final class BufferedSourceJsonReader extends JsonReader {
         }
       } else if (c == '#') {
         // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but it's
-        // required to parse existing documents. See http://b/2571423.
+        // required to parse existing documents.
         checkLenient();
         skipToEndOfLine();
         p = 0;
