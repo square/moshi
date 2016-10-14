@@ -406,6 +406,66 @@ public final class AdapterMethodsTest {
     assertThat(moshi.adapter(c)).isSameAs(moshi.adapter(a));
   }
 
+  @Test public void writerAndReaderTakingJsonAdapterParameter() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new PointWriterAndReaderJsonAdapter())
+        .add(new JsonAdapterWithWriterAndReaderTakingJsonAdapterParameter())
+        .build();
+    JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
+    Line line = new Line(new Point(5, 8), new Point(3, 2));
+    assertThat(lineAdapter.toJson(line)).isEqualTo("[[5,8],[3,2]]");
+    assertThat(lineAdapter.fromJson("[[5,8],[3,2]]")).isEqualTo(line);
+  }
+
+  static class JsonAdapterWithWriterAndReaderTakingJsonAdapterParameter {
+    @ToJson void lineToJson(
+        JsonWriter writer, Line line, JsonAdapter<Point> pointAdapter) throws IOException {
+      writer.beginArray();
+      pointAdapter.toJson(writer, line.a);
+      pointAdapter.toJson(writer, line.b);
+      writer.endArray();
+    }
+
+    @FromJson Line lineFromJson(
+        JsonReader reader, JsonAdapter<Point> pointAdapter) throws Exception {
+      reader.beginArray();
+      Point a = pointAdapter.fromJson(reader);
+      Point b = pointAdapter.fromJson(reader);
+      reader.endArray();
+      return new Line(a, b);
+    }
+  }
+
+  @Test public void noToJsonAdapterTakingJsonAdapterParameter() throws Exception {
+    try {
+      new Moshi.Builder().add(new ToJsonAdapterTakingJsonAdapterParameter());
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageStartingWith("Unexpected signature");
+    }
+  }
+
+  static class ToJsonAdapterTakingJsonAdapterParameter {
+    @ToJson String lineToJson(Line line, JsonAdapter<Point> pointAdapter) throws IOException {
+      throw new AssertionError();
+    }
+  }
+
+  @Test public void noFromJsonAdapterTakingJsonAdapterParameter() throws Exception {
+    try {
+      new Moshi.Builder().add(new FromJsonAdapterTakingJsonAdapterParameter());
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageStartingWith("Unexpected signature");
+    }
+  }
+
+  static class FromJsonAdapterTakingJsonAdapterParameter {
+    @FromJson Line lineFromJson(String value, JsonAdapter<Point> pointAdapter) throws Exception {
+      throw new AssertionError();
+    }
+  }
+
   static class Point {
     final int x;
     final int y;
@@ -421,6 +481,24 @@ public final class AdapterMethodsTest {
 
     @Override public int hashCode() {
       return x * 37 + y;
+    }
+  }
+
+  static class Line {
+    final Point a;
+    final Point b;
+
+    public Line(Point a, Point b) {
+      this.a = a;
+      this.b = b;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof Line && ((Line) o).a.equals(a) && ((Line) o).b.equals(b);
+    }
+
+    @Override public int hashCode() {
+      return a.hashCode() * 37 + b.hashCode();
     }
   }
 
