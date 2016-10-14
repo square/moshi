@@ -23,8 +23,11 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Test;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -434,6 +437,84 @@ public final class AdapterMethodsTest {
       reader.endArray();
       return new Line(a, b);
     }
+  }
+
+  @Test public void writerAndReaderTakingAnnotatedJsonAdapterParameter() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new PointWithParensJsonAdapter())
+        .add(new JsonAdapterWithWriterAndReaderTakingAnnotatedJsonAdapterParameter())
+        .build();
+    JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
+    Line line = new Line(new Point(5, 8), new Point(3, 2));
+    assertThat(lineAdapter.toJson(line)).isEqualTo("[\"(5 8)\",\"(3 2)\"]");
+    assertThat(lineAdapter.fromJson("[\"(5 8)\",\"(3 2)\"]")).isEqualTo(line);
+  }
+
+  static class PointWithParensJsonAdapter{
+    @ToJson String pointToJson(@WithParens Point point) throws IOException {
+      return String.format("(%s %s)", point.x, point.y);
+    }
+
+    @FromJson @WithParens Point pointFromJson(String string) throws Exception {
+      Matcher matcher = Pattern.compile("\\((\\d+) (\\d+)\\)").matcher(string);
+      if (!matcher.matches()) throw new JsonDataException();
+      return new Point(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
+    }
+  }
+
+  static class JsonAdapterWithWriterAndReaderTakingAnnotatedJsonAdapterParameter {
+    @ToJson void lineToJson(JsonWriter writer, Line line,
+        @WithParens JsonAdapter<Point> pointAdapter) throws IOException {
+      writer.beginArray();
+      pointAdapter.toJson(writer, line.a);
+      pointAdapter.toJson(writer, line.b);
+      writer.endArray();
+    }
+
+    @FromJson Line lineFromJson(
+        JsonReader reader, @WithParens JsonAdapter<Point> pointAdapter) throws Exception {
+      reader.beginArray();
+      Point a = pointAdapter.fromJson(reader);
+      Point b = pointAdapter.fromJson(reader);
+      reader.endArray();
+      return new Line(a, b);
+    }
+  }
+
+  @Test public void writerAndReaderTakingMultipleJsonAdapterParameters() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new PointWriterAndReaderJsonAdapter())
+        .add(new PointWithParensJsonAdapter())
+        .add(new JsonAdapterWithWriterAndReaderTakingMultipleJsonAdapterParameters())
+        .build();
+    JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
+    Line line = new Line(new Point(5, 8), new Point(3, 2));
+    assertThat(lineAdapter.toJson(line)).isEqualTo("[[5,8],\"(3 2)\"]");
+    assertThat(lineAdapter.fromJson("[[5,8],\"(3 2)\"]")).isEqualTo(line);
+  }
+
+  static class JsonAdapterWithWriterAndReaderTakingMultipleJsonAdapterParameters {
+    @ToJson void lineToJson(JsonWriter writer, Line line,
+        JsonAdapter<Point> aAdapter, @WithParens JsonAdapter<Point> bAdapter) throws IOException {
+      writer.beginArray();
+      aAdapter.toJson(writer, line.a);
+      bAdapter.toJson(writer, line.b);
+      writer.endArray();
+    }
+
+    @FromJson Line lineFromJson(JsonReader reader,
+        JsonAdapter<Point> aAdapter, @WithParens JsonAdapter<Point> bAdapter) throws Exception {
+      reader.beginArray();
+      Point a = aAdapter.fromJson(reader);
+      Point b = bAdapter.fromJson(reader);
+      reader.endArray();
+      return new Line(a, b);
+    }
+  }
+
+  @Retention(RUNTIME)
+  @JsonQualifier
+  public @interface WithParens {
   }
 
   @Test public void noToJsonAdapterTakingJsonAdapterParameter() throws Exception {
