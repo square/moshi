@@ -419,31 +419,62 @@ public final class BufferedSinkJsonWriterTest {
   @Test public void deepNestingArrays() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter jsonWriter = JsonWriter.of(buffer);
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 31; i++) {
       jsonWriter.beginArray();
     }
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 31; i++) {
       jsonWriter.endArray();
     }
-    assertThat(buffer.readUtf8()).isEqualTo("[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]");
+    assertThat(buffer.readUtf8())
+        .isEqualTo("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+  }
+
+  @Test public void tooDeepNestingArrays() throws IOException {
+    Buffer buffer = new Buffer();
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    for (int i = 0; i < 31; i++) {
+      jsonWriter.beginArray();
+    }
+    try {
+      jsonWriter.beginArray();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
+          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]: circular reference?");
+    }
   }
 
   @Test public void deepNestingObjects() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    for (int i = 0; i < 20; i++) {
-      jsonWriter.name("a");
+    for (int i = 0; i < 31; i++) {
       jsonWriter.beginObject();
+      jsonWriter.name("a");
     }
-    for (int i = 0; i < 20; i++) {
+    jsonWriter.value(true);
+    for (int i = 0; i < 31; i++) {
       jsonWriter.endObject();
     }
-    jsonWriter.endObject();
-    assertThat(buffer.readUtf8()).isEqualTo(
-        "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
-        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{"
-        + "}}}}}}}}}}}}}}}}}}}}}");
+    assertThat(buffer.readUtf8()).isEqualTo(""
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":true}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
+  }
+
+  @Test public void tooDeepNestingObjects() throws IOException {
+    Buffer buffer = new Buffer();
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    for (int i = 0; i < 31; i++) {
+      jsonWriter.beginObject();
+      jsonWriter.name("a");
+    }
+    try {
+      jsonWriter.beginObject();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a."
+          + "a.a.a.a.a.a.a.a.a.a.a.a: circular reference?");
+    }
   }
 
   @Test public void repeatedName() throws IOException {

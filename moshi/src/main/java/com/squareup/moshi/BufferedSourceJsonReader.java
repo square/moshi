@@ -92,17 +92,17 @@ final class BufferedSourceJsonReader extends JsonReader {
    */
   private String peekedString;
 
-  /*
-   * The nesting stack. Using a manual array rather than an ArrayList saves 20%.
-   */
-  private int[] stack = new int[32];
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
+  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
+  // StackOverflowErrors.
+  private final int[] stack = new int[32];
   private int stackSize = 0;
   {
     stack[stackSize++] = JsonScope.EMPTY_DOCUMENT;
   }
 
-  private String[] pathNames = new String[32];
-  private int[] pathIndices = new int[32];
+  private final String[] pathNames = new String[32];
+  private final int[] pathIndices = new int[32];
 
   BufferedSourceJsonReader(BufferedSource source) {
     if (source == null) {
@@ -901,15 +901,7 @@ final class BufferedSourceJsonReader extends JsonReader {
 
   private void push(int newTop) {
     if (stackSize == stack.length) {
-      int[] newStack = new int[stackSize * 2];
-      int[] newPathIndices = new int[stackSize * 2];
-      String[] newPathNames = new String[stackSize * 2];
-      System.arraycopy(stack, 0, newStack, 0, stackSize);
-      System.arraycopy(pathIndices, 0, newPathIndices, 0, stackSize);
-      System.arraycopy(pathNames, 0, newPathNames, 0, stackSize);
-      stack = newStack;
-      pathIndices = newPathIndices;
-      pathNames = newPathNames;
+      throw new JsonDataException("Nesting too deep at " + getPath());
     }
     stack[stackSize++] = newTop;
   }

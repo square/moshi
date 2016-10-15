@@ -22,6 +22,10 @@ package com.squareup.moshi;
  *
  * <p>Exceptions of this type should be fixed by either changing the application code to accept
  * the unexpected JSON, or by changing the JSON to conform to the application's expectations.
+ *
+ * <p>This exception may also be triggered if a document's nesting exceeds 31 levels. This depth is
+ * sufficient for all practical applications, but shallow enough to avoid uglier failures like
+ * {@link StackOverflowError}.
  */
 public final class JsonDataException extends RuntimeException {
   public JsonDataException() {
