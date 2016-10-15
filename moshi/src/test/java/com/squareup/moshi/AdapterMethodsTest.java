@@ -22,6 +22,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -544,6 +545,44 @@ public final class AdapterMethodsTest {
   static class FromJsonAdapterTakingJsonAdapterParameter {
     @FromJson Line lineFromJson(String value, JsonAdapter<Point> pointAdapter) throws Exception {
       throw new AssertionError();
+    }
+  }
+
+  @Test public void adaptedTypeIsEnclosedParameterizedType() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new EnclosedParameterizedTypeJsonAdapter())
+        .build();
+    JsonAdapter<Box<Point>> boxAdapter = moshi.adapter(Types.newParameterizedTypeWithOwner(
+        AdapterMethodsTest.class, Box.class, Point.class));
+    Box<Point> box = new Box<>(new Point(5, 8));
+    String json = "[{\"x\":5,\"y\":8}]";
+    assertThat(boxAdapter.toJson(box)).isEqualTo(json);
+    assertThat(boxAdapter.fromJson(json)).isEqualTo(box);
+  }
+
+  static class EnclosedParameterizedTypeJsonAdapter {
+    @FromJson Box<Point> boxFromJson(List<Point> points) {
+      return new Box<>(points.get(0));
+    }
+
+    @ToJson List<Point> boxToJson(Box<Point> box) throws Exception {
+      return Collections.singletonList(box.data);
+    }
+  }
+
+  static class Box<T> {
+    final T data;
+
+    public Box(T data) {
+      this.data = data;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof Box && ((Box) o).data.equals(data);
+    }
+
+    @Override public int hashCode() {
+      return data.hashCode();
     }
   }
 

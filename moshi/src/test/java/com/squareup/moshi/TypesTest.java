@@ -34,27 +34,32 @@ public final class TypesTest {
     assertThat(getFirstTypeArgument(type)).isEqualTo(A.class);
 
     // A<B>. A is a static inner class.
-    type = Types.newParameterizedType(A.class, B.class);
+    type = Types.newParameterizedTypeWithOwner(TypesTest.class, A.class, B.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
+  }
 
-    final class D {
-    }
+  @Test public void parameterizedTypeWithRequiredOwnerMissing() throws Exception {
     try {
-      // D<A> is not allowed since D is not a static inner class.
-      Types.newParameterizedType(D.class, A.class);
+      Types.newParameterizedType(A.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unexpected owner type for " + A.class + ": null");
     }
+  }
 
-    // A<D> is allowed.
-    type = Types.newParameterizedType(A.class, D.class);
-    assertThat(getFirstTypeArgument(type)).isEqualTo(D.class);
+  @Test public void parameterizedTypeWithUnnecessaryOwnerProvided() throws Exception {
+    try {
+      Types.newParameterizedTypeWithOwner(A.class, List.class, B.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unexpected owner type for " + List.class + ": " + A.class);
+    }
   }
 
   @Test public void getFirstTypeArgument() throws Exception {
     assertThat(getFirstTypeArgument(A.class)).isNull();
 
-    Type type = Types.newParameterizedType(A.class, B.class, C.class);
+    Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, A.class, B.class, C.class);
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
   }
 
