@@ -1498,41 +1498,75 @@ public final class BufferedSourceJsonReaderTest {
   }
 
   @Test public void deeplyNestedArrays() throws IOException {
-    // this is nested 40 levels deep; Gson is tuned for nesting is 30 levels deep or fewer
-    JsonReader reader = newReader(
-        "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
-    for (int i = 0; i < 40; i++) {
+    JsonReader reader = newReader("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+    for (int i = 0; i < 31; i++) {
       reader.beginArray();
     }
-    assertThat(reader.getPath()).isEqualTo(
-        "$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
-        + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
-    for (int i = 0; i < 40; i++) {
+    assertThat(reader.getPath()).isEqualTo("$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
+        + "[0][0][0][0][0][0][0][0][0][0][0][0][0]");
+    for (int i = 0; i < 31; i++) {
       reader.endArray();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+  @Test public void tooDeeplyNestedArrays() throws IOException {
+    JsonReader reader = newReader(
+        "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+    for (int i = 0; i < 31; i++) {
+      reader.beginArray();
+    }
+    try {
+      reader.beginArray();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
+          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+    }
+  }
+
   @Test public void deeplyNestedObjects() throws IOException {
-    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 40 levels deep
+    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
     String array = "{\"a\":%s}";
     String json = "true";
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 31; i++) {
       json = String.format(array, json);
     }
 
     JsonReader reader = newReader(json);
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 31; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
-    assertThat(reader.getPath()).isEqualTo("$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a"
-        + ".a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+    assertThat(reader.getPath())
+        .isEqualTo("$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
     assertThat(reader.nextBoolean()).isTrue();
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 31; i++) {
       reader.endObject();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void tooDeeplyNestedObjects() throws IOException {
+    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
+    String array = "{\"a\":%s}";
+    String json = "true";
+    for (int i = 0; i < 32; i++) {
+      json = String.format(array, json);
+    }
+
+    JsonReader reader = newReader(json);
+    for (int i = 0; i < 31; i++) {
+      reader.beginObject();
+      assertThat(reader.nextName()).isEqualTo("a");
+    }
+    try {
+      reader.beginObject();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+    }
   }
 
   // http://code.google.com/p/google-gson/issues/detail?id=409

@@ -57,14 +57,17 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   /** The output data, containing at most one top-level array or object. */
   private final BufferedSink sink;
 
-  private int[] stack = new int[32];
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
+  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
+  // StackOverflowErrors.
+  private final int[] stack = new int[32];
   private int stackSize = 0;
   {
     push(EMPTY_DOCUMENT);
   }
 
-  private String[] pathNames = new String[32];
-  private int[] pathIndices = new int[32];
+  private final String[] pathNames = new String[32];
+  private final int[] pathIndices = new int[32];
 
   /**
    * A string containing a full set of spaces for a single level of
@@ -143,8 +146,8 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    */
   private JsonWriter open(int empty, String openBracket) throws IOException {
     beforeValue();
-    pathIndices[stackSize] = 0;
     push(empty);
+    pathIndices[stackSize - 1] = 0;
     sink.writeUtf8(openBracket);
     return this;
   }
@@ -175,9 +178,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
 
   private void push(int newTop) {
     if (stackSize == stack.length) {
-      int[] newStack = new int[stackSize * 2];
-      System.arraycopy(stack, 0, newStack, 0, stackSize);
-      stack = newStack;
+      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
     }
     stack[stackSize++] = newTop;
   }

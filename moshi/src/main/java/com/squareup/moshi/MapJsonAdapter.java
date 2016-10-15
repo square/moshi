@@ -50,7 +50,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
     writer.beginObject();
     for (Map.Entry<K, V> entry : map.entrySet()) {
       if (entry.getKey() == null) {
-        throw new JsonDataException("Map key is null at path " + writer.getPath());
+        throw new JsonDataException("Map key is null at " + writer.getPath());
       }
       writer.promoteNameToValue();
       keyAdapter.toJson(writer, entry.getKey());

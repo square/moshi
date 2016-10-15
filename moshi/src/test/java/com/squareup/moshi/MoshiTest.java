@@ -23,13 +23,17 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import javax.crypto.KeyGenerator;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
@@ -813,6 +817,47 @@ public final class MoshiTest {
     Moshi.Builder newBuilder = moshi.newBuilder();
     for (JsonAdapter.Factory factory : Moshi.BUILT_IN_FACTORIES) {
       assertThat(factory).isNotIn(newBuilder.factories);
+    }
+  }
+
+  @Test public void referenceCyclesOnArrays() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("a", map);
+    try {
+      moshi.adapter(Object.class).toJson(map);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a."
+          + "a.a.a.a.a.a.a.a.a.a.a.a: circular reference?");
+    }
+  }
+
+  @Test public void referenceCyclesOnObjects() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    List<Object> list = new ArrayList<>();
+    list.add(list);
+    try {
+      moshi.adapter(Object.class).toJson(list);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
+          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]: circular reference?");
+    }
+  }
+
+  @Test public void referenceCyclesOnMixedTypes() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    List<Object> list = new ArrayList<>();
+    Map<String, Object> map = new LinkedHashMap<>();
+    list.add(map);
+    map.put("a", list);
+    try {
+      moshi.adapter(Object.class).toJson(list);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0].a[0].a[0].a[0].a[0].a[0].a[0].a[0]."
+          + "a[0].a[0].a[0].a[0].a[0].a[0].a[0].a[0]: circular reference?");
     }
   }
 
