@@ -1,6 +1,38 @@
 Change Log
 ==========
 
+## Version 1.3.0
+
+_2016-10-15_
+
+ *  New: Permit `@ToJson` and `@FromJson` methods to take any number of `JsonReader` parameters to
+    delegate to. This is supported for `@ToJson` methods that take a `JsonWriter` and `@FromJson`
+    methods that take a `JsonReader`.
+ *  New: Throw `JsonEncodingException` when the incoming data is not valid JSON. Use this to
+    differentiate data format problems from connectivity problems.
+ *  New: Upgrade to Okio 1.11.0.
+
+    ```xml
+    <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <version>1.11.0</version>
+    </dependency>
+    ```
+
+ *  New: Omit Kotlin (`kotlin.*`) and Scala (`scala.*`) platform types when encoding objects using
+    their fields. This should make it easier to avoid unexpected dependencies on platform versions.
+ *  Fix: Explicitly limit reading and writing to 31 levels of nested structure. Previously no
+    specific limit was enforced, but deeply nested documents would fail with either an
+    `ArrayIndexOutOfBoundsException` due to a bug in `JsonWriter`'s path management, or a
+    `StackOverflowError` due to excessive recursion.
+ *  Fix: Require enclosed types to specify their enclosing type with
+    `Types.newParameterizedTypeWithOwner()`. Previously this API did not exist and looking up
+    adapters for enclosed parameterized types as not possible.
+ *  Fix: Fail on invalid escapes. Previously any character could be escaped. With this fix only
+    characters permitted to be escaped may be escaped. Use `JsonReader.setLenient(true)` to read
+    JSON documents that escape characters that should not be escaped.
+
 ## Version 1.2.0
 
 _2016-05-28_
