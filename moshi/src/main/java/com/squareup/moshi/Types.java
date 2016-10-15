@@ -18,7 +18,6 @@ package com.squareup.moshi;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -37,10 +36,20 @@ public final class Types {
   }
 
   /**
-   * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}.
+   * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}. Use this
+   * method if {@code rawType} is not enclosed in another type.
    */
   public static ParameterizedType newParameterizedType(Type rawType, Type... typeArguments) {
     return new ParameterizedTypeImpl(null, rawType, typeArguments);
+  }
+
+  /**
+   * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}. Use this
+   * method if {@code rawType} is enclosed in {@code ownerType}.
+   */
+  public static ParameterizedType newParameterizedTypeWithOwner(
+      Type ownerType, Type rawType, Type... typeArguments) {
+    return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
@@ -405,12 +414,11 @@ public final class Types {
     final Type[] typeArguments;
 
     ParameterizedTypeImpl(Type ownerType, Type rawType, Type... typeArguments) {
-      // require an owner type if the raw type needs it
-      if (rawType instanceof Class<?>) {
-        Class<?> rawTypeAsClass = (Class<?>) rawType;
-        boolean isStaticOrTopLevelClass = Modifier.isStatic(rawTypeAsClass.getModifiers())
-            || rawTypeAsClass.getEnclosingClass() == null;
-        if (ownerType == null && !isStaticOrTopLevelClass) throw new IllegalArgumentException();
+      // Require an owner type if the raw type needs it.
+      if (rawType instanceof Class<?>
+          && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
+        throw new IllegalArgumentException(
+            "unexpected owner type for " + rawType + ": " + ownerType);
       }
 
       this.ownerType = ownerType == null ? null : canonicalize(ownerType);
