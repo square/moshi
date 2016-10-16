@@ -186,8 +186,17 @@ public final class Moshi {
       return this;
     }
 
+    /** Scans the object for methods annotated with {@link ToJson} and/or {@link FromJson}. */
     public Builder add(Object adapter) {
-      return add(AdapterMethodsFactory.get(adapter));
+      return add(AdapterMethodsFactory.fromInstance(adapter));
+    }
+
+    /**
+     * Scans the {@code class} for {@code static} methods annotated with {@link ToJson}
+     * and/or {@link FromJson}.
+     */
+    public Builder add(Class<?> adapter) {
+      return add(AdapterMethodsFactory.fromClass(adapter));
     }
 
     Builder addAll(List<JsonAdapter.Factory> factories) {

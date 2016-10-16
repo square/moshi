@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -98,31 +99,19 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     };
   }
 
-  public static AdapterMethodsFactory get(Object adapter) {
+  public static AdapterMethodsFactory fromInstance(Object adapter) {
     List<AdapterMethod> toAdapters = new ArrayList<>();
     List<AdapterMethod> fromAdapters = new ArrayList<>();
 
     for (Class<?> c = adapter.getClass(); c != Object.class; c = c.getSuperclass()) {
       for (Method m : c.getDeclaredMethods()) {
         if (m.isAnnotationPresent(ToJson.class)) {
-          AdapterMethod toAdapter = toAdapter(adapter, m);
-          AdapterMethod conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations);
-          if (conflicting != null) {
-            throw new IllegalArgumentException("Conflicting @ToJson methods:\n"
-                + "    " + conflicting.method + "\n"
-                + "    " + toAdapter.method);
-          }
+          AdapterMethod toAdapter = nonConflictingToJsonAdapter(toAdapters, adapter, m);
           toAdapters.add(toAdapter);
         }
 
         if (m.isAnnotationPresent(FromJson.class)) {
-          AdapterMethod fromAdapter = fromAdapter(adapter, m);
-          AdapterMethod conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations);
-          if (conflicting != null) {
-            throw new IllegalArgumentException("Conflicting @FromJson methods:\n"
-                + "    " + conflicting.method + "\n"
-                + "    " + fromAdapter.method);
-          }
+          AdapterMethod fromAdapter = nonConflictingFromJsonAdapter(fromAdapters, adapter, m);
           fromAdapters.add(fromAdapter);
         }
       }
@@ -134,6 +123,54 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     }
 
     return new AdapterMethodsFactory(toAdapters, fromAdapters);
+  }
+
+  public static AdapterMethodsFactory fromClass(Class<?> cls) {
+    List<AdapterMethod> toAdapters = new ArrayList<>();
+    List<AdapterMethod> fromAdapters = new ArrayList<>();
+
+    for (Method m : cls.getDeclaredMethods()) {
+      if (Modifier.isStatic(m.getModifiers()) && m.isAnnotationPresent(ToJson.class)) {
+        AdapterMethod toAdapter = nonConflictingToJsonAdapter(toAdapters, cls, m);
+        toAdapters.add(toAdapter);
+      }
+
+      if (Modifier.isStatic(m.getModifiers()) && m.isAnnotationPresent(FromJson.class)) {
+        AdapterMethod fromAdapter = nonConflictingFromJsonAdapter(fromAdapters, cls, m);
+        fromAdapters.add(fromAdapter);
+      }
+    }
+
+    if (toAdapters.isEmpty() && fromAdapters.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Expected at least one static @ToJson or @FromJson method on " + cls.getName());
+    }
+
+    return new AdapterMethodsFactory(toAdapters, fromAdapters);
+  }
+
+  private static AdapterMethod nonConflictingToJsonAdapter(List<AdapterMethod> toAdapters,
+      Object adapter, Method method) {
+    AdapterMethod toAdapter = toAdapter(adapter, method);
+    AdapterMethod conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations);
+    if (conflicting != null) {
+      throw new IllegalArgumentException("Conflicting @ToJson methods:\n"
+          + "    " + conflicting.method + "\n"
+          + "    " + toAdapter.method);
+    }
+    return toAdapter;
+  }
+
+  private static AdapterMethod nonConflictingFromJsonAdapter(List<AdapterMethod> fromAdapters,
+      Object adapter, Method method) {
+    AdapterMethod fromAdapter = fromAdapter(adapter, method);
+    AdapterMethod conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations);
+    if (conflicting != null) {
+      throw new IllegalArgumentException("Conflicting @FromJson methods:\n"
+          + "    " + conflicting.method + "\n"
+          + "    " + fromAdapter.method);
+    }
+    return fromAdapter;
   }
 
   /**
@@ -160,7 +197,6 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           invoke(writer, value);
         }
       };
-
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // List<Integer> pointToJson(Point point) {
       final Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
@@ -181,7 +217,6 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           delegate.toJson(writer, intermediate);
         }
       };
-
     } else {
       throw new IllegalArgumentException("Unexpected signature for " + method + ".\n"
           + "@ToJson method signatures may have one of the following structures:\n"
@@ -223,7 +258,6 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           return invoke(reader);
         }
       };
-
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // Point pointFromJson(List<Integer> o) {
       final Set<? extends Annotation> qualifierAnnotations
@@ -244,7 +278,6 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           return invoke(intermediate);
         }
       };
-
     } else {
       throw new IllegalArgumentException("Unexpected signature for " + method + ".\n"
           + "@FromJson method signatures may have one of the following structures:\n"
