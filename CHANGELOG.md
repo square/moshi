@@ -5,7 +5,7 @@ Change Log
 
 _2016-10-15_
 
- *  New: Permit `@ToJson` and `@FromJson` methods to take any number of `JsonReader` parameters to
+ *  New: Permit `@ToJson` and `@FromJson` methods to take any number of `JsonAdapter` parameters to
     delegate to. This is supported for `@ToJson` methods that take a `JsonWriter` and `@FromJson`
     methods that take a `JsonReader`.
  *  New: Throw `JsonEncodingException` when the incoming data is not valid JSON. Use this to
