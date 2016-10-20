@@ -1073,6 +1073,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       case '\'':
       case '"':
       case '\\':
+      case '/':
         return (char) escaped;
 
       default:
