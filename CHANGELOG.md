@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## Version 1.3.1
+
+_2016-10-21_
+
+ *  Fix: Don't incorrectly report invalid input when a slash character is escaped. When we tightened
+    our invalid escape handling we missed the one character that is valid both escaped `\/` and
+    unescaped `/`.
+
 ## Version 1.3.0
 
 _2016-10-15_

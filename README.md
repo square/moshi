@@ -455,12 +455,12 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.3.0</version>
+  <version>1.3.1</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.moshi:moshi:1.3.0'
+compile 'com.squareup.moshi:moshi:1.3.1'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
