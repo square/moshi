@@ -1804,6 +1804,12 @@ public final class BufferedSourceJsonReaderTest {
     }
   }
 
+  @Test public void validEscapes() throws IOException {
+    JsonReader reader = newReader("[\"\\\"\\\\\\/\\b\\f\\n\\r\\t\"]");
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("\"\\/\b\f\n\r\t");
+  }
+
   @Test public void invalidEscape() throws IOException {
     JsonReader reader = newReader("[\"str\\ing\"]");
     reader.beginArray();
