@@ -154,7 +154,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
       Set<? extends Annotation> qualifierAnnotations = jsonAnnotations(parameterAnnotations[1]);
       return new AdapterMethod(parameterTypes[1], qualifierAnnotations, adapter, method,
-          parameterTypes.length, 2, false) {
+          parameterTypes.length, 2, true) {
         @Override public void toJson(Moshi moshi, JsonWriter writer, Object value)
             throws IOException, InvocationTargetException {
           invoke(writer, value);
@@ -217,7 +217,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       // Point pointFromJson(JsonReader jsonReader) {
       // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
       return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method,
-          parameterTypes.length, 1, false) {
+          parameterTypes.length, 1, true) {
         @Override public Object fromJson(Moshi moshi, JsonReader reader)
             throws IOException, InvocationTargetException {
           return invoke(reader);

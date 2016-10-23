@@ -294,6 +294,33 @@ public final class AdapterMethodsTest {
   @interface Nullable {
   }
 
+  @Test public void toAndFromNullJsonWithWriterAndReader() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new NullableIntToJsonAdapter())
+        .build();
+    JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
+    assertThat(pointAdapter.fromJson("{\"x\":null,\"y\":3}")).isEqualTo(new Point(-1, 3));
+    assertThat(pointAdapter.toJson(new Point(-1, 3))).isEqualTo("{\"y\":3}");
+  }
+
+  static class NullableIntToJsonAdapter {
+    @FromJson int intToJson(JsonReader reader) throws IOException {
+      if (reader.peek() == JsonReader.Token.NULL) {
+        reader.nextNull();
+        return -1;
+      }
+      return reader.nextInt();
+    }
+
+    @ToJson void jsonToInt(JsonWriter writer, int value) throws IOException {
+      if (value == -1) {
+        writer.nullValue();
+      } else {
+        writer.value(value);
+      }
+    }
+  }
+
   @Test public void adapterThrows() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(new ExceptionThrowingPointJsonAdapter())
@@ -317,10 +344,12 @@ public final class AdapterMethodsTest {
 
   static class ExceptionThrowingPointJsonAdapter {
     @ToJson void pointToJson(JsonWriter writer, Point point) throws Exception {
-      throw new Exception("pointToJson fail!");
+      if (point != null) throw new Exception("pointToJson fail!");
+      writer.nullValue();
     }
 
     @FromJson Point pointFromJson(JsonReader reader) throws Exception {
+      if (reader.peek() == JsonReader.Token.NULL) return reader.nextNull();
       throw new Exception("pointFromJson fail!");
     }
   }
