@@ -37,12 +37,16 @@ import java.util.Set;
  * LinkedHashMap classes.
  */
 final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Serializable {
-  @SuppressWarnings({ "unchecked", "rawtypes" }) // to avoid Comparable<Comparable<Comparable<...>>>
-  private static final Comparator<Comparable> NATURAL_ORDER = new Comparator<Comparable>() {
+
+  private static class NaturalOrderComparator implements Comparator<Comparable>, Serializable {
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // to avoid Comparable<Comparable<Comparable<...>>>
+    @Override
     public int compare(Comparable a, Comparable b) {
       return a.compareTo(b);
     }
-  };
+  }
+
+  private static final Comparator<Comparable> NATURAL_ORDER = new NaturalOrderComparator();
 
   Comparator<? super K> comparator;
   Node<K, V>[] table;
