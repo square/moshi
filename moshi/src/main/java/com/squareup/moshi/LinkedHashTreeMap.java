@@ -466,7 +466,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
     return result != null ? result : (keySet = new KeySet());
   }
 
-  static final class Node<K, V> implements Entry<K, V> {
+  static final class Node<K, V> implements Entry<K, V>, Serializable {
     Node<K, V> parent;
     Node<K, V> left;
     Node<K, V> right;
