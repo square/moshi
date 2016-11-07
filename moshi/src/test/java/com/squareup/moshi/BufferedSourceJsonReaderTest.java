@@ -621,7 +621,7 @@ public final class BufferedSourceJsonReaderTest {
    * This test fails because there's no double for 9223372036854775808, and our
    * long parsing uses Double.parseDouble() for fractional values.
    */
-  @Test @Ignore public void peekLargerThanLongMaxValue() throws IOException {
+  @Test public void peekLargerThanLongMaxValue() throws IOException {
     JsonReader reader = newReader("[9223372036854775808]");
     reader.setLenient(true);
     reader.beginArray();

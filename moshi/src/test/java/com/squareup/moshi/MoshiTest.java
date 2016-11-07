@@ -433,21 +433,19 @@ public final class MoshiTest {
     assertThat(adapter.fromJson("9223372036854775807")).isEqualTo(Long.MAX_VALUE);
     assertThat(adapter.toJson(Long.MAX_VALUE)).isEqualTo("9223372036854775807");
 
-    // TODO: This is a bug?
-    assertThat(adapter.fromJson("9223372036854775808")).isEqualTo(Long.MAX_VALUE); // wtf?
-    //try {
-    //  adapter.fromJson("9223372036854775808");
-    //  fail();
-    //} catch (NumberFormatException expected) {
-    //  assertThat(expected).hasMessage("Expected a long but was 9223372036854775808 at path $");
-    //}
-    //
-    //try {
-    //  adapter.fromJson("-9223372036854775809");
-    //  fail();
-    //} catch (NumberFormatException expected) {
-    //  assertThat(expected).hasMessage("Expected a long but was -9223372036854775809 at path $");
-    //}
+    try {
+      adapter.fromJson("9223372036854775808");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected a long but was 9223372036854775808 at path $");
+    }
+
+    try {
+      adapter.fromJson("-9223372036854775809");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected a long but was -9223372036854775809 at path $");
+    }
 
     // Nulls not allowed for long.class
     try {
