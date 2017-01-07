@@ -190,6 +190,8 @@ public final class Moshi {
       return add(AdapterMethodsFactory.get(adapter));
     }
 
+    public Builder setPrettyPrinting() { return this; }
+
     Builder addAll(List<JsonAdapter.Factory> factories) {
       this.factories.addAll(factories);
       return this;

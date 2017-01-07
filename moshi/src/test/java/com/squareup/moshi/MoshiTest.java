@@ -546,6 +546,21 @@ public final class MoshiTest {
         .isEqualTo(new Pizza(18, true));
   }
 
+  @Test public void setPrettyPrinting() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+            .setPrettyPrinting() 
+            .add(Pizza.class, new PizzaAdapter())
+            .build();
+
+    String expectedJson = "{\n" +
+            "  \"size\": 15,\n" +
+            "  \"extra cheese\": true\n" +
+            "}";
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
+    assertThat(jsonAdapter.toJson(new Pizza(15, true)))
+            .isEqualTo(expectedJson);
+  }
+
   @Test public void composingJsonAdapterFactory() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(new MealDealAdapterFactory())
