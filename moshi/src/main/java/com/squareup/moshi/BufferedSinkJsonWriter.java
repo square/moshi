@@ -105,6 +105,10 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     }
   }
 
+  @Override public final String getIndent() {
+    return indent != null ? indent : "";
+  }
+
   @Override public final void setLenient(boolean lenient) {
     this.lenient = lenient;
   }

@@ -33,7 +33,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.crypto.KeyGenerator;
-import org.junit.Assert;
+import okio.Buffer;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
@@ -544,6 +544,42 @@ public final class MoshiTest {
         .isEqualTo("{\"size\":15,\"extra cheese\":true}");
     assertThat(jsonAdapter.fromJson("{\"extra cheese\":true,\"size\":18}"))
         .isEqualTo(new Pizza(18, true));
+  }
+
+  @Test public void indent() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
+
+    Pizza pizza = new Pizza(15, true);
+    assertThat(jsonAdapter.indent("  ").toJson(pizza)).isEqualTo(""
+        + "{\n"
+        + "  \"size\": 15,\n"
+        + "  \"extra cheese\": true\n"
+        + "}");
+  }
+
+  @Test public void unindent() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
+
+    Buffer buffer = new Buffer();
+    JsonWriter writer = JsonWriter.of(buffer);
+    writer.setLenient(true);
+    writer.setIndent("  ");
+
+    Pizza pizza = new Pizza(15, true);
+
+    // Calling JsonAdapter.indent("") can remove indentation.
+    jsonAdapter.indent("").toJson(writer, pizza);
+    assertThat(buffer.readUtf8()).isEqualTo("{\"size\":15,\"extra cheese\":true}");
+
+    // Indentation changes only apply to their use.
+    jsonAdapter.toJson(writer, pizza);
+    assertThat(buffer.readUtf8()).isEqualTo(""
+        + "{\n"
+        + "  \"size\": 15,\n"
+        + "  \"extra cheese\": true\n"
+        + "}");
   }
 
   @Test public void composingJsonAdapterFactory() throws Exception {

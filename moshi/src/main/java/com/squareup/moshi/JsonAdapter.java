@@ -136,6 +136,35 @@ public abstract class JsonAdapter<T> {
     };
   }
 
+  /**
+   * Return a JSON adapter equal to this, but using {@code indent} to control how the result is
+   * formatted. The {@code indent} string to be repeated for each level of indentation in the
+   * encoded document. If {@code indent.isEmpty()} the encoded document will be compact. Otherwise
+   * the encoded document will be more human-readable.
+   *
+   * @param indent a string containing only whitespace.
+   */
+  public JsonAdapter<T> indent(final String indent) {
+    final JsonAdapter<T> delegate = this;
+    return new JsonAdapter<T>() {
+      @Override public T fromJson(JsonReader reader) throws IOException {
+        return delegate.fromJson(reader);
+      }
+      @Override public void toJson(JsonWriter writer, T value) throws IOException {
+        String originalIndent = writer.getIndent();
+        writer.setIndent(indent);
+        try {
+          delegate.toJson(writer, value);
+        } finally {
+          writer.setIndent(originalIndent);
+        }
+      }
+      @Override public String toString() {
+        return delegate + ".indent(\"" + indent + "\")";
+      }
+    };
+  }
+
   public interface Factory {
     /**
      * Attempts to create an adapter for {@code type} annotated with {@code annotations}. This
