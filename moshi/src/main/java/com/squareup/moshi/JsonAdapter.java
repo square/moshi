@@ -136,6 +136,31 @@ public abstract class JsonAdapter<T> {
     };
   }
 
+  /**
+   * Return a JSON adapter equal to this, but with pretty printing instead of the default compact form.
+   */
+  public JsonAdapter<T> indent(final String indent) {
+    final JsonAdapter<T> delegate = this;
+    return new JsonAdapter<T>() {
+
+      @Override
+      public T fromJson(JsonReader reader) throws IOException {
+        return delegate.fromJson(reader);
+      }
+
+      @Override
+      public void toJson(JsonWriter writer, T value) throws IOException {
+        writer.setIndent(indent);
+        delegate.toJson(writer, value);
+      }
+
+      @Override
+      public String toString() {
+        return delegate + ".indent(" + indent + ")";
+      }
+    };
+  }
+
   public interface Factory {
     /**
      * Attempts to create an adapter for {@code type} annotated with {@code annotations}. This

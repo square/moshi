@@ -33,6 +33,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.crypto.KeyGenerator;
+
+import okio.Buffer;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -548,17 +550,24 @@ public final class MoshiTest {
 
   @Test public void setPrettyPrinting() throws Exception {
     Moshi moshi = new Moshi.Builder()
-            .setPrettyPrinting() 
             .add(Pizza.class, new PizzaAdapter())
             .build();
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class).indent("  ");
 
+    Pizza pizza = new Pizza(15, true);
     String expectedJson = "{\n" +
             "  \"size\": 15,\n" +
             "  \"extra cheese\": true\n" +
             "}";
-    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
-    assertThat(jsonAdapter.toJson(new Pizza(15, true)))
-            .isEqualTo(expectedJson);
+
+    assertThat(jsonAdapter.toJson(pizza)).isEqualTo(expectedJson);
+
+    Buffer buffer = new Buffer();
+    jsonAdapter.toJson(buffer, pizza);
+    assertThat(buffer.readUtf8()).isEqualTo(expectedJson);
+
+
+
   }
 
   @Test public void composingJsonAdapterFactory() throws Exception {
