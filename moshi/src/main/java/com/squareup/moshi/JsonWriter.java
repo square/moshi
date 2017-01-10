@@ -68,7 +68,7 @@ import okio.BufferedSink;
  * This code encodes the above structure: <pre>   {@code
  *   public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
  *     JsonWriter writer = JsonWriter.of(sink);
- *     writer.setIndentSpaces(4);
+ *     writer.setIndent("    ");
  *     writeMessagesArray(writer, messages);
  *     writer.close();
  *   }
