@@ -69,4 +69,8 @@ final class ArrayJsonAdapter extends JsonAdapter<Object> {
     }
     writer.endArray();
   }
+
+  @Override public String toString() {
+    return elementAdapter + ".array()";
+  }
 }
