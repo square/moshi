@@ -68,7 +68,7 @@ import okio.BufferedSink;
  * This code encodes the above structure: <pre>   {@code
  *   public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
  *     JsonWriter writer = JsonWriter.of(sink);
- *     writer.setIndentSpaces(4);
+ *     writer.setIndent("  ");
  *     writeMessagesArray(writer, messages);
  *     writer.close();
  *   }
@@ -136,6 +136,12 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * @param indent a string containing only whitespace.
    */
   public abstract void setIndent(String indent);
+
+  /**
+   * Returns a string containing only whitespace, used for each level of
+   * indentation. If empty, the encoded document will be compact.
+   */
+  public abstract String getIndent();
 
   /**
    * Configure this writer to relax its syntax rules. By default, this writer
