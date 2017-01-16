@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -718,15 +719,11 @@ final class BufferedSourceJsonReader extends JsonReader {
     }
 
     peeked = PEEKED_BUFFERED;
-    double asDouble;
+    long result;
     try {
-      asDouble = Double.parseDouble(peekedString);
-    } catch (NumberFormatException e) {
-      throw new JsonDataException("Expected a long but was " + peekedString
-          + " at path " + getPath());
-    }
-    long result = (long) asDouble;
-    if (result != asDouble) { // Make sure no precision was lost casting to 'long'.
+      BigDecimal asDecimal = new BigDecimal(peekedString);
+      result = asDecimal.longValueExact();
+    } catch (NumberFormatException | ArithmeticException e) {
       throw new JsonDataException("Expected a long but was " + peekedString
           + " at path " + getPath());
     }

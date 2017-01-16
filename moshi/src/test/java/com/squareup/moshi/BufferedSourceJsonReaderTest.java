@@ -617,11 +617,7 @@ public final class BufferedSourceJsonReaderTest {
     }
   }
 
-  /**
-   * This test fails because there's no double for 9223372036854775808, and our
-   * long parsing uses Double.parseDouble() for fractional values.
-   */
-  @Test @Ignore public void peekLargerThanLongMaxValue() throws IOException {
+  @Test public void peekLargerThanLongMaxValue() throws IOException {
     JsonReader reader = newReader("[9223372036854775808]");
     reader.setLenient(true);
     reader.beginArray();
@@ -633,11 +629,19 @@ public final class BufferedSourceJsonReaderTest {
     }
   }
 
-  /**
-   * This test fails because there's no double for -9223372036854775809, and our
-   * long parsing uses Double.parseDouble() for fractional values.
-   */
-  @Test @Ignore public void peekLargerThanLongMinValue() throws IOException {
+  @Test public void precisionNotDiscarded() throws IOException {
+    JsonReader reader = newReader("[9223372036854775806.5]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertThat(reader.peek()).isEqualTo(NUMBER);
+    try {
+      reader.nextLong();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+  }
+
+  @Test public void peekLargerThanLongMinValue() throws IOException {
     JsonReader reader = newReader("[-9223372036854775809]");
     reader.setLenient(true);
     reader.beginArray();
@@ -650,11 +654,7 @@ public final class BufferedSourceJsonReaderTest {
     assertThat(reader.nextDouble()).isEqualTo(-9223372036854775809d);
   }
 
-  /**
-   * This test fails because there's no double for 9223372036854775806, and
-   * our long parsing uses Double.parseDouble() for fractional values.
-   */
-  @Test @Ignore public void highPrecisionLong() throws IOException {
+  @Test public void highPrecisionLong() throws IOException {
     String json = "[9223372036854775806.000]";
     JsonReader reader = newReader(json);
     reader.beginArray();
