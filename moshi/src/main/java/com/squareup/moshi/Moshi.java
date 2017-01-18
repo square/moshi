@@ -182,11 +182,13 @@ public final class Moshi {
     }
 
     public Builder add(JsonAdapter.Factory factory) {
+      if (factory == null) throw new IllegalArgumentException("factory == null");
       factories.add(factory);
       return this;
     }
 
     public Builder add(Object adapter) {
+      if (adapter == null) throw new IllegalArgumentException("adapter == null");
       return add(AdapterMethodsFactory.get(adapter));
     }
 
