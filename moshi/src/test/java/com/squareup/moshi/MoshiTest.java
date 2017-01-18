@@ -532,6 +532,63 @@ public final class MoshiTest {
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
+  @Test public void addNullFails() throws Exception {
+    JsonAdapter jsonAdapter = new JsonAdapter() {
+      @Override public Object fromJson(JsonReader reader) throws IOException {
+        throw new AssertionError();
+      }
+
+      @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+        throw new AssertionError();
+      }
+    };
+    Type type = Object.class;
+    Class<? extends Annotation> annotation = Annotation.class;
+    Moshi.Builder builder = new Moshi.Builder();
+    try {
+      builder.add((JsonAdapter.Factory) null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("factory == null");
+    }
+    try {
+      builder.add(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("adapter == null");
+    }
+    try {
+      builder.add(null, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("type == null");
+    }
+    try {
+      builder.add(type, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("jsonAdapter == null");
+    }
+    try {
+      builder.add(null, null, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("type == null");
+    }
+    try {
+      builder.add(type, null, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("annotation == null");
+    }
+    try {
+      builder.add(type, annotation, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("jsonAdapter == null");
+    }
+  }
+
   @Test public void customJsonAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(Pizza.class, new PizzaAdapter())
