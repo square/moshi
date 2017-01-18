@@ -546,13 +546,13 @@ public final class MoshiTest {
     Class<? extends Annotation> annotation = Annotation.class;
     Moshi.Builder builder = new Moshi.Builder();
     try {
-      builder.add((JsonAdapter.Factory) null);
+      builder.add((null));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("factory == null");
     }
     try {
-      builder.add(null);
+      builder.add((Object) null);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("adapter == null");
