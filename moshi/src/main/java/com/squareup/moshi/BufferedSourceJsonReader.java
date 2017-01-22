@@ -47,10 +47,11 @@ final class BufferedSourceJsonReader extends JsonReader {
   private static final int PEEKED_SINGLE_QUOTED_NAME = 12;
   private static final int PEEKED_DOUBLE_QUOTED_NAME = 13;
   private static final int PEEKED_UNQUOTED_NAME = 14;
+  private static final int PEEKED_BUFFERED_NAME = 15;
   /** When this is returned, the integer value is stored in peekedLong. */
-  private static final int PEEKED_LONG = 15;
-  private static final int PEEKED_NUMBER = 16;
-  private static final int PEEKED_EOF = 17;
+  private static final int PEEKED_LONG = 16;
+  private static final int PEEKED_NUMBER = 17;
+  private static final int PEEKED_EOF = 18;
 
   /* State machine when parsing numbers */
   private static final int NUMBER_CHAR_NONE = 0;
@@ -98,6 +99,7 @@ final class BufferedSourceJsonReader extends JsonReader {
   // StackOverflowErrors.
   private final int[] stack = new int[32];
   private int stackSize = 0;
+
   {
     stack[stackSize++] = JsonScope.EMPTY_DOCUMENT;
   }
@@ -215,6 +217,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       case PEEKED_SINGLE_QUOTED_NAME:
       case PEEKED_DOUBLE_QUOTED_NAME:
       case PEEKED_UNQUOTED_NAME:
+      case PEEKED_BUFFERED_NAME:
         return Token.NAME;
       case PEEKED_TRUE:
       case PEEKED_FALSE:
@@ -545,6 +548,8 @@ final class BufferedSourceJsonReader extends JsonReader {
       result = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH);
     } else if (p == PEEKED_SINGLE_QUOTED_NAME) {
       result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
+    } else if (p == PEEKED_BUFFERED_NAME) {
+      result = peekedString;
     } else {
       throw new JsonDataException("Expected a name but was " + peek() + " at path " + getPath());
     }
@@ -553,12 +558,12 @@ final class BufferedSourceJsonReader extends JsonReader {
     return result;
   }
 
-  @Override int selectName(Options options) throws IOException {
+  @Override public int selectName(Options options) throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
     }
-    if (p != PEEKED_DOUBLE_QUOTED_NAME) {
+    if (p  < PEEKED_SINGLE_QUOTED_NAME || p > PEEKED_BUFFERED_NAME) {
       return -1;
     }
 
@@ -566,8 +571,30 @@ final class BufferedSourceJsonReader extends JsonReader {
     if (result != -1) {
       peeked = PEEKED_NONE;
       pathNames[stackSize - 1] = options.strings[result];
+
+      return result;
     }
-    return result;
+
+    // The next name may be unnecessary escaped. Save the last recorded path name, so that we
+    // can restore the peek state in case we fail to find a match.
+    String lastPathName = pathNames[stackSize - 1];
+
+    String nextName = nextName();
+    for (int i = 0, size = options.strings.length; i < size; i++) {
+      if (nextName.equals(options.strings[i])) {
+        peeked = PEEKED_NONE;
+        pathNames[stackSize - 1] = nextName;
+
+        return i;
+      }
+    }
+
+    peeked = PEEKED_BUFFERED_NAME;
+    peekedString = nextName;
+    // We can't push the path further, make it seem like nothing happened.
+    pathNames[stackSize - 1] = lastPathName;
+
+    return -1;
   }
 
   @Override public String nextString() throws IOException {
@@ -597,12 +624,12 @@ final class BufferedSourceJsonReader extends JsonReader {
     return result;
   }
 
-  @Override int selectString(Options options) throws IOException {
+  @Override public int selectString(Options options) throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();
     }
-    if (p != PEEKED_DOUBLE_QUOTED) {
+    if (p < PEEKED_SINGLE_QUOTED || p > PEEKED_BUFFERED) {
       return -1;
     }
 
@@ -610,8 +637,25 @@ final class BufferedSourceJsonReader extends JsonReader {
     if (result != -1) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+
+      return result;
     }
-    return result;
+
+    String nextString = nextString();
+    for (int i = 0, size = options.strings.length; i < size; i++) {
+      if (nextString.equals(options.strings[i])) {
+        peeked = PEEKED_NONE;
+        pathIndices[stackSize - 1]++;
+
+        return i;
+      }
+    }
+
+    peeked = PEEKED_BUFFERED;
+    peekedString = nextString;
+    pathIndices[stackSize - 1]--;
+
+    return -1;
   }
 
   @Override public boolean nextBoolean() throws IOException {
@@ -995,7 +1039,7 @@ final class BufferedSourceJsonReader extends JsonReader {
    */
   private boolean skipTo(String toFind) throws IOException {
     outer:
-    for (; source.request(toFind.length());) {
+    for (; source.request(toFind.length()); ) {
       for (int c = 0; c < toFind.length(); c++) {
         if (buffer.getByte(c) != toFind.charAt(c)) {
           buffer.readByte();

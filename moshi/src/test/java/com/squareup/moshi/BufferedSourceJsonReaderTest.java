@@ -1161,9 +1161,12 @@ public final class BufferedSourceJsonReaderTest {
     assertDocument("{\"name\":,", BEGIN_OBJECT, NAME, JsonEncodingException.class);
     assertDocument("{\"name\"=}", BEGIN_OBJECT, NAME, JsonEncodingException.class);
     assertDocument("{\"name\"=>}", BEGIN_OBJECT, NAME, JsonEncodingException.class);
-    assertDocument("{\"name\"=>\"string\":", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
-    assertDocument("{\"name\"=>\"string\"=", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
-    assertDocument("{\"name\"=>\"string\"=>", BEGIN_OBJECT, NAME, STRING, JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\":", BEGIN_OBJECT, NAME, STRING,
+        JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\"=", BEGIN_OBJECT, NAME, STRING,
+        JsonEncodingException.class);
+    assertDocument("{\"name\"=>\"string\"=>", BEGIN_OBJECT, NAME, STRING,
+        JsonEncodingException.class);
     assertDocument("{\"name\"=>\"string\",", BEGIN_OBJECT, NAME, STRING, EOFException.class);
     assertDocument("{\"name\"=>\"string\",\"name\"", BEGIN_OBJECT, NAME, STRING, NAME);
     assertDocument("[}", BEGIN_ARRAY, JsonEncodingException.class);
@@ -1222,41 +1225,6 @@ public final class BufferedSourceJsonReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertThat(reader.nextString()).isEqualTo("string");
-  }
-
-  /** Select doesn't match unquoted strings. */
-  @Test public void selectStringUnquoted() throws IOException {
-    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
-
-    JsonReader reader = newReader("[a]");
-    reader.setLenient(true);
-    reader.beginArray();
-    assertEquals(-1, reader.selectString(abc));
-    assertEquals("a", reader.nextString());
-    reader.endArray();
-  }
-
-  /** Select doesn't match single quoted strings. */
-  @Test public void selectStringSingleQuoted() throws IOException {
-    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
-
-    JsonReader reader = newReader("['a']");
-    reader.setLenient(true);
-    reader.beginArray();
-    assertEquals(-1, reader.selectString(abc));
-    assertEquals("a", reader.nextString());
-    reader.endArray();
-  }
-
-  /** Select doesn't match unnecessarily-escaped strings. */
-  @Test public void selectUnnecessaryEscaping() throws IOException {
-    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
-
-    JsonReader reader = newReader("[\"\\u0061\"]");
-    reader.beginArray();
-    assertEquals(-1, reader.selectString(abc));
-    assertEquals("a", reader.nextString());
-    reader.endArray();
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {

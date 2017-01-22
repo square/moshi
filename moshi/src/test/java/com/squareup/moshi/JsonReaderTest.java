@@ -28,6 +28,7 @@ import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.NAME;
 import static com.squareup.moshi.JsonReader.Token.STRING;
+import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -690,6 +691,78 @@ public final class JsonReaderTest {
     reader.endObject();
   }
 
+  /** Select does match necessarily escaping. The decoded value is used in the path. */
+  @Test public void selectNameNecessaryEscaping() throws IOException {
+    JsonReader.Options options = JsonReader.Options.of("\n", "\u0000", "\"");
+
+    JsonReader reader = newReader("{\"\\n\": 5,\"\\u0000\": 5, \"\\\"\": 5}");
+    reader.beginObject();
+    assertEquals(0, reader.selectName(options));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\n", reader.getPath());
+    assertEquals(1, reader.selectName(options));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\u0000", reader.getPath());
+    assertEquals(2, reader.selectName(options));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.\"", reader.getPath());
+    reader.endObject();
+  }
+
+  /** Select removes unnecessary escaping from the source JSON. */
+  @Test public void selectNameUnnecessaryEscaping() throws IOException {
+    JsonReader.Options options = JsonReader.Options.of("coffee", "tea");
+
+    JsonReader reader = newReader("{\"cof\\u0066ee\":5, \"\\u0074e\\u0061\":4, \"water\":3}");
+    reader.beginObject();
+    assertEquals(0, reader.selectName(options));
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.coffee", reader.getPath());
+    assertEquals(1, reader.selectName(options));
+    assertEquals(4, reader.nextInt());
+    assertEquals("$.tea", reader.getPath());
+
+    // Ensure select name doesn't advance the stack in case there are no matches.
+    assertEquals(-1, reader.selectName(options));
+    assertEquals(JsonReader.Token.NAME, reader.peek());
+    assertEquals("$.tea", reader.getPath());
+
+    // Consume the last token.
+    assertEquals("water", reader.nextName());
+    assertEquals(3, reader.nextInt());
+    reader.endObject();
+  }
+
+  @Test public void selectNameUnquoted() throws Exception {
+    JsonReader.Options options = JsonReader.Options.of("a", "b");
+
+    JsonReader reader = newReader("{a:2}");
+    reader.setLenient(true);
+    reader.beginObject();
+
+    assertEquals(0, reader.selectName(options));
+    assertEquals("$.a", reader.getPath());
+    assertEquals(2, reader.nextInt());
+    assertEquals("$.a", reader.getPath());
+
+    reader.endObject();
+  }
+
+  @Test public void selectNameSingleQuoted() throws IOException {
+    JsonReader.Options abc = JsonReader.Options.of("a", "b");
+
+    JsonReader reader = newReader("{'a':5}");
+    reader.setLenient(true);
+    reader.beginObject();
+
+    assertEquals(0, reader.selectName(abc));
+    assertEquals("$.a", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.a", reader.getPath());
+
+    reader.endObject();
+  }
+
   @Test public void selectString() throws IOException {
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
 
@@ -717,22 +790,64 @@ public final class JsonReaderTest {
     reader.endArray();
   }
 
-  /** Select does match necessarily escaping. The decoded value is used in the path. */
-  @Test public void selectNecessaryEscaping() throws IOException {
+  @Test public void selectStringNecessaryEscaping() throws Exception {
     JsonReader.Options options = JsonReader.Options.of("\n", "\u0000", "\"");
 
-    JsonReader reader = newReader("{\"\\n\": 5,\"\\u0000\": 5, \"\\\"\": 5}");
-    reader.beginObject();
-    assertEquals(0, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
-    assertEquals("$.\n", reader.getPath());
-    assertEquals(1, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
-    assertEquals("$.\u0000", reader.getPath());
-    assertEquals(2, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
-    assertEquals("$.\"", reader.getPath());
-    reader.endObject();
+    JsonReader reader = newReader("[\"\\n\",\"\\u0000\", \"\\\"\"]");
+    reader.beginArray();
+    assertEquals(0, reader.selectString(options));
+    assertEquals(1, reader.selectString(options));
+    assertEquals(2, reader.selectString(options));
+    reader.endArray();
+  }
+
+  /** Select strips unnecessarily-escaped strings. */
+  @Test public void selectStringUnnecessaryEscaping() throws IOException {
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
+
+    JsonReader reader = newReader("[\"\\u0061\", \"b\", \"\\u0063\"]");
+    reader.beginArray();
+    assertEquals(0, reader.selectString(abc));
+    assertEquals(1, reader.selectString(abc));
+    assertEquals(2, reader.selectString(abc));
+    reader.endArray();
+  }
+
+  @Test public void selectStringUnquoted() throws IOException {
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
+
+    JsonReader reader = newReader("[a, \"b\", c]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertEquals(0, reader.selectString(abc));
+    assertEquals(1, reader.selectString(abc));
+    assertEquals(2, reader.selectString(abc));
+    reader.endArray();
+  }
+
+  @Test public void selectStringSingleQuoted() throws IOException {
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
+
+    JsonReader reader = newReader("['a', \"b\", c]");
+    reader.setLenient(true);
+    reader.beginArray();
+    assertEquals(0, reader.selectString(abc));
+    assertEquals(1, reader.selectString(abc));
+    assertEquals(2, reader.selectString(abc));
+    reader.endArray();
+  }
+
+  @Test public void selectStringMaintainsReaderState() throws IOException {
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
+
+    JsonReader reader = newReader("[\"\\u0061\", \"42\"]");
+    reader.beginArray();
+    assertEquals(0, reader.selectString(abc));
+    assertEquals(-1, reader.selectString(abc));
+    assertEquals(JsonReader.Token.STRING, reader.peek());
+    // Next long can retrieve a value from a buffered string.
+    assertEquals(42, reader.nextLong());
+    reader.endArray();
   }
 
   @Test public void stringToNumberCoersion() throws Exception {

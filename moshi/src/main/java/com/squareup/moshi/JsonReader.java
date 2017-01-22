@@ -274,7 +274,7 @@ public abstract class JsonReader implements Closeable {
    * If the next token is a {@linkplain Token#NAME property name} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
    */
-  abstract int selectName(Options options) throws IOException;
+  public abstract int selectName(Options options) throws IOException;
 
   /**
    * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next
@@ -288,7 +288,7 @@ public abstract class JsonReader implements Closeable {
    * If the next token is a {@linkplain Token#STRING string} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no string is consumed.
    */
-  abstract int selectString(Options options) throws IOException;
+  public abstract int selectString(Options options) throws IOException;
 
   /**
    * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.
@@ -359,13 +359,9 @@ public abstract class JsonReader implements Closeable {
 
   /**
    * A set of strings to be chosen with {@link #selectName} or {@link #selectString}. This prepares
-   * the encoded values of the strings so they can be read directly from the input source. It cannot
-   * read arbitrary encodings of the strings: if any of a string's characters are unnecessarily
-   * escaped in the source JSON, that string will not be selected. Similarly, if the string is
-   * unquoted or uses single quotes in the source JSON, it will not be selected. Client code that
-   * uses this class should fall back to another mechanism to accommodate this possibility.
+   * the encoded values of the strings so they can be read directly from the input source.
    */
-  static final class Options {
+  public static final class Options {
     final String[] strings;
     final okio.Options doubleQuoteSuffix;
 

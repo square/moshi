@@ -158,7 +158,7 @@ final class ObjectJsonReader extends JsonReader {
     return result;
   }
 
-  @Override int selectName(Options options) throws IOException {
+  @Override public int selectName(Options options) throws IOException {
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
     String name = stringKey(peeked);
     for (int i = 0, length = options.strings.length; i < length; i++) {
@@ -178,7 +178,7 @@ final class ObjectJsonReader extends JsonReader {
     return peeked;
   }
 
-  @Override int selectString(Options options) throws IOException {
+  @Override public int selectString(Options options) throws IOException {
     String peeked = require(String.class, Token.STRING);
     for (int i = 0, length = options.strings.length; i < length; i++) {
       if (options.strings[i].equals(peeked)) {
