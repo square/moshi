@@ -354,7 +354,8 @@ public final class JsonReaderTest {
   }
 
   @Test public void longs() throws IOException {
-    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT); // TODO(jwilson): fix precision checks.
+    assumeTrue(factory.implementsStrictPrecision());
+
     String json = "[0,0,0,"
         + "1,1,1,"
         + "-1,-1,-1,"
@@ -457,7 +458,7 @@ public final class JsonReaderTest {
   }
 
   @Test public void integerMismatchWithDoubleDoesNotAdvance() throws IOException {
-    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT); // TODO(jwilson): fix precision checks.
+    assumeTrue(factory.implementsStrictPrecision());
 
     JsonReader reader = newReader("[1.5]");
     reader.beginArray();
@@ -471,7 +472,7 @@ public final class JsonReaderTest {
   }
 
   @Test public void integerMismatchWithLongDoesNotAdvance() throws IOException {
-    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT); // TODO(jwilson): fix precision checks.
+    assumeTrue(factory.implementsStrictPrecision());
 
     JsonReader reader = newReader("[9223372036854775807]");
     reader.beginArray();
@@ -485,7 +486,7 @@ public final class JsonReaderTest {
   }
 
   @Test public void longMismatchWithDoubleDoesNotAdvance() throws IOException {
-    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT); // TODO(jwilson): fix precision checks.
+    assumeTrue(factory.implementsStrictPrecision());
 
     JsonReader reader = newReader("[1.5]");
     reader.beginArray();
