@@ -346,10 +346,10 @@ final class ObjectJsonReader extends JsonReader {
 
   private JsonDataException typeMismatch(Object value, Object expected) {
     if (value == null) {
-      throw new JsonDataException(
+      return new JsonDataException(
           "Expected " + expected + " but was null at path " + getPath());
     } else {
-      throw new JsonDataException("Expected " + expected + " but was " + value + ", a "
+      return new JsonDataException("Expected " + expected + " but was " + value + ", a "
           + value.getClass().getName() + ", at path " + getPath());
     }
   }
