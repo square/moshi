@@ -26,6 +26,10 @@ abstract class JsonReaderFactory {
       Buffer buffer = new Buffer().writeUtf8(json);
       return JsonReader.of(buffer);
     }
+
+    @Override public String toString() {
+      return "BufferedSourceJsonReader";
+    }
   };
 
   public static final JsonReaderFactory JSON_OBJECT = new JsonReaderFactory() {
@@ -33,6 +37,10 @@ abstract class JsonReaderFactory {
       Moshi moshi = new Moshi.Builder().build();
       Object object = moshi.adapter(Object.class).lenient().fromJson(json);
       return new ObjectJsonReader(object);
+    }
+
+    @Override public String toString() {
+      return "ObjectJsonReader";
     }
   };
 
