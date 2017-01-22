@@ -563,8 +563,11 @@ final class BufferedSourceJsonReader extends JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek();
     }
-    if (p  < PEEKED_SINGLE_QUOTED_NAME || p > PEEKED_BUFFERED_NAME) {
+    if (p < PEEKED_SINGLE_QUOTED_NAME || p > PEEKED_BUFFERED_NAME) {
       return -1;
+    }
+    if (p == PEEKED_BUFFERED_NAME) {
+      return findName(peekedString, options);
     }
 
     int result = source.select(options.doubleQuoteSuffix);
@@ -580,20 +583,31 @@ final class BufferedSourceJsonReader extends JsonReader {
     String lastPathName = pathNames[stackSize - 1];
 
     String nextName = nextName();
+    result = findName(nextName, options);
+
+    if (result == -1) {
+      peeked = PEEKED_BUFFERED_NAME;
+      peekedString = nextName;
+      // We can't push the path further, make it seem like nothing happened.
+      pathNames[stackSize - 1] = lastPathName;
+    }
+
+    return result;
+  }
+
+  /**
+   * If {@code name} is in {@code options} this consumes it and returns it's index.
+   * Otherwise this returns -1 and no name is consumed.
+   */
+  private int findName(String name, Options options) {
     for (int i = 0, size = options.strings.length; i < size; i++) {
-      if (nextName.equals(options.strings[i])) {
+      if (name.equals(options.strings[i])) {
         peeked = PEEKED_NONE;
-        pathNames[stackSize - 1] = nextName;
+        pathNames[stackSize - 1] = name;
 
         return i;
       }
     }
-
-    peeked = PEEKED_BUFFERED_NAME;
-    peekedString = nextName;
-    // We can't push the path further, make it seem like nothing happened.
-    pathNames[stackSize - 1] = lastPathName;
-
     return -1;
   }
 
@@ -632,6 +646,9 @@ final class BufferedSourceJsonReader extends JsonReader {
     if (p < PEEKED_SINGLE_QUOTED || p > PEEKED_BUFFERED) {
       return -1;
     }
+    if (p == PEEKED_BUFFERED) {
+      return findString(peekedString, options);
+    }
 
     int result = source.select(options.doubleQuoteSuffix);
     if (result != -1) {
@@ -642,19 +659,30 @@ final class BufferedSourceJsonReader extends JsonReader {
     }
 
     String nextString = nextString();
+    result = findString(nextString, options);
+
+    if (result == -1) {
+      peeked = PEEKED_BUFFERED;
+      peekedString = nextString;
+      pathIndices[stackSize - 1]--;
+    }
+
+    return result;
+  }
+
+  /**
+   * If {@code string} is in {@code options} this consumes it and returns it's index.
+   * Otherwise this returns -1 and no string is consumed.
+   */
+  private int findString(String string, Options options) {
     for (int i = 0, size = options.strings.length; i < size; i++) {
-      if (nextString.equals(options.strings[i])) {
+      if (string.equals(options.strings[i])) {
         peeked = PEEKED_NONE;
         pathIndices[stackSize - 1]++;
 
         return i;
       }
     }
-
-    peeked = PEEKED_BUFFERED;
-    peekedString = nextString;
-    pathIndices[stackSize - 1]--;
-
     return -1;
   }
 
