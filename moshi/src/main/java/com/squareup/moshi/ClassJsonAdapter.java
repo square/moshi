@@ -21,7 +21,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -122,18 +121,16 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
     private boolean includeField(boolean platformType, int modifiers) {
       if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
-      return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)|| !platformType;
+      return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
     }
   };
 
   private final ClassFactory<T> classFactory;
-  private final Map<String, FieldBinding<?>> fieldsMap;
   private final FieldBinding<?>[] fieldsArray;
   private final JsonReader.Options options;
 
   ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
-    this.fieldsMap = new LinkedHashMap<>(fieldsMap);
     this.fieldsArray = fieldsMap.values().toArray(new FieldBinding[fieldsMap.size()]);
     this.options = JsonReader.Options.of(
         fieldsMap.keySet().toArray(new String[fieldsMap.size()]));
@@ -162,12 +159,9 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         if (index != -1) {
           fieldBinding = fieldsArray[index];
         } else {
-          String name = reader.nextName();
-          fieldBinding = fieldsMap.get(name);
-          if (fieldBinding == null) {
-            reader.skipValue();
-            continue;
-          }
+          reader.nextName();
+          reader.skipValue();
+          continue;
         }
         fieldBinding.read(reader, result);
       }

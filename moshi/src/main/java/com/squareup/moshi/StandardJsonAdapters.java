@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -214,7 +215,6 @@ final class StandardJsonAdapters {
 
   static final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     private final Class<T> enumType;
-    private final Map<String, T> nameConstantMap;
     private final String[] nameStrings;
     private final T[] constants;
     private final JsonReader.Options options;
@@ -223,13 +223,11 @@ final class StandardJsonAdapters {
       this.enumType = enumType;
       try {
         constants = enumType.getEnumConstants();
-        nameConstantMap = new LinkedHashMap<>();
         nameStrings = new String[constants.length];
         for (int i = 0; i < constants.length; i++) {
           T constant = constants[i];
           Json annotation = enumType.getField(constant.name()).getAnnotation(Json.class);
           String name = annotation != null ? annotation.name() : constant.name();
-          nameConstantMap.put(name, constant);
           nameStrings[i] = name;
         }
         options = JsonReader.Options.of(nameStrings);
@@ -242,11 +240,10 @@ final class StandardJsonAdapters {
       int index = reader.selectString(options);
       if (index != -1) return constants[index];
 
+      // We can consume the string safely, we are terminating anyway.
       String name = reader.nextString();
-      T constant = nameConstantMap.get(name);
-      if (constant != null) return constant;
       throw new JsonDataException("Expected one of "
-          + nameConstantMap.keySet() + " but was " + name + " at path "
+          + Arrays.asList(nameStrings) + " but was " + name + " at path "
           + reader.getPath());
     }
 
