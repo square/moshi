@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -106,8 +109,7 @@ public final class ObjectJsonReaderTest {
 
   @Test public void nesting() throws Exception {
     List<Map<String, List<Map<String, Double>>>> root
-        = Collections.singletonList(Collections.singletonMap(
-            "a", Collections.singletonList(Collections.singletonMap("b", 1.5d))));
+        = singletonList(singletonMap("a", singletonList(singletonMap("b", 1.5d))));
     JsonReader reader = new ObjectJsonReader(root);
 
     assertThat(reader.hasNext()).isTrue();
@@ -158,7 +160,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void promoteNameToValue() throws Exception {
-    Map<String, String> root = Collections.singletonMap("a", "b");
+    Map<String, String> root = singletonMap("a", "b");
 
     JsonReader reader = new ObjectJsonReader(root);
     reader.beginObject();
@@ -174,31 +176,32 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void endArrayTooEarly() throws Exception {
-    JsonReader reader = new ObjectJsonReader(Collections.singletonList("s"));
+    JsonReader reader = new ObjectJsonReader(singletonList("s"));
 
     reader.beginArray();
     try {
       reader.endArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected END_ARRAY but was STRING at path $[0]");
+      assertThat(expected).hasMessage(
+          "Expected END_ARRAY but was s, a java.lang.String, at path $[0]");
     }
   }
 
   @Test public void endObjectTooEarly() throws Exception {
-    JsonReader reader = new ObjectJsonReader(Collections.singletonMap("a", "b"));
+    JsonReader reader = new ObjectJsonReader(singletonMap("a", "b"));
 
     reader.beginObject();
     try {
       reader.endObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected END_OBJECT but was NAME at path $.");
+      assertThat(expected).hasMessageStartingWith("Expected END_OBJECT but was a=b");
     }
   }
 
   @Test public void unsupportedType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(Collections.singletonList(new StringBuilder("x")));
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("x")));
 
     reader.beginArray();
     try {
@@ -206,12 +209,109 @@ public final class ObjectJsonReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage(
-          "Expected a JSON value but was a java.lang.StringBuilder at path $[0]");
+          "Expected a JSON value but was x, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unsupportedKeyType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonMap(new StringBuilder("x"), "y"));
+
+    reader.beginObject();
+    try {
+      reader.nextName();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected NAME but was x, a java.lang.StringBuilder, at path $.");
+    }
+  }
+
+  @Test public void nullKey() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonMap(null, "y"));
+
+    reader.beginObject();
+    try {
+      reader.nextName();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected NAME but was null at path $.");
+    }
+  }
+
+  @Test public void unexpectedIntType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    reader.beginArray();
+    try {
+      reader.nextInt();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unexpectedLongType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    reader.beginArray();
+    try {
+      reader.nextLong();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unexpectedDoubleType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    reader.beginArray();
+    try {
+      reader.nextDouble();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unexpectedStringType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("s")));
+    reader.beginArray();
+    try {
+      reader.nextString();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected STRING but was s, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unexpectedBooleanType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("true")));
+    reader.beginArray();
+    try {
+      reader.nextBoolean();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected BOOLEAN but was true, a java.lang.StringBuilder, at path $[0]");
+    }
+  }
+
+  @Test public void unexpectedNullType() throws Exception {
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("null")));
+    reader.beginArray();
+    try {
+      reader.nextNull();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected NULL but was null, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
   @Test public void skipRoot() throws Exception {
-    JsonReader reader = new ObjectJsonReader(Collections.singletonList(new StringBuilder("x")));
+    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("x")));
     reader.skipValue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
@@ -292,7 +392,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void failOnUnknown() throws Exception {
-    JsonReader reader = new ObjectJsonReader(Collections.singletonList("a"));
+    JsonReader reader = new ObjectJsonReader(singletonList("a"));
     reader.setFailOnUnknown(true);
 
     reader.beginArray();
@@ -306,7 +406,7 @@ public final class ObjectJsonReaderTest {
 
   @Test public void close() throws Exception {
     try {
-      JsonReader reader = new ObjectJsonReader(Collections.singletonList("a"));
+      JsonReader reader = new ObjectJsonReader(singletonList("a"));
       reader.beginArray();
       reader.close();
       reader.nextString();
@@ -315,11 +415,48 @@ public final class ObjectJsonReaderTest {
     }
 
     try {
-      JsonReader reader = new ObjectJsonReader(Collections.singletonList("a"));
+      JsonReader reader = new ObjectJsonReader(singletonList("a"));
       reader.close();
       reader.beginArray();
       fail();
     } catch (IllegalStateException expected) {
+    }
+  }
+
+  @Test public void tooDeeplyNestedArrays() throws IOException {
+    Object root = Collections.emptyList();
+    for (int i = 0; i < 32; i++) {
+      root = singletonList(root);
+    }
+    JsonReader reader = new ObjectJsonReader(root);
+    for (int i = 0; i < 31; i++) {
+      reader.beginArray();
+    }
+    try {
+      reader.beginArray();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
+          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+    }
+  }
+
+  @Test public void tooDeeplyNestedObjects() throws IOException {
+    Object root = Boolean.TRUE;
+    for (int i = 0; i < 32; i++) {
+      root = singletonMap("a", root);
+    }
+    JsonReader reader = new ObjectJsonReader(root);
+    for (int i = 0; i < 31; i++) {
+      reader.beginObject();
+      assertThat(reader.nextName()).isEqualTo("a");
+    }
+    try {
+      reader.beginObject();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.");
     }
   }
 }

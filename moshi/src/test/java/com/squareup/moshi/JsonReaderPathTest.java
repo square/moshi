@@ -16,9 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import okio.Buffer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -30,33 +28,12 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonReaderPathTest {
-  interface Factory {
-    Factory BUFFERED_SOURCE = new Factory() {
-      @Override public JsonReader newReader(String json) {
-        Buffer buffer = new Buffer().writeUtf8(json);
-        return JsonReader.of(buffer);
-      }
-    };
-
-    Factory JSON_OBJECT = new Factory() {
-      @Override public JsonReader newReader(String json) throws IOException {
-        Moshi moshi = new Moshi.Builder().build();
-        Object object = moshi.adapter(Object.class).fromJson(json);
-        return new ObjectJsonReader(object);
-      }
-    };
-
-    JsonReader newReader(String json) throws IOException;
-  }
+  @Parameter public JsonReaderFactory factory;
 
   @Parameters(name = "{0}")
   public static List<Object[]> parameters() {
-    return Arrays.asList(
-        new Object[] { Factory.BUFFERED_SOURCE},
-        new Object[] { Factory.JSON_OBJECT});
+    return JsonReaderFactory.factories();
   }
-
-  @Parameter public Factory factory;
 
   @Test public void path() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
@@ -208,7 +185,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    assumeTrue(factory != Factory.JSON_OBJECT);
+    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT);
 
     JsonReader reader = factory.newReader("[][]");
     reader.setLenient(true);

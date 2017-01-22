@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -86,16 +87,14 @@ final class ObjectJsonReader extends JsonReader {
 
     // If the iterator isn't empty push its first value onto the stack.
     if (iterator.hasNext()) {
-      stack[stackSize] = iterator.next();
-      stackSize++;
+      push(iterator.next());
     }
   }
 
   @Override public void endArray() throws IOException {
     ListIterator<?> peeked = require(ListIterator.class, Token.END_ARRAY);
     if (peeked.hasNext()) {
-      throw new JsonDataException(
-          "Expected " + Token.END_ARRAY + " but was " + peek() + " at path " + getPath());
+      throw typeMismatch(peeked, Token.END_ARRAY);
     }
     remove();
   }
@@ -109,16 +108,14 @@ final class ObjectJsonReader extends JsonReader {
 
     // If the iterator isn't empty push its first value onto the stack.
     if (iterator.hasNext()) {
-      stack[stackSize] = iterator.next();
-      stackSize++;
+      push(iterator.next());
     }
   }
 
   @Override public void endObject() throws IOException {
     Iterator<?> peeked = require(Iterator.class, Token.END_OBJECT);
     if (peeked instanceof ListIterator || peeked.hasNext()) {
-      throw new JsonDataException(
-          "Expected " + Token.END_OBJECT + " but was " + peek() + " at path " + getPath());
+      throw typeMismatch(peeked, Token.END_OBJECT);
     }
     pathNames[stackSize - 1] = null;
     remove();
@@ -148,22 +145,31 @@ final class ObjectJsonReader extends JsonReader {
     if (peeked == null) return Token.NULL;
     if (peeked == JSON_READER_CLOSED) throw new IllegalStateException("JsonReader is closed");
 
-    throw new JsonDataException("Expected a JSON value but was a " + peeked.getClass().getName()
-        + " at path " + getPath());
+    throw typeMismatch(peeked, "a JSON value");
   }
 
   @Override public String nextName() throws IOException {
-    Object peeked = require(Map.Entry.class, Token.NAME);
+    Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
 
     // Swap the Map.Entry for its value on the stack and return its key.
-    String result = (String) ((Map.Entry<?, ?>) peeked).getKey();
-    stack[stackSize - 1] = ((Map.Entry<?, ?>) peeked).getValue();
+    String result = stringKey(peeked);
+    stack[stackSize - 1] = peeked.getValue();
     pathNames[stackSize - 2] = result;
     return result;
   }
 
   @Override int selectName(Options options) throws IOException {
-    throw new UnsupportedOperationException();
+    Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
+    String name = stringKey(peeked);
+    for (int i = 0, length = options.strings.length; i < length; i++) {
+      // Swap the Map.Entry for its value on the stack and return its key.
+      if (options.strings[i].equals(name)) {
+        stack[stackSize - 1] = peeked.getValue();
+        pathNames[stackSize - 2] = name;
+        return i;
+      }
+    }
+    return -1;
   }
 
   @Override public String nextString() throws IOException {
@@ -173,7 +179,14 @@ final class ObjectJsonReader extends JsonReader {
   }
 
   @Override int selectString(Options options) throws IOException {
-    throw new UnsupportedOperationException();
+    String peeked = require(String.class, Token.STRING);
+    for (int i = 0, length = options.strings.length; i < length; i++) {
+      if (options.strings[i].equals(peeked)) {
+        remove();
+        return i;
+      }
+    }
+    return -1;
   }
 
   @Override public boolean nextBoolean() throws IOException {
@@ -189,21 +202,74 @@ final class ObjectJsonReader extends JsonReader {
   }
 
   @Override public double nextDouble() throws IOException {
-    Number peeked = require(Number.class, Token.NUMBER);
+    Object peeked = require(Object.class, Token.NUMBER);
+
+    double result;
+    if (peeked instanceof Number) {
+      result = ((Number) peeked).doubleValue();
+    } else if (peeked instanceof String) {
+      try {
+        result = Double.parseDouble((String) peeked);
+      } catch (NumberFormatException e) {
+        throw typeMismatch(peeked, Token.NUMBER);
+      }
+    } else {
+      throw typeMismatch(peeked, Token.NUMBER);
+    }
+    if (!lenient && (Double.isNaN(result) || Double.isInfinite(result))) {
+      throw new JsonEncodingException("JSON forbids NaN and infinities: " + result
+          + " at path " + getPath());
+    }
     remove();
-    return peeked.doubleValue(); // TODO(jwilson): precision check?
+    return result;
   }
 
   @Override public long nextLong() throws IOException {
-    Number peeked = require(Number.class, Token.NUMBER);
+    Object peeked = require(Object.class, Token.NUMBER);
+
+    long result;
+    if (peeked instanceof Number) {
+      result = ((Number) peeked).longValue();
+    } else if (peeked instanceof String) {
+      try {
+        result = Long.parseLong((String) peeked);
+      } catch (NumberFormatException e) {
+        try {
+          BigDecimal asDecimal = new BigDecimal((String) peeked);
+          result = asDecimal.longValueExact();
+        } catch (NumberFormatException e2) {
+          throw typeMismatch(peeked, Token.NUMBER);
+        }
+      }
+    } else {
+      throw typeMismatch(peeked, Token.NUMBER);
+    }
     remove();
-    return peeked.longValue(); // TODO(jwilson): precision check?
+    return result;
   }
 
   @Override public int nextInt() throws IOException {
-    Number peeked = require(Number.class, Token.NUMBER);
+    Object peeked = require(Object.class, Token.NUMBER);
+
+    int result;
+    if (peeked instanceof Number) {
+      result = ((Number) peeked).intValue();
+    } else if (peeked instanceof String) {
+      try {
+        result = Integer.parseInt((String) peeked);
+      } catch (NumberFormatException e) {
+        try {
+          BigDecimal asDecimal = new BigDecimal((String) peeked);
+          result = asDecimal.intValueExact();
+        } catch (NumberFormatException e2) {
+          throw typeMismatch(peeked, Token.NUMBER);
+        }
+      }
+    } else {
+      throw typeMismatch(peeked, Token.NUMBER);
+    }
     remove();
-    return peeked.intValue(); // TODO(jwilson): precision check?
+    return result;
   }
 
   @Override public void skipValue() throws IOException {
@@ -233,11 +299,10 @@ final class ObjectJsonReader extends JsonReader {
   }
 
   @Override void promoteNameToValue() throws IOException {
-    Object peeked = require(Map.Entry.class, Token.NAME);
+    Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
 
-    stackSize++;
-    stack[stackSize - 2] = ((Map.Entry<?, ?>) peeked).getValue();
-    stack[stackSize - 1] = ((Map.Entry<?, ?>) peeked).getKey();
+    push(peeked.getKey());
+    stack[stackSize - 2] = peeked.getValue();
   }
 
   @Override public void close() throws IOException {
@@ -245,6 +310,13 @@ final class ObjectJsonReader extends JsonReader {
     stack[0] = JSON_READER_CLOSED;
     scopes[0] = JsonScope.CLOSED;
     stackSize = 1;
+  }
+
+  private void push(Object newTop) {
+    if (stackSize == stack.length) {
+      throw new JsonDataException("Nesting too deep at " + getPath());
+    }
+    stack[stackSize++] = newTop;
   }
 
   /**
@@ -263,8 +335,23 @@ final class ObjectJsonReader extends JsonReader {
     if (peeked == JSON_READER_CLOSED) {
       throw new IllegalStateException("JsonReader is closed");
     }
-    throw new JsonDataException(
-        "Expected " + expected + " but was " + peek() + " at path " + getPath());
+    throw typeMismatch(peeked, expected);
+  }
+
+  private String stringKey(Map.Entry<?, ?> entry) {
+    Object name = entry.getKey();
+    if (name instanceof String) return (String) name;
+    throw typeMismatch(name, Token.NAME);
+  }
+
+  private JsonDataException typeMismatch(Object value, Object expected) {
+    if (value == null) {
+      throw new JsonDataException(
+          "Expected " + expected + " but was null at path " + getPath());
+    } else {
+      throw new JsonDataException("Expected " + expected + " but was " + value + ", a "
+          + value.getClass().getName() + ", at path " + getPath());
+    }
   }
 
   /**
@@ -282,8 +369,7 @@ final class ObjectJsonReader extends JsonReader {
 
       Object parent = stack[stackSize - 1];
       if (parent instanceof Iterator && ((Iterator<?>) parent).hasNext()) {
-        stack[stackSize] = ((Iterator<?>) parent).next();
-        stackSize++;
+        push(((Iterator<?>) parent).next());
       }
     }
   }
