@@ -15,12 +15,19 @@
  */
 package com.squareup.moshi;
 
+import java.util.Arrays;
 import okio.Buffer;
 
 final class TestUtil {
   static JsonReader newReader(String json) {
     Buffer buffer = new Buffer().writeUtf8(json);
     return JsonReader.of(buffer);
+  }
+
+  static String repeat(char c, int count) {
+    char[] array = new char[count];
+    Arrays.fill(array, c);
+    return new String(array);
   }
 
   private TestUtil() {
