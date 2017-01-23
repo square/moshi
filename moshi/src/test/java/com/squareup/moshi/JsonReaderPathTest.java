@@ -185,7 +185,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    assumeTrue(factory != JsonReaderFactory.JSON_OBJECT);
+    assumeTrue(factory.supportsMultipleTopLevelValuesInOneDocument());
 
     JsonReader reader = factory.newReader("[][]");
     reader.setLenient(true);

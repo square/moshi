@@ -18,68 +18,83 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import okio.Buffer;
+import java.util.List;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+@RunWith(Parameterized.class)
 public final class BufferedSinkJsonWriterTest {
+  @Parameter public JsonWriterFactory factory;
+
+  @Parameters(name = "{0}")
+  public static List<Object[]> parameters() {
+    return JsonWriterFactory.factories();
+  }
+
   @Test public void nullsValuesNotSerializedByDefault() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
-    jsonWriter.nullValue();
-    jsonWriter.endObject();
-    jsonWriter.close();
-    assertThat(buffer.readUtf8()).isEqualTo("{}");
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    writer.nullValue();
+    writer.endObject();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("{}");
   }
 
   @Test public void nullsValuesSerializedWhenConfigured() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setSerializeNulls(true);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
-    jsonWriter.nullValue();
-    jsonWriter.endObject();
-    jsonWriter.close();
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":null}");
+    JsonWriter writer = factory.newWriter();
+    writer.setSerializeNulls(true);
+    writer.beginObject();
+    writer.name("a");
+    writer.nullValue();
+    writer.endObject();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("{\"a\":null}");
   }
 
-  @Test public void topLevelValueTypes() throws IOException {
-    Buffer buffer = new Buffer();
+  @Test public void topLevelBoolean() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.value(true);
+    writer.close();
+    assertThat(factory.json()).isEqualTo("true");
+  }
 
-    JsonWriter writer1 = JsonWriter.of(buffer);
-    writer1.value(true);
-    writer1.close();
-    assertThat(buffer.readUtf8()).isEqualTo("true");
+  @Test public void topLevelNull() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.nullValue();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("null");
+  }
 
-    JsonWriter writer2 = JsonWriter.of(buffer);
-    writer2.nullValue();
-    writer2.close();
-    assertThat(buffer.readUtf8()).isEqualTo("null");
+  @Test public void topLevelInt() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.value(123);
+    writer.close();
+    assertThat(factory.json()).isEqualTo("123");
+  }
 
-    JsonWriter writer3 = JsonWriter.of(buffer);
-    writer3.value(123);
-    writer3.close();
-    assertThat(buffer.readUtf8()).isEqualTo("123");
+  @Test public void topLevelDouble() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.value(123.4);
+    writer.close();
+    assertThat(factory.json()).isEqualTo("123.4");
+  }
 
-    JsonWriter writer4 = JsonWriter.of(buffer);
-    writer4.value(123.4);
-    writer4.close();
-    assertThat(buffer.readUtf8()).isEqualTo("123.4");
-
-    JsonWriter writer5 = JsonWriter.of(buffer);
-    writer5.value("a");
-    writer5.close();
-    assertThat(buffer.readUtf8()).isEqualTo("\"a\"");
+  @Test public void topLevelString() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.value("a");
+    writer.close();
+    assertThat(factory.json()).isEqualTo("\"a\"");
   }
 
   @Test public void invalidTopLevelTypes() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.name("hello");
     try {
       writer.value("world");
@@ -89,155 +104,144 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void twoNames() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
     try {
-      jsonWriter.name("a");
+      writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void nameWithoutValue() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
     try {
-      jsonWriter.endObject();
+      writer.endObject();
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void valueWithoutName() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
     try {
-      jsonWriter.value(true);
+      writer.value(true);
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void multipleTopLevelValues() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray().endArray();
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray().endArray();
     try {
-      jsonWriter.beginArray();
+      writer.beginArray();
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void badNestingObject() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.beginObject();
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.beginObject();
     try {
-      jsonWriter.endArray();
+      writer.endArray();
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void badNestingArray() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.beginArray();
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.beginArray();
     try {
-      jsonWriter.endObject();
+      writer.endObject();
       fail();
     } catch (IllegalStateException expected) {
     }
   }
 
   @Test public void nullName() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
     try {
-      jsonWriter.name(null);
+      writer.name(null);
       fail();
     } catch (NullPointerException expected) {
     }
   }
 
   @Test public void nullStringValue() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setSerializeNulls(true);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
-    jsonWriter.value((String) null);
-    jsonWriter.endObject();
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":null}");
+    JsonWriter writer = factory.newWriter();
+    writer.setSerializeNulls(true);
+    writer.beginObject();
+    writer.name("a");
+    writer.value((String) null);
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":null}");
   }
 
   @Test public void nonFiniteDoubles() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
     try {
-      jsonWriter.value(Double.NaN);
+      writer.value(Double.NaN);
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
-      jsonWriter.value(Double.NEGATIVE_INFINITY);
+      writer.value(Double.NEGATIVE_INFINITY);
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
-      jsonWriter.value(Double.POSITIVE_INFINITY);
+      writer.value(Double.POSITIVE_INFINITY);
       fail();
     } catch (IllegalArgumentException expected) {
     }
   }
 
   @Test public void nonFiniteBoxedDoubles() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
     try {
-      jsonWriter.value(new Double(Double.NaN));
+      writer.value(new Double(Double.NaN));
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
-      jsonWriter.value(new Double(Double.NEGATIVE_INFINITY));
+      writer.value(new Double(Double.NEGATIVE_INFINITY));
       fail();
     } catch (IllegalArgumentException expected) {
     }
     try {
-      jsonWriter.value(new Double(Double.POSITIVE_INFINITY));
+      writer.value(new Double(Double.POSITIVE_INFINITY));
       fail();
     } catch (IllegalArgumentException expected) {
     }
   }
 
   @Test public void doubles() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value(-0.0);
-    jsonWriter.value(1.0);
-    jsonWriter.value(Double.MAX_VALUE);
-    jsonWriter.value(Double.MIN_VALUE);
-    jsonWriter.value(0.0);
-    jsonWriter.value(-0.5);
-    jsonWriter.value(2.2250738585072014E-308);
-    jsonWriter.value(Math.PI);
-    jsonWriter.value(Math.E);
-    jsonWriter.endArray();
-    jsonWriter.close();
-    assertThat(buffer.readUtf8()).isEqualTo("[-0.0,"
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value(-0.0);
+    writer.value(1.0);
+    writer.value(Double.MAX_VALUE);
+    writer.value(Double.MIN_VALUE);
+    writer.value(0.0);
+    writer.value(-0.5);
+    writer.value(2.2250738585072014E-308);
+    writer.value(Math.PI);
+    writer.value(Math.E);
+    writer.endArray();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("[-0.0,"
         + "1.0,"
         + "1.7976931348623157E308,"
         + "4.9E-324,"
@@ -249,17 +253,16 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void longs() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value(0);
-    jsonWriter.value(1);
-    jsonWriter.value(-1);
-    jsonWriter.value(Long.MIN_VALUE);
-    jsonWriter.value(Long.MAX_VALUE);
-    jsonWriter.endArray();
-    jsonWriter.close();
-    assertThat(buffer.readUtf8()).isEqualTo("[0,"
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value(0);
+    writer.value(1);
+    writer.value(-1);
+    writer.value(Long.MIN_VALUE);
+    writer.value(Long.MAX_VALUE);
+    writer.endArray();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("[0,"
         + "1,"
         + "-1,"
         + "-9223372036854775808,"
@@ -267,75 +270,70 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void numbers() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value(new BigInteger("0"));
-    jsonWriter.value(new BigInteger("9223372036854775808"));
-    jsonWriter.value(new BigInteger("-9223372036854775809"));
-    jsonWriter.value(new BigDecimal("3.141592653589793238462643383"));
-    jsonWriter.endArray();
-    jsonWriter.close();
-    assertThat(buffer.readUtf8()).isEqualTo("[0,"
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value(new BigInteger("0"));
+    writer.value(new BigInteger("9223372036854775808"));
+    writer.value(new BigInteger("-9223372036854775809"));
+    writer.value(new BigDecimal("3.141592653589793238462643383"));
+    writer.endArray();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("[0,"
         + "9223372036854775808,"
         + "-9223372036854775809,"
         + "3.141592653589793238462643383]");
   }
 
   @Test public void booleans() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value(true);
-    jsonWriter.value(false);
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[true,false]");
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value(true);
+    writer.value(false);
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[true,false]");
   }
 
   @Test public void boxedBooleans() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value((Boolean) true);
-    jsonWriter.value((Boolean) false);
-    jsonWriter.value((Boolean) null);
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[true,false,null]");
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value((Boolean) true);
+    writer.value((Boolean) false);
+    writer.value((Boolean) null);
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[true,false,null]");
   }
 
   @Test public void nulls() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.nullValue();
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[null]");
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.nullValue();
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[null]");
   }
 
   @Test public void strings() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value("a");
-    jsonWriter.value("a\"");
-    jsonWriter.value("\"");
-    jsonWriter.value(":");
-    jsonWriter.value(",");
-    jsonWriter.value("\b");
-    jsonWriter.value("\f");
-    jsonWriter.value("\n");
-    jsonWriter.value("\r");
-    jsonWriter.value("\t");
-    jsonWriter.value(" ");
-    jsonWriter.value("\\");
-    jsonWriter.value("{");
-    jsonWriter.value("}");
-    jsonWriter.value("[");
-    jsonWriter.value("]");
-    jsonWriter.value("\0");
-    jsonWriter.value("\u0019");
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[\"a\","
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value("a");
+    writer.value("a\"");
+    writer.value("\"");
+    writer.value(":");
+    writer.value(",");
+    writer.value("\b");
+    writer.value("\f");
+    writer.value("\n");
+    writer.value("\r");
+    writer.value("\t");
+    writer.value(" ");
+    writer.value("\\");
+    writer.value("{");
+    writer.value("}");
+    writer.value("[");
+    writer.value("]");
+    writer.value("\0");
+    writer.value("\u0019");
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[\"a\","
         + "\"a\\\"\","
         + "\"\\\"\","
         + "\":\","
@@ -356,87 +354,80 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void unicodeLineBreaksEscaped() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.value("\u2028 \u2029");
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[\"\\u2028 \\u2029\"]");
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value("\u2028 \u2029");
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[\"\\u2028 \\u2029\"]");
   }
 
   @Test public void emptyArray() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[]");
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[]");
   }
 
   @Test public void emptyObject() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.endObject();
-    assertThat(buffer.readUtf8()).isEqualTo("{}");
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{}");
   }
 
   @Test public void objectsInArrays() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginArray();
-    jsonWriter.beginObject();
-    jsonWriter.name("a").value(5);
-    jsonWriter.name("b").value(false);
-    jsonWriter.endObject();
-    jsonWriter.beginObject();
-    jsonWriter.name("c").value(6);
-    jsonWriter.name("d").value(true);
-    jsonWriter.endObject();
-    jsonWriter.endArray();
-    assertThat(buffer.readUtf8()).isEqualTo("[{\"a\":5,\"b\":false},"
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.beginObject();
+    writer.name("a").value(5);
+    writer.name("b").value(false);
+    writer.endObject();
+    writer.beginObject();
+    writer.name("c").value(6);
+    writer.name("d").value(true);
+    writer.endObject();
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[{\"a\":5,\"b\":false},"
         + "{\"c\":6,\"d\":true}]");
   }
 
   @Test public void arraysInObjects() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.name("a");
-    jsonWriter.beginArray();
-    jsonWriter.value(5);
-    jsonWriter.value(false);
-    jsonWriter.endArray();
-    jsonWriter.name("b");
-    jsonWriter.beginArray();
-    jsonWriter.value(6);
-    jsonWriter.value(true);
-    jsonWriter.endArray();
-    jsonWriter.endObject();
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":[5,false],"
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    writer.beginArray();
+    writer.value(5);
+    writer.value(false);
+    writer.endArray();
+    writer.name("b");
+    writer.beginArray();
+    writer.value(6);
+    writer.value(true);
+    writer.endArray();
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":[5,false],"
         + "\"b\":[6,true]}");
   }
 
   @Test public void deepNestingArrays() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     for (int i = 0; i < 31; i++) {
-      jsonWriter.beginArray();
+      writer.beginArray();
     }
     for (int i = 0; i < 31; i++) {
-      jsonWriter.endArray();
+      writer.endArray();
     }
-    assertThat(buffer.readUtf8())
+    assertThat(factory.json())
         .isEqualTo("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
   }
 
   @Test public void tooDeepNestingArrays() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     for (int i = 0; i < 31; i++) {
-      jsonWriter.beginArray();
+      writer.beginArray();
     }
     try {
-      jsonWriter.beginArray();
+      writer.beginArray();
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
@@ -445,31 +436,29 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void deepNestingObjects() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     for (int i = 0; i < 31; i++) {
-      jsonWriter.beginObject();
-      jsonWriter.name("a");
+      writer.beginObject();
+      writer.name("a");
     }
-    jsonWriter.value(true);
+    writer.value(true);
     for (int i = 0; i < 31; i++) {
-      jsonWriter.endObject();
+      writer.endObject();
     }
-    assertThat(buffer.readUtf8()).isEqualTo(""
+    assertThat(factory.json()).isEqualTo(""
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":true}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
   }
 
   @Test public void tooDeepNestingObjects() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     for (int i = 0; i < 31; i++) {
-      jsonWriter.beginObject();
-      jsonWriter.name("a");
+      writer.beginObject();
+      writer.name("a");
     }
     try {
-      jsonWriter.beginObject();
+      writer.beginObject();
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a."
@@ -478,36 +467,34 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void repeatedName() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.beginObject();
-    jsonWriter.name("a").value(true);
-    jsonWriter.name("a").value(false);
-    jsonWriter.endObject();
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a").value(true);
+    writer.name("a").value(false);
+    writer.endObject();
     // JsonWriter doesn't attempt to detect duplicate names
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":true,\"a\":false}");
+    assertThat(factory.json()).isEqualTo("{\"a\":true,\"a\":false}");
   }
 
   @Test public void prettyPrintObject() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setSerializeNulls(true);
-    jsonWriter.setIndent("   ");
+    JsonWriter writer = factory.newWriter();
+    writer.setSerializeNulls(true);
+    writer.setIndent("   ");
 
-    jsonWriter.beginObject();
-    jsonWriter.name("a").value(true);
-    jsonWriter.name("b").value(false);
-    jsonWriter.name("c").value(5.0);
-    jsonWriter.name("e").nullValue();
-    jsonWriter.name("f").beginArray();
-    jsonWriter.value(6.0);
-    jsonWriter.value(7.0);
-    jsonWriter.endArray();
-    jsonWriter.name("g").beginObject();
-    jsonWriter.name("h").value(8.0);
-    jsonWriter.name("i").value(9.0);
-    jsonWriter.endObject();
-    jsonWriter.endObject();
+    writer.beginObject();
+    writer.name("a").value(true);
+    writer.name("b").value(false);
+    writer.name("c").value(5.0);
+    writer.name("e").nullValue();
+    writer.name("f").beginArray();
+    writer.value(6.0);
+    writer.value(7.0);
+    writer.endArray();
+    writer.name("g").beginObject();
+    writer.name("h").value(8.0);
+    writer.name("i").value(9.0);
+    writer.endObject();
+    writer.endObject();
 
     String expected = "{\n"
         + "   \"a\": true,\n"
@@ -523,28 +510,27 @@ public final class BufferedSinkJsonWriterTest {
         + "      \"i\": 9.0\n"
         + "   }\n"
         + "}";
-    assertThat(buffer.readUtf8()).isEqualTo(expected);
+    assertThat(factory.json()).isEqualTo(expected);
   }
 
   @Test public void prettyPrintArray() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setIndent("   ");
+    JsonWriter writer = factory.newWriter();
+    writer.setIndent("   ");
 
-    jsonWriter.beginArray();
-    jsonWriter.value(true);
-    jsonWriter.value(false);
-    jsonWriter.value(5.0);
-    jsonWriter.nullValue();
-    jsonWriter.beginObject();
-    jsonWriter.name("a").value(6.0);
-    jsonWriter.name("b").value(7.0);
-    jsonWriter.endObject();
-    jsonWriter.beginArray();
-    jsonWriter.value(8.0);
-    jsonWriter.value(9.0);
-    jsonWriter.endArray();
-    jsonWriter.endArray();
+    writer.beginArray();
+    writer.value(true);
+    writer.value(false);
+    writer.value(5.0);
+    writer.nullValue();
+    writer.beginObject();
+    writer.name("a").value(6.0);
+    writer.name("b").value(7.0);
+    writer.endObject();
+    writer.beginArray();
+    writer.value(8.0);
+    writer.value(9.0);
+    writer.endArray();
+    writer.endArray();
 
     String expected = "[\n"
         + "   true,\n"
@@ -560,24 +546,22 @@ public final class BufferedSinkJsonWriterTest {
         + "      9.0\n"
         + "   ]\n"
         + "]";
-    assertThat(buffer.readUtf8()).isEqualTo(expected);
+    assertThat(factory.json()).isEqualTo(expected);
   }
 
   @Test public void lenientWriterPermitsMultipleTopLevelValues() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.setLenient(true);
     writer.beginArray();
     writer.endArray();
     writer.beginArray();
     writer.endArray();
     writer.close();
-    assertThat(buffer.readUtf8()).isEqualTo("[][]");
+    assertThat(factory.json()).isEqualTo("[][]");
   }
 
   @Test public void strictWriterDoesNotPermitMultipleTopLevelValues() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     try {
@@ -588,8 +572,7 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void closedWriterThrowsOnStructure() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     writer.close();
@@ -616,8 +599,7 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void closedWriterThrowsOnName() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     writer.close();
@@ -629,8 +611,7 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void closedWriterThrowsOnValue() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     writer.close();
@@ -642,8 +623,7 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void closedWriterThrowsOnFlush() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     writer.close();
@@ -655,8 +635,7 @@ public final class BufferedSinkJsonWriterTest {
   }
 
   @Test public void writerCloseIsIdempotent() throws IOException {
-    Buffer buffer = new Buffer();
-    JsonWriter writer = JsonWriter.of(buffer);
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     writer.close();

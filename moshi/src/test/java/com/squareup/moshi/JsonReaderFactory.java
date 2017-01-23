@@ -21,34 +21,51 @@ import java.util.List;
 import okio.Buffer;
 
 abstract class JsonReaderFactory {
-  public static final JsonReaderFactory BUFFERED_SOURCE = new JsonReaderFactory() {
-    @Override public JsonReader newReader(String json) {
-      Buffer buffer = new Buffer().writeUtf8(json);
-      return JsonReader.of(buffer);
-    }
-
-    @Override public String toString() {
-      return "BufferedSourceJsonReader";
-    }
-  };
-
-  public static final JsonReaderFactory JSON_OBJECT = new JsonReaderFactory() {
-    @Override public JsonReader newReader(String json) throws IOException {
-      Moshi moshi = new Moshi.Builder().build();
-      Object object = moshi.adapter(Object.class).lenient().fromJson(json);
-      return new ObjectJsonReader(object);
-    }
-
-    @Override public String toString() {
-      return "ObjectJsonReader";
-    }
-  };
-
   static List<Object[]> factories() {
+    JsonReaderFactory bufferedSource = new JsonReaderFactory() {
+      @Override public JsonReader newReader(String json) {
+        Buffer buffer = new Buffer().writeUtf8(json);
+        return JsonReader.of(buffer);
+      }
+
+      @Override public boolean supportsMultipleTopLevelValuesInOneDocument() {
+        return true;
+      }
+
+      @Override public String toString() {
+        return "BufferedSourceJsonReader";
+      }
+    };
+
+    JsonReaderFactory jsonObject = new JsonReaderFactory() {
+      @Override public JsonReader newReader(String json) throws IOException {
+        Moshi moshi = new Moshi.Builder().build();
+        Object object = moshi.adapter(Object.class).lenient().fromJson(json);
+        return new ObjectJsonReader(object);
+      }
+
+      // TODO(jwilson): fix precision checks and delete his method.
+      @Override public boolean implementsStrictPrecision() {
+        return false;
+      }
+
+      @Override public String toString() {
+        return "ObjectJsonReader";
+      }
+    };
+
     return Arrays.asList(
-        new Object[] { BUFFERED_SOURCE },
-        new Object[] { JSON_OBJECT });
+        new Object[] { bufferedSource },
+        new Object[] { jsonObject });
   }
 
   abstract JsonReader newReader(String json) throws IOException;
+
+  public boolean supportsMultipleTopLevelValuesInOneDocument() {
+    return false;
+  }
+
+  public boolean implementsStrictPrecision() {
+    return true;
+  }
 }
