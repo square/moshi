@@ -188,7 +188,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   }
 
   /**
-   * Returns the value on the top of the stack.
+   * Returns the scope on the top of the stack.
    */
   private int peek() {
     if (stackSize == 0) {
@@ -212,7 +212,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
       throw new IllegalStateException("JsonWriter is closed.");
     }
     if (deferredName != null) {
-      throw new IllegalStateException();
+      throw new IllegalStateException("Nesting problem.");
     }
     deferredName = name;
     pathNames[stackSize - 1] = name;

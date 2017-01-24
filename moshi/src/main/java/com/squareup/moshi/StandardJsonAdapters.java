@@ -286,7 +286,13 @@ final class StandardJsonAdapters {
           Map<String, Object> map = new LinkedHashTreeMap<>();
           reader.beginObject();
           while (reader.hasNext()) {
-            map.put(reader.nextName(), fromJson(reader));
+            String name = reader.nextName();
+            Object value = fromJson(reader);
+            Object replaced = map.put(name, value);
+            if (replaced != null) {
+              throw new JsonDataException("Map key '" + name + "' has multiple values at path "
+                  + reader.getPath() + ": " + replaced + " and " + value);
+            }
           }
           reader.endObject();
           return map;

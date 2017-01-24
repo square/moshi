@@ -69,7 +69,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
       V replaced = result.put(name, value);
       if (replaced != null) {
         throw new JsonDataException("Map key '" + name + "' has multiple values at path "
-            + reader.getPath());
+            + reader.getPath() + ": " + replaced + " and " + value);
       }
     }
     reader.endObject();

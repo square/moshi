@@ -105,7 +105,7 @@ public final class MapJsonAdapterTest {
       fromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Map key 'c' has multiple values at path $.c");
+      assertThat(expected).hasMessage("Map key 'c' has multiple values at path $.c: 1 and 2");
     }
   }
 
