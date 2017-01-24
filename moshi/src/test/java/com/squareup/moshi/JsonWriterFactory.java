@@ -15,11 +15,15 @@
  */
 package com.squareup.moshi;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import okio.Buffer;
 
 abstract class JsonWriterFactory {
+  private static final Moshi MOSHI = new Moshi.Builder().build();
+  private static final JsonAdapter<Object> OBJECT_ADAPTER = MOSHI.adapter(Object.class);
+
   static List<Object[]> factories() {
     final JsonWriterFactory bufferedSink = new JsonWriterFactory() {
       Buffer buffer;
@@ -35,15 +39,59 @@ abstract class JsonWriterFactory {
         return result;
       }
 
+      @Override boolean supportsMultipleTopLevelValuesInOneDocument() {
+        return true;
+      }
+
       @Override public String toString() {
         return "BufferedSinkJsonWriter";
       }
     };
 
-    return Arrays.<Object[]>asList(
-        new Object[] { bufferedSink });
+    final JsonWriterFactory object = new JsonWriterFactory() {
+      ObjectJsonWriter writer;
+
+      @Override JsonWriter newWriter() {
+        writer = new ObjectJsonWriter();
+        return writer;
+      }
+
+      @Override String json() {
+        // This writer writes a DOM. Use other Moshi features to serialize it as a string.
+        try {
+          Buffer buffer = new Buffer();
+          JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
+          bufferedSinkWriter.setSerializeNulls(true);
+          OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
+          return buffer.readUtf8();
+        } catch (IOException e) {
+          throw new AssertionError();
+        }
+      }
+
+      // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
+      @Override boolean supportsBigNumbers() {
+        return false;
+      }
+
+      @Override public String toString() {
+        return "ObjectJsonWriter";
+      }
+    };
+
+    return Arrays.asList(
+        new Object[] { bufferedSink },
+        new Object[] { object });
   }
 
   abstract JsonWriter newWriter();
   abstract String json();
+
+  boolean supportsMultipleTopLevelValuesInOneDocument() {
+    return false;
+  }
+
+  boolean supportsBigNumbers() {
+    return true;
+  }
 }

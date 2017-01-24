@@ -28,7 +28,7 @@ abstract class JsonReaderFactory {
         return JsonReader.of(buffer);
       }
 
-      @Override public boolean supportsMultipleTopLevelValuesInOneDocument() {
+      @Override boolean supportsMultipleTopLevelValuesInOneDocument() {
         return true;
       }
 
@@ -45,7 +45,7 @@ abstract class JsonReaderFactory {
       }
 
       // TODO(jwilson): fix precision checks and delete his method.
-      @Override public boolean implementsStrictPrecision() {
+      @Override boolean implementsStrictPrecision() {
         return false;
       }
 
@@ -61,11 +61,11 @@ abstract class JsonReaderFactory {
 
   abstract JsonReader newReader(String json) throws IOException;
 
-  public boolean supportsMultipleTopLevelValuesInOneDocument() {
+  boolean supportsMultipleTopLevelValuesInOneDocument() {
     return false;
   }
 
-  public boolean implementsStrictPrecision() {
+  boolean implementsStrictPrecision() {
     return true;
   }
 }
