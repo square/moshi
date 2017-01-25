@@ -18,13 +18,16 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * Converts maps with string keys to JSON objects.
  *
- * TODO: support maps with other key types and convert to/from strings.
+ * @author Jesse Wilson
  */
 final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   public static final Factory FACTORY = new Factory() {
@@ -32,16 +35,28 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!annotations.isEmpty()) return null;
       Class<?> rawType = Types.getRawType(type);
-      if (rawType != Map.class) return null;
+      if (!SUPPORTED_MAPS.contains(rawType)) return null;
       Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
-      return new MapJsonAdapter<>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe();
+      return new MapJsonAdapter<>(moshi, rawType, keyAndValue[0], keyAndValue[1]).nullSafe();
     }
   };
 
+  /** List of supported raw map types. */
+  private static final List<Class<?>> SUPPORTED_MAPS = new ArrayList<>(2);
+
+  static {
+    SUPPORTED_MAPS.add(Map.class);
+    SUPPORTED_MAPS.add(EnumMap.class);
+  }
+
+  private final Class<?> rawType;
+  private final Class<?> keyRawType;
   private final JsonAdapter<K> keyAdapter;
   private final JsonAdapter<V> valueAdapter;
 
-  public MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
+  public MapJsonAdapter(Moshi moshi, Class<?> rawType, Type keyType, Type valueType) {
+    this.rawType = rawType;
+    this.keyRawType = Types.getRawType(keyType);
     this.keyAdapter = moshi.adapter(keyType);
     this.valueAdapter = moshi.adapter(valueType);
   }
@@ -60,7 +75,19 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   }
 
   @Override public Map<K, V> fromJson(JsonReader reader) throws IOException {
-    LinkedHashTreeMap<K, V> result = new LinkedHashTreeMap<>();
+    Map<K, V> result;
+    // EnumMap maintains the natural order of the declared enum type, and in some cases
+    // may be more efficient. So try to use EnumMap if the key is an enum.
+    if (rawType == EnumMap.class || keyRawType.getSuperclass() == Enum.class) {
+      // Since the compiler will block the caller of declaring an EnumMap with a non enum key,
+      // we we don't have to worry about type safety.
+      //noinspection unchecked
+      result = new EnumMap(keyRawType);
+    } else {
+      // Fall back to default map implementation.
+      result = new LinkedHashTreeMap<>();
+    }
+
     reader.beginObject();
     while (reader.hasNext()) {
       reader.promoteNameToValue();

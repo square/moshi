@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import okio.Buffer;
@@ -39,10 +40,10 @@ public final class MapJsonAdapterTest {
     map.put("b", false);
     map.put("c", null);
 
-    String toJson = toJson(String.class, Boolean.class, map);
+    String toJson = mapToJson(String.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{\"a\":true,\"b\":false,\"c\":null}");
 
-    Map<String, Boolean> fromJson = fromJson(
+    Map<String, Boolean> fromJson = mapFromJson(
         String.class, Boolean.class, "{\"a\":true,\"b\":false,\"c\":null}");
     assertThat(fromJson).containsExactly(
         MapEntry.entry("a", true), MapEntry.entry("b", false), MapEntry.entry("c", null));
@@ -53,7 +54,7 @@ public final class MapJsonAdapterTest {
     map.put(null, true);
 
     try {
-      toJson(String.class, Boolean.class, map);
+      mapToJson(String.class, Boolean.class, map);
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Map key is null at $.");
@@ -63,10 +64,10 @@ public final class MapJsonAdapterTest {
   @Test public void emptyMap() throws Exception {
     Map<String, Boolean> map = new LinkedHashMap<>();
 
-    String toJson = toJson(String.class, Boolean.class, map);
+    String toJson = mapToJson(String.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{}");
 
-    Map<String, Boolean> fromJson = fromJson(String.class, Boolean.class, "{}");
+    Map<String, Boolean> fromJson = mapFromJson(String.class, Boolean.class, "{}");
     assertThat(fromJson).isEmpty();
   }
 
@@ -91,10 +92,10 @@ public final class MapJsonAdapterTest {
     map.put("d", 3);
     map.put("b", 4);
 
-    String toJson = toJson(String.class, Integer.class, map);
+    String toJson = mapToJson(String.class, Integer.class, map);
     assertThat(toJson).isEqualTo("{\"c\":1,\"a\":2,\"d\":3,\"b\":4}");
 
-    Map<String, Integer> fromJson = fromJson(
+    Map<String, Integer> fromJson = mapFromJson(
         String.class, Integer.class, "{\"c\":1,\"a\":2,\"d\":3,\"b\":4}");
     assertThat(new ArrayList<Object>(fromJson.keySet()))
         .isEqualTo(Arrays.asList("c", "a", "d", "b"));
@@ -102,7 +103,7 @@ public final class MapJsonAdapterTest {
 
   @Test public void duplicatesAreForbidden() throws Exception {
     try {
-      fromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
+      mapFromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Map key 'c' has multiple values at path $.c: 1 and 2");
@@ -116,16 +117,59 @@ public final class MapJsonAdapterTest {
     map.put(6, false);
     map.put(7, null);
 
-    String toJson = toJson(Integer.class, Boolean.class, map);
+    String toJson = mapToJson(Integer.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{\"5\":true,\"6\":false,\"7\":null}");
 
-    Map<String, Boolean> fromJson = fromJson(
+    Map<String, Boolean> fromJson = mapFromJson(
         Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
     assertThat(fromJson).containsExactly(
         MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
   }
 
-  private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {
+  /** If the requested type is a raw Map with enum keys, use EnumMap. */
+  @Test public void mapWithEnumKeys() throws Exception {
+    Map<Rating, String> map = new LinkedHashMap<>();
+    map.put(Rating.PG, "Star Wars");
+    map.put(Rating.NC_17, null);
+    map.put(Rating.PG_13, "Spectre");
+
+    String toJson = mapToJson(Rating.class, String.class, map);
+    assertThat(toJson).isEqualTo("{"
+        + "\"PG\":\"Star Wars\","
+        + "\"NC_17\":null,"
+        + "\"PG_13\":\"Spectre\""
+        + "}");
+
+    Map<Rating, String> fromJson = mapFromJson(Rating.class, String.class, toJson);
+    assertThat(fromJson).containsExactly(
+        MapEntry.entry(Rating.PG, "Star Wars"), MapEntry.entry(Rating.PG_13, "Spectre"),
+        MapEntry.entry(Rating.NC_17, null));
+    assertThat(fromJson).isInstanceOf(EnumMap.class);
+  }
+
+  @Test public void enumMap() throws Exception {
+    EnumMap<Rating, String> map = new EnumMap<>(Rating.class);
+    map.put(Rating.G, "Lion King");
+    map.put(Rating.PG_13, "Scream");
+    map.put(Rating.R, null);
+    map.put(Rating.NC_17, "Saw");
+
+    String toJson = mapToJson(Rating.class, String.class, map);
+    assertThat(toJson).isEqualTo("{"
+        + "\"G\":\"Lion King\","
+        + "\"PG_13\":\"Scream\","
+        + "\"R\":null,"
+        + "\"NC_17\":\"Saw\""
+        + "}");
+
+    EnumMap<Rating, String> fromJson = enumMapFromJson(Rating.class, String.class, toJson);
+    assertThat(fromJson).containsExactly(
+        MapEntry.entry(Rating.G, "Lion King"), MapEntry.entry(Rating.PG_13, "Scream"),
+        MapEntry.entry(Rating.R, null), MapEntry.entry(Rating.NC_17, "Saw"));
+  }
+
+  private <K, V> String mapToJson(Type keyType, Type valueType, Map<K, V> value)
+      throws IOException {
     JsonAdapter<Map<K, V>> jsonAdapter = mapAdapter(keyType, valueType);
     Buffer buffer = new Buffer();
     JsonWriter jsonWriter = JsonWriter.of(buffer);
@@ -134,14 +178,32 @@ public final class MapJsonAdapterTest {
     return buffer.readUtf8();
   }
 
+  private <K, V> Map<K, V> mapFromJson(Type keyType, Type valueType, String json)
+      throws IOException {
+    JsonAdapter<Map<K, V>> mapJsonAdapter = mapAdapter(keyType, valueType);
+    return mapJsonAdapter.fromJson(json);
+  }
+
   @SuppressWarnings("unchecked") // It's the caller's responsibility to make sure K and V match.
   private <K, V> JsonAdapter<Map<K, V>> mapAdapter(Type keyType, Type valueType) {
     return (JsonAdapter<Map<K, V>>) MapJsonAdapter.FACTORY.create(
         Types.newParameterizedType(Map.class, keyType, valueType), NO_ANNOTATIONS, moshi);
   }
 
-  private <K, V> Map<K, V> fromJson(Type keyType, Type valueType, String json) throws IOException {
-    JsonAdapter<Map<K, V>> mapJsonAdapter = mapAdapter(keyType, valueType);
+  private <K extends Enum<K>, V> EnumMap<K, V> enumMapFromJson(Type keyType, Type valueType,
+      String json) throws IOException {
+    JsonAdapter<EnumMap<K, V>> mapJsonAdapter = enumMapAdapter(keyType, valueType);
     return mapJsonAdapter.fromJson(json);
+  }
+
+  @SuppressWarnings("unchecked") // Compiler will block the caller form doing anything funky.
+  private <K extends Enum<K>, V> JsonAdapter<EnumMap<K, V>> enumMapAdapter(
+      Type keyType, Type valueType) {
+    return (JsonAdapter<EnumMap<K, V>>) MapJsonAdapter.FACTORY.create(
+        Types.newParameterizedType(EnumMap.class, keyType, valueType), NO_ANNOTATIONS, moshi);
+  }
+
+  private enum Rating {
+    G, PG, PG_13, R, NC_17
   }
 }
