@@ -55,6 +55,35 @@ public abstract class JsonAdapter<T> {
   }
 
   /**
+   * Encodes {@code value} as a Java model comprised of maps, lists, strings, numbers, booleans
+   * and nulls. The returned model is equivalent to calling {@link #toJson} to encode {@code value}
+   * as a JSON string, and then parsing that string without any particular type.
+   */
+  public final Object toJsonObject(T value) {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    try {
+      toJson(writer, value);
+      return writer.root();
+    } catch (IOException e) {
+      throw new AssertionError(e); // No I/O writing to an object.
+    }
+  }
+
+  /**
+   * Decodes a Java value from {@code object}, which must be a Java model comprised of maps, lists,
+   * strings, numbers, booleans and nulls. This is equivalent to encoding {@code object} to a JSON
+   * string, and then calling {@link #fromJson} to decode that string.
+   */
+  public final T fromJsonObject(Object object) {
+    ObjectJsonReader reader = new ObjectJsonReader(object);
+    try {
+      return fromJson(reader);
+    } catch (IOException e) {
+      throw new AssertionError(e); // No I/O reading from an object.
+    }
+  }
+
+  /**
    * Returns a JSON adapter equal to this JSON adapter, but with support for reading and writing
    * nulls.
    */

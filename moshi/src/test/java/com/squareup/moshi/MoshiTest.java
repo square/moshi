@@ -601,6 +601,36 @@ public final class MoshiTest {
         .isEqualTo(new Pizza(18, true));
   }
 
+  @Test public void classAdapterToObjectAndFromObject() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+
+    Pizza pizza = new Pizza(15, true);
+
+    Map<String, Object> pizzaObject = new LinkedHashMap<>();
+    pizzaObject.put("diameter", 15L);
+    pizzaObject.put("extraCheese", true);
+
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
+    assertThat(jsonAdapter.toJsonObject(pizza)).isEqualTo(pizzaObject);
+    assertThat(jsonAdapter.fromJsonObject(pizzaObject)).isEqualTo(pizza);
+  }
+
+  @Test public void customJsonAdapterToObjectAndFromObject() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(Pizza.class, new PizzaAdapter())
+        .build();
+
+    Pizza pizza = new Pizza(15, true);
+
+    Map<String, Object> pizzaObject = new LinkedHashMap<>();
+    pizzaObject.put("size", 15L);
+    pizzaObject.put("extra cheese", true);
+
+    JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
+    assertThat(jsonAdapter.toJsonObject(pizza)).isEqualTo(pizzaObject);
+    assertThat(jsonAdapter.fromJsonObject(pizzaObject)).isEqualTo(pizza);
+  }
+
   @Test public void indent() throws Exception {
     Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
     JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
