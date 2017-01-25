@@ -116,15 +116,49 @@ import okio.BufferedSink;
  * malformed JSON string will fail with an {@link IllegalStateException}.
  */
 public abstract class JsonWriter implements Closeable, Flushable {
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
+  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
+  // StackOverflowErrors.
+  int stackSize = 0;
+  final int[] scopes = new int[32];
+  final String[] pathNames = new String[32];
+  final int[] pathIndices = new int[32];
+
   /**
-   * Returns a new instance that writes a JSON-encoded stream to {@code sink}.
+   * A string containing a full set of spaces for a single level of indentation, or null for no
+   * pretty printing.
    */
+  String indent;
+  boolean lenient;
+  boolean serializeNulls;
+
+  /** Returns a new instance that writes a JSON-encoded stream to {@code sink}. */
   public static JsonWriter of(BufferedSink sink) {
     return new BufferedSinkJsonWriter(sink);
   }
 
   JsonWriter() {
     // Package-private to control subclasses.
+  }
+
+  /** Returns the scope on the top of the stack. */
+  final int peekScope() {
+    if (stackSize == 0) {
+      throw new IllegalStateException("JsonWriter is closed.");
+    }
+    return scopes[stackSize - 1];
+  }
+
+  final void pushScope(int newTop) {
+    if (stackSize == scopes.length) {
+      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
+    }
+    scopes[stackSize++] = newTop;
+  }
+
+  /** Replace the value on the top of the stack with the given value. */
+  final void replaceTop(int topOfStack) {
+    scopes[stackSize - 1] = topOfStack;
   }
 
   /**
@@ -135,13 +169,17 @@ public abstract class JsonWriter implements Closeable, Flushable {
    *
    * @param indent a string containing only whitespace.
    */
-  public abstract void setIndent(String indent);
+  public void setIndent(String indent) {
+    this.indent = !indent.isEmpty() ? indent : null;
+  }
 
   /**
    * Returns a string containing only whitespace, used for each level of
    * indentation. If empty, the encoded document will be compact.
    */
-  public abstract String getIndent();
+  public final String getIndent() {
+    return indent != null ? indent : "";
+  }
 
   /**
    * Configure this writer to relax its syntax rules. By default, this writer
@@ -155,24 +193,32 @@ public abstract class JsonWriter implements Closeable, Flushable {
    *       Double#isInfinite() infinities}.
    * </ul>
    */
-  public abstract void setLenient(boolean lenient);
+  public final void setLenient(boolean lenient) {
+    this.lenient = lenient;
+  }
 
   /**
    * Returns true if this writer has relaxed syntax rules.
    */
-  public abstract boolean isLenient();
+  public final boolean isLenient() {
+    return lenient;
+  }
 
   /**
    * Sets whether object members are serialized when their value is null.
    * This has no impact on array elements. The default is false.
    */
-  public abstract void setSerializeNulls(boolean serializeNulls);
+  public final void setSerializeNulls(boolean serializeNulls) {
+    this.serializeNulls = serializeNulls;
+  }
 
   /**
    * Returns true if object members are serialized when their value is null.
    * This has no impact on array elements. The default is false.
    */
-  public abstract boolean getSerializeNulls();
+  public final boolean getSerializeNulls() {
+    return serializeNulls;
+  }
 
   /**
    * Begins encoding a new array. Each call to this method must be paired with
@@ -276,5 +322,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
    * the current location in the JSON value.
    */
-  public abstract String getPath();
+  public final String getPath() {
+    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
 }

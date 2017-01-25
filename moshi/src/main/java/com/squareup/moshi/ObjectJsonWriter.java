@@ -27,19 +27,11 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class ObjectJsonWriter extends JsonWriter {
-  private String indent;
-  private boolean lenient;
-  private boolean serializeNulls;
-
   private final Object[] stack = new Object[32];
-  private final int[] scopes = new int[32];
-  private final String[] pathNames = new String[32];
-  private final int[] pathIndices = new int[32];
-  private int stackSize = 0;
   private String deferredName;
 
   ObjectJsonWriter() {
-    scopes[stackSize++] = EMPTY_DOCUMENT;
+    pushScope(EMPTY_DOCUMENT);
   }
 
   public Object root() {
@@ -50,30 +42,6 @@ final class ObjectJsonWriter extends JsonWriter {
     return stack[0];
   }
 
-  @Override public void setIndent(String indent) {
-    this.indent = indent;
-  }
-
-  @Override public String getIndent() {
-    return indent;
-  }
-
-  @Override public void setLenient(boolean lenient) {
-    this.lenient = lenient;
-  }
-
-  @Override public boolean isLenient() {
-    return lenient;
-  }
-
-  @Override public void setSerializeNulls(boolean serializeNulls) {
-    this.serializeNulls = serializeNulls;
-  }
-
-  @Override public boolean getSerializeNulls() {
-    return serializeNulls;
-  }
-
   @Override public JsonWriter beginArray() throws IOException {
     if (stackSize == stack.length) {
       throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
@@ -81,14 +49,13 @@ final class ObjectJsonWriter extends JsonWriter {
     List<Object> list = new ArrayList<>();
     add(list);
     stack[stackSize] = list;
-    scopes[stackSize] = EMPTY_ARRAY;
     pathIndices[stackSize] = 0;
-    stackSize++;
+    pushScope(EMPTY_ARRAY);
     return this;
   }
 
   @Override public JsonWriter endArray() throws IOException {
-    if (peek() != EMPTY_ARRAY) {
+    if (peekScope() != EMPTY_ARRAY) {
       throw new IllegalStateException("Nesting problem.");
     }
     stackSize--;
@@ -104,13 +71,12 @@ final class ObjectJsonWriter extends JsonWriter {
     Map<String, Object> map = new LinkedHashTreeMap<>();
     add(map);
     stack[stackSize] = map;
-    scopes[stackSize] = EMPTY_OBJECT;
-    stackSize++;
+    pushScope(EMPTY_OBJECT);
     return this;
   }
 
   @Override public JsonWriter endObject() throws IOException {
-    if (peek() != EMPTY_OBJECT || deferredName != null) {
+    if (peekScope() != EMPTY_OBJECT || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
     }
     stackSize--;
@@ -127,7 +93,7 @@ final class ObjectJsonWriter extends JsonWriter {
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
     }
-    if (peek() != EMPTY_OBJECT || deferredName != null) {
+    if (peekScope() != EMPTY_OBJECT || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
     }
     pathNames[stackSize - 1] = name;
@@ -136,19 +102,27 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(String value) throws IOException {
-    return add(value);
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter nullValue() throws IOException {
-    return add(null);
+    add(null);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(boolean value) throws IOException {
-    return add(value);
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(Boolean value) throws IOException {
-    return add(value);
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(double value) throws IOException {
@@ -156,7 +130,9 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(long value) throws IOException {
-    return add(value);
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(Number value) throws IOException {
@@ -166,15 +142,13 @@ final class ObjectJsonWriter extends JsonWriter {
         throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
       }
     }
-    return add(value);
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override void promoteNameToValue() throws IOException {
     throw new UnsupportedOperationException();
-  }
-
-  @Override public String getPath() {
-    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
   }
 
   @Override public void close() throws IOException {
@@ -191,18 +165,8 @@ final class ObjectJsonWriter extends JsonWriter {
     }
   }
 
-  /**
-   * Returns the scope on the top of the stack.
-   */
-  private int peek() {
-    if (stackSize == 0) {
-      throw new IllegalStateException("JsonWriter is closed.");
-    }
-    return scopes[stackSize - 1];
-  }
-
   private ObjectJsonWriter add(Object newTop) {
-    int scope = peek();
+    int scope = peekScope();
 
     if (stackSize == 1) {
       if (scope != EMPTY_DOCUMENT) {
