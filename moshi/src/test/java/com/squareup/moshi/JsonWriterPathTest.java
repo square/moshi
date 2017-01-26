@@ -17,14 +17,27 @@ package com.squareup.moshi;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import okio.Buffer;
+import java.util.List;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
 
+@RunWith(Parameterized.class)
 public final class JsonWriterPathTest {
+  @Parameter public JsonWriterFactory factory;
+
+  @Parameters(name = "{0}")
+  public static List<Object[]> parameters() {
+    return JsonWriterFactory.factories();
+  }
+
   @Test public void path() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -63,7 +76,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayOfObjects() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
     writer.beginObject();
@@ -83,7 +96,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayOfArrays() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
     writer.beginArray();
@@ -103,7 +116,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void objectPath() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -122,7 +135,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void nestedObjects() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();
     assertThat(writer.getPath()).isEqualTo("$.");
@@ -147,7 +160,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void arrayPath() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
@@ -168,7 +181,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void nestedArrays() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginArray();
     assertThat(writer.getPath()).isEqualTo("$[0]");
@@ -189,7 +202,9 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    assumeTrue(factory.supportsMultipleTopLevelValuesInOneDocument());
+
+    JsonWriter writer = factory.newWriter();
     writer.setLenient(true);
     writer.beginArray();
     writer.endArray();
@@ -200,7 +215,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void skipNulls() throws IOException {
-    JsonWriter writer = JsonWriter.of(new Buffer());
+    JsonWriter writer = factory.newWriter();
     writer.setSerializeNulls(false);
     assertThat(writer.getPath()).isEqualTo("$");
     writer.beginObject();

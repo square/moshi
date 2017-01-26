@@ -63,12 +63,6 @@ final class BufferedSourceJsonReader extends JsonReader {
   private static final int NUMBER_CHAR_EXP_SIGN = 6;
   private static final int NUMBER_CHAR_EXP_DIGIT = 7;
 
-  /** True to accept non-spec compliant JSON */
-  private boolean lenient = false;
-
-  /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
-  private boolean failOnUnknown = false;
-
   /** The input JSON. */
   private final BufferedSource source;
   private final Buffer buffer;
@@ -94,41 +88,13 @@ final class BufferedSourceJsonReader extends JsonReader {
    */
   private String peekedString;
 
-  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
-  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
-  // StackOverflowErrors.
-  private final int[] stack = new int[32];
-  private int stackSize = 0;
-
-  {
-    stack[stackSize++] = JsonScope.EMPTY_DOCUMENT;
-  }
-
-  private final String[] pathNames = new String[32];
-  private final int[] pathIndices = new int[32];
-
   BufferedSourceJsonReader(BufferedSource source) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }
     this.source = source;
     this.buffer = source.buffer();
-  }
-
-  @Override public void setLenient(boolean lenient) {
-    this.lenient = lenient;
-  }
-
-  @Override public boolean isLenient() {
-    return lenient;
-  }
-
-  @Override public void setFailOnUnknown(boolean failOnUnknown) {
-    this.failOnUnknown = failOnUnknown;
-  }
-
-  @Override public boolean failOnUnknown() {
-    return failOnUnknown;
+    pushScope(JsonScope.EMPTY_DOCUMENT);
   }
 
   @Override public void beginArray() throws IOException {
@@ -137,7 +103,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       p = doPeek();
     }
     if (p == PEEKED_BEGIN_ARRAY) {
-      push(JsonScope.EMPTY_ARRAY);
+      pushScope(JsonScope.EMPTY_ARRAY);
       pathIndices[stackSize - 1] = 0;
       peeked = PEEKED_NONE;
     } else {
@@ -167,7 +133,7 @@ final class BufferedSourceJsonReader extends JsonReader {
       p = doPeek();
     }
     if (p == PEEKED_BEGIN_OBJECT) {
-      push(JsonScope.EMPTY_OBJECT);
+      pushScope(JsonScope.EMPTY_OBJECT);
       peeked = PEEKED_NONE;
     } else {
       throw new JsonDataException("Expected BEGIN_OBJECT but was " + peek()
@@ -240,9 +206,9 @@ final class BufferedSourceJsonReader extends JsonReader {
   }
 
   private int doPeek() throws IOException {
-    int peekStack = stack[stackSize - 1];
+    int peekStack = scopes[stackSize - 1];
     if (peekStack == JsonScope.EMPTY_ARRAY) {
-      stack[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
+      scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
     } else if (peekStack == JsonScope.NONEMPTY_ARRAY) {
       // Look for a comma before the next element.
       int c = nextNonWhitespace(true);
@@ -258,7 +224,7 @@ final class BufferedSourceJsonReader extends JsonReader {
           throw syntaxError("Unterminated array");
       }
     } else if (peekStack == JsonScope.EMPTY_OBJECT || peekStack == JsonScope.NONEMPTY_OBJECT) {
-      stack[stackSize - 1] = JsonScope.DANGLING_NAME;
+      scopes[stackSize - 1] = JsonScope.DANGLING_NAME;
       // Look for a comma before the next element.
       if (peekStack == JsonScope.NONEMPTY_OBJECT) {
         int c = nextNonWhitespace(true);
@@ -299,7 +265,7 @@ final class BufferedSourceJsonReader extends JsonReader {
           }
       }
     } else if (peekStack == JsonScope.DANGLING_NAME) {
-      stack[stackSize - 1] = JsonScope.NONEMPTY_OBJECT;
+      scopes[stackSize - 1] = JsonScope.NONEMPTY_OBJECT;
       // Look for a colon before the value.
       int c = nextNonWhitespace(true);
       buffer.readByte(); // Consume ':'.
@@ -316,7 +282,7 @@ final class BufferedSourceJsonReader extends JsonReader {
           throw syntaxError("Expected ':'");
       }
     } else if (peekStack == JsonScope.EMPTY_DOCUMENT) {
-      stack[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT;
+      scopes[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT;
     } else if (peekStack == JsonScope.NONEMPTY_DOCUMENT) {
       int c = nextNonWhitespace(false);
       if (c == -1) {
@@ -923,7 +889,7 @@ final class BufferedSourceJsonReader extends JsonReader {
 
   @Override public void close() throws IOException {
     peeked = PEEKED_NONE;
-    stack[0] = JsonScope.CLOSED;
+    scopes[0] = JsonScope.CLOSED;
     stackSize = 1;
     buffer.clear();
     source.close();
@@ -941,10 +907,10 @@ final class BufferedSourceJsonReader extends JsonReader {
       }
 
       if (p == PEEKED_BEGIN_ARRAY) {
-        push(JsonScope.EMPTY_ARRAY);
+        pushScope(JsonScope.EMPTY_ARRAY);
         count++;
       } else if (p == PEEKED_BEGIN_OBJECT) {
-        push(JsonScope.EMPTY_OBJECT);
+        pushScope(JsonScope.EMPTY_OBJECT);
         count++;
       } else if (p == PEEKED_END_ARRAY) {
         stackSize--;
@@ -966,13 +932,6 @@ final class BufferedSourceJsonReader extends JsonReader {
 
     pathIndices[stackSize - 1]++;
     pathNames[stackSize - 1] = "null";
-  }
-
-  private void push(int newTop) {
-    if (stackSize == stack.length) {
-      throw new JsonDataException("Nesting too deep at " + getPath());
-    }
-    stack[stackSize++] = newTop;
   }
 
   /**
@@ -1083,10 +1042,6 @@ final class BufferedSourceJsonReader extends JsonReader {
     return "JsonReader(" + source + ")";
   }
 
-  @Override public String getPath() {
-    return JsonScope.getPath(stackSize, stack, pathNames, pathIndices);
-  }
-
   /**
    * Unescapes the character identified by the character or characters that immediately follow a
    * backslash. The backslash '\' should have already been read. This supports both unicode escapes
@@ -1149,14 +1104,6 @@ final class BufferedSourceJsonReader extends JsonReader {
         if (!lenient) throw syntaxError("Invalid escape sequence: \\" + (char) escaped);
         return (char) escaped;
     }
-  }
-
-  /**
-   * Throws a new IO exception with the given message and a context snippet
-   * with this reader's content.
-   */
-  private JsonEncodingException syntaxError(String message) throws JsonEncodingException {
-    throw new JsonEncodingException(message + " at path " + getPath());
   }
 
   @Override void promoteNameToValue() throws IOException {

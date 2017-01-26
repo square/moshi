@@ -57,34 +57,10 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   /** The output data, containing at most one top-level array or object. */
   private final BufferedSink sink;
 
-  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
-  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
-  // StackOverflowErrors.
-  private final int[] stack = new int[32];
-  private int stackSize = 0;
-  {
-    push(EMPTY_DOCUMENT);
-  }
-
-  private final String[] pathNames = new String[32];
-  private final int[] pathIndices = new int[32];
-
-  /**
-   * A string containing a full set of spaces for a single level of
-   * indentation, or null for no pretty printing.
-   */
-  private String indent;
-
-  /**
-   * The name/value separator; either ":" or ": ".
-   */
+  /** The name/value separator; either ":" or ": ". */
   private String separator = ":";
 
-  private boolean lenient;
-
   private String deferredName;
-
-  private boolean serializeNulls;
 
   private boolean promoteNameToValue;
 
@@ -93,36 +69,12 @@ final class BufferedSinkJsonWriter extends JsonWriter {
       throw new NullPointerException("sink == null");
     }
     this.sink = sink;
+    pushScope(EMPTY_DOCUMENT);
   }
 
-  @Override public final void setIndent(String indent) {
-    if (indent.length() == 0) {
-      this.indent = null;
-      this.separator = ":";
-    } else {
-      this.indent = indent;
-      this.separator = ": ";
-    }
-  }
-
-  @Override public final String getIndent() {
-    return indent != null ? indent : "";
-  }
-
-  @Override public final void setLenient(boolean lenient) {
-    this.lenient = lenient;
-  }
-
-  @Override public boolean isLenient() {
-    return lenient;
-  }
-
-  @Override public final void setSerializeNulls(boolean serializeNulls) {
-    this.serializeNulls = serializeNulls;
-  }
-
-  @Override public final boolean getSerializeNulls() {
-    return serializeNulls;
+  @Override public void setIndent(String indent) {
+    super.setIndent(indent);
+    this.separator = !indent.isEmpty() ? ": " : ":";
   }
 
   @Override public JsonWriter beginArray() throws IOException {
@@ -150,7 +102,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    */
   private JsonWriter open(int empty, String openBracket) throws IOException {
     beforeValue();
-    push(empty);
+    pushScope(empty);
     pathIndices[stackSize - 1] = 0;
     sink.writeUtf8(openBracket);
     return this;
@@ -160,9 +112,8 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    * Closes the current scope by appending any necessary whitespace and the
    * given bracket.
    */
-  private JsonWriter close(int empty, int nonempty, String closeBracket)
-      throws IOException {
-    int context = peek();
+  private JsonWriter close(int empty, int nonempty, String closeBracket) throws IOException {
+    int context = peekScope();
     if (context != nonempty && context != empty) {
       throw new IllegalStateException("Nesting problem.");
     }
@@ -178,30 +129,6 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     }
     sink.writeUtf8(closeBracket);
     return this;
-  }
-
-  private void push(int newTop) {
-    if (stackSize == stack.length) {
-      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
-    }
-    stack[stackSize++] = newTop;
-  }
-
-  /**
-   * Returns the scope on the top of the stack.
-   */
-  private int peek() {
-    if (stackSize == 0) {
-      throw new IllegalStateException("JsonWriter is closed.");
-    }
-    return stack[stackSize - 1];
-  }
-
-  /**
-   * Replace the value on the top of the stack with the given value.
-   */
-  private void replaceTop(int topOfStack) {
-    stack[stackSize - 1] = topOfStack;
   }
 
   @Override public JsonWriter name(String name) throws IOException {
@@ -337,7 +264,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     sink.close();
 
     int size = stackSize;
-    if (size > 1 || size == 1 && stack[size - 1] != NONEMPTY_DOCUMENT) {
+    if (size > 1 || size == 1 && scopes[size - 1] != NONEMPTY_DOCUMENT) {
       throw new IOException("Incomplete document");
     }
     stackSize = 0;
@@ -395,7 +322,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    * adjusts the stack to expect the name's value.
    */
   private void beforeName() throws IOException {
-    int context = peek();
+    int context = peekScope();
     if (context == NONEMPTY_OBJECT) { // first in object
       sink.writeByte(',');
     } else if (context != EMPTY_OBJECT) { // not in an object!
@@ -412,7 +339,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
    */
   @SuppressWarnings("fallthrough")
   private void beforeValue() throws IOException {
-    switch (peek()) {
+    switch (peekScope()) {
       case NONEMPTY_DOCUMENT:
         if (!lenient) {
           throw new IllegalStateException(
@@ -444,14 +371,10 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   }
 
   @Override void promoteNameToValue() throws IOException {
-    int context = peek();
+    int context = peekScope();
     if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
       throw new IllegalStateException("Nesting problem.");
     }
     promoteNameToValue = true;
-  }
-
-  @Override public String getPath() {
-    return JsonScope.getPath(stackSize, stack, pathNames, pathIndices);
   }
 }

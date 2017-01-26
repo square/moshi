@@ -171,15 +171,52 @@ import okio.ByteString;
  * of this class are not thread safe.
  */
 public abstract class JsonReader implements Closeable {
-  /**
-   * Returns a new instance that reads a JSON-encoded stream from {@code source}.
-   */
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
+  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
+  // StackOverflowErrors.
+  int stackSize = 0;
+  final int[] scopes = new int[32];
+  final String[] pathNames = new String[32];
+  final int[] pathIndices = new int[32];
+
+  /** True to accept non-spec compliant JSON */
+  boolean lenient;
+
+  /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
+  boolean failOnUnknown;
+
+  /** Returns a new instance that reads a JSON-encoded stream from {@code source}. */
   public static JsonReader of(BufferedSource source) {
     return new BufferedSourceJsonReader(source);
   }
 
   JsonReader() {
     // Package-private to control subclasses.
+  }
+
+  final void pushScope(int newTop) {
+    if (stackSize == scopes.length) {
+      throw new JsonDataException("Nesting too deep at " + getPath());
+    }
+    scopes[stackSize++] = newTop;
+  }
+
+  /**
+   * Throws a new IO exception with the given message and a context snippet
+   * with this reader's content.
+   */
+  final JsonEncodingException syntaxError(String message) throws JsonEncodingException {
+    throw new JsonEncodingException(message + " at path " + getPath());
+  }
+
+  final JsonDataException typeMismatch(Object value, Object expected) {
+    if (value == null) {
+      return new JsonDataException(
+          "Expected " + expected + " but was null at path " + getPath());
+    } else {
+      return new JsonDataException("Expected " + expected + " but was " + value + ", a "
+          + value.getClass().getName() + ", at path " + getPath());
+    }
   }
 
   /**
@@ -207,12 +244,16 @@ public abstract class JsonReader implements Closeable {
    *   <li>Name/value pairs separated by {@code ;} instead of {@code ,}.
    * </ul>
    */
-  public abstract void setLenient(boolean lenient);
+  public final void setLenient(boolean lenient) {
+    this.lenient = lenient;
+  }
 
   /**
    * Returns true if this parser is liberal in what it accepts.
    */
-  public abstract boolean isLenient();
+  public final boolean isLenient() {
+    return lenient;
+  }
 
   /**
    * Configure whether this parser throws a {@link JsonDataException} when {@link #skipValue} is
@@ -222,12 +263,16 @@ public abstract class JsonReader implements Closeable {
    * useful in development and debugging because it means a typo like "locatiom" will be detected
    * early. It's potentially harmful in production because it complicates revising a JSON schema.
    */
-  public abstract void setFailOnUnknown(boolean failOnUnknown);
+  public final void setFailOnUnknown(boolean failOnUnknown) {
+    this.failOnUnknown = failOnUnknown;
+  }
 
   /**
    * Returns true if this parser forbids skipping values.
    */
-  public abstract boolean failOnUnknown();
+  public final boolean failOnUnknown() {
+    return failOnUnknown;
+  }
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is the beginning of a new
@@ -349,7 +394,9 @@ public abstract class JsonReader implements Closeable {
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
    * the current location in the JSON value.
    */
-  public abstract String getPath();
+  public final String getPath() {
+    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
 
   /**
    * Changes the reader to treat the next name as a string value. This is useful for map adapters so

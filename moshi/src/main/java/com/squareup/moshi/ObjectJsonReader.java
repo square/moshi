@@ -48,33 +48,11 @@ final class ObjectJsonReader extends JsonReader {
   /** Sentinel object pushed on {@link #stack} when the reader is closed. */
   private static final Object JSON_READER_CLOSED = new Object();
 
-  private int stackSize = 0;
   private final Object[] stack = new Object[32];
-  private final int[] scopes = new int[32];
-  private final String[] pathNames = new String[32];
-  private final int[] pathIndices = new int[32];
-  private boolean lenient;
-  private boolean failOnUnknown;
 
   public ObjectJsonReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
     stack[stackSize++] = root;
-  }
-
-  @Override public void setLenient(boolean lenient) {
-    this.lenient = lenient;
-  }
-
-  @Override public boolean isLenient() {
-    return lenient;
-  }
-
-  @Override public void setFailOnUnknown(boolean failOnUnknown) {
-    this.failOnUnknown = failOnUnknown;
-  }
-
-  @Override public boolean failOnUnknown() {
-    return failOnUnknown;
   }
 
   @Override public void beginArray() throws IOException {
@@ -294,10 +272,6 @@ final class ObjectJsonReader extends JsonReader {
     }
   }
 
-  @Override public String getPath() {
-    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
-  }
-
   @Override void promoteNameToValue() throws IOException {
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
 
@@ -342,16 +316,6 @@ final class ObjectJsonReader extends JsonReader {
     Object name = entry.getKey();
     if (name instanceof String) return (String) name;
     throw typeMismatch(name, Token.NAME);
-  }
-
-  private JsonDataException typeMismatch(Object value, Object expected) {
-    if (value == null) {
-      return new JsonDataException(
-          "Expected " + expected + " but was null at path " + getPath());
-    } else {
-      return new JsonDataException("Expected " + expected + " but was " + value + ", a "
-          + value.getClass().getName() + ", at path " + getPath());
-    }
   }
 
   /**
