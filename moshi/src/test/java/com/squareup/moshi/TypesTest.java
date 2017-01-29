@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 import org.junit.Test;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -142,5 +144,21 @@ public final class TypesTest {
   @Test public void fixedVariablesTypes() throws Exception {
     assertThat(Types.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class))
         .containsExactly(String.class, Integer.class);
+  }
+
+  @Test public void createJsonQualifierImplementation() throws Exception {
+    TestQualifier actual = Types.createJsonQualifierImplementation(TestQualifier.class);
+    TestQualifier expected =
+        (TestQualifier) TypesTest.class.getDeclaredField("unused").getAnnotations()[0];
+    assertThat(actual.annotationType()).isEqualTo(TestQualifier.class);
+    assertThat(actual).isEqualTo(expected);
+    assertThat(actual).isNotEqualTo(null);
+    assertThat(actual.hashCode()).isEqualTo(expected.hashCode());
+    assertThat(actual.getClass()).isNotEqualTo(TestQualifier.class);
+  }
+
+  @TestQualifier private static Object unused;
+
+  @Retention(RUNTIME) @JsonQualifier @interface TestQualifier {
   }
 }
