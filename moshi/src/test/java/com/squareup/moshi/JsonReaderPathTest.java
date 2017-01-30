@@ -28,11 +28,11 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonReaderPathTest {
-  @Parameter public JsonReaderFactory factory;
+  @Parameter public JsonCodecFactory factory;
 
   @Parameters(name = "{0}")
   public static List<Object[]> parameters() {
-    return JsonReaderFactory.factories();
+    return JsonCodecFactory.factories();
   }
 
   @Test public void path() throws IOException {
@@ -185,7 +185,7 @@ public final class JsonReaderPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    assumeTrue(factory.supportsMultipleTopLevelValuesInOneDocument());
+    assumeTrue(factory.encodesToBytes());
 
     JsonReader reader = factory.newReader("[][]");
     reader.setLenient(true);

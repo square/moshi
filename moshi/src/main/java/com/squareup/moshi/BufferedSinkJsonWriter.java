@@ -200,7 +200,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(double value) throws IOException {
-    if (Double.isNaN(value) || Double.isInfinite(value)) {
+    if (!lenient && (Double.isNaN(value) || Double.isInfinite(value))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     if (promoteNameToValue) {

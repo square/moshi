@@ -29,11 +29,11 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonWriterPathTest {
-  @Parameter public JsonWriterFactory factory;
+  @Parameter public JsonCodecFactory factory;
 
   @Parameters(name = "{0}")
   public static List<Object[]> parameters() {
-    return JsonWriterFactory.factories();
+    return JsonCodecFactory.factories();
   }
 
   @Test public void path() throws IOException {
@@ -202,7 +202,7 @@ public final class JsonWriterPathTest {
   }
 
   @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
-    assumeTrue(factory.supportsMultipleTopLevelValuesInOneDocument());
+    assumeTrue(factory.encodesToBytes());
 
     JsonWriter writer = factory.newWriter();
     writer.setLenient(true);
