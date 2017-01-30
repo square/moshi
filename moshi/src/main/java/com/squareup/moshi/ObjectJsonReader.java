@@ -273,10 +273,10 @@ final class ObjectJsonReader extends JsonReader {
   }
 
   @Override void promoteNameToValue() throws IOException {
-    Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
-
-    push(peeked.getKey());
-    stack[stackSize - 2] = peeked.getValue();
+    if (hasNext()) {
+      String name = nextName();
+      push(name);
+    }
   }
 
   @Override public void close() throws IOException {
