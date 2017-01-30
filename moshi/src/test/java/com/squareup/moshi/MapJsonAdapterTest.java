@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class MapJsonAdapterTest {
-  private final Moshi moshi = new Moshi.Builder().build();
+  private final Moshi moshi = new Moshi.Builder().add(byte[].class, new Base32Adapter()).build();
 
   @Test public void map() throws Exception {
     Map<String, Boolean> map = new LinkedHashMap<>();
@@ -123,6 +124,33 @@ public final class MapJsonAdapterTest {
         Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
     assertThat(fromJson).containsExactly(
         MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
+  }
+
+  class Base32Adapter extends JsonAdapter<byte[]>  {
+    @Override
+    public byte[] fromJson(JsonReader reader) throws IOException {
+      String string = reader.nextString();
+      return new BigInteger(string, 32).toByteArray();
+    }
+
+    @Override
+    public void toJson(JsonWriter writer, byte[] bytes) throws IOException {
+      String string = new BigInteger(bytes).toString(32);
+      writer.value(string);
+    }
+  }
+
+  static class DevBytes {
+    public Map<String, byte[]> bytes;
+  }
+
+  @Test public void byteArrayMapAdapter() throws Exception {
+    String jsonString = "{\"bytes\":{\"jesse\":\"a\",\"jake\":\"1\"}}";
+    DevBytes dev = moshi.adapter(DevBytes.class).fromJson(jsonString);
+
+    assertThat(dev.bytes).containsOnlyKeys("jesse", "jake");
+    assertThat(dev.bytes.get("jesse")).isEqualTo(new byte[] { 0xa });
+    assertThat(dev.bytes.get("jake")).isEqualTo(new byte[] { 0x1 });
   }
 
   private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {

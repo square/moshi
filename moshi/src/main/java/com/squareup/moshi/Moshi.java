@@ -89,9 +89,10 @@ public final class Moshi {
     // Prepare for re-entrant calls, then ask each factory to create a type adapter.
     DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(cacheKey);
     deferredAdapters.add(deferredAdapter);
+    Type canonicalType = Types.canonicalizePlatformTypes(type);
     try {
       for (int i = 0, size = factories.size(); i < size; i++) {
-        JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
+        JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(canonicalType, annotations, this);
         if (result != null) {
           deferredAdapter.ready(result);
           synchronized (adapterCache) {
