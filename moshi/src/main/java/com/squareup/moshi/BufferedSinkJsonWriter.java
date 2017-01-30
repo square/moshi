@@ -62,8 +62,6 @@ final class BufferedSinkJsonWriter extends JsonWriter {
 
   private String deferredName;
 
-  private boolean promoteNameToValue;
-
   BufferedSinkJsonWriter(BufferedSink sink) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
@@ -92,7 +90,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter endObject() throws IOException {
-    promoteNameToValue = false;
+    promoteValueToName = false;
     return close(EMPTY_OBJECT, NONEMPTY_OBJECT, "}");
   }
 
@@ -143,7 +141,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     }
     deferredName = name;
     pathNames[stackSize - 1] = name;
-    promoteNameToValue = false;
+    promoteValueToName = false;
     return this;
   }
 
@@ -159,7 +157,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     if (value == null) {
       return nullValue();
     }
-    if (promoteNameToValue) {
+    if (promoteValueToName) {
       return name(value);
     }
     writeDeferredName();
@@ -203,7 +201,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
     if (!lenient && (Double.isNaN(value) || Double.isInfinite(value))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
-    if (promoteNameToValue) {
+    if (promoteValueToName) {
       return name(Double.toString(value));
     }
     writeDeferredName();
@@ -214,7 +212,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(long value) throws IOException {
-    if (promoteNameToValue) {
+    if (promoteValueToName) {
       return name(Long.toString(value));
     }
     writeDeferredName();
@@ -234,7 +232,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
         && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
-    if (promoteNameToValue) {
+    if (promoteValueToName) {
       return name(string);
     }
     writeDeferredName();
@@ -368,13 +366,5 @@ final class BufferedSinkJsonWriter extends JsonWriter {
       default:
         throw new IllegalStateException("Nesting problem.");
     }
-  }
-
-  @Override void promoteNameToValue() throws IOException {
-    int context = peekScope();
-    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
-      throw new IllegalStateException("Nesting problem.");
-    }
-    promoteNameToValue = true;
   }
 }

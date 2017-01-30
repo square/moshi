@@ -79,6 +79,7 @@ final class ObjectJsonWriter extends JsonWriter {
     if (peekScope() != EMPTY_OBJECT || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
     }
+    promoteValueToName = false;
     stackSize--;
     stack[stackSize] = null;
     pathNames[stackSize] = null; // Free the last path name so that it can be garbage collected!
@@ -96,12 +97,16 @@ final class ObjectJsonWriter extends JsonWriter {
     if (peekScope() != EMPTY_OBJECT || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
     }
-    pathNames[stackSize - 1] = name;
     deferredName = name;
+    pathNames[stackSize - 1] = name;
+    promoteValueToName = false;
     return this;
   }
 
   @Override public JsonWriter value(String value) throws IOException {
+    if (promoteValueToName) {
+      return name(value);
+    }
     add(value);
     pathIndices[stackSize - 1]++;
     return this;
@@ -130,6 +135,9 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(long value) throws IOException {
+    if (promoteValueToName) {
+      return name(Long.toString(value));
+    }
     add(value);
     pathIndices[stackSize - 1]++;
     return this;
@@ -142,13 +150,12 @@ final class ObjectJsonWriter extends JsonWriter {
         throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
       }
     }
+    if (promoteValueToName) {
+      return name(value.toString());
+    }
     add(value);
     pathIndices[stackSize - 1]++;
     return this;
-  }
-
-  @Override void promoteNameToValue() throws IOException {
-    throw new UnsupportedOperationException();
   }
 
   @Override public void close() throws IOException {

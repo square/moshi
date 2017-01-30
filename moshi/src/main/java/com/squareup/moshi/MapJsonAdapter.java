@@ -52,7 +52,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
       if (entry.getKey() == null) {
         throw new JsonDataException("Map key is null at " + writer.getPath());
       }
-      writer.promoteNameToValue();
+      writer.promoteValueToName();
       keyAdapter.toJson(writer, entry.getKey());
       valueAdapter.toJson(writer, entry.getValue());
     }

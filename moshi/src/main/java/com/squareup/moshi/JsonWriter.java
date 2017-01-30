@@ -20,6 +20,9 @@ import java.io.Flushable;
 import java.io.IOException;
 import okio.BufferedSink;
 
+import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
+import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
+
 /**
  * Writes a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
  * encoded value to a stream, one token at a time. The stream includes both
@@ -131,6 +134,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
   String indent;
   boolean lenient;
   boolean serializeNulls;
+  boolean promoteValueToName;
 
   /** Returns a new instance that writes a JSON-encoded stream to {@code sink}. */
   public static JsonWriter of(BufferedSink sink) {
@@ -313,10 +317,16 @@ public abstract class JsonWriter implements Closeable, Flushable {
   public abstract JsonWriter value(Number value) throws IOException;
 
   /**
-   * Changes the reader to treat the next string value as a name. This is useful for map adapters so
-   * that arbitrary type adapters can use {@link #value(String)} to write a name value.
+   * Changes the writer to treat the next value as a string name. This is useful for map adapters so
+   * that arbitrary type adapters can use {@link #value} to write a name value.
    */
-  abstract void promoteNameToValue() throws IOException;
+  final void promoteValueToName() throws IOException {
+    int context = peekScope();
+    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
+      throw new IllegalStateException("Nesting problem.");
+    }
+    promoteValueToName = true;
+  }
 
   /**
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to

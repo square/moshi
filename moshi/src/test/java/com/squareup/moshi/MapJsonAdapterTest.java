@@ -125,6 +125,22 @@ public final class MapJsonAdapterTest {
         MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
   }
 
+  @Test public void mapWithNonStringKeysToJsonObject() throws Exception {
+    Map<Integer, Boolean> map = new LinkedHashMap<>();
+    map.put(5, true);
+    map.put(6, false);
+    map.put(7, null);
+
+    Map<String, Boolean> jsonObject = new LinkedHashMap<>();
+    jsonObject.put("5", true);
+    jsonObject.put("6", false);
+    jsonObject.put("7", null);
+
+    JsonAdapter<Map<Integer, Boolean>> jsonAdapter = mapAdapter(Integer.class, Boolean.class);
+    assertThat(jsonAdapter.serializeNulls().toJsonObject(map)).isEqualTo(jsonObject);
+    assertThat(jsonAdapter.fromJsonObject(jsonObject)).isEqualTo(map);
+  }
+
   private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {
     JsonAdapter<Map<K, V>> jsonAdapter = mapAdapter(keyType, valueType);
     Buffer buffer = new Buffer();
