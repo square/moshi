@@ -28,7 +28,6 @@ import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.NAME;
 import static com.squareup.moshi.JsonReader.Token.STRING;
-import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -37,11 +36,11 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonReaderTest {
-  @Parameter public JsonReaderFactory factory;
+  @Parameter public JsonCodecFactory factory;
 
   @Parameters(name = "{0}")
   public static List<Object[]> parameters() {
-    return JsonReaderFactory.factories();
+    return JsonCodecFactory.factories();
   }
 
   JsonReader newReader(String json) throws IOException {

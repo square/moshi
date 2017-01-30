@@ -20,13 +20,18 @@ import java.util.Arrays;
 import java.util.List;
 import okio.Buffer;
 
-abstract class JsonWriterFactory {
+abstract class JsonCodecFactory {
   private static final Moshi MOSHI = new Moshi.Builder().build();
   private static final JsonAdapter<Object> OBJECT_ADAPTER = MOSHI.adapter(Object.class);
 
   static List<Object[]> factories() {
-    final JsonWriterFactory bufferedSink = new JsonWriterFactory() {
+    final JsonCodecFactory bufferedSink = new JsonCodecFactory() {
       Buffer buffer;
+
+      @Override public JsonReader newReader(String json) {
+        Buffer buffer = new Buffer().writeUtf8(json);
+        return JsonReader.of(buffer);
+      }
 
       @Override JsonWriter newWriter() {
         buffer = new Buffer();
@@ -39,17 +44,28 @@ abstract class JsonWriterFactory {
         return result;
       }
 
-      @Override boolean supportsMultipleTopLevelValuesInOneDocument() {
+      @Override boolean encodesToBytes() {
         return true;
       }
 
       @Override public String toString() {
-        return "BufferedSinkJsonWriter";
+        return "Buffer";
       }
     };
 
-    final JsonWriterFactory object = new JsonWriterFactory() {
+    final JsonCodecFactory object = new JsonCodecFactory() {
       ObjectJsonWriter writer;
+
+      @Override public JsonReader newReader(String json) throws IOException {
+        Moshi moshi = new Moshi.Builder().build();
+        Object object = moshi.adapter(Object.class).lenient().fromJson(json);
+        return new ObjectJsonReader(object);
+      }
+
+      // TODO(jwilson): fix precision checks and delete his method.
+      @Override boolean implementsStrictPrecision() {
+        return false;
+      }
 
       @Override JsonWriter newWriter() {
         writer = new ObjectJsonWriter();
@@ -62,6 +78,7 @@ abstract class JsonWriterFactory {
           Buffer buffer = new Buffer();
           JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
           bufferedSinkWriter.setSerializeNulls(true);
+          bufferedSinkWriter.setLenient(true);
           OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
           return buffer.readUtf8();
         } catch (IOException e) {
@@ -75,7 +92,7 @@ abstract class JsonWriterFactory {
       }
 
       @Override public String toString() {
-        return "ObjectJsonWriter";
+        return "Object";
       }
     };
 
@@ -84,10 +101,17 @@ abstract class JsonWriterFactory {
         new Object[] { object });
   }
 
+  abstract JsonReader newReader(String json) throws IOException;
+
   abstract JsonWriter newWriter();
+
+  boolean implementsStrictPrecision() {
+    return true;
+  }
+
   abstract String json();
 
-  boolean supportsMultipleTopLevelValuesInOneDocument() {
+  boolean encodesToBytes() {
     return false;
   }
 

@@ -31,11 +31,11 @@ import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonWriterTest {
-  @Parameter public JsonWriterFactory factory;
+  @Parameter public JsonCodecFactory factory;
 
   @Parameters(name = "{0}")
   public static List<Object[]> parameters() {
-    return JsonWriterFactory.factories();
+    return JsonCodecFactory.factories();
   }
 
   @Test public void nullsValuesNotSerializedByDefault() throws IOException {
@@ -469,7 +469,7 @@ public final class JsonWriterTest {
   }
 
   @Test public void lenientWriterPermitsMultipleTopLevelValues() throws IOException {
-    assumeTrue(factory.supportsMultipleTopLevelValuesInOneDocument());
+    assumeTrue(factory.encodesToBytes());
 
     JsonWriter writer = factory.newWriter();
     writer.setLenient(true);
