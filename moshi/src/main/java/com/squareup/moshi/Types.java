@@ -28,15 +28,41 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Set;
 
 /** Factory methods for types. */
 public final class Types {
   static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
 
   private Types() {
+  }
+
+  /**
+   * Checks if {@code annotations} contains {@code jsonQualifier}.
+   * Returns the subset of {@code annotations} without {@code jsonQualifier}, or null if {@code
+   * annotations} does not contain {@code jsonQualifier}.
+   */
+  public static Set<? extends Annotation> nextAnnotations(Set<? extends Annotation> annotations,
+      Class<? extends Annotation> jsonQualifier) {
+    if (!jsonQualifier.isAnnotationPresent(JsonQualifier.class)) {
+      throw new IllegalArgumentException(jsonQualifier + " is not a JsonQualifier.");
+    }
+    if (annotations.isEmpty()) {
+      return null;
+    }
+    for (Annotation annotation : annotations) {
+      if (jsonQualifier.equals(annotation.annotationType())) {
+        Set<Annotation> delegateAnnotations = new LinkedHashSet<>(annotations);
+        delegateAnnotations.remove(annotation);
+        return Collections.unmodifiableSet(delegateAnnotations);
+      }
+    }
+    return null;
   }
 
   /**
