@@ -776,6 +776,19 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void noTypeAdapterForQualifiedPlatformType() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    Field uppercaseStringField = MoshiTest.class.getDeclaredField("uppercaseString");
+    try {
+      moshi.adapter(uppercaseStringField.getGenericType(),
+          Util.jsonAnnotations(uppercaseStringField));
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("No JsonAdapter for class java.lang.String "
+          + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
+    }
+  }
+
   @Test public void objectArray() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<String[]> adapter = moshi.adapter(String[].class);

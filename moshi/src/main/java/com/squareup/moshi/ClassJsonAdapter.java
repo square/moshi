@@ -111,11 +111,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
      */
     private boolean isPlatformType(Class<?> rawType) {
       String name = rawType.getName();
-      return name.startsWith("android.")
+      return (name.startsWith("android.")
           || name.startsWith("java.")
           || name.startsWith("javax.")
           || name.startsWith("kotlin.")
-          || name.startsWith("scala.");
+          || name.startsWith("scala.")) && !Types.isAllowedPlatformType(rawType);
     }
 
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */

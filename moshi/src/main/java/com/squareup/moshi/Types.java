@@ -423,6 +423,22 @@ public final class Types {
     return unknown;
   }
 
+  /**
+   * Returns true if this is a Type supported by {@link StandardJsonAdapters#FACTORY}.
+   */
+  static boolean isAllowedPlatformType(Type type) {
+    return type == Boolean.class
+        || type == Byte.class
+        || type == Character.class
+        || type == Double.class
+        || type == Float.class
+        || type == Integer.class
+        || type == Long.class
+        || type == Short.class
+        || type == String.class
+        || type == Object.class;
+  }
+
   private static int indexOf(Object[] array, Object toFind) {
     for (int i = 0; i < array.length; i++) {
       if (toFind.equals(array[i])) return i;
