@@ -995,6 +995,26 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void duplicateKeyDisallowedInObjectType() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Object> adapter = moshi.adapter(Object.class);
+    String json = "{\"diameter\":5,\"diameter\":5,\"extraCheese\":true}";
+    try {
+      adapter.fromJson(json);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Map key 'diameter' has multiple values at path $.diameter: 5.0 and 5.0");
+    }
+  }
+
+  @Test public void duplicateKeysAllowedInCustomType() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Pizza> adapter = moshi.adapter(Pizza.class);
+    String json = "{\"diameter\":5,\"diameter\":5,\"extraCheese\":true}";
+    assertThat(adapter.fromJson(json)).isEqualTo(new Pizza(5, true));
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;
