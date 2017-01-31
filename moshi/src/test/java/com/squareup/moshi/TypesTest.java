@@ -58,6 +58,27 @@ public final class TypesTest {
     }
   }
 
+  @Test public void arrayOf() {
+    assertThat(Types.getRawType(Types.arrayOf(int.class))).isEqualTo(int[].class);
+    assertThat(Types.getRawType(Types.arrayOf(List.class))).isEqualTo(List[].class);
+    assertThat(Types.getRawType(Types.arrayOf(String[].class))).isEqualTo(String[][].class);
+  }
+
+  List<? extends CharSequence> listSubtype;
+  List<? super String> listSupertype;
+
+  @Test public void subtypeOf() throws Exception {
+    Type listOfWildcardType = TypesTest.class.getDeclaredField("listSubtype").getGenericType();
+    Type expected = Types.collectionElementType(listOfWildcardType, List.class);
+    assertThat(Types.subtypeOf(CharSequence.class)).isEqualTo(expected);
+  }
+
+  @Test public void supertypeOf() throws Exception {
+    Type listOfWildcardType = TypesTest.class.getDeclaredField("listSupertype").getGenericType();
+    Type expected = Types.collectionElementType(listOfWildcardType, List.class);
+    assertThat(Types.supertypeOf(String.class)).isEqualTo(expected);
+  }
+
   @Test public void getFirstTypeArgument() throws Exception {
     assertThat(getFirstTypeArgument(A.class)).isNull();
 
