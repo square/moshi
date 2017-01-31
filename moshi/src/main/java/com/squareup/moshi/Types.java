@@ -15,10 +15,14 @@
  */
 package com.squareup.moshi;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
@@ -135,6 +139,39 @@ public final class Types {
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
           + "GenericArrayType, but <" + type + "> is of type " + className);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T extends Annotation> T createJsonQualifierImplementation(final Class<T> annotationType) {
+    if (!annotationType.isAnnotation()) {
+      throw new IllegalArgumentException(annotationType + " must be an annotation.");
+    }
+    if (!annotationType.isAnnotationPresent(JsonQualifier.class)) {
+      throw new IllegalArgumentException(annotationType + " must have @JsonQualifier.");
+    }
+    if (annotationType.getDeclaredMethods().length != 0) {
+      throw new IllegalArgumentException(annotationType + " must not declare methods.");
+    }
+    return (T) Proxy.newProxyInstance(annotationType.getClassLoader(),
+        new Class<?>[] { annotationType }, new InvocationHandler() {
+          @Override public Object invoke(Object proxy, Method method, Object[] args)
+              throws Throwable {
+            String methodName = method.getName();
+            switch (methodName) {
+              case "annotationType":
+                return annotationType;
+              case "equals":
+                Object o = args[0];
+                return annotationType.isInstance(o);
+              case "hashCode":
+                return 0;
+              case "toString":
+                return "@" + annotationType.getName() + "()";
+              default:
+                return method.invoke(proxy, args);
+            }
+          }
+        });
   }
 
   static boolean equal(Object a, Object b) {

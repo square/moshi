@@ -61,6 +61,11 @@ public final class Moshi {
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
+  public <T> JsonAdapter<T> adapter(Type type, Class<? extends Annotation> annotationType) {
+    return adapter(type,
+        Collections.singleton(Types.createJsonQualifierImplementation(annotationType)));
+  }
+
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
     type = Types.canonicalize(type);
