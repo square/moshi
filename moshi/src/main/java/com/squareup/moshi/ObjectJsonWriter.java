@@ -16,17 +16,26 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
 import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
+import static java.lang.Double.NEGATIVE_INFINITY;
+import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class ObjectJsonWriter extends JsonWriter {
+  private static final BigInteger BIG_INTEGER_MIN_LONG = BigInteger.valueOf(Long.MIN_VALUE);
+  private static final BigInteger BIG_INTEGER_MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
+
   private final Object[] stack = new Object[32];
   private String deferredName;
 
@@ -131,7 +140,20 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(double value) throws IOException {
-    return value(Double.valueOf(value));
+    long longValue = (long) value;
+    if (Double.compare(longValue, value) == 0) {
+      return value(longValue);
+    }
+    if (!lenient
+        && (Double.isNaN(value) || value == NEGATIVE_INFINITY || value == POSITIVE_INFINITY)) {
+      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
+    }
+    if (promoteValueToName) {
+      return name(Double.toString(value));
+    }
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(long value) throws IOException {
@@ -144,18 +166,47 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(Number value) throws IOException {
-    if (!lenient) {
-      double d = value.doubleValue();
-      if (d == Double.POSITIVE_INFINITY || d == Double.NEGATIVE_INFINITY || Double.isNaN(d)) {
-        throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
-      }
+    // If it's trivially converted to a long, do that.
+    if (value instanceof Byte
+        || value instanceof Short
+        || value instanceof Integer
+        || value instanceof AtomicInteger
+        || value instanceof Long
+        || value instanceof AtomicLong
+        || (value instanceof BigInteger && fitsInLong((BigInteger) value))) {
+      return value(value.longValue());
     }
+
+    // If it's trivially converted to a double, do that. This might further convert to a long!
+    if (value instanceof Float
+        || value instanceof Double) {
+      return value(value.doubleValue());
+    }
+
+    // Everything else gets converted to a BigDecimal, which itself might convert to a long.
+    BigDecimal bigDecimalValue = value instanceof BigDecimal
+        ? ((BigDecimal) value)
+        : new BigDecimal(value.toString());
+    try {
+      return value(bigDecimalValue.longValueExact());
+    } catch (ArithmeticException lossyConversion) {
+    }
+
+    // We're stuck with a big decimal because the value is too big or has a fractional part Put it
+    // in a canonical form.
+    bigDecimalValue = bigDecimalValue.stripTrailingZeros();
+
+    // Emit the value.
     if (promoteValueToName) {
-      return name(value.toString());
+      return name(bigDecimalValue.toString());
     }
-    add(value);
+    add(bigDecimalValue);
     pathIndices[stackSize - 1]++;
     return this;
+  }
+
+  private boolean fitsInLong(BigInteger value) {
+    return value.compareTo(BIG_INTEGER_MIN_LONG) >= 0 && value.compareTo(BIG_INTEGER_MAX_LONG) <= 0;
   }
 
   @Override public void close() throws IOException {

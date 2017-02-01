@@ -16,8 +16,13 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,6 +70,220 @@ public final class ObjectJsonWriterTest {
       assertThat(expected).hasMessage(
           "Map key 'a' has multiple values at path $.a: 1 and 2");
     }
+  }
+
+  @Test public void valueLongAlwaysEmitsLongs() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(Long.MIN_VALUE);
+    writer.value(-1L);
+    writer.value(0L);
+    writer.value(1L);
+    writer.value(Long.MAX_VALUE);
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        Long.MIN_VALUE,
+        -1L,
+        0L,
+        1L,
+        Long.MAX_VALUE);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueDoubleEmitsLongsIfConversionIsLossless() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(-2147483649.0d);
+    writer.value(-2147483648.0d);
+    writer.value(-1.0d);
+    writer.value(0.0d);
+    writer.value(1.0d);
+    writer.value(2147483647.0d);
+    writer.value(2147483648.0d);
+    writer.value(9007199254740991.0d);
+    writer.value(9007199254740992.0d);
+    writer.value(9007199254740994.0d);
+    writer.value(9223372036854776832.0d);
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        -2147483649L,
+        -2147483648L,
+        -1L,
+        0L,
+        1L,
+        2147483647L,
+        2147483648L,
+        9007199254740991L,
+        9007199254740992L,
+        9007199254740994L,
+        9223372036854775807L); // (long) 9223372036854776832.0 == 9223372036854775807L
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueDoubleDoesNotEmitLongsIfConversionIsLossy() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.setLenient(true);
+    writer.beginArray();
+    writer.value(-0.5d);
+    writer.value(-0.0d);
+    writer.value(0.5d);
+    writer.value(9.22337203685478e18);
+    writer.value(Double.NEGATIVE_INFINITY);
+    writer.value(Double.MIN_VALUE);
+    writer.value(Double.MIN_NORMAL);
+    writer.value(-Double.MIN_NORMAL);
+    writer.value(Double.MAX_VALUE);
+    writer.value(Double.POSITIVE_INFINITY);
+    writer.value(Double.NaN);
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        -0.5d,
+        -0.0d,
+        0.5d,
+        9.22337203685478e18,
+        Double.NEGATIVE_INFINITY,
+        Double.MIN_VALUE,
+        Double.MIN_NORMAL,
+        -Double.MIN_NORMAL,
+        Double.MAX_VALUE,
+        Double.POSITIVE_INFINITY,
+        Double.NaN);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueIntegerNumberEmitsLongs() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(new AtomicInteger(Integer.MIN_VALUE));
+    writer.value(new AtomicLong(Long.MIN_VALUE));
+    writer.value(new Byte(Byte.MIN_VALUE));
+    writer.value(new Short(Short.MIN_VALUE));
+    writer.value(new Integer(Integer.MIN_VALUE));
+    writer.value(new Long(Long.MIN_VALUE));
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        -2147483648L,
+        -9223372036854775808L,
+        -128L,
+        -32768L,
+        -2147483648L,
+        -9223372036854775808L);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueFloatingPointNumberEmitsDoubles() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(new Float(0.5f));
+    writer.value(new Double(0.5d));
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        0.5d,
+        0.5d);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueBigNumberEmitsLongIfConversionIsLossless() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(BigInteger.valueOf(Long.MIN_VALUE));
+    writer.value(BigInteger.valueOf(-1L));
+    writer.value(BigInteger.valueOf(0L));
+    writer.value(BigInteger.valueOf(1L));
+    writer.value(BigInteger.valueOf(Long.MAX_VALUE));
+    writer.value(BigDecimal.valueOf(Long.MIN_VALUE));
+    writer.value(BigDecimal.valueOf(-1L));
+    writer.value(BigDecimal.valueOf(0L));
+    writer.value(BigDecimal.valueOf(1L));
+    writer.value(BigDecimal.valueOf(Long.MAX_VALUE));
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        Long.MIN_VALUE,
+        -1L,
+        0L,
+        1L,
+        Long.MAX_VALUE,
+        Long.MIN_VALUE,
+        -1L,
+        0L,
+        1L,
+        Long.MAX_VALUE);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueBigNumberEmitsBigDecimalIfConversionIsLossy() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(new BigInteger("-9223372036854775809"));
+    writer.value(new BigInteger("9223372036854775808"));
+    writer.value(new BigDecimal("-9223372036854775809"));
+    writer.value(new BigDecimal("9223372036854775808"));
+    writer.value(new BigDecimal("0.5"));
+    writer.value(new BigDecimal("100000e15"));
+    writer.value(new BigDecimal("0.0000100e-10"));
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        new BigDecimal("-9223372036854775809"),
+        new BigDecimal("9223372036854775808"),
+        new BigDecimal("-9223372036854775809"),
+        new BigDecimal("9223372036854775808"),
+        new BigDecimal("0.5"),
+        new BigDecimal("1e20"), // With BigDecimal, 1.00000e20 doesn't equal 1e20.
+        new BigDecimal("1e-15")); // With BigDecimal, 1.00e-15 doesn't equal 1e-15.
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  @Test public void valueOtherNumberTypeEmitsLongOrBigDecimal() throws Exception {
+    ObjectJsonWriter writer = new ObjectJsonWriter();
+    writer.beginArray();
+    writer.value(stringNumber("-9223372036854775809"));
+    writer.value(stringNumber("-9223372036854775808"));
+    writer.value(stringNumber("0.5"));
+    writer.value(stringNumber("1.0"));
+    writer.endArray();
+
+    List<Number> numbers = Arrays.<Number>asList(
+        new BigDecimal("-9223372036854775809"),
+        -9223372036854775808L,
+        new BigDecimal("0.5"),
+        1L);
+    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+  }
+
+  /**
+   * Returns an instance of number whose {@link #toString} is {@code s}. Using the standard number
+   * methods like {@link Number#doubleValue} are awkward because they may truncate or discard
+   * precision.
+   */
+  private Number stringNumber(final String s) {
+    return new Number() {
+      @Override public int intValue() {
+        throw new AssertionError();
+      }
+
+      @Override public long longValue() {
+        throw new AssertionError();
+      }
+
+      @Override public float floatValue() {
+        throw new AssertionError();
+      }
+
+      @Override public double doubleValue() {
+        throw new AssertionError();
+      }
+
+      @Override public String toString() {
+        return s;
+      }
+    };
   }
 }
 

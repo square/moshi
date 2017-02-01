@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.Set;
 import okio.Buffer;
 import okio.BufferedSink;
@@ -56,7 +57,11 @@ public abstract class JsonAdapter<T> {
 
   /**
    * Encodes {@code value} as a Java model comprised of maps, lists, strings, numbers, booleans
-   * and nulls. The returned model is equivalent to calling {@link #toJson} to encode {@code value}
+   * and nulls. Numeric types will be either {@linkplain Long Longs}, {@linkplain Double Doubles},
+   * or {@linkplain BigDecimal BigDecimals}. Longs are used unless the value cannot be converted
+   * without truncation or loss of precision.
+   *
+   * <p>The returned model is equivalent to calling {@link #toJson} to encode {@code value}
    * as a JSON string, and then parsing that string without any particular type.
    */
   public final Object toJsonObject(T value) {
