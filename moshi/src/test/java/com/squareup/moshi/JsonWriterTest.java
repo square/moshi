@@ -227,14 +227,12 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void doubles() throws IOException {
+  @Test public void fractionalDoubles() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value(-0.0);
-    writer.value(1.0);
     writer.value(Double.MAX_VALUE);
     writer.value(Double.MIN_VALUE);
-    writer.value(0.0);
     writer.value(-0.5);
     writer.value(2.2250738585072014E-308);
     writer.value(Math.PI);
@@ -242,14 +240,24 @@ public final class JsonWriterTest {
     writer.endArray();
     writer.close();
     assertThat(factory.json()).isEqualTo("[-0.0,"
-        + "1.0,"
         + "1.7976931348623157E308,"
         + "4.9E-324,"
-        + "0.0,"
         + "-0.5,"
         + "2.2250738585072014E-308,"
         + "3.141592653589793,"
         + "2.718281828459045]");
+  }
+
+  @Test public void integralDoubles() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value(1.0);
+    writer.value(0.0);
+    writer.endArray();
+    writer.close();
+
+    // Roundtripping through an object model converts non-fractional doubles to longs.
+    assertThat(factory.json()).isIn("[1.0,0.0]", "[1,0]");
   }
 
   @Test public void longs() throws IOException {
