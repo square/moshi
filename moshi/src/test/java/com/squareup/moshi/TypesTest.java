@@ -15,13 +15,17 @@
  */
 package com.squareup.moshi;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import org.junit.Test;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -29,6 +33,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class TypesTest {
+  @Retention(RUNTIME) @JsonQualifier @interface TestQualifier {
+  }
+
+  @Retention(RUNTIME) @JsonQualifier @interface AnotherTestQualifier {
+  }
+
+  @Retention(RUNTIME) @interface TestAnnotation {
+  }
+
+  @TestQualifier private Object hasTestQualifier;
+
+  @Test public void nextAnnotationsRequiresJsonAnnotation() throws Exception {
+    try {
+      Types.nextAnnotations(Collections.<Annotation>emptySet(), TestAnnotation.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "interface com.squareup.moshi.TypesTest$TestAnnotation is not a JsonQualifier.");
+    }
+  }
+
+  @Test public void nextAnnotationsDoesNotContainReturnsNull() throws Exception {
+    Set<? extends Annotation> annotations =
+        Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+    assertThat(Types.nextAnnotations(annotations, TestQualifier.class)).isNull();
+    assertThat(
+        Types.nextAnnotations(Collections.<Annotation>emptySet(), TestQualifier.class)).isNull();
+  }
+
+  @Test public void nextAnnotationsReturnsDelegateAnnotations() throws Exception {
+    Set<Annotation> annotations = new LinkedHashSet<>(2);
+    annotations.add(Types.createJsonQualifierImplementation(TestQualifier.class));
+    annotations.add(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+    Set<AnotherTestQualifier> expected =
+        Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+    assertThat(Types.nextAnnotations(Collections.unmodifiableSet(annotations), TestQualifier.class))
+        .isEqualTo(expected);
+  }
 
   @Test public void newParameterizedType() throws Exception {
     // List<A>. List is a top-level class.
@@ -170,16 +212,11 @@ public final class TypesTest {
   @Test public void createJsonQualifierImplementation() throws Exception {
     TestQualifier actual = Types.createJsonQualifierImplementation(TestQualifier.class);
     TestQualifier expected =
-        (TestQualifier) TypesTest.class.getDeclaredField("unused").getAnnotations()[0];
+        (TestQualifier) TypesTest.class.getDeclaredField("hasTestQualifier").getAnnotations()[0];
     assertThat(actual.annotationType()).isEqualTo(TestQualifier.class);
     assertThat(actual).isEqualTo(expected);
     assertThat(actual).isNotEqualTo(null);
     assertThat(actual.hashCode()).isEqualTo(expected.hashCode());
     assertThat(actual.getClass()).isNotEqualTo(TestQualifier.class);
-  }
-
-  @TestQualifier private static Object unused;
-
-  @Retention(RUNTIME) @JsonQualifier @interface TestQualifier {
   }
 }
