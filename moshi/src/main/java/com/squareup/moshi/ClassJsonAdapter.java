@@ -46,7 +46,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum()) return null;
-      if (isPlatformType(rawType)) {
+      if (isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
         throw new IllegalArgumentException("Platform "
             + type
             + " annotated "
@@ -111,11 +111,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
      */
     private boolean isPlatformType(Class<?> rawType) {
       String name = rawType.getName();
-      return (name.startsWith("android.")
+      return name.startsWith("android.")
           || name.startsWith("java.")
           || name.startsWith("javax.")
           || name.startsWith("kotlin.")
-          || name.startsWith("scala.")) && !Types.isAllowedPlatformType(rawType);
+          || name.startsWith("scala.");
     }
 
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
