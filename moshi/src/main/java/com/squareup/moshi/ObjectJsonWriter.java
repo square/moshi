@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
 import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
+import static java.lang.Double.NEGATIVE_INFINITY;
+import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class ObjectJsonWriter extends JsonWriter {
@@ -131,7 +134,16 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(double value) throws IOException {
-    return value(Double.valueOf(value));
+    if (!lenient
+        && (Double.isNaN(value) || value == NEGATIVE_INFINITY || value == POSITIVE_INFINITY)) {
+      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
+    }
+    if (promoteValueToName) {
+      return name(Double.toString(value));
+    }
+    add(value);
+    pathIndices[stackSize - 1]++;
+    return this;
   }
 
   @Override public JsonWriter value(long value) throws IOException {
@@ -144,16 +156,27 @@ final class ObjectJsonWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(Number value) throws IOException {
-    if (!lenient) {
-      double d = value.doubleValue();
-      if (d == Double.POSITIVE_INFINITY || d == Double.NEGATIVE_INFINITY || Double.isNaN(d)) {
-        throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
-      }
+    // If it's trivially converted to a long, do that.
+    if (value instanceof Byte
+        || value instanceof Short
+        || value instanceof Integer
+        || value instanceof Long) {
+      return value(value.longValue());
     }
+
+    // If it's trivially converted to a double, do that.
+    if (value instanceof Float || value instanceof Double) {
+      return value(value.doubleValue());
+    }
+
+    // Everything else gets converted to a BigDecimal.
+    BigDecimal bigDecimalValue = value instanceof BigDecimal
+        ? ((BigDecimal) value)
+        : new BigDecimal(value.toString());
     if (promoteValueToName) {
-      return name(value.toString());
+      return name(bigDecimalValue.toString());
     }
-    add(value);
+    add(bigDecimalValue);
     pathIndices[stackSize - 1]++;
     return this;
   }
