@@ -17,6 +17,8 @@ package com.squareup.moshi;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -911,5 +913,36 @@ public final class JsonReaderTest {
     }
     assertThat(reader.nextString()).isEqualTo("a");
     reader.endArray();
+  }
+
+  @Test public void readJsonValueInt() throws IOException {
+    JsonReader reader = newReader("1");
+    Object value = reader.readJsonValue();
+    assertThat(value).isEqualTo(1.0);
+  }
+
+  @Test public void readJsonValueMap() throws IOException {
+    JsonReader reader = newReader("{\"hello\": \"world\"}");
+    Object value = reader.readJsonValue();
+    assertThat(value).isEqualTo(Collections.singletonMap("hello", "world"));
+  }
+
+  @Test public void readJsonValueList() throws IOException {
+    JsonReader reader = newReader("[\"a\", \"b\"]");
+    Object value = reader.readJsonValue();
+    assertThat(value).isEqualTo(Arrays.asList("a", "b"));
+  }
+
+  @Test public void readJsonValueListMultipleTypes() throws IOException {
+    JsonReader reader = newReader("[\"a\", 5, false]");
+    Object value = reader.readJsonValue();
+    assertThat(value).isEqualTo(Arrays.asList("a", 5.0, false));
+  }
+
+  @Test public void readJsonValueNestedListInMap() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", \"pepperoni\"]}");
+    Object value = reader.readJsonValue();
+    assertThat(value).isEqualTo(
+        Collections.singletonMap("pizzas", Arrays.asList("cheese", "pepperoni")));
   }
 }

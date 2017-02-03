@@ -18,11 +18,8 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -272,47 +269,7 @@ final class StandardJsonAdapters {
     }
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
-      switch (reader.peek()) {
-        case BEGIN_ARRAY:
-          List<Object> list = new ArrayList<>();
-          reader.beginArray();
-          while (reader.hasNext()) {
-            list.add(fromJson(reader));
-          }
-          reader.endArray();
-          return list;
-
-        case BEGIN_OBJECT:
-          Map<String, Object> map = new LinkedHashTreeMap<>();
-          reader.beginObject();
-          while (reader.hasNext()) {
-            String name = reader.nextName();
-            Object value = fromJson(reader);
-            Object replaced = map.put(name, value);
-            if (replaced != null) {
-              throw new JsonDataException("Map key '" + name + "' has multiple values at path "
-                  + reader.getPath() + ": " + replaced + " and " + value);
-            }
-          }
-          reader.endObject();
-          return map;
-
-        case STRING:
-          return reader.nextString();
-
-        case NUMBER:
-          return reader.nextDouble();
-
-        case BOOLEAN:
-          return reader.nextBoolean();
-
-        case NULL:
-          return reader.nextNull();
-
-        default:
-          throw new IllegalStateException("Expected a value but was " + reader.peek()
-              + " at path " + reader.getPath());
-      }
+      return reader.readJsonValue();
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
