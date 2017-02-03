@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public final class BufferedSourceJsonReaderTest {
+public final class JsonUtf8ReaderTest {
   @Test public void readingDoesNotBuffer() throws IOException {
     Buffer buffer = new Buffer().writeUtf8("{}{}");
 

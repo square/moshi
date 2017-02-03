@@ -25,7 +25,7 @@ abstract class JsonCodecFactory {
   private static final JsonAdapter<Object> OBJECT_ADAPTER = MOSHI.adapter(Object.class);
 
   static List<Object[]> factories() {
-    final JsonCodecFactory bufferedSink = new JsonCodecFactory() {
+    final JsonCodecFactory utf8 = new JsonCodecFactory() {
       Buffer buffer;
 
       @Override public JsonReader newReader(String json) {
@@ -35,7 +35,7 @@ abstract class JsonCodecFactory {
 
       @Override JsonWriter newWriter() {
         buffer = new Buffer();
-        return new BufferedSinkJsonWriter(buffer);
+        return new JsonUt8Writer(buffer);
       }
 
       @Override String json() {
@@ -49,17 +49,17 @@ abstract class JsonCodecFactory {
       }
 
       @Override public String toString() {
-        return "Buffer";
+        return "Utf8";
       }
     };
 
-    final JsonCodecFactory object = new JsonCodecFactory() {
-      ObjectJsonWriter writer;
+    final JsonCodecFactory value = new JsonCodecFactory() {
+      JsonValueWriter writer;
 
       @Override public JsonReader newReader(String json) throws IOException {
         Moshi moshi = new Moshi.Builder().build();
         Object object = moshi.adapter(Object.class).lenient().fromJson(json);
-        return new ObjectJsonReader(object);
+        return new JsonValueReader(object);
       }
 
       // TODO(jwilson): fix precision checks and delete his method.
@@ -68,7 +68,7 @@ abstract class JsonCodecFactory {
       }
 
       @Override JsonWriter newWriter() {
-        writer = new ObjectJsonWriter();
+        writer = new JsonValueWriter();
         return writer;
       }
 
@@ -92,13 +92,13 @@ abstract class JsonCodecFactory {
       }
 
       @Override public String toString() {
-        return "Object";
+        return "Value";
       }
     };
 
     return Arrays.asList(
-        new Object[] { bufferedSink },
-        new Object[] { object });
+        new Object[] { utf8 },
+        new Object[] { value });
   }
 
   abstract JsonReader newReader(String json) throws IOException;

@@ -611,8 +611,8 @@ public final class MoshiTest {
     pizzaObject.put("extraCheese", true);
 
     JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
-    assertThat(jsonAdapter.toJsonObject(pizza)).isEqualTo(pizzaObject);
-    assertThat(jsonAdapter.fromJsonObject(pizzaObject)).isEqualTo(pizza);
+    assertThat(jsonAdapter.toJsonValue(pizza)).isEqualTo(pizzaObject);
+    assertThat(jsonAdapter.fromJsonValue(pizzaObject)).isEqualTo(pizza);
   }
 
   @Test public void customJsonAdapterToObjectAndFromObject() throws Exception {
@@ -627,8 +627,8 @@ public final class MoshiTest {
     pizzaObject.put("extra cheese", true);
 
     JsonAdapter<Pizza> jsonAdapter = moshi.adapter(Pizza.class);
-    assertThat(jsonAdapter.toJsonObject(pizza)).isEqualTo(pizzaObject);
-    assertThat(jsonAdapter.fromJsonObject(pizzaObject)).isEqualTo(pizza);
+    assertThat(jsonAdapter.toJsonValue(pizza)).isEqualTo(pizzaObject);
+    assertThat(jsonAdapter.fromJsonValue(pizzaObject)).isEqualTo(pizza);
   }
 
   @Test public void indent() throws Exception {

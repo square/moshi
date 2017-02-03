@@ -185,9 +185,9 @@ public abstract class JsonReader implements Closeable {
   /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
   boolean failOnUnknown;
 
-  /** Returns a new instance that reads a JSON-encoded stream from {@code source}. */
+  /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
   public static JsonReader of(BufferedSource source) {
-    return new BufferedSourceJsonReader(source);
+    return new JsonUtf8Reader(source);
   }
 
   JsonReader() {
@@ -422,7 +422,7 @@ public abstract class JsonReader implements Closeable {
         ByteString[] result = new ByteString[strings.length];
         Buffer buffer = new Buffer();
         for (int i = 0; i < strings.length; i++) {
-          BufferedSinkJsonWriter.string(buffer, strings[i]);
+          JsonUt8Writer.string(buffer, strings[i]);
           buffer.readByte(); // Skip the leading double quote (but leave the trailing one).
           result[i] = buffer.readByteString();
         }

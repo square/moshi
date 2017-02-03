@@ -136,9 +136,9 @@ public abstract class JsonWriter implements Closeable, Flushable {
   boolean serializeNulls;
   boolean promoteValueToName;
 
-  /** Returns a new instance that writes a JSON-encoded stream to {@code sink}. */
+  /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
   public static JsonWriter of(BufferedSink sink) {
-    return new BufferedSinkJsonWriter(sink);
+    return new JsonUt8Writer(sink);
   }
 
   JsonWriter() {
