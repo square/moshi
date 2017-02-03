@@ -27,7 +27,7 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
 import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
 
-final class BufferedSinkJsonWriter extends JsonWriter {
+final class JsonUt8Writer extends JsonWriter {
 
   /*
    * From RFC 7159, "All Unicode characters may be placed within the
@@ -62,7 +62,7 @@ final class BufferedSinkJsonWriter extends JsonWriter {
 
   private String deferredName;
 
-  BufferedSinkJsonWriter(BufferedSink sink) {
+  JsonUt8Writer(BufferedSink sink) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
     }

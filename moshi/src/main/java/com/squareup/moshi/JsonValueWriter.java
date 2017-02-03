@@ -29,11 +29,11 @@ import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
-final class ObjectJsonWriter extends JsonWriter {
+final class JsonValueWriter extends JsonWriter {
   private final Object[] stack = new Object[32];
   private String deferredName;
 
-  ObjectJsonWriter() {
+  JsonValueWriter() {
     pushScope(EMPTY_DOCUMENT);
   }
 
@@ -195,7 +195,7 @@ final class ObjectJsonWriter extends JsonWriter {
     }
   }
 
-  private ObjectJsonWriter add(Object newTop) {
+  private JsonValueWriter add(Object newTop) {
     int scope = peekScope();
 
     if (stackSize == 1) {

@@ -56,20 +56,17 @@ public abstract class JsonAdapter<T> {
   }
 
   /**
-   * Encodes {@code value} as a Java model comprised of maps, lists, strings, numbers, booleans
-   * and nulls.
+   * Encodes {@code value} as a Java value object comprised of maps, lists, strings, numbers,
+   * booleans, and nulls.
    * 
    * <p>Values encoded using {@code value(double)} or {@code value(long)} are modeled with the
    * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a
    * {@link Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link
    * Long}), as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}),
    * and as a {@link BigDecimal} for all other types.
-   *
-   * <p>The returned model is equivalent to calling {@link #toJson} to encode {@code value}
-   * as a JSON string, and then parsing that string without any particular type.
    */
-  public final Object toJsonObject(T value) {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+  public final Object toJsonValue(T value) {
+    JsonValueWriter writer = new JsonValueWriter();
     try {
       toJson(writer, value);
       return writer.root();
@@ -79,12 +76,11 @@ public abstract class JsonAdapter<T> {
   }
 
   /**
-   * Decodes a Java value from {@code object}, which must be a Java model comprised of maps, lists,
-   * strings, numbers, booleans and nulls. This is equivalent to encoding {@code object} to a JSON
-   * string, and then calling {@link #fromJson} to decode that string.
+   * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
+   * strings, numbers, booleans and nulls.
    */
-  public final T fromJsonObject(Object object) {
-    ObjectJsonReader reader = new ObjectJsonReader(object);
+  public final T fromJsonValue(Object value) {
+    JsonValueReader reader = new JsonValueReader(value);
     try {
       return fromJson(reader);
     } catch (IOException e) {

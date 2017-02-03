@@ -22,7 +22,7 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
 
-final class BufferedSourceJsonReader extends JsonReader {
+final class JsonUtf8Reader extends JsonReader {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
   private static final ByteString SINGLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("'\\");
@@ -88,7 +88,7 @@ final class BufferedSourceJsonReader extends JsonReader {
    */
   private String peekedString;
 
-  BufferedSourceJsonReader(BufferedSource source) {
+  JsonUtf8Reader(BufferedSource source) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }

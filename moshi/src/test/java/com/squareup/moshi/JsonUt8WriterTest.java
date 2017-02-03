@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class BufferedSinkJsonWriterTest {
+public final class JsonUt8WriterTest {
   @Test public void prettyPrintObject() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);

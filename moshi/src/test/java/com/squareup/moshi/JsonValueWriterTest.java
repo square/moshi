@@ -29,10 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.fail;
 
-public final class ObjectJsonWriterTest {
+public final class JsonValueWriterTest {
   @SuppressWarnings("unchecked")
   @Test public void array() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
 
     writer.beginArray();
     writer.value("s");
@@ -45,7 +45,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void object() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.setSerializeNulls(true);
 
     writer.beginObject();
@@ -60,7 +60,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void repeatedNameThrows() throws IOException {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginObject();
     writer.name("a").value(1L);
     try {
@@ -73,7 +73,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void valueLongEmitsLong() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(Long.MIN_VALUE);
     writer.value(-1L);
@@ -92,7 +92,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void valueDoubleEmitsDouble() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.setLenient(true);
     writer.beginArray();
     writer.value(-2147483649.0d);
@@ -146,7 +146,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void primitiveIntegerTypesEmitLong() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new Byte(Byte.MIN_VALUE));
     writer.value(new Short(Short.MIN_VALUE));
@@ -163,7 +163,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void primitiveFloatingPointTypesEmitDouble() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new Float(0.5f));
     writer.value(new Double(0.5d));
@@ -176,7 +176,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void otherNumberTypesEmitBigDecimal() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new AtomicInteger(-2147483648));
     writer.value(new AtomicLong(-9223372036854775808L));
@@ -223,7 +223,7 @@ public final class ObjectJsonWriterTest {
   }
 
   @Test public void valueCustomNumberTypeEmitsLongOrBigDecimal() throws Exception {
-    ObjectJsonWriter writer = new ObjectJsonWriter();
+    JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(stringNumber("-9223372036854775809"));
     writer.value(stringNumber("-9223372036854775808"));

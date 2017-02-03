@@ -28,14 +28,14 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-public final class ObjectJsonReaderTest {
+public final class JsonValueReaderTest {
   @Test public void array() throws Exception {
     List<Object> root = new ArrayList<>();
     root.add("s");
     root.add(1.5d);
     root.add(true);
     root.add(null);
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     assertThat(reader.hasNext()).isTrue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_ARRAY);
@@ -70,7 +70,7 @@ public final class ObjectJsonReaderTest {
     root.put("b", 1.5d);
     root.put("c", true);
     root.put("d", null);
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     assertThat(reader.hasNext()).isTrue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
@@ -110,7 +110,7 @@ public final class ObjectJsonReaderTest {
   @Test public void nesting() throws Exception {
     List<Map<String, List<Map<String, Double>>>> root
         = singletonList(singletonMap("a", singletonList(singletonMap("b", 1.5d))));
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     assertThat(reader.hasNext()).isTrue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_ARRAY);
@@ -162,7 +162,7 @@ public final class ObjectJsonReaderTest {
   @Test public void promoteNameToValue() throws Exception {
     Map<String, String> root = singletonMap("a", "b");
 
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
     reader.beginObject();
     reader.promoteNameToValue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
@@ -176,7 +176,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void endArrayTooEarly() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList("s"));
+    JsonReader reader = new JsonValueReader(singletonList("s"));
 
     reader.beginArray();
     try {
@@ -189,7 +189,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void endObjectTooEarly() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonMap("a", "b"));
+    JsonReader reader = new JsonValueReader(singletonMap("a", "b"));
 
     reader.beginObject();
     try {
@@ -201,7 +201,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unsupportedType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("x")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("x")));
 
     reader.beginArray();
     try {
@@ -214,7 +214,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unsupportedKeyType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonMap(new StringBuilder("x"), "y"));
+    JsonReader reader = new JsonValueReader(singletonMap(new StringBuilder("x"), "y"));
 
     reader.beginObject();
     try {
@@ -227,7 +227,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void nullKey() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonMap(null, "y"));
+    JsonReader reader = new JsonValueReader(singletonMap(null, "y"));
 
     reader.beginObject();
     try {
@@ -239,7 +239,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedIntType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("1")));
     reader.beginArray();
     try {
       reader.nextInt();
@@ -251,7 +251,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedLongType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("1")));
     reader.beginArray();
     try {
       reader.nextLong();
@@ -263,7 +263,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedDoubleType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("1")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("1")));
     reader.beginArray();
     try {
       reader.nextDouble();
@@ -275,7 +275,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedStringType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("s")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("s")));
     reader.beginArray();
     try {
       reader.nextString();
@@ -287,7 +287,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedBooleanType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("true")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("true")));
     reader.beginArray();
     try {
       reader.nextBoolean();
@@ -299,7 +299,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void unexpectedNullType() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("null")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("null")));
     reader.beginArray();
     try {
       reader.nextNull();
@@ -311,7 +311,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void skipRoot() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList(new StringBuilder("x")));
+    JsonReader reader = new JsonValueReader(singletonList(new StringBuilder("x")));
     reader.skipValue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
@@ -321,7 +321,7 @@ public final class ObjectJsonReaderTest {
     root.add("a");
     root.add("b");
     root.add("c");
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     reader.beginArray();
 
@@ -342,7 +342,7 @@ public final class ObjectJsonReaderTest {
     root.put("a", "s");
     root.put("b", 1.5d);
     root.put("c", true);
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     reader.beginObject();
 
@@ -369,7 +369,7 @@ public final class ObjectJsonReaderTest {
     root.put("a", "s");
     root.put("b", 1.5d);
     root.put("c", true);
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
 
     reader.beginObject();
 
@@ -392,7 +392,7 @@ public final class ObjectJsonReaderTest {
   }
 
   @Test public void failOnUnknown() throws Exception {
-    JsonReader reader = new ObjectJsonReader(singletonList("a"));
+    JsonReader reader = new JsonValueReader(singletonList("a"));
     reader.setFailOnUnknown(true);
 
     reader.beginArray();
@@ -406,7 +406,7 @@ public final class ObjectJsonReaderTest {
 
   @Test public void close() throws Exception {
     try {
-      JsonReader reader = new ObjectJsonReader(singletonList("a"));
+      JsonReader reader = new JsonValueReader(singletonList("a"));
       reader.beginArray();
       reader.close();
       reader.nextString();
@@ -415,7 +415,7 @@ public final class ObjectJsonReaderTest {
     }
 
     try {
-      JsonReader reader = new ObjectJsonReader(singletonList("a"));
+      JsonReader reader = new JsonValueReader(singletonList("a"));
       reader.close();
       reader.beginArray();
       fail();
@@ -428,7 +428,7 @@ public final class ObjectJsonReaderTest {
     for (int i = 0; i < 32; i++) {
       root = singletonList(root);
     }
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
     for (int i = 0; i < 31; i++) {
       reader.beginArray();
     }
@@ -446,7 +446,7 @@ public final class ObjectJsonReaderTest {
     for (int i = 0; i < 32; i++) {
       root = singletonMap("a", root);
     }
-    JsonReader reader = new ObjectJsonReader(root);
+    JsonReader reader = new JsonValueReader(root);
     for (int i = 0; i < 31; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
