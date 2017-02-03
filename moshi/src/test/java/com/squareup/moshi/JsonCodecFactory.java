@@ -35,7 +35,7 @@ abstract class JsonCodecFactory {
 
       @Override JsonWriter newWriter() {
         buffer = new Buffer();
-        return new JsonUt8Writer(buffer);
+        return new JsonUtf8Writer(buffer);
       }
 
       @Override String json() {
