@@ -138,7 +138,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
 
   /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
   public static JsonWriter of(BufferedSink sink) {
-    return new JsonUt8Writer(sink);
+    return new JsonUtf8Writer(sink);
   }
 
   JsonWriter() {
