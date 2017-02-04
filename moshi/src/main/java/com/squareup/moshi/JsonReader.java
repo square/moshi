@@ -17,6 +17,9 @@ package com.squareup.moshi;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -389,6 +392,57 @@ public abstract class JsonReader implements Closeable {
    * #failOnUnknown fail on unknown} values.
    */
   public abstract void skipValue() throws IOException;
+
+  /**
+   * Returns the value of the next token, consuming it. The result may be a string, number, boolean,
+   * null, map, or list, according to the JSON structure.
+   *
+   * @throws JsonDataException if the next token is not a literal value, if a JSON object has a
+   * duplicate key.
+   */
+  public final Object readJsonValue() throws IOException {
+    switch (peek()) {
+      case BEGIN_ARRAY:
+        List<Object> list = new ArrayList<>();
+        beginArray();
+        while (hasNext()) {
+          list.add(readJsonValue());
+        }
+        endArray();
+        return list;
+
+      case BEGIN_OBJECT:
+        Map<String, Object> map = new LinkedHashTreeMap<>();
+        beginObject();
+        while (hasNext()) {
+          String name = nextName();
+          Object value = readJsonValue();
+          Object replaced = map.put(name, value);
+          if (replaced != null) {
+            throw new JsonDataException("Map key '" + name + "' has multiple values at path "
+                + getPath() + ": " + replaced + " and " + value);
+          }
+        }
+        endObject();
+        return map;
+
+      case STRING:
+        return nextString();
+
+      case NUMBER:
+        return nextDouble();
+
+      case BOOLEAN:
+        return nextBoolean();
+
+      case NULL:
+        return nextNull();
+
+      default:
+        throw new IllegalStateException(
+            "Expected a value but was " + peek() + " at path " + getPath());
+    }
+  }
 
   /**
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
