@@ -1,6 +1,42 @@
 Change Log
 ==========
 
+## Version 1.4.0
+
+_2017-02-04_
+
+Moshi 1.4 is a major release that adds _JSON values_ as a core part of the library. We consider any
+Java object comprised of maps, lists, strings, numbers, booleans and nulls to be a JSON value. These
+are equivalent to parsed JSON objects in JavaScript, [Gson][gson]’s `JsonElement`, and
+[Jackson][jackson]’s `JsonNode`. Unlike Jackson and Gson, Moshi just uses Java’s built-in types for
+its values:
+
+<table>
+<tr><th></th><th>JSON type</th><th>Java type</th></tr>
+<tr><td>{...}</td><td>Object</td><td>Map&lt;String, Object&gt;</th></tr>
+<tr><td>[...]</td><td>Array</td><td>List&lt;Object&gt;</th></tr>
+<tr><td>"abc"</td><td>String</td><td>String</th></tr>
+<tr><td>123</td><td>Number</td><td>Double, Long, or BigDecimal</th></tr>
+<tr><td>true</td><td>Boolean</td><td>Boolean</th></tr>
+<tr><td>null</td><td>null</td><td>null</th></tr>
+</table>
+
+Moshi's new API `JsonAdapter.toJsonValue()` converts your application classes to JSON values
+comprised of the above types. Symmetrically, `JsonAdapter.fromJsonValue()` converts JSON values to
+your application classes.
+
+ *  New: `JsonAdapter.toJsonValue()` and `fromJsonValue()`.
+ *  New: `JsonReader.readJsonValue()` reads a JSON value from a stream.
+ *  New: `Moshi.adapter(Type, Class<? extends Annotation>)` lets you look up the adapter for a
+    qualified type.
+ *  New: `JsonAdapter.serializeNulls()` and `indent()` return JSON adapters that customize the
+    format of the encoded JSON.
+ *  New: `JsonReader.selectName()` and `selectString()` optimize decoding JSON with known names and
+    values.
+ *  New: `Types.nextAnnotations()` and `Types.createJsonQualifierImplementation()` reduce the amount
+    of code required to implement a custom `JsonAdapter.Factory`.
+ *  Fix: Don't fail on large longs that have a fractional component like `9223372036854775806.0`.
+
 ## Version 1.3.1
 
 _2016-10-21_
@@ -120,3 +156,5 @@ _2015-06-16_
 
  [dates_example]: https://github.com/square/moshi/blob/master/examples/src/main/java/com/squareup/moshi/recipes/ReadAndWriteRfc3339Dates.java
  [rfc_7159]: https://tools.ietf.org/html/rfc7159
+ [gson]: https://github.com/google/gson
+ [jackson]: http://wiki.fasterxml.com/JacksonHome
