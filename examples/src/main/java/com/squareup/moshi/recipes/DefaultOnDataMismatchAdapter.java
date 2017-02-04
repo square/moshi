@@ -28,22 +28,14 @@ import java.util.Set;
 public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
   private final JsonAdapter<T> delegate;
   private final T defaultValue;
-  private final JsonAdapter<Object> objectAdapter;
 
-  private DefaultOnDataMismatchAdapter(JsonAdapter<T> delegate, T defaultValue,
-      JsonAdapter<Object> objectAdapter) {
+  private DefaultOnDataMismatchAdapter(JsonAdapter<T> delegate, T defaultValue) {
     this.delegate = delegate;
     this.defaultValue = defaultValue;
-    this.objectAdapter = objectAdapter;
   }
 
   @Override public T fromJson(JsonReader reader) throws IOException {
-    // Read the value first so that the reader will be in a known state even if there's an
-    // exception. Otherwise it may be awkward to recover: it might be between calls to
-    // beginObject() and endObject() for example.
-    Object jsonValue = objectAdapter.fromJson(reader);
-
-    // Use the delegate to convert the JSON value to the target type.
+    Object jsonValue = reader.readJsonValue();
     try {
       return delegate.fromJsonValue(jsonValue);
     } catch (JsonDataException e) {
@@ -57,12 +49,12 @@ public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
 
   public static <T> Factory newFactory(final Class<T> type, final T defaultValue) {
     return new Factory() {
-      @Override public JsonAdapter<?> create(
-          Type requestedType, Set<? extends Annotation> annotations, Moshi moshi) {
+      @Override
+      public JsonAdapter<?> create(Type requestedType, Set<? extends Annotation> annotations,
+          Moshi moshi) {
         if (type != requestedType) return null;
-        JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
         JsonAdapter<T> delegate = moshi.nextAdapter(this, type, annotations);
-        return new DefaultOnDataMismatchAdapter<>(delegate, defaultValue, objectAdapter);
+        return new DefaultOnDataMismatchAdapter<>(delegate, defaultValue);
       }
     };
   }
