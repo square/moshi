@@ -213,6 +213,32 @@ JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
 Event event = jsonAdapter.fromJson(json);
 ```
 
+### Parse JSON Arrays
+
+Say we have a JSON string of this structure:
+
+```java
+[
+	 {
+	   "rank": "4",
+	   "suit": "CLUBS"
+	 },
+	 {
+	   "rank": "A",
+	   "suit": "HEARTS"
+	 }
+]
+```
+
+We can now use Moshi to parse the JSON string into a `List<Card>`.
+
+```java
+String cardsJsonResponse = ...;
+Type type = Types.newParameterizedType(List.class, Card.class);
+JsonAdapter<List<Card>> adapter = moshi.adapter(type);
+List<Card> cards = adapter.fromJson(cardsJsonResponse);
+```
+
 ### Fails Gracefully
 
 Automatic databinding almost feels like magic. But unlike the black magic that typically accompanies
