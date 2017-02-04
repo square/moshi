@@ -11,7 +11,7 @@
 
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-parent</artifactId>
-  <version>1.4.0</version>
+  <version>1.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Moshi (Parent)</name>
   <description>A modern JSON API for Android and Java</description>
@@ -39,7 +39,7 @@
     <url>https://github.com/square/moshi/</url>
     <connection>scm:git:https://github.com/square/moshi.git</connection>
     <developerConnection>scm:git:git@github.com:square/moshi.git</developerConnection>
-    <tag>moshi-parent-1.4.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <issueManagement>
