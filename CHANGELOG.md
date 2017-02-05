@@ -33,8 +33,8 @@ your application classes.
     format of the encoded JSON.
  *  New: `JsonReader.selectName()` and `selectString()` optimize decoding JSON with known names and
     values.
- *  New: `Types.nextAnnotations()` and `Types.createJsonQualifierImplementation()` reduce the amount
-    of code required to implement a custom `JsonAdapter.Factory`.
+ *  New: `Types.nextAnnotations()` reduces the amount of code required to implement a custom
+    `JsonAdapter.Factory`.
  *  Fix: Don't fail on large longs that have a fractional component like `9223372036854775806.0`.
 
 ## Version 1.3.1
