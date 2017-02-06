@@ -995,6 +995,39 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void deferredAdapterRecursesInfinitely() throws Exception {
+    JsonAdapter.Factory faulty = new JsonAdapter.Factory() {
+      @Override
+      public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+        if (type != Boolean.class) return null;
+        final JsonAdapter<Boolean> delegate = moshi.adapter(Boolean.class);
+        return new JsonAdapter<Boolean>() {
+          @Override public Boolean fromJson(JsonReader reader) throws IOException {
+            return delegate.fromJson(reader);
+          }
+
+          @Override public void toJson(JsonWriter writer, Boolean value) throws IOException {
+            delegate.toJson(writer, value);
+          }
+        };
+      }
+    };
+    Moshi moshi = new Moshi.Builder().add(faulty).build();
+    JsonAdapter<Boolean> deferred = moshi.adapter(Boolean.class);
+    try {
+      deferred.fromJson("false");
+      fail();
+    } catch (StackOverflowError expected) {
+      assertThat(expected.getMessage()).isNull();
+    }
+    try {
+      deferred.toJson(false);
+      fail();
+    } catch (StackOverflowError expected) {
+      assertThat(expected.getMessage()).isNull();
+    }
+  }
+
   @Test public void duplicateKeyDisallowedInObjectType() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
