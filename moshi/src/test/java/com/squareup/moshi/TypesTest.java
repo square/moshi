@@ -209,6 +209,7 @@ public final class TypesTest {
         .containsExactly(String.class, Integer.class);
   }
 
+  @SuppressWarnings("GetClassOnAnnotation") // Explicitly checking for proxy implementation.
   @Test public void createJsonQualifierImplementation() throws Exception {
     TestQualifier actual = Types.createJsonQualifierImplementation(TestQualifier.class);
     TestQualifier expected =
