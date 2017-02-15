@@ -57,7 +57,7 @@ public final class Types {
     }
     for (Annotation annotation : annotations) {
       if (jsonQualifier.equals(annotation.annotationType())) {
-        Set<Annotation> delegateAnnotations = new LinkedHashSet<>(annotations);
+        Set<? extends Annotation> delegateAnnotations = new LinkedHashSet<>(annotations);
         delegateAnnotations.remove(annotation);
         return Collections.unmodifiableSet(delegateAnnotations);
       }
