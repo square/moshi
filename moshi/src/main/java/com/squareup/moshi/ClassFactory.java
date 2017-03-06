@@ -94,7 +94,6 @@ abstract class ClassFactory<T> {
                             } else {
                                 args[j] = ClassFactory.get(parameterType).newInstance();
                             }
-                            System.out.println("Constructed " + j + "/" + parameterTypes.length);
                         }
 
                         return (T) constructor.newInstance(args);
