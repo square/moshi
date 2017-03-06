@@ -17,10 +17,11 @@ public class JsonConstructorTest {
     private final List<?> list;
     private final Enum testEnum;
     private final Date date;
+    private final Runnable runnable;
 
-    @JsonConstructor
-    DemoModel(short s, int i, Integer i2,
-              String str, List<?> list, Enum testEnum, Date date) {
+    @JsonConstructor DemoModel(short s, int i, Integer i2,
+                               String str, List<?> list, Enum testEnum, Date date,
+                               Runnable runnable) {
 
       this.s = s;
       this.i = i;
@@ -29,6 +30,7 @@ public class JsonConstructorTest {
       this.list = list;
       this.testEnum = testEnum;
       this.date = date;
+      this.runnable = runnable;
     }
   }
 
@@ -36,23 +38,24 @@ public class JsonConstructorTest {
     VALUE
   }
 
-  @Test
-  public void testJsonConstructorAnnotation() {
-    try {
-      ClassFactory<DemoModel> factory = ClassFactory.get(DemoModel.class);
-      DemoModel demoModel = factory.newInstance();
-      Assert.assertEquals(0, demoModel.s);
-      Assert.assertEquals(0, demoModel.i);
-      Assert.assertEquals(Integer.valueOf(0), demoModel.i2);
-      Assert.assertEquals("", demoModel.str);
-      Assert.assertNotNull("Interface parameters should be passed proxy objects.", demoModel.list);
-      Assert.assertEquals("Enum parameters should be passed the first enum value.", Enum.VALUE, demoModel.testEnum);
-      Assert.assertNotNull("Other objects should be created using a no-arg constructor.", demoModel.date);
-    } catch (IllegalArgumentException e) {
-      Assert.fail("Should be able to construct ClassFactory.");
-    } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-      Assert.fail("Should be able to construct object using ClassFactory.");
-    }
+  @Test public void testJsonConstructorAnnotation()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    ClassFactory<DemoModel> factory = ClassFactory.get(DemoModel.class);
+    DemoModel demoModel = factory.newInstance();
+    Assert.assertEquals(0, demoModel.s);
+    Assert.assertEquals(0, demoModel.i);
+    Assert.assertEquals(Integer.valueOf(0), demoModel.i2);
+    Assert.assertEquals("", demoModel.str);
+    Assert.assertNotNull("Interface parameters should be passed proxy objects.", demoModel.list);
+    Assert.assertEquals("Enum parameters should be passed the first enum value.", Enum.VALUE, demoModel.testEnum);
+    Assert.assertNotNull("Other objects should be created using a no-arg constructor.", demoModel.date);
+  }
+
+  @Test(expected = UnsupportedOperationException.class) public void testProxyThrows()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    ClassFactory<DemoModel> factory = ClassFactory.get(DemoModel.class);
+    DemoModel demoModel = factory.newInstance();
+    demoModel.runnable.run();
   }
 
 }

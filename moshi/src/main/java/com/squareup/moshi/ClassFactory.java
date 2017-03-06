@@ -17,7 +17,12 @@ package com.squareup.moshi;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,14 +45,16 @@ abstract class ClassFactory<T> {
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
-    if (unsafeFactories.containsKey(rawType)) {
-      //noinspection unchecked
-      return (ClassFactory<T>) unsafeFactories.get(rawType);
+    @SuppressWarnings("unchecked")
+    ClassFactory<T> cachedFactory = (ClassFactory<T>) unsafeFactories.get(rawType);
+    if (cachedFactory != null) {
+      return cachedFactory;
     }
 
-    // Try to find a constructor with the JsonConstructor annotation
-    for (int i = 0; i < rawType.getDeclaredConstructors().length; i++) {
-      final Constructor<?> constructor = rawType.getDeclaredConstructors()[i];
+    // Try to find a constructor with the JsonConstructor annotation.
+    Constructor<?>[] declaredConstructors = rawType.getDeclaredConstructors();
+    for (int i = 0; i < declaredConstructors.length; i++) {
+      final Constructor<?> constructor = declaredConstructors[i];
       boolean hasAnnotation = constructor.isAnnotationPresent(JsonConstructor.class);
 
       if (hasAnnotation) {
@@ -64,15 +71,13 @@ abstract class ClassFactory<T> {
       constructor.setAccessible(true);
       ClassFactory<T> factory = new ClassFactory<T>() {
         @SuppressWarnings("unchecked") // T is the same raw type as is requested
-        @Override
-        public T newInstance() throws IllegalAccessException, InvocationTargetException,
+        @Override public T newInstance() throws IllegalAccessException, InvocationTargetException,
             InstantiationException {
           Object[] args = null;
           return (T) constructor.newInstance(args);
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
           return rawType.getName();
         }
       };
@@ -94,13 +99,11 @@ abstract class ClassFactory<T> {
       final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
       ClassFactory<T> factory = new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override
-        public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) allocateInstance.invoke(unsafe, rawType);
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
           return rawType.getName();
         }
       };
@@ -127,13 +130,11 @@ abstract class ClassFactory<T> {
       newInstance.setAccessible(true);
       ClassFactory<T> factory = new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override
-        public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) newInstance.invoke(null, rawType, constructorId);
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
           return rawType.getName();
         }
       };
@@ -158,13 +159,11 @@ abstract class ClassFactory<T> {
       newInstance.setAccessible(true);
       ClassFactory<T> factory = new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override
-        public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) newInstance.invoke(null, rawType, Object.class);
         }
 
-        @Override
-        public String toString() {
+        @Override public String toString() {
           return rawType.getName();
         }
       };
@@ -178,56 +177,54 @@ abstract class ClassFactory<T> {
 
   private static <T> ClassFactory<T> createAnnotationClassFactory(final Class<?> rawType, final Constructor<?> constructor) {
     return new ClassFactory<T>() {
-            @SuppressWarnings("unchecked")
-            @Override
-            T newInstance() throws InvocationTargetException, IllegalAccessException, InstantiationException {
-              Class<?>[] parameterTypes = constructor.getParameterTypes();
-              Object[] args = new Object[parameterTypes.length];
-              for (int j = 0; j < parameterTypes.length; j++) {
-                Class<?> parameterType = parameterTypes[j];
-                // Default values according to
-                // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
-                if (parameterType == byte.class || parameterType == Byte.class) {
-                  args[j] = (byte) 0;
-                } else if (parameterType == short.class || parameterType == Short.class) {
-                  args[j] = (short) 0;
-                } else if (parameterType == int.class || parameterType == Integer.class) {
-                  args[j] = 0;
-                } else if (parameterType == long.class || parameterType == Long.class) {
-                  args[j] = 0L;
-                } else if (parameterType == float.class || parameterType == Float.class) {
-                  args[j] = 0f;
-                } else if (parameterType == double.class || parameterType == Double.class) {
-                  args[j] = 0.0;
-                } else if (parameterType == char.class || parameterType == Character.class) {
-                  args[j] = '\u0000';
-                } else if (parameterType == boolean.class || parameterType == Boolean.class) {
-                  args[j] = false;
-                } else if (parameterType == String.class) {
-                  args[j] = "";
-                } else if (parameterType.isInterface()) {
-                  args[j] = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{parameterType}, new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                      throw new IllegalAccessException("Trying to call a method on a " +
-                          "stub object created by Moshi as requested using the JsonConstructor" +
-                          "annotation.");
-                    }
-                  });
-                } else if (parameterType.isEnum() && parameterType.getEnumConstants().length > 0) {
-                  args[j] = parameterType.getEnumConstants()[0];
-                } else {
-                  args[j] = ClassFactory.get(parameterType).newInstance();
-                }
+      @SuppressWarnings("unchecked")
+      @Override T newInstance() throws InvocationTargetException, IllegalAccessException, InstantiationException {
+        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Object[] args = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterTypes.length; i++) {
+          Class<?> parameterType = parameterTypes[i];
+          // Default values according to
+          // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
+          if (parameterType == byte.class || parameterType == Byte.class) {
+            args[i] = (byte) 0;
+          } else if (parameterType == short.class || parameterType == Short.class) {
+            args[i] = (short) 0;
+          } else if (parameterType == int.class || parameterType == Integer.class) {
+            args[i] = 0;
+          } else if (parameterType == long.class || parameterType == Long.class) {
+            args[i] = 0L;
+          } else if (parameterType == float.class || parameterType == Float.class) {
+            args[i] = 0f;
+          } else if (parameterType == double.class || parameterType == Double.class) {
+            args[i] = 0.0;
+          } else if (parameterType == char.class || parameterType == Character.class) {
+            args[i] = '\u0000';
+          } else if (parameterType == boolean.class || parameterType == Boolean.class) {
+            args[i] = false;
+          } else if (parameterType == String.class) {
+            args[i] = "";
+          } else if (parameterType.isInterface()) {
+            args[i] = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{parameterType}, new InvocationHandler() {
+              @Override
+              public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                throw new UnsupportedOperationException("Trying to call a method on a " +
+                    "stub object created by Moshi as requested using the JsonConstructor" +
+                    "annotation.");
               }
+            });
+          } else if (parameterType.isEnum() && parameterType.getEnumConstants().length > 0) {
+            args[i] = parameterType.getEnumConstants()[0];
+          } else {
+            args[i] = ClassFactory.get(parameterType).newInstance();
+          }
+        }
 
-              return (T) constructor.newInstance(args);
-            }
+        return (T) constructor.newInstance(args);
+      }
 
-            @Override
-            public String toString() {
-              return rawType.getName();
-            }
-          };
+      @Override public String toString() {
+        return rawType.getName();
+      }
+    };
   }
 }
