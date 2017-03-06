@@ -52,17 +52,22 @@ abstract class ClassFactory<T> {
     }
 
     // Try to find a constructor with the JsonConstructor annotation.
+    ClassFactory<T> annotationFactory = null;
     Constructor<?>[] declaredConstructors = rawType.getDeclaredConstructors();
     for (int i = 0; i < declaredConstructors.length; i++) {
       final Constructor<?> constructor = declaredConstructors[i];
       boolean hasAnnotation = constructor.isAnnotationPresent(JsonConstructor.class);
 
-      if (hasAnnotation) {
+      if (annotationFactory != null && hasAnnotation) {
+        throw new IllegalArgumentException("Only one constructor may be annotated with JsonConstructor.");
+      } else if (hasAnnotation) {
         constructor.setAccessible(true);
-        ClassFactory<T> factory = createAnnotationClassFactory(rawType, constructor);
-        unsafeFactories.put(rawType, factory);
-        return factory;
+        annotationFactory = createAnnotationClassFactory(rawType, constructor);
       }
+    }
+    if (annotationFactory != null) {
+      unsafeFactories.put(rawType, annotationFactory);
+      return annotationFactory;
     }
 
     // Try to find a no-args constructor. May be any visibility including private.

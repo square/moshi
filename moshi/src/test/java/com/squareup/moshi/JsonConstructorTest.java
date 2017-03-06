@@ -32,10 +32,22 @@ public class JsonConstructorTest {
       this.date = date;
       this.runnable = runnable;
     }
+
+    DemoModel() {
+      throw new UnsupportedOperationException("Should call annotated constructor");
+    }
   }
 
   enum Enum {
     VALUE
+  }
+
+  static class InvalidModel {
+    @JsonConstructor InvalidModel(int i) {
+    }
+
+    @JsonConstructor InvalidModel(String s) {
+    }
   }
 
   @Test public void testJsonConstructorAnnotation()
@@ -56,6 +68,12 @@ public class JsonConstructorTest {
     ClassFactory<DemoModel> factory = ClassFactory.get(DemoModel.class);
     DemoModel demoModel = factory.newInstance();
     demoModel.runnable.run();
+  }
+
+  @Test(expected = IllegalArgumentException.class) public void testChecksForMultipleAnnotatedConstructors()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    ClassFactory<InvalidModel> factory = ClassFactory.get(InvalidModel.class);
+    InvalidModel invalidModel = factory.newInstance();
   }
 
 }
