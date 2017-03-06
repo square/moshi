@@ -52,58 +52,7 @@ abstract class ClassFactory<T> {
 
       if (hasAnnotation) {
         constructor.setAccessible(true);
-        ClassFactory<T> factory = new ClassFactory<T>() {
-          @SuppressWarnings("unchecked")
-          @Override
-          T newInstance() throws InvocationTargetException, IllegalAccessException, InstantiationException {
-            Class<?>[] parameterTypes = constructor.getParameterTypes();
-            Object[] args = new Object[parameterTypes.length];
-            for (int j = 0; j < parameterTypes.length; j++) {
-              Class<?> parameterType = parameterTypes[j];
-              // Default values according to
-              // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
-              if (parameterType == byte.class || parameterType == Byte.class) {
-                args[j] = (byte) 0;
-              } else if (parameterType == short.class || parameterType == Short.class) {
-                args[j] = (short) 0;
-              } else if (parameterType == int.class || parameterType == Integer.class) {
-                args[j] = 0;
-              } else if (parameterType == long.class || parameterType == Long.class) {
-                args[j] = 0L;
-              } else if (parameterType == float.class || parameterType == Float.class) {
-                args[j] = 0f;
-              } else if (parameterType == double.class || parameterType == Double.class) {
-                args[j] = 0.0;
-              } else if (parameterType == char.class || parameterType == Character.class) {
-                args[j] = '\u0000';
-              } else if (parameterType == boolean.class || parameterType == Boolean.class) {
-                args[j] = false;
-              } else if (parameterType == String.class) {
-                args[j] = "";
-              } else if (parameterType.isInterface()) {
-                args[j] = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{parameterType}, new InvocationHandler() {
-                  @Override
-                  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    throw new IllegalAccessException("Trying to call a method on a " +
-                        "stub object created by Moshi as requested using the JsonConstructor" +
-                        "annotation.");
-                  }
-                });
-              } else if (parameterType.isEnum() && parameterType.getEnumConstants().length > 0) {
-                args[j] = parameterType.getEnumConstants()[0];
-              } else {
-                args[j] = ClassFactory.get(parameterType).newInstance();
-              }
-            }
-
-            return (T) constructor.newInstance(args);
-          }
-
-          @Override
-          public String toString() {
-            return rawType.getName();
-          }
-        };
+        ClassFactory<T> factory = createAnnotationClassFactory(rawType, constructor);
         unsafeFactories.put(rawType, factory);
         return factory;
       }
@@ -225,5 +174,60 @@ abstract class ClassFactory<T> {
     }
 
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
+  }
+
+  private static <T> ClassFactory<T> createAnnotationClassFactory(final Class<?> rawType, final Constructor<?> constructor) {
+    return new ClassFactory<T>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            T newInstance() throws InvocationTargetException, IllegalAccessException, InstantiationException {
+              Class<?>[] parameterTypes = constructor.getParameterTypes();
+              Object[] args = new Object[parameterTypes.length];
+              for (int j = 0; j < parameterTypes.length; j++) {
+                Class<?> parameterType = parameterTypes[j];
+                // Default values according to
+                // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
+                if (parameterType == byte.class || parameterType == Byte.class) {
+                  args[j] = (byte) 0;
+                } else if (parameterType == short.class || parameterType == Short.class) {
+                  args[j] = (short) 0;
+                } else if (parameterType == int.class || parameterType == Integer.class) {
+                  args[j] = 0;
+                } else if (parameterType == long.class || parameterType == Long.class) {
+                  args[j] = 0L;
+                } else if (parameterType == float.class || parameterType == Float.class) {
+                  args[j] = 0f;
+                } else if (parameterType == double.class || parameterType == Double.class) {
+                  args[j] = 0.0;
+                } else if (parameterType == char.class || parameterType == Character.class) {
+                  args[j] = '\u0000';
+                } else if (parameterType == boolean.class || parameterType == Boolean.class) {
+                  args[j] = false;
+                } else if (parameterType == String.class) {
+                  args[j] = "";
+                } else if (parameterType.isInterface()) {
+                  args[j] = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{parameterType}, new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                      throw new IllegalAccessException("Trying to call a method on a " +
+                          "stub object created by Moshi as requested using the JsonConstructor" +
+                          "annotation.");
+                    }
+                  });
+                } else if (parameterType.isEnum() && parameterType.getEnumConstants().length > 0) {
+                  args[j] = parameterType.getEnumConstants()[0];
+                } else {
+                  args[j] = ClassFactory.get(parameterType).newInstance();
+                }
+              }
+
+              return (T) constructor.newInstance(args);
+            }
+
+            @Override
+            public String toString() {
+              return rawType.getName();
+            }
+          };
   }
 }
