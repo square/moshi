@@ -46,8 +46,8 @@ abstract class ClassFactory<T> {
         }
 
         // Try to find a constructor with the JsonConstructor annotation
-        for (int i = 0; i < rawType.getConstructors().length; i++) {
-            final Constructor<?> constructor = rawType.getConstructors()[i];
+        for (int i = 0; i < rawType.getDeclaredConstructors().length; i++) {
+            final Constructor<?> constructor = rawType.getDeclaredConstructors()[i];
             boolean hasAnnotation = constructor.isAnnotationPresent(JsonConstructor.class);
 
             if (hasAnnotation) {
