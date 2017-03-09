@@ -18,13 +18,7 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -41,6 +35,7 @@ public final class Moshi {
   }
 
   private final List<JsonAdapter.Factory> factories;
+  private final Map<Class<?>, ClassFactory<?>> userClassFactories;
   private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
@@ -50,6 +45,7 @@ public final class Moshi {
     factories.addAll(builder.factories);
     factories.addAll(BUILT_IN_FACTORIES);
     this.factories = Collections.unmodifiableList(factories);
+    this.userClassFactories = Collections.unmodifiableMap(builder.userClassFactories);
   }
 
   /** Returns a JSON adapter for {@code type}, creating it if necessary. */
@@ -137,7 +133,7 @@ public final class Moshi {
     int fullSize = factories.size();
     int tailSize = BUILT_IN_FACTORIES.size();
     List<JsonAdapter.Factory> customFactories = factories.subList(0, fullSize - tailSize);
-    return new Builder().addAll(customFactories);
+    return new Builder().addAll(customFactories).addAllUserClassFactories(userClassFactories);
   }
 
   /** Returns an opaque object that's equal if the type and annotations are equal. */
@@ -146,8 +142,13 @@ public final class Moshi {
     return Arrays.asList(type, annotations);
   }
 
+  ClassFactory<?> userClassFactory(Class<?> rawType) {
+    return userClassFactories.get(rawType);
+  }
+
   public static final class Builder {
     final List<JsonAdapter.Factory> factories = new ArrayList<>();
+    final Map<Class<?>, ClassFactory<?>> userClassFactories = new LinkedHashMap<>();
 
     public <T> Builder add(final Type type, final JsonAdapter<T> jsonAdapter) {
       if (type == null) throw new IllegalArgumentException("type == null");
@@ -202,9 +203,30 @@ public final class Moshi {
       return this;
     }
 
+    /**
+     * Register a custom {@link ClassFactory}. When Moshi creates instances of types,
+     * it will try to find a user-supplied {@link ClassFactory}. If none is found,
+     * it will use generic techniques to create such instances, for example a no-args
+     * constructor or sun.misc.Unsafe.
+     * @param rawType
+     * @param classFactory
+     * @param <T>
+     * @return
+     */
+    public <T> Builder addUserClassFactory(Class<T> rawType, ClassFactory<T> classFactory) {
+      userClassFactories.put(rawType, classFactory);
+      return this;
+    }
+
+    Builder addAllUserClassFactories(Map<Class<?>, ClassFactory<?>> userClassFactories) {
+      this.userClassFactories.putAll(userClassFactories);
+      return this;
+    }
+
     public Moshi build() {
       return new Moshi(this);
     }
+
   }
 
   /**

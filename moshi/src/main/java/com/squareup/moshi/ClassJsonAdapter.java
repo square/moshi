@@ -42,6 +42,7 @@ import java.util.TreeMap;
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
+
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
@@ -68,7 +69,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
       }
 
-      ClassFactory<Object> classFactory = ClassFactory.get(rawType);
+      ClassFactory<?> userClassFactory = moshi.userClassFactory(rawType);
+      ClassFactory<?> classFactory = userClassFactory != null ? userClassFactory : ClassFactory.get(rawType);
       Map<String, FieldBinding<?>> fields = new TreeMap<>();
       for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
         createFieldBindings(moshi, t, fields);
