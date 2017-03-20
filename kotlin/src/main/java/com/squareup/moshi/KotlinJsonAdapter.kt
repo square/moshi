@@ -94,7 +94,7 @@ internal class KotlinJsonAdapter<T>(
     private val constructor: KFunction<T>,
     private val toJsonAdapter: JsonAdapter<T>,
     private val propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
-    private val adapterByParam: Map<KParameter, JsonAdapter<*>>,
+    private val adapterByParam: Map<KParameter, JsonAdapter<*>>
     ) : JsonAdapter<T>() {
 
   private val jsonNames = constructor.parameters
