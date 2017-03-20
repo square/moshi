@@ -31,7 +31,7 @@ import kotlin.reflect.jvm.javaField
  * - If the class is a platform type (kotlin.*), it may not contain private fields.
  */
 class KotlinJsonAdapterFactory : JsonAdapter.Factory {
-  override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi): JsonAdapter<*>? {
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
     val kclass = (type as? Class<*>)?.kotlin ?: return null
     if (!kclass.isData) return null
     // This gives us a few guarantees:
