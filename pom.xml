@@ -21,6 +21,7 @@
     <module>moshi</module>
     <module>examples</module>
     <module>adapters</module>
+    <module>kotlin</module>
   </modules>
 
   <properties>
