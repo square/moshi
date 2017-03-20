@@ -21,8 +21,8 @@ import kotlin.reflect.jvm.javaField
  *
  * Moshi will call its primary constructor to create the object. This allows for delegated properties
  * to be initialized correctly. If the JSON does not contain a value for a parameter with a default value
- * and [crashOnMissingValues] is set to false, the default value is used. If no default value is present,
- * an [IllegalArgumentException] will be thrown during deserialization.
+ * the default value is used. If no default value is present an [IllegalArgumentException] will be
+ * thrown during deserialization.
  *
  * Data classes to be (de-)serialized must conform to the following rules:
  *
@@ -30,7 +30,7 @@ import kotlin.reflect.jvm.javaField
  * - The primary constructor may not contain transient properties unless a default value is provided.
  * - If the class is a platform type (kotlin.*), it may not contain private fields.
  */
-class KotlinJsonAdapterFactory(private val crashOnMissingValues: Boolean = false) : JsonAdapter.Factory {
+class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi): JsonAdapter<*>? {
     val kclass = (type as? Class<*>)?.kotlin ?: return null
     if (!kclass.isData) return null
@@ -84,13 +84,7 @@ class KotlinJsonAdapterFactory(private val crashOnMissingValues: Boolean = false
       param to moshi.adapter<Any>(paramType, annotations)
     }
 
-    return KotlinJsonAdapter(
-        constructor,
-        toJsonAdapter as JsonAdapter<Any?>,
-        propertyByParam,
-        adapterByParam,
-        crashOnMissingValues
-    )
+    return KotlinJsonAdapter(constructor, toJsonAdapter as JsonAdapter<Any?>, propertyByParam, adapterByParam)
   }
 
 }
@@ -99,10 +93,9 @@ class KotlinJsonAdapterFactory(private val crashOnMissingValues: Boolean = false
 internal class KotlinJsonAdapter<T>(
     private val constructor: KFunction<T>,
     private val toJsonAdapter: JsonAdapter<T>,
-    propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
+    private val propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
     private val adapterByParam: Map<KParameter, JsonAdapter<*>>,
-    private val crashOnMissingValues: Boolean
-) : JsonAdapter<T>() {
+    ) : JsonAdapter<T>() {
 
   private val jsonNames = constructor.parameters
       .map { propertyByParam[it]!! }
@@ -130,7 +123,7 @@ internal class KotlinJsonAdapter<T>(
       reader.endObject()
 
       for (param in constructor.parameters) {
-        if ((crashOnMissingValues || !param.isOptional) && param !in valuesByParam) {
+        if (!param.isOptional && param !in valuesByParam) {
           throw IllegalArgumentException("JSON is missing value for ${param.name}")
         }
       }
