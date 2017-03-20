@@ -62,7 +62,7 @@ class KotlinJsonAdapterFactory(private val crashOnMissingValues: Boolean = false
         .filterNot { it.isOptional }
         .map { concretePropertyByName[it.name]!! }
         .firstOrNull { it.findAnnotation<Transient>() != null }
-        ?.run { throw IllegalArgumentException("Transient properties in primary constructor are unsupported.") }
+        ?.let { throw IllegalArgumentException("Transient properties in primary constructor are unsupported. ($it)") }
 
     val isPlatformType = isPlatformType(Types.getRawType(type))
     val notIncludedParams = constructorParameterByName
