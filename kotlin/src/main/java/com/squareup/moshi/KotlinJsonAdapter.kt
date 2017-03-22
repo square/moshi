@@ -81,7 +81,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val paramType = Types.resolve(javaField.type, Types.getRawType(javaField.type), javaField.genericType)
       val annotations = param.annotations.toSet()
 
-      param to moshi.adapter<Any>(paramType, annotations)
+      return@associate param to moshi.adapter<Any>(paramType, annotations)
     }
 
     return KotlinJsonAdapter(constructor, toJsonAdapter as JsonAdapter<Any?>, propertyByParam, adapterByParam)
