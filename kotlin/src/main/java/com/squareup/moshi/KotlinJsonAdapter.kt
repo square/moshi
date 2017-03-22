@@ -76,13 +76,13 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     val toJsonAdapter = ClassJsonAdapter.FACTORY.create(type, annotations, moshi)
     val propertyByParam = constructor.parameters.associate { it to concretePropertyByName[it.name]!! }
-    val adapterByParam = constructor.parameters.associate { param ->
+    val adapterByParam = constructor.parameters.map { param ->
       val javaField = propertyByParam[param]!!.javaField!!
       val paramType = Types.resolve(javaField.type, Types.getRawType(javaField.type), javaField.genericType)
       val annotations = param.annotations.toSet()
 
-      return@associate param to moshi.adapter<Any>(paramType, annotations)
-    }
+      return@map moshi.adapter<Any>(paramType, annotations)
+    }.toTypedArray<JsonAdapter<*>>()
 
     return KotlinJsonAdapter(constructor, toJsonAdapter as JsonAdapter<Any?>, propertyByParam, adapterByParam)
   }
@@ -93,8 +93,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 internal class KotlinJsonAdapter<T>(
     private val constructor: KFunction<T>,
     private val toJsonAdapter: JsonAdapter<T>,
-    private val propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
-    private val adapterByParam: Map<KParameter, JsonAdapter<*>>
+    propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
+    private val adapterByParamIdx: Array<JsonAdapter<*>>
     ) : JsonAdapter<T>() {
 
   private val jsonNames = constructor.parameters
@@ -118,7 +118,7 @@ internal class KotlinJsonAdapter<T>(
           continue
         }
 
-        valuesByParam[param] = adapterByParam[param]!!.fromJson(reader)
+        valuesByParam[param] = adapterByParamIdx[index].fromJson(reader)
       }
       reader.endObject()
 
