@@ -54,7 +54,7 @@ class KotlinJsonAdapterFactoryTest {
     assertEquals("", deserialized.def, "Default value from constructor should be used.")
   }
 
-  @Test(expected = IllegalArgumentException::class) fun testMissingJsonValue() {
+  @Test(expected = JsonDataException::class) fun testMissingJsonValue() {
     val json = "{}"
     moshi.adapter(DefaultParam::class.java).fromJson(json)
   }
