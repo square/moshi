@@ -21,7 +21,7 @@ import kotlin.reflect.jvm.javaField
  *
  * Moshi will call its primary constructor to create the object. This allows for delegated properties
  * to be initialized correctly. If the JSON does not contain a value for a parameter with a default value
- * the default value is used. If no default value is present an [IllegalArgumentException] will be
+ * the default value is used. If no default value is present a [JsonDataException] will be
  * thrown during deserialization.
  *
  * Data classes to be (de-)serialized must conform to the following rules:
@@ -124,7 +124,7 @@ internal class KotlinJsonAdapter<T>(
 
       for (param in constructor.parameters) {
         if (!param.isOptional && param !in valuesByParam) {
-          throw IllegalArgumentException("JSON is missing value for ${param.name}")
+          throw JsonDataException("JSON is missing value for ${param.name}")
         }
       }
 
