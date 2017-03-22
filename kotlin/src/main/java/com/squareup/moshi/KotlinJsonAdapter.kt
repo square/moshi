@@ -2,9 +2,8 @@
 
 package com.squareup.moshi
 
-import com.squareup.moshi.ClassJsonAdapter.includeField
-import com.squareup.moshi.ClassJsonAdapter.isPlatformType
-import java.lang.reflect.Modifier
+import com.squareup.moshi.ClassJsonAdapter.*
+import java.lang.reflect.Field
 import java.lang.reflect.Type
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -26,9 +25,11 @@ import kotlin.reflect.jvm.javaField
  *
  * Data classes to be (de-)serialized must conform to the following rules:
  *
- * - Any properties not found in the primary constructor must be transient, including delegated properties.
  * - The primary constructor may not contain transient properties unless a default value is provided.
  * - If the class is a platform type (kotlin.*), it may not contain private fields.
+ *
+ * In most cases, delegated properties should be annotated with `@delegate:Transient` to
+ * avoid the inclusion of the delegate in the serialized JSON.
  */
 class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
@@ -47,22 +48,14 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         .filter { it.javaField != null }
         .associateBy { it.name }
     val constructorParameterByName = constructor.parameters.associateBy { it.name }
-    for ((name, property) in concretePropertyByName) {
-      if (name !in constructorParameterByName.keys &&
-          !Modifier.isTransient(property.javaField!!.modifiers)) {
-        throw IllegalArgumentException("Property $name is not transient. " +
-            "Any properties not found in the primary constructor need to be transient. " +
-            "If this is a delegated property, mark the delegate as transient " +
-            "using @delegate:Transient.")
-      }
-    }
 
     constructor.parameters
         .asSequence()
         .filterNot { it.isOptional }
         .map { concretePropertyByName[it.name]!! }
         .firstOrNull { it.findAnnotation<Transient>() != null }
-        ?.let { throw IllegalArgumentException("Transient properties in primary constructor are unsupported. ($it)") }
+        ?.let { throw IllegalArgumentException("Transient properties in primary constructor " +
+            "without default values are unsupported. ($it)") }
 
     val isPlatformType = isPlatformType(Types.getRawType(type))
     val notIncludedParams = constructorParameterByName
@@ -74,17 +67,33 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           "not found in serialized JSON: $notIncludedParams")
     }
 
-    val toJsonAdapter = ClassJsonAdapter.FACTORY.create(type, annotations, moshi)
     val propertyByParam = constructor.parameters.associate { it to concretePropertyByName[it.name]!! }
     val adapterByParam = constructor.parameters.map { param ->
       val javaField = propertyByParam[param]!!.javaField!!
       val paramType = Types.resolve(javaField.type, Types.getRawType(javaField.type), javaField.genericType)
-      val annotations = param.annotations.toSet()
+      val paramAnnotations = param.annotations.toSet()
 
-      return@map moshi.adapter<Any>(paramType, annotations)
+      return@map moshi.adapter<Any>(paramType, paramAnnotations)
     }.toTypedArray<JsonAdapter<*>>()
 
-    return KotlinJsonAdapter(constructor, toJsonAdapter as JsonAdapter<Any?>, propertyByParam, adapterByParam)
+    return KotlinJsonAdapter(constructor, type.createFieldBindings(moshi), propertyByParam, adapterByParam)
+  }
+
+  /**
+   * A [Sequence] of supertypes, including the type itself
+   * and excluding [Object].
+   */
+  private val Type.hierarchy get() = generateSequence(this) {
+    val superClass = Types.getGenericSuperclass(it)
+    return@generateSequence if (superClass != Object::class.java) superClass else null
+  }
+
+  private fun Type.createFieldBindings(moshi: Moshi): LinkedHashMap<String, ClassJsonAdapter.FieldBinding<*>> {
+    val fields = LinkedHashMap<String, FieldBinding<*>>()
+    for (type in hierarchy) {
+      ClassJsonAdapter.createFieldBindings(moshi, type, fields)
+    }
+    return fields
   }
 
 }
@@ -92,33 +101,65 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 @Suppress("LoopToCallChain")
 internal class KotlinJsonAdapter<T>(
     private val constructor: KFunction<T>,
-    private val toJsonAdapter: JsonAdapter<T>,
+    fieldBindings: LinkedHashMap<String, ClassJsonAdapter.FieldBinding<*>>,
     propertyByParam: Map<KParameter, KProperty1<out Any, Any?>>,
     private val adapterByParamIdx: Array<JsonAdapter<*>>
-    ) : JsonAdapter<T>() {
+) : JsonAdapter<T>() {
 
-  private val jsonNames = constructor.parameters
-      .map { propertyByParam[it]!! }
-      .map { it.javaField!!.getAnnotation(Json::class.java)?.name ?: it.name }
-      .toTypedArray()
-  private val options = JsonReader.Options.of(*jsonNames)
+  private val options: JsonReader.Options
+  private val fullFieldsArray = fieldBindings.values.toTypedArray()
+  private val nonParamFieldsArray: Array<FieldBinding<*>>
+
+  init {
+    val paramNames = constructor.parameters.map { it.name!! }.toSet()
+    val jsonNamesForParams = constructor.parameters
+        .map { propertyByParam[it]!! }
+        .map { it.javaField!!.getAnnotation(Json::class.java)?.name ?: it.name }
+        .toTypedArray()
+    val jsonNamesForFields = fieldBindings
+        .keys
+        .filter { it !in paramNames }
+        .toTypedArray()
+    nonParamFieldsArray = fieldBindings
+        .entries
+        .filter { it.key !in paramNames }
+        .map { it.value }
+        .toTypedArray()
+
+    options = JsonReader.Options.of(*(jsonNamesForParams + jsonNamesForFields))
+  }
 
   override fun fromJson(reader: JsonReader): T {
     try {
       val valuesByParam = mutableMapOf<KParameter, Any?>()
+      var lazyPendingBindings: MutableList<Pair<Field, Any>>? = null
 
       reader.beginObject()
       while (reader.hasNext()) {
         val index = reader.selectName(options)
-        val param = if (index != -1) {
-          constructor.parameters[index]
-        } else {
+        if (index == -1) {
           reader.nextName()
           reader.skipValue()
           continue
         }
 
-        valuesByParam[param] = adapterByParamIdx[index].fromJson(reader)
+        val numParams = constructor.parameters.size
+        if (index < numParams) {
+          val param = constructor.parameters[index]
+          valuesByParam[param] = adapterByParamIdx[index].fromJson(reader)
+        } else {
+          val fieldBinding = nonParamFieldsArray[index - numParams]
+          val field = fieldBinding.field
+          val fieldValue = fieldBinding.adapter.fromJson(reader)
+
+          // Many data classes do not contain any properties
+          // outside of the primary constructor, so the allocation
+          // of the list is deferred to here.
+          if (lazyPendingBindings == null) {
+            lazyPendingBindings = mutableListOf()
+          }
+          lazyPendingBindings.add(field to fieldValue)
+        }
       }
       reader.endObject()
 
@@ -128,14 +169,26 @@ internal class KotlinJsonAdapter<T>(
         }
       }
 
-      return constructor.callBy(valuesByParam)
+      return constructor.callBy(valuesByParam).apply {
+        lazyPendingBindings?.forEach { it.first.set(this, it.second) }
+      }
     } catch (e: IllegalAccessException) {
       throw AssertionError()
     }
   }
 
   override fun toJson(writer: JsonWriter, value: T) {
-    toJsonAdapter.toJson(writer, value)
+    try {
+      writer.beginObject()
+      for (fieldBinding in fullFieldsArray) {
+        writer.name(fieldBinding.name)
+        fieldBinding.write(writer, value)
+      }
+      writer.endObject()
+    } catch (e: IllegalAccessException) {
+      throw AssertionError()
+    }
+
   }
 
 }

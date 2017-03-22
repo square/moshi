@@ -36,12 +36,19 @@ class KotlinJsonAdapterFactoryTest {
     moshi.adapter(TransientProperty::class.java)
   }
 
-  private data class NonTransientNonConstructorProperty(val ignored: String) {
+  private open class Superclass {
     var x: String = ""
   }
+  private data class NonTransientNonConstructorProperty(val ignored: String): Superclass() {
+    var y: String = ""
+  }
 
-  @Test(expected = IllegalArgumentException::class) fun testNonTransientNonConstructorProperty() {
-    moshi.adapter(NonTransientNonConstructorProperty::class.java)
+  @Test() fun testNonTransientNonConstructorProperty() {
+    val adapter = moshi.adapter(NonTransientNonConstructorProperty::class.java)
+    val test = adapter.fromJson("{\"ignored\": \"\", \"x\": \"\", \"y\": \"\"}")
+    assertEquals("", test.x, "Non-constructor parameter from superclass should be deserialized correctly.")
+    assertEquals("", test.y, "Non-constructor parameter should be deserialized correctly.")
+    assertEquals(test, adapter.fromJson(adapter.toJson(test)), "Object should still be equal after serialization and deserialization.")
   }
 
   // def can be transient since a default value is provided
