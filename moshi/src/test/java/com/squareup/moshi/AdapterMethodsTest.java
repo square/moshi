@@ -215,6 +215,8 @@ public final class AdapterMethodsTest {
           + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
           + "@ToJson method signatures may have one of the following structures:\n"
           + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
+          + "    <any access modifier> void toJson(JsonReader jsonReader,"
+          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
           + "    <any access modifier> R toJson(T value) throws <any>;\n");
     }
   }
@@ -234,7 +236,9 @@ public final class AdapterMethodsTest {
           + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
           + "(java.lang.String).\n"
           + "@FromJson method signatures may have one of the following structures:\n"
-          + "    <any access modifier> void fromJson(JsonReader jsonReader) throws <any>;\n"
+          + "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n"
+          + "    <any access modifier> R fromJson(JsonReader jsonReader,"
+          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
           + "    <any access modifier> R fromJson(T value) throws <any>;\n");
     }
   }
