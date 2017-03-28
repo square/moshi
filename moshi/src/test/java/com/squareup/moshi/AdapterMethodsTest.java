@@ -79,6 +79,55 @@ public final class AdapterMethodsTest {
     }
   }
 
+  private static final class PointJsonAdapterWithDelegate {
+    @FromJson Point fromJson(JsonReader reader, JsonAdapter<Point> delegate) throws IOException {
+      reader.beginArray();
+      Point value = delegate.fromJson(reader);
+      reader.endArray();
+      return value;
+    }
+
+    @ToJson void toJson(JsonWriter writer, Point value, JsonAdapter<Point> delegate)
+        throws IOException {
+      writer.beginArray();
+      delegate.toJson(writer, value);
+      writer.endArray();
+    }
+  }
+
+  private static final class PointJsonAdapterWithDelegateWithQualifier {
+    @FromJson @WithParens Point fromJson(JsonReader reader, JsonAdapter<Point> delegate)
+        throws IOException {
+      reader.beginArray();
+      Point value = delegate.fromJson(reader);
+      reader.endArray();
+      return value;
+    }
+
+    @ToJson void toJson(JsonWriter writer, @WithParens Point value, JsonAdapter<Point> delegate)
+        throws IOException {
+      writer.beginArray();
+      delegate.toJson(writer, value);
+      writer.endArray();
+    }
+  }
+
+  @Test public void toAndFromWithDelegate() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegate()).build();
+    JsonAdapter<Point> adapter = moshi.adapter(Point.class);
+    Point point = new Point(5, 8);
+    assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
+    assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+  }
+
+  @Test public void toAndFromWithDelegateWithQualifier() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegateWithQualifier()).build();
+    JsonAdapter<Point> adapter = moshi.adapter(Point.class, WithParens.class);
+    Point point = new Point(5, 8);
+    assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
+    assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+  }
+
   @Test public void toJsonOnly() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(new PointAsListOfIntegersToAdapter())
@@ -308,7 +357,7 @@ public final class AdapterMethodsTest {
   }
 
   static class NullableIntToJsonAdapter {
-    @FromJson int intToJson(JsonReader reader) throws IOException {
+    @FromJson int jsonToInt(JsonReader reader) throws IOException {
       if (reader.peek() == JsonReader.Token.NULL) {
         reader.nextNull();
         return -1;
@@ -316,7 +365,7 @@ public final class AdapterMethodsTest {
       return reader.nextInt();
     }
 
-    @ToJson void jsonToInt(JsonWriter writer, int value) throws IOException {
+    @ToJson void intToJson(JsonWriter writer, int value) throws IOException {
       if (value == -1) {
         writer.nullValue();
       } else {
