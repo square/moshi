@@ -186,7 +186,9 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       throw new IllegalArgumentException("Unexpected signature for " + method + ".\n"
           + "@ToJson method signatures may have one of the following structures:\n"
           + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
-          + "    <any access modifier> void toJson(JsonReader jsonReader,"
+          + "    <any access modifier> void toJson(JsonWriter writer,"
+          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+          + "    <any access modifier> void toJson(JsonWriter writer, T value"
           + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
           + "    <any access modifier> R toJson(T value) throws <any>;\n");
     }

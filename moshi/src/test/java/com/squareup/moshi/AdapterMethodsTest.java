@@ -264,7 +264,9 @@ public final class AdapterMethodsTest {
           + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
           + "@ToJson method signatures may have one of the following structures:\n"
           + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
-          + "    <any access modifier> void toJson(JsonReader jsonReader,"
+          + "    <any access modifier> void toJson(JsonWriter writer,"
+          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+          + "    <any access modifier> void toJson(JsonWriter writer, T value"
           + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
           + "    <any access modifier> R toJson(T value) throws <any>;\n");
     }
