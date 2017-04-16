@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import okio.ByteString;
 import org.junit.Test;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -667,6 +669,57 @@ public final class AdapterMethodsTest {
 
     @Override public int hashCode() {
       return data.hashCode();
+    }
+  }
+
+  @Test public void genericArrayTypes() throws Exception {
+    Moshi moshi = new Moshi.Builder()
+        .add(new ByteArrayJsonAdapter())
+        .build();
+    JsonAdapter<MapOfByteArrays> jsonAdapter = moshi.adapter(MapOfByteArrays.class);
+
+    MapOfByteArrays mapOfByteArrays = new MapOfByteArrays(
+        Collections.singletonMap("a", new byte[] { 0, -1}));
+    String json = "{\"map\":{\"a\":\"00ff\"}}";
+
+    assertThat(jsonAdapter.toJson(mapOfByteArrays)).isEqualTo(json);
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(mapOfByteArrays);
+  }
+
+  static class ByteArrayJsonAdapter {
+    @ToJson String byteArrayToJson(byte[] b) {
+      return ByteString.of(b).hex();
+    }
+
+    @FromJson byte[] byteArrayFromJson(String s) throws Exception {
+      return ByteString.decodeHex(s).toByteArray();
+    }
+  }
+
+  static class MapOfByteArrays {
+    final Map<String, byte[]> map;
+
+    public MapOfByteArrays(Map<String, byte[]> map) {
+      this.map = map;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof MapOfByteArrays && o.toString().equals(toString());
+    }
+
+    @Override public int hashCode() {
+      return toString().hashCode();
+    }
+
+    @Override public String toString() {
+      StringBuilder result = new StringBuilder();
+      for (Map.Entry<String, byte[]> entry : map.entrySet()) {
+        if (result.length() > 0) result.append(", ");
+        result.append(entry.getKey())
+            .append(":")
+            .append(Arrays.toString(entry.getValue()));
+      }
+      return result.toString();
     }
   }
 
