@@ -75,55 +75,55 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       }
       return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
     }
+  };
 
-    /** Creates a field binding for each of declared field of {@code type}. */
-    private void createFieldBindings(
-        Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
-      Class<?> rawType = Types.getRawType(type);
-      boolean platformType = isPlatformType(rawType);
-      for (Field field : rawType.getDeclaredFields()) {
-        if (!includeField(platformType, field.getModifiers())) continue;
+  /** Creates a field binding for each of declared field of {@code type}. */
+  static void createFieldBindings(
+      Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
+    Class<?> rawType = Types.getRawType(type);
+    boolean platformType = isPlatformType(rawType);
+    for (Field field : rawType.getDeclaredFields()) {
+      if (!includeField(platformType, field.getModifiers())) continue;
 
-        // Look up a type adapter for this type.
-        Type fieldType = Types.resolve(type, rawType, field.getGenericType());
-        Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
-        JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations);
+      // Look up a type adapter for this type.
+      Type fieldType = Types.resolve(type, rawType, field.getGenericType());
+      Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
+      JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations);
 
-        // Create the binding between field and JSON.
-        field.setAccessible(true);
+      // Create the binding between field and JSON.
+      field.setAccessible(true);
 
-        // Store it using the field's name. If there was already a field with this name, fail!
-        Json jsonAnnotation = field.getAnnotation(Json.class);
-        String name = jsonAnnotation != null ? jsonAnnotation.name() : field.getName();
-        FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
-        FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
-        if (replaced != null) {
-          throw new IllegalArgumentException("Conflicting fields:\n"
-              + "    " + replaced.field + "\n"
-              + "    " + fieldBinding.field);
-        }
+      // Store it using the field's name. If there was already a field with this name, fail!
+      Json jsonAnnotation = field.getAnnotation(Json.class);
+      String name = jsonAnnotation != null ? jsonAnnotation.name() : field.getName();
+      FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
+      FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
+      if (replaced != null) {
+        throw new IllegalArgumentException("Conflicting fields:\n"
+            + "    " + replaced.field + "\n"
+            + "    " + fieldBinding.field);
       }
     }
+  }
 
-    /**
-     * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
-     * types because they're unspecified and likely to be different on Java vs. Android.
-     */
-    private boolean isPlatformType(Class<?> rawType) {
-      String name = rawType.getName();
-      return name.startsWith("android.")
-          || name.startsWith("java.")
-          || name.startsWith("javax.")
-          || name.startsWith("kotlin.")
-          || name.startsWith("scala.");
-    }
+  /**
+   * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
+   * types because they're unspecified and likely to be different on Java vs. Android.
+   */
+  static boolean isPlatformType(Class<?> rawType) {
+    String name = rawType.getName();
+    return name.startsWith("android.")
+        || name.startsWith("java.")
+        || name.startsWith("javax.")
+        || name.startsWith("kotlin.")
+        || name.startsWith("scala.");
+  }
 
-    /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
-    private boolean includeField(boolean platformType, int modifiers) {
-      if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
-      return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
-    }
-  };
+  /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
+  static boolean includeField(boolean platformType, int modifiers) {
+    if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
+    return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
+  }
 
   private final ClassFactory<T> classFactory;
   private final FieldBinding<?>[] fieldsArray;
