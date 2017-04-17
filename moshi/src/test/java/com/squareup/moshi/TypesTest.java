@@ -220,4 +220,11 @@ public final class TypesTest {
     assertThat(actual.hashCode()).isEqualTo(expected.hashCode());
     assertThat(actual.getClass()).isNotEqualTo(TestQualifier.class);
   }
+
+  @Test public void arrayEqualsGenericTypeArray() {
+    assertThat(Types.equals(int[].class, Types.arrayOf(int.class))).isTrue();
+    assertThat(Types.equals(Types.arrayOf(int.class), int[].class)).isTrue();
+    assertThat(Types.equals(String[].class, Types.arrayOf(String.class))).isTrue();
+    assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
+  }
 }
