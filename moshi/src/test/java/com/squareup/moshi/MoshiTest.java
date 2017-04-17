@@ -533,15 +533,6 @@ public final class MoshiTest {
   }
 
   @Test public void addNullFails() throws Exception {
-    JsonAdapter jsonAdapter = new JsonAdapter() {
-      @Override public Object fromJson(JsonReader reader) throws IOException {
-        throw new AssertionError();
-      }
-
-      @Override public void toJson(JsonWriter writer, Object value) throws IOException {
-        throw new AssertionError();
-      }
-    };
     Type type = Object.class;
     Class<? extends Annotation> annotation = Annotation.class;
     Moshi.Builder builder = new Moshi.Builder();
