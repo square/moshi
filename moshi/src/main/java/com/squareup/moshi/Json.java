@@ -19,12 +19,23 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/** Customizes how a field is encoded as JSON. */
-@Target({FIELD, METHOD})
+/**
+ * Customizes how a field is encoded as JSON.
+ *
+ * <p>Although this annotation doesn't declare a {@link Target}, it is only honored in the following
+ * elements:
+ *
+ * <ul>
+ *   <li><strong>Java class fields</strong>
+ *   <li><strong>Kotlin properties</strong> for use with {@code moshi-kotlin}. This includes both
+ *       properties declared in the constructor and properties declared as members.
+ * </ul>
+ *
+ * <p>Users of the <a href="https://github.com/rharter/auto-value-moshi">AutoValue: Moshi
+ * Extension</a> may also use this annotation on abstract getters.
+ */
 @Retention(RUNTIME)
 @Documented
 public @interface Json {
