@@ -83,7 +83,7 @@ internal class KotlinJsonAdapter<T> private constructor(
 
     // Set remaining properties.
     for (i in constructorSize until bindings.size) {
-      bindings[i]!![result] = values[i]
+      bindings[i]!!.set(result, values[i])
     }
 
     return result
@@ -95,7 +95,7 @@ internal class KotlinJsonAdapter<T> private constructor(
       if (binding == null) continue // Skip constructor parameters that aren't properties.
 
       writer.name(binding.name)
-      binding.adapter.toJson(writer, binding[value])
+      binding.adapter.toJson(writer, binding.get(value))
     }
     writer.endObject()
   }
@@ -113,9 +113,9 @@ internal class KotlinJsonAdapter<T> private constructor(
       }
     }
 
-    operator fun get(value: K) = property.get(value)
+    fun get(value: K) = property.get(value)
 
-    operator fun set(result: K, value: P) {
+    fun set(result: K, value: P) {
       if (value !== ABSENT_VALUE) {
         (property as KMutableProperty1<K, P>).set(result, value)
       }
