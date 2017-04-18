@@ -36,7 +36,7 @@ private val KOTLIN_METADATA = Class.forName("kotlin.Metadata") as Class<out Anno
  * Placeholder value used when a field is absent from the JSON. Note that this code
  * distinguishes between absent values and present-but-null values.
  */
-private val ABSENT_VALUE = object : Any() {}
+private object ABSENT_VALUE
 
 /**
  * This class encodes Kotlin classes using their properties. It decodes them by first invoking the
@@ -68,8 +68,7 @@ internal class KotlinJsonAdapter<T> private constructor(
             "Multiple values for ${constructor.parameters[index].name} at ${reader.path}")
       }
 
-      val value = binding.adapter.fromJson(reader)
-      values[index] = value
+      values[index] = binding.adapter.fromJson(reader)
     }
     reader.endObject()
 
@@ -165,7 +164,7 @@ internal class KotlinJsonAdapter<T> private constructor(
         if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) continue
 
         property.isAccessible = true
-        var allAnnotations = property.annotations
+        val allAnnotations = property.annotations.toMutableList()
         var jsonAnnotation = property.findAnnotation<Json>()
 
         val parameter = parametersByName[property.name]
