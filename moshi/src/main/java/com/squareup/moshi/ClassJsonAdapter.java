@@ -105,25 +105,25 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       }
     }
 
-    /**
-     * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
-     * types because they're unspecified and likely to be different on Java vs. Android.
-     */
-    private boolean isPlatformType(Class<?> rawType) {
-      String name = rawType.getName();
-      return name.startsWith("android.")
-          || name.startsWith("java.")
-          || name.startsWith("javax.")
-          || name.startsWith("kotlin.")
-          || name.startsWith("scala.");
-    }
-
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
     private boolean includeField(boolean platformType, int modifiers) {
       if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
       return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
     }
   };
+
+  /**
+   * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
+   * types because they're unspecified and likely to be different on Java vs. Android.
+   */
+  static boolean isPlatformType(Class<?> rawType) {
+    String name = rawType.getName();
+    return name.startsWith("android.")
+        || name.startsWith("java.")
+        || name.startsWith("javax.")
+        || name.startsWith("kotlin.")
+        || name.startsWith("scala.");
+  }
 
   private final ClassFactory<T> classFactory;
   private final FieldBinding<?>[] fieldsArray;

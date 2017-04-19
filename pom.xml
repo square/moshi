@@ -21,14 +21,16 @@
     <module>moshi</module>
     <module>examples</module>
     <module>adapters</module>
+    <module>kotlin</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
+    <kotlin.version>1.1.1</kotlin.version>
 
     <!-- Dependencies -->
-    <okio.version>1.11.0</okio.version>
+    <okio.version>1.12.0</okio.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
@@ -71,6 +73,22 @@
         <artifactId>assertj-core</artifactId>
         <version>${assertj.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-reflect</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-test</artifactId>
+        <version>${kotlin.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -99,6 +117,11 @@
               <version>2.0.15</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-maven-plugin</artifactId>
+          <version>${kotlin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
