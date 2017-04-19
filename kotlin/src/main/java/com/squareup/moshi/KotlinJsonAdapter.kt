@@ -43,7 +43,7 @@ private object ABSENT_VALUE
  * This class encodes Kotlin classes using their properties. It decodes them by first invoking the
  * constructor, and then by setting any additional properties that exist, if any.
  */
-internal class KotlinJsonAdapter<T> constructor(
+internal class KotlinJsonAdapter<T>(
     val constructor: KFunction<T>,
     val bindings: List<Binding<T, Any?>?>,
     val options: JsonReader.Options) : JsonAdapter<T>() {
