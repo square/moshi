@@ -162,7 +162,6 @@ class KotlinJsonAdapterTest {
 
   class ExplicitNull(var a: Int?, var b: Int?)
 
-  // TODO(jwilson): if a nullable field is absent, just do the obvious thing instead of crashing?
   @Test fun absentNull() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
     val jsonAdapter = moshi.adapter(AbsentNull::class.java)
@@ -171,15 +170,26 @@ class KotlinJsonAdapterTest {
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
     assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("{\"a\":null,\"b\":5}")
 
-    try {
-      jsonAdapter.fromJson("{\"b\":6}")
-      fail()
-    } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required value a missing at $")
-    }
+    val decoded = jsonAdapter.fromJson("{\"b\":6}")
+    assertThat(decoded.a).isNull()
+    assertThat(decoded.b).isEqualTo(6)
   }
 
   class AbsentNull(var a: Int?, var b: Int?)
+
+  @Test fun repeatedValue() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":4,\"b\":null,\"b\":6}")
+      fail()
+    } catch(expected: JsonDataException) {
+      assertThat(expected).hasMessage("Multiple values for b at $.b")
+    }
+  }
+
+  class RepeatedValue(var a: Int, var b: Int?)
 
   @Test fun constructorParameterWithQualifier() {
     val moshi = Moshi.Builder()
@@ -384,6 +394,26 @@ class KotlinJsonAdapterTest {
     fun b() = b
   }
 
+  @Test fun privateConstructor() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
+
+    val encoded = PrivateConstructor.newInstance(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+
+    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")
+    assertThat(decoded.a()).isEqualTo(4)
+    assertThat(decoded.b()).isEqualTo(6)
+  }
+
+  class PrivateConstructor private constructor(var a: Int, var b: Int) {
+    fun a() = a
+    fun b() = b
+    companion object {
+      fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
+    }
+  }
+
   @Test fun privateProperties() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
     val jsonAdapter = moshi.adapter(PrivateProperties::class.java)
@@ -415,9 +445,37 @@ class KotlinJsonAdapterTest {
     }
   }
 
+  @Test fun unsettableProperty() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    try {
+      moshi.adapter(UnsettableProperty::class.java)
+      fail()
+    } catch(expected: IllegalArgumentException) {
+      assertThat(expected).hasMessage("No constructor or var property for " +
+          "val ${UnsettableProperty::class.qualifiedName}.a: kotlin.Int")
+    }
+  }
+
+  class UnsettableProperty {
+    val a: Int = -1
+    var b: Int = -1
+  }
+
+  @Test fun nonPropertyConstructorParameter() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    try {
+      moshi.adapter(NonPropertyConstructorParameter::class.java)
+      fail()
+    } catch(expected: IllegalArgumentException) {
+      assertThat(expected).hasMessage(
+          "No property for required constructor parameter #0 a of " + "fun <init>(" +
+              "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}")
+    }
+  }
+
+  class NonPropertyConstructorParameter(a: Int, val b: Int)
+
   // TODO(jwilson): resolve generic types?
-  // TODO(jwilson): inaccessible constructors?
-  // TODO(jwilson): constructors parameter that is not a property
 
   @Retention(RUNTIME)
   @JsonQualifier
