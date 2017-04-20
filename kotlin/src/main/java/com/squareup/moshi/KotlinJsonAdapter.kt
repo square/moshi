@@ -16,6 +16,7 @@
 package com.squareup.moshi
 
 import java.lang.reflect.Modifier
+import java.lang.reflect.Type
 import java.util.AbstractMap.SimpleEntry
 import kotlin.collections.Map.Entry
 import kotlin.reflect.KFunction
@@ -42,7 +43,7 @@ private object ABSENT_VALUE
  * This class encodes Kotlin classes using their properties. It decodes them by first invoking the
  * constructor, and then by setting any additional properties that exist, if any.
  */
-internal class KotlinJsonAdapter<T> private constructor(
+internal class KotlinJsonAdapter<T>(
     val constructor: KFunction<T>,
     val bindings: List<Binding<T, Any?>?>,
     val options: JsonReader.Options) : JsonAdapter<T>() {
@@ -148,60 +149,60 @@ internal class KotlinJsonAdapter<T> private constructor(
       return if (value !== ABSENT_VALUE) value else null
     }
   }
+}
 
-  companion object {
-    @JvmField val FACTORY = Factory { type, annotations, moshi ->
-      if (!annotations.isEmpty()) return@Factory null
+object KotlinJsonAdapterFactory : JsonAdapter.Factory {
+  override fun create(type: Type?, annotations: MutableSet<out Annotation>, moshi: Moshi): JsonAdapter<*>? {
+    if (!annotations.isEmpty()) return null
 
-      val rawType = Types.getRawType(type)
-      val platformType = ClassJsonAdapter.isPlatformType(rawType)
-      if (platformType) return@Factory null
+    val rawType = Types.getRawType(type)
+    val platformType = ClassJsonAdapter.isPlatformType(rawType)
+    if (platformType) return null
 
-      if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return@Factory null
+    if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
 
-      val constructor = rawType.kotlin.primaryConstructor ?: return@Factory null
-      val parametersByName = constructor.parameters.associateBy { it.name }
-      constructor.isAccessible = true
+    val constructor = rawType.kotlin.primaryConstructor ?: return null
+    val parametersByName = constructor.parameters.associateBy { it.name }
+    constructor.isAccessible = true
 
-      val bindingsByName = LinkedHashMap<String, Binding<Any, Any?>>()
+    val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
-      for (property in rawType.kotlin.memberProperties) {
-        if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) continue
+    for (property in rawType.kotlin.memberProperties) {
+      if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) continue
 
-        property.isAccessible = true
-        var allAnnotations = property.annotations
-        var jsonAnnotation = property.findAnnotation<Json>()
+      property.isAccessible = true
+      var allAnnotations = property.annotations
+      var jsonAnnotation = property.findAnnotation<Json>()
 
-        val parameter = parametersByName[property.name]
-        if (parameter != null) {
-          allAnnotations += parameter.annotations
-          if (jsonAnnotation == null) {
-            jsonAnnotation = parameter.findAnnotation<Json>()
-          }
+      val parameter = parametersByName[property.name]
+      if (parameter != null) {
+        allAnnotations += parameter.annotations
+        if (jsonAnnotation == null) {
+          jsonAnnotation = parameter.findAnnotation<Json>()
         }
-
-        val name = jsonAnnotation?.name ?: property.name
-        val adapter = moshi.adapter<Any>(
-            property.returnType.javaType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
-
-        bindingsByName[property.name] =
-            Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
       }
 
-      val bindings = ArrayList<Binding<Any, Any?>?>()
+      val name = jsonAnnotation?.name ?: property.name
+      val adapter = moshi.adapter<Any>(
+          property.returnType.javaType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
-      for (parameter in constructor.parameters) {
-        val binding = bindingsByName.remove(parameter.name)
-        if (binding == null && !parameter.isOptional) {
-          throw IllegalArgumentException("No property for required constructor ${parameter}")
-        }
-        bindings += binding
-      }
-
-      bindings += bindingsByName.values
-
-      val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
-      KotlinJsonAdapter(constructor, bindings, options)
+      bindingsByName[property.name] =
+          KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
     }
+
+    val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
+
+    for (parameter in constructor.parameters) {
+      val binding = bindingsByName.remove(parameter.name)
+      if (binding == null && !parameter.isOptional) {
+        throw IllegalArgumentException("No property for required constructor ${parameter}")
+      }
+      bindings += binding
+    }
+
+    bindings += bindingsByName.values
+
+    val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
+    return KotlinJsonAdapter(constructor, bindings, options)
   }
 }
