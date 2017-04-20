@@ -72,13 +72,18 @@ internal class KotlinJsonAdapter<T> private constructor(
     }
     reader.endObject()
 
-    // Call the constructor using a Map so that absent optionals get defaults.
+    // Confirm all parameters are present, optional, or nullable.
     for (i in 0 until constructorSize) {
-      if (!constructor.parameters[i].isOptional && values[i] === ABSENT_VALUE) {
-        throw JsonDataException(
-            "Required value ${constructor.parameters[i].name} missing at ${reader.path}")
+      if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
+        if (!constructor.parameters[i].type.isMarkedNullable) {
+          throw JsonDataException(
+              "Required value ${constructor.parameters[i].name} missing at ${reader.path}")
+        }
+        values[i] = null // Replace absent with null.
       }
     }
+
+    // Call the constructor using a Map so that absent optionals get defaults.
     val result = constructor.callBy(IndexedParameterMap(constructor.parameters, values))
 
     // Set remaining properties.
@@ -109,7 +114,7 @@ internal class KotlinJsonAdapter<T> private constructor(
       val parameter: KParameter?) {
     init {
       if (property !is KMutableProperty1 && parameter == null) {
-        throw IllegalArgumentException("No constructor or var property for ${property.name}")
+        throw IllegalArgumentException("No constructor or var property for ${property}")
       }
     }
 
@@ -188,8 +193,7 @@ internal class KotlinJsonAdapter<T> private constructor(
       for (parameter in constructor.parameters) {
         val binding = bindingsByName.remove(parameter.name)
         if (binding == null && !parameter.isOptional) {
-          throw IllegalArgumentException(
-              "No property for required constructor parameter ${parameter.name}")
+          throw IllegalArgumentException("No property for required constructor ${parameter}")
         }
         bindings += binding
       }
