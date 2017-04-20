@@ -464,7 +464,8 @@ final class JsonUtf8Reader extends JsonReader {
     }
 
     // We've read a complete number. Decide if it's a PEEKED_LONG or a PEEKED_NUMBER.
-    if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)) {
+    if (last == NUMBER_CHAR_DIGIT && fitsInLong && (value != Long.MIN_VALUE || negative)
+        && (value != 0 || !negative)) {
       peekedLong = negative ? value : -value;
       buffer.skip(i);
       return peeked = PEEKED_LONG;

@@ -330,6 +330,12 @@ public final class JsonUtf8ReaderTest {
     assertThat(reader.nextDouble()).isEqualTo(-92233720368547758080d);
   }
 
+  @Test public void negativeZeroIsANumber() throws Exception {
+    JsonReader reader = newReader("-0");
+    assertEquals(NUMBER, reader.peek());
+    assertEquals("-0", reader.nextString());
+  }
+
   @Test public void quotedNumberWithEscape() throws IOException {
     JsonReader reader = newReader("[\"12\u00334\"]");
     reader.setLenient(true);
