@@ -945,4 +945,61 @@ public final class JsonReaderTest {
     assertThat(value).isEqualTo(
         Collections.singletonMap("pizzas", Arrays.asList("cheese", "pepperoni")));
   }
+
+  @Test public void bufferValueInt() throws IOException {
+    JsonReader reader = newReader("1");
+    JsonReader leaf = reader.bufferValue();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertThat(leaf.nextInt()).isEqualTo(1);
+    assertThat(leaf.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void bufferValueDouble() throws IOException {
+    JsonReader reader = newReader("1");
+    JsonReader leaf = reader.bufferValue();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertThat(leaf.nextDouble()).isEqualTo(1.0);
+    assertThat(leaf.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void bufferValueQuotedInt() throws IOException {
+    JsonReader reader = newReader("{\"number\": \"11\"}");
+    reader.beginObject();
+    reader.nextName();
+    JsonReader leaf = reader.bufferValue();
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertThat(leaf.nextInt()).isEqualTo(11);
+    assertThat(leaf.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void bufferValueObject() throws IOException {
+    JsonReader reader = newReader("[{\"hello\": \"world\"}, 0]");
+    reader.beginArray();
+    JsonReader leaf = reader.bufferValue();
+    reader.nextInt();
+    reader.endArray();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    leaf.beginObject();
+    assertThat(leaf.nextName()).isEqualTo("hello");
+    assertThat(leaf.nextString()).isEqualTo("world");
+    leaf.endObject();
+    assertThat(leaf.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void bufferValueArray() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", 5, \"pepperoni\", true]}");
+    reader.beginObject();
+    reader.nextName();
+    JsonReader leaf = reader.bufferValue();
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    leaf.beginArray();
+    assertThat(leaf.nextString()).isEqualTo("cheese");
+    assertThat(leaf.nextInt()).isEqualTo(5);
+    assertThat(leaf.nextString()).isEqualTo("pepperoni");
+    assertThat(leaf.nextBoolean()).isTrue();
+    leaf.endArray();
+    assertThat(leaf.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
 }
