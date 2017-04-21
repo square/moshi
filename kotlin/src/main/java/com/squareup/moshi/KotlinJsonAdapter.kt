@@ -156,10 +156,9 @@ object KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (!annotations.isEmpty()) return null
 
     val rawType = Types.getRawType(type)
-    val platformType = ClassJsonAdapter.isPlatformType(rawType)
-    if (platformType) return null
-
+    if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
+    if (ClassJsonAdapter.isPlatformType(rawType)) return null
 
     val constructor = rawType.kotlin.primaryConstructor ?: return null
     val parametersByName = constructor.parameters.associateBy { it.name }
