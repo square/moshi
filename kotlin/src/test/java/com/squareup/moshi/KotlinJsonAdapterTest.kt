@@ -178,7 +178,7 @@ class KotlinJsonAdapterTest {
   class AbsentNull(var a: Int?, var b: Int?)
 
   @Test fun repeatedValue() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
     val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
 
     try {
@@ -395,7 +395,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateConstructor() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
     val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
 
     val encoded = PrivateConstructor.newInstance(3, 5)
@@ -446,7 +446,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun unsettableProperty() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
     try {
       moshi.adapter(UnsettableProperty::class.java)
       fail()
@@ -462,7 +462,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun nonPropertyConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapter.FACTORY).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
     try {
       moshi.adapter(NonPropertyConstructorParameter::class.java)
       fail()
@@ -474,6 +474,19 @@ class KotlinJsonAdapterTest {
   }
 
   class NonPropertyConstructorParameter(a: Int, val b: Int)
+
+  @Test fun kotlinEnumsAreNotCovered() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val adapter = moshi.adapter(UsingEnum::class.java)
+
+    assertThat(adapter.fromJson("""{"e": "A"}""")).isEqualTo(UsingEnum(KotlinEnum.A))
+  }
+
+  data class UsingEnum(val e: KotlinEnum)
+
+  enum class KotlinEnum {
+    A, B
+  }
 
   // TODO(jwilson): resolve generic types?
 
