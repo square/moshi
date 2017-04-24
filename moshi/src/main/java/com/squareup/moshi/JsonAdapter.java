@@ -204,6 +204,9 @@ public abstract class JsonAdapter<T> {
    * @param indent a string containing only whitespace.
    */
   public JsonAdapter<T> indent(final String indent) {
+    if (indent == null) {
+      throw new NullPointerException("indent == null");
+    }
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public T fromJson(JsonReader reader) throws IOException {

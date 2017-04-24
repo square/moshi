@@ -145,6 +145,24 @@ public final class JsonAdapterTest {
         + "]");
   }
 
+  @Test public void indentDisallowsNull() throws Exception {
+    JsonAdapter<Object> adapter = new JsonAdapter<Object>() {
+      @Override public Object fromJson(JsonReader reader) {
+        throw new AssertionError();
+      }
+
+      @Override public void toJson(JsonWriter writer, Object value) {
+        throw new AssertionError();
+      }
+    };
+    try {
+      adapter.indent(null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("indent == null");
+    }
+  }
+
   @Test public void serializeNulls() throws Exception {
     JsonAdapter<Map<String, String>> serializeNulls = new JsonAdapter<Map<String, String>>() {
       @Override public Map<String, String> fromJson(JsonReader reader) throws IOException {
