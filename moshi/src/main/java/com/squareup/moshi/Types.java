@@ -205,7 +205,7 @@ public final class Types {
   }
 
   /** Returns true if {@code a} and {@code b} are equal. */
-  static boolean equals(Type a, Type b) {
+  public static boolean equals(Type a, Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
 
