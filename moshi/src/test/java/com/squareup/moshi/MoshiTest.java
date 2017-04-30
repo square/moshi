@@ -16,11 +16,16 @@
 package com.squareup.moshi;
 
 import android.util.Pair;
+import okio.Buffer;
+import org.junit.Test;
+
+import javax.crypto.KeyGenerator;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -32,13 +37,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.crypto.KeyGenerator;
-import okio.Buffer;
-import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class MoshiTest {
@@ -1004,6 +1007,53 @@ public final class MoshiTest {
     JsonAdapter<Pizza> adapter = moshi.adapter(Pizza.class);
     String json = "{\"diameter\":5,\"diameter\":5,\"extraCheese\":true}";
     assertThat(adapter.fromJson(json)).isEqualTo(new Pizza(5, true));
+  }
+
+  @Test public void userClassFactoryUsage() throws IOException {
+    ClassFactory<UserClassFactoryPizza> pizzaClassFactory = new ClassFactory<UserClassFactoryPizza>() {
+
+      @Override
+      public UserClassFactoryPizza newInstance()
+          throws InvocationTargetException, IllegalAccessException, InstantiationException {
+        return new UserClassFactoryPizza(0, false, true);
+      }
+    };
+
+    String json = "{\"diameter\":5,\"diameter\":5,\"extraCheese\":true}";
+    Moshi moshi = new Moshi.Builder().addUserClassFactory(UserClassFactoryPizza.class, pizzaClassFactory).build();
+    UserClassFactoryPizza userClassFactoryPizza = moshi.adapter(UserClassFactoryPizza.class).fromJson(json);
+    assertTrue("userClassFactoryPizza should have been created using a user-supplied" +
+        "ClassFactory.", userClassFactoryPizza.createdByUserClassFactory);
+  }
+
+  static class UserClassFactoryPizza {
+    final int diameter;
+    final boolean extraCheese;
+    final boolean createdByUserClassFactory;
+
+    UserClassFactoryPizza(int diameter, boolean extraCheese, boolean createdByUserClassFactory) {
+      this.diameter = diameter;
+      this.extraCheese = extraCheese;
+      this.createdByUserClassFactory = createdByUserClassFactory;
+    }
+
+    @Override public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      UserClassFactoryPizza that = (UserClassFactoryPizza) o;
+
+      if (diameter != that.diameter) return false;
+      if (extraCheese != that.extraCheese) return false;
+      return createdByUserClassFactory == that.createdByUserClassFactory;
+    }
+
+    @Override public int hashCode() {
+      int result = diameter;
+      result = 31 * result + (extraCheese ? 1 : 0);
+      result = 31 * result + (createdByUserClassFactory ? 1 : 0);
+      return result;
+    }
   }
 
   static class Pizza {

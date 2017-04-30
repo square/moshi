@@ -29,8 +29,12 @@ import java.lang.reflect.Method;
  * @author Joel Leitch
  * @author Jesse Wilson
  */
-abstract class ClassFactory<T> {
-  abstract T newInstance() throws
+public abstract class ClassFactory<T> {
+
+  /**
+   * Create a new instance of this type.
+   */
+  public abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
