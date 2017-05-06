@@ -55,7 +55,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
    * Create a natural order, empty tree map whose keys must be mutually
    * comparable and non-null.
    */
-  public LinkedHashTreeMap() {
+  LinkedHashTreeMap() {
     this(null);
   }
 
@@ -66,8 +66,10 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
    * @param comparator the comparator to order elements with, or {@code null} to
    *     use the natural ordering.
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" }) // unsafe! if comparator is null, this assumes K is comparable
-  public LinkedHashTreeMap(Comparator<? super K> comparator) {
+  @SuppressWarnings({
+      "unchecked", "rawtypes" // Unsafe! if comparator is null, this assumes K is comparable.
+  })
+  LinkedHashTreeMap(Comparator<? super K> comparator) {
     this.comparator = comparator != null
         ? comparator
         : (Comparator) NATURAL_ORDER;
@@ -473,14 +475,14 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
     V value;
     int height;
 
-    /** Create the header entry */
+    /** Create the header entry. */
     Node() {
       key = null;
       hash = -1;
       next = prev = this;
     }
 
-    /** Create a regular entry */
+    /** Create a regular entry. */
     Node(Node<K, V> parent, K key, int hash, Node<K, V> next, Node<K, V> prev) {
       this.parent = parent;
       this.key = key;
@@ -665,7 +667,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
    * comparisons. Using this class to create a tree of size <i>S</i> is
    * {@code O(S)}.
    */
-  final static class AvlBuilder<K, V> {
+  static final class AvlBuilder<K, V> {
     /** This stack is a singly linked list, linked by the 'parent' field. */
     private Node<K, V> stack;
     private int leavesToSkip;

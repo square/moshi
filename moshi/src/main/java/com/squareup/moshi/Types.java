@@ -149,7 +149,7 @@ public final class Types {
       return (Class<?>) rawType;
 
     } else if (type instanceof GenericArrayType) {
-      Type componentType = ((GenericArrayType)type).getGenericComponentType();
+      Type componentType = ((GenericArrayType) type).getGenericComponentType();
       return Array.newInstance(getRawType(componentType), 0).getClass();
 
     } else if (type instanceof TypeVariable) {
@@ -560,7 +560,7 @@ public final class Types {
   private static final class GenericArrayTypeImpl implements GenericArrayType {
     private final Type componentType;
 
-    public GenericArrayTypeImpl(Type componentType) {
+    GenericArrayTypeImpl(Type componentType) {
       this.componentType = canonicalize(componentType);
     }
 
@@ -591,7 +591,7 @@ public final class Types {
     private final Type upperBound;
     private final Type lowerBound;
 
-    public WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
+    WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
       if (lowerBounds.length > 1) throw new IllegalArgumentException();
       if (upperBounds.length != 1) throw new IllegalArgumentException();
 

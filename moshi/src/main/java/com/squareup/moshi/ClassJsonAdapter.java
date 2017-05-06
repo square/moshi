@@ -194,7 +194,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     final Field field;
     final JsonAdapter<T> adapter;
 
-    public FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
+    FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
       this.name = name;
       this.field = field;
       this.adapter = adapter;

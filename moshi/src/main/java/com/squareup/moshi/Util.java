@@ -25,6 +25,9 @@ import java.util.Set;
 final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
 
+  private Util() {
+  }
+
   public static boolean typesMatch(Type pattern, Type candidate) {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
     return pattern.equals(candidate);

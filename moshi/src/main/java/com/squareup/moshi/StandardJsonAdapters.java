@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 final class StandardJsonAdapters {
+  private StandardJsonAdapters() {
+  }
+
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
@@ -216,7 +219,7 @@ final class StandardJsonAdapters {
     private final T[] constants;
     private final JsonReader.Options options;
 
-    public EnumJsonAdapter(Class<T> enumType) {
+    EnumJsonAdapter(Class<T> enumType) {
       this.enumType = enumType;
       try {
         constants = enumType.getEnumConstants();
@@ -264,7 +267,7 @@ final class StandardJsonAdapters {
   static final class ObjectJsonAdapter extends JsonAdapter<Object> {
     private final Moshi moshi;
 
-    public ObjectJsonAdapter(Moshi moshi) {
+    ObjectJsonAdapter(Moshi moshi) {
       this.moshi = moshi;
     }
 
