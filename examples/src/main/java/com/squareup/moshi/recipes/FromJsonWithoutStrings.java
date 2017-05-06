@@ -44,6 +44,7 @@ public final class FromJsonWithoutStrings {
     new FromJsonWithoutStrings().run();
   }
 
+  @SuppressWarnings("checkstyle:membername")
   private static final class EventJson {
     String title;
     String begin_date;
@@ -55,10 +56,10 @@ public final class FromJsonWithoutStrings {
     String beginDateAndTime;
 
     @Override public String toString() {
-      return "Event{" +
-          "title='" + title + '\'' +
-          ", beginDateAndTime='" + beginDateAndTime + '\'' +
-          '}';
+      return "Event{"
+          + "title='" + title + '\''
+          + ", beginDateAndTime='" + beginDateAndTime + '\''
+          + '}';
     }
   }
 

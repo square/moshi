@@ -17,6 +17,8 @@ package com.squareup.moshi;
 
 /** Lexical scoping elements within a JSON reader or writer. */
 final class JsonScope {
+  private JsonScope() {
+  }
 
   /** An array with no elements requires no separators or newlines before it is closed. */
   static final int EMPTY_ARRAY = 1;

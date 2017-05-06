@@ -21,7 +21,7 @@ import com.squareup.moshi.recipes.models.BlackjackHand;
 
 public final class ReadJson {
   public void run() throws Exception {
-    String json = "" 
+    String json = ""
         + "{\n"
         + "  \"hidden_card\": {\n"
         + "    \"rank\": \"6\",\n"

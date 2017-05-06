@@ -58,7 +58,7 @@ public abstract class JsonAdapter<T> {
   /**
    * Encodes {@code value} as a Java value object comprised of maps, lists, strings, numbers,
    * booleans, and nulls.
-   * 
+   *
    * <p>Values encoded using {@code value(double)} or {@code value(long)} are modeled with the
    * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a
    * {@link Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link

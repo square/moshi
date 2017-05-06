@@ -32,6 +32,9 @@ import java.util.Set;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 final class Unwrap {
+  private Unwrap() {
+  }
+
   public static void main(String[] args) throws Exception {
     String json = ""
         + "{\"data\":"

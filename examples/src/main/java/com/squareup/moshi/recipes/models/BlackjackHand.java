@@ -17,13 +17,14 @@ package com.squareup.moshi.recipes.models;
 
 import java.util.List;
 
+@SuppressWarnings("checkstyle:membername")
 public final class BlackjackHand {
   public final Card hidden_card;
   public final List<Card> visible_cards;
 
-  public BlackjackHand(Card hidden_card, List<Card> visible_cards) {
-    this.hidden_card = hidden_card;
-    this.visible_cards = visible_cards;
+  public BlackjackHand(Card hiddenCard, List<Card> visibleCards) {
+    this.hidden_card = hiddenCard;
+    this.visible_cards = visibleCards;
   }
 
   @Override public String toString() {

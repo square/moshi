@@ -50,7 +50,7 @@ final class JsonValueReader extends JsonReader {
 
   private final Object[] stack = new Object[32];
 
-  public JsonValueReader(Object root) {
+  JsonValueReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
     stack[stackSize++] = root;
   }

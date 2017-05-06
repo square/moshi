@@ -182,7 +182,7 @@ public abstract class JsonReader implements Closeable {
   final String[] pathNames = new String[32];
   final int[] pathIndices = new int[32];
 
-  /** True to accept non-spec compliant JSON */
+  /** True to accept non-spec compliant JSON. */
   boolean lenient;
 
   /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */

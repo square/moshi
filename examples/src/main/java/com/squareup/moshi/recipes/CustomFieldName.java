@@ -21,7 +21,7 @@ import com.squareup.moshi.recipes.models.Player;
 
 public final class CustomFieldName {
   public void run() throws Exception {
-    String json = "" 
+    String json = ""
         + "{"
         + "  \"username\": \"jesse\","
         + "  \"lucky number\": 32"

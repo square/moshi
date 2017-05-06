@@ -41,7 +41,7 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   private final JsonAdapter<K> keyAdapter;
   private final JsonAdapter<V> valueAdapter;
 
-  public MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
+  MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
     this.keyAdapter = moshi.adapter(keyType);
     this.valueAdapter = moshi.adapter(valueType);
   }
