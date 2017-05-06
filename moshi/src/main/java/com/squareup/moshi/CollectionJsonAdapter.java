@@ -23,11 +23,12 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public JsonAdapter<?> create(
+    @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (!annotations.isEmpty()) return null;

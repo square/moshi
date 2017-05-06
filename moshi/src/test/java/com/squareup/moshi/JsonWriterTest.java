@@ -286,6 +286,15 @@ public final class JsonWriterTest {
         + "3.141592653589793238462643383]");
   }
 
+  @Test public void nullNumbers() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.value((Number) null);
+    writer.endArray();
+    writer.close();
+    assertThat(factory.json()).isEqualTo("[null]");
+  }
+
   @Test public void booleans() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();

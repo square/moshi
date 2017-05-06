@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import javax.annotation.Nullable;
 import okio.BufferedSink;
 
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
@@ -257,7 +258,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
   /**
    * Encodes the property name.
    *
-   * @param name the name of the forthcoming value. May not be null.
+   * @param name the name of the forthcoming value. Must not be null.
    * @return this writer.
    */
   public abstract JsonWriter name(String name) throws IOException;
@@ -268,7 +269,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * @param value the literal string value, or null to encode a null literal.
    * @return this writer.
    */
-  public abstract JsonWriter value(String value) throws IOException;
+  public abstract JsonWriter value(@Nullable String value) throws IOException;
 
   /**
    * Encodes {@code null}.
@@ -289,7 +290,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    *
    * @return this writer.
    */
-  public abstract JsonWriter value(Boolean value) throws IOException;
+  public abstract JsonWriter value(@Nullable Boolean value) throws IOException;
 
   /**
    * Encodes {@code value}.
@@ -314,7 +315,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    *     {@linkplain Double#isInfinite() infinities}.
    * @return this writer.
    */
-  public abstract JsonWriter value(Number value) throws IOException;
+  public abstract JsonWriter value(@Nullable Number value) throws IOException;
 
   /**
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so

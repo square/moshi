@@ -28,6 +28,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -51,8 +52,8 @@ final class Unwrap {
 
   public static final class EnvelopeJsonAdapter extends JsonAdapter<Object> {
     public static final JsonAdapter.Factory FACTORY = new Factory() {
-      @Override
-      public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      @Override public @Nullable JsonAdapter<?> create(
+          Type type, Set<? extends Annotation> annotations, Moshi moshi) {
         Set<? extends Annotation> delegateAnnotations =
             Types.nextAnnotations(annotations, Enveloped.class);
         if (delegateAnnotations == null) {

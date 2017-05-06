@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.EOFException;
 import java.io.IOException;
 import java.math.BigDecimal;
+import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -86,7 +87,7 @@ final class JsonUtf8Reader extends JsonReader {
    * This is populated before a numeric value is parsed and used if that parsing
    * fails.
    */
-  private String peekedString;
+  private @Nullable String peekedString;
 
   JsonUtf8Reader(BufferedSource source) {
     if (source == null) {
@@ -670,7 +671,7 @@ final class JsonUtf8Reader extends JsonReader {
     throw new JsonDataException("Expected a boolean but was " + peek() + " at path " + getPath());
   }
 
-  @Override public <T> T nextNull() throws IOException {
+  @Override public @Nullable <T> T nextNull() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
       p = doPeek();

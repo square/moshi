@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This
@@ -29,7 +30,7 @@ import java.util.Set;
  */
 final class ArrayJsonAdapter extends JsonAdapter<Object> {
   public static final Factory FACTORY = new Factory() {
-    @Override public JsonAdapter<?> create(
+    @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Type elementType = Types.arrayComponentType(type);
       if (elementType == null) return null;

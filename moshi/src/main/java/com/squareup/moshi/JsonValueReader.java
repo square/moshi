@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -173,7 +174,7 @@ final class JsonValueReader extends JsonReader {
     return peeked;
   }
 
-  @Override public <T> T nextNull() throws IOException {
+  @Override public @Nullable <T> T nextNull() throws IOException {
     require(Void.class, Token.NULL);
     remove();
     return null;
@@ -297,7 +298,7 @@ final class JsonValueReader extends JsonReader {
    * Returns the top of the stack which is required to be a {@code type}. Throws if this reader is
    * closed, or if the type isn't what was expected.
    */
-  private <T> T require(Class<T> type, Token expected) throws IOException {
+  private @Nullable <T> T require(Class<T> type, Token expected) throws IOException {
     Object peeked = (stackSize != 0 ? stack[stackSize - 1] : null);
 
     if (type.isInstance(peeked)) {

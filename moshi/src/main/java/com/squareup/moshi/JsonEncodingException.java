@@ -16,10 +16,11 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import javax.annotation.Nullable;
 
 /** Thrown when the data being parsed is not encoded as valid JSON. */
 public final class JsonEncodingException extends IOException {
-  public JsonEncodingException(String message) {
+  public JsonEncodingException(@Nullable String message) {
     super(message);
   }
 }

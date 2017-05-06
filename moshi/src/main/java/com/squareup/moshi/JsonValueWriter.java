@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
@@ -31,7 +32,7 @@ import static java.lang.Double.POSITIVE_INFINITY;
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class JsonValueWriter extends JsonWriter {
   private final Object[] stack = new Object[32];
-  private String deferredName;
+  private @Nullable String deferredName;
 
   JsonValueWriter() {
     pushScope(EMPTY_DOCUMENT);
@@ -106,7 +107,7 @@ final class JsonValueWriter extends JsonWriter {
     return this;
   }
 
-  @Override public JsonWriter value(String value) throws IOException {
+  @Override public JsonWriter value(@Nullable String value) throws IOException {
     if (promoteValueToName) {
       return name(value);
     }
@@ -127,7 +128,7 @@ final class JsonValueWriter extends JsonWriter {
     return this;
   }
 
-  @Override public JsonWriter value(Boolean value) throws IOException {
+  @Override public JsonWriter value(@Nullable Boolean value) throws IOException {
     add(value);
     pathIndices[stackSize - 1]++;
     return this;
@@ -155,7 +156,7 @@ final class JsonValueWriter extends JsonWriter {
     return this;
   }
 
-  @Override public JsonWriter value(Number value) throws IOException {
+  @Override public JsonWriter value(@Nullable Number value) throws IOException {
     // If it's trivially converted to a long, do that.
     if (value instanceof Byte
         || value instanceof Short
@@ -167,6 +168,10 @@ final class JsonValueWriter extends JsonWriter {
     // If it's trivially converted to a double, do that.
     if (value instanceof Float || value instanceof Double) {
       return value(value.doubleValue());
+    }
+
+    if (value == null) {
+      return nullValue();
     }
 
     // Everything else gets converted to a BigDecimal.
@@ -195,7 +200,7 @@ final class JsonValueWriter extends JsonWriter {
     }
   }
 
-  private JsonValueWriter add(Object newTop) {
+  private JsonValueWriter add(@Nullable Object newTop) {
     int scope = peekScope();
 
     if (stackSize == 1) {

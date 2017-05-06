@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
   private final JsonAdapter<T> delegate;
@@ -54,7 +55,7 @@ public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
 
   public static <T> Factory newFactory(final Class<T> type, final T defaultValue) {
     return new Factory() {
-      @Override public JsonAdapter<?> create(
+      @Override public @Nullable JsonAdapter<?> create(
           Type requestedType, Set<? extends Annotation> annotations, Moshi moshi) {
         if (type != requestedType) return null;
         JsonAdapter<T> delegate = moshi.nextAdapter(this, type, annotations);

@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import javax.annotation.Nullable;
+
 /**
  * Thrown when the data in a JSON document doesn't match the data expected by the caller. For
  * example, suppose the application expects a boolean but the JSON document contains a string. When
@@ -31,15 +33,15 @@ public final class JsonDataException extends RuntimeException {
   public JsonDataException() {
   }
 
-  public JsonDataException(String message) {
+  public JsonDataException(@Nullable String message) {
     super(message);
   }
 
-  public JsonDataException(Throwable cause) {
+  public JsonDataException(@Nullable Throwable cause) {
     super(cause);
   }
 
-  public JsonDataException(String message, Throwable cause) {
+  public JsonDataException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 }

@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import javax.annotation.Nullable;
 import okio.BufferedSink;
 import okio.Sink;
 
@@ -222,7 +223,7 @@ final class JsonUtf8Writer extends JsonWriter {
     return this;
   }
 
-  @Override public JsonWriter value(Number value) throws IOException {
+  @Override public JsonWriter value(@Nullable Number value) throws IOException {
     if (value == null) {
       return nullValue();
     }
