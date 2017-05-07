@@ -115,12 +115,6 @@ internal class KotlinJsonAdapter<T>(
       val adapter: JsonAdapter<P>,
       val property: KProperty1<K, P>,
       val parameter: KParameter?) {
-    init {
-      if (property !is KMutableProperty1 && parameter == null) {
-        throw IllegalArgumentException("No constructor or var property for ${property}")
-      }
-    }
-
     fun get(value: K) = property.get(value)
 
     fun set(result: K, value: P) {
@@ -171,11 +165,13 @@ object KotlinJsonAdapterFactory : JsonAdapter.Factory {
     for (property in rawType.kotlin.memberProperties) {
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) continue
 
+      val parameter = parametersByName[property.name]
+      if (property !is KMutableProperty1 && parameter == null) continue
+
       property.isAccessible = true
       var allAnnotations = property.annotations
       var jsonAnnotation = property.findAnnotation<Json>()
 
-      val parameter = parametersByName[property.name]
       if (parameter != null) {
         allAnnotations += parameter.annotations
         if (jsonAnnotation == null) {

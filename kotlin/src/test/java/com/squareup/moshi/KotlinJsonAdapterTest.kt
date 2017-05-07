@@ -445,20 +445,68 @@ class KotlinJsonAdapterTest {
     }
   }
 
-  @Test fun unsettableProperty() {
+  @Test fun unsettablePropertyIgnored() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
-    try {
-      moshi.adapter(UnsettableProperty::class.java)
-      fail()
-    } catch(expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage("No constructor or var property for " +
-          "val ${UnsettableProperty::class.qualifiedName}.a: kotlin.Int")
-    }
+    val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
+
+    val encoded = UnsettableProperty()
+    encoded.b = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
+
+    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
   }
 
   class UnsettableProperty {
     val a: Int = -1
     var b: Int = -1
+  }
+
+  @Test fun getterOnlyNoBackingField() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val jsonAdapter = moshi.adapter(GetterOnly::class.java)
+
+    val encoded = GetterOnly(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+
+    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    assertThat(decoded.a).isEqualTo(4)
+    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.total).isEqualTo(10)
+  }
+
+  class GetterOnly(var a: Int, var b: Int) {
+    val total : Int
+      get() = a + b
+  }
+
+  @Test fun getterAndSetterNoBackingField() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
+
+    val encoded = GetterAndSetter(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5,\"total\":8}")
+
+    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
+    val decoded1 = jsonAdapter.fromJson("{\"a\":4,\"b\":6,\"total\":11}")!!
+    assertThat(decoded1.a).isEqualTo(4)
+    assertThat(decoded1.b).isEqualTo(7)
+    assertThat(decoded1.total).isEqualTo(11)
+
+    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
+    val decoded2 = jsonAdapter.fromJson("{\"a\":4,\"total\":11,\"b\":6}")!!
+    assertThat(decoded2.a).isEqualTo(4)
+    assertThat(decoded2.b).isEqualTo(7)
+    assertThat(decoded2.total).isEqualTo(11)
+  }
+
+  class GetterAndSetter(var a: Int, var b: Int) {
+    var total : Int
+      get() = a + b
+      set(value) {
+        b = value - a
+      }
   }
 
   @Test fun nonPropertyConstructorParameter() {
