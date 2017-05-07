@@ -48,7 +48,8 @@ public final class Types {
    * Returns the subset of {@code annotations} without {@code jsonQualifier}, or null if {@code
    * annotations} does not contain {@code jsonQualifier}.
    */
-  public static Set<? extends Annotation> nextAnnotations(Set<? extends Annotation> annotations,
+  public static @Nullable Set<? extends Annotation> nextAnnotations(
+      Set<? extends Annotation> annotations,
       Class<? extends Annotation> jsonQualifier) {
     if (!jsonQualifier.isAnnotationPresent(JsonQualifier.class)) {
       throw new IllegalArgumentException(jsonQualifier + " is not a JsonQualifier.");
