@@ -95,7 +95,9 @@ internal class KotlinJsonAdapter<T>(
     return result
   }
 
-  override fun toJson(writer: JsonWriter, value: T) {
+  override fun toJson(writer: JsonWriter, value: T?) {
+    if (value == null) throw NullPointerException("value == null")
+
     writer.beginObject()
     for (binding in bindings) {
       if (binding == null) continue // Skip constructor parameters that aren't properties.
@@ -202,6 +204,6 @@ object KotlinJsonAdapterFactory : JsonAdapter.Factory {
     bindings += bindingsByName.values
 
     val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
-    return KotlinJsonAdapter(constructor, bindings, options)
+    return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
   }
 }

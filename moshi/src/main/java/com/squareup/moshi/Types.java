@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /** Factory methods for types. */
 public final class Types {
@@ -200,12 +201,12 @@ public final class Types {
         });
   }
 
-  static boolean equal(Object a, Object b) {
+  static boolean equal(@Nullable Object a, @Nullable Object b) {
     return a == b || (a != null && a.equals(b));
   }
 
   /** Returns true if {@code a} and {@code b} are equal. */
-  public static boolean equals(Type a, Type b) {
+  public static boolean equals(@Nullable Type a, @Nullable Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
 
@@ -260,7 +261,7 @@ public final class Types {
     }
   }
 
-  static int hashCodeOrZero(Object o) {
+  static int hashCodeOrZero(@Nullable Object o) {
     return o != null ? o.hashCode() : 0;
   }
 
@@ -484,7 +485,7 @@ public final class Types {
    * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
    * a class.
    */
-  private static Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
+  private static @Nullable Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
     GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
     return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
   }
@@ -496,11 +497,11 @@ public final class Types {
   }
 
   private static final class ParameterizedTypeImpl implements ParameterizedType {
-    private final Type ownerType;
+    private final @Nullable Type ownerType;
     private final Type rawType;
     final Type[] typeArguments;
 
-    ParameterizedTypeImpl(Type ownerType, Type rawType, Type... typeArguments) {
+    ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type... typeArguments) {
       // Require an owner type if the raw type needs it.
       if (rawType instanceof Class<?>
           && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
@@ -526,7 +527,7 @@ public final class Types {
       return rawType;
     }
 
-    @Override public Type getOwnerType() {
+    @Override public @Nullable Type getOwnerType() {
       return ownerType;
     }
 
@@ -589,7 +590,7 @@ public final class Types {
    */
   private static final class WildcardTypeImpl implements WildcardType {
     private final Type upperBound;
-    private final Type lowerBound;
+    private final @Nullable Type lowerBound;
 
     WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
       if (lowerBounds.length > 1) throw new IllegalArgumentException();

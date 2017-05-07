@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -212,7 +213,7 @@ public abstract class JsonReader implements Closeable {
     throw new JsonEncodingException(message + " at path " + getPath());
   }
 
-  final JsonDataException typeMismatch(Object value, Object expected) {
+  final JsonDataException typeMismatch(@Nullable Object value, Object expected) {
     if (value == null) {
       return new JsonDataException(
           "Expected " + expected + " but was null at path " + getPath());
@@ -351,7 +352,7 @@ public abstract class JsonReader implements Closeable {
    *
    * @throws JsonDataException if the next token is not null or if this reader is closed.
    */
-  public abstract <T> T nextNull() throws IOException;
+  public abstract @Nullable <T> T nextNull() throws IOException;
 
   /**
    * Returns the {@linkplain Token#NUMBER double} value of the next token, consuming it. If the next
@@ -400,7 +401,7 @@ public abstract class JsonReader implements Closeable {
    * @throws JsonDataException if the next token is not a literal value, if a JSON object has a
    * duplicate key.
    */
-  public final Object readJsonValue() throws IOException {
+  public final @Nullable Object readJsonValue() throws IOException {
     switch (peek()) {
       case BEGIN_ARRAY:
         List<Object> list = new ArrayList<>();

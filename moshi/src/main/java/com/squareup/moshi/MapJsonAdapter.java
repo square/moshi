@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Converts maps with string keys to JSON objects.
@@ -28,7 +29,7 @@ import java.util.Set;
  */
 final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
   public static final Factory FACTORY = new Factory() {
-    @Override public JsonAdapter<?> create(
+    @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!annotations.isEmpty()) return null;
       Class<?> rawType = Types.getRawType(type);

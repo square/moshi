@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -154,7 +155,7 @@ public final class Moshi {
       if (jsonAdapter == null) throw new IllegalArgumentException("jsonAdapter == null");
 
       return add(new JsonAdapter.Factory() {
-        @Override public JsonAdapter<?> create(
+        @Override public @Nullable JsonAdapter<?> create(
             Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
           return annotations.isEmpty() && Util.typesMatch(type, targetType) ? jsonAdapter : null;
         }
@@ -174,7 +175,7 @@ public final class Moshi {
       }
 
       return add(new JsonAdapter.Factory() {
-        @Override public JsonAdapter<?> create(
+        @Override public @Nullable JsonAdapter<?> create(
             Type targetType, Set<? extends Annotation> annotations, Moshi moshi) {
           if (Util.typesMatch(type, targetType)
               && annotations.size() == 1
@@ -216,8 +217,8 @@ public final class Moshi {
    * class that has a {@code List<Employee>} field for an organization's management hierarchy.
    */
   private static class DeferredAdapter<T> extends JsonAdapter<T> {
-    Object cacheKey;
-    private JsonAdapter<T> delegate;
+    @Nullable Object cacheKey;
+    private @Nullable JsonAdapter<T> delegate;
 
     DeferredAdapter(Object cacheKey) {
       this.cacheKey = cacheKey;

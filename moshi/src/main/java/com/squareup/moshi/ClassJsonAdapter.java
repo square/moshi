@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.annotation.Nullable;
 
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
@@ -42,7 +43,7 @@ import java.util.TreeMap;
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public JsonAdapter<?> create(
+    @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum()) return null;

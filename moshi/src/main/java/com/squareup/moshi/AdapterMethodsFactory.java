@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 import static com.squareup.moshi.Util.jsonAnnotations;
 
@@ -36,7 +37,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     this.fromAdapters = fromAdapters;
   }
 
-  @Override public JsonAdapter<?> create(
+  @Override public @Nullable JsonAdapter<?> create(
       final Type type, final Set<? extends Annotation> annotations, final Moshi moshi) {
     final AdapterMethod toAdapter = get(toAdapters, type, annotations);
     final AdapterMethod fromAdapter = get(fromAdapters, type, annotations);
@@ -59,7 +60,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     if (fromAdapter != null) fromAdapter.bind(moshi, this);
 
     return new JsonAdapter<Object>() {
-      @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+      @Override public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
         if (toAdapter == null) {
           delegate.toJson(writer, value);
         } else if (!toAdapter.nullable && value == null) {
@@ -75,7 +76,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         }
       }
 
-      @Override public Object fromJson(JsonReader reader) throws IOException {
+      @Override public @Nullable Object fromJson(JsonReader reader) throws IOException {
         if (fromAdapter == null) {
           return delegate.fromJson(reader);
         } else if (!fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL) {
@@ -155,7 +156,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       Set<? extends Annotation> qualifierAnnotations = jsonAnnotations(parameterAnnotations[1]);
       return new AdapterMethod(parameterTypes[1], qualifierAnnotations, adapter, method,
           parameterTypes.length, 2, true) {
-        @Override public void toJson(Moshi moshi, JsonWriter writer, Object value)
+        @Override public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
             throws IOException, InvocationTargetException {
           invoke(writer, value);
         }
@@ -175,7 +176,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           delegate = moshi.adapter(returnType, returnTypeAnnotations);
         }
 
-        @Override public void toJson(Moshi moshi, JsonWriter writer, Object value)
+        @Override public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
             throws IOException, InvocationTargetException {
           Object intermediate = invoke(value);
           delegate.toJson(writer, intermediate);
@@ -260,7 +261,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   }
 
   /** Returns the matching adapter method from the list. */
-  private static AdapterMethod get(
+  private static @Nullable AdapterMethod get(
       List<AdapterMethod> adapterMethods, Type type, Set<? extends Annotation> annotations) {
     for (int i = 0, size = adapterMethods.size(); i < size; i++) {
       AdapterMethod adapterMethod = adapterMethods.get(i);
@@ -306,18 +307,18 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       }
     }
 
-    public void toJson(Moshi moshi, JsonWriter writer, Object value)
+    public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
         throws IOException, InvocationTargetException {
       throw new AssertionError();
     }
 
-    public Object fromJson(Moshi moshi, JsonReader reader)
+    public @Nullable Object fromJson(Moshi moshi, JsonReader reader)
         throws IOException, InvocationTargetException {
       throw new AssertionError();
     }
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments. */
-    protected Object invoke(Object a1) throws InvocationTargetException {
+    protected @Nullable Object invoke(@Nullable Object a1) throws InvocationTargetException {
       Object[] args = new Object[1 + jsonAdapters.length];
       args[0] = a1;
       System.arraycopy(jsonAdapters, 0, args, 1, jsonAdapters.length);
@@ -330,7 +331,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     }
 
     /** Invoke the method with two fixed arguments, plus any number of JSON adapter arguments. */
-    protected Object invoke(Object a1, Object a2) throws InvocationTargetException {
+    protected Object invoke(@Nullable Object a1, @Nullable Object a2)
+        throws InvocationTargetException {
       Object[] args = new Object[2 + jsonAdapters.length];
       args[0] = a1;
       args[1] = a2;
