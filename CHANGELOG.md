@@ -134,7 +134,7 @@ _2015-09-27_
     code should keep a reference to required adapters in a field.
  *  New: The `Types` factory class makes it possible to compose types like `List<Card>` or
     `Map<String, Integer>`. This is useful to look up JSON adapters for parameterized types.
- *  New: `JsonAdapter.failOnUnknown()` returns a new JSON adapter that throws if an unknonw value is
+ *  New: `JsonAdapter.failOnUnknown()` returns a new JSON adapter that throws if an unknown value is
     encountered on the stream. Use this in development and debug builds to detect typos in field
     names. This feature shouldn’t be used in production because it makes migrations very difficult.
 
