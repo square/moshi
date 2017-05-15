@@ -1,6 +1,43 @@
 Change Log
 ==========
 
+## Version 1.5.0
+
+_2017-05-14_
+
+ *  **Moshi now uses `@Nullable` to annotate all possibly-null values.** We've added a compile-time
+    dependency on the JSR 305 annotations. This is a [provided][maven_provided] dependency and does
+    not need to be included in your build configuration, `.jar` file, or `.apk`. We use
+    `@ParametersAreNonnullByDefault` and all parameters and return types are never null unless
+    explicitly annotated `@Nullable`.
+
+ *  **Warning: Moshi APIs in this update are source-incompatible for Kotlin callers.** Nullability
+    was previously ambiguous and lenient but now the compiler will enforce strict null checks.
+
+ *  **Kotlin models are now supported via the `moshi-kotlin` extension.** `KotlinJsonAdapterFactory`
+    is the best way to use Kotlin with Moshi. It honors default values and is null-safe. Kotlin
+    users that don't use this factory should write custom adapters for their JSON types. Otherwise
+    Moshi cannot properly initialize delegated properties of the objects it decodes.
+
+ *  New: Upgrade to Okio 1.13.0.
+
+    ```xml
+     <dependency>
+       <groupId>com.squareup.okio</groupId>
+       <artifactId>okio</artifactId>
+       <version>1.13.0</version>
+     </dependency>
+
+     com.squareup.okio:okio:1.13.0
+    ```
+
+ *  New: You may now declare delegates in `@ToJson` and `@FromJson` methods. If one of the arguments
+    to the method is a `JsonAdapter` of the same type, that will be the next eligible adapter for
+    that type. This may be useful for composing adapters.
+ *  New: `Types.equals(Type, Type)` makes it easier to compare types in `JsonAdapter.Factory`.
+ *  Fix: Retain the sign on negative zero.
+
+
 ## Version 1.4.0
 
 _2017-02-04_
@@ -158,3 +195,4 @@ _2015-06-16_
  [rfc_7159]: https://tools.ietf.org/html/rfc7159
  [gson]: https://github.com/google/gson
  [jackson]: http://wiki.fasterxml.com/JacksonHome
+ [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html

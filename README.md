@@ -481,15 +481,26 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.4.0</version>
+  <version>1.5.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.moshi:moshi:1.4.0'
+compile 'com.squareup.moshi:moshi:1.5.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+
+
+ProGuard
+--------
+
+If you are using ProGuard you might need to add the following options:
+```
+-dontwarn okio.**
+-dontwarn javax.annotation.Nullable
+-dontwarn javax.annotation.ParametersAreNonnullByDefault
+```
 
 
 License
