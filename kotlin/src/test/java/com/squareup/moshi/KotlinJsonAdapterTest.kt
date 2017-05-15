@@ -25,7 +25,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class KotlinJsonAdapterTest {
   @Test fun constructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ConstructorParameters::class.java)
 
     val encoded = ConstructorParameters(3, 5)
@@ -39,7 +39,7 @@ class KotlinJsonAdapterTest {
   class ConstructorParameters(var a: Int, var b: Int)
 
   @Test fun properties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(Properties::class.java)
 
     val encoded = Properties()
@@ -58,7 +58,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorParametersAndProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ConstructorParametersAndProperties::class.java)
 
     val encoded = ConstructorParametersAndProperties(3)
@@ -75,7 +75,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun immutableConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ImmutableConstructorParameters::class.java)
 
     val encoded = ImmutableConstructorParameters(3, 5)
@@ -89,7 +89,7 @@ class KotlinJsonAdapterTest {
   class ImmutableConstructorParameters(val a: Int, val b: Int)
 
   @Test fun immutableProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ImmutableProperties::class.java)
 
     val encoded = ImmutableProperties(3, 5)
@@ -106,7 +106,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorDefaults() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ConstructorDefaultValues::class.java)
 
     val encoded = ConstructorDefaultValues(3, 5)
@@ -120,7 +120,7 @@ class KotlinJsonAdapterTest {
   class ConstructorDefaultValues(var a: Int = -1, var b: Int = -2)
 
   @Test fun requiredValueAbsent() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(RequiredValueAbsent::class.java)
 
     try {
@@ -134,7 +134,7 @@ class KotlinJsonAdapterTest {
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
   @Test fun duplicatedValue() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
 
     try {
@@ -148,7 +148,7 @@ class KotlinJsonAdapterTest {
   class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
   @Test fun explicitNull() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ExplicitNull::class.java)
 
     val encoded = ExplicitNull(null, 5)
@@ -163,7 +163,7 @@ class KotlinJsonAdapterTest {
   class ExplicitNull(var a: Int?, var b: Int?)
 
   @Test fun absentNull() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(AbsentNull::class.java)
 
     val encoded = AbsentNull(null, 5)
@@ -178,7 +178,7 @@ class KotlinJsonAdapterTest {
   class AbsentNull(var a: Int?, var b: Int?)
 
   @Test fun repeatedValue() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
 
     try {
@@ -193,7 +193,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun constructorParameterWithQualifier() {
     val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory)
+        .add(KotlinJsonAdapterFactory())
         .add(UppercaseJsonAdapter())
         .build()
     val jsonAdapter = moshi.adapter(ConstructorParameterWithQualifier::class.java)
@@ -210,7 +210,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory)
+        .add(KotlinJsonAdapterFactory())
         .add(UppercaseJsonAdapter())
         .build()
     val jsonAdapter = moshi.adapter(PropertyWithQualifier::class.java)
@@ -231,7 +231,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorParameterWithJsonName() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ConstructorParameterWithJsonName::class.java)
 
     val encoded = ConstructorParameterWithJsonName(3, 5)
@@ -245,7 +245,7 @@ class KotlinJsonAdapterTest {
   class ConstructorParameterWithJsonName(@Json(name = "key a") var a: Int, var b: Int)
 
   @Test fun propertyWithJsonName() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(PropertyWithJsonName::class.java)
 
     val encoded = PropertyWithJsonName()
@@ -264,7 +264,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(TransientConstructorParameter::class.java)
 
     val encoded = TransientConstructorParameter(3, 5)
@@ -278,7 +278,7 @@ class KotlinJsonAdapterTest {
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
   @Test fun transientProperty() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(TransientProperty::class.java)
 
     val encoded = TransientProperty()
@@ -297,7 +297,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun supertypeConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
 
     val encoded = SubtypeConstructorParameters(3, 5)
@@ -313,7 +313,7 @@ class KotlinJsonAdapterTest {
   class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)
 
   @Test fun supertypeProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(SubtypeProperties::class.java)
 
     val encoded = SubtypeProperties()
@@ -335,7 +335,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun extendsPlatformClassWithPrivateField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
 
     val encoded = ExtendsPlatformClassWithPrivateField(3)
@@ -349,7 +349,7 @@ class KotlinJsonAdapterTest {
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
   @Test fun extendsPlatformClassWithProtectedField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithProtectedField::class.java)
 
     val encoded = ExtendsPlatformClassWithProtectedField(3)
@@ -367,7 +367,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun platformTypeThrows() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
       moshi.adapter(Triple::class.java)
       fail()
@@ -378,7 +378,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(PrivateConstructorParameters::class.java)
 
     val encoded = PrivateConstructorParameters(3, 5)
@@ -395,7 +395,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateConstructor() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
 
     val encoded = PrivateConstructor.newInstance(3, 5)
@@ -415,7 +415,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(PrivateProperties::class.java)
 
     val encoded = PrivateProperties()
@@ -446,7 +446,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun unsettablePropertyIgnored() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
 
     val encoded = UnsettableProperty()
@@ -464,7 +464,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun getterOnlyNoBackingField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(GetterOnly::class.java)
 
     val encoded = GetterOnly(3, 5)
@@ -482,7 +482,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun getterAndSetterNoBackingField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
 
     val encoded = GetterAndSetter(3, 5)
@@ -510,7 +510,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun nonPropertyConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
       moshi.adapter(NonPropertyConstructorParameter::class.java)
       fail()
@@ -524,7 +524,7 @@ class KotlinJsonAdapterTest {
   class NonPropertyConstructorParameter(a: Int, val b: Int)
 
   @Test fun kotlinEnumsAreNotCovered() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory).build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val adapter = moshi.adapter(UsingEnum::class.java)
 
     assertThat(adapter.fromJson("""{"e": "A"}""")).isEqualTo(UsingEnum(KotlinEnum.A))
