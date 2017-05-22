@@ -120,7 +120,7 @@ Moshi moshi = new Moshi.Builder()
     .build();
 ```
 
-Voila:
+Voilà:
 
 ```json
 {
