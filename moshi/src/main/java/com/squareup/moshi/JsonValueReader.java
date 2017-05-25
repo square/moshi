@@ -152,7 +152,12 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public String nextString() throws IOException {
-    String peeked = require(String.class, Token.STRING);
+    String peeked;
+    try {
+      peeked = require(Number.class, Token.NUMBER).toString();
+    } catch (JsonDataException e) {
+      peeked = require(String.class, Token.STRING);
+    }
     remove();
     return peeked;
   }

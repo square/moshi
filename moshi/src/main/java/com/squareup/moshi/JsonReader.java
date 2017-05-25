@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -431,7 +432,21 @@ public abstract class JsonReader implements Closeable {
         return nextString();
 
       case NUMBER:
-        return nextDouble();
+        final BigDecimal decimal = new BigDecimal(nextString());
+        // for numbers with decimal places, return a double (e.g., 0.0)
+        if (decimal.scale() > 0) {
+          return decimal.doubleValue();
+        }
+        // otherwise try an exact conversion to an integer, then to a long, then convert to a double
+        try {
+          return decimal.intValueExact();
+        } catch (ArithmeticException e1) {
+          try {
+            return decimal.longValueExact();
+          } catch (ArithmeticException e2) {
+            return decimal.doubleValue();
+          }
+        }
 
       case BOOLEAN:
         return nextBoolean();

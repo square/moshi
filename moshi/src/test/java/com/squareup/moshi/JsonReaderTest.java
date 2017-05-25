@@ -297,7 +297,7 @@ public final class JsonReaderTest {
         + "2.718281828459045]";
     JsonReader reader = newReader(json);
     reader.beginArray();
-    assertThat(reader.nextDouble()).isEqualTo(-0.0);
+    assertThat(reader.nextDouble()).isIn(0.0, -0.0);
     assertThat(reader.nextDouble()).isEqualTo(1.0);
     assertThat(reader.nextDouble()).isEqualTo(1.7976931348623157E308);
     assertThat(reader.nextDouble()).isEqualTo(4.9E-324);
@@ -912,6 +912,15 @@ public final class JsonReaderTest {
     } catch (JsonDataException expected) {
     }
     assertThat(reader.nextString()).isEqualTo("a");
+    reader.endArray();
+  }
+
+  @Test public void readJsonValueNumbers() throws Exception {
+    JsonReader reader = newReader("[0, 9223372036854775807, 1.5]");
+    reader.beginArray();
+    assertThat(reader.readJsonValue()).isEqualTo(0);
+    assertThat(reader.readJsonValue()).isEqualTo(9223372036854775807L);
+    assertThat(reader.readJsonValue()).isEqualTo(1.5d);
     reader.endArray();
   }
 
