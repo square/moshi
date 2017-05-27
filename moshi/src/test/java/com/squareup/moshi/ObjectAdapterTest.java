@@ -72,7 +72,7 @@ public final class ObjectAdapterTest {
     Map<Object, Object> delivery = new LinkedHashMap<>();
     delivery.put("address", "1455 Market St.");
     Map<Object, Object> pizza = new LinkedHashMap<>();
-    pizza.put("diameter", 12d);
+    pizza.put("diameter", 12);
     pizza.put("extraCheese", true);
     delivery.put("items", Arrays.asList(pizza, "Pepsi"));
 
@@ -90,7 +90,7 @@ public final class ObjectAdapterTest {
   @Test public void fromJsonUsesDoublesForNumbers() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.fromJson("[0, 1]")).isEqualTo(Arrays.asList(0d, 1d));
+    assertThat(adapter.fromJson("[0, 1]")).isEqualTo(Arrays.asList(0, 1));
   }
 
   @Test public void fromJsonDoesNotFailOnNullValues() throws Exception {

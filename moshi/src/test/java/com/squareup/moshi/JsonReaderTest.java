@@ -297,7 +297,7 @@ public final class JsonReaderTest {
         + "2.718281828459045]";
     JsonReader reader = newReader(json);
     reader.beginArray();
-    assertThat(reader.nextDouble()).isEqualTo(-0.0);
+    assertThat(reader.nextDouble()).isIn(0.0, -0.0);
     assertThat(reader.nextDouble()).isEqualTo(1.0);
     assertThat(reader.nextDouble()).isEqualTo(1.7976931348623157E308);
     assertThat(reader.nextDouble()).isEqualTo(4.9E-324);
@@ -915,10 +915,19 @@ public final class JsonReaderTest {
     reader.endArray();
   }
 
+  @Test public void readJsonValueNumbers() throws Exception {
+    JsonReader reader = newReader("[0, 9223372036854775807, 1.5]");
+    reader.beginArray();
+    assertThat(reader.readJsonValue()).isEqualTo(0);
+    assertThat(reader.readJsonValue()).isEqualTo(9223372036854775807L);
+    assertThat(reader.readJsonValue()).isEqualTo(1.5d);
+    reader.endArray();
+  }
+
   @Test public void readJsonValueInt() throws IOException {
     JsonReader reader = newReader("1");
     Object value = reader.readJsonValue();
-    assertThat(value).isEqualTo(1.0);
+    assertThat(value).isEqualTo(1);
   }
 
   @Test public void readJsonValueMap() throws IOException {
@@ -936,7 +945,7 @@ public final class JsonReaderTest {
   @Test public void readJsonValueListMultipleTypes() throws IOException {
     JsonReader reader = newReader("[\"a\", 5, false]");
     Object value = reader.readJsonValue();
-    assertThat(value).isEqualTo(Arrays.asList("a", 5.0, false));
+    assertThat(value).isEqualTo(Arrays.asList("a", 5, false));
   }
 
   @Test public void readJsonValueNestedListInMap() throws IOException {
