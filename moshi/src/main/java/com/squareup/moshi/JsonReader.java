@@ -446,6 +446,16 @@ public abstract class JsonReader implements Closeable {
   }
 
   /**
+   * Consumes the value of the next token and returns a JsonReader to defer reading the value.
+   *
+   * @throws JsonDataException if the next token is not a literal value, if a JSON object has a
+   * duplicate key.
+   */
+  public final JsonReader bufferValue() throws IOException {
+    return new JsonValueReader(readJsonValue());
+  }
+
+  /**
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
    * the current location in the JSON value.
    */
