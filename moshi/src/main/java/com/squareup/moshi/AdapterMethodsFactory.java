@@ -300,9 +300,9 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           Type type = ((ParameterizedType) parameterTypes[i]).getActualTypeArguments()[0];
           Set<? extends Annotation> jsonAnnotations = jsonAnnotations(parameterAnnotations[i]);
           jsonAdapters[i - adaptersOffset] =
-              Types.equals(this.type, type) && annotations.equals(jsonAnnotations)
-                  ? moshi.nextAdapter(factory, type, jsonAnnotations)
-                  : moshi.adapter(type, jsonAnnotations);
+              Types.equals(Types.canonicalize(this.type), Types.canonicalize(type))
+                  && annotations.equals(jsonAnnotations) ? moshi.nextAdapter(factory, type,
+                  jsonAnnotations) : moshi.adapter(type, jsonAnnotations);
         }
       }
     }

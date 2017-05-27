@@ -114,6 +114,23 @@ public final class AdapterMethodsTest {
     }
   }
 
+  private static final class StringArrayWithDelegate {
+    @FromJson String[] fromJson(JsonReader reader, JsonAdapter<String[]> delegate)
+        throws IOException {
+      reader.beginArray();
+      String[] value = delegate.fromJson(reader);
+      reader.endArray();
+      return value;
+    }
+
+    @ToJson void toJson(JsonWriter writer, String[] value, JsonAdapter<String[]> delegate)
+        throws IOException {
+      writer.beginArray();
+      delegate.toJson(writer, value);
+      writer.endArray();
+    }
+  }
+
   @Test public void toAndFromWithDelegate() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegate()).build();
     JsonAdapter<Point> adapter = moshi.adapter(Point.class);
@@ -128,6 +145,15 @@ public final class AdapterMethodsTest {
     Point point = new Point(5, 8);
     assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
     assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+  }
+
+  @Test public void toAndFromWithDelegateForArray() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new StringArrayWithDelegate()).build();
+    JsonAdapter<String[]> adapter = moshi.adapter(String[].class);
+    assertThat(adapter.toJson(new String[] { "five", "eight" })).isEqualTo(
+        "[[\"five\",\"eight\"]]");
+    assertThat(adapter.fromJson("[[\"five\",\"eight\"]]")).isEqualTo(
+        new String[] { "five", "eight" });
   }
 
   @Test public void toJsonOnly() throws Exception {
