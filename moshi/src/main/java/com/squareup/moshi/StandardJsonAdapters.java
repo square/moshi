@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -266,13 +267,45 @@ final class StandardJsonAdapters {
    */
   static final class ObjectJsonAdapter extends JsonAdapter<Object> {
     private final Moshi moshi;
+    private final JsonAdapter<List> listJsonAdapter;
+    private final JsonAdapter<Map> mapAdapter;
+    private final JsonAdapter<String> stringAdapter;
+    private final JsonAdapter<Double> doubleAdapter;
+    private final JsonAdapter<Boolean> booleanAdapter;
 
     ObjectJsonAdapter(Moshi moshi) {
       this.moshi = moshi;
+      this.listJsonAdapter = moshi.adapter(List.class);
+      this.mapAdapter = moshi.adapter(Map.class);
+      this.stringAdapter = moshi.adapter(String.class);
+      this.doubleAdapter = moshi.adapter(Double.class);
+      this.booleanAdapter = moshi.adapter(Boolean.class);
     }
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
-      return reader.readJsonValue();
+      switch (reader.peek()) {
+        case BEGIN_ARRAY:
+          return listJsonAdapter.fromJson(reader);
+
+        case BEGIN_OBJECT:
+          return mapAdapter.fromJson(reader);
+
+        case STRING:
+          return stringAdapter.fromJson(reader);
+
+        case NUMBER:
+          return doubleAdapter.fromJson(reader);
+
+        case BOOLEAN:
+          return booleanAdapter.fromJson(reader);
+
+        case NULL:
+          return reader.nextNull();
+
+        default:
+          throw new IllegalStateException(
+              "Expected a value but was " + reader.peek() + " at path " + reader.getPath());
+      }
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
