@@ -1233,6 +1233,17 @@ public final class JsonUtf8ReaderTest {
     assertThat(reader.nextString()).isEqualTo("string");
   }
 
+  @Test
+  public void expectEncodingExceptionWhenMalFormedJSON() throws IOException {
+    JsonReader reader = newReader("A");
+    try {
+      reader.beginArray();
+      fail();
+    } catch (JsonEncodingException expected) {
+      assertThat(expected).hasMessage("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+    }
+  }
+
   private void assertDocument(String document, Object... expectations) throws IOException {
     JsonReader reader = newReader(document);
     reader.setLenient(true);
