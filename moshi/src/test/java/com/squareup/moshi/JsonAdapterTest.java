@@ -16,11 +16,14 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -181,5 +184,72 @@ public final class JsonAdapterTest {
     JsonWriter writer = factory.newWriter();
     serializeNulls.toJson(writer, Collections.<String, String>singletonMap("a", null));
     assertThat(factory.json()).isEqualTo("{\"a\":null}");
+  }
+
+  @Test public void defaultIfDataExceptionInt() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    String json = "\"ZERO\"";
+    JsonAdapter<Integer> adapter = moshi.adapter(int.class).defaultIfDataException(0);
+    assertThat(adapter.fromJson(json)).isEqualTo(0);
+  }
+
+  @Test public void defaultIfDataExceptionCustomType() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    String json = "{\"price\":\"eighty\"}";
+    JsonAdapter<Pizza> adapter = moshi.adapter(Pizza.class).defaultIfDataException(new Pizza(-1));
+    assertThat(adapter.fromJson(json)).isEqualTo(new Pizza(-1));
+  }
+
+  @Test public void defaultIfDataExceptionInNested() throws Exception {
+    JsonAdapter.Factory pizzaFactory = new JsonAdapter.Factory() {
+      @Override
+      public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+        if (type != Pizza.class) {
+          return null;
+        }
+        JsonAdapter<Pizza> pizzaAdapter = moshi.nextAdapter(this, type, annotations);
+        return pizzaAdapter.defaultIfDataException(new Pizza(-1));
+      }
+    };
+    Moshi moshi = new Moshi.Builder().add(pizzaFactory).build();
+    String json = "{\"pizza\":{\"price\":\"eighty\"}, \"drink\":\"coke\"}";
+    JsonAdapter<MealDeal> adapter = moshi.adapter(MealDeal.class);
+    assertThat(adapter.fromJson(json)).isEqualTo(new MealDeal(new Pizza(-1), "coke"));
+  }
+
+  private static final class Pizza {
+    final long price;
+
+    Pizza(long price) {
+      this.price = price;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof Pizza && ((Pizza) o).price == price;
+    }
+
+    @Override public int hashCode() {
+      return (int) (price ^ (price >>> 32));
+    }
+  }
+
+  private static final class MealDeal {
+    final Pizza pizza;
+    final String drink;
+
+    MealDeal(Pizza pizza, String drink) {
+      this.pizza = pizza;
+      this.drink = drink;
+    }
+
+    @Override public boolean equals(Object o) {
+      return o instanceof MealDeal
+          && ((MealDeal) o).pizza.equals(pizza)
+          && ((MealDeal) o).drink.equals(drink);
+    }
+
+    @Override public int hashCode() {
+      return pizza.hashCode() + (31 * drink.hashCode());
+    }
   }
 }

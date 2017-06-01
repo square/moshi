@@ -228,6 +228,32 @@ public abstract class JsonAdapter<T> {
     };
   }
 
+  /**
+   * Return a JSON adapter equal to this, but using {@code defaultValue} instead of throwing a
+   * {@linkplain JsonDataException} on data type mismatches.
+   *
+   * @param defaultValue the default value to use as a fallback.
+   */
+  public JsonAdapter<T> defaultIfDataException(final T defaultValue) {
+    final JsonAdapter<T> delegate = this;
+    return new JsonAdapter<T>() {
+      @Override public T fromJson(JsonReader reader) throws IOException {
+        try {
+          Object value = reader.readJsonValue();
+          return delegate.fromJsonValue(value);
+        } catch (JsonDataException e) {
+          return defaultValue;
+        }
+      }
+      @Override public void toJson(JsonWriter writer, T value) throws IOException {
+        delegate.toJson(writer, value);
+      }
+      @Override public String toString() {
+        return delegate + ".defaultIfDataException(\"" + defaultValue + "\")";
+      }
+    };
+  }
+
   public interface Factory {
     /**
      * Attempts to create an adapter for {@code type} annotated with {@code annotations}. This
