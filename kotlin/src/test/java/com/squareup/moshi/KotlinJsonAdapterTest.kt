@@ -17,6 +17,7 @@ package com.squareup.moshi
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
+import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.util.Locale
@@ -535,6 +536,92 @@ class KotlinJsonAdapterTest {
   enum class KotlinEnum {
     A, B
   }
+
+  @Test fun manyProperties32() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(ManyProperties32::class.java)
+
+    val encoded = ManyProperties32(
+        101, 102, 103, 104, 105,
+        106, 107, 108, 109, 110,
+        111, 112, 113, 114, 115,
+        116, 117, 118, 119, 120,
+        121, 122, 123, 124, 125,
+        126, 127, 128, 129, 130,
+        131, 132)
+    val json = ("""
+        |{
+        |"v01":101,"v02":102,"v03":103,"v04":104,"v05":105,
+        |"v06":106,"v07":107,"v08":108,"v09":109,"v10":110,
+        |"v11":111,"v12":112,"v13":113,"v14":114,"v15":115,
+        |"v16":116,"v17":117,"v18":118,"v19":119,"v20":120,
+        |"v21":121,"v22":122,"v23":123,"v24":124,"v25":125,
+        |"v26":126,"v27":127,"v28":128,"v29":129,"v30":130,
+        |"v31":131,"v32":132
+        |}
+        |""").trimMargin().replace("\n", "")
+
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(json)
+
+    val decoded = jsonAdapter.fromJson(json)!!
+    assertThat(decoded.v01).isEqualTo(101)
+    assertThat(decoded.v32).isEqualTo(132)
+  }
+
+  class ManyProperties32(
+      var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
+      var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
+      var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
+      var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
+      var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
+      var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
+      var v31: Int, var v32: Int)
+
+  /**
+   * Kotlin reflect can't target constructors with more than 32 parameters.
+   * https://github.com/square/moshi/issues/323
+   */
+  @Ignore
+  @Test fun manyProperties33() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(ManyProperties33::class.java)
+
+    val encoded = ManyProperties33(
+        101, 102, 103, 104, 105,
+        106, 107, 108, 109, 110,
+        111, 112, 113, 114, 115,
+        116, 117, 118, 119, 120,
+        121, 122, 123, 124, 125,
+        126, 127, 128, 129, 130,
+        131, 132, 133)
+    val json = ("""
+        |{
+        |"v01":101,"v02":102,"v03":103,"v04":104,"v05":105,
+        |"v06":106,"v07":107,"v08":108,"v09":109,"v10":110,
+        |"v11":111,"v12":112,"v13":113,"v14":114,"v15":115,
+        |"v16":116,"v17":117,"v18":118,"v19":119,"v20":120,
+        |"v21":121,"v22":122,"v23":123,"v24":124,"v25":125,
+        |"v26":126,"v27":127,"v28":128,"v29":129,"v30":130,
+        |"v31":131,"v32":132,"v33":133
+        |}
+        |""").trimMargin().replace("\n", "")
+
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo(json)
+
+    val decoded = jsonAdapter.fromJson(json)!!
+    assertThat(decoded.v01).isEqualTo(101)
+    assertThat(decoded.v32).isEqualTo(132)
+    assertThat(decoded.v33).isEqualTo(133)
+  }
+
+  class ManyProperties33(
+      var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
+      var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
+      var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
+      var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
+      var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
+      var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
+      var v31: Int, var v32: Int, var v33: Int)
 
   // TODO(jwilson): resolve generic types?
 
