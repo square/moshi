@@ -190,7 +190,7 @@ final class Iso8601Utils {
       // If we get a ParseException it'll already have the right message/offset.
       // Other exception types can convert here.
     } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
-      throw new JsonDataException("Not an RFC 3339 date: " + date);
+      throw new JsonDataException("Not an RFC 3339 date: " + date, e);
     }
   }
 
