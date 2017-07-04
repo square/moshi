@@ -175,13 +175,14 @@ import okio.ByteString;
  * of this class are not thread safe.
  */
 public abstract class JsonReader implements Closeable {
-  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
-  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. By default, this stack
+  // permits up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
   // StackOverflowErrors.
   int stackSize = 0;
-  final int[] scopes = new int[32];
-  final String[] pathNames = new String[32];
-  final int[] pathIndices = new int[32];
+  final int maxDepth = Config.maxDepth;
+  final int[] scopes = new int[maxDepth];
+  final String[] pathNames = new String[maxDepth];
+  final int[] pathIndices = new int[maxDepth];
 
   /** True to accept non-spec compliant JSON. */
   boolean lenient;

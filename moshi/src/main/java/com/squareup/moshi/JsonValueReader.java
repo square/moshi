@@ -49,7 +49,7 @@ final class JsonValueReader extends JsonReader {
   /** Sentinel object pushed on {@link #stack} when the reader is closed. */
   private static final Object JSON_READER_CLOSED = new Object();
 
-  private final Object[] stack = new Object[32];
+  private final Object[] stack = new Object[maxDepth];
 
   JsonValueReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;

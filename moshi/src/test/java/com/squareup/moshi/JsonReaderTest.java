@@ -566,6 +566,38 @@ public final class JsonReaderTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+  @Test public void moreDeeplyNestedArrays() throws IOException {
+    ++Config.maxDepth;
+    try {
+      JsonReader reader = newReader("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+      for (int i = 0; i < 32; i++) {
+        reader.beginArray();
+      }
+      assertThat(reader.getPath()).isEqualTo("$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
+                                             + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+      for (int i = 0; i < 32; i++) {
+        reader.endArray();
+      }
+      assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    }
+    finally {
+      --Config.maxDepth;
+    }
+  }
+
+  @Test public void tooDeeplyNestedArrays() throws IOException {
+    try {
+      JsonReader reader = newReader("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+      for (int i = 0; i < 32; i++) {
+        reader.beginArray();
+      }
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
+        + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+    }
+  }
+
   @Test public void deeplyNestedObjects() throws IOException {
     // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
     String array = "{\"a\":%s}";
@@ -586,6 +618,55 @@ public final class JsonReaderTest {
       reader.endObject();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void moreDeeplyNestedObjects() throws IOException {
+    ++Config.maxDepth;
+    try {
+      // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 32 levels deep.
+      String array = "{\"a\":%s}";
+      String json = "true";
+      for (int i = 0; i < 32; i++) {
+        json = String.format(array, json);
+      }
+
+      JsonReader reader = newReader(json);
+      for (int i = 0; i < 32; i++) {
+        reader.beginObject();
+        assertThat(reader.nextName()).isEqualTo("a");
+      }
+      assertThat(reader.getPath())
+        .isEqualTo("$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+      assertThat(reader.nextBoolean()).isTrue();
+      for (int i = 0; i < 32; i++) {
+        reader.endObject();
+      }
+      assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    }
+    finally {
+      --Config.maxDepth;
+    }
+  }
+
+  @Test public void tooDeeplyNestedObjects() throws IOException {
+    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 32 levels deep.
+    String array = "{\"a\":%s}";
+    String json = "true";
+    for (int i = 0; i < 32; i++) {
+      json = String.format(array, json);
+    }
+
+    try {
+      JsonReader reader = newReader(json);
+      for (int i = 0; i < 32; i++) {
+        reader.beginObject();
+        assertThat(reader.nextName()).isEqualTo("a");
+      }
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Nesting too deep at "
+        + "$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+    }
   }
 
   @Test public void skipVeryLongUnquotedString() throws IOException {
