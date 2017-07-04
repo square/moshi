@@ -432,6 +432,19 @@ public final class JsonWriterTest {
         .isEqualTo("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
   }
 
+  @Test public void deeperNestingArrays() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.setMaxDepth(33);
+    for (int i = 0; i < 32; i++) {
+      writer.beginArray();
+    }
+    for (int i = 0; i < 32; i++) {
+      writer.endArray();
+    }
+    assertThat(factory.json())
+      .isEqualTo("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+  }
+
   @Test public void tooDeepNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
     for (int i = 0; i < 31; i++) {
@@ -460,6 +473,24 @@ public final class JsonWriterTest {
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
         + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":true}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
+  }
+
+  @Test public void deeperNestingObjects() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.setMaxDepth(33);
+    for (int i = 0; i < 32; i++) {
+      writer.beginObject();
+      writer.name("a");
+    }
+    writer.value(true);
+    for (int i = 0; i < 32; i++) {
+      writer.endObject();
+    }
+    assertThat(factory.json()).isEqualTo(""
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
+        + "true}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
   }
 
   @Test public void tooDeepNestingObjects() throws IOException {

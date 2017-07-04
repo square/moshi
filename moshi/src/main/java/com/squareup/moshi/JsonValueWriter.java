@@ -31,7 +31,9 @@ import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class JsonValueWriter extends JsonWriter {
-  private final Object[] stack = new Object[32];
+
+  Object[] stack = new Object[maxDepth];
+
   private @Nullable String deferredName;
 
   JsonValueWriter() {
@@ -44,6 +46,17 @@ final class JsonValueWriter extends JsonWriter {
       throw new IllegalStateException("Incomplete document");
     }
     return stack[0];
+  }
+
+  @Override
+  protected boolean newMaxDepth(int maxDepth) {
+    if (super.newMaxDepth(maxDepth)) {
+      final Object[] stack = new Object[maxDepth];
+      System.arraycopy(this.stack, 0, stack, 0, stackSize);
+      this.stack = stack;
+      return true;
+    }
+    return false;
   }
 
   @Override public JsonWriter beginArray() throws IOException {

@@ -423,6 +423,22 @@ public final class JsonValueReaderTest {
     }
   }
 
+  @Test public void deeplyNestedArrays() throws IOException {
+    Object root = Collections.emptyList();
+    for (int i = 0; i < 32; i++) {
+      root = singletonList(root);
+    }
+    JsonReader reader = new JsonValueReader(root);
+    reader.setMaxDepth(33);
+    for (int i = 0; i < 33; i++) {
+      reader.beginArray();
+    }
+    for (int i = 0; i < 33; i++) {
+      reader.endArray();
+    }
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   @Test public void tooDeeplyNestedArrays() throws IOException {
     Object root = Collections.emptyList();
     for (int i = 0; i < 32; i++) {
@@ -439,6 +455,24 @@ public final class JsonValueReaderTest {
       assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
           + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
     }
+  }
+
+  @Test public void deeplyNestedObjects() throws IOException {
+    Object root = Boolean.TRUE;
+    for (int i = 0; i < 32; i++) {
+      root = singletonMap("a", root);
+    }
+    JsonReader reader = new JsonValueReader(root);
+    reader.setMaxDepth(33);
+    for (int i = 0; i < 32; i++) {
+      reader.beginObject();
+      assertThat(reader.nextName()).isEqualTo("a");
+    }
+    assertThat(reader.nextBoolean()).isEqualTo(true);
+    for (int i = 0; i < 32; i++) {
+      reader.endObject();
+    }
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
   @Test public void tooDeeplyNestedObjects() throws IOException {

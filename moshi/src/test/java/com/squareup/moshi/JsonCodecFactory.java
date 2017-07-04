@@ -33,6 +33,13 @@ abstract class JsonCodecFactory {
         return JsonReader.of(buffer);
       }
 
+      @Override public JsonReader newReader(String json, int maxDepth) {
+        Buffer buffer = new Buffer().writeUtf8(json);
+        JsonReader reader = JsonReader.of(buffer);
+        reader.setMaxDepth(maxDepth);
+        return reader;
+      }
+
       @Override JsonWriter newWriter() {
         buffer = new Buffer();
         return new JsonUtf8Writer(buffer);
@@ -62,6 +69,13 @@ abstract class JsonCodecFactory {
         return new JsonValueReader(object);
       }
 
+      @Override
+      public JsonReader newReader(String json, int maxDepth) throws IOException {
+        Moshi moshi = new Moshi.Builder().build();
+        Object object = moshi.adapter(Object.class).lenient().maxDepth(maxDepth).fromJson(json);
+        return new JsonValueReader(object);
+      }
+
       // TODO(jwilson): fix precision checks and delete his method.
       @Override boolean implementsStrictPrecision() {
         return false;
@@ -79,6 +93,7 @@ abstract class JsonCodecFactory {
           JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
           bufferedSinkWriter.setSerializeNulls(true);
           bufferedSinkWriter.setLenient(true);
+          bufferedSinkWriter.setMaxDepth(writer.maxDepth);
           OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
           return buffer.readUtf8();
         } catch (IOException e) {
@@ -102,6 +117,8 @@ abstract class JsonCodecFactory {
   }
 
   abstract JsonReader newReader(String json) throws IOException;
+
+  abstract JsonReader newReader(String json, int maxDepth) throws IOException;
 
   abstract JsonWriter newWriter();
 

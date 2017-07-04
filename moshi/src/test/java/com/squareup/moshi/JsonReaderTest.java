@@ -49,6 +49,10 @@ public final class JsonReaderTest {
     return factory.newReader(json);
   }
 
+  JsonReader newReader(String json, int maxDepth) throws IOException {
+    return factory.newReader(json, maxDepth);
+  }
+
   @Test public void readArray() throws IOException {
     JsonReader reader = newReader("[true, true]");
     reader.beginArray();
@@ -561,6 +565,22 @@ public final class JsonReaderTest {
     assertThat(reader.getPath()).isEqualTo("$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
         + "[0][0][0][0][0][0][0][0][0][0][0][0][0]");
     for (int i = 0; i < 31; i++) {
+      reader.endArray();
+    }
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void moreDeeplyNestedArrays() throws IOException {
+    JsonReader reader = newReader(
+      "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      33
+    );
+    for (int i = 0; i < 32; i++) {
+      reader.beginArray();
+    }
+    assertThat(reader.getPath()).isEqualTo("$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
+                                           + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+    for (int i = 0; i < 32; i++) {
       reader.endArray();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
