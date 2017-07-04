@@ -31,7 +31,7 @@ import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class JsonValueWriter extends JsonWriter {
-  private final Object[] stack = new Object[32];
+  private final Object[] stack = new Object[maxDepth];
   private @Nullable String deferredName;
 
   JsonValueWriter() {
