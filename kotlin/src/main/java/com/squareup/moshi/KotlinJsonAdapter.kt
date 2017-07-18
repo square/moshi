@@ -16,6 +16,7 @@
 package com.squareup.moshi
 
 import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.AbstractMap.SimpleEntry
 import kotlin.collections.Map.Entry
@@ -161,6 +162,14 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val parametersByName = constructor.parameters.associateBy { it.name }
     constructor.isAccessible = true
 
+    // If the kotlin type has type arguments map the declared names with
+    // the ones expected by the consumer
+    val typeArguments = (type as? ParameterizedType)?.actualTypeArguments
+        ?.mapIndexed { index, arg ->
+          Pair(rawType.kotlin.typeParameters[index].name, arg)
+        }
+        ?.associate { it } ?: mapOf()
+
     val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
     for (property in rawType.kotlin.memberProperties) {
@@ -181,8 +190,10 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
+      val propertyJavaType = property.returnType.javaType
+      val propertyType = typeArguments[propertyJavaType.typeName] ?: propertyJavaType
       val adapter = moshi.adapter<Any>(
-          property.returnType.javaType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
+          propertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
       bindingsByName[property.name] =
           KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
@@ -193,7 +204,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
       if (binding == null && !parameter.isOptional) {
-        throw IllegalArgumentException("No property for required constructor ${parameter}")
+        throw IllegalArgumentException("No property for required constructor $parameter")
       }
       bindings += binding
     }
