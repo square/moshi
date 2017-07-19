@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
 import okio.Buffer;
 import org.junit.Test;
@@ -703,6 +704,23 @@ public final class MoshiTest {
 
   @Uppercase
   static String uppercaseString;
+
+  @Test public void nextJsonAdapterDisallowsNullAnnotations() throws Exception {
+    JsonAdapter.Factory badFactory = new JsonAdapter.Factory() {
+      @Nullable @Override
+      public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations,
+          Moshi moshi) {
+        return moshi.nextAdapter(this, type, null);
+      }
+    };
+    Moshi moshi = new Moshi.Builder().add(badFactory).build();
+    try {
+      moshi.adapter(Object.class);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("annotations == null");
+    }
+  }
 
   @Test public void delegatingJsonAdapterFactory() throws Exception {
     Moshi moshi = new Moshi.Builder()

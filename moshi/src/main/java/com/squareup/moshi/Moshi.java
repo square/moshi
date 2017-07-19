@@ -119,6 +119,8 @@ public final class Moshi {
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
       Set<? extends Annotation> annotations) {
+    if (annotations == null) throw new NullPointerException("annotations == null");
+
     type = Types.canonicalize(type);
 
     int skipPastIndex = factories.indexOf(skipPast);
