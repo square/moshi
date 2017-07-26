@@ -7,7 +7,7 @@ To use, supply an instance of your desired converter when building your `Moshi` 
 
 ```java
 Moshi moshi = new Moshi.Builder()
-    .addConverterFactory(new Rfc3339DateJsonAdapter())
+    .addConverterFactory(Date.class, new Rfc3339DateJsonAdapter())
     //etc
     .build();
 ```
