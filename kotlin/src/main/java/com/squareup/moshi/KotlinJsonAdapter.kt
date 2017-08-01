@@ -15,9 +15,11 @@
  */
 package com.squareup.moshi
 
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import java.util.AbstractMap.SimpleEntry
 import kotlin.collections.Map.Entry
 import kotlin.reflect.KFunction
@@ -149,7 +151,7 @@ internal class KotlinJsonAdapter<T>(
 }
 
 class KotlinJsonAdapterFactory : JsonAdapter.Factory {
-  override fun create(type: Type?, annotations: MutableSet<out Annotation>, moshi: Moshi)
+  override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi)
       : JsonAdapter<*>? {
     if (!annotations.isEmpty()) return null
 
@@ -190,10 +192,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val propertyJavaType = property.returnType.javaType
-      val propertyType = typeArguments[propertyJavaType.typeName] ?: propertyJavaType
-      val adapter = moshi.adapter<Any>(
-          propertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
+      val adapter = moshi.adapter<Any>(property.returnType.javaType.canonicalize(typeArguments),
+          Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
       bindingsByName[property.name] =
           KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
@@ -214,4 +214,26 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
   }
+
+  /** Canonicalize the properties return type with respect to of owner type arguments. */
+  private fun Type.canonicalize(ownerTypeArguments: Map<String, Type?>): Type {
+    val canonicalType = Types.canonicalize(this)
+    return when (canonicalType) {
+      is ParameterizedType -> {
+        Types.newParameterizedTypeWithOwner(canonicalType.ownerType,
+            canonicalType.rawType.canonicalize(ownerTypeArguments),
+            *canonicalType.actualTypeArguments.canonicalize(ownerTypeArguments))
+      }
+      is GenericArrayType -> {
+        Types.arrayOf(canonicalType.genericComponentType.canonicalize(ownerTypeArguments))
+      }
+      is WildcardType -> {
+        throw AssertionError() // Kotlin properties will never be represented by a wildcard type.
+      }
+      else -> ownerTypeArguments[typeName] ?: this
+    }
+  }
+
+  private fun Array<Type>.canonicalize(ownerTypeArguments: Map<String, Type?>): Array<Type> =
+      map { it.canonicalize(ownerTypeArguments) }.toTypedArray()
 }

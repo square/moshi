@@ -564,6 +564,20 @@ class KotlinJsonAdapterTest {
 
   data class SuperGeneric<out A, out B, out C>(val first: A, val second: B, val third: C)
 
+  @Test fun genericMultitable() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    val typeJavaClass = Multitable::class.java
+    val adapter = moshi.adapter<Multitable<String, Int, Double>>(
+        Types.newParameterizedTypeWithOwner(typeJavaClass.enclosingClass, typeJavaClass,
+            String::class.java, java.lang.Integer::class.java, java.lang.Double::class.java))
+
+    assertThat(adapter.fromJson("""{ "cells": { "rKey": { "1" : [ 3.0, 5.0, 11.0, 17.0 ] } } }"""))
+        .isEqualTo(Multitable(mapOf(Pair("rKey", mapOf(Pair(1, listOf(3.0, 5.0, 11.0, 17.0)))))))
+  }
+
+  data class Multitable<R, C, out V>(val cells: Map<R, Map<C, List<V>>>)
+
   @Test fun manyProperties32() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ManyProperties32::class.java)
