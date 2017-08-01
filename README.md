@@ -472,6 +472,14 @@ public final class BlackjackHand {
 }
 ```
 
+### Kotlin Support
+
+Kotlin classes work with Moshi out of the box, with the exception of annotations. If you need to annotate your Kotlin classes with an `@Json` annotation or otherwise, you will need to use the `moshi-kotlin` artifact, and set up Moshi to use its converter factory:
+```kotlin
+val moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .build()
+```
 
 Download
 --------
@@ -487,6 +495,18 @@ Download [the latest JAR][dl] or depend via Maven:
 or Gradle:
 ```groovy
 compile 'com.squareup.moshi:moshi:1.5.0'
+```
+and for additional Kotlin support:
+```xml
+<dependency>
+  <groupId>com.squareup.moshi</groupId>
+  <artifactId>moshi-kotlin</artifactId>
+  <version>1.5.0</version>
+</dependency>
+```
+or Gradle:
+```groovy
+compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -504,7 +524,12 @@ If you are using ProGuard you might need to add the following options:
     @com.squareup.moshi.* <methods>;
 }
 ```
-
+Additional rules are needed if you are using the Kotlin artifact:
+```
+-keepclassmembers class kotlin.Metadata {
+    public <methods>;
+}
+```
 
 License
 --------
