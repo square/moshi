@@ -523,6 +523,7 @@ If you are using ProGuard you might need to add the following options:
 -keepclasseswithmembers class * {
     @com.squareup.moshi.* <methods>;
 }
+-keep @com.squareup.moshi.JsonQualifier interface *
 ```
 Additional rules are needed if you are using the Kotlin artifact:
 ```
