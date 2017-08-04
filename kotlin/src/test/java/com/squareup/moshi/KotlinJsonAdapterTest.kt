@@ -25,9 +25,12 @@ import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class KotlinJsonAdapterTest {
+  /** Returns a new instance of [Moshi] with [KotlinJsonAdapterFactory] added. */
+  val newMoshi: Moshi
+    get() = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
   @Test fun constructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ConstructorParameters::class.java)
+    val jsonAdapter = newMoshi.adapter(ConstructorParameters::class.java)
 
     val encoded = ConstructorParameters(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -40,8 +43,7 @@ class KotlinJsonAdapterTest {
   class ConstructorParameters(var a: Int, var b: Int)
 
   @Test fun properties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(Properties::class.java)
+    val jsonAdapter = newMoshi.adapter(Properties::class.java)
 
     val encoded = Properties()
     encoded.a = 3
@@ -59,8 +61,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorParametersAndProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ConstructorParametersAndProperties::class.java)
+    val jsonAdapter = newMoshi.adapter(ConstructorParametersAndProperties::class.java)
 
     val encoded = ConstructorParametersAndProperties(3)
     encoded.b = 5
@@ -76,8 +77,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun immutableConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ImmutableConstructorParameters::class.java)
+    val jsonAdapter = newMoshi.adapter(ImmutableConstructorParameters::class.java)
 
     val encoded = ImmutableConstructorParameters(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -90,8 +90,7 @@ class KotlinJsonAdapterTest {
   class ImmutableConstructorParameters(val a: Int, val b: Int)
 
   @Test fun immutableProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ImmutableProperties::class.java)
+    val jsonAdapter = newMoshi.adapter(ImmutableProperties::class.java)
 
     val encoded = ImmutableProperties(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -107,8 +106,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorDefaults() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ConstructorDefaultValues::class.java)
+    val jsonAdapter = newMoshi.adapter(ConstructorDefaultValues::class.java)
 
     val encoded = ConstructorDefaultValues(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -121,8 +119,7 @@ class KotlinJsonAdapterTest {
   class ConstructorDefaultValues(var a: Int = -1, var b: Int = -2)
 
   @Test fun requiredValueAbsent() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(RequiredValueAbsent::class.java)
+    val jsonAdapter = newMoshi.adapter(RequiredValueAbsent::class.java)
 
     try {
       jsonAdapter.fromJson("{\"a\":4}")
@@ -135,8 +132,7 @@ class KotlinJsonAdapterTest {
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
   @Test fun duplicatedValue() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
+    val jsonAdapter = newMoshi.adapter(DuplicateValue::class.java)
 
     try {
       jsonAdapter.fromJson("{\"a\":4,\"a\":4}")
@@ -149,8 +145,7 @@ class KotlinJsonAdapterTest {
   class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
   @Test fun explicitNull() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ExplicitNull::class.java)
+    val jsonAdapter = newMoshi.adapter(ExplicitNull::class.java)
 
     val encoded = ExplicitNull(null, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
@@ -164,8 +159,7 @@ class KotlinJsonAdapterTest {
   class ExplicitNull(var a: Int?, var b: Int?)
 
   @Test fun absentNull() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(AbsentNull::class.java)
+    val jsonAdapter = newMoshi.adapter(AbsentNull::class.java)
 
     val encoded = AbsentNull(null, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
@@ -179,8 +173,7 @@ class KotlinJsonAdapterTest {
   class AbsentNull(var a: Int?, var b: Int?)
 
   @Test fun repeatedValue() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
+    val jsonAdapter = newMoshi.adapter(RepeatedValue::class.java)
 
     try {
       jsonAdapter.fromJson("{\"a\":4,\"b\":null,\"b\":6}")
@@ -232,8 +225,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun constructorParameterWithJsonName() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ConstructorParameterWithJsonName::class.java)
+    val jsonAdapter = newMoshi.adapter(ConstructorParameterWithJsonName::class.java)
 
     val encoded = ConstructorParameterWithJsonName(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"key a\":3,\"b\":5}")
@@ -246,8 +238,7 @@ class KotlinJsonAdapterTest {
   class ConstructorParameterWithJsonName(@Json(name = "key a") var a: Int, var b: Int)
 
   @Test fun propertyWithJsonName() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(PropertyWithJsonName::class.java)
+    val jsonAdapter = newMoshi.adapter(PropertyWithJsonName::class.java)
 
     val encoded = PropertyWithJsonName()
     encoded.a = 3
@@ -265,8 +256,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(TransientConstructorParameter::class.java)
+    val jsonAdapter = newMoshi.adapter(TransientConstructorParameter::class.java)
 
     val encoded = TransientConstructorParameter(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
@@ -279,8 +269,7 @@ class KotlinJsonAdapterTest {
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
   @Test fun transientProperty() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(TransientProperty::class.java)
+    val jsonAdapter = newMoshi.adapter(TransientProperty::class.java)
 
     val encoded = TransientProperty()
     encoded.a = 3
@@ -298,8 +287,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun supertypeConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
+    val jsonAdapter = newMoshi.adapter(SubtypeConstructorParameters::class.java)
 
     val encoded = SubtypeConstructorParameters(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -314,8 +302,7 @@ class KotlinJsonAdapterTest {
   class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)
 
   @Test fun supertypeProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(SubtypeProperties::class.java)
+    val jsonAdapter = newMoshi.adapter(SubtypeProperties::class.java)
 
     val encoded = SubtypeProperties()
     encoded.a = 3
@@ -336,8 +323,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun extendsPlatformClassWithPrivateField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
+    val jsonAdapter = newMoshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
 
     val encoded = ExtendsPlatformClassWithPrivateField(3)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3}")
@@ -350,8 +336,7 @@ class KotlinJsonAdapterTest {
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
   @Test fun extendsPlatformClassWithProtectedField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithProtectedField::class.java)
+    val jsonAdapter = newMoshi.adapter(ExtendsPlatformClassWithProtectedField::class.java)
 
     val encoded = ExtendsPlatformClassWithProtectedField(3)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"buf\":[0,0],\"count\":0}")
@@ -368,9 +353,8 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun platformTypeThrows() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
-      moshi.adapter(Triple::class.java)
+      newMoshi.adapter(Triple::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Platform class kotlin.Triple annotated [] "
@@ -379,8 +363,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(PrivateConstructorParameters::class.java)
+    val jsonAdapter = newMoshi.adapter(PrivateConstructorParameters::class.java)
 
     val encoded = PrivateConstructorParameters(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -396,8 +379,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun privateConstructor() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
+    val jsonAdapter = newMoshi.adapter(PrivateConstructor::class.java)
 
     val encoded = PrivateConstructor.newInstance(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -410,14 +392,14 @@ class KotlinJsonAdapterTest {
   class PrivateConstructor private constructor(var a: Int, var b: Int) {
     fun a() = a
     fun b() = b
+
     companion object {
       fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
     }
   }
 
   @Test fun privateProperties() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(PrivateProperties::class.java)
+    val jsonAdapter = newMoshi.adapter(PrivateProperties::class.java)
 
     val encoded = PrivateProperties()
     encoded.a(3)
@@ -447,8 +429,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun unsettablePropertyIgnored() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
+    val jsonAdapter = newMoshi.adapter(UnsettableProperty::class.java)
 
     val encoded = UnsettableProperty()
     encoded.b = 5
@@ -465,8 +446,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun getterOnlyNoBackingField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(GetterOnly::class.java)
+    val jsonAdapter = newMoshi.adapter(GetterOnly::class.java)
 
     val encoded = GetterOnly(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
@@ -478,13 +458,12 @@ class KotlinJsonAdapterTest {
   }
 
   class GetterOnly(var a: Int, var b: Int) {
-    val total : Int
+    val total: Int
       get() = a + b
   }
 
   @Test fun getterAndSetterNoBackingField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
+    val jsonAdapter = newMoshi.adapter(GetterAndSetter::class.java)
 
     val encoded = GetterAndSetter(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5,\"total\":8}")
@@ -503,7 +482,7 @@ class KotlinJsonAdapterTest {
   }
 
   class GetterAndSetter(var a: Int, var b: Int) {
-    var total : Int
+    var total: Int
       get() = a + b
       set(value) {
         b = value - a
@@ -511,9 +490,8 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun nonPropertyConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
-      moshi.adapter(NonPropertyConstructorParameter::class.java)
+      newMoshi.adapter(NonPropertyConstructorParameter::class.java)
       fail()
     } catch(expected: IllegalArgumentException) {
       assertThat(expected).hasMessage(
@@ -525,8 +503,7 @@ class KotlinJsonAdapterTest {
   class NonPropertyConstructorParameter(a: Int, val b: Int)
 
   @Test fun kotlinEnumsAreNotCovered() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val adapter = moshi.adapter(UsingEnum::class.java)
+    val adapter = newMoshi.adapter(UsingEnum::class.java)
 
     assertThat(adapter.fromJson("""{"e": "A"}""")).isEqualTo(UsingEnum(KotlinEnum.A))
   }
@@ -538,8 +515,7 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun manyProperties32() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ManyProperties32::class.java)
+    val jsonAdapter = newMoshi.adapter(ManyProperties32::class.java)
 
     val encoded = ManyProperties32(
         101, 102, 103, 104, 105,
@@ -583,8 +559,7 @@ class KotlinJsonAdapterTest {
    */
   @Ignore
   @Test fun manyProperties33() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(ManyProperties33::class.java)
+    val jsonAdapter = newMoshi.adapter(ManyProperties33::class.java)
 
     val encoded = ManyProperties33(
         101, 102, 103, 104, 105,
@@ -630,10 +605,11 @@ class KotlinJsonAdapterTest {
   annotation class Uppercase
 
   class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase s: String) : String {
+    @ToJson fun toJson(@Uppercase s: String): String {
       return s.toUpperCase(Locale.US)
     }
-    @FromJson @Uppercase fun fromJson(s: String) : String {
+
+    @FromJson @Uppercase fun fromJson(s: String): String {
       return s.toLowerCase(Locale.US)
     }
   }
