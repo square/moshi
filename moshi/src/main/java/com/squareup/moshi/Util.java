@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -65,5 +66,18 @@ final class Util {
       }
     }
     return false;
+  }
+
+  public static int[] doubleArray(int[] array) {
+    int[] result = new int[array.length * 2];
+    System.arraycopy(array, 0, result, 0, array.length);
+    return result;
+  }
+
+  public static <T> T[] doubleArray(T[] array) {
+    @SuppressWarnings("unchecked") // We use the same type as 'array'.
+    T[] result = (T[]) Array.newInstance(array.getClass().getComponentType(), array.length * 2);
+    System.arraycopy(array, 0, result, 0, array.length);
+    return result;
   }
 }

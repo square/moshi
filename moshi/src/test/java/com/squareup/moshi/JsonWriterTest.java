@@ -25,6 +25,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import static com.squareup.moshi.TestUtil.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -434,15 +435,15 @@ public final class JsonWriterTest {
 
   @Test public void tooDeepNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       writer.beginArray();
     }
     try {
       writer.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
-          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]: circular reference?");
+      assertThat(expected).hasMessage("Nesting too deep at $"
+          + repeat("[0]", 255) + ": circular reference?");
     }
   }
 
@@ -464,7 +465,7 @@ public final class JsonWriterTest {
 
   @Test public void tooDeepNestingObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       writer.beginObject();
       writer.name("a");
     }
@@ -472,8 +473,8 @@ public final class JsonWriterTest {
       writer.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a."
-          + "a.a.a.a.a.a.a.a.a.a.a.a: circular reference?");
+      assertThat(expected).hasMessage("Nesting too deep at $"
+          + repeat(".a", 255) + ": circular reference?");
     }
   }
 
