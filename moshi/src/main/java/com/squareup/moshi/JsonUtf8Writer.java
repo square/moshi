@@ -101,6 +101,7 @@ final class JsonUtf8Writer extends JsonWriter {
    */
   private JsonWriter open(int empty, String openBracket) throws IOException {
     beforeValue();
+    checkStack();
     pushScope(empty);
     pathIndices[stackSize - 1] = 0;
     sink.writeUtf8(openBracket);

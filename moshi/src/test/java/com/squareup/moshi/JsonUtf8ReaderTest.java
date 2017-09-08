@@ -1023,17 +1023,15 @@ public final class JsonUtf8ReaderTest {
   }
 
   @Test public void tooDeeplyNestedArrays() throws IOException {
-    JsonReader reader = newReader(
-        "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
-    for (int i = 0; i < 31; i++) {
+    JsonReader reader = newReader(repeat("[", 256) + repeat("]", 256));
+    for (int i = 0; i < 255; i++) {
       reader.beginArray();
     }
     try {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
-          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", 255));
     }
   }
 
@@ -1041,12 +1039,12 @@ public final class JsonUtf8ReaderTest {
     // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
     String array = "{\"a\":%s}";
     String json = "true";
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 256; i++) {
       json = String.format(array, json);
     }
 
     JsonReader reader = newReader(json);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
@@ -1054,8 +1052,7 @@ public final class JsonUtf8ReaderTest {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage(
-          "Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", 255));
     }
   }
 
