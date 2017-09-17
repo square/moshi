@@ -554,35 +554,34 @@ public final class JsonReaderTest {
   }
 
   @Test public void deeplyNestedArrays() throws IOException {
-    JsonReader reader = newReader("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
-    for (int i = 0; i < 31; i++) {
+    JsonReader reader = newReader(repeat("[", 255) + repeat("]", 255));
+    for (int i = 0; i < 255; i++) {
       reader.beginArray();
     }
-    assertThat(reader.getPath()).isEqualTo("$[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]"
-        + "[0][0][0][0][0][0][0][0][0][0][0][0][0]");
-    for (int i = 0; i < 31; i++) {
+    assertThat(reader.getPath()).isEqualTo("$" + repeat("[0]", 255));
+    for (int i = 0; i < 255; i++) {
       reader.endArray();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
   @Test public void deeplyNestedObjects() throws IOException {
-    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
+    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 255 levels deep.
     String array = "{\"a\":%s}";
     String json = "true";
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       json = String.format(array, json);
     }
 
     JsonReader reader = newReader(json);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
     assertThat(reader.getPath())
-        .isEqualTo("$.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a");
+        .isEqualTo("$" + repeat(".a", 255));
     assertThat(reader.nextBoolean()).isTrue();
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       reader.endObject();
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);

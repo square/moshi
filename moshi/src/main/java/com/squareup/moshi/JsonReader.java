@@ -198,18 +198,6 @@ public abstract class JsonReader implements Closeable {
     // Package-private to control subclasses.
   }
 
-  final void pushScope(int newTop) {
-    if (stackSize == scopes.length) {
-      if (stackSize == 256) {
-        throw new JsonDataException("Nesting too deep at " + getPath());
-      }
-      scopes = Util.doubleArray(scopes);
-      pathNames = Util.doubleArray(pathNames);
-      pathIndices = Util.doubleArray(pathIndices);
-    }
-    scopes[stackSize++] = newTop;
-  }
-
   /**
    * Throws a new IO exception with the given message and a context snippet
    * with this reader's content.
@@ -225,6 +213,21 @@ public abstract class JsonReader implements Closeable {
     } else {
       return new JsonDataException("Expected " + expected + " but was " + value + ", a "
           + value.getClass().getName() + ", at path " + getPath());
+    }
+  }
+
+  /**
+   * Ensures that the scopes, pathNames, and pathIndicies all have the capacity to hold an
+   * additional element.
+   */
+  void checkStack() {
+    if (stackSize == scopes.length) {
+      if (stackSize == 256) {
+        throw new JsonDataException("Nesting too deep at " + getPath());
+      }
+      scopes = Util.doubleArray(scopes);
+      pathNames = Util.doubleArray(pathNames);
+      pathIndices = Util.doubleArray(pathIndices);
     }
   }
 

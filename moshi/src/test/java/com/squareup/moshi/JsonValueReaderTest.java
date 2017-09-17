@@ -16,17 +16,15 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.junit.Test;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
+import static com.squareup.moshi.TestUtil.repeat;
 
 public final class JsonValueReaderTest {
   @Test public void array() throws Exception {
@@ -425,29 +423,28 @@ public final class JsonValueReaderTest {
 
   @Test public void tooDeeplyNestedArrays() throws IOException {
     Object root = Collections.emptyList();
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 256; i++) {
       root = singletonList(root);
     }
     JsonReader reader = new JsonValueReader(root);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       reader.beginArray();
     }
     try {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
-          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", 256));
     }
   }
 
   @Test public void tooDeeplyNestedObjects() throws IOException {
     Object root = Boolean.TRUE;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 256; i++) {
       root = singletonMap("a", root);
     }
     JsonReader reader = new JsonValueReader(root);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 255; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
@@ -456,7 +453,7 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage(
-          "Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.");
+          "Nesting too deep at $." + repeat("a.", 255));
     }
   }
 }
