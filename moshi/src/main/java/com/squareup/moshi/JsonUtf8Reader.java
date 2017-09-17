@@ -98,6 +98,11 @@ final class JsonUtf8Reader extends JsonReader {
     pushScope(JsonScope.EMPTY_DOCUMENT);
   }
 
+  private void pushScope(int newTop) {
+    checkStack();
+    scopes[stackSize++] = newTop;
+  }
+
   @Override public void beginArray() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {

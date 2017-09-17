@@ -49,7 +49,7 @@ final class JsonValueReader extends JsonReader {
   /** Sentinel object pushed on {@link #stack} when the reader is closed. */
   private static final Object JSON_READER_CLOSED = new Object();
 
-  private final Object[] stack = new Object[32];
+  private Object[] stack = new Object[32];
 
   JsonValueReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
@@ -288,10 +288,19 @@ final class JsonValueReader extends JsonReader {
   }
 
   private void push(Object newTop) {
-    if (stackSize == stack.length) {
-      throw new JsonDataException("Nesting too deep at " + getPath());
-    }
+    checkStack();
     stack[stackSize++] = newTop;
+  }
+
+  @Override
+  void checkStack() {
+    super.checkStack();
+
+    // super.checkStack() checks for maximum size. If we get here it's safe to say the stack size
+    // is under its limit.
+    if (stackSize == stack.length) {
+      stack = Util.doubleArray(stack);
+    }
   }
 
   /**
