@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSink;
@@ -46,7 +47,7 @@ public abstract class JsonAdapter<T> {
     toJson(writer, value);
   }
 
-  public final String toJson(@Nullable T value) {
+  public final @CheckReturnValue String toJson(@Nullable T value) {
     Buffer buffer = new Buffer();
     try {
       toJson(buffer, value);
