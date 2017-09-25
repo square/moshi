@@ -88,7 +88,7 @@ final class Unwrap {
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
-      delegate.toJson(new Envelope<>(value));
+      delegate.toJson(writer, new Envelope<>(value));
     }
   }
 }
