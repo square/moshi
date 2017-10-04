@@ -98,7 +98,7 @@ public final class AdapterMethodsTest {
   }
 
   private static final class PointJsonAdapterWithDelegateWithQualifier {
-    @FromJson @WithParens Point fromJson(JsonReader reader, JsonAdapter<Point> delegate)
+    @FromJson @WithParens Point fromJson(JsonReader reader, @WithParens JsonAdapter<Point> delegate)
         throws IOException {
       reader.beginArray();
       Point value = delegate.fromJson(reader);
@@ -106,7 +106,8 @@ public final class AdapterMethodsTest {
       return value;
     }
 
-    @ToJson void toJson(JsonWriter writer, @WithParens Point value, JsonAdapter<Point> delegate)
+    @ToJson void toJson(JsonWriter writer, @WithParens Point value,
+        @WithParens JsonAdapter<Point> delegate)
         throws IOException {
       writer.beginArray();
       delegate.toJson(writer, value);
@@ -115,7 +116,9 @@ public final class AdapterMethodsTest {
   }
 
   @Test public void toAndFromWithDelegate() throws Exception {
-    Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegate()).build();
+    Moshi moshi = new Moshi.Builder()
+        .add(new PointJsonAdapterWithDelegate())
+        .build();
     JsonAdapter<Point> adapter = moshi.adapter(Point.class);
     Point point = new Point(5, 8);
     assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
@@ -123,11 +126,14 @@ public final class AdapterMethodsTest {
   }
 
   @Test public void toAndFromWithDelegateWithQualifier() throws Exception {
-    Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegateWithQualifier()).build();
+    Moshi moshi = new Moshi.Builder()
+        .add(new PointJsonAdapterWithDelegateWithQualifier())
+        .add(new PointWithParensJsonAdapter())
+        .build();
     JsonAdapter<Point> adapter = moshi.adapter(Point.class, WithParens.class);
     Point point = new Point(5, 8);
-    assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
-    assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+    assertThat(adapter.toJson(point)).isEqualTo("[\"(5 8)\"]");
+    assertThat(adapter.fromJson("[\"(5 8)\"]")).isEqualTo(point);
   }
 
   @Test public void toJsonOnly() throws Exception {
