@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.MoshiTest.Uppercase;
+import com.squareup.moshi.MoshiTest.UppercaseAdapterFactory;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -128,6 +130,36 @@ public final class AdapterMethodsTest {
     Point point = new Point(5, 8);
     assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
     assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+  }
+
+  @Test public void toAndFromWithIntermediate() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new Object() {
+      @FromJson String fromJson(String string) {
+        return string.substring(1, string.length() - 1);
+      }
+
+      @ToJson String toJson(String value) {
+        return "|" + value + "|";
+      }
+    }).build();
+    JsonAdapter<String> adapter = moshi.adapter(String.class);
+    assertThat(adapter.toJson("pizza")).isEqualTo("\"|pizza|\"");
+    assertThat(adapter.fromJson("\"|pizza|\"")).isEqualTo("pizza");
+  }
+
+  @Test public void toAndFromWithIntermediateWithQualifier() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new Object() {
+      @FromJson @Uppercase String fromJson(@Uppercase String string) {
+        return string.substring(1, string.length() - 1);
+      }
+
+      @ToJson @Uppercase String toJson(@Uppercase String value) {
+        return "|" + value + "|";
+      }
+    }).add(new UppercaseAdapterFactory()).build();
+    JsonAdapter<String> adapter = moshi.adapter(String.class, Uppercase.class);
+    assertThat(adapter.toJson("pizza")).isEqualTo("\"|PIZZA|\"");
+    assertThat(adapter.fromJson("\"|pizza|\"")).isEqualTo("PIZZA");
   }
 
   @Test public void toJsonOnly() throws Exception {

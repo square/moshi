@@ -165,7 +165,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // List<Integer> pointToJson(Point point) {
       final Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
-      Set<? extends Annotation> qualifierAnnotations = jsonAnnotations(parameterAnnotations[0]);
+      final Set<? extends Annotation> qualifierAnnotations =
+          jsonAnnotations(parameterAnnotations[0]);
       boolean nullable = Util.hasNullable(parameterAnnotations[0]);
       return new AdapterMethod(parameterTypes[0], qualifierAnnotations, adapter, method,
           parameterTypes.length, 1, nullable) {
@@ -173,7 +174,10 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
 
         @Override public void bind(Moshi moshi, JsonAdapter.Factory factory) {
           super.bind(moshi, factory);
-          delegate = moshi.adapter(returnType, returnTypeAnnotations);
+          delegate = Types.equals(parameterTypes[0], returnType)
+              && qualifierAnnotations.equals(returnTypeAnnotations)
+              ? moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
+              : moshi.adapter(returnType, returnTypeAnnotations);
         }
 
         @Override public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
@@ -211,7 +215,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   static AdapterMethod fromAdapter(Object adapter, Method method) {
     method.setAccessible(true);
     final Type returnType = method.getGenericReturnType();
-    Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
+    final Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
     final Type[] parameterTypes = method.getGenericParameterTypes();
     Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
@@ -240,7 +244,10 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
 
         @Override public void bind(Moshi moshi, JsonAdapter.Factory factory) {
           super.bind(moshi, factory);
-          delegate = moshi.adapter(parameterTypes[0], qualifierAnnotations);
+          delegate = Types.equals(parameterTypes[0], returnType)
+              && qualifierAnnotations.equals(returnTypeAnnotations)
+              ? moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
+              : moshi.adapter(parameterTypes[0], qualifierAnnotations);
         }
 
         @Override public Object fromJson(Moshi moshi, JsonReader reader)
@@ -265,7 +272,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       List<AdapterMethod> adapterMethods, Type type, Set<? extends Annotation> annotations) {
     for (int i = 0, size = adapterMethods.size(); i < size; i++) {
       AdapterMethod adapterMethod = adapterMethods.get(i);
-      if (adapterMethod.type.equals(type) && adapterMethod.annotations.equals(annotations)) {
+      if (Types.equals(adapterMethod.type, type) && adapterMethod.annotations.equals(annotations)) {
         return adapterMethod;
       }
     }
