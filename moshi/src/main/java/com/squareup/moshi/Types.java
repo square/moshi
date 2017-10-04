@@ -202,10 +202,6 @@ public final class Types {
         });
   }
 
-  static boolean equal(@Nullable Object a, @Nullable Object b) {
-    return a == b || (a != null && a.equals(b));
-  }
-
   /** Returns true if {@code a} and {@code b} are equal. */
   public static boolean equals(@Nullable Type a, @Nullable Type b) {
     if (a == b) {
@@ -228,7 +224,7 @@ public final class Types {
       Type[] bTypeArguments = pb instanceof ParameterizedTypeImpl
           ? ((ParameterizedTypeImpl) pb).typeArguments
           : pb.getActualTypeArguments();
-      return equal(pa.getOwnerType(), pb.getOwnerType())
+      return equals(pa.getOwnerType(), pb.getOwnerType())
           && pa.getRawType().equals(pb.getRawType())
           && Arrays.equals(aTypeArguments, bTypeArguments);
 
