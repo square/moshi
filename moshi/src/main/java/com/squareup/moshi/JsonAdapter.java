@@ -37,7 +37,9 @@ public abstract class JsonAdapter<T> {
   }
 
   public final @Nullable T fromJson(String string) throws IOException {
-    return fromJson(new Buffer().writeUtf8(string));
+    try (Buffer buffer = new Buffer()) {
+    	return fromJson(buffer.writeUtf8(string));
+    }
   }
 
   public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
