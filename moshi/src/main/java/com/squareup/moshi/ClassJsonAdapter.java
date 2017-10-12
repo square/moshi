@@ -46,8 +46,6 @@ class ClassJsonAdapter<T> extends JsonAdapter<T> {
     @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = getRawType(type, annotations);
-      if (rawType == null)
-        return null;
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);
       Map<String, FieldBinding<?>> fields = new TreeMap<>();
       for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
@@ -119,7 +117,7 @@ class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
       return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
     }
-
+ 
   /**
    * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
    * types because they're unspecified and likely to be different on Java vs. Android.
