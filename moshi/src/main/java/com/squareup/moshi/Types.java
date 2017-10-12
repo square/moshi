@@ -207,9 +207,9 @@ public final class Types {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
 
-    } else if (a instanceof Class<?>) {
+    } else if (a instanceof Class) {
       if (b instanceof GenericArrayType) {
-        return equals(((Class<?>) a).getComponentType(),
+        return equals(((Class) a).getComponentType(),
             ((GenericArrayType) b).getGenericComponentType());
       }
       return a.equals(b); // Class already specifies equals().
@@ -230,7 +230,7 @@ public final class Types {
 
     } else if (a instanceof GenericArrayType) {
       if (b instanceof Class) {
-        return equals(((Class<?>) b).getComponentType(),
+        return equals(((Class) b).getComponentType(),
             ((GenericArrayType) a).getGenericComponentType());
       }
       if (!(b instanceof GenericArrayType)) return false;
