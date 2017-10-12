@@ -41,21 +41,10 @@ import javax.annotation.Nullable;
  *   <li>scala.*
  * </ul>
  */
-class ClassJsonAdapter<T> extends JsonAdapter<T> {
+final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      Class<?> rawType = getRawType(type, annotations);
-      ClassFactory<Object> classFactory = ClassFactory.get(rawType);
-      Map<String, FieldBinding<?>> fields = new TreeMap<>();
-      for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
-        createFieldBindings(moshi, t, fields);
-      }
-      return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
-    }
-  };
-
-  static Class<?> getRawType(Type type, Set<? extends Annotation> annotations) {
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
@@ -80,11 +69,16 @@ class ClassJsonAdapter<T> extends JsonAdapter<T> {
         throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
       }
 
-    return rawType;
+      ClassFactory<Object> classFactory = ClassFactory.get(rawType);
+      Map<String, FieldBinding<?>> fields = new TreeMap<>();
+      for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
+        createFieldBindings(moshi, t, fields);
+      }
+      return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
     }
 
     /** Creates a field binding for each of declared field of {@code type}. */
-  static void createFieldBindings(
+    private void createFieldBindings(
         Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
       Class<?> rawType = Types.getRawType(type);
       boolean platformType = isPlatformType(rawType);
@@ -113,11 +107,12 @@ class ClassJsonAdapter<T> extends JsonAdapter<T> {
     }
 
     /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
-  static boolean includeField(boolean platformType, int modifiers) {
+    private boolean includeField(boolean platformType, int modifiers) {
       if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
       return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
     }
- 
+  };
+
   /**
    * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
    * types because they're unspecified and likely to be different on Java vs. Android.
@@ -131,9 +126,9 @@ class ClassJsonAdapter<T> extends JsonAdapter<T> {
         || name.startsWith("scala.");
   }
 
-  protected final ClassFactory<T> classFactory;
-  protected final FieldBinding<?>[] fieldsArray;
-  protected final JsonReader.Options options;
+  private final ClassFactory<T> classFactory;
+  private final FieldBinding<?>[] fieldsArray;
+  private final JsonReader.Options options;
 
   ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
