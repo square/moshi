@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi;
 
-import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.Util.NO_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -28,8 +27,6 @@ import java.util.List;
 import java.util.SimpleTimeZone;
 
 import org.junit.Test;
-
-import okio.Buffer;
 
 public final class AsArrayJsonAdapterTest {
   private final Moshi moshi = new Moshi.Builder().build();
@@ -85,7 +82,7 @@ public final class AsArrayJsonAdapterTest {
     String toJson = toJson(DessertPizza.class, value);
     assertThat(toJson).isEqualTo("[true,13]");
 
-    DessertPizza fromJson = fromJson(DessertPizza.class, "[13,true]");
+    DessertPizza fromJson = fromJson(DessertPizza.class, "[true,13]");
     assertThat(fromJson.diameter).isEqualTo(13);
     assertThat(fromJson.chocolate).isTrue();
   }
@@ -134,7 +131,7 @@ public final class AsArrayJsonAdapterTest {
     String toJson = toJson(StaticFields.class, value);
     assertThat(toJson).isEqualTo("[12]");
 
-    StaticFields fromJson = fromJson(StaticFields.class, "[13,12]");
+    StaticFields fromJson = fromJson(StaticFields.class, "[12]");
     assertThat(StaticFields.a).isEqualTo(11); // Unchanged.
     assertThat(fromJson.b).isEqualTo(12);
   }
@@ -152,7 +149,7 @@ public final class AsArrayJsonAdapterTest {
     String toJson = toJson(TransientFields.class, value);
     assertThat(toJson).isEqualTo("[12]");
 
-    TransientFields fromJson = fromJson(TransientFields.class, "[13,12]");
+    TransientFields fromJson = fromJson(TransientFields.class, "[12]");
     assertThat(fromJson.a).isEqualTo(0); // Not assigned.
     assertThat(fromJson.b).isEqualTo(12);
   }
@@ -250,19 +247,6 @@ public final class AsArrayJsonAdapterTest {
   }
 
   @JsonAsArray
-  static class NoArgConstructorWithDefaultField {
-    int a = 5;
-    int b;
-  }
-
-  @Test public void noArgConstructorFieldDefaultsHonored() throws Exception {
-    NoArgConstructorWithDefaultField fromJson = fromJson(
-        NoArgConstructorWithDefaultField.class, "[8]");
-    assertThat(fromJson.a).isEqualTo(5);
-    assertThat(fromJson.b).isEqualTo(8);
-  }
-
-  @JsonAsArray
   static class MagicConstructor {
     int a;
 
@@ -288,11 +272,11 @@ public final class AsArrayJsonAdapterTest {
 
   @Test public void magicConstructorFieldDefaultsNotHonored() throws Exception {
     MagicConstructorWithDefaultField fromJson = fromJson(
-        MagicConstructorWithDefaultField.class, "[3]");
-    assertThat(fromJson.a).isEqualTo(0); // Surprising! No value is assigned.
+        MagicConstructorWithDefaultField.class, "[4,3]");
+    assertThat(fromJson.a).isEqualTo(4); // Surprising! Value is assigned.
     assertThat(fromJson.b).isEqualTo(3);
   }
-
+  
   @JsonAsArray
   static class NullRootObject {
     int a;
@@ -383,7 +367,7 @@ public final class AsArrayJsonAdapterTest {
     assertThat(toJson).isEqualTo("[4]");
 
     ExtendsPlatformClassWithPrivateField fromJson = fromJson(
-        ExtendsPlatformClassWithPrivateField.class, "[4,\"BAR\"]");
+        ExtendsPlatformClassWithPrivateField.class, "[4]");
     assertThat(fromJson.a).isEqualTo(4);
     assertThat(fromJson.getID()).isEqualTo("FOO");
   }
