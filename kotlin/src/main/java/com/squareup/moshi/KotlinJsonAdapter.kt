@@ -23,6 +23,7 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -181,8 +182,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val adapter = moshi.adapter<Any>(
-          property.returnType.javaType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
+      val adapter = jsonAdapter(
+          property.returnType, moshi, Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
       bindingsByName[property.name] =
           KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
@@ -203,4 +204,55 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
   }
+
+  private fun jsonAdapter(type: KType, moshi: Moshi, qualifierAnnotations: Set<Annotation>):
+      JsonAdapter<Any?> {
+    val javaType = type.javaType
+    val javaRawType = javaType.rawType
+    val create: () -> MutableCollection<Any?>
+    if (javaRawType == List::class.java || javaRawType == Collection::class.java) {
+      create = { ArrayList() }
+    } else if (javaRawType == Set::class.java) {
+      create = { LinkedHashSet() }
+    } else {
+      return moshi.adapter<Any>(javaType, qualifierAnnotations)
+    }
+    if (!qualifierAnnotations.isEmpty()) {
+      return moshi.adapter<Any>(javaType, qualifierAnnotations)
+    }
+    val collectionElementType = type.arguments[0].type!!
+    val elementAdapter = jsonAdapter(collectionElementType, moshi, Util.NO_ANNOTATIONS)
+    return collectionJsonAdapter(
+        elementAdapter, create, collectionElementType.isMarkedNullable) as JsonAdapter<Any?>
+  }
+
+  private inline fun <T> collectionJsonAdapter(elementAdapter: JsonAdapter<T?>,
+      crossinline create: () -> MutableCollection<T?>, nullableElements: Boolean):
+      JsonAdapter<Collection<T?>> {
+    return object : JsonAdapter<Collection<T?>>() {
+      override fun fromJson(reader: JsonReader): Collection<T?> {
+        val result = create()
+        reader.beginArray()
+        while (reader.hasNext()) {
+          val element = elementAdapter.fromJson(reader)
+          if (element == null && !nullableElements) {
+            throw JsonDataException("TODO!")
+          }
+          result.add(element)
+        }
+        reader.endArray()
+        return result
+      }
+
+      override fun toJson(writer: JsonWriter, value: Collection<T?>?) {
+        writer.beginArray()
+        for (element in value!!) {
+          elementAdapter.toJson(writer, element)
+        }
+        writer.endArray()
+      }
+    }.nullSafe()
+  }
+
+  private val Type.rawType get() = Types.getRawType(this)
 }

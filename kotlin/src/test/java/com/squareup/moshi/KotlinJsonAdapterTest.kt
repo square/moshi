@@ -623,6 +623,66 @@ class KotlinJsonAdapterTest {
       var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
       var v31: Int, var v32: Int, var v33: Int)
 
+  @Test fun collectionPropertiesWithNonNullElementsFailDeserializingNulls() {
+    data class ListData(val nonNullElements: List<String>)
+    data class CollectionData(val nonNullElements: Collection<String>)
+    data class SetData(val nonNullElements: Set<String>, val nullableElements: Set<String?>)
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val listDataAdapter = moshi.adapter(ListData::class.java)
+    val collectionDataAdapter = moshi.adapter(CollectionData::class.java)
+    val setDataAdapter = moshi.adapter(SetData::class.java)
+    try {
+      listDataAdapter.fromJson("""{"nonNullElements":["Jesse", null, "Jake"]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      // TODO
+    }
+    try {
+      collectionDataAdapter.fromJson("""{"nonNullElements":["Jesse", null, "Jake"]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      // TODO
+    }
+    try {
+      setDataAdapter.fromJson("""{"nonNullElements":["Jesse", null, "Jake"]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      // TODO
+    }
+  }
+
+  @Test fun listPropertyOfNullableListsOfNonNullTypes() {
+    data class ListData(val elements: List<List<String>?>)
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val listDataAdapter = moshi.adapter(ListData::class.java)
+    try {
+      listDataAdapter.fromJson("""{"elements":[[],null,["Jesse",null,"Jake"]]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      // TODO
+    }
+    val json = """{"elements":[[],null,["Jesse","banana","Jake"]]}"""
+    val value = ListData(listOf(listOf(), null, listOf("Jesse", "banana", "Jake")))
+    assertThat(listDataAdapter.fromJson(json)).isEqualTo(value)
+    assertThat(listDataAdapter.toJson(value)).isEqualTo(json)
+  }
+
+  @Test fun listPropertyOfNonNullListsOfNullableTypes() {
+    data class ListData(val elements: List<List<String?>>)
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val listDataAdapter = moshi.adapter(ListData::class.java)
+    try {
+      listDataAdapter.fromJson("""{"elements":[[],null,["Jesse",null,"Jake"]]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      // TODO
+    }
+    val json = """{"elements":[[],[],["Jesse",null,"Jake"]]}"""
+    val value = ListData(listOf(listOf(), listOf(), listOf("Jesse", null, "Jake")))
+    assertThat(listDataAdapter.fromJson(json)).isEqualTo(value)
+    assertThat(listDataAdapter.toJson(value)).isEqualTo(json)
+  }
+
   // TODO(jwilson): resolve generic types?
 
   @Retention(RUNTIME)
