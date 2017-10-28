@@ -17,7 +17,6 @@ package com.squareup.moshi
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
-import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.util.Locale
@@ -577,11 +576,6 @@ class KotlinJsonAdapterTest {
       var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
       var v31: Int, var v32: Int)
 
-  /**
-   * Kotlin reflect can't target constructors with more than 32 parameters.
-   * https://github.com/square/moshi/issues/323
-   */
-  @Ignore
   @Test fun manyProperties33() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(ManyProperties33::class.java)
