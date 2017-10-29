@@ -133,6 +133,32 @@ class KotlinJsonAdapterTest {
 
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
+  @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
+    class Data(val a: String)
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(Data::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":null}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value a was null at \$")
+    }
+  }
+
+  @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
+    class Data { var a: String = "" }
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(Data::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":null}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value a was null at \$")
+    }
+  }
+
   @Test fun duplicatedValue() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
