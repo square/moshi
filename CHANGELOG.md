@@ -109,7 +109,7 @@ _2016-10-15_
     `StackOverflowError` due to excessive recursion.
  *  Fix: Require enclosed types to specify their enclosing type with
     `Types.newParameterizedTypeWithOwner()`. Previously this API did not exist and looking up
-    adapters for enclosed parameterized types as not possible.
+    adapters for enclosed parameterized types was not possible.
  *  Fix: Fail on invalid escapes. Previously any character could be escaped. With this fix only
     characters permitted to be escaped may be escaped. Use `JsonReader.setLenient(true)` to read
     JSON documents that escape characters that should not be escaped.
