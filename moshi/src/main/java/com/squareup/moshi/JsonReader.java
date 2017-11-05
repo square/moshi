@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -190,7 +191,7 @@ public abstract class JsonReader implements Closeable {
   boolean failOnUnknown;
 
   /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
-  public static JsonReader of(BufferedSource source) {
+  @CheckReturnValue public static JsonReader of(BufferedSource source) {
     return new JsonUtf8Reader(source);
   }
 
@@ -255,7 +256,7 @@ public abstract class JsonReader implements Closeable {
   /**
    * Returns true if this parser is liberal in what it accepts.
    */
-  public final boolean isLenient() {
+  @CheckReturnValue public final boolean isLenient() {
     return lenient;
   }
 
@@ -274,7 +275,7 @@ public abstract class JsonReader implements Closeable {
   /**
    * Returns true if this parser forbids skipping values.
    */
-  public final boolean failOnUnknown() {
+  @CheckReturnValue public final boolean failOnUnknown() {
     return failOnUnknown;
   }
 
@@ -449,7 +450,7 @@ public abstract class JsonReader implements Closeable {
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
    * the current location in the JSON value.
    */
-  public final String getPath() {
+  @CheckReturnValue public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
   }
 
@@ -472,7 +473,7 @@ public abstract class JsonReader implements Closeable {
       this.doubleQuoteSuffix = doubleQuoteSuffix;
     }
 
-    public static Options of(String... strings) {
+    @CheckReturnValue public static Options of(String... strings) {
       try {
         ByteString[] result = new ByteString[strings.length];
         Buffer buffer = new Buffer();

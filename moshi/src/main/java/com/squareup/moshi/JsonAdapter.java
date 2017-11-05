@@ -30,13 +30,13 @@ import okio.BufferedSource;
  * Converts Java values to JSON, and JSON values to Java.
  */
 public abstract class JsonAdapter<T> {
-  public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
+  @CheckReturnValue public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
 
-  public final @Nullable T fromJson(BufferedSource source) throws IOException {
+  @CheckReturnValue public final @Nullable T fromJson(BufferedSource source) throws IOException {
     return fromJson(JsonReader.of(source));
   }
 
-  public final @Nullable T fromJson(String string) throws IOException {
+  @CheckReturnValue public final @Nullable T fromJson(String string) throws IOException {
     return fromJson(new Buffer().writeUtf8(string));
   }
 
@@ -47,7 +47,7 @@ public abstract class JsonAdapter<T> {
     toJson(writer, value);
   }
 
-  public final @CheckReturnValue String toJson(@Nullable T value) {
+  @CheckReturnValue public final String toJson(@Nullable T value) {
     Buffer buffer = new Buffer();
     try {
       toJson(buffer, value);
@@ -67,7 +67,7 @@ public abstract class JsonAdapter<T> {
    * Long}), as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}),
    * and as a {@link BigDecimal} for all other types.
    */
-  public final @Nullable Object toJsonValue(@Nullable T value) {
+  @CheckReturnValue public final @Nullable Object toJsonValue(@Nullable T value) {
     JsonValueWriter writer = new JsonValueWriter();
     try {
       toJson(writer, value);
@@ -81,7 +81,7 @@ public abstract class JsonAdapter<T> {
    * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
    * strings, numbers, booleans and nulls.
    */
-  public final @Nullable T fromJsonValue(@Nullable Object value) {
+  @CheckReturnValue public final @Nullable T fromJsonValue(@Nullable Object value) {
     JsonValueReader reader = new JsonValueReader(value);
     try {
       return fromJson(reader);
@@ -94,7 +94,7 @@ public abstract class JsonAdapter<T> {
    * Returns a JSON adapter equal to this JSON adapter, but that serializes nulls when encoding
    * JSON.
    */
-  public final JsonAdapter<T> serializeNulls() {
+  @CheckReturnValue public final JsonAdapter<T> serializeNulls() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
@@ -119,7 +119,7 @@ public abstract class JsonAdapter<T> {
    * Returns a JSON adapter equal to this JSON adapter, but with support for reading and writing
    * nulls.
    */
-  public final JsonAdapter<T> nullSafe() {
+  @CheckReturnValue public final JsonAdapter<T> nullSafe() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
@@ -143,7 +143,7 @@ public abstract class JsonAdapter<T> {
   }
 
   /** Returns a JSON adapter equal to this, but is lenient when reading and writing. */
-  public final JsonAdapter<T> lenient() {
+  @CheckReturnValue public final JsonAdapter<T> lenient() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
@@ -176,7 +176,7 @@ public abstract class JsonAdapter<T> {
    * constraint applies to both the top-level message handled by this type adapter as well as to
    * nested messages.
    */
-  public final JsonAdapter<T> failOnUnknown() {
+  @CheckReturnValue public final JsonAdapter<T> failOnUnknown() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
@@ -205,7 +205,7 @@ public abstract class JsonAdapter<T> {
    *
    * @param indent a string containing only whitespace.
    */
-  public JsonAdapter<T> indent(final String indent) {
+  @CheckReturnValue public JsonAdapter<T> indent(final String indent) {
     if (indent == null) {
       throw new NullPointerException("indent == null");
     }
@@ -238,6 +238,7 @@ public abstract class JsonAdapter<T> {
      * <p>Implementations may use to {@link Moshi#adapter} to compose adapters of other types, or
      * {@link Moshi#nextAdapter} to delegate to the underlying adapter of the same type.
      */
+    @CheckReturnValue
     @Nullable JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi);
   }
 }
