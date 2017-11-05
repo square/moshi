@@ -164,9 +164,16 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
     for (property in rawType.kotlin.memberProperties) {
-      if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) continue
-
       val parameter = parametersByName[property.name]
+
+      if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
+        if (parameter != null && !parameter.isOptional) {
+          throw IllegalArgumentException(
+              "No default value for transient constructor $parameter")
+        }
+        continue
+      }
+
       if (property !is KMutableProperty1 && parameter == null) continue
 
       property.isAccessible = true
