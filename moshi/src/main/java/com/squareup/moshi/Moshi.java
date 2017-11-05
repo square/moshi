@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -54,19 +55,21 @@ public final class Moshi {
   }
 
   /** Returns a JSON adapter for {@code type}, creating it if necessary. */
-  public <T> JsonAdapter<T> adapter(Type type) {
+  @CheckReturnValue public <T> JsonAdapter<T> adapter(Type type) {
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
-  public <T> JsonAdapter<T> adapter(Class<T> type) {
+  @CheckReturnValue public <T> JsonAdapter<T> adapter(Class<T> type) {
     return adapter(type, Util.NO_ANNOTATIONS);
   }
 
+  @CheckReturnValue
   public <T> JsonAdapter<T> adapter(Type type, Class<? extends Annotation> annotationType) {
     return adapter(type,
         Collections.singleton(Types.createJsonQualifierImplementation(annotationType)));
   }
 
+  @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
     type = Types.canonicalize(type);
@@ -116,6 +119,7 @@ public final class Moshi {
     throw new IllegalArgumentException("No JsonAdapter for " + type + " annotated " + annotations);
   }
 
+  @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> nextAdapter(JsonAdapter.Factory skipPast, Type type,
       Set<? extends Annotation> annotations) {
@@ -136,7 +140,7 @@ public final class Moshi {
   }
 
   /** Returns a new builder containing all custom factories used by the current instance. */
-  public Moshi.Builder newBuilder() {
+  @CheckReturnValue public Moshi.Builder newBuilder() {
     int fullSize = factories.size();
     int tailSize = BUILT_IN_FACTORIES.size();
     List<JsonAdapter.Factory> customFactories = factories.subList(0, fullSize - tailSize);
@@ -205,7 +209,7 @@ public final class Moshi {
       return this;
     }
 
-    public Moshi build() {
+    @CheckReturnValue public Moshi build() {
       return new Moshi(this);
     }
   }

@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.BufferedSink;
 
@@ -138,7 +139,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
   boolean promoteValueToName;
 
   /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
-  public static JsonWriter of(BufferedSink sink) {
+  @CheckReturnValue public static JsonWriter of(BufferedSink sink) {
     return new JsonUtf8Writer(sink);
   }
 
@@ -182,7 +183,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * Returns a string containing only whitespace, used for each level of
    * indentation. If empty, the encoded document will be compact.
    */
-  public final String getIndent() {
+  @CheckReturnValue public final String getIndent() {
     return indent != null ? indent : "";
   }
 
@@ -205,7 +206,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
   /**
    * Returns true if this writer has relaxed syntax rules.
    */
-  public final boolean isLenient() {
+  @CheckReturnValue public final boolean isLenient() {
     return lenient;
   }
 
@@ -221,7 +222,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * Returns true if object members are serialized when their value is null.
    * This has no impact on array elements. The default is false.
    */
-  public final boolean getSerializeNulls() {
+  @CheckReturnValue public final boolean getSerializeNulls() {
     return serializeNulls;
   }
 
@@ -333,7 +334,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
    * the current location in the JSON value.
    */
-  public final String getPath() {
+  @CheckReturnValue public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
   }
 }

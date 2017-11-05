@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /** Factory methods for types. */
@@ -48,7 +49,7 @@ public final class Types {
    * Returns the subset of {@code annotations} without {@code jsonQualifier}, or null if {@code
    * annotations} does not contain {@code jsonQualifier}.
    */
-  public static @Nullable Set<? extends Annotation> nextAnnotations(
+  @CheckReturnValue public static @Nullable Set<? extends Annotation> nextAnnotations(
       Set<? extends Annotation> annotations,
       Class<? extends Annotation> jsonQualifier) {
     if (!jsonQualifier.isAnnotationPresent(JsonQualifier.class)) {
@@ -71,6 +72,7 @@ public final class Types {
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}. Use this
    * method if {@code rawType} is not enclosed in another type.
    */
+  @CheckReturnValue
   public static ParameterizedType newParameterizedType(Type rawType, Type... typeArguments) {
     return new ParameterizedTypeImpl(null, rawType, typeArguments);
   }
@@ -79,13 +81,13 @@ public final class Types {
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType}. Use this
    * method if {@code rawType} is enclosed in {@code ownerType}.
    */
-  public static ParameterizedType newParameterizedTypeWithOwner(
+  @CheckReturnValue public static ParameterizedType newParameterizedTypeWithOwner(
       Type ownerType, Type rawType, Type... typeArguments) {
     return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
-  public static GenericArrayType arrayOf(Type componentType) {
+  @CheckReturnValue public static GenericArrayType arrayOf(Type componentType) {
     return new GenericArrayTypeImpl(componentType);
   }
 
@@ -95,7 +97,7 @@ public final class Types {
    * {@code bound} is {@code Object.class}, this returns {@code ?}, which is shorthand for {@code
    * ? extends Object}.
    */
-  public static WildcardType subtypeOf(Type bound) {
+  @CheckReturnValue public static WildcardType subtypeOf(Type bound) {
     return new WildcardTypeImpl(new Type[] { bound }, EMPTY_TYPE_ARRAY);
   }
 
@@ -103,7 +105,7 @@ public final class Types {
    * Returns a type that represents an unknown supertype of {@code bound}. For example, if {@code
    * bound} is {@code String.class}, this returns {@code ? super String}.
    */
-  public static WildcardType supertypeOf(Type bound) {
+  @CheckReturnValue public static WildcardType supertypeOf(Type bound) {
     return new WildcardTypeImpl(new Type[] { Object.class }, new Type[] { bound });
   }
 
@@ -137,7 +139,7 @@ public final class Types {
     }
   }
 
-  public static Class<?> getRawType(Type type) {
+  @CheckReturnValue public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // type is a normal class.
       return (Class<?>) type;
@@ -203,7 +205,7 @@ public final class Types {
   }
 
   /** Returns true if {@code a} and {@code b} are equal. */
-  public static boolean equals(@Nullable Type a, @Nullable Type b) {
+  @CheckReturnValue public static boolean equals(@Nullable Type a, @Nullable Type b) {
     if (a == b) {
       return true; // Also handles (a == null && b == null).
 
@@ -341,6 +343,7 @@ public final class Types {
    * Returns the element type of this collection type.
    * @throws IllegalArgumentException if this type is not a collection.
    */
+  @CheckReturnValue
   public static Type collectionElementType(Type context, Class<?> contextRawType) {
     Type collectionType = getSupertype(context, contextRawType, Collection.class);
 
