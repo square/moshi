@@ -125,9 +125,10 @@ public abstract class JsonWriter implements Closeable, Flushable {
   // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
   // StackOverflowErrors.
   int stackSize = 0;
-  final int[] scopes = new int[32];
-  final String[] pathNames = new String[32];
-  final int[] pathIndices = new int[32];
+  int maxDepth = 32;
+  int[] scopes = new int[maxDepth];
+  String[] pathNames = new String[maxDepth];
+  int[] pathIndices = new int[maxDepth];
 
   /**
    * A string containing a full set of spaces for a single level of indentation, or null for no
@@ -208,6 +209,39 @@ public abstract class JsonWriter implements Closeable, Flushable {
    */
   @CheckReturnValue public final boolean isLenient() {
     return lenient;
+  }
+
+  /**
+   * Configure this writer to allow nesting of at least maxDepth. By default, this writer
+   * only supports 32 levels. This method does nothing if the current max depth is already deeper.
+   */
+  public final void setMaxDepth(int maxDepth) {
+    if (newMaxDepth(maxDepth)) {
+      this.maxDepth = maxDepth;
+    }
+  }
+
+  protected boolean newMaxDepth(int maxDepth) {
+    if (maxDepth > this.maxDepth) {
+      final int[] scopes = new int[maxDepth];
+      System.arraycopy(this.scopes, 0, scopes, 0, stackSize);
+      final String[] pathNames = new String[maxDepth];
+      System.arraycopy(this.pathNames, 0, pathNames, 0, stackSize);
+      final int[] pathIndices = new int[maxDepth];
+      System.arraycopy(this.pathIndices, 0, pathIndices, 0, stackSize);
+      this.scopes = scopes;
+      this.pathNames = pathNames;
+      this.pathIndices = pathIndices;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Returns the maximum depth supported before JsonDataException are thrown .
+   */
+  public final int getMaxDepth() {
+    return maxDepth;
   }
 
   /**

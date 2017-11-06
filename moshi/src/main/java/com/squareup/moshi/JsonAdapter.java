@@ -170,6 +170,25 @@ public abstract class JsonAdapter<T> {
     };
   }
 
+  /** Returns a JSON adapter equal to this, but allows the specified maximum depth when
+   *  reading and writing. */
+  public final JsonAdapter<T> maxDepth(final int maxDepth) {
+    final JsonAdapter<T> delegate = this;
+    return new JsonAdapter<T>() {
+      @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+        reader.setMaxDepth(maxDepth);
+        return delegate.fromJson(reader);
+      }
+      @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+        writer.setMaxDepth(maxDepth);
+        delegate.toJson(writer, value);
+      }
+      @Override public String toString() {
+        return delegate + ".maxDepth(" + maxDepth + ")";
+      }
+    };
+  }
+
   /**
    * Returns a JSON adapter equal to this, but that throws a {@link JsonDataException} when
    * {@linkplain JsonReader#setFailOnUnknown(boolean) unknown values} are encountered. This
