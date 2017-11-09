@@ -336,6 +336,18 @@ public final class JsonUtf8ReaderTest {
     assertEquals("-0", reader.nextString());
   }
 
+  @Test public void numberToStringCoersion() throws Exception {
+    JsonReader reader = newReader("[0, 9223372036854775807, 2.5, 3.010, \"a\", \"5\"]");
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("0");
+    assertThat(reader.nextString()).isEqualTo("9223372036854775807");
+    assertThat(reader.nextString()).isEqualTo("2.5");
+    assertThat(reader.nextString()).isEqualTo("3.010");
+    assertThat(reader.nextString()).isEqualTo("a");
+    assertThat(reader.nextString()).isEqualTo("5");
+    reader.endArray();
+  }
+
   @Test public void quotedNumberWithEscape() throws IOException {
     JsonReader reader = newReader("[\"12\u00334\"]");
     reader.setLenient(true);
