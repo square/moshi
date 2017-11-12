@@ -227,4 +227,25 @@ public final class TypesTest {
     assertThat(Types.equals(String[].class, Types.arrayOf(String.class))).isTrue();
     assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
   }
+
+  @Test public void parameterizedAndWildcardTypesCannotHavePrimitiveArguments() throws Exception {
+    try {
+      Types.newParameterizedType(List.class, int.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unexpected primitive int. Use the boxed type.");
+    }
+    try {
+      Types.subtypeOf(byte.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unexpected primitive byte. Use the boxed type.");
+    }
+    try {
+      Types.subtypeOf(boolean.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unexpected primitive boolean. Use the boxed type.");
+    }
+  }
 }
