@@ -512,6 +512,7 @@ compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
+IntelliJ IDEA and Android Studion POJO [plugin](https://plugins.jetbrains.com/plugin/8634-robopojogenerator) 
 
 ProGuard
 --------
