@@ -492,7 +492,7 @@ public final class Types {
 
   static void checkNotPrimitive(Type type) {
     if ((type instanceof Class<?>) && ((Class<?>) type).isPrimitive()) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("Unexpected primitive " + type + ". Use the boxed type.");
     }
   }
 
