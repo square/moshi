@@ -437,6 +437,14 @@ public final class JsonValueReaderTest {
     reader.endArray();
   }
 
+  @Test public void numberToStringCoersionIsPlainText() throws Exception {
+    JsonReader reader = new JsonValueReader(Arrays.asList(4.0, 10000000f));
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("4");
+    assertThat(reader.nextString()).isEqualTo("10000000");
+    reader.endArray();
+  }
+
   @Test public void tooDeeplyNestedArrays() throws IOException {
     Object root = Collections.emptyList();
     for (int i = 0; i < 32; i++) {
