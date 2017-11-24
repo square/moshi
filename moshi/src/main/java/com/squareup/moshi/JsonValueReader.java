@@ -159,7 +159,7 @@ final class JsonValueReader extends JsonReader {
     }
     if (peeked instanceof Number) {
       remove();
-      return peeked.toString();
+      return new BigDecimal(peeked.toString()).stripTrailingZeros().toPlainString();
     }
     if (peeked == JSON_READER_CLOSED) {
       throw new IllegalStateException("JsonReader is closed");
