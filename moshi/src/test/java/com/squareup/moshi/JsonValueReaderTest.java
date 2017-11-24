@@ -425,7 +425,8 @@ public final class JsonValueReaderTest {
   }
 
   @Test public void numberToStringCoersion() throws Exception {
-    JsonReader reader = new JsonValueReader(Arrays.asList(0, 9223372036854775807L, 2.5d, 3.010f, "a", "5"));
+    JsonReader reader =
+        new JsonValueReader(Arrays.asList(0, 9223372036854775807L, 2.5d, 3.01f, "a", "5"));
     reader.beginArray();
     assertThat(reader.nextString()).isEqualTo("0");
     assertThat(reader.nextString()).isEqualTo("9223372036854775807");
