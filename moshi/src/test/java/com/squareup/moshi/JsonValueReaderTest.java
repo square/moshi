@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -421,6 +422,19 @@ public final class JsonValueReaderTest {
       fail();
     } catch (IllegalStateException expected) {
     }
+  }
+
+  @Test public void numberToStringCoersion() throws Exception {
+    JsonReader reader =
+        new JsonValueReader(Arrays.asList(0, 9223372036854775807L, 2.5d, 3.01f, "a", "5"));
+    reader.beginArray();
+    assertThat(reader.nextString()).isEqualTo("0");
+    assertThat(reader.nextString()).isEqualTo("9223372036854775807");
+    assertThat(reader.nextString()).isEqualTo("2.5");
+    assertThat(reader.nextString()).isEqualTo("3.01");
+    assertThat(reader.nextString()).isEqualTo("a");
+    assertThat(reader.nextString()).isEqualTo("5");
+    reader.endArray();
   }
 
   @Test public void tooDeeplyNestedArrays() throws IOException {
