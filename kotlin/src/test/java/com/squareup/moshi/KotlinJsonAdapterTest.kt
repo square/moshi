@@ -208,6 +208,29 @@ class KotlinJsonAdapterTest {
 
   class ConstructorParameterWithQualifier(@Uppercase var a: String, var b: String)
 
+  @Test fun constructorParameterWithQualifierOnSupertype() {
+    open class Child : SupertypeConstructorParameterWithQualifier()
+    class Grandchild : Child()
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .add(UppercaseJsonAdapter())
+        .build()
+
+    val childAdapter = moshi.adapter(Child::class.java)
+    assertThat(childAdapter.toJson(Child().apply { a = "android" }))
+        .isEqualTo("{\"a\":\"ANDROID\"}")
+    assertThat(childAdapter.fromJson("{\"a\":\"Android\"}")!!.a)
+        .isEqualTo("android")
+
+    val grandchildAdapter = moshi.adapter(Grandchild::class.java)
+    assertThat(grandchildAdapter.toJson(Grandchild().apply { a = "android" }))
+        .isEqualTo("{\"a\":\"ANDROID\"}")
+    assertThat(grandchildAdapter.fromJson("{\"a\":\"Android\"}")!!.a)
+        .isEqualTo("android")
+  }
+
+  open class SupertypeConstructorParameterWithQualifier(@Uppercase var a: String = "")
+
   @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -243,6 +266,25 @@ class KotlinJsonAdapterTest {
   }
 
   class ConstructorParameterWithJsonName(@Json(name = "key a") var a: Int, var b: Int)
+
+  @Test fun constructorParameterWithJsonNameOnSupertype() {
+    open class Child : SupertypeConstructorParameterWithJsonName()
+    class Grandchild : Child()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    val childAdapter = moshi.adapter(Child::class.java)
+    assertThat(childAdapter.toJson(Child().apply { a = 5 }))
+        .isEqualTo("{\"key a\":5}")
+    assertThat(childAdapter.fromJson("{\"key a\":5}")!!.a).isEqualTo(5)
+
+    val grandChildAdapter = moshi.adapter(Grandchild::class.java)
+    assertThat(grandChildAdapter.toJson(Grandchild().apply { a = 5 }))
+        .isEqualTo("{\"key a\":5}")
+    assertThat(grandChildAdapter.fromJson("{\"key a\":5}")!!.a)
+        .isEqualTo(5)
+  }
+
+  open class SupertypeConstructorParameterWithJsonName(@Json(name = "key a") var a: Int = -1)
 
   @Test fun propertyWithJsonName() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
