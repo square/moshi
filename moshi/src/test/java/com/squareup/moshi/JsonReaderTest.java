@@ -852,6 +852,21 @@ public final class JsonReaderTest {
     reader.endArray();
   }
 
+  @Test public void selectStringWithoutString() throws IOException {
+    JsonReader.Options numbers = JsonReader.Options.of("1", "2.0", "true", "4");
+
+    JsonReader reader = newReader("[0, 2.0, true, \"4\"]");
+    reader.beginArray();
+    assertThat(reader.selectString(numbers)).isEqualTo(-1);
+    reader.skipValue();
+    assertThat(reader.selectString(numbers)).isEqualTo(-1);
+    reader.skipValue();
+    assertThat(reader.selectString(numbers)).isEqualTo(-1);
+    reader.skipValue();
+    assertThat(reader.selectString(numbers)).isEqualTo(3);
+    reader.endArray();
+  }
+
   @Test public void stringToNumberCoersion() throws Exception {
     JsonReader reader = newReader("[\"0\", \"9223372036854775807\", \"1.5\"]");
     reader.beginArray();
@@ -876,21 +891,6 @@ public final class JsonReaderTest {
     assertThat(reader.nextDouble()).isNaN();
     assertThat(reader.nextDouble()).isEqualTo(Double.POSITIVE_INFINITY);
     assertThat(reader.nextDouble()).isEqualTo(Double.NEGATIVE_INFINITY);
-    reader.endArray();
-  }
-
-  @Test public void selectStringWithoutString() throws IOException {
-    JsonReader.Options numbers = JsonReader.Options.of("1", "2.0", "true", "4");
-
-    JsonReader reader = newReader("[0, 2.0, true, \"4\"]");
-    reader.beginArray();
-    assertThat(reader.selectString(numbers)).isEqualTo(-1);
-    reader.skipValue();
-    assertThat(reader.selectString(numbers)).isEqualTo(-1);
-    reader.skipValue();
-    assertThat(reader.selectString(numbers)).isEqualTo(-1);
-    reader.skipValue();
-    assertThat(reader.selectString(numbers)).isEqualTo(3);
     reader.endArray();
   }
 
