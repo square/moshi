@@ -168,9 +168,18 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public int selectString(Options options) throws IOException {
-    String peeked = require(String.class, Token.STRING);
+    Object peeked = (stackSize != 0 ? stack[stackSize - 1] : null);
+
+    if (!(peeked instanceof String)) {
+      if (peeked == JSON_READER_CLOSED) {
+        throw new IllegalStateException("JsonReader is closed");
+      }
+      return -1;
+    }
+    String peekedString = (String) peeked;
+
     for (int i = 0, length = options.strings.length; i < length; i++) {
-      if (options.strings[i].equals(peeked)) {
+      if (options.strings[i].equals(peekedString)) {
         remove();
         return i;
       }
