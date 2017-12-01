@@ -120,7 +120,7 @@ import okio.ByteString;
  *         id = reader.nextLong();
  *       } else if (name.equals("text")) {
  *         text = reader.nextString();
- *       } else if (name.equals("geo") && reader.peek() != JsonToken.NULL) {
+ *       } else if (name.equals("geo") && reader.peek() != Token.NULL) {
  *         geo = readDoublesArray(reader);
  *       } else if (name.equals("user")) {
  *         user = readUser(reader);
