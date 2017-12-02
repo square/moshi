@@ -45,7 +45,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      Class<?> rawType = Types.getRawType(type);
+      if (!(type instanceof Class)) return null;
+      Class<?> rawType = (Class<?>) type;
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
         throw new IllegalArgumentException("Platform "
@@ -71,7 +72,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);
       Map<String, FieldBinding<?>> fields = new TreeMap<>();
-      for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
+      for (Type t = rawType; t != Object.class; t = Types.getGenericSuperclass(t)) {
         createFieldBindings(moshi, t, fields);
       }
       return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
