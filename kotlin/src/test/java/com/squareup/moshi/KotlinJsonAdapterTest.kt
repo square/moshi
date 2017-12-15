@@ -29,9 +29,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ConstructorParameters::class.java)
 
     val encoded = ConstructorParameters(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -45,9 +45,9 @@ class KotlinJsonAdapterTest {
     val encoded = Properties()
     encoded.a = 3
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":3,\"b\":5}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":3,"b":5}""")!!
     assertThat(decoded.a).isEqualTo(3)
     assertThat(decoded.b).isEqualTo(5)
   }
@@ -63,9 +63,9 @@ class KotlinJsonAdapterTest {
 
     val encoded = ConstructorParametersAndProperties(3)
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -79,9 +79,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ImmutableConstructorParameters::class.java)
 
     val encoded = ImmutableConstructorParameters(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -93,9 +93,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ImmutableProperties::class.java)
 
     val encoded = ImmutableProperties(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":3,\"b\":5}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":3,"b":5}""")!!
     assertThat(decoded.a).isEqualTo(3)
     assertThat(decoded.b).isEqualTo(5)
   }
@@ -110,9 +110,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ConstructorDefaultValues::class.java)
 
     val encoded = ConstructorDefaultValues(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"b":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -124,7 +124,7 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(RequiredValueAbsent::class.java)
 
     try {
-      jsonAdapter.fromJson("{\"a\":4}")
+      jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
       assertThat(expected).hasMessage("Required value b missing at $")
@@ -138,7 +138,7 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
 
     try {
-      jsonAdapter.fromJson("{\"a\":4,\"a\":4}")
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
       assertThat(expected).hasMessage("Multiple values for a at $.a")
@@ -152,10 +152,10 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ExplicitNull::class.java)
 
     val encoded = ExplicitNull(null, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
-    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("{\"a\":null,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":null,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":null,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(null)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -167,10 +167,10 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(AbsentNull::class.java)
 
     val encoded = AbsentNull(null, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
-    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("{\"a\":null,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"b":6}""")!!
     assertThat(decoded.a).isNull()
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -182,7 +182,7 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
 
     try {
-      jsonAdapter.fromJson("{\"a\":4,\"b\":null,\"b\":6}")
+      jsonAdapter.fromJson("""{"a":4,"b":null,"b":6}""")
       fail()
     } catch(expected: JsonDataException) {
       assertThat(expected).hasMessage("Multiple values for b at $.b")
@@ -199,9 +199,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ConstructorParameterWithQualifier::class.java)
 
     val encoded = ConstructorParameterWithQualifier("Android", "Banana")
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":\"ANDROID\",\"b\":\"Banana\"}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"Banana"}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":\"Android\",\"b\":\"Banana\"}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":"Android","b":"Banana"}""")!!
     assertThat(decoded.a).isEqualTo("android")
     assertThat(decoded.b).isEqualTo("Banana")
   }
@@ -218,9 +218,9 @@ class KotlinJsonAdapterTest {
     val encoded = PropertyWithQualifier()
     encoded.a = "Android"
     encoded.b = "Banana"
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":\"ANDROID\",\"b\":\"Banana\"}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"Banana"}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":\"Android\",\"b\":\"Banana\"}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":"Android","b":"Banana"}""")!!
     assertThat(decoded.a).isEqualTo("android")
     assertThat(decoded.b).isEqualTo("Banana")
   }
@@ -235,9 +235,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ConstructorParameterWithJsonName::class.java)
 
     val encoded = ConstructorParameterWithJsonName(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"key a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"key a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"key a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"key a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -251,9 +251,9 @@ class KotlinJsonAdapterTest {
     val encoded = PropertyWithJsonName()
     encoded.a = 3
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"key a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"key a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"key a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"key a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -268,9 +268,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(TransientConstructorParameter::class.java)
 
     val encoded = TransientConstructorParameter(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -298,9 +298,9 @@ class KotlinJsonAdapterTest {
     val encoded = TransientProperty()
     encoded.a = 3
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -315,9 +315,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
 
     val encoded = SubtypeConstructorParameters(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -333,9 +333,9 @@ class KotlinJsonAdapterTest {
     val encoded = SubtypeProperties()
     encoded.a = 3
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5,\"a\":3}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5,"a":3}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -353,9 +353,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
 
     val encoded = ExtendsPlatformClassWithPrivateField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"id\":\"B\"}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"id":"B"}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.id).isEqualTo("C")
   }
@@ -367,9 +367,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithProtectedField::class.java)
 
     val encoded = ExtendsPlatformClassWithProtectedField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"buf\":[0,0],\"count\":0}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"buf":[0,0],"count":0}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"buf\":[0,0],\"size\":0}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"buf":[0,0],"size":0}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.buf()).isEqualTo(ByteArray(2, { 0 }))
     assertThat(decoded.count()).isEqualTo(0)
@@ -396,9 +396,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(PrivateConstructorParameters::class.java)
 
     val encoded = PrivateConstructorParameters(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a()).isEqualTo(4)
     assertThat(decoded.b()).isEqualTo(6)
   }
@@ -413,9 +413,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
 
     val encoded = PrivateConstructor.newInstance(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a()).isEqualTo(4)
     assertThat(decoded.b()).isEqualTo(6)
   }
@@ -435,9 +435,9 @@ class KotlinJsonAdapterTest {
     val encoded = PrivateProperties()
     encoded.a(3)
     encoded.b(5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a()).isEqualTo(4)
     assertThat(decoded.b()).isEqualTo(6)
   }
@@ -465,9 +465,9 @@ class KotlinJsonAdapterTest {
 
     val encoded = UnsettableProperty()
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -482,9 +482,9 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(GetterOnly::class.java)
 
     val encoded = GetterOnly(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("{\"a\":4,\"b\":6}")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
     assertThat(decoded.b).isEqualTo(6)
     assertThat(decoded.total).isEqualTo(10)
@@ -500,16 +500,16 @@ class KotlinJsonAdapterTest {
     val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
 
     val encoded = GetterAndSetter(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("{\"a\":3,\"b\":5,\"total\":8}")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5,"total":8}""")
 
     // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
-    val decoded1 = jsonAdapter.fromJson("{\"a\":4,\"b\":6,\"total\":11}")!!
+    val decoded1 = jsonAdapter.fromJson("""{"a":4,"b":6,"total":11}""")!!
     assertThat(decoded1.a).isEqualTo(4)
     assertThat(decoded1.b).isEqualTo(7)
     assertThat(decoded1.total).isEqualTo(11)
 
     // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
-    val decoded2 = jsonAdapter.fromJson("{\"a\":4,\"total\":11,\"b\":6}")!!
+    val decoded2 = jsonAdapter.fromJson("""{"a":4,"total":11,"b":6}""")!!
     assertThat(decoded2.a).isEqualTo(4)
     assertThat(decoded2.b).isEqualTo(7)
     assertThat(decoded2.total).isEqualTo(11)
