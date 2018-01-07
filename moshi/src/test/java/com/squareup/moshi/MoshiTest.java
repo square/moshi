@@ -534,6 +534,26 @@ public final class MoshiTest {
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
+  @Test public void upperBoundedWildcardsAreNotHandled() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(Types.subtypeOf(String.class));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No JsonAdapter for ? extends java.lang.String annotated []");
+    }
+  }
+
+  @Test public void lowerBoundedWildcardsAreNotHandled() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(Types.supertypeOf(String.class));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No JsonAdapter for ? super java.lang.String annotated []");
+    }
+  }
+
   @Test public void addNullFails() throws Exception {
     Type type = Object.class;
     Class<? extends Annotation> annotation = Annotation.class;
