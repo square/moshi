@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.BufferedSink;
@@ -121,13 +122,13 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
  * malformed JSON string will fail with an {@link IllegalStateException}.
  */
 public abstract class JsonWriter implements Closeable, Flushable {
-  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack permits
-  // up to 32 levels of nesting including the top-level document. Deeper nesting is prone to trigger
-  // StackOverflowErrors.
+  // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack will
+  // grow itself up to 256 levels of nesting including the top-level document. Deeper nesting is
+  // prone to trigger StackOverflowErrors.
   int stackSize = 0;
-  final int[] scopes = new int[32];
-  final String[] pathNames = new String[32];
-  final int[] pathIndices = new int[32];
+  int[] scopes = new int[32];
+  String[] pathNames = new String[32];
+  int[] pathIndices = new int[32];
 
   /**
    * A string containing a full set of spaces for a single level of indentation, or null for no
@@ -155,10 +156,26 @@ public abstract class JsonWriter implements Closeable, Flushable {
     return scopes[stackSize - 1];
   }
 
-  final void pushScope(int newTop) {
-    if (stackSize == scopes.length) {
+  /** Before pushing a value on the stack this confirms that the stack has capacity. */
+  final boolean checkStack() {
+    if (stackSize != scopes.length) return false;
+
+    if (stackSize == 256) {
       throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
     }
+
+    scopes = Arrays.copyOf(scopes, scopes.length * 2);
+    pathNames = Arrays.copyOf(pathNames, pathNames.length * 2);
+    pathIndices = Arrays.copyOf(pathIndices, pathIndices.length * 2);
+    if (this instanceof JsonValueWriter) {
+      ((JsonValueWriter) this).stack =
+          Arrays.copyOf(((JsonValueWriter) this).stack, ((JsonValueWriter) this).stack.length * 2);
+    }
+
+    return true;
+  }
+
+  final void pushScope(int newTop) {
     scopes[stackSize++] = newTop;
   }
 

@@ -31,7 +31,7 @@ import static java.lang.Double.POSITIVE_INFINITY;
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 final class JsonValueWriter extends JsonWriter {
-  private final Object[] stack = new Object[32];
+  Object[] stack = new Object[32];
   private @Nullable String deferredName;
 
   JsonValueWriter() {
@@ -47,9 +47,7 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter beginArray() throws IOException {
-    if (stackSize == stack.length) {
-      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
-    }
+    checkStack();
     List<Object> list = new ArrayList<>();
     add(list);
     stack[stackSize] = list;
@@ -69,9 +67,7 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter beginObject() throws IOException {
-    if (stackSize == stack.length) {
-      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
-    }
+    checkStack();
     Map<String, Object> map = new LinkedHashTreeMap<>();
     add(map);
     stack[stackSize] = map;

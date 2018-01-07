@@ -30,6 +30,14 @@ final class TestUtil {
     return new String(array);
   }
 
+  static String repeat(String s, int count) {
+    StringBuilder result = new StringBuilder(s.length() * count);
+    for (int i = 0; i < count; i++) {
+      result.append(s);
+    }
+    return result.toString();
+  }
+
   private TestUtil() {
     throw new AssertionError("No instances.");
   }

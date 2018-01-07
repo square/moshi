@@ -38,6 +38,7 @@ import okio.Buffer;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
+import static com.squareup.moshi.TestUtil.repeat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -971,8 +972,8 @@ public final class MoshiTest {
       moshi.adapter(Object.class).toJson(map);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a."
-          + "a.a.a.a.a.a.a.a.a.a.a.a: circular reference?");
+      assertThat(expected).hasMessage("Nesting too deep at $"
+          + repeat(".a", 255) + ": circular reference?");
     }
   }
 
@@ -984,8 +985,8 @@ public final class MoshiTest {
       moshi.adapter(Object.class).toJson(list);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
-          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]: circular reference?");
+      assertThat(expected).hasMessage("Nesting too deep at $"
+          + repeat("[0]", 255) + ": circular reference?");
     }
   }
 
@@ -999,8 +1000,8 @@ public final class MoshiTest {
       moshi.adapter(Object.class).toJson(list);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0].a[0].a[0].a[0].a[0].a[0].a[0].a[0]."
-          + "a[0].a[0].a[0].a[0].a[0].a[0].a[0].a[0]: circular reference?");
+      assertThat(expected).hasMessage("Nesting too deep at $[0]"
+          + repeat(".a[0]", 127) + ": circular reference?");
     }
   }
 
