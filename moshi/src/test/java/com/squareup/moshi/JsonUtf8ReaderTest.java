@@ -33,6 +33,7 @@ import static com.squareup.moshi.JsonReader.Token.NAME;
 import static com.squareup.moshi.JsonReader.Token.NULL;
 import static com.squareup.moshi.JsonReader.Token.NUMBER;
 import static com.squareup.moshi.JsonReader.Token.STRING;
+import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -1023,28 +1024,28 @@ public final class JsonUtf8ReaderTest {
   }
 
   @Test public void tooDeeplyNestedArrays() throws IOException {
-    JsonReader reader = newReader(repeat("[", 256) + repeat("]", 256));
-    for (int i = 0; i < 255; i++) {
+    JsonReader reader = newReader(repeat("[", MAX_DEPTH + 1) + repeat("]", MAX_DEPTH + 1));
+    for (int i = 0; i < MAX_DEPTH; i++) {
       reader.beginArray();
     }
     try {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", 255));
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", MAX_DEPTH));
     }
   }
 
   @Test public void tooDeeplyNestedObjects() throws IOException {
-    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 31 levels deep.
+    // Build a JSON document structured like {"a":{"a":{"a":{"a":true}}}}, but 255 levels deep.
     String array = "{\"a\":%s}";
     String json = "true";
-    for (int i = 0; i < 256; i++) {
+    for (int i = 0; i < MAX_DEPTH + 1; i++) {
       json = String.format(array, json);
     }
 
     JsonReader reader = newReader(json);
-    for (int i = 0; i < 255; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
@@ -1052,7 +1053,7 @@ public final class JsonUtf8ReaderTest {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", 255));
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH));
     }
   }
 

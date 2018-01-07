@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
+import static com.squareup.moshi.TestUtil.MAX_DEPTH;
+import static com.squareup.moshi.TestUtil.repeat;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -439,29 +441,28 @@ public final class JsonValueReaderTest {
 
   @Test public void tooDeeplyNestedArrays() throws IOException {
     Object root = Collections.emptyList();
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < MAX_DEPTH + 1; i++) {
       root = singletonList(root);
     }
     JsonReader reader = new JsonValueReader(root);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       reader.beginArray();
     }
     try {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $[0][0][0][0][0][0][0][0][0][0][0][0][0]"
-          + "[0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0][0]");
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", MAX_DEPTH + 1));
     }
   }
 
   @Test public void tooDeeplyNestedObjects() throws IOException {
     Object root = Boolean.TRUE;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < MAX_DEPTH + 1; i++) {
       root = singletonMap("a", root);
     }
     JsonReader reader = new JsonValueReader(root);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       reader.beginObject();
       assertThat(reader.nextName()).isEqualTo("a");
     }
@@ -469,8 +470,7 @@ public final class JsonValueReaderTest {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage(
-          "Nesting too deep at $.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.");
+      assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ".");
     }
   }
 }

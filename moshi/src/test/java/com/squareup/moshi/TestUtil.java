@@ -19,6 +19,8 @@ import java.util.Arrays;
 import okio.Buffer;
 
 final class TestUtil {
+  static final int MAX_DEPTH = 255;
+
   static JsonReader newReader(String json) {
     Buffer buffer = new Buffer().writeUtf8(json);
     return JsonReader.of(buffer);
