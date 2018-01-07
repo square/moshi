@@ -25,6 +25,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -423,19 +424,19 @@ public final class JsonWriterTest {
 
   @Test public void deepNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginArray();
     }
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endArray();
     }
     assertThat(factory.json())
-        .isEqualTo("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+        .isEqualTo(repeat("[", MAX_DEPTH) + repeat("]", MAX_DEPTH));
   }
 
-  @Test public void tooDeepNestingArrays() throws IOException {
+  @Test public void tooDeeplyNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 255; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginArray();
     }
     try {
@@ -443,29 +444,27 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Nesting too deep at $"
-          + repeat("[0]", 255) + ": circular reference?");
+          + repeat("[0]", MAX_DEPTH) + ": circular reference?");
     }
   }
 
   @Test public void deepNestingObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginObject();
       writer.name("a");
     }
     writer.value(true);
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endObject();
     }
-    assertThat(factory.json()).isEqualTo(""
-        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
-        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":"
-        + "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":true}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
+    assertThat(factory.json()).isEqualTo(
+        repeat("{\"a\":", MAX_DEPTH) + "true" + repeat("}", MAX_DEPTH));
   }
 
-  @Test public void tooDeepNestingObjects() throws IOException {
+  @Test public void tooDeeplyNestingObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
-    for (int i = 0; i < 255; i++) {
+    for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginObject();
       writer.name("a");
     }
@@ -474,7 +473,7 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Nesting too deep at $"
-          + repeat(".a", 255) + ": circular reference?");
+          + repeat(".a", MAX_DEPTH) + ": circular reference?");
     }
   }
 
