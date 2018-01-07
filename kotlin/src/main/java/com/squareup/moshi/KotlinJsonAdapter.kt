@@ -81,6 +81,9 @@ internal class KotlinJsonAdapter<T>(
               "Required value ${constructor.parameters[i].name} missing at ${reader.path}")
         }
         values[i] = null // Replace absent with null.
+      } else if (values[i] == null && !constructor.parameters[i].type.isMarkedNullable) {
+        throw JsonDataException("Non-null value ${constructor.parameters[i].name} " +
+            "was null at ${reader.path}")
       }
     }
 
@@ -89,7 +92,13 @@ internal class KotlinJsonAdapter<T>(
 
     // Set remaining properties.
     for (i in constructorSize until bindings.size) {
-      bindings[i]!!.set(result, values[i])
+      val binding = bindings[i]!!
+      val value = values[i]
+      if (value == null && !binding.property.returnType.isMarkedNullable) {
+        throw JsonDataException("Non-null value ${binding.property.name} " +
+            "was null at ${reader.path}")
+      }
+      binding.set(result, value)
     }
 
     return result
