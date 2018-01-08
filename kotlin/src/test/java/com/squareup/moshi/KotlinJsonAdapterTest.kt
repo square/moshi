@@ -449,6 +449,7 @@ class KotlinJsonAdapterTest {
   class PrivateConstructor private constructor(var a: Int, var b: Int) {
     fun a() = a
     fun b() = b
+
     companion object {
       fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
     }
@@ -517,7 +518,7 @@ class KotlinJsonAdapterTest {
   }
 
   class GetterOnly(var a: Int, var b: Int) {
-    val total : Int
+    val total: Int
       get() = a + b
   }
 
@@ -542,7 +543,7 @@ class KotlinJsonAdapterTest {
   }
 
   class GetterAndSetter(var a: Int, var b: Int) {
-    var total : Int
+    var total: Int
       get() = a + b
       set(value) {
         b = value - a
@@ -575,6 +576,46 @@ class KotlinJsonAdapterTest {
   enum class KotlinEnum {
     A, B
   }
+
+  @Test fun genericProperty() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter(GenericTypeUser::class.java)
+
+    assertThat(adapter.fromJson("""{"v": {"t": "c"}}"""))
+        .isEqualTo(GenericTypeUser(GenericType("c")))
+  }
+
+  data class GenericType<out A>(val t: A)
+
+  data class GenericTypeUser(val v: GenericType<String>)
+
+  @Test fun genericType() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    val typeJavaClass = SuperGeneric::class.java
+    val adapter = moshi.adapter<SuperGeneric<Int, String, Boolean>>(
+        Types.newParameterizedTypeWithOwner(typeJavaClass.enclosingClass, typeJavaClass,
+            java.lang.Integer::class.java, String::class.java, java.lang.Boolean::class.java))
+
+    assertThat(adapter.fromJson("""{"first": 42, "second": "Law of thermodynamics", "third": false}"""))
+        .isEqualTo(SuperGeneric(42, "Law of thermodynamics", false))
+  }
+
+  data class SuperGeneric<out A, out B, out C>(val first: A, val second: B, val third: C)
+
+  @Test fun genericMultitable() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    val typeJavaClass = Multitable::class.java
+    val adapter = moshi.adapter<Multitable<String, Int, Double>>(
+        Types.newParameterizedTypeWithOwner(typeJavaClass.enclosingClass, typeJavaClass,
+            String::class.java, java.lang.Integer::class.java, java.lang.Double::class.java))
+
+    assertThat(adapter.fromJson("""{ "cells": { "rKey": { "1" : [ 3.0, 5.0, 11.0, 17.0 ] } } }"""))
+        .isEqualTo(Multitable(mapOf(Pair("rKey", mapOf(Pair(1, listOf(3.0, 5.0, 11.0, 17.0)))))))
+  }
+
+  data class Multitable<R, C, out V>(val cells: Map<R, Map<C, List<V>>>)
 
   @Test fun manyProperties32() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -657,17 +698,16 @@ class KotlinJsonAdapterTest {
       var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
       var v31: Int, var v32: Int, var v33: Int)
 
-  // TODO(jwilson): resolve generic types?
-
   @Retention(RUNTIME)
   @JsonQualifier
   annotation class Uppercase
 
   class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase s: String) : String {
+    @ToJson fun toJson(@Uppercase s: String): String {
       return s.toUpperCase(Locale.US)
     }
-    @FromJson @Uppercase fun fromJson(s: String) : String {
+
+    @FromJson @Uppercase fun fromJson(s: String): String {
       return s.toLowerCase(Locale.US)
     }
   }

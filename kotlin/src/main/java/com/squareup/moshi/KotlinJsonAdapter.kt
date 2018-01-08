@@ -15,8 +15,11 @@
  */
 package com.squareup.moshi
 
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.lang.reflect.WildcardType
 import java.util.AbstractMap.SimpleEntry
 import kotlin.collections.Map.Entry
 import kotlin.reflect.KFunction
@@ -170,6 +173,14 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val parametersByName = constructor.parameters.associateBy { it.name }
     constructor.isAccessible = true
 
+    // If the kotlin type has type arguments map the declared names with
+    // the ones expected by the consumer
+    val typeArguments = (type as? ParameterizedType)?.actualTypeArguments
+        ?.mapIndexed { index, arg ->
+          Pair(rawType.kotlin.typeParameters[index].name, arg)
+        }
+        ?.associate { it } ?: mapOf()
+
     val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
     for (property in rawType.kotlin.memberProperties) {
@@ -197,8 +208,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val adapter = moshi.adapter<Any>(
-          property.returnType.javaType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
+      val adapter = moshi.adapter<Any>(property.returnType.javaType.canonicalize(typeArguments),
+          Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
       bindingsByName[property.name] =
           KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
@@ -209,7 +220,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
       if (binding == null && !parameter.isOptional) {
-        throw IllegalArgumentException("No property for required constructor ${parameter}")
+        throw IllegalArgumentException("No property for required constructor $parameter")
       }
       bindings += binding
     }
@@ -219,4 +230,26 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
   }
+
+  /** Canonicalize the properties return type with respect to of owner type arguments. */
+  private fun Type.canonicalize(ownerTypeArguments: Map<String, Type?>): Type {
+    val canonicalType = Types.canonicalize(this)
+    return when (canonicalType) {
+      is ParameterizedType -> {
+        Types.newParameterizedTypeWithOwner(canonicalType.ownerType,
+            canonicalType.rawType.canonicalize(ownerTypeArguments),
+            *canonicalType.actualTypeArguments.canonicalize(ownerTypeArguments))
+      }
+      is GenericArrayType -> {
+        Types.arrayOf(canonicalType.genericComponentType.canonicalize(ownerTypeArguments))
+      }
+      is WildcardType -> {
+        throw AssertionError() // Kotlin properties will never be represented by a wildcard type.
+      }
+      else -> ownerTypeArguments[typeName] ?: this
+    }
+  }
+
+  private fun Array<Type>.canonicalize(ownerTypeArguments: Map<String, Type?>): Array<Type> =
+      map { it.canonicalize(ownerTypeArguments) }.toTypedArray()
 }
