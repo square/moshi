@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
@@ -45,8 +46,10 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      if (!(type instanceof Class)) return null;
-      Class<?> rawType = (Class<?>) type;
+      if (!(type instanceof Class || type instanceof ParameterizedType)) {
+        return null;
+      }
+      Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
         throw new IllegalArgumentException("Platform "
@@ -72,7 +75,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);
       Map<String, FieldBinding<?>> fields = new TreeMap<>();
-      for (Type t = rawType; t != Object.class; t = Types.getGenericSuperclass(t)) {
+      for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
         createFieldBindings(moshi, t, fields);
       }
       return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
