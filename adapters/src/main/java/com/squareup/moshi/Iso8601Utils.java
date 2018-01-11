@@ -23,7 +23,7 @@ import java.util.TimeZone;
 
 /**
  * Jackson’s date formatter, pruned to Moshi's needs. Forked from this file:
- * https://github.com/FasterXML/jackson-databind/blob/master/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
+ * https://github.com/FasterXML/jackson-databind/blob/67ebf7305f492285a8f9f4de31545f5f16fc7c3a/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
  *
  * Utilities methods for manipulating dates in iso8601 format. This is much much faster and GC
  * friendly than using SimpleDateFormat so highly suitable if you (un)serialize lots of date
