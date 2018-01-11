@@ -134,9 +134,8 @@ class KotlinJsonAdapterTest {
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
   @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
-    class Data(val a: String)
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(Data::class.java)
+    val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
 
     try {
       jsonAdapter.fromJson("{\"a\":null}")
@@ -146,10 +145,11 @@ class KotlinJsonAdapterTest {
     }
   }
 
+  class HasNonNullConstructorParameter(val a: String)
+
   @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
-    class Data { var a: String = "" }
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(Data::class.java)
+    val jsonAdapter = moshi.adapter(HasNonNullProperty::class.java)
 
     try {
       jsonAdapter.fromJson("{\"a\":null}")
@@ -157,6 +157,10 @@ class KotlinJsonAdapterTest {
     } catch (expected: JsonDataException) {
       assertThat(expected).hasMessage("Non-null value a was null at \$")
     }
+  }
+
+  class HasNonNullProperty {
+    var a: String = ""
   }
 
   @Test fun duplicatedValue() {
@@ -574,6 +578,86 @@ class KotlinJsonAdapterTest {
 
   enum class KotlinEnum {
     A, B
+  }
+
+  @Test fun interfacesNotSupported() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(Interface::class.java)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage("No JsonAdapter for interface " +
+          "com.squareup.moshi.KotlinJsonAdapterTest\$Interface annotated []")
+    }
+  }
+
+  interface Interface
+
+  @Test fun abstractClassesNotSupported() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(AbstractClass::class.java)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage(
+          "Cannot serialize abstract class com.squareup.moshi.KotlinJsonAdapterTest\$AbstractClass")
+    }
+  }
+
+  abstract class AbstractClass(val a: Int)
+
+  @Test fun innerClassesNotSupported() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(InnerClass::class.java)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage(
+          "Cannot serialize inner class com.squareup.moshi.KotlinJsonAdapterTest\$InnerClass")
+    }
+  }
+
+  inner class InnerClass(val a: Int)
+
+  @Test fun localClassesNotSupported() {
+    class LocalClass(val a: Int)
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(LocalClass::class.java)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage("Cannot serialize local class or object expression " +
+          "com.squareup.moshi.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass")
+    }
+  }
+
+  @Test fun objectDeclarationsNotSupported() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(ObjectDeclaration.javaClass)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage("Cannot serialize object declaration " +
+          "com.squareup.moshi.KotlinJsonAdapterTest\$ObjectDeclaration")
+    }
+  }
+
+  object ObjectDeclaration {
+    var a = 5
+  }
+
+  @Test fun objectExpressionsNotSupported() {
+    val expression = object : Any() {
+      var a = 5
+    }
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(expression.javaClass)
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage("Cannot serialize local class or object expression " +
+          "com.squareup.moshi.KotlinJsonAdapterTest\$objectExpressionsNotSupported\$expression$1")
+    }
   }
 
   @Test fun manyProperties32() {
