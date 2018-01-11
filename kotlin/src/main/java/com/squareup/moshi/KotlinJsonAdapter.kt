@@ -162,17 +162,32 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (!annotations.isEmpty()) return null
 
     val rawType = Types.getRawType(type)
+    if (rawType.isInterface) return null
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
     if (ClassJsonAdapter.isPlatformType(rawType)) return null
 
-    val constructor = rawType.kotlin.primaryConstructor ?: return null
+    if (rawType.isLocalClass) {
+      throw IllegalArgumentException("Cannot serialize local class or object expression ${rawType.name}")
+    }
+    val rawTypeKotlin = rawType.kotlin
+    if (rawTypeKotlin.isAbstract) {
+      throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}")
+    }
+    if (rawTypeKotlin.isInner) {
+      throw IllegalArgumentException("Cannot serialize inner class ${rawType.name}")
+    }
+    if (rawTypeKotlin.objectInstance != null) {
+      throw IllegalArgumentException("Cannot serialize object declaration ${rawType.name}")
+    }
+
+    val constructor = rawTypeKotlin.primaryConstructor ?: return null
     val parametersByName = constructor.parameters.associateBy { it.name }
     constructor.isAccessible = true
 
     val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
-    for (property in rawType.kotlin.memberProperties) {
+    for (property in rawTypeKotlin.memberProperties) {
       val parameter = parametersByName[property.name]
 
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
