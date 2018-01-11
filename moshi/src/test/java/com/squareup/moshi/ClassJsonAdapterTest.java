@@ -341,8 +341,23 @@ public final class ClassJsonAdapterTest {
     }
   }
 
+  @Test public void localClassNotSupported() throws Exception {
+    class Local {
+    }
+    try {
+      ClassJsonAdapter.FACTORY.create(Local.class, NO_ANNOTATIONS, moshi);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot serialize local class "
+          + "com.squareup.moshi.ClassJsonAdapterTest$1Local");
+    }
+  }
+
+  interface Interface {
+  }
+
   @Test public void interfaceNotSupported() throws Exception {
-    assertThat(ClassJsonAdapter.FACTORY.create(Runnable.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertThat(ClassJsonAdapter.FACTORY.create(Interface.class, NO_ANNOTATIONS, moshi)).isNull();
   }
 
   static abstract class Abstract {

@@ -57,14 +57,15 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       }
       if (!annotations.isEmpty()) return null;
 
+      if (rawType.isAnonymousClass()) {
+        throw new IllegalArgumentException("Cannot serialize anonymous class " + rawType.getName());
+      }
+      if (rawType.isLocalClass()) {
+        throw new IllegalArgumentException("Cannot serialize local class " + rawType.getName());
+      }
       if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
-        if (rawType.getSimpleName().isEmpty()) {
-          throw new IllegalArgumentException(
-              "Cannot serialize anonymous class " + rawType.getName());
-        } else {
-          throw new IllegalArgumentException(
-              "Cannot serialize non-static nested class " + rawType.getName());
-        }
+        throw new IllegalArgumentException(
+            "Cannot serialize non-static nested class " + rawType.getName());
       }
       if (Modifier.isAbstract(rawType.getModifiers())) {
         throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
