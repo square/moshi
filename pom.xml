@@ -22,6 +22,9 @@
     <module>examples</module>
     <module>adapters</module>
     <module>kotlin</module>
+    <module>kotlin-codegen/compiler</module>
+    <module>kotlin-codegen/integration-test</module>
+    <module>kotlin-codegen/runtime</module>
   </modules>
 
   <properties>
