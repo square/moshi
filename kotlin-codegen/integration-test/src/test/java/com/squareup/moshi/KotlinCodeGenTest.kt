@@ -36,6 +36,9 @@ class KotlinCodeGenTest {
     assertThat(decoded.b).isEqualTo(6)
   }
 
+  @MoshiSerializable
+  data class Foo(val a: String)
+
   class ConstructorParameters(var a: Int, var b: Int)
 
   @Test fun properties() {
