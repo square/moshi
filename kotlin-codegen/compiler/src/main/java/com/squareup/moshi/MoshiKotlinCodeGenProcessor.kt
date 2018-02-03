@@ -406,7 +406,7 @@ private data class Adapter(
                 val possibleBangs = if (prop.nullable) "" else "!!"
                 addStatement("%S -> %L = %N.fromJson(%N)$possibleBangs",
                     prop.serializedName,
-                    prop.name,
+                    allocatedNames[prop]!!,
                     adapterProperties[prop.typeName]!!,
                     reader)
               }
