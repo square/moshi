@@ -50,6 +50,7 @@ import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.metadata.extractFullName
 import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
+import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
 import me.eugeniomarletti.kotlin.metadata.kaptGeneratedOption
 import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.visibility
@@ -62,10 +63,11 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.INTERNAL
 import org.jetbrains.kotlin.serialization.deserialization.NameResolver
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
-import javax.lang.model.util.ElementFilter
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic.Kind.ERROR
 
@@ -120,13 +122,21 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
         '/', '.')
 
     val hasCompanionObject = classProto.hasCompanionObjectName()
-    println("Has companion object? $hasCompanionObject")
-
-    val parameters = classProto.constructorList
-        // todo allow custom constructor
+    // todo allow custom constructor
+    val protoConstructor = classProto.constructorList
         .single { it.isPrimary }
+    val constructorJvmSignature = protoConstructor.getJvmConstructorSignature(nameResolver,
+        classProto.typeTable)
+    val constructor = classProto.fqName
+        .let(nameResolver::getString)
+        .replace('/', '.')
+        .let(elementUtils::getTypeElement)
+        .enclosedElements
+        .mapNotNull { it.takeIf { it.kind == ElementKind.CONSTRUCTOR }?.let { it as ExecutableElement } }
+        .single { it.jvmMethodSignature == constructorJvmSignature }
+    val parameters = protoConstructor
         .valueParameterList
-        .map { valueParameter ->
+        .mapIndexed { index, valueParameter ->
           val paramName = nameResolver.getString(valueParameter.name)
 
           val nullable = valueParameter.type.nullable
@@ -134,19 +144,13 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
               .replace("`", "")
               .removeSuffix("?")
 
-          // Get the serialized name if there is one
-          // This is where we'll probably want to collect other relevant annotations (qualifiers, etc)
+          val actualElement = constructor.parameters[index]
 
-          // This would be ideal, but unfortunately not visible right now in the kotlin-metadata library
-//          val serializedName = valueParameter.getAnnotation(Json::class.java)?.name ?: paramName
-
-          // Ugly hack around missing annotation. We go fetch it from the corresponding java constructor param
-          val actualElement = ElementFilter.constructorsIn(element.enclosedElements)
-              .first()
-              .parameters
-              .find { it.simpleName.toString() == paramName }!!
           val serializedName = actualElement.getAnnotation(Json::class.java)?.name
               ?: paramName
+
+          val jsonQualifiers = actualElement.annotationMirrors
+              .filter { it.annotationType.getAnnotation(JsonQualifier::class.java) != null }
 
           Property(
               name = paramName,
@@ -154,7 +158,8 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
               serializedName = serializedName,
               hasDefault = valueParameter.declaresDefaultValue,
               nullable = nullable,
-              typeName = valueParameter.type.asTypeName(nameResolver, classProto::getTypeParameter))
+              typeName = valueParameter.type.asTypeName(nameResolver, classProto::getTypeParameter),
+              jsonQualifiers = jsonQualifiers)
         }
 
 
@@ -311,7 +316,8 @@ private data class Property(
     val serializedName: String,
     val hasDefault: Boolean,
     val nullable: Boolean,
-    val typeName: TypeName)
+    val typeName: TypeName,
+    val jsonQualifiers: List<AnnotationMirror>)
 
 private data class Adapter(
     val fqClassName: String,
@@ -368,7 +374,8 @@ private data class Adapter(
         optionsCN,
         PRIVATE)
         .delegate(
-            "lazy { %T.of(${optionsByIndex.map { it.value.key }.joinToString(", ") { "\"$it\"" }}) }",
+            "lazy { %T.of(${optionsByIndex.map { it.value.key }
+                .joinToString(", ") { "\"$it\"" }}) }",
             optionsCN)
         .build()
     val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
