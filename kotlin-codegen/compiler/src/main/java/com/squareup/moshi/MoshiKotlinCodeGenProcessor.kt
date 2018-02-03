@@ -355,9 +355,26 @@ private data class Adapter(
               .build()
         }
 
-    // TODO in the fiture make these propertyspecs directly. Not reasonable right now because
-    // kotlinpoet only toString()'s it
+    // TODO in the future make these propertyspecs directly.
+    // Pending https://github.com/square/kotlinpoet/pull/317
     val allocatedNames = propertyList.associate { it to it.name.allocate() }
+    val optionsByIndex = propertyList
+        .associateBy { it.serializedName }.entries.withIndex()
+
+    // selectName() API setup
+    val optionsCN = JsonReader.Options::class.asTypeName()
+    val optionsProperty = PropertySpec.builder(
+        "OPTIONS".allocate(),
+        optionsCN,
+        PRIVATE)
+        .delegate(
+            "lazy { %T.of(${optionsByIndex.map { it.value.key }.joinToString(", ") { "\"$it\"" }}) }",
+            optionsCN)
+        .build()
+    val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
+        .addModifiers(PRIVATE)
+        .addProperty(optionsProperty)
+        .build()
 
     val adapter = TypeSpec.classBuilder(adapterName)
         .superclass(jsonAdapterTypeName)
@@ -370,6 +387,7 @@ private data class Adapter(
         .primaryConstructor(FunSpec.constructorBuilder()
             .addParameter(moshiParam)
             .build())
+        .addType(companionObject)
         .addProperties(adapterProperties.values)
         .addFunction(FunSpec.builder("fromJson")
             .addModifiers(OVERRIDE)
@@ -398,20 +416,24 @@ private data class Adapter(
               }
             }
             .addStatement("%N.beginObject()", reader)
-            // TODO Use select() API for optimization
             .beginControlFlow("while (%N.hasNext())", reader)
-            .beginControlFlow("when (%N.nextName())", reader)
+            .beginControlFlow("when (%N.selectName(%N))", reader, optionsProperty)
             .apply {
-              propertyList.forEach { prop ->
-                val possibleBangs = if (prop.nullable) "" else "!!"
-                addStatement("%S -> %L = %N.fromJson(%N)$possibleBangs",
-                    prop.serializedName,
-                    allocatedNames[prop]!!,
-                    adapterProperties[prop.typeName]!!,
-                    reader)
-              }
+              optionsByIndex.map { (index, entry) -> index to entry.value }
+                  .forEach { (index, prop) ->
+                    val possibleBangs = if (prop.nullable) "" else "!!"
+                    addStatement("%L -> %L = %N.fromJson(%N)$possibleBangs",
+                        index,
+                        allocatedNames[prop]!!,
+                        adapterProperties[prop.typeName]!!,
+                        reader)
+                  }
             }
-            .addStatement("else -> %N.skipValue()", reader)
+            .beginControlFlow("-1 ->")
+            .addCode("// Unknown name, skip it\n")
+            .addStatement("%N.nextName()", reader)
+            .addStatement("%N.skipValue()", reader)
+            .endControlFlow()
             .endControlFlow()
             .endControlFlow()
             .addStatement("%N.endObject()", reader)
