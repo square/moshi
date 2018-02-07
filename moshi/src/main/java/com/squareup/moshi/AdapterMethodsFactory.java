@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -26,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-import static com.squareup.moshi.Util.jsonAnnotations;
+import static com.squareup.moshi.internal.Util.jsonAnnotations;
 
 final class AdapterMethodsFactory implements JsonAdapter.Factory {
   private final List<AdapterMethod> toAdapters;

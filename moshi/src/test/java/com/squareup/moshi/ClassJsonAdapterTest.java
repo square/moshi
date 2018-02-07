@@ -25,7 +25,7 @@ import okio.Buffer;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
-import static com.squareup.moshi.Util.NO_ANNOTATIONS;
+import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 

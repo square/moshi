@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;

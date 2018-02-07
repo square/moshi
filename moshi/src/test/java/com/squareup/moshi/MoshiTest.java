@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import android.util.Pair;
+import com.squareup.moshi.internal.Util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;

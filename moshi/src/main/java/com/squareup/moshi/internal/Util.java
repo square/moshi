@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi.internal;
 
+import com.squareup.moshi.JsonQualifier;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
@@ -22,7 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-final class Util {
+public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
 
   private Util() {
@@ -65,5 +66,18 @@ final class Util {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
+   * types because they're unspecified and likely to be different on Java vs. Android.
+   */
+  public static boolean isPlatformType(Class<?> rawType) {
+    String name = rawType.getName();
+    return name.startsWith("android.")
+        || name.startsWith("java.")
+        || name.startsWith("javax.")
+        || name.startsWith("kotlin.")
+        || name.startsWith("scala.");
   }
 }

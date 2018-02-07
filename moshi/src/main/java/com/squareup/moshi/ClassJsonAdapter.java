@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -48,7 +49,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (!(type instanceof Class)) return null;
       Class<?> rawType = (Class<?>) type;
       if (rawType.isInterface() || rawType.isEnum()) return null;
-      if (isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
+      if (Util.isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
         throw new IllegalArgumentException("Platform "
             + type
             + " annotated "
@@ -83,7 +84,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     private void createFieldBindings(
         Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
       Class<?> rawType = Types.getRawType(type);
-      boolean platformType = isPlatformType(rawType);
+      boolean platformType = Util.isPlatformType(rawType);
       for (Field field : rawType.getDeclaredFields()) {
         if (!includeField(platformType, field.getModifiers())) continue;
 
@@ -114,19 +115,6 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
     }
   };
-
-  /**
-   * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
-   * types because they're unspecified and likely to be different on Java vs. Android.
-   */
-  static boolean isPlatformType(Class<?> rawType) {
-    String name = rawType.getName();
-    return name.startsWith("android.")
-        || name.startsWith("java.")
-        || name.startsWith("javax.")
-        || name.startsWith("kotlin.")
-        || name.startsWith("scala.");
-  }
 
   private final ClassFactory<T> classFactory;
   private final FieldBinding<?>[] fieldsArray;
