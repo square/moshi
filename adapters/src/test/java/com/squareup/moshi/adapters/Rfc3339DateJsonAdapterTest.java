@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi.adapters;
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;

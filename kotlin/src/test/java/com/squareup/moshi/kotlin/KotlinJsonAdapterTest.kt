@@ -13,8 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.kotlin
 
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonQualifier
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
 import org.junit.Test
@@ -315,7 +321,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessage("No default value for transient constructor parameter #0 " +
           "a of fun <init>(kotlin.Int): " +
-          "com.squareup.moshi.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
+          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
     }
   }
 
@@ -587,7 +593,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("No JsonAdapter for interface " +
-          "com.squareup.moshi.KotlinJsonAdapterTest\$Interface annotated []")
+          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$Interface annotated []")
     }
   }
 
@@ -599,8 +605,8 @@ class KotlinJsonAdapterTest {
       moshi.adapter(AbstractClass::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
-          "Cannot serialize abstract class com.squareup.moshi.KotlinJsonAdapterTest\$AbstractClass")
+      assertThat(e).hasMessage("Cannot serialize abstract class " +
+              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$AbstractClass")
     }
   }
 
@@ -612,8 +618,8 @@ class KotlinJsonAdapterTest {
       moshi.adapter(InnerClass::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
-          "Cannot serialize inner class com.squareup.moshi.KotlinJsonAdapterTest\$InnerClass")
+      assertThat(e).hasMessage("Cannot serialize inner class " +
+              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$InnerClass")
     }
   }
 
@@ -627,7 +633,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize local class or object expression " +
-          "com.squareup.moshi.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass")
+          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass")
     }
   }
 
@@ -638,7 +644,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize object declaration " +
-          "com.squareup.moshi.KotlinJsonAdapterTest\$ObjectDeclaration")
+          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$ObjectDeclaration")
     }
   }
 
@@ -656,7 +662,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize local class or object expression " +
-          "com.squareup.moshi.KotlinJsonAdapterTest\$objectExpressionsNotSupported\$expression$1")
+              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$objectExpressionsNotSupported" +
+              "\$expression$1")
     }
   }
 
