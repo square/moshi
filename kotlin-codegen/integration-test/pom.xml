@@ -7,6 +7,7 @@
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
     <version>1.6.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>moshi-kotlin-codegen-integration</artifactId>

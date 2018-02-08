@@ -617,7 +617,7 @@ class KotlinCodeGenTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage(
-          "Cannot serialize inner class com.squareup.moshi.KotlinJsonAdapterTest\$InnerClass")
+          "Cannot serialize non-static nested class com.squareup.moshi.KotlinCodeGenTest\$InnerClass")
     }
   }
 

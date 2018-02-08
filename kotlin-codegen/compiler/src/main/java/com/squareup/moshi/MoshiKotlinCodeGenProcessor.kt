@@ -51,7 +51,6 @@ import me.eugeniomarletti.kotlin.metadata.extractFullName
 import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
 import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
-import me.eugeniomarletti.kotlin.metadata.kaptGeneratedOption
 import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.visibility
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
@@ -61,6 +60,7 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.TypeParameter.Variance
 import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.INTERNAL
 import org.jetbrains.kotlin.serialization.deserialization.NameResolver
+import java.io.File
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.AnnotationMirror
@@ -180,16 +180,16 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
   }
 
   private fun Adapter.generateAndWrite(): Boolean {
-    val generatedDir = generatedDir ?: run {
-      messager.printMessage(ERROR, "Can't find option '$kaptGeneratedOption'")
-      return false
-    }
+    // TODO Hack since the maven plugin doesn't supply `kapt.kotlin.generated` option
+    // bug filed https://youtrack.jetbrains.com/issue/KT-22783
     val adapterName = "${name}_JsonAdapter"
+    val javaFileObject = filer.createSourceFile(adapterName)
+    val file = File(javaFileObject.toUri())
+    val generatedDir = file.parentFile
+    file.delete()
     val fileBuilder = FileSpec.builder(packageName, adapterName)
     generate(adapterName, fileBuilder)
-    fileBuilder
-        .build()
-        .writeTo(generatedDir)
+    fileBuilder.build().writeTo(generatedDir)
     return true
   }
 }
