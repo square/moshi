@@ -242,7 +242,7 @@ private fun primitiveDefaultFor(typeName: TypeName): String {
     LONG -> "0L"
     CHAR -> "'0'"
     FLOAT -> "0.0f"
-    DOUBLE -> "0.0d"
+    DOUBLE -> "0.0"
     else -> throw IllegalArgumentException("Non-primitive type! $typeName")
   }
 }
