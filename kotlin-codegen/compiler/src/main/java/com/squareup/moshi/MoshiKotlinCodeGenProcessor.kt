@@ -193,11 +193,8 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
   private fun mavenGeneratedDir(adapterName: String): File {
     // Hack since the maven plugin doesn't supply `kapt.kotlin.generated` option
     // Bug filed at https://youtrack.jetbrains.com/issue/KT-22783
-    val javaFileObject = filer.createSourceFile(adapterName)
-    val file = File(javaFileObject.toUri())
-    val generatedDir = file.parentFile
-    file.delete()
-    return generatedDir
+    val file = filer.createSourceFile(adapterName).toUri().let(::File)
+    return file.parentFile.also { file.delete() }
   }
 }
 
