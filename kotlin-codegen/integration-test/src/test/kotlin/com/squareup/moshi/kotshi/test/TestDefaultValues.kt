@@ -1,9 +1,6 @@
 package com.squareup.moshi.kotshi.test
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
 import com.squareup.moshi.kotshi.*
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.fail
@@ -20,7 +17,8 @@ class TestDefaultValues {
     @Before
     fun setup() {
         moshi = Moshi.Builder()
-                .add(TestFactory)
+//                .add(TestFactory)
+                .add(MoshiSerializableFactory.getInstance())
                 .add(LocalDate::class.java, LocalDateAdapter)
                 .add(LocalTime::class.java, LocalTimeAdapter)
                 .add(LocalDateTime::class.java, LocalDateTimeAdapter)

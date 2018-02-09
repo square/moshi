@@ -4,7 +4,7 @@ import com.squareup.moshi.MoshiSerializable
 
 @MoshiSerializable
 data class ClassWithGenericDefaults(
-        @JsonDefaultValue
+//        @JsonDefaultValue
         val generic2: Generic2<String?, Int?>
 ) {
 
@@ -12,10 +12,10 @@ data class ClassWithGenericDefaults(
     class Generic1<out T>(t1: T, t2: String?) : Generic2<T, String?>(t1, t2)
 
     companion object {
-        @JsonDefaultValue
+//        @JsonDefaultValue
         fun <T> provideGeneric1Default(): Generic1<T?> = Generic1(null, null)
 
-        @JsonDefaultValue
+//        @JsonDefaultValue
         fun <T1, T2> provideGeneric2Default(): Generic2<T1?, T2?> = Generic2(null, null)
     }
 

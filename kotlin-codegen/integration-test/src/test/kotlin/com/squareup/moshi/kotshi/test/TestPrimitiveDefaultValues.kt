@@ -2,8 +2,8 @@ package com.squareup.moshi.kotshi.test
 
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.MoshiSerializableFactory
 import com.squareup.moshi.kotshi.ClassWithPrimitiveDefaults
-import com.squareup.moshi.kotshi.TestFactory
 import junit.framework.Assert.assertEquals
 import okio.Buffer
 import org.junit.Before
@@ -15,7 +15,8 @@ class TestPrimitiveDefaultValues {
     @Before
     fun setup() {
         moshi = Moshi.Builder()
-                .add(TestFactory)
+//                .add(TestFactory)
+                .add(MoshiSerializableFactory.getInstance())
                 .build()
     }
 

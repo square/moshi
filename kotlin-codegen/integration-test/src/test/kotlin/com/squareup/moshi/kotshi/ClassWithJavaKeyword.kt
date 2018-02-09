@@ -5,13 +5,13 @@ import com.squareup.moshi.MoshiSerializable
 
 @MoshiSerializable
 data class ClassWithJavaKeyword(
-        @GetterName("getDefault")
+//        @GetterName("getDefault")
         @Json(name = "default")
         val default: Boolean,
-        @GetterName("getInt")
+//        @GetterName("getInt")
         @Json(name = "int")
         val int: Int,
-        @GetterName("someCase")
+//        @GetterName("someCase")
         @Json(name = "case")
         @get:JvmName("someCase")
         val case: Int

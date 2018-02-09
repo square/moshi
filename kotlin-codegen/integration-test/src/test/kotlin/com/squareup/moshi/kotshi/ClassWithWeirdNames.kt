@@ -2,7 +2,7 @@ package com.squareup.moshi.kotshi
 
 import com.squareup.moshi.MoshiSerializable
 
-@MoshiSerializable(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
+@MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
 data class ClassWithWeirdNames(
         val OPTIONS: Int,
         val writer: Boolean,

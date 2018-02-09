@@ -2,7 +2,7 @@ package com.squareup.moshi.kotshi
 
 import com.squareup.moshi.MoshiSerializable
 
-@MoshiSerializable(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
+@MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
 data class UsingPrimitiveAdapterTestClass(
         val aString: String,
         val aBoolean: Boolean,
@@ -23,7 +23,7 @@ data class UsingPrimitiveAdapterTestClass(
         val nullableDouble: Double?
 )
 
-@MoshiSerializable(useAdaptersForPrimitives = PrimitiveAdapters.DISABLED)
+@MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.DISABLED)
 data class NotUsingPrimitiveAdapterTestClass(
         val aString: String,
         val aBoolean: Boolean,
@@ -44,7 +44,7 @@ data class NotUsingPrimitiveAdapterTestClass(
         val nullableDouble: Double?
 )
 
-@MoshiSerializable(useAdaptersForPrimitives = PrimitiveAdapters.DISABLED)
+@MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.DISABLED)
 data class PrimitiveWithJsonQualifierTestClass(
     @Hello val greetingInt: Int
 )

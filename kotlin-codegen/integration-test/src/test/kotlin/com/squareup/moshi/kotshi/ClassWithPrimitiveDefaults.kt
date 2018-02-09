@@ -4,22 +4,22 @@ import com.squareup.moshi.MoshiSerializable
 
 @MoshiSerializable
 data class ClassWithPrimitiveDefaults(
-        @JsonDefaultValueString("default")
+//        @JsonDefaultValueString("default")
         val someString: String,
-        @JsonDefaultValueBoolean(true)
+//        @JsonDefaultValueBoolean(true)
         val someBoolean: Boolean,
-        @JsonDefaultValueByte(0x42)
+//        @JsonDefaultValueByte(0x42)
         val someByte: Byte,
-        @JsonDefaultValueChar('N')
+//        @JsonDefaultValueChar('N')
         val someChar: Char,
-        @JsonDefaultValueShort(4711)
+//        @JsonDefaultValueShort(4711)
         val someShort: Short,
-        @JsonDefaultValueInt(4711)
+//        @JsonDefaultValueInt(4711)
         val someInt: Int,
-        @JsonDefaultValueLong(4711)
+//        @JsonDefaultValueLong(4711)
         val someLong: Long,
-        @JsonDefaultValueFloat(0.4711f)
+//        @JsonDefaultValueFloat(0.4711f)
         val someFloat: Float,
-        @JsonDefaultValueDouble(0.4711)
+//        @JsonDefaultValueDouble(0.4711)
         val someDouble: Double
 )

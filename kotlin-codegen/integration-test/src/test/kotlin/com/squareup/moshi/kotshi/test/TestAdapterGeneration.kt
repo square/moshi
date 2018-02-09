@@ -1,19 +1,15 @@
 package com.squareup.moshi.kotshi.test
 
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
+import com.squareup.moshi.*
 import com.squareup.moshi.kotshi.*
+import junit.framework.Assert.assertEquals
 import okio.Buffer
 import org.junit.Test
 
 class TestAdapterGeneration {
     private val moshi: Moshi = Moshi.Builder()
-            .add(TestFactory)
+//            .add(TestFactory)
+            .add(MoshiSerializableFactory.getInstance())
             .add(String::class.java, Hello::class.java, HelloJsonAdapter())
             .build()
 
@@ -189,7 +185,8 @@ class TestAdapterGeneration {
                         writer.endObject()
                     }
                 })
-                .add(TestFactory)
+//                .add(TestFactory)
+                .add(MoshiSerializableFactory.getInstance())
                 .build()
                 .adapter(MultipleJsonQualifiers::class.java)
         val json = """{"string":{"name":["Hello, world!"]}}"""

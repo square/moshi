@@ -2,20 +2,20 @@ package com.squareup.moshi.kotshi
 
 import com.squareup.moshi.MoshiSerializable
 
-@JsonDefaultValue
+//@JsonDefaultValue
 annotation class StringWithNA
 
 @MoshiSerializable
 data class MyClass(
-        @JsonDefaultValue
+//        @JsonDefaultValue
         val name: String,
         @StringWithNA
         val address: String,
-        @JsonDefaultValueInt(-1)
+//        @JsonDefaultValueInt(-1)
         val age: Int
 ) {
     companion object {
-        @JsonDefaultValue
+//        @JsonDefaultValue
         @JvmField
         val defaultString = ""
 

@@ -1,9 +1,6 @@
 package com.squareup.moshi.kotshi.test
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
+import com.squareup.moshi.*
 import com.squareup.moshi.kotshi.*
 import junit.framework.Assert.assertEquals
 import okio.Buffer
@@ -35,7 +32,8 @@ class TestPrimitiveAdapters {
         floatAdapter = DelegateAdapter(basicMoshi.adapter(Float::class.java))
         doubleAdapter = DelegateAdapter(basicMoshi.adapter(Double::class.java))
         moshi = Moshi.Builder()
-                .add(TestFactory)
+//                .add(TestFactory)
+                .add(MoshiSerializableFactory.getInstance())
                 .add(String::class.java, stringAdapter)
                 .add(Boolean::class.javaPrimitiveType!!, booleanAdapter)
                 .add(Boolean::class.javaObjectType, booleanAdapter)
