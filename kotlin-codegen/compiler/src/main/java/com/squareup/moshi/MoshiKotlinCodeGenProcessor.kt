@@ -180,17 +180,24 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
   }
 
   private fun Adapter.generateAndWrite(): Boolean {
-    // TODO Hack since the maven plugin doesn't supply `kapt.kotlin.generated` option
-    // bug filed https://youtrack.jetbrains.com/issue/KT-22783
     val adapterName = "${name}_JsonAdapter"
+    val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
+    val fileBuilder = FileSpec.builder(packageName, adapterName)
+    generate(adapterName, fileBuilder)
+    fileBuilder
+        .build()
+        .writeTo(outputDir)
+    return true
+  }
+
+  private fun mavenGeneratedDir(adapterName: String): File {
+    // Hack since the maven plugin doesn't supply `kapt.kotlin.generated` option
+    // Bug filed at https://youtrack.jetbrains.com/issue/KT-22783
     val javaFileObject = filer.createSourceFile(adapterName)
     val file = File(javaFileObject.toUri())
     val generatedDir = file.parentFile
     file.delete()
-    val fileBuilder = FileSpec.builder(packageName, adapterName)
-    generate(adapterName, fileBuilder)
-    fileBuilder.build().writeTo(generatedDir)
-    return true
+    return generatedDir
   }
 }
 
