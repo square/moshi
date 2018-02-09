@@ -61,6 +61,7 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.INTERNAL
 import org.jetbrains.kotlin.serialization.deserialization.NameResolver
 import java.io.File
+import java.lang.reflect.Type
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.AnnotationMirror
@@ -70,6 +71,7 @@ import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic.Kind.ERROR
+
 
 /**
  * An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
@@ -162,6 +164,24 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
               jsonQualifiers = jsonQualifiers)
         }
 
+    val genericTypeNames = classProto.typeParameterList
+        .map {
+          val variance = it.variance.asKModifier().let {
+            // We don't redeclare out variance here
+            if (it == OUT) {
+              null
+            } else {
+              it
+            }
+          }
+          TypeVariableName.invoke(
+              name = nameResolver.getString(it.name),
+              bounds = *(it.upperBoundList
+                  .map { it.asTypeName(nameResolver, classProto::getTypeParameter) }
+                  .toTypedArray()),
+              variance = variance)
+              .reified(it.reified)
+        }
 
     return Adapter(
         fqClassName = fqClassName,
@@ -170,6 +190,7 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
         originalElement = element,
         hasCompanionObject = hasCompanionObject,
         visibility = classProto.visibility!!,
+        genericTypeNames = genericTypeNames,
         elementUtils = elementUtils)
   }
 
@@ -262,9 +283,12 @@ private fun ClassName.isClass(elementUtils: Elements): Boolean {
   return elementUtils.getTypeElement(fqcn).kind == ElementKind.INTERFACE
 }
 
-private fun TypeName.makeType(elementUtils: Elements): CodeBlock {
+private fun TypeName.makeType(
+    elementUtils: Elements,
+    typesArray: ParameterSpec,
+    genericTypeNames: List<TypeVariableName>): CodeBlock {
   if (nullable) {
-    return asNonNullable().makeType(elementUtils)
+    return asNonNullable().makeType(elementUtils, typesArray, genericTypeNames)
   }
   return when (this) {
     is ClassName -> CodeBlock.of("%T::class.java", this)
@@ -273,7 +297,7 @@ private fun TypeName.makeType(elementUtils: Elements): CodeBlock {
       if (rawType == ARRAY) {
         return CodeBlock.of("%T.arrayOf(%L)",
             Types::class.asTypeName(),
-            typeArguments[0].makeType(elementUtils))
+            typeArguments[0].makeType(elementUtils, typesArray, genericTypeNames))
       }
       // If it's a Class type, we have to specify the generics.
       val rawTypeParameters = if (rawType.isClass(elementUtils)) {
@@ -295,7 +319,9 @@ private fun TypeName.makeType(elementUtils: Elements): CodeBlock {
           Types::class.asTypeName(),
           rawType,
           rawTypeParameters,
-          *(typeArguments.map { it.makeType(elementUtils) }.toTypedArray()))
+          *(typeArguments.map {
+            it.makeType(elementUtils, typesArray, genericTypeNames)
+          }.toTypedArray()))
     }
     is WildcardTypeName -> {
       val target: TypeName
@@ -314,7 +340,9 @@ private fun TypeName.makeType(elementUtils: Elements): CodeBlock {
       }
       CodeBlock.of("%T.%L(%T::class.java)", Types::class.asTypeName(), method, target)
     }
-    is TypeVariableName -> TODO()
+    is TypeVariableName -> {
+      CodeBlock.of("%N[%L]", typesArray, genericTypeNames.indexOfFirst { it == this })
+    }
   // Shouldn't happen
     else -> throw IllegalArgumentException("Unrepresentable type: " + this)
   }
@@ -339,14 +367,18 @@ private data class Adapter(
         .removePrefix("_"),
     val hasCompanionObject: Boolean,
     val visibility: Visibility,
-    val elementUtils: Elements) {
+    val elementUtils: Elements,
+    val genericTypeNames: List<TypeVariableName>?) {
+
   fun generate(adapterName: String, fileSpecBuilder: FileSpec.Builder) {
     val nameAllocator = NameAllocator()
     fun String.allocate() = nameAllocator.newName(this)
 
-    val originalTypeName = originalElement.asType().asTypeName() as ClassName
+    val originalTypeName = originalElement.asType().asTypeName()
     val moshiName = "moshi".allocate()
     val moshiParam = ParameterSpec.builder(moshiName, Moshi::class.asClassName()).build()
+    val typesParam = ParameterSpec.builder("types".allocate(),
+        ParameterizedTypeName.get(ARRAY, Type::class.asTypeName())).build()
     val reader = ParameterSpec.builder("reader".allocate(),
         JsonReader::class.asClassName()).build()
     val writer = ParameterSpec.builder("writer".allocate(),
@@ -367,7 +399,7 @@ private data class Adapter(
               .initializer("%N.adapter%L(%L)",
                   moshiParam,
                   if (typeName is ClassName) "" else CodeBlock.of("<%T>", typeName),
-                  typeName.makeType(elementUtils))
+                  typeName.makeType(elementUtils, typesParam, genericTypeNames ?: emptyList()))
               .build()
         }
 
@@ -396,6 +428,11 @@ private data class Adapter(
     val adapter = TypeSpec.classBuilder(adapterName)
         .superclass(jsonAdapterTypeName)
         .apply {
+          genericTypeNames?.let {
+            addTypeVariables(genericTypeNames)
+          }
+        }
+        .apply {
           // TODO make this configurable. Right now it just matches the source model
           if (visibility == INTERNAL) {
             addModifiers(KModifier.INTERNAL)
@@ -403,6 +440,11 @@ private data class Adapter(
         }
         .primaryConstructor(FunSpec.constructorBuilder()
             .addParameter(moshiParam)
+            .apply {
+              genericTypeNames?.let {
+                addParameter(typesParam)
+              }
+            }
             .build())
         .addType(companionObject)
         .addProperties(adapterProperties.values)
@@ -503,6 +545,11 @@ private data class Adapter(
         .build()
 
     if (hasCompanionObject) {
+      val rawType = when (originalTypeName) {
+        is TypeVariableName -> throw IllegalArgumentException("Cannot get raw type of TypeVariable!")
+        is ParameterizedTypeName -> originalTypeName.rawType
+        else -> originalTypeName as ClassName
+      }
       fileSpecBuilder.addFunction(FunSpec.builder("jsonAdapter")
           .apply {
             // TODO make this configurable. Right now it just matches the source model
@@ -510,9 +557,14 @@ private data class Adapter(
               addModifiers(KModifier.INTERNAL)
             }
           }
-          .receiver(originalTypeName.nestedClass("Companion"))
+          .receiver(rawType.nestedClass("Companion"))
           .returns(jsonAdapterTypeName)
           .addParameter(moshiParam)
+          .apply {
+            genericTypeNames?.let {
+              addParameter(typesParam)
+            }
+          }
           .addStatement("return %N(%N)", adapter, moshiParam)
           .build())
     }
