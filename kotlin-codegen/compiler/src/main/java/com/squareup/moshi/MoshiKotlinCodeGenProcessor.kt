@@ -358,7 +358,7 @@ private data class Adapter(
 
     // Create fields
     val adapterProperties = propertyList
-        .map { it.typeName }
+        .map { it.typeName.asNonNullable() }
         .distinct()
         .associate { typeName ->
           val propertyName = "${typeName.simplifiedName().allocate()}_Adapter"
@@ -442,7 +442,7 @@ private data class Adapter(
                     addStatement("%L -> %L = %N.fromJson(%N)$possibleBangs",
                         index,
                         allocatedNames[prop]!!,
-                        adapterProperties[prop.typeName]!!,
+                        adapterProperties[prop.typeName.asNonNullable()]!!,
                         reader)
                   }
             }
@@ -489,7 +489,7 @@ private data class Adapter(
                 }
                 addStatement("%N.name(%S)", writer, prop.serializedName)
                 addStatement("%N.toJson(%N, %N.%L)",
-                    adapterProperties[prop.typeName]!!,
+                    adapterProperties[prop.typeName.asNonNullable()]!!,
                     writer,
                     value,
                     prop.name)
