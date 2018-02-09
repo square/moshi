@@ -71,7 +71,7 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
     if (adapterCtor != null) {
       return adapterCtor
     }
-    val clsName = cls.name
+    val clsName = cls.name.replace("$", "_")
     if (clsName.startsWith("android.")
         || clsName.startsWith("java.")
         || clsName.startsWith("kotlin.")) {
