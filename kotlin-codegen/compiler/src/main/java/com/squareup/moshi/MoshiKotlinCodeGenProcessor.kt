@@ -265,6 +265,12 @@ private fun TypeName.makeType(elementUtils: Elements): CodeBlock {
   return when (this) {
     is ClassName -> CodeBlock.of("%T::class.java", this)
     is ParameterizedTypeName -> {
+      // If it's an Array type, we shortcut this to return Types.arrayOf()
+      if (rawType == ARRAY) {
+        return CodeBlock.of("%T.arrayOf(%L)",
+            Types::class.asTypeName(),
+            typeArguments[0].makeType(elementUtils))
+      }
       // If it's a Class type, we have to specify the generics.
       val rawTypeParameters = if (rawType.isClass(elementUtils)) {
         CodeBlock.of(
