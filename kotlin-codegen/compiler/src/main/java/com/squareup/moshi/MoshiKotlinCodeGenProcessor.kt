@@ -29,6 +29,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.IN
+import com.squareup.kotlinpoet.KModifier.LATEINIT
 import com.squareup.kotlinpoet.KModifier.OUT
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
@@ -409,9 +410,42 @@ private data class Adapter(
               .build()
         }
 
-    // TODO in the future make these propertyspecs directly.
-    // Pending https://github.com/square/kotlinpoet/pull/317
-    val allocatedNames = propertyList.associate { it to it.name.allocate() }
+    val localProperties =
+        propertyList.associate { prop ->
+          val name = prop.name.allocate()
+          prop to when {
+            prop.nullable -> {
+              PropertySpec.builder(name, prop.typeName.asNullable())
+                  .mutable(true)
+                  .initializer("null")
+                  .build()
+            }
+            prop.isNullablyBoundedTypeVariable -> {
+              PropertySpec.builder(name, prop.typeName.asNullable())
+                  .mutable(true)
+                  .initializer("null")
+                  .build()
+            }
+            prop.hasDefault -> {
+              PropertySpec.builder(name, prop.typeName.asNullable())
+                  .mutable(true)
+                  .initializer("null")
+                  .build()
+            }
+            prop.typeName.isPrimitive -> {
+              PropertySpec.builder(name, prop.typeName)
+                  .mutable(true)
+                  .initializer("%L", primitiveDefaultFor(prop.typeName))
+                  .build()
+            }
+            else ->  {
+              PropertySpec.builder(name, prop.typeName)
+                  .mutable(true)
+                  .addModifiers(LATEINIT)
+                  .build()
+            }
+          }
+        }
     val optionsByIndex = propertyList
         .associateBy { it.serializedName }.entries.withIndex()
 
@@ -462,24 +496,8 @@ private data class Adapter(
             .addStatement("%N.nextNull<%T>()", reader, ANY)
             .endControlFlow()
             .apply {
-              propertyList.forEach { prop ->
-                when {
-                  prop.nullable -> {
-                    addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName.asNullable())
-                  }
-                  prop.isNullablyBoundedTypeVariable -> {
-                    addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName.asNullable())
-                  }
-                  prop.hasDefault -> {
-                    addStatement("var ${allocatedNames[prop]}: %T = null",
-                        prop.typeName.asNullable())
-                  }
-                  prop.typeName.isPrimitive -> {
-                    addStatement("var ${allocatedNames[prop]} = %L",
-                        primitiveDefaultFor(prop.typeName))
-                  }
-                  else -> addStatement("lateinit var ${allocatedNames[prop]}: %T", prop.typeName)
-                }
+              localProperties.values.forEach {
+                addCode("%L", it)
               }
             }
             .addStatement("%N.beginObject()", reader)
@@ -489,9 +507,9 @@ private data class Adapter(
               optionsByIndex.map { (index, entry) -> index to entry.value }
                   .forEach { (index, prop) ->
                     val possibleBangs = if (prop.nullable) "" else "!!"
-                    addStatement("%L -> %L = %N.fromJson(%N)$possibleBangs",
+                    addStatement("%L -> %N = %N.fromJson(%N)$possibleBangs",
                         index,
-                        allocatedNames[prop]!!,
+                        localProperties[prop]!!,
                         adapterProperties[prop.typeName.asNonNullable()]!!,
                         reader)
                   }
@@ -505,28 +523,31 @@ private data class Adapter(
             .endControlFlow()
             .addStatement("%N.endObject()", reader)
             .apply {
-              propertyList.forEach {
-                if (it.isNullablyBoundedTypeVariable) {
-                  val allocatedName = allocatedNames[it]
-                  beginControlFlow("if ($allocatedName == null)")
-                  addStatement("throw %T(%S)", NullPointerException::class, "$allocatedName was null")
+              localProperties.forEach { (property, spec) ->
+                if (property.isNullablyBoundedTypeVariable) {
+                  beginControlFlow("if (%N == null)", spec)
+                  addStatement("throw %T(\"%N was null\")", NullPointerException::class, spec)
                   endControlFlow()
                 }
               }
-              val propertiesWithDefaults = propertyList.filter { it.hasDefault }
+              val propertiesWithDefaults = localProperties.entries.filter { it.key.hasDefault }
               if (propertiesWithDefaults.isEmpty()) {
                 addStatement("return %T(%L)",
                     originalTypeName,
-                    propertyList.joinToString(",\n") { "${it.name} = ${allocatedNames[it]}" })
+                    localProperties.entries.joinToString(",\n") { (property, spec) ->
+                      "${property.name} = ${spec.name}"
+                    })
               } else {
                 addStatement("return %T(%L).let {\n  it.copy(%L)\n}",
                     originalTypeName,
-                    propertyList
-                        .filter { !it.hasDefault }
-                        .joinToString(",\n") { "${it.name} = ${allocatedNames[it]}" },
+                    localProperties.entries
+                        .filter { !it.key.hasDefault }
+                        .joinToString(",\n") { (property, spec) ->
+                        "${property.name} = ${spec.name}"
+                        },
                     propertiesWithDefaults
-                        .joinToString(",\n      ") {
-                          "${it.name} = ${allocatedNames[it]} ?: it.${it.name}"
+                        .joinToString(",\n      ") { (property, spec) ->
+                        "${property.name} = ${spec.name} ?: it.${property.name}"
                         })
               }
             }
