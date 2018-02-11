@@ -52,7 +52,8 @@
     <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
-      <version>0.6.0</version>
+      <!-- Temporary to pick up Any filter fix -->
+      <version>0.7.0-20180211.200114-25</version>
     </dependency>
   </dependencies>
 
