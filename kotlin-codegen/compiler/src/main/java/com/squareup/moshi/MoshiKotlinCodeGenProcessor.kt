@@ -357,7 +357,11 @@ private data class Property(
     val hasDefault: Boolean,
     val nullable: Boolean,
     val typeName: TypeName,
-    val jsonQualifiers: List<AnnotationMirror>)
+    val jsonQualifiers: List<AnnotationMirror>) {
+
+  val isNullablyBoundedTypeVariable = typeName is TypeVariableName
+      && with(typeName.bounds) { isEmpty() || any { it.nullable } }
+}
 
 private data class Adapter(
     val fqClassName: String,
@@ -459,13 +463,11 @@ private data class Adapter(
             .endControlFlow()
             .apply {
               propertyList.forEach { prop ->
-                val isNullablyBoundedTypeVariable = prop.typeName is TypeVariableName
-                    && with(prop.typeName.bounds) { isEmpty() || any { it.nullable } }
                 when {
                   prop.nullable -> {
-                    addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName)
+                    addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName.asNullable())
                   }
-                  isNullablyBoundedTypeVariable -> {
+                  prop.isNullablyBoundedTypeVariable -> {
                     addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName.asNullable())
                   }
                   prop.hasDefault -> {
@@ -503,6 +505,14 @@ private data class Adapter(
             .endControlFlow()
             .addStatement("%N.endObject()", reader)
             .apply {
+              propertyList.forEach {
+                if (it.isNullablyBoundedTypeVariable) {
+                  val allocatedName = allocatedNames[it]
+                  beginControlFlow("if ($allocatedName == null)")
+                  addStatement("throw %T(%S)", NullPointerException::class, "$allocatedName was null")
+                  endControlFlow()
+                }
+              }
               val propertiesWithDefaults = propertyList.filter { it.hasDefault }
               if (propertiesWithDefaults.isEmpty()) {
                 addStatement("return %T(%L)",
