@@ -417,9 +417,8 @@ private data class Adapter(
         "OPTIONS".allocate(),
         optionsCN,
         PRIVATE)
-        .delegate(
-            "lazy { %T.of(${optionsByIndex.map { it.value.key }
-                .joinToString(", ") { "\"$it\"" }}) }",
+        .initializer("%T.of(${optionsByIndex.map { it.value.key }
+                .joinToString(", ") { "\"$it\"" }})",
             optionsCN)
         .build()
     val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
