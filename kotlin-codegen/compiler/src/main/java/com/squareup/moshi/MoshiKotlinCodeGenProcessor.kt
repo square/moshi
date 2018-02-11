@@ -135,7 +135,9 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
         .let(elementUtils::getTypeElement)
         .enclosedElements
         .mapNotNull { it.takeIf { it.kind == ElementKind.CONSTRUCTOR }?.let { it as ExecutableElement } }
-        .single { it.jvmMethodSignature == constructorJvmSignature }
+        .first()
+    // TODO Temporary until jvm method signature matching is better
+//        .single { it.jvmMethodSignature == constructorJvmSignature }
     val parameters = protoConstructor
         .valueParameterList
         .mapIndexed { index, valueParameter ->
