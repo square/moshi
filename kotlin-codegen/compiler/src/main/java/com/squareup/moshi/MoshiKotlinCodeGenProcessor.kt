@@ -458,9 +458,14 @@ private data class Adapter(
             .endControlFlow()
             .apply {
               propertyList.forEach { prop ->
+                val isNullablyBoundedTypeVariable = prop.typeName is TypeVariableName
+                    && with(prop.typeName.bounds) { isEmpty() || any { it.nullable } }
                 when {
                   prop.nullable -> {
                     addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName)
+                  }
+                  isNullablyBoundedTypeVariable -> {
+                    addStatement("var ${allocatedNames[prop]}: %T = null", prop.typeName.asNullable())
                   }
                   prop.hasDefault -> {
                     addStatement("var ${allocatedNames[prop]}: %T = null",
