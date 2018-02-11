@@ -245,8 +245,8 @@ private val PRIMITIVE_TYPES = setOf(
 private fun primitiveDefaultFor(typeName: TypeName): String {
   return when (typeName) {
     BOOLEAN -> "false"
-    BYTE -> "0 as Byte"
-    SHORT -> "0 as Short"
+    BYTE -> "0"
+    SHORT -> "0"
     INT -> "0"
     LONG -> "0L"
     CHAR -> "'0'"
