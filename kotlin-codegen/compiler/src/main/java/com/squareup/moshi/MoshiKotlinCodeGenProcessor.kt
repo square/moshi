@@ -572,7 +572,13 @@ private data class Adapter(
               addParameter(typesParam)
             }
           }
-          .addStatement("return %N(%N)", adapter, moshiParam)
+          .apply {
+            if (genericTypeNames != null) {
+              addStatement("return %N(%N, %N)", adapter, moshiParam, typesParam)
+            } else {
+              addStatement("return %N(%N)", adapter, moshiParam)
+            }
+          }
           .build())
     }
     fileSpecBuilder.addType(adapter)
