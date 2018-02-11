@@ -583,11 +583,11 @@ private fun ProtoBuf.TypeParameter.asTypeName(
   )
 }
 
-private fun ProtoBuf.TypeParameter.Variance.asKModifier(): KModifier {
+private fun ProtoBuf.TypeParameter.Variance.asKModifier(): KModifier? {
   return when (this) {
     Variance.IN -> IN
     Variance.OUT -> OUT
-    Variance.INV -> TODO("INV variance is unsupported")
+    Variance.INV -> null
   }
 }
 
