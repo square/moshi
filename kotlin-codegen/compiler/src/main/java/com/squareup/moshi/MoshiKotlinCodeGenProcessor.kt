@@ -579,6 +579,7 @@ private data class Adapter(
           .apply {
             genericTypeNames?.let {
               addParameter(typesParam)
+              addTypeVariables(it)
             }
           }
           .apply {
