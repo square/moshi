@@ -184,6 +184,12 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
                   .toTypedArray()),
               variance = variance)
               .reified(it.reified)
+        }.let {
+          if (it.isEmpty()) {
+            null
+          } else {
+            it
+          }
         }
 
     return Adapter(
