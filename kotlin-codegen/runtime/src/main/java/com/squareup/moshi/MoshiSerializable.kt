@@ -18,6 +18,7 @@ package com.squareup.moshi
 import java.lang.ref.WeakReference
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.Collections
 import java.util.LinkedHashMap
@@ -46,7 +47,11 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       return if (constructor.parameterTypes.size == 1) {
         constructor.newInstance(moshi)
       } else {
-        constructor.newInstance(moshi, type)
+        if (type is ParameterizedType) {
+          constructor.newInstance(moshi, type.actualTypeArguments)
+        } else {
+          throw IllegalStateException("Unable to handle type $type")
+        }
       }
     } catch (e: IllegalAccessException) {
       throw RuntimeException("Unable to invoke " + constructor, e)
@@ -89,7 +94,7 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
         // Try the moshi + type constructor
         @Suppress("UNCHECKED_CAST")
         bindingClass.getConstructor(Moshi::class.java,
-            Type::class.java) as Constructor<out JsonAdapter<*>>
+            Array<Type>::class.java) as Constructor<out JsonAdapter<*>>
       }
 
     } catch (e: ClassNotFoundException) {
