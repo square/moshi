@@ -8,18 +8,18 @@ annotation class StringWithNA
 @MoshiSerializable
 data class MyClass(
 //        @JsonDefaultValue
-        val name: String,
-        @StringWithNA
-        val address: String,
+    val name: String,
+    @StringWithNA
+    val address: String,
 //        @JsonDefaultValueInt(-1)
-        val age: Int
+    val age: Int
 ) {
-    companion object {
-//        @JsonDefaultValue
-        @JvmField
-        val defaultString = ""
+  companion object {
+    //        @JsonDefaultValue
+    @JvmField
+    val defaultString = ""
 
-        @StringWithNA
-        fun defaultStringWithNA() = "N/A"
-    }
+    @StringWithNA
+    fun defaultStringWithNA() = "N/A"
+  }
 }
