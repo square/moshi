@@ -512,10 +512,11 @@ private data class Adapter(
             .apply {
               optionsByIndex.map { (index, entry) -> index to entry.value }
                   .forEach { (index, prop) ->
-                    val possibleBangs = if (prop.nullable) "" else "!!"
+                    val spec = localProperties[prop]!!
+                    val possibleBangs = if (spec.type.nullable) "" else "!!"
                     addStatement("%L -> %N = %N.fromJson(%N)$possibleBangs",
                         index,
-                        localProperties[prop]!!,
+                        spec,
                         adapterProperties[prop.typeName.asNonNullable()]!!,
                         reader)
                   }
