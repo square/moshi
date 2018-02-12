@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-@MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
+@MoshiSerializable
 data class ClassWithDefaultValues(
     val v1: WithCompanionFunction = WithCompanionFunction("WithCompanionFunction"),
     val v2: WithStaticFunction = WithStaticFunction("WithStaticFunction"),
