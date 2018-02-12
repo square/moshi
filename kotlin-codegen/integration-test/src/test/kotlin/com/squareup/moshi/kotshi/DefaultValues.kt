@@ -7,126 +7,44 @@ import java.time.LocalTime
 
 @MoshiSerializable //(useAdaptersForPrimitives = PrimitiveAdapters.ENABLED)
 data class ClassWithDefaultValues(
-//        @JsonDefaultValue
-    val v1: WithCompanionFunction,
-//        @JsonDefaultValue
-    val v2: WithStaticFunction,
-//        @JsonDefaultValue
-    val v3: WithCompanionProperty,
-//        @JsonDefaultValue
-    val v4: WithStaticProperty,
-//        @JsonDefaultValue
-    val v5: GenericClassWithDefault<String>,
-//        @JsonDefaultValue
-    val v6: GenericClassWithDefault<Int>,
-//        @JsonDefaultValue
-    val v7: LocalDate,
-//        @JsonDefaultValue
-    val v8: LocalTime,
-//        @JsonDefaultValue
-    val v9: LocalDateTime,
+    val v1: WithCompanionFunction = WithCompanionFunction("WithCompanionFunction"),
+    val v2: WithStaticFunction = WithStaticFunction("WithStaticFunction"),
+    val v3: WithCompanionProperty = WithCompanionProperty("WithCompanionProperty"),
+    val v4: WithStaticProperty = WithStaticProperty("WithStaticProperty"),
+    val v5: GenericClassWithDefault<String> = GenericClassWithDefault<String>(null),
+    val v6: GenericClassWithDefault<Int> = GenericClassWithDefault(4711),
+    val v7: LocalDate = LocalDate.MIN,
+    val v8: LocalTime = LocalTime.MIN,
+    val v9: LocalDateTime = LocalDateTime.MIN,
     val v10: WithCompanionFunction, // No annotations, should not get a default value
-    @OtherJsonDefaultValue
-    val v11: WithCompanionFunction,
-//        @JsonDefaultValue
-    val v12: ClassWithConstructorAsDefault,
-//        @JsonDefaultValue
-    val v13: GenericClassWithConstructorAsDefault<String>,
-//        @JsonDefaultValue
-    val v14: Int?,
-//        @JsonDefaultValue
-    val v15: SomeEnum,
-//        @JsonDefaultValue
-    val v16: Map<String, Int>
+    val v12: ClassWithConstructorAsDefault = ClassWithConstructorAsDefault(),
+    val v13: GenericClassWithConstructorAsDefault<String> = GenericClassWithConstructorAsDefault(),
+    val v14: Int? = 4711,
+    val v15: SomeEnum = SomeEnum.VALUE3,
+    val v16: Map<String, Int> = emptyMap()
 )
 
 @MoshiSerializable
-data class WithCompanionFunction(val v: String?) {
-  companion object {
-    //        @JsonDefaultValue
-    fun provideDefault(): WithCompanionFunction = WithCompanionFunction("WithCompanionFunction")
-
-    @OtherJsonDefaultValue
-    fun provideQualifiedDefault() = WithCompanionFunction("OtherJsonDefaultValue")
-  }
-}
+data class WithCompanionFunction(val v: String?)
 
 @MoshiSerializable
-data class WithStaticFunction(val v: String?) {
-  companion object {
-    //        @JsonDefaultValue
-    @JvmStatic
-    fun provideDefault() = WithStaticFunction("WithStaticFunction")
-  }
-}
+data class WithStaticFunction(val v: String?)
 
 @MoshiSerializable
-data class WithCompanionProperty(val v: String?) {
-  companion object {
-    //        @JsonDefaultValue
-    val defaultValue = WithCompanionProperty("WithCompanionProperty")
-  }
-}
+data class WithCompanionProperty(val v: String?)
 
 @MoshiSerializable
-data class WithStaticProperty(val v: String?) {
-  companion object {
-    @JvmField
-//        @JsonDefaultValue
-    val defaultValue = WithStaticProperty("WithStaticProperty")
-  }
-}
+data class WithStaticProperty(val v: String?)
 
 @MoshiSerializable
-data class GenericClassWithDefault<out T>(val v: T?) {
-  companion object {
-    //        @JsonDefaultValue
-    fun <T> provideDefault() = GenericClassWithDefault<T>(null)
-
-    //        @JsonDefaultValue
-    fun provideIntDefault() = GenericClassWithDefault(4711)
-  }
-}
-
-object DefaultProvider {
-  //    @JsonDefaultValue
-  fun provideDefaultLocalDate(): LocalDate = LocalDate.MIN
-
-  //    @JsonDefaultValue
-  @JvmStatic
-  fun provideDefaultLocalTime(): LocalTime = LocalTime.MIN
-}
-
-class OtherDefaultProvider private constructor() {
-  //    @JsonDefaultValue
-  fun provideDefaultLocalDateTime(): LocalDateTime = LocalDateTime.MIN
-
-  companion object {
-    @JvmStatic
-    val instance = OtherDefaultProvider()
-  }
-}
+data class GenericClassWithDefault<out T>(val v: T?)
 
 @MoshiSerializable
 data class ClassWithConstructorAsDefault(val v: String?) {
-  //    @JsonDefaultValue
   constructor() : this("ClassWithConstructorAsDefault")
 }
 
 @MoshiSerializable
 data class GenericClassWithConstructorAsDefault<T : CharSequence>(val v: T?) {
-  //    @JsonDefaultValue
   constructor() : this(null)
 }
-
-//@JsonDefaultValue
-fun provideIntDefault(): Int? = 4711
-
-//@JsonDefaultValue
-fun <K, V> provideDefaultMap() = emptyMap<K, V>()
-
-@Target(AnnotationTarget.PROPERTY, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
-@MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
-//@JsonDefaultValue
-annotation class OtherJsonDefaultValue

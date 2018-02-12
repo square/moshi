@@ -24,14 +24,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-@Ignore("Pending decision on whether or not to support default values")
 class TestDefaultValues {
   private lateinit var moshi: Moshi
 
   @Before
   fun setup() {
     moshi = Moshi.Builder()
-//                .add(TestFactory)
         .add(MoshiSerializableFactory.getInstance())
         .add(LocalDate::class.java, LocalDateAdapter)
         .add(LocalTime::class.java, LocalTimeAdapter)
@@ -66,9 +64,6 @@ class TestDefaultValues {
              |  "v10": {
              |    "v": "v10"
              |  },
-             |  "v11": {
-             |    "v": "v11"
-             |  },
              |  "v12": {
              |    "v": "v12"
              |  },
@@ -93,7 +88,6 @@ class TestDefaultValues {
         v8 = LocalTime.of(13, 37),
         v9 = LocalDateTime.of(1989, 7, 3, 13, 37),
         v10 = WithCompanionFunction("v10"),
-        v11 = WithCompanionFunction("v11"),
         v12 = ClassWithConstructorAsDefault("v12"),
         v13 = GenericClassWithConstructorAsDefault("v13"),
         v14 = 14,
@@ -116,7 +110,6 @@ class TestDefaultValues {
         v8 = LocalTime.MIN,
         v9 = LocalDateTime.MIN,
         v10 = WithCompanionFunction("v10"),
-        v11 = WithCompanionFunction("OtherJsonDefaultValue"),
         v12 = ClassWithConstructorAsDefault("ClassWithConstructorAsDefault"),
         v13 = GenericClassWithConstructorAsDefault(null),
         v14 = 4711,
@@ -136,7 +129,6 @@ class TestDefaultValues {
              |  "v10": {
              |    "v": "v10"
              |  },
-             |  "v11": null,
              |  "v12": null,
              |  "v13": null,
              |  "v14": null,
@@ -160,7 +152,6 @@ class TestDefaultValues {
         v8 = LocalTime.MIN,
         v9 = LocalDateTime.MIN,
         v10 = WithCompanionFunction("v10"),
-        v11 = WithCompanionFunction("OtherJsonDefaultValue"),
         v12 = ClassWithConstructorAsDefault("ClassWithConstructorAsDefault"),
         v13 = GenericClassWithConstructorAsDefault(null),
         v14 = 4711,
@@ -175,6 +166,7 @@ class TestDefaultValues {
     assertEquals(expected, actual)
   }
 
+  @Ignore("Pending how we want to handle missing properties reporting")
   @Test
   fun throwsNPEWhenNotUsingDefaultValues() {
     try {
