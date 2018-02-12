@@ -276,7 +276,7 @@ private fun TypeName.simplifiedName(): String {
     is TypeVariableName -> name.decapitalize() + if (bounds.isEmpty()) "" else "__" + bounds.simplifiedNames()
   // Shouldn't happen
     else -> toString().decapitalize()
-  }
+  }.let { if (nullable) "${it}_nullable" else it }
 }
 
 private fun ClassName.isClass(elementUtils: Elements): Boolean {
@@ -403,13 +403,14 @@ private data class Adapter(
 
     // Create fields
     val adapterProperties = propertyList
-        .map { it.typeName.asNonNullable() }
-        .distinct()
-        .associate { typeName ->
+        .distinctBy { it.typeName }
+        .associate { prop ->
+          val typeName = prop.typeName
+          val possibleNullSafe = if (typeName.nullable || prop.hasDefault) ".nullSafe()" else ""
           val propertyName = "${typeName.simplifiedName().allocate()}_Adapter"
           val adapterTypeName = ParameterizedTypeName.get(JsonAdapter::class.asTypeName(), typeName)
           typeName to PropertySpec.builder(propertyName, adapterTypeName, PRIVATE)
-              .initializer("%N.adapter%L(%L)",
+              .initializer("%N.adapter%L(%L)$possibleNullSafe",
                   moshiParam,
                   if (typeName is ClassName) "" else CodeBlock.of("<%T>", typeName),
                   typeName.makeType(elementUtils, typesParam, genericTypeNames ?: emptyList()))
@@ -517,7 +518,7 @@ private data class Adapter(
                     addStatement("%L -> %N = %N.fromJson(%N)$possibleBangs",
                         index,
                         spec,
-                        adapterProperties[prop.typeName.asNonNullable()]!!,
+                        adapterProperties[prop.typeName]!!,
                         reader)
                   }
             }
@@ -575,7 +576,7 @@ private data class Adapter(
                 }
                 addStatement("%N.name(%S)", writer, prop.serializedName)
                 addStatement("%N.toJson(%N, %N.%L)",
-                    adapterProperties[prop.typeName.asNonNullable()]!!,
+                    adapterProperties[prop.typeName]!!,
                     writer,
                     value,
                     prop.name)
