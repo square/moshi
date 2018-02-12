@@ -8,7 +8,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.MoshiSerializableFactory
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
-import com.squareup.moshi.kotshi.CustomNames
 import com.squareup.moshi.kotshi.GenericClass
 import com.squareup.moshi.kotshi.GenericClassWithQualifier
 import com.squareup.moshi.kotshi.Hello
@@ -137,17 +136,6 @@ class TestAdapterGeneration {
                     "genericClass",
                     e.message)
         }
-    }
-
-    @Ignore("Pending decision on whether to care about annotation site targets")
-    @Test
-    fun testCustomNames() {
-        val json = """{"jsonProp1":"value1","jsonProp2":"value2"}"""
-        val adapter = moshi.adapter(CustomNames::class.java)
-        val actual = adapter.fromJson(json)
-        val expected = CustomNames("value1", "value2")
-        assertEquals(expected, actual)
-        assertEquals(json, adapter.toJson(actual))
     }
 
     @Test
