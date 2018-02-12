@@ -131,8 +131,8 @@ class DataClassesTest {
     try {
       adapter.fromJson(invalidJson)
       fail("The invalid json should have failed!")
-    } catch (e: KotlinNullPointerException) {
-      // Expected
+    } catch (e: JsonDataException) {
+      assertThat(e).hasMessageContaining("foo")
     }
   }
 

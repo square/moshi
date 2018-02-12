@@ -1,6 +1,7 @@
 package com.squareup.moshi.kotshi.test
 
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
@@ -18,7 +19,6 @@ import junit.framework.Assert.assertEquals
 import junit.framework.Assert.fail
 import okio.Buffer
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -166,14 +166,13 @@ class TestDefaultValues {
     assertEquals(expected, actual)
   }
 
-  @Ignore("Pending how we want to handle missing properties reporting")
   @Test
   fun throwsNPEWhenNotUsingDefaultValues() {
     try {
       moshi.adapter(ClassWithDefaultValues::class.java).fromJson("{}")
       fail()
-    } catch (e: NullPointerException) {
-      assertEquals("The following properties were null: v10", e.message)
+    } catch (e: JsonDataException) {
+      assertEquals("The following required properties were missing: v10", e.message)
     }
   }
 

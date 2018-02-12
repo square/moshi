@@ -2,6 +2,7 @@ package com.squareup.moshi.kotshi.test
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
@@ -114,13 +115,12 @@ class TestAdapterGeneration {
                 .readUtf8())
     }
 
-    @Ignore("Pending how we want to handle missing properties reporting")
     @Test
     fun testNull() {
         try {
             moshi.adapter(TestClass::class.java).fromJson("{}")
-        } catch (e: NullPointerException) {
-            assertEquals("The following properties were null: " +
+        } catch (e: JsonDataException) {
+            assertEquals("The following required properties were missing: " +
                     "string, " +
                     "integer, " +
                     "isBoolean, " +
@@ -130,7 +130,7 @@ class TestAdapterGeneration {
                     "list, " +
                     "nestedList, " +
                     "abstractProperty, " +
-                    "customName, " +
+                    "other_name, " +
                     "annotated, " +
                     "anotherAnnotated, " +
                     "genericClass",

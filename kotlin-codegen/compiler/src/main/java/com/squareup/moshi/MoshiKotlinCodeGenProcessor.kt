@@ -29,11 +29,11 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.IN
-import com.squareup.kotlinpoet.KModifier.LATEINIT
 import com.squareup.kotlinpoet.KModifier.OUT
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -242,20 +242,6 @@ private val PRIMITIVE_TYPES = setOf(
     DOUBLE
 )
 
-private fun primitiveDefaultFor(typeName: TypeName): String {
-  return when (typeName) {
-    BOOLEAN -> "false"
-    BYTE -> "0"
-    SHORT -> "0"
-    INT -> "0"
-    LONG -> "0L"
-    CHAR -> "'0'"
-    FLOAT -> "0.0f"
-    DOUBLE -> "0.0"
-    else -> throw IllegalArgumentException("Non-primitive type! $typeName")
-  }
-}
-
 /**
  * Creates a joined string representation of simplified typename names.
  */
@@ -441,55 +427,32 @@ private data class Adapter(
 
     val localProperties =
         propertyList.associate { prop ->
-          val name = prop.name.allocate()
-          prop to when {
-            prop.nullable -> {
-              PropertySpec.builder(name, prop.typeName.asNullable())
-                  .mutable(true)
-                  .initializer("null")
-                  .build()
-            }
-            prop.isNullablyBoundedTypeVariable -> {
-              PropertySpec.builder(name, prop.typeName.asNullable())
-                  .mutable(true)
-                  .initializer("null")
-                  .build()
-            }
-            prop.hasDefault -> {
-              PropertySpec.builder(name, prop.typeName.asNullable())
-                  .mutable(true)
-                  .initializer("null")
-                  .build()
-            }
-            prop.typeName.isPrimitive -> {
-              PropertySpec.builder(name, prop.typeName)
-                  .mutable(true)
-                  .initializer("%L", primitiveDefaultFor(prop.typeName))
-                  .build()
-            }
-            else -> {
-              PropertySpec.builder(name, prop.typeName)
-                  .mutable(true)
-                  .addModifiers(LATEINIT)
-                  .build()
-            }
-          }
+          prop to PropertySpec.builder(prop.name.allocate(), prop.typeName.asNullable())
+              .mutable(true)
+              .initializer("null")
+              .build()
         }
     val optionsByIndex = propertyList
         .associateBy { it.serializedName }.entries.withIndex()
 
     // selectName() API setup
+    val namesArray = PropertySpec.builder("NAMES".allocate(),
+        ParameterizedTypeName.get(ARRAY, String::class.asTypeName()), PRIVATE)
+        .initializer("arrayOf(${optionsByIndex.map { it.value.key }
+            .joinToString(", ") { "\"$it\"" }})")
+        .build()
     val optionsCN = JsonReader.Options::class.asTypeName()
     val optionsProperty = PropertySpec.builder(
         "OPTIONS".allocate(),
         optionsCN,
         PRIVATE)
-        .initializer("%T.of(${optionsByIndex.map { it.value.key }
-            .joinToString(", ") { "\"$it\"" }})",
-            optionsCN)
+        .initializer("%T.of(*%N)",
+            optionsCN,
+            namesArray)
         .build()
     val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
         .addModifiers(PRIVATE)
+        .addProperty(namesArray)
         .addProperty(optionsProperty)
         .build()
 
@@ -544,8 +507,7 @@ private data class Adapter(
               optionsByIndex.map { (index, entry) -> index to entry.value }
                   .forEach { (index, prop) ->
                     val spec = localProperties[prop]!!
-                    val possibleBangs = if (spec.type.nullable) "" else "!!"
-                    addStatement("%L -> %N = %N.fromJson(%N)$possibleBangs",
+                    addStatement("%L -> %N = %N.fromJson(%N)",
                         index,
                         spec,
                         adapterProperties[prop.typeName]!!,
@@ -561,11 +523,56 @@ private data class Adapter(
             .endControlFlow()
             .addStatement("%N.endObject()", reader)
             .apply {
-              localProperties.forEach { (property, spec) ->
-                if (property.isNullablyBoundedTypeVariable) {
-                  beginControlFlow("if (%N == null)", spec)
-                  addStatement("throw %T(\"%N was null\")", NullPointerException::class, spec)
-                  endControlFlow()
+              if (localProperties.keys.any {
+                    it.isNullablyBoundedTypeVariable || (!it.nullable && !it.hasDefault)
+                  }) {
+                val indexParam = ParameterSpec.builder("index".allocate(), INT)
+                    .build()
+                val lambdaType = LambdaTypeName.get(
+                    returnType = JsonDataException::class.asTypeName()
+                )
+                val missingLambda = PropertySpec.builder("missingArguments".allocate(), lambdaType)
+                    .initializer(CodeBlock.builder()
+                        .add("{\n")
+                        .add("%N.filterIndexed { %N, _ ->", namesArray, indexParam)
+                        .add("%>")
+                        // Begin controlflow
+                        .add("\nwhen (%N) {", indexParam)
+                        .add("%>")
+                        .apply {
+                          optionsByIndex
+                              .map { (index, entry) -> index to entry.value }
+                              .filter { (_, prop) ->
+                                prop.isNullablyBoundedTypeVariable
+                                    || with(prop) { !nullable && !hasDefault }
+                              }
+                              .forEach { (index, prop) ->
+                                add("\n%L -> %N == null",
+                                    index,
+                                    localProperties[prop]!!)
+                              }
+                        }
+                        .add("\nelse -> false")
+                        // End controlflow
+                        .add("%<")
+                        .add("\n}")
+                        .add("%<")
+                        .add("\n}")
+                        .add(
+                            ".let { %T(\"The following required properties were missing: \${%L}\") }",
+                            JsonDataException::class,
+                            CodeBlock.of("it.joinToString()"))
+                        .add("\n}")
+                        .build())
+                    .build()
+                addCode("%L", missingLambda)
+                localProperties.forEach { (property, spec) ->
+                  if (property.isNullablyBoundedTypeVariable
+                      || (!property.nullable && !property.hasDefault)) {
+                    beginControlFlow("if (%N == null)", spec)
+                    addStatement("throw %N()", missingLambda)
+                    endControlFlow()
+                  }
                 }
               }
               val propertiesWithDefaults = localProperties.entries.filter { it.key.hasDefault }
