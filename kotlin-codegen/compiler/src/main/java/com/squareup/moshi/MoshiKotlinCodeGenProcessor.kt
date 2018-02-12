@@ -292,6 +292,20 @@ private fun ClassName.isClass(elementUtils: Elements): Boolean {
   return elementUtils.getTypeElement(fqcn).kind == ElementKind.INTERFACE
 }
 
+private fun TypeName.objectType(): TypeName {
+  return when (this) {
+    BOOLEAN -> Boolean::class.javaObjectType.asTypeName()
+    BYTE -> Byte::class.javaObjectType.asTypeName()
+    SHORT -> Short::class.javaObjectType.asTypeName()
+    INT -> Integer::class.javaObjectType.asTypeName()
+    LONG -> Long::class.javaObjectType.asTypeName()
+    CHAR -> Character::class.javaObjectType.asTypeName()
+    FLOAT -> Float::class.javaObjectType.asTypeName()
+    DOUBLE -> Double::class.javaObjectType.asTypeName()
+    else -> this
+  }
+}
+
 private fun TypeName.makeType(
     elementUtils: Elements,
     typesArray: ParameterSpec,
@@ -306,7 +320,7 @@ private fun TypeName.makeType(
       if (rawType == ARRAY) {
         return CodeBlock.of("%T.arrayOf(%L)",
             Types::class.asTypeName(),
-            typeArguments[0].makeType(elementUtils, typesArray, genericTypeNames))
+            typeArguments[0].objectType().makeType(elementUtils, typesArray, genericTypeNames))
       }
       // If it's a Class type, we have to specify the generics.
       val rawTypeParameters = if (rawType.isClass(elementUtils)) {
@@ -317,7 +331,7 @@ private fun TypeName.makeType(
                 prefix = "<",
                 postfix = ">") { "%T" }
                 .toString(),
-            *(typeArguments.toTypedArray())
+            *(typeArguments.map { objectType() }.toTypedArray())
         )
       } else {
         CodeBlock.of("")
@@ -326,10 +340,10 @@ private fun TypeName.makeType(
           "%T.newParameterizedType(%T%L::class.java, ${typeArguments
               .joinToString(", ") { "%L" }})",
           Types::class.asTypeName(),
-          rawType,
+          rawType.objectType(),
           rawTypeParameters,
           *(typeArguments.map {
-            it.makeType(elementUtils, typesArray, genericTypeNames)
+            it.objectType().makeType(elementUtils, typesArray, genericTypeNames)
           }.toTypedArray()))
     }
     is WildcardTypeName -> {
