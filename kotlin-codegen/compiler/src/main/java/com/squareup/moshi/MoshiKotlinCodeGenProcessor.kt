@@ -263,6 +263,14 @@ private fun List<TypeName>.simplifiedNames(): String {
   return joinToString("_") { it.simplifiedName() }
 }
 
+private fun TypeName.resolveRawType(): ClassName {
+  return when (this) {
+    is ClassName -> this
+    is ParameterizedTypeName -> rawType
+    else -> throw UnsupportedOperationException("Cannot get raw type from $this")
+  }
+}
+
 /**
  * Creates a simplified string representation of a TypeName's name
  */
@@ -459,7 +467,7 @@ private data class Adapter(
                   .initializer("%L", primitiveDefaultFor(prop.typeName))
                   .build()
             }
-            else ->  {
+            else -> {
               PropertySpec.builder(name, prop.typeName)
                   .mutable(true)
                   .addModifiers(LATEINIT)
@@ -477,7 +485,7 @@ private data class Adapter(
         optionsCN,
         PRIVATE)
         .initializer("%T.of(${optionsByIndex.map { it.value.key }
-                .joinToString(", ") { "\"$it\"" }})",
+            .joinToString(", ") { "\"$it\"" }})",
             optionsCN)
         .build()
     val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
@@ -508,6 +516,14 @@ private data class Adapter(
             .build())
         .addType(companionObject)
         .addProperties(adapterProperties.values)
+        .addFunction(FunSpec.builder("toString")
+            .addModifiers(OVERRIDE)
+            .returns(String::class)
+            .addStatement("return %S",
+                "GeneratedJsonAdapter(${originalTypeName.resolveRawType()
+                    .simpleNames()
+                    .joinToString(".")})")
+            .build())
         .addFunction(FunSpec.builder("fromJson")
             .addModifiers(OVERRIDE)
             .addParameter(reader)
@@ -565,11 +581,11 @@ private data class Adapter(
                     localProperties.entries
                         .filter { !it.key.hasDefault }
                         .joinToString(",\n") { (property, spec) ->
-                        "${property.name} = ${spec.name}"
+                          "${property.name} = ${spec.name}"
                         },
                     propertiesWithDefaults
                         .joinToString(",\n      ") { (property, spec) ->
-                        "${property.name} = ${spec.name} ?: it.${property.name}"
+                          "${property.name} = ${spec.name} ?: it.${property.name}"
                         })
               }
             }
@@ -605,7 +621,8 @@ private data class Adapter(
 
     if (hasCompanionObject) {
       val rawType = when (originalTypeName) {
-        is TypeVariableName -> throw IllegalArgumentException("Cannot get raw type of TypeVariable!")
+        is TypeVariableName -> throw IllegalArgumentException(
+            "Cannot get raw type of TypeVariable!")
         is ParameterizedTypeName -> originalTypeName.rawType
         else -> originalTypeName as ClassName
       }

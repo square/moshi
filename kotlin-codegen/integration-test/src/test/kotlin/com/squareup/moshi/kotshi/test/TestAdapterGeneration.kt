@@ -203,10 +203,9 @@ class TestAdapterGeneration {
         assertEquals(json, adapter.toJson(value))
     }
 
-    @Ignore("Pending how we want to handle toString()")
     @Test
     fun testToString() {
-        assertEquals("KotshiJsonAdapter(NestedClasses)", moshi.adapter(NestedClasses::class.java).toString())
-        assertEquals("KotshiJsonAdapter(NestedClasses.Inner)", moshi.adapter(NestedClasses.Inner::class.java).toString())
+        assertEquals("GeneratedJsonAdapter(NestedClasses)", moshi.adapter(NestedClasses::class.java).toString())
+        assertEquals("GeneratedJsonAdapter(NestedClasses.Inner)", moshi.adapter(NestedClasses.Inner::class.java).toString())
     }
 }
