@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.google.auto.common.AnnotationMirrors
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.BOOLEAN
@@ -154,8 +155,8 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
           val serializedName = actualElement.getAnnotation(Json::class.java)?.name
               ?: paramName
 
-          val jsonQualifiers = actualElement.annotationMirrors
-              .filter { it.annotationType.getAnnotation(JsonQualifier::class.java) != null }
+          val jsonQualifiers = AnnotationMirrors.getAnnotatedAnnotations(actualElement,
+              JsonQualifier::class.java)
 
           Property(
               name = paramName,
@@ -372,7 +373,7 @@ private data class Property(
     val hasDefault: Boolean,
     val nullable: Boolean,
     val typeName: TypeName,
-    val jsonQualifiers: List<AnnotationMirror>) {
+    val jsonQualifiers: Set<AnnotationMirror>) {
 
   val isNullablyBoundedTypeVariable = typeName is TypeVariableName
       && with(typeName.bounds) { isEmpty() || any { it.nullable } }
@@ -411,17 +412,60 @@ private data class Adapter(
 
     // Create fields
     val adapterProperties = propertyList
-        .distinctBy { it.typeName }
+        .distinctBy { it.typeName to it.jsonQualifiers }
         .associate { prop ->
           val typeName = prop.typeName
-          val possibleNullSafe = if (typeName.nullable || prop.hasDefault) ".nullSafe()" else ""
-          val propertyName = "${typeName.simplifiedName().allocate()}_Adapter"
+          val qualifierNames = prop.jsonQualifiers.joinToString("_") {
+            it.annotationType.asElement().simpleName.toString()
+          }
+          val propertyName = "${typeName.simplifiedName().allocate()}_Adapter".let {
+            if (qualifierNames.isBlank()) {
+              it
+            } else {
+              "${it}_for_$qualifierNames"
+            }
+          }.let { "${it}_Adapter" }
           val adapterTypeName = ParameterizedTypeName.get(JsonAdapter::class.asTypeName(), typeName)
-          typeName to PropertySpec.builder(propertyName, adapterTypeName, PRIVATE)
-              .initializer("%N.adapter%L(%L)$possibleNullSafe",
-                  moshiParam,
-                  if (typeName is ClassName) "" else CodeBlock.of("<%T>", typeName),
-                  typeName.makeType(elementUtils, typesParam, genericTypeNames ?: emptyList()))
+          val key = typeName to prop.jsonQualifiers
+          return@associate key to PropertySpec.builder(propertyName, adapterTypeName, PRIVATE)
+              .apply {
+                val qualifiers = prop.jsonQualifiers.toList()
+                val standardArgs = arrayOf(moshiParam,
+                    if (typeName is ClassName && qualifiers.isEmpty()) {
+                      ""
+                    } else {
+                      CodeBlock.of("<%T>",
+                          typeName)
+                    },
+                    typeName.makeType(elementUtils, typesParam, genericTypeNames ?: emptyList()))
+                val standardArgsSize = standardArgs.size + 1
+                val (initializerString, args) = when {
+                  qualifiers.isEmpty() -> "" to emptyArray()
+                  qualifiers.size == 1 -> {
+                    ", %${standardArgsSize}T::class.java" to arrayOf(
+                        qualifiers.first().annotationType.asTypeName())
+                  }
+                  else -> {
+                    val initString = qualifiers
+                        .mapIndexed { index, _ ->
+                          val annoClassIndex = standardArgsSize + index + 1
+                          return@mapIndexed "%${standardArgsSize}T.createJsonQualifierImplementation(%${annoClassIndex}T::class.java)"
+                        }
+                        .joinToString()
+                    val initArgs = (listOf(Types::class.asTypeName())
+                        + qualifiers.map { it.annotationType.asTypeName() })
+                        .toTypedArray()
+                    ", setOf($initString)" to initArgs
+                  }
+                }
+                val finalArgs = arrayOf(*standardArgs, *args)
+                try {
+                  initializer("%1N.adapter%2L(%3L$initializerString).nullSafe()", *finalArgs)
+                } catch (e: IllegalArgumentException) {
+                  throw RuntimeException(
+                      "$e " + "InitString is " + "%1N.adapter%2L(%3L$initializerString).nullSafe()" + " and args are " + finalArgs.joinToString())
+                }
+              }
               .build()
         }
 
@@ -510,7 +554,7 @@ private data class Adapter(
                     addStatement("%L -> %N = %N.fromJson(%N)",
                         index,
                         spec,
-                        adapterProperties[prop.typeName]!!,
+                        adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
                         reader)
                   }
             }
@@ -613,7 +657,7 @@ private data class Adapter(
                 }
                 addStatement("%N.name(%S)", writer, prop.serializedName)
                 addStatement("%N.toJson(%N, %N.%L)",
-                    adapterProperties[prop.typeName]!!,
+                    adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
                     writer,
                     value,
                     prop.name)

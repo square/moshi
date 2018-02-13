@@ -29,7 +29,6 @@ class TestAdapterGeneration {
             .add(String::class.java, Hello::class.java, HelloJsonAdapter())
             .build()
 
-    @Ignore("Pending @JsonQualifier support")
     @Test
     fun testBasic() {
         val json = """{
@@ -155,7 +154,6 @@ class TestAdapterGeneration {
         assertEquals(json, adapter.toJson(actual))
     }
 
-    @Ignore("Pending @JsonQualifier support")
     @Test
     fun testGenericTypeWithQualifier() {
         val adapter: JsonAdapter<GenericClassWithQualifier<String>> =
@@ -166,7 +164,6 @@ class TestAdapterGeneration {
         assertEquals(json, adapter.toJson(actual))
     }
 
-    @Ignore("Pending @JsonQualifier support")
     @Test
     fun testMultipleJsonQualifiers() {
         val adapter = Moshi.Builder()
