@@ -146,15 +146,12 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       reader.beginObject();
       while (reader.hasNext()) {
         int index = reader.selectName(options);
-        FieldBinding<?> fieldBinding;
-        if (index != -1) {
-          fieldBinding = fieldsArray[index];
-        } else {
+        if (index == -1) {
           reader.nextName();
           reader.skipValue();
           continue;
         }
-        fieldBinding.read(reader, result);
+        fieldsArray[index].read(reader, result);
       }
       reader.endObject();
       return result;
