@@ -55,6 +55,12 @@
       <version>0.10</version>
     </dependency>
     <dependency>
+      <groupId>com.google.auto.service</groupId>
+      <artifactId>auto-service</artifactId>
+      <version>1.0-rc4</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
       <!-- Temporary to pick up Any filter fix -->
@@ -69,6 +75,25 @@
         <artifactId>kotlin-maven-plugin</artifactId>
         <version>${kotlin.version}</version>
         <executions>
+          <execution>
+            <id>kapt</id>
+            <goals>
+              <goal>kapt</goal>
+            </goals>
+            <configuration>
+              <sourceDirs>
+                <sourceDir>src/main/kotlin</sourceDir>
+                <sourceDir>src/main/java</sourceDir>
+              </sourceDirs>
+              <annotationProcessorPaths>
+                <annotationProcessorPath>
+                  <groupId>com.google.auto.service</groupId>
+                  <artifactId>auto-service</artifactId>
+                  <version>1.0-rc4</version>
+                </annotationProcessorPath>
+              </annotationProcessorPaths>
+            </configuration>
+          </execution>
           <execution>
             <id>compile</id>
             <phase>compile</phase>

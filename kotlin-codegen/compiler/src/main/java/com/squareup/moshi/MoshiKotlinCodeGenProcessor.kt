@@ -16,6 +16,7 @@
 package com.squareup.moshi
 
 import com.google.auto.common.AnnotationMirrors
+import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.BOOLEAN
@@ -64,6 +65,7 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.INTERNAL
 import org.jetbrains.kotlin.serialization.deserialization.NameResolver
 import java.io.File
 import java.lang.reflect.Type
+import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.AnnotationMirror
@@ -86,6 +88,7 @@ import javax.tools.Diagnostic.Kind.ERROR
  * If you define a companion object, a jsonAdapter() extension function will be generated onto it.
  * If you don't want this though, you can use the runtime [MoshiSerializable] factory implementation.
  */
+@AutoService(Processor::class)
 class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
 
   private val annotationName = MoshiSerializable::class.java.canonicalName
