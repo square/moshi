@@ -142,6 +142,34 @@ class DataClassesTest {
       val nullableString: String?
   )
 
+  @Test
+  fun collections() {
+    val adapter = moshi.adapter(SpecialCollections::class.java)
+
+    val specialCollections = SpecialCollections(
+        mutableListOf(),
+        mutableSetOf(),
+        mutableMapOf(),
+        emptyList(),
+        emptySet(),
+        emptyMap()
+    )
+
+    val json = adapter.toJson(specialCollections)
+    val newCollections = adapter.fromJson(json)
+    assertThat(newCollections).isEqualTo(specialCollections)
+  }
+
+  @MoshiSerializable
+  data class SpecialCollections(
+      val mutableList: MutableList<String>,
+      val mutableSet: MutableSet<String>,
+      val mutableMap: MutableMap<String, String>,
+      val immutableList: List<String>,
+      val immutableSet: Set<String>,
+      val immutableMap: Map<String, String>
+  )
+
 }
 
 /**
