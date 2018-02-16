@@ -232,20 +232,6 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
   }
 }
 
-private val TypeName.isPrimitive: Boolean
-  get() = !nullable && this in PRIMITIVE_TYPES
-
-private val PRIMITIVE_TYPES = setOf(
-    BOOLEAN,
-    BYTE,
-    SHORT,
-    INT,
-    LONG,
-    CHAR,
-    FLOAT,
-    DOUBLE
-)
-
 /**
  * Creates a joined string representation of simplified typename names.
  */
