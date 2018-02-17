@@ -63,8 +63,7 @@
     <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
-      <!-- Temporary to pick up Any filter fix -->
-      <version>0.7.0-20180211.200114-25</version>
+      <version>0.7.0</version>
     </dependency>
   </dependencies>
 
