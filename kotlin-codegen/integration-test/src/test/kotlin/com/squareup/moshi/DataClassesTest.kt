@@ -170,7 +170,84 @@ class DataClassesTest {
       val immutableMap: Map<String, String>
   )
 
+  @Test
+  fun mutableProperties() {
+    val adapter = moshi.adapter(MutableProperties::class.java)
+
+    val mutableProperties = MutableProperties(
+        "immutableProperty",
+        "mutableProperty",
+        mutableListOf("immutableMutableList"),
+        mutableListOf("immutableImmutableList"),
+        mutableListOf("mutableMutableList"),
+        mutableListOf("mutableImmutableList"),
+        "immutableProperty",
+        "mutableProperty",
+        mutableListOf("immutableMutableList"),
+        mutableListOf("immutableImmutableList"),
+        mutableListOf("mutableMutableList"),
+        mutableListOf("mutableImmutableList")
+    )
+
+    val json = adapter.toJson(mutableProperties)
+    val newMutableProperties = adapter.fromJson(json)
+    assertThat(newMutableProperties).isEqualTo(mutableProperties)
+  }
+
+  @MoshiSerializable
+  data class MutableProperties(
+      val immutableProperty: String,
+      var mutableProperty: String,
+      val immutableMutableList: MutableList<String>,
+      val immutableImmutableList: List<String>,
+      var mutableMutableList: MutableList<String>,
+      var mutableImmutableList: List<String>,
+      val nullableImmutableProperty: String?,
+      var nullableMutableProperty: String?,
+      val nullableImmutableMutableList: MutableList<String>?,
+      val nullableImmutableImmutableList: List<String>?,
+      var nullableMutableMutableList: MutableList<String>?,
+      var nullableMutableImmutableList: List<String>
+  )
+
+  @Test
+  fun nullableTypeParams() {
+    val adapter = moshi.adapter<NullableTypeParams<Int>>(
+        Types.newParameterizedType(NullableTypeParams::class.java, Int::class.javaObjectType))
+    val nullSerializing = adapter.serializeNulls()
+
+    val nullableTypeParams = NullableTypeParams<Int>(
+        listOf("foo", null, "bar"),
+        setOf("foo", null, "bar"),
+        mapOf("foo" to "bar", "baz" to null),
+        null
+    )
+
+    val noNullsTypeParams = NullableTypeParams<Int>(
+        nullableTypeParams.nullableList,
+        nullableTypeParams.nullableSet,
+        nullableTypeParams.nullableMap.filterValues { it != null },
+        null
+    )
+
+    val json = adapter.toJson(nullableTypeParams)
+    val newNullableTypeParams = adapter.fromJson(json)
+    assertThat(newNullableTypeParams).isEqualTo(noNullsTypeParams)
+
+    val nullSerializedJson = nullSerializing.toJson(nullableTypeParams)
+    val nullSerializedNullableTypeParams = adapter.fromJson(nullSerializedJson)
+    assertThat(nullSerializedNullableTypeParams).isEqualTo(nullableTypeParams)
+  }
 }
+
+// Has to be outside to avoid Types seeing an owning class
+@MoshiSerializable
+data class NullableTypeParams<T>(
+    val nullableList: List<String?>,
+    val nullableSet: Set<String?>,
+    val nullableMap: Map<String, String?>,
+    val nullableT: T?
+)
 
 /**
  * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
