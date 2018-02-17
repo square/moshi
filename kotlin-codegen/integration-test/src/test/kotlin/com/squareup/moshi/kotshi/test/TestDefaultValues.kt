@@ -167,7 +167,7 @@ class TestDefaultValues {
   }
 
   @Test
-  fun throwsNPEWhenNotUsingDefaultValues() {
+  fun throwsWhenNotUsingDefaultValues() {
     try {
       moshi.adapter(ClassWithDefaultValues::class.java).fromJson("{}")
       fail()
