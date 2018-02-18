@@ -206,6 +206,11 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         continue
       }
 
+      if (parameter != null && parameter.type != property.returnType) {
+        throw IllegalArgumentException("'${property.name}' has a constructor parameter of type " +
+            "${parameter.type} but a property of type ${property.returnType}.")
+      }
+
       if (property !is KMutableProperty1 && parameter == null) continue
 
       property.isAccessible = true

@@ -346,6 +346,21 @@ class KotlinJsonAdapterTest {
     var b: Int = -1
   }
 
+  @Test fun constructorParametersAndPropertiesWithSameNamesMustHaveSameTypes() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter(ConstructorParameterWithSameNameAsPropertyButDifferentType::class.java)
+      fail()
+    } catch (expected: IllegalArgumentException) {
+      assertThat(expected).hasMessage("'a' has a constructor parameter of type " +
+          "kotlin.Int but a property of type kotlin.String.")
+    }
+  }
+
+  class ConstructorParameterWithSameNameAsPropertyButDifferentType(a: Int) {
+    var a = "boo"
+  }
+
   @Test fun supertypeConstructorParameters() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
