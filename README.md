@@ -474,13 +474,16 @@ public final class BlackjackHand {
 
 ### Kotlin Support
 
-Kotlin classes work with Moshi out of the box, with the exception of annotations. If you need to annotate your Kotlin classes with an `@Json` annotation or otherwise, you will need to use the `moshi-kotlin` artifact, and set up Moshi to use its converter factory. Add the KotlinJsonAdapterFactory last to allow other installed Kotlin type factories to be used, since factories are called in order.
+Kotlin classes work with Moshi out of the box. However, you need to add the `KotlinJsonAdapterFactory` if you want to activate the validation for non-nullable properties. Add it last to allow other installed Kotlin type factories to be used, since factories are called in order.
 ```kotlin
 val moshi = Moshi.Builder()
     // Add any other JsonAdapter factories.
     .add(KotlinJsonAdapterFactory())
     .build()
 ```
+
+If you need to annotate your Kotlin classes with an `@Json` annotation or otherwise, you need to add `KotlinJsonAdapterFactory` as well. In both cases you have to add `moshi-kotlin` as dependency (see below). 
+
 
 Download
 --------
