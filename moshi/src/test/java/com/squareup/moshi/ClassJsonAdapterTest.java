@@ -444,6 +444,23 @@ public final class ClassJsonAdapterTest {
     assertThat(fromJson.zipCode).isEqualTo("94043");
   }
 
+  static final class Box<T> {
+    final T data;
+
+    Box(T data) {
+      this.data = data;
+    }
+  }
+
+  @Test public void parameterizedType() throws Exception {
+    @SuppressWarnings("unchecked")
+    JsonAdapter<Box<Integer>> adapter = (JsonAdapter<Box<Integer>>) ClassJsonAdapter.FACTORY.create(
+        Types.newParameterizedTypeWithOwner(ClassJsonAdapterTest.class, Box.class, Integer.class),
+        NO_ANNOTATIONS, moshi);
+    assertThat(adapter.fromJson("{\"data\":5}").data).isEqualTo(5);
+    assertThat(adapter.toJson(new Box<>(5))).isEqualTo("{\"data\":5}");
+  }
+
   private <T> String toJson(Class<T> type, T value) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
         JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(
