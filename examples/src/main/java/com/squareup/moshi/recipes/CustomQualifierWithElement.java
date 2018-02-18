@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2018 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.squareup.moshi.recipes;
 
 import com.squareup.moshi.JsonAdapter;
@@ -18,6 +33,11 @@ import javax.annotation.Nullable;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 final class CustomQualifierWithElement {
+  /**
+   * A qualifier to use a deserialized default value for the targeted type instead of the null
+   * literal. If the targeted type is <em>absent</em> from an enclosing JSON object, this will have
+   * no effect. The deserialized default value will be shared and should be immutable.
+   */
   @Retention(RUNTIME)
   @JsonQualifier
   public @interface DefaultReplacesNull {
@@ -77,10 +97,11 @@ final class CustomQualifierWithElement {
     }
 
     @Override public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
-      if (value == null) {
-        value = defaultIfNull;
+      if (defaultIfNull.equals(value)) {
+        delegate.toJson(writer, null);
+      } else {
+        delegate.toJson(writer, value);
       }
-      delegate.toJson(writer, value);
     }
   }
 
@@ -102,11 +123,13 @@ final class CustomQualifierWithElement {
   }
 
   public static void main(String[] args) throws IOException {
-    JsonAdapter<Data> adapter =
-        new Moshi.Builder().add(DefaultReplacesNullJsonAdapter.FACTORY).build().adapter(Data.class);
+    JsonAdapter<Data> adapter = new Moshi.Builder().add(DefaultReplacesNullJsonAdapter.FACTORY)
+        .build()
+        .adapter(Data.class)
+        .serializeNulls();
     String json = "{\"name\":null,\"names\":null}";
     System.out.println(adapter.fromJson(json));
-    System.out.println(adapter.toJson(new Data(null, null)));
+    System.out.println(adapter.toJson(new Data("", Collections.<String>emptyList())));
   }
 
   private CustomQualifierWithElement() {
