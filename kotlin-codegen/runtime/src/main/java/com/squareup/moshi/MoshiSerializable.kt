@@ -36,7 +36,26 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       return null
     }
 
-    val constructor = findConstructorForClass(rawType) ?: return null
+    val clsName = rawType.name.replace("$", "_")
+    val constructor = try {
+      val bindingClass = rawType.classLoader
+          .loadClass(clsName + "JsonAdapter")
+      try {
+        // Try the moshi constructor
+        @Suppress("UNCHECKED_CAST")
+        bindingClass.getConstructor(
+            Moshi::class.java) as Constructor<out JsonAdapter<*>>
+      } catch (e: NoSuchMethodException) {
+        // Try the moshi + type constructor
+        @Suppress("UNCHECKED_CAST")
+        bindingClass.getConstructor(Moshi::class.java,
+            Array<Type>::class.java) as Constructor<out JsonAdapter<*>>
+      }
+    } catch (e: ClassNotFoundException) {
+      throw RuntimeException("Unable to find generated Moshi adapter class for " + clsName, e)
+    } catch (e: NoSuchMethodException) {
+      throw RuntimeException("Unable to find generated Moshi adapter constructor for " + clsName, e)
+    }
 
     try {
       return if (constructor.parameterTypes.size == 1) {
@@ -63,33 +82,5 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       throw RuntimeException(
           "Could not create generated JsonAdapter instance for type " + rawType, cause)
     }
-
-  }
-
-  private fun findConstructorForClass(cls: Class<*>): Constructor<out JsonAdapter<*>>? {
-    var adapterCtor: Constructor<out JsonAdapter<*>>?
-    val clsName = cls.name.replace("$", "_")
-    try {
-      val bindingClass = cls.classLoader
-          .loadClass(clsName + "JsonAdapter")
-      adapterCtor = try {
-        // Try the moshi constructor
-        @Suppress("UNCHECKED_CAST")
-        bindingClass.getConstructor(
-            Moshi::class.java) as Constructor<out JsonAdapter<*>>
-      } catch (e: NoSuchMethodException) {
-        // Try the moshi + type constructor
-        @Suppress("UNCHECKED_CAST")
-        bindingClass.getConstructor(Moshi::class.java,
-            Array<Type>::class.java) as Constructor<out JsonAdapter<*>>
-      }
-
-    } catch (e: ClassNotFoundException) {
-      adapterCtor = findConstructorForClass(cls.superclass)
-    } catch (e: NoSuchMethodException) {
-      throw RuntimeException("Unable to find binding constructor for " + clsName, e)
-    }
-
-    return adapterCtor
   }
 }
