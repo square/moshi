@@ -67,14 +67,12 @@ class TestPrimitiveDefaultValues {
   private inline fun <reified T> T.testFormatting(json: String) {
     val adapter = moshi.adapter(T::class.java)
     val actual = adapter.fromJson(json)
+    val buffer = Buffer()
+    val writer = JsonWriter.of(buffer).apply { indent = "  " }
     assertEquals(this, actual)
-    assertEquals(json, Buffer()
-        .apply {
-          JsonWriter.of(this).run {
-            indent = "  "
-            adapter.toJson(this, actual)
-          }
-        }
-        .readUtf8())
+
+    adapter.toJson(writer, actual)
+    val bufferText = buffer.readUtf8()
+    assertEquals(json, bufferText)
   }
 }
