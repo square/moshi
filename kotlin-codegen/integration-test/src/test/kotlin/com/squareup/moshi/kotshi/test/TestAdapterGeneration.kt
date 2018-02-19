@@ -20,7 +20,6 @@ import com.squareup.moshi.kotshi.WrappedInArray
 import com.squareup.moshi.kotshi.WrappedInObject
 import junit.framework.Assert.assertEquals
 import okio.Buffer
-import org.junit.Ignore
 import org.junit.Test
 
 class TestAdapterGeneration {
@@ -104,14 +103,12 @@ class TestAdapterGeneration {
                 genericClass = GenericClass(listOf("val1", "val2"), "val3"))
 
         assertEquals(expected, actual)
-        assertEquals(json, Buffer()
-                .apply {
-                    JsonWriter.of(this).run {
-                        indent = "  "
-                        adapter.toJson(this, actual)
-                    }
-                }
-                .readUtf8())
+        val buffer = Buffer()
+        val writer = JsonWriter.of(buffer).apply { indent = "  " }
+
+        adapter.toJson(writer, actual)
+        val bufferText = buffer.readUtf8()
+        assertEquals(json, bufferText)
     }
 
     @Test
