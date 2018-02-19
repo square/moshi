@@ -28,8 +28,7 @@ annotation class MoshiSerializable
 
 class MoshiSerializableFactory : JsonAdapter.Factory {
 
-  override fun create(type: Type, annotations: Set<out Annotation>,
-      moshi: Moshi): JsonAdapter<*>? {
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
 
     val rawType = Types.getRawType(type)
     if (!rawType.isAnnotationPresent(MoshiSerializable::class.java)) {
