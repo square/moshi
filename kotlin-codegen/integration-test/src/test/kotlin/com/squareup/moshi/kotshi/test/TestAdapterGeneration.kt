@@ -25,7 +25,7 @@ import org.junit.Test
 
 class TestAdapterGeneration {
     private val moshi: Moshi = Moshi.Builder()
-            .add(MoshiSerializableFactory.getInstance())
+            .add(MoshiSerializableFactory())
             .add(String::class.java, Hello::class.java, HelloJsonAdapter())
             .build()
 
@@ -191,7 +191,7 @@ class TestAdapterGeneration {
                         writer.endObject()
                     }
                 })
-                .add(MoshiSerializableFactory.getInstance())
+                .add(MoshiSerializableFactory())
                 .build()
                 .adapter(MultipleJsonQualifiers::class.java)
         val json = """{"string":{"name":["Hello, world!"]}}"""

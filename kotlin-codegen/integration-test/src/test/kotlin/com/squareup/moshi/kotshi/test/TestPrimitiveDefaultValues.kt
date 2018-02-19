@@ -15,7 +15,7 @@ class TestPrimitiveDefaultValues {
   @Before
   fun setup() {
     moshi = Moshi.Builder()
-        .add(MoshiSerializableFactory.getInstance())
+        .add(MoshiSerializableFactory())
         .build()
   }
 

@@ -22,7 +22,7 @@ import org.junit.Test
 
 class DataClassesTest {
 
-  private val moshi = Moshi.Builder().add(MoshiSerializableFactory.getInstance()).build()
+  private val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
 
   @Test
   fun jsonAnnotation() {

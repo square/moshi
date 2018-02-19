@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi
 
-import java.lang.ref.WeakReference
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
@@ -105,12 +104,5 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
 
     adapters[cls] = adapterCtor
     return adapterCtor
-  }
-
-  companion object {
-    private var instance: WeakReference<MoshiSerializableFactory>? = null
-
-    fun getInstance() =
-        instance?.get() ?: MoshiSerializableFactory().also { instance = WeakReference(it) }
   }
 }

@@ -10,7 +10,7 @@ import org.junit.Test
 
 class TestClassWithJavaKeyword {
   private val adapter = Moshi.Builder()
-      .add(MoshiSerializableFactory.getInstance())
+      .add(MoshiSerializableFactory())
       .build()
       .adapter(ClassWithJavaKeyword::class.java)
 
