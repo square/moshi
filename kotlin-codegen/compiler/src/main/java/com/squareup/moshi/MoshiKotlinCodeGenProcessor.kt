@@ -257,8 +257,7 @@ private fun TypeName.simplifiedName(): String {
     }
     is WildcardTypeName -> "wildcard__" + (lowerBounds + upperBounds).simplifiedNames()
     is TypeVariableName -> name.decapitalize() + if (bounds.isEmpty()) "" else "__" + bounds.simplifiedNames()
-  // Shouldn't happen
-    else -> toString().decapitalize()
+    else -> throw IllegalArgumentException("Unrecognized type! $this")
   }.let { if (nullable) "${it}_nullable" else it }
 }
 
