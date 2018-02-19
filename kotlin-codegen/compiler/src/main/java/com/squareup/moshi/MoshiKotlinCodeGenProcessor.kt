@@ -554,7 +554,7 @@ private data class Adapter(
                   }
             }
             .beginControlFlow("-1 ->")
-            .addCode("// Unknown name, skip it\n")
+            .addCode("// Unknown name, skip it.\n")
             .addStatement("%N.nextName()", reader)
             .addStatement("%N.skipValue()", reader)
             .endControlFlow()
