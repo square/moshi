@@ -172,7 +172,7 @@ public final class Types {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T extends Annotation> T createJsonQualifierImplementation(
+  static <T extends Annotation> T createJsonQualifierImplementation(
       final Class<T> annotationType) {
     if (!annotationType.isAnnotation()) {
       throw new IllegalArgumentException(annotationType + " must be an annotation.");

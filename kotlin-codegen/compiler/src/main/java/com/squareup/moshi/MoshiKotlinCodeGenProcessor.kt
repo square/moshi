@@ -436,14 +436,14 @@ private data class Adapter(
                   else -> {
                     val initString = qualifiers
                         .mapIndexed { index, _ ->
-                          val annoClassIndex = standardArgsSize + index + 1
-                          return@mapIndexed "%${standardArgsSize}T.createJsonQualifierImplementation(%${annoClassIndex}T::class.java)"
+                          val annoClassIndex = standardArgsSize + index
+                          return@mapIndexed "%${annoClassIndex}T::class.java"
                         }
                         .joinToString()
-                    val initArgs = (listOf(Types::class.asTypeName())
-                        + qualifiers.map { it.annotationType.asTypeName() })
+                    val initArgs = qualifiers
+                        .map { it.annotationType.asTypeName() }
                         .toTypedArray()
-                    ", setOf($initString)" to initArgs
+                    ", $initString" to initArgs
                   }
                 }
                 val finalArgs = arrayOf(*standardArgs, *args)
