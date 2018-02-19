@@ -33,14 +33,10 @@ class TestClassWithJavaKeyword {
             |  "case": 1337
             |}""".trimMargin()
 
-    val actual = Buffer()
-        .apply {
-          adapter.toJson(JsonWriter.of(this)
-              .apply {
-                indent = "  "
-              }, ClassWithJavaKeyword(true, 4711, 1337))
-        }
-        .readUtf8()
+    val buffer = Buffer()
+    val writer = JsonWriter.of(buffer).apply { indent = "  " }
+    adapter.toJson(writer, ClassWithJavaKeyword(true, 4711, 1337))
+    val actual = buffer.readUtf8()
     assertEquals(expected, actual)
   }
 
