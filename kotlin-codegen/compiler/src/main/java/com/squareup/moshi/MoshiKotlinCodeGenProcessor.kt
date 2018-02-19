@@ -242,7 +242,7 @@ private fun TypeName.resolveRawType(): ClassName {
   return when (this) {
     is ClassName -> this
     is ParameterizedTypeName -> rawType
-    else -> throw UnsupportedOperationException("Cannot get raw type from $this")
+    else -> throw IllegalArgumentException("Cannot get raw type from $this")
   }
 }
 
