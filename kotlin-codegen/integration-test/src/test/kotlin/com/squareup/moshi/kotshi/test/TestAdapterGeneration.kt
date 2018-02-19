@@ -119,21 +119,7 @@ class TestAdapterGeneration {
         try {
             moshi.adapter(TestClass::class.java).fromJson("{}")
         } catch (e: JsonDataException) {
-            assertEquals("The following required properties were missing: " +
-                    "string, " +
-                    "integer, " +
-                    "isBoolean, " +
-                    "aShort, " +
-                    "aByte, " +
-                    "aChar, " +
-                    "list, " +
-                    "nestedList, " +
-                    "abstractProperty, " +
-                    "other_name, " +
-                    "annotated, " +
-                    "anotherAnnotated, " +
-                    "genericClass",
-                    e.message)
+            assertEquals("Required property 'string' missing at \$", e.message)
         }
     }
 

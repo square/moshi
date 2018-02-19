@@ -172,7 +172,7 @@ class TestDefaultValues {
       moshi.adapter(ClassWithDefaultValues::class.java).fromJson("{}")
       fail()
     } catch (e: JsonDataException) {
-      assertEquals("The following required properties were missing: v10", e.message)
+      assertEquals("Required property 'v10' missing at \$", e.message)
     }
   }
 

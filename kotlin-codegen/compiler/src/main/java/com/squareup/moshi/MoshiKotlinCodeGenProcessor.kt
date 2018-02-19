@@ -35,7 +35,6 @@ import com.squareup.kotlinpoet.KModifier.OUT
 import com.squareup.kotlinpoet.KModifier.OVERRIDE
 import com.squareup.kotlinpoet.KModifier.PRIVATE
 import com.squareup.kotlinpoet.LONG
-import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -551,67 +550,36 @@ private data class Adapter(
             .endControlFlow()
             .addStatement("%N.endObject()", reader)
             .apply {
-              if (localProperties.keys.any { it.isRequired }) {
-                val indexParam = ParameterSpec.builder("index".allocate(), INT)
-                    .build()
-                val lambdaType = LambdaTypeName.get(
-                    returnType = JsonDataException::class.asTypeName()
-                )
-                val missingLambda = PropertySpec.builder("missingArguments".allocate(), lambdaType)
-                    .initializer(CodeBlock.builder()
-                        .add("{\n")
-                        .add("%N.filterIndexed { %N, _ ->", namesArray, indexParam)
-                        .add("%>")
-                        // Begin controlflow
-                        .add("\nwhen (%N) {", indexParam)
-                        .add("%>")
-                        .apply {
-                          optionsByIndex
-                              .map { (index, entry) -> index to entry.value }
-                              .filter { (_, prop) -> prop.isRequired }
-                              .forEach { (index, prop) ->
-                                add("\n%L -> %N == null",
-                                    index,
-                                    localProperties[prop]!!)
-                              }
-                        }
-                        .add("\nelse -> false")
-                        // End controlflow
-                        .add("%<")
-                        .add("\n}")
-                        .add("%<")
-                        .add("\n}")
-                        .add(
-                            ".let { %T(\"The following required properties were missing: \${%L}\") }",
-                            JsonDataException::class,
-                            CodeBlock.of("it.joinToString()"))
-                        .add("\n}")
-                        .build())
-                    .build()
-                addCode("%L", missingLambda)
-                localProperties.forEach { (property, spec) ->
-                  if (property.isRequired) {
-                    beginControlFlow("if (%N == null)", spec)
-                    addStatement("throw %N()", missingLambda)
-                    endControlFlow()
-                  }
-                }
-              }
               val propertiesWithDefaults = localProperties.entries.filter { it.key.hasDefault }
+              val propertiesWithoutDefaults = localProperties.entries.filter { !it.key.hasDefault }
+              val requiredPropertiesCodeBlock = CodeBlock.of(
+                  propertiesWithoutDefaults.joinToString(",\n") { (property, spec) ->
+                    "${property.name} = ${spec.name}%L"
+                  },
+                  *(propertiesWithoutDefaults
+                      .map { (property, _) ->
+                        if (property.isRequired) {
+                          @Suppress("IMPLICIT_CAST_TO_ANY")
+                          CodeBlock.of(
+                              " ?: throw %T(\"Required property '%L' missing at \${%N.path}\")",
+                              JsonDataException::class.asTypeName(),
+                              property.name,
+                              reader
+                          )
+                        } else {
+                          @Suppress("IMPLICIT_CAST_TO_ANY")
+                          ""
+                        }
+                      }
+                      .toTypedArray()))
               if (propertiesWithDefaults.isEmpty()) {
                 addStatement("return %T(%L)",
                     originalTypeName,
-                    localProperties.entries.joinToString(",\n") { (property, spec) ->
-                      "${property.name} = ${spec.name}"
-                    })
+                    requiredPropertiesCodeBlock)
               } else {
-                addStatement("return %T(%L).let {\n  it.copy(%L)\n}",
+                addStatement("return %T(%L)\n.let {\n  it.copy(%L)\n}",
                     originalTypeName,
-                    localProperties.entries
-                        .filter { !it.key.hasDefault }
-                        .joinToString(",\n") { (property, spec) ->
-                          "${property.name} = ${spec.name}"
-                        },
+                    requiredPropertiesCodeBlock,
                     propertiesWithDefaults
                         .joinToString(",\n      ") { (property, spec) ->
                           "${property.name} = ${spec.name} ?: it.${property.name}"
