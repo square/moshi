@@ -383,13 +383,13 @@ private data class Adapter(
 
     val originalTypeName = originalElement.asType().asTypeName()
     val moshiName = "moshi".allocate()
-    val moshiParam = ParameterSpec.builder(moshiName, Moshi::class.asClassName()).build()
+    val moshiParam = ParameterSpec.builder(moshiName, Moshi::class).build()
     val typesParam = ParameterSpec.builder("types".allocate(),
         ParameterizedTypeName.get(ARRAY, Type::class.asTypeName())).build()
     val reader = ParameterSpec.builder("reader".allocate(),
-        JsonReader::class.asClassName()).build()
+        JsonReader::class).build()
     val writer = ParameterSpec.builder("writer".allocate(),
-        JsonWriter::class.asClassName()).build()
+        JsonWriter::class).build()
     val value = ParameterSpec.builder("value".allocate(),
         originalTypeName.asNullable()).build()
     val jsonAdapterTypeName = ParameterizedTypeName.get(JsonAdapter::class.asClassName(),
