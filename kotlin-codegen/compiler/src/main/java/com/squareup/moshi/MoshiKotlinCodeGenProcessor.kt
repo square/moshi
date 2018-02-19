@@ -623,18 +623,18 @@ private data class Adapter(
             .addModifiers(OVERRIDE)
             .addParameter(writer)
             .addParameter(value)
-            .beginControlFlow("if (%N == null)", value)
-            .addStatement("%N.nullValue()", writer)
-            .addStatement("return")
-            .endControlFlow()
             .addStatement("%N.beginObject()", writer)
             .apply {
-              propertyList.forEach { prop ->
+              propertyList.forEachIndexed { index, prop ->
                 if (prop.nullable) {
-                  beginControlFlow("if (%N.%L != null)", value, prop.name)
+                  beginControlFlow("if (%N${if (index == 0) "!!" else ""}.%L != null)",
+                      value,
+                      prop.name)
                 }
-                addStatement("%N.name(%S)", writer, prop.serializedName)
-                addStatement("%N.toJson(%N, %N.%L)",
+                addStatement("%N.name(%S)",
+                    writer,
+                    prop.serializedName)
+                addStatement("%N.toJson(%N, %N${if (index == 0 && !prop.nullable) "!!" else ""}.%L)",
                     adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
                     writer,
                     value,
