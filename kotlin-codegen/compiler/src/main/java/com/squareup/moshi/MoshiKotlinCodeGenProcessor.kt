@@ -402,16 +402,16 @@ private data class Adapter(
         .distinctBy { it.typeName to it.jsonQualifiers }
         .associate { prop ->
           val typeName = prop.typeName
-          val qualifierNames = prop.jsonQualifiers.joinToString("_") {
-            it.annotationType.asElement().simpleName.toString()
+          val qualifierNames = prop.jsonQualifiers.joinToString("") {
+            "at${it.annotationType.asElement().simpleName.toString().capitalize()}"
           }
-          val propertyName = "${typeName.simplifiedName().allocate()}".let {
+          val propertyName = typeName.simplifiedName().allocate().let {
             if (qualifierNames.isBlank()) {
               it
             } else {
-              "${it}_for_$qualifierNames"
+              "$it$qualifierNames"
             }
-          }.let { "${it}_Adapter" }
+          }.let { "${it}Adapter" }
           val adapterTypeName = ParameterizedTypeName.get(JsonAdapter::class.asTypeName(), typeName)
           val key = typeName to prop.jsonQualifiers
           return@associate key to PropertySpec.builder(propertyName, adapterTypeName, PRIVATE)
