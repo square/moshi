@@ -608,13 +608,16 @@ private data class Adapter(
             .addModifiers(OVERRIDE)
             .addParameter(writer)
             .addParameter(value)
+            .beginControlFlow("if (%N == null)", value)
+            .addStatement("throw %T(%S)", NullPointerException::class, "${value.name} was null! Wrap in .nullSafe() to write nullable values.")
+            .endControlFlow()
             .addStatement("%N.beginObject()", writer)
             .apply {
-              propertyList.forEachIndexed { index, prop ->
+              propertyList.forEach { prop ->
                 addStatement("%N.name(%S)",
                     writer,
                     prop.serializedName)
-                addStatement("%N.toJson(%N, %N${if (index == 0) "!!" else ""}.%L)",
+                addStatement("%N.toJson(%N, %N.%L)",
                     adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
                     writer,
                     value,
