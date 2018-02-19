@@ -98,48 +98,6 @@ class TestDefaultValues {
   }
 
   @Test
-  fun withNullValues() {
-    val expected = ClassWithDefaultValues(
-        v1 = WithCompanionFunction("WithCompanionFunction"),
-        v2 = WithStaticFunction("WithStaticFunction"),
-        v3 = WithCompanionProperty("WithCompanionProperty"),
-        v4 = WithStaticProperty("WithStaticProperty"),
-        v5 = GenericClassWithDefault(null),
-        v6 = GenericClassWithDefault(4711),
-        v7 = LocalDate.MIN,
-        v8 = LocalTime.MIN,
-        v9 = LocalDateTime.MIN,
-        v10 = WithCompanionFunction("v10"),
-        v12 = ClassWithConstructorAsDefault("ClassWithConstructorAsDefault"),
-        v13 = GenericClassWithConstructorAsDefault(null),
-        v14 = 4711,
-        v15 = SomeEnum.VALUE3,
-        v16 = emptyMap())
-
-    val actual = moshi.adapter(ClassWithDefaultValues::class.java).fromJson("""{
-             |  "v1": null,
-             |  "v2": null,
-             |  "v3": null,
-             |  "v4": null,
-             |  "v5": null,
-             |  "v6": null,
-             |  "v7": null,
-             |  "v8": null,
-             |  "v9": null,
-             |  "v10": {
-             |    "v": "v10"
-             |  },
-             |  "v12": null,
-             |  "v13": null,
-             |  "v14": null,
-             |  "v15": null,
-             |  "v16": null
-             |}""".trimMargin())
-
-    assertEquals(expected, actual)
-  }
-
-  @Test
   fun withAbsentValues() {
     val expected = ClassWithDefaultValues(
         v1 = WithCompanionFunction("WithCompanionFunction"),

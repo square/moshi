@@ -446,22 +446,29 @@ private data class Adapter(
                   }
                 }
                 val finalArgs = arrayOf(*standardArgs, *args)
-                try {
-                  initializer("%1N.adapter%2L(%3L$initializerString).nullSafe()", *finalArgs)
-                } catch (e: IllegalArgumentException) {
-                  throw RuntimeException(
-                      "$e " + "InitString is " + "%1N.adapter%2L(%3L$initializerString).nullSafe()" + " and args are " + finalArgs.joinToString())
-                }
+                initializer(
+                    "%1N.adapter%2L(%3L$initializerString)${if (prop.nullable) ".nullSafe()" else ""}",
+                    *finalArgs)
               }
               .build()
         }
 
     val localProperties =
         propertyList.associate { prop ->
-          prop to PropertySpec.builder(prop.name.allocate(), prop.typeName.asNullable())
+          val propertySpec = PropertySpec.builder(prop.name.allocate(), prop.typeName.asNullable())
               .mutable(true)
               .initializer("null")
               .build()
+          val propertySetSpec = if (prop.hasDefault && prop.nullable) {
+            PropertySpec.builder("${propertySpec.name}Set".allocate(), BOOLEAN)
+                .mutable(true)
+                .initializer("false")
+                .build()
+          } else {
+            null
+          }
+          val specs = propertySpec to propertySetSpec
+          prop to specs
         }
     val optionsByIndex = propertyList
         .associateBy { it.serializedName }.entries.withIndex()
@@ -514,7 +521,10 @@ private data class Adapter(
             .returns(originalTypeName.asNullable())
             .apply {
               localProperties.values.forEach {
-                addCode("%L", it)
+                addCode("%L", it.first)
+                it.second?.let {
+                  addCode("%L", it)
+                }
               }
             }
             .addStatement("%N.beginObject()", reader)
@@ -523,12 +533,24 @@ private data class Adapter(
             .apply {
               optionsByIndex.map { (index, entry) -> index to entry.value }
                   .forEach { (index, prop) ->
-                    val spec = localProperties[prop]!!
-                    addStatement("%L -> %N = %N.fromJson(%N)",
-                        index,
-                        spec,
-                        adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
-                        reader)
+                    val specs = localProperties[prop]!!
+                    val spec = specs.first
+                    val setterSpec = specs.second
+                    if (setterSpec != null) {
+                      beginControlFlow("%L -> ", index)
+                      addStatement("%N = %N.fromJson(%N)",
+                          spec,
+                          adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
+                          reader)
+                      addStatement("%N = true", setterSpec)
+                      endControlFlow()
+                    } else {
+                      addStatement("%L -> %N = %N.fromJson(%N)",
+                          index,
+                          spec,
+                          adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
+                          reader)
+                    }
                   }
             }
             .beginControlFlow("-1 ->")
@@ -543,7 +565,8 @@ private data class Adapter(
               val propertiesWithDefaults = localProperties.entries.filter { it.key.hasDefault }
               val propertiesWithoutDefaults = localProperties.entries.filter { !it.key.hasDefault }
               val requiredPropertiesCodeBlock = CodeBlock.of(
-                  propertiesWithoutDefaults.joinToString(",\n") { (property, spec) ->
+                  propertiesWithoutDefaults.joinToString(",\n") { (property, specs) ->
+                    val spec = specs.first
                     "${property.name} = ${spec.name}%L"
                   },
                   *(propertiesWithoutDefaults
@@ -571,8 +594,14 @@ private data class Adapter(
                     originalTypeName,
                     requiredPropertiesCodeBlock,
                     propertiesWithDefaults
-                        .joinToString(",\n      ") { (property, spec) ->
-                          "${property.name} = ${spec.name} ?: it.${property.name}"
+                        .joinToString(",\n      ") { (property, specs) ->
+                          val spec = specs.first
+                          val setSpec = specs.second
+                          if (setSpec != null) {
+                            "${property.name} = if (${setSpec.name}) ${spec.name} else it.${property.name}"
+                          } else {
+                            "${property.name} = ${spec.name} ?: it.${property.name}"
+                          }
                         })
               }
             }

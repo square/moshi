@@ -48,34 +48,6 @@ class TestPrimitiveDefaultValues {
   }
 
   @Test
-  fun withNullValues() {
-    val expected = ClassWithPrimitiveDefaults(
-        someString = "default",
-        someBoolean = true,
-        someByte = 66,
-        someChar = 'N',
-        someShort = 4711,
-        someInt = 4711,
-        someLong = 4711,
-        someFloat = 0.4711f,
-        someDouble = 0.4711)
-
-    val actual = moshi.adapter(ClassWithPrimitiveDefaults::class.java).fromJson("""{
-             |  "someString": null,
-             |  "someBoolean": null,
-             |  "someByte": null,
-             |  "someChar": null,
-             |  "someShort": null,
-             |  "someInt": null,
-             |  "someLong": null,
-             |  "someFloat": null,
-             |  "someDouble": null
-             |}""".trimMargin())
-
-    assertEquals(expected, actual)
-  }
-
-  @Test
   fun withAbsentValues() {
     val expected = ClassWithPrimitiveDefaults(
         someString = "default",
