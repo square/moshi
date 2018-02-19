@@ -58,14 +58,10 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
     }
 
     try {
-      return if (constructor.parameterTypes.size == 1) {
-        constructor.newInstance(moshi)
-      } else {
-        if (type is ParameterizedType) {
-          constructor.newInstance(moshi, type.actualTypeArguments)
-        } else {
-          throw IllegalStateException("Unable to handle type $type")
-        }
+      return when {
+        constructor.parameterTypes.size == 1 -> constructor.newInstance(moshi)
+        type is ParameterizedType -> constructor.newInstance(moshi, type.actualTypeArguments)
+        else -> throw IllegalStateException("Unable to handle type $type")
       }
     } catch (e: IllegalAccessException) {
       throw RuntimeException("Unable to invoke " + constructor, e)
