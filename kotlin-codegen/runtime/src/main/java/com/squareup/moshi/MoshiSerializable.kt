@@ -69,11 +69,6 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
   private fun findConstructorForClass(cls: Class<*>): Constructor<out JsonAdapter<*>>? {
     var adapterCtor: Constructor<out JsonAdapter<*>>?
     val clsName = cls.name.replace("$", "_")
-    if (clsName.startsWith("android.")
-        || clsName.startsWith("java.")
-        || clsName.startsWith("kotlin.")) {
-      return null
-    }
     try {
       val bindingClass = cls.classLoader
           .loadClass(clsName + "JsonAdapter")
