@@ -626,22 +626,14 @@ private data class Adapter(
             .addStatement("%N.beginObject()", writer)
             .apply {
               propertyList.forEachIndexed { index, prop ->
-                if (prop.nullable) {
-                  beginControlFlow("if (%N${if (index == 0) "!!" else ""}.%L != null)",
-                      value,
-                      prop.name)
-                }
                 addStatement("%N.name(%S)",
                     writer,
                     prop.serializedName)
-                addStatement("%N.toJson(%N, %N${if (index == 0 && !prop.nullable) "!!" else ""}.%L)",
+                addStatement("%N.toJson(%N, %N${if (index == 0) "!!" else ""}.%L)",
                     adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
                     writer,
                     value,
                     prop.name)
-                if (prop.nullable) {
-                  endControlFlow()
-                }
               }
             }
             .addStatement("%N.endObject()", writer)
