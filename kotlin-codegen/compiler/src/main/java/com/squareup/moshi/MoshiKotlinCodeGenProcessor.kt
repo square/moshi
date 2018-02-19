@@ -467,24 +467,14 @@ private data class Adapter(
         .associateBy { it.serializedName }.entries.withIndex()
 
     // selectName() API setup
-    val namesArray = PropertySpec.builder("NAMES".allocate(),
-        ParameterizedTypeName.get(ARRAY, String::class.asTypeName()), PRIVATE)
-        .initializer("arrayOf(${optionsByIndex.map { it.value.key }
-            .joinToString(", ") { "\"$it\"" }})")
-        .build()
     val optionsCN = JsonReader.Options::class.asTypeName()
     val optionsProperty = PropertySpec.builder(
-        "OPTIONS".allocate(),
+        "options".allocate(),
         optionsCN,
         PRIVATE)
-        .initializer("%T.of(*%N)",
-            optionsCN,
-            namesArray)
-        .build()
-    val companionObject = TypeSpec.companionObjectBuilder("SelectOptions")
-        .addModifiers(PRIVATE)
-        .addProperty(namesArray)
-        .addProperty(optionsProperty)
+        .initializer("%T.of(${optionsByIndex.map { it.value.key }
+            .joinToString(", ") { "\"$it\"" }})",
+            optionsCN)
         .build()
 
     val adapter = TypeSpec.classBuilder(adapterName)
@@ -508,7 +498,7 @@ private data class Adapter(
               }
             }
             .build())
-        .addType(companionObject)
+        .addProperty(optionsProperty)
         .addProperties(adapterProperties.values)
         .addFunction(FunSpec.builder("toString")
             .addModifiers(OVERRIDE)
