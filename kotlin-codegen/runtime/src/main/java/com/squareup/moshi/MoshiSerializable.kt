@@ -19,8 +19,6 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import java.util.Collections
-import java.util.LinkedHashMap
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.CLASS
 
@@ -29,8 +27,6 @@ import kotlin.annotation.AnnotationTarget.CLASS
 annotation class MoshiSerializable
 
 class MoshiSerializableFactory : JsonAdapter.Factory {
-  private val adapters = Collections.synchronizedMap(
-      LinkedHashMap<Class<*>, Constructor<out JsonAdapter<*>>>())
 
   override fun create(type: Type, annotations: MutableSet<out Annotation>,
       moshi: Moshi): JsonAdapter<*>? {
@@ -71,10 +67,7 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
   }
 
   private fun findConstructorForClass(cls: Class<*>): Constructor<out JsonAdapter<*>>? {
-    var adapterCtor: Constructor<out JsonAdapter<*>>? = adapters[cls]
-    if (adapterCtor != null) {
-      return adapterCtor
-    }
+    var adapterCtor: Constructor<out JsonAdapter<*>>?
     val clsName = cls.name.replace("$", "_")
     if (clsName.startsWith("android.")
         || clsName.startsWith("java.")
@@ -102,7 +95,6 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       throw RuntimeException("Unable to find binding constructor for " + clsName, e)
     }
 
-    adapters[cls] = adapterCtor
     return adapterCtor
   }
 }
