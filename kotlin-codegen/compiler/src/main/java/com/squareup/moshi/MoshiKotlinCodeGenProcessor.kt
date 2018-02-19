@@ -302,7 +302,7 @@ private fun TypeName.makeType(
       // If it's an Array type, we shortcut this to return Types.arrayOf()
       if (rawType == ARRAY) {
         return CodeBlock.of("%T.arrayOf(%L)",
-            Types::class.asTypeName(),
+            Types::class,
             typeArguments[0].objectType().makeType(elementUtils, typesArray, genericTypeNames))
       }
       // If it's a Class type, we have to specify the generics.
@@ -322,7 +322,7 @@ private fun TypeName.makeType(
       CodeBlock.of(
           "%T.newParameterizedType(%T%L::class.java, ${typeArguments
               .joinToString(", ") { "%L" }})",
-          Types::class.asTypeName(),
+          Types::class,
           rawType.objectType(),
           rawTypeParameters,
           *(typeArguments.map {
@@ -344,7 +344,7 @@ private fun TypeName.makeType(
         else -> throw IllegalArgumentException(
             "Unrepresentable wildcard type. Cannot have more than one bound: " + this)
       }
-      CodeBlock.of("%T.%L(%T::class.java)", Types::class.asTypeName(), method, target)
+      CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target)
     }
     is TypeVariableName -> {
       CodeBlock.of("%N[%L]", typesArray, genericTypeNames.indexOfFirst { it == this })
@@ -575,7 +575,7 @@ private data class Adapter(
                           @Suppress("IMPLICIT_CAST_TO_ANY")
                           CodeBlock.of(
                               " ?: throw %T(\"Required property '%L' missing at \${%N.path}\")",
-                              JsonDataException::class.asTypeName(),
+                              JsonDataException::class,
                               property.name,
                               reader
                           )
