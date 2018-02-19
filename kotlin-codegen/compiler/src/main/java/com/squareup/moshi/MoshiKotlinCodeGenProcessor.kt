@@ -97,10 +97,12 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     val annotationElement = elementUtils.getTypeElement(annotationName)
-    return if (roundEnv.getElementsAnnotatedWith(annotationElement)
-            .asSequence()
-            .mapNotNull { processElement(it) }
-            .any { !it.generateAndWrite() }) true else true
+    roundEnv.getElementsAnnotatedWith(annotationElement)
+        .asSequence()
+        .mapNotNull { processElement(it) }
+        .forEach { it.generateAndWrite() }
+
+    return true
   }
 
   private fun processElement(element: Element): Adapter? {
@@ -211,7 +213,7 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
         element)
   }
 
-  private fun Adapter.generateAndWrite(): Boolean {
+  private fun Adapter.generateAndWrite() {
     val adapterName = "${name}JsonAdapter"
     val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
     val fileBuilder = FileSpec.builder(packageName, adapterName)
@@ -219,7 +221,6 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
     fileBuilder
         .build()
         .writeTo(outputDir)
-    return true
   }
 
   private fun mavenGeneratedDir(adapterName: String): File {
