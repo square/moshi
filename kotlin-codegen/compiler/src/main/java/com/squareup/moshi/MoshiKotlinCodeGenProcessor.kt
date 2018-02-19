@@ -75,7 +75,6 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.tools.Diagnostic.Kind.ERROR
 
-
 /**
  * An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
  * This generates Kotlin code, and understands basic Kotlin language features like default values
