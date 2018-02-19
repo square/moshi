@@ -349,7 +349,6 @@ private fun TypeName.makeType(
     is TypeVariableName -> {
       CodeBlock.of("%N[%L]", typesArray, genericTypeNames.indexOfFirst { it == this })
     }
-  // Shouldn't happen
     else -> throw IllegalArgumentException("Unrepresentable type: " + this)
   }
 }
