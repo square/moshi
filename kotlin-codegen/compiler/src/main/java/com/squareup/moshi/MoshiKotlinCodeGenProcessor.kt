@@ -523,10 +523,6 @@ private data class Adapter(
             .addModifiers(OVERRIDE)
             .addParameter(reader)
             .returns(originalTypeName.asNullable())
-            .beginControlFlow("if (%N.peek() == %T.NULL)", reader,
-                JsonReader.Token.NULL.declaringClass.asTypeName())
-            .addStatement("%N.nextNull<%T>()", reader, ANY)
-            .endControlFlow()
             .apply {
               localProperties.values.forEach {
                 addCode("%L", it)
