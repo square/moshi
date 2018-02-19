@@ -405,7 +405,7 @@ private data class Adapter(
           val qualifierNames = prop.jsonQualifiers.joinToString("_") {
             it.annotationType.asElement().simpleName.toString()
           }
-          val propertyName = "${typeName.simplifiedName().allocate()}_Adapter".let {
+          val propertyName = "${typeName.simplifiedName().allocate()}".let {
             if (qualifierNames.isBlank()) {
               it
             } else {
