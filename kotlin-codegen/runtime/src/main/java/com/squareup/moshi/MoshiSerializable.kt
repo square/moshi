@@ -84,7 +84,7 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
     }
     try {
       val bindingClass = cls.classLoader
-          .loadClass(clsName + "_JsonAdapter")
+          .loadClass(clsName + "JsonAdapter")
       adapterCtor = try {
         // Try the moshi constructor
         @Suppress("UNCHECKED_CAST")

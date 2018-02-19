@@ -214,7 +214,7 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
   }
 
   private fun Adapter.generateAndWrite(): Boolean {
-    val adapterName = "${name}_JsonAdapter"
+    val adapterName = "${name}JsonAdapter"
     val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
     val fileBuilder = FileSpec.builder(packageName, adapterName)
     generate(adapterName, fileBuilder)
