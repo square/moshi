@@ -518,7 +518,7 @@ private data class Adapter(
         .addFunction(FunSpec.builder("fromJson")
             .addModifiers(OVERRIDE)
             .addParameter(reader)
-            .returns(originalTypeName.asNullable())
+            .returns(originalTypeName)
             .apply {
               localProperties.values.forEach {
                 addCode("%L", it.first)
