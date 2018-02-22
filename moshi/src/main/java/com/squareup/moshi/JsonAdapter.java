@@ -37,7 +37,12 @@ public abstract class JsonAdapter<T> {
   }
 
   @CheckReturnValue public final @Nullable T fromJson(String string) throws IOException {
-    return fromJson(new Buffer().writeUtf8(string));
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
+    T result = fromJson(reader);
+    if (!isLenient() && reader.peek() != JsonReader.Token.END_DOCUMENT) {
+      throw new JsonDataException("JSON document was not fully consumed.");
+    }
+    return result;
   }
 
   public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
@@ -109,6 +114,9 @@ public abstract class JsonAdapter<T> {
           writer.setSerializeNulls(serializeNulls);
         }
       }
+      @Override boolean isLenient() {
+        return delegate.isLenient();
+      }
       @Override public String toString() {
         return delegate + ".serializeNulls()";
       }
@@ -135,6 +143,9 @@ public abstract class JsonAdapter<T> {
         } else {
           delegate.toJson(writer, value);
         }
+      }
+      @Override boolean isLenient() {
+        return delegate.isLenient();
       }
       @Override public String toString() {
         return delegate + ".nullSafe()";
@@ -164,6 +175,9 @@ public abstract class JsonAdapter<T> {
           writer.setLenient(lenient);
         }
       }
+      @Override boolean isLenient() {
+        return true;
+      }
       @Override public String toString() {
         return delegate + ".lenient()";
       }
@@ -190,6 +204,9 @@ public abstract class JsonAdapter<T> {
       }
       @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
         delegate.toJson(writer, value);
+      }
+      @Override boolean isLenient() {
+        return delegate.isLenient();
       }
       @Override public String toString() {
         return delegate + ".failOnUnknown()";
@@ -223,10 +240,17 @@ public abstract class JsonAdapter<T> {
           writer.setIndent(originalIndent);
         }
       }
+      @Override boolean isLenient() {
+        return delegate.isLenient();
+      }
       @Override public String toString() {
         return delegate + ".indent(\"" + indent + "\")";
       }
     };
+  }
+
+  boolean isLenient() {
+    return false;
   }
 
   public interface Factory {
