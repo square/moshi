@@ -360,7 +360,7 @@ public final class Types {
    * Returns a two element array containing this map's key and value types in positions 0 and 1
    * respectively.
    */
-  static Type[] mapKeyAndValueTypes(Type context, Class<?> contextRawType) {
+  public static Type[] mapKeyAndValueTypes(Type context, Class<?> contextRawType) {
     // Work around a problem with the declaration of java.util.Properties. That class should extend
     // Hashtable<String, String>, but it's declared to extend Hashtable<Object, Object>.
     if (context == Properties.class) return new Type[] { String.class, String.class };
