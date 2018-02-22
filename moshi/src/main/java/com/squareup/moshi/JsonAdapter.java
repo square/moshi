@@ -30,6 +30,16 @@ import okio.BufferedSource;
  * Converts Java values to JSON, and JSON values to Java.
  */
 public abstract class JsonAdapter<T> {
+  final boolean lenient;
+
+  public JsonAdapter() {
+    lenient = false;
+  }
+
+  private JsonAdapter(boolean lenient) {
+    this.lenient = lenient;
+  }
+
   @CheckReturnValue public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
 
   @CheckReturnValue public final @Nullable T fromJson(BufferedSource source) throws IOException {
@@ -37,7 +47,12 @@ public abstract class JsonAdapter<T> {
   }
 
   @CheckReturnValue public final @Nullable T fromJson(String string) throws IOException {
-    return fromJson(new Buffer().writeUtf8(string));
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
+    T result = fromJson(reader);
+    if (!lenient && reader.peek() != JsonReader.Token.END_DOCUMENT) {
+      throw new JsonDataException("JSON document was not fully consumed.");
+    }
+    return result;
   }
 
   public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
@@ -96,7 +111,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue public final JsonAdapter<T> serializeNulls() {
     final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
+    return new JsonAdapter<T>(delegate.lenient) {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);
       }
@@ -121,7 +136,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue public final JsonAdapter<T> nullSafe() {
     final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
+    return new JsonAdapter<T>(delegate.lenient) {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
         if (reader.peek() == JsonReader.Token.NULL) {
           return reader.nextNull();
@@ -145,7 +160,7 @@ public abstract class JsonAdapter<T> {
   /** Returns a JSON adapter equal to this, but is lenient when reading and writing. */
   @CheckReturnValue public final JsonAdapter<T> lenient() {
     final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
+    return new JsonAdapter<T>(true) {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean lenient = reader.isLenient();
         reader.setLenient(true);
@@ -178,7 +193,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue public final JsonAdapter<T> failOnUnknown() {
     final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
+    return new JsonAdapter<T>(delegate.lenient) {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean skipForbidden = reader.failOnUnknown();
         reader.setFailOnUnknown(true);
@@ -210,7 +225,7 @@ public abstract class JsonAdapter<T> {
       throw new NullPointerException("indent == null");
     }
     final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
+    return new JsonAdapter<T>(delegate.lenient) {
       @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);
       }

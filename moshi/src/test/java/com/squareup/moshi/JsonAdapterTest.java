@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -181,5 +182,68 @@ public final class JsonAdapterTest {
     JsonWriter writer = factory.newWriter();
     serializeNulls.toJson(writer, Collections.<String, String>singletonMap("a", null));
     assertThat(factory.json()).isEqualTo("{\"a\":null}");
+  }
+
+  @Test public void stringDocumentMustBeFullyConsumed() throws IOException {
+    JsonAdapter<String> brokenAdapter = new JsonAdapter<String>() {
+      @Override public String fromJson(JsonReader reader) throws IOException {
+        return "Forgot to call reader.nextString().";
+      }
+
+      @Override public void toJson(JsonWriter writer, @Nullable String value) throws IOException {
+        throw new AssertionError();
+      }
+    };
+    try {
+      brokenAdapter.fromJson("\"value\"");
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("JSON document was not fully consumed.");
+    }
+  }
+
+  @Test public void adapterFromJsonStringPeeksAtEnd() throws IOException {
+    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
+      @Override public Boolean fromJson(JsonReader reader) throws IOException {
+        return reader.nextBoolean();
+      }
+
+      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+        throw new AssertionError();
+      }
+    };
+    try {
+      adapter.fromJson("true true");
+      fail();
+    } catch (JsonEncodingException e) {
+      assertThat(e).hasMessage(
+          "Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+    }
+  }
+
+  @Test public void lenientAdapterFromJsonStringDoesNotPeekAtEnd() throws IOException {
+    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
+      @Override public Boolean fromJson(JsonReader reader) throws IOException {
+        return reader.nextBoolean();
+      }
+
+      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+        throw new AssertionError();
+      }
+    }.lenient();
+    assertThat(adapter.fromJson("true true")).isEqualTo(true);
+  }
+
+  @Test public void adaptersDelegateLeniency() throws IOException {
+    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
+      @Override public Boolean fromJson(JsonReader reader) throws IOException {
+        return reader.nextBoolean();
+      }
+
+      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+        throw new AssertionError();
+      }
+    }.lenient().nullSafe();
+    assertThat(adapter.fromJson("true true")).isEqualTo(true);
   }
 }
