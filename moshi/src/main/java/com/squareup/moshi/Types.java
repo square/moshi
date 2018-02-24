@@ -503,10 +503,17 @@ public final class Types {
 
     ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type... typeArguments) {
       // Require an owner type if the raw type needs it.
-      if (rawType instanceof Class<?>
-          && (ownerType == null) != (((Class<?>) rawType).getEnclosingClass() == null)) {
-        throw new IllegalArgumentException(
-            "unexpected owner type for " + rawType + ": " + ownerType);
+      if (rawType instanceof Class<?>) {
+        Class<?> enclosingClass = ((Class<?>) rawType).getEnclosingClass();
+        if (ownerType != null) {
+          if (enclosingClass == null || Types.getRawType(ownerType) != enclosingClass) {
+            throw new IllegalArgumentException(
+                "unexpected owner type for " + rawType + ": " + ownerType);
+          }
+        } else if (enclosingClass != null) {
+          throw new IllegalArgumentException(
+              "unexpected owner type for " + rawType + ": null");
+        }
       }
 
       this.ownerType = ownerType == null ? null : canonicalize(ownerType);

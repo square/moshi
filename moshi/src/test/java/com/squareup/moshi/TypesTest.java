@@ -100,6 +100,15 @@ public final class TypesTest {
     }
   }
 
+  @Test public void parameterizedTypeWithIncorrectOwnerProvided() throws Exception {
+    try {
+      Types.newParameterizedTypeWithOwner(A.class, D.class, B.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unexpected owner type for " + D.class + ": " + A.class);
+    }
+  }
+
   @Test public void arrayOf() {
     assertThat(Types.getRawType(Types.arrayOf(int.class))).isEqualTo(int[].class);
     assertThat(Types.getRawType(Types.arrayOf(List.class))).isEqualTo(List[].class);
@@ -151,6 +160,9 @@ public final class TypesTest {
   }
 
   private static final class C {
+  }
+
+  private static final class D<T> {
   }
 
   /**
