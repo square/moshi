@@ -81,7 +81,7 @@ public final class Moshi {
     for (Class<? extends Annotation> annotationType : annotationTypes) {
       annotations.add(Types.createJsonQualifierImplementation(annotationType));
     }
-    return adapter(type, annotations);
+    return adapter(type, Collections.unmodifiableSet(annotations));
   }
 
   @CheckReturnValue
