@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi
 
-import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -37,18 +36,15 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
 
     val clsName = rawType.name.replace("$", "_")
     val constructor = try {
+      @Suppress("UNCHECKED_CAST")
       val bindingClass = rawType.classLoader
-          .loadClass(clsName + "JsonAdapter")
-      try {
-        // Try the moshi constructor
-        @Suppress("UNCHECKED_CAST")
-        bindingClass.getDeclaredConstructor(
-            Moshi::class.java) as Constructor<out JsonAdapter<*>>
-      } catch (e: NoSuchMethodException) {
-        // Try the moshi + type constructor
-        @Suppress("UNCHECKED_CAST")
-        bindingClass.getDeclaredConstructor(Moshi::class.java,
-            Array<Type>::class.java) as Constructor<out JsonAdapter<*>>
+          .loadClass(clsName + "JsonAdapter") as Class<out JsonAdapter<*>>
+      if (type is ParameterizedType) {
+        // This is generic, use the two param moshi + type constructor
+        bindingClass.getDeclaredConstructor(Moshi::class.java, Array<Type>::class.java)
+      } else {
+        // The standard single param moshi constructor
+        bindingClass.getDeclaredConstructor(Moshi::class.java)
       }
     } catch (e: ClassNotFoundException) {
       throw RuntimeException("Unable to find generated Moshi adapter class for " + clsName, e)
