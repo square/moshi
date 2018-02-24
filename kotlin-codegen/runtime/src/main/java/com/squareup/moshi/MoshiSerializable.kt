@@ -42,12 +42,12 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       try {
         // Try the moshi constructor
         @Suppress("UNCHECKED_CAST")
-        bindingClass.getConstructor(
+        bindingClass.getDeclaredConstructor(
             Moshi::class.java) as Constructor<out JsonAdapter<*>>
       } catch (e: NoSuchMethodException) {
         // Try the moshi + type constructor
         @Suppress("UNCHECKED_CAST")
-        bindingClass.getConstructor(Moshi::class.java,
+        bindingClass.getDeclaredConstructor(Moshi::class.java,
             Array<Type>::class.java) as Constructor<out JsonAdapter<*>>
       }
     } catch (e: ClassNotFoundException) {
