@@ -74,8 +74,7 @@ public final class Moshi {
   @CheckReturnValue
   public <T> JsonAdapter<T> adapter(Type type, Class<? extends Annotation>... annotationTypes) {
     if (annotationTypes.length == 1) {
-      return adapter(type,
-          Collections.singleton(Types.createJsonQualifierImplementation(annotationTypes[0])));
+      return adapter(type, annotationTypes[0]);
     }
     Set<Annotation> annotations = new LinkedHashSet<>(annotationTypes.length);
     for (Class<? extends Annotation> annotationType : annotationTypes) {
