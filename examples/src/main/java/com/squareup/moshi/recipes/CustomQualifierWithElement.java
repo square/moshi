@@ -46,7 +46,8 @@ final class CustomQualifierWithElement {
 
   public static final class DefaultReplacesNullJsonAdapter extends JsonAdapter<Object> {
     final JsonAdapter<Object> delegate;
-    final Object defaultIfNull;
+    final String defaultJson;
+    @Nullable volatile Object defaultIfNull; // Lazily computed.
 
     public static final Factory FACTORY = new Factory() {
       @Nullable @Override
@@ -69,39 +70,46 @@ final class CustomQualifierWithElement {
           return null;
         }
         JsonAdapter<Object> delegate = moshi.adapter(type, delegateAnnotations);
-        Object defaultIfNull;
-        try {
-          defaultIfNull = delegate.fromJson(defaultJson);
-        } catch (IOException e) {
-          throw new IllegalArgumentException("Malformed default JSON " + defaultJson, e);
-        }
-        if (defaultIfNull == null) {
-          throw new IllegalArgumentException(
-              "Default JSON should not deserialize to null: " + defaultJson);
-        }
-        return new DefaultReplacesNullJsonAdapter(delegate, defaultIfNull);
+        return new DefaultReplacesNullJsonAdapter(delegate, defaultJson);
       }
     };
 
-    DefaultReplacesNullJsonAdapter(JsonAdapter<Object> delegate, Object defaultIfNull) {
+    DefaultReplacesNullJsonAdapter(JsonAdapter<Object> delegate, String defaultJson) {
       this.delegate = delegate;
-      this.defaultIfNull = defaultIfNull;
+      this.defaultJson = defaultJson;
     }
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
       Object result = delegate.fromJson(reader);
       if (result == null) {
-        result = defaultIfNull;
+        result = defaultIfNull();
       }
       return result;
     }
 
     @Override public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
-      if (defaultIfNull.equals(value)) {
+      if (defaultIfNull().equals(value)) {
         delegate.toJson(writer, null);
       } else {
         delegate.toJson(writer, value);
       }
+    }
+
+    private Object defaultIfNull() {
+      Object defaultIfNull = this.defaultIfNull;
+      if (defaultIfNull == null) {
+        try {
+          defaultIfNull = delegate.fromJson(defaultJson);
+        } catch (IOException e) {
+          throw new IllegalArgumentException("Malformed default JSON: " + defaultJson, e);
+        }
+        if (defaultIfNull == null) {
+          throw new IllegalArgumentException(
+              "Default JSON should not deserialize to null: " + defaultJson);
+        }
+      }
+      this.defaultIfNull = defaultIfNull;
+      return defaultIfNull;
     }
   }
 
