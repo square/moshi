@@ -133,7 +133,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required value b missing at $")
+      assertThat(expected).hasMessage("Required value 'b' missing at $")
     }
   }
 
@@ -147,7 +147,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value a was null at \$")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
     }
   }
 
@@ -161,7 +161,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value a was null at \$")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
     }
   }
 
@@ -177,7 +177,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for a at $.a")
+      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
     }
   }
 
@@ -221,7 +221,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4,"b":null,"b":6}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for b at $.b")
+      assertThat(expected).hasMessage("Multiple values for 'b' at $.b")
     }
   }
 
