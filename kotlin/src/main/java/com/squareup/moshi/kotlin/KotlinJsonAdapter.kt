@@ -74,7 +74,7 @@ internal class KotlinJsonAdapter<T>(
 
       if (values[index] !== ABSENT_VALUE) {
         throw JsonDataException(
-            "Multiple values for ${constructor.parameters[index].name} at ${reader.path}")
+            "Multiple values for '${constructor.parameters[index].name}' at ${reader.path}")
       }
 
       values[index] = binding.adapter.fromJson(reader)
@@ -86,11 +86,11 @@ internal class KotlinJsonAdapter<T>(
       if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
         if (!constructor.parameters[i].type.isMarkedNullable) {
           throw JsonDataException(
-              "Required value ${constructor.parameters[i].name} missing at ${reader.path}")
+              "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
         }
         values[i] = null // Replace absent with null.
       } else if (values[i] == null && !constructor.parameters[i].type.isMarkedNullable) {
-        throw JsonDataException("Non-null value ${constructor.parameters[i].name} " +
+        throw JsonDataException("Non-null value '${constructor.parameters[i].name}' " +
             "was null at ${reader.path}")
       }
     }
@@ -103,7 +103,7 @@ internal class KotlinJsonAdapter<T>(
       val binding = bindings[i]!!
       val value = values[i]
       if (value == null && !binding.property.returnType.isMarkedNullable) {
-        throw JsonDataException("Non-null value ${binding.property.name} " +
+        throw JsonDataException("Non-null value '${binding.property.name}' " +
             "was null at ${reader.path}")
       }
       binding.set(result, value)
