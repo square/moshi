@@ -66,6 +66,9 @@ public final class Moshi {
 
   @CheckReturnValue
   public <T> JsonAdapter<T> adapter(Type type, Class<? extends Annotation> annotationType) {
+    if (annotationType == null) {
+      throw new NullPointerException("annotationType == null");
+    }
     return adapter(type,
         Collections.singleton(Types.createJsonQualifierImplementation(annotationType)));
   }
@@ -73,6 +76,10 @@ public final class Moshi {
   @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
+    if (annotations == null) {
+      throw new NullPointerException("annotations == null");
+    }
+
     type = Types.canonicalize(type);
 
     // If there's an equivalent adapter in the cache, we're done!

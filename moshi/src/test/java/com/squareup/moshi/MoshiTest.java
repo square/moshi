@@ -724,8 +724,21 @@ public final class MoshiTest {
         .isEqualTo("{\"shout\":\"WHAT'S UP\",\"speak\":\"Yo dog\"}");
   }
 
-  @Uppercase
-  static String uppercaseString;
+  @Test public void adapterLookupDisallowsNullAnnotations() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(String.class, (Class<? extends Annotation>) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("annotationType == null");
+    }
+    try {
+      moshi.adapter(String.class, (Set<? extends Annotation>) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("annotations == null");
+    }
+  }
 
   @Test public void nextJsonAdapterDisallowsNullAnnotations() throws Exception {
     JsonAdapter.Factory badFactory = new JsonAdapter.Factory() {
@@ -743,6 +756,9 @@ public final class MoshiTest {
       assertThat(expected).hasMessage("annotations == null");
     }
   }
+
+  @Uppercase
+  static String uppercaseString;
 
   @Test public void delegatingJsonAdapterFactory() throws Exception {
     Moshi moshi = new Moshi.Builder()
