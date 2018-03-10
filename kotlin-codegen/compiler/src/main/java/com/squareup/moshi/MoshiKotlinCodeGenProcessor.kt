@@ -168,6 +168,7 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
               hasDefault = valueParameter.declaresDefaultValue,
               nullable = nullable,
               typeName = valueParameter.type.asTypeName(nameResolver, classProto::getTypeParameter),
+              unaliasedName = valueParameter.type.asTypeName(nameResolver, classProto::getTypeParameter, true),
               jsonQualifiers = jsonQualifiers)
         }
 
@@ -359,6 +360,7 @@ private data class Property(
     val hasDefault: Boolean,
     val nullable: Boolean,
     val typeName: TypeName,
+    val unaliasedName: TypeName,
     val jsonQualifiers: Set<AnnotationMirror>) {
 
   val isRequired = !nullable && !hasDefault
@@ -397,9 +399,9 @@ private data class Adapter(
 
     // Create fields
     val adapterProperties = propertyList
-        .distinctBy { it.typeName to it.jsonQualifiers }
+        .distinctBy { it.unaliasedName to it.jsonQualifiers }
         .associate { prop ->
-          val typeName = prop.typeName
+          val typeName = prop.unaliasedName
           val qualifierNames = prop.jsonQualifiers.joinToString("") {
             "at${it.annotationType.asElement().simpleName.toString().capitalize()}"
           }
@@ -538,7 +540,7 @@ private data class Adapter(
                       beginControlFlow("%L -> ", index)
                       addStatement("%N = %N.fromJson(%N)",
                           spec,
-                          adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
+                          adapterProperties[prop.unaliasedName to prop.jsonQualifiers]!!,
                           reader)
                       addStatement("%N = true", setterSpec)
                       endControlFlow()
@@ -546,7 +548,7 @@ private data class Adapter(
                       addStatement("%L -> %N = %N.fromJson(%N)",
                           index,
                           spec,
-                          adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
+                          adapterProperties[prop.unaliasedName to prop.jsonQualifiers]!!,
                           reader)
                     }
                   }
@@ -618,7 +620,7 @@ private data class Adapter(
                     writer,
                     prop.serializedName)
                 addStatement("%N.toJson(%N, %N.%L)",
-                    adapterProperties[prop.typeName to prop.jsonQualifiers]!!,
+                    adapterProperties[prop.unaliasedName to prop.jsonQualifiers]!!,
                     writer,
                     value,
                     prop.name)
@@ -666,10 +668,11 @@ private data class Adapter(
 
 private fun ProtoBuf.TypeParameter.asTypeName(
     nameResolver: NameResolver,
-    getTypeParameter: (index: Int) -> ProtoBuf.TypeParameter): TypeName {
+    getTypeParameter: (index: Int) -> ProtoBuf.TypeParameter,
+    resolveAliases: Boolean = false): TypeName {
   return TypeVariableName(
       name = nameResolver.getString(name),
-      bounds = *(upperBoundList.map { it.asTypeName(nameResolver, getTypeParameter) }
+      bounds = *(upperBoundList.map { it.asTypeName(nameResolver, getTypeParameter, resolveAliases) }
           .toTypedArray()),
       variance = variance.asKModifier()
   )
@@ -694,7 +697,8 @@ private fun ProtoBuf.TypeParameter.Variance.asKModifier(): KModifier? {
  */
 private fun ProtoBuf.Type.asTypeName(
     nameResolver: NameResolver,
-    getTypeParameter: (index: Int) -> ProtoBuf.TypeParameter
+    getTypeParameter: (index: Int) -> ProtoBuf.TypeParameter,
+    resolveAliases: Boolean = false
 ): TypeName {
 
   val argumentList = when {
@@ -704,16 +708,16 @@ private fun ProtoBuf.Type.asTypeName(
 
   if (hasFlexibleUpperBound()) {
     return WildcardTypeName.subtypeOf(
-        flexibleUpperBound.asTypeName(nameResolver, getTypeParameter))
+        flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, resolveAliases))
   } else if (hasOuterType()) {
-    return WildcardTypeName.supertypeOf(outerType.asTypeName(nameResolver, getTypeParameter))
+    return WildcardTypeName.supertypeOf(outerType.asTypeName(nameResolver, getTypeParameter, resolveAliases))
   }
 
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
-        .asTypeName(nameResolver, getTypeParameter)
+        .asTypeName(nameResolver, getTypeParameter, resolveAliases)
     hasTypeParameterName() -> typeParameterName
-    hasAbbreviatedType() -> abbreviatedType.typeAliasName
+    hasAbbreviatedType() && !resolveAliases -> abbreviatedType.typeAliasName
     else -> className
   }
 
@@ -726,7 +730,7 @@ private fun ProtoBuf.Type.asTypeName(
         it.projection
       } else null
       if (it.hasType()) {
-        it.type.asTypeName(nameResolver, getTypeParameter)
+        it.type.asTypeName(nameResolver, getTypeParameter, resolveAliases)
             .let { typeName ->
               projection?.let {
                 when (it) {

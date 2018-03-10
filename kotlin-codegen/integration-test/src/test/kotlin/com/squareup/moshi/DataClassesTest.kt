@@ -249,6 +249,8 @@ data class NullableTypeParams<T>(
     val nullableT: T?
 )
 
+typealias TypeAliasName = String
+
 /**
  * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
  * nullability, primitive arrays, and some wacky generics.
@@ -273,5 +275,6 @@ data class SmokeTestType(
     val favoriteThreeNumbers: IntArray,
     val favoriteArrayValues: Array<String>,
     val favoriteNullableArrayValues: Array<String?>,
-    val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null
+    val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
+    val aliasedName: TypeAliasName = "Woah"
 )
