@@ -47,9 +47,9 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
         bindingClass.getDeclaredConstructor(Moshi::class.java)
       }
     } catch (e: ClassNotFoundException) {
-      throw RuntimeException("Unable to find generated Moshi adapter class for " + clsName, e)
+      throw RuntimeException("Unable to find generated Moshi adapter class for $clsName", e)
     } catch (e: NoSuchMethodException) {
-      throw RuntimeException("Unable to find generated Moshi adapter constructor for " + clsName, e)
+      throw RuntimeException("Unable to find generated Moshi adapter constructor for $clsName", e)
     }
 
     try {
@@ -59,9 +59,9 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
         else -> throw IllegalStateException("Unable to handle type $type")
       }
     } catch (e: IllegalAccessException) {
-      throw RuntimeException("Unable to invoke " + constructor, e)
+      throw RuntimeException("Unable to invoke $constructor", e)
     } catch (e: InstantiationException) {
-      throw RuntimeException("Unable to invoke " + constructor, e)
+      throw RuntimeException("Unable to invoke $constructor", e)
     } catch (e: InvocationTargetException) {
       val cause = e.cause
       if (cause is RuntimeException) {
@@ -71,7 +71,7 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
         throw cause
       }
       throw RuntimeException(
-          "Could not create generated JsonAdapter instance for type " + rawType, cause)
+          "Could not create generated JsonAdapter instance for type $rawType", cause)
     }
   }
 }
