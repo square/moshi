@@ -22,12 +22,15 @@
     <module>examples</module>
     <module>adapters</module>
     <module>kotlin</module>
+    <module>kotlin-codegen/compiler</module>
+    <module>kotlin-codegen/integration-test</module>
+    <module>kotlin-codegen/runtime</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
-    <kotlin.version>1.1.60</kotlin.version>
+    <kotlin.version>1.2.21</kotlin.version>
 
     <!-- Dependencies -->
     <okio.version>1.13.0</okio.version>

@@ -7,9 +7,10 @@
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
     <version>1.6.0-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
-  <artifactId>moshi-kotlin</artifactId>
+  <artifactId>moshi-kotlin-codegen-runtime</artifactId>
 
   <dependencies>
     <dependency>
@@ -30,15 +31,6 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-reflect</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-test</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -84,17 +76,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>com.squareup.moshi.kotlin</Automatic-Module-Name>
-            </manifestEntries>
-          </archive>
-        </configuration>
       </plugin>
     </plugins>
   </build>
