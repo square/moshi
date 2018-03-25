@@ -26,7 +26,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class KotlinCodeGenTest {
   @Ignore @Test fun constructorParameters() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ConstructorParameters::class.java)
 
     val encoded = ConstructorParameters(3, 5)
@@ -41,7 +41,7 @@ class KotlinCodeGenTest {
 
   @Ignore @Test fun properties() {
 
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(Properties::class.java)
 
     val encoded = Properties()
@@ -60,7 +60,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun constructorParametersAndProperties() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ConstructorParametersAndProperties::class.java)
 
     val encoded = ConstructorParametersAndProperties(3)
@@ -77,7 +77,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun immutableConstructorParameters() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ImmutableConstructorParameters::class.java)
 
     val encoded = ImmutableConstructorParameters(3, 5)
@@ -91,7 +91,7 @@ class KotlinCodeGenTest {
   class ImmutableConstructorParameters(val a: Int, val b: Int)
 
   @Ignore @Test fun immutableProperties() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ImmutableProperties::class.java)
 
     val encoded = ImmutableProperties(3, 5)
@@ -108,7 +108,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun constructorDefaults() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ConstructorDefaultValues::class.java)
 
     val encoded = ConstructorDefaultValues(3, 5)
@@ -122,7 +122,7 @@ class KotlinCodeGenTest {
   class ConstructorDefaultValues(var a: Int = -1, var b: Int = -2)
 
   @Ignore @Test fun requiredValueAbsent() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(RequiredValueAbsent::class.java)
 
     try {
@@ -136,7 +136,7 @@ class KotlinCodeGenTest {
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
   @Ignore @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
 
     try {
@@ -150,7 +150,7 @@ class KotlinCodeGenTest {
   class HasNonNullConstructorParameter(val a: String)
 
   @Ignore @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(HasNonNullProperty::class.java)
 
     try {
@@ -166,7 +166,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun duplicatedValue() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
 
     try {
@@ -180,7 +180,7 @@ class KotlinCodeGenTest {
   class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
   @Ignore @Test fun explicitNull() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ExplicitNull::class.java)
 
     val encoded = ExplicitNull(null, 5)
@@ -195,7 +195,7 @@ class KotlinCodeGenTest {
   class ExplicitNull(var a: Int?, var b: Int?)
 
   @Ignore @Test fun absentNull() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(AbsentNull::class.java)
 
     val encoded = AbsentNull(null, 5)
@@ -210,7 +210,7 @@ class KotlinCodeGenTest {
   class AbsentNull(var a: Int?, var b: Int?)
 
   @Ignore @Test fun repeatedValue() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
 
     try {
@@ -225,7 +225,6 @@ class KotlinCodeGenTest {
 
   @Ignore @Test fun constructorParameterWithQualifier() {
     val moshi = Moshi.Builder()
-        .add(MoshiSerializableFactory())
         .add(UppercaseJsonAdapter())
         .build()
     val jsonAdapter = moshi.adapter(ConstructorParameterWithQualifier::class.java)
@@ -242,7 +241,6 @@ class KotlinCodeGenTest {
 
   @Ignore @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()
-        .add(MoshiSerializableFactory())
         .add(UppercaseJsonAdapter())
         .build()
     val jsonAdapter = moshi.adapter(PropertyWithQualifier::class.java)
@@ -263,7 +261,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun constructorParameterWithJsonName() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ConstructorParameterWithJsonName::class.java)
 
     val encoded = ConstructorParameterWithJsonName(3, 5)
@@ -277,7 +275,7 @@ class KotlinCodeGenTest {
   class ConstructorParameterWithJsonName(@Json(name = "key a") var a: Int, var b: Int)
 
   @Ignore @Test fun propertyWithJsonName() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(PropertyWithJsonName::class.java)
 
     val encoded = PropertyWithJsonName()
@@ -296,7 +294,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(TransientConstructorParameter::class.java)
 
     val encoded = TransientConstructorParameter(3, 5)
@@ -310,7 +308,7 @@ class KotlinCodeGenTest {
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
   @Ignore @Test fun requiredTransientConstructorParameterFails() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(RequiredTransientConstructorParameter::class.java)
       fail()
@@ -324,7 +322,7 @@ class KotlinCodeGenTest {
   class RequiredTransientConstructorParameter(@Transient var a: Int)
 
   @Ignore @Test fun transientProperty() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(TransientProperty::class.java)
 
     val encoded = TransientProperty()
@@ -343,7 +341,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun supertypeConstructorParameters() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
 
     val encoded = SubtypeConstructorParameters(3, 5)
@@ -359,7 +357,7 @@ class KotlinCodeGenTest {
   class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)
 
   @Ignore @Test fun supertypeProperties() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(SubtypeProperties::class.java)
 
     val encoded = SubtypeProperties()
@@ -381,7 +379,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun extendsPlatformClassWithPrivateField() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
 
     val encoded = ExtendsPlatformClassWithPrivateField(3)
@@ -395,7 +393,7 @@ class KotlinCodeGenTest {
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
   @Ignore @Test fun extendsPlatformClassWithProtectedField() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithProtectedField::class.java)
 
     val encoded = ExtendsPlatformClassWithProtectedField(3)
@@ -413,7 +411,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun platformTypeThrows() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(Triple::class.java)
       fail()
@@ -424,7 +422,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun privateConstructorParameters() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(PrivateConstructorParameters::class.java)
 
     val encoded = PrivateConstructorParameters(3, 5)
@@ -441,7 +439,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun privateConstructor() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(PrivateConstructor::class.java)
 
     val encoded = PrivateConstructor.newInstance(3, 5)
@@ -461,7 +459,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun privateProperties() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(PrivateProperties::class.java)
 
     val encoded = PrivateProperties()
@@ -492,7 +490,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun unsettablePropertyIgnored() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
 
     val encoded = UnsettableProperty()
@@ -510,7 +508,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun getterOnlyNoBackingField() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(GetterOnly::class.java)
 
     val encoded = GetterOnly(3, 5)
@@ -528,7 +526,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun getterAndSetterNoBackingField() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
 
     val encoded = GetterAndSetter(3, 5)
@@ -556,7 +554,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun nonPropertyConstructorParameter() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(NonPropertyConstructorParameter::class.java)
       fail()
@@ -570,7 +568,7 @@ class KotlinCodeGenTest {
   class NonPropertyConstructorParameter(a: Int, val b: Int)
 
   @Ignore @Test fun kotlinEnumsAreNotCovered() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val adapter = moshi.adapter(UsingEnum::class.java)
 
     assertThat(adapter.fromJson("""{"e": "A"}""")).isEqualTo(UsingEnum(KotlinEnum.A))
@@ -583,7 +581,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun interfacesNotSupported() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(Interface::class.java)
       fail()
@@ -596,7 +594,7 @@ class KotlinCodeGenTest {
   interface Interface
 
   @Ignore @Test fun abstractClassesNotSupported() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(AbstractClass::class.java)
       fail()
@@ -609,7 +607,7 @@ class KotlinCodeGenTest {
   abstract class AbstractClass(val a: Int)
 
   @Ignore @Test fun innerClassesNotSupported() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(InnerClass::class.java)
       fail()
@@ -623,7 +621,7 @@ class KotlinCodeGenTest {
 
   @Ignore @Test fun localClassesNotSupported() {
     class LocalClass(val a: Int)
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(LocalClass::class.java)
       fail()
@@ -634,7 +632,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun objectDeclarationsNotSupported() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(ObjectDeclaration.javaClass)
       fail()
@@ -652,7 +650,7 @@ class KotlinCodeGenTest {
     val expression = object : Any() {
       var a = 5
     }
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     try {
       moshi.adapter(expression.javaClass)
       fail()
@@ -663,7 +661,7 @@ class KotlinCodeGenTest {
   }
 
   @Ignore @Test fun manyProperties32() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ManyProperties32::class.java)
 
     val encoded = ManyProperties32(
@@ -703,7 +701,7 @@ class KotlinCodeGenTest {
       var v31: Int, var v32: Int)
 
   @Ignore @Test fun manyProperties33() {
-    val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+    val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(ManyProperties33::class.java)
 
     val encoded = ManyProperties33(
