@@ -50,6 +50,10 @@ class MoshiSerializableFactory : JsonAdapter.Factory {
       throw RuntimeException("Unable to find generated Moshi adapter class for $clsName", e)
     } catch (e: NoSuchMethodException) {
       throw RuntimeException("Unable to find generated Moshi adapter constructor for $clsName", e)
+    }.apply {
+      if (!isAccessible) {
+        isAccessible = true
+      }
     }
 
     try {
