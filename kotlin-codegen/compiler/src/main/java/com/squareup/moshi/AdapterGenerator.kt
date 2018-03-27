@@ -31,9 +31,9 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import org.jetbrains.kotlin.serialization.ProtoBuf
 import java.lang.reflect.Type
+import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
-import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
@@ -43,7 +43,7 @@ internal class AdapterGenerator(
   val isDataClass: Boolean,
   val hasCompanionObject: Boolean,
   val visibility: ProtoBuf.Visibility,
-  val elements: Elements,
+  val env: ProcessingEnvironment,
   val genericTypeNames: List<TypeVariableName>?
 ) {
   val nameAllocator = NameAllocator()
