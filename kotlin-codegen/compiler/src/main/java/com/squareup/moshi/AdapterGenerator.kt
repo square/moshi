@@ -15,7 +15,9 @@
  */
 package com.squareup.moshi
 
+import com.google.auto.common.GeneratedAnnotations.generatedAnnotation
 import com.squareup.kotlinpoet.ARRAY
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -30,8 +32,8 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import org.jetbrains.kotlin.serialization.ProtoBuf
 import java.lang.reflect.Type
+import javax.annotation.processing.ProcessingEnvironment
 import javax.lang.model.element.Element
-import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
@@ -41,7 +43,7 @@ internal class AdapterGenerator(
   val isDataClass: Boolean,
   val hasCompanionObject: Boolean,
   val visibility: ProtoBuf.Visibility,
-  val elements: Elements,
+  val env: ProcessingEnvironment,
   val genericTypeNames: List<TypeVariableName>?
 ) {
   val nameAllocator = NameAllocator()
@@ -99,6 +101,14 @@ internal class AdapterGenerator(
 
   private fun generateType(): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+
+    generatedAnnotation(env.elementUtils, env.sourceVersion).ifPresent {
+      result.addAnnotation(AnnotationSpec.builder(it.asClassName())
+          .addMember("value = [%S]", MoshiKotlinCodeGenProcessor::class.java.canonicalName)
+          .addMember("comments = %S", "https://github.com/square/moshi")
+          .build())
+    }
+
     result.superclass(jsonAdapterTypeName)
 
     genericTypeNames?.let {
