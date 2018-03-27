@@ -25,7 +25,7 @@ Download [the latest JAR][1] or grab via [Maven][2]:
 ```
 or [Gradle][2]:
 ```groovy
-compile 'com.squareup.moshi:moshi-adapters:latest.version'
+implementation 'com.squareup.moshi:moshi-adapters:latest.version'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
