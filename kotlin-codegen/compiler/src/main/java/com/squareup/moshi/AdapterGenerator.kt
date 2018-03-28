@@ -104,8 +104,8 @@ internal class AdapterGenerator(
 
     generatedAnnotation(env.elementUtils, env.sourceVersion).ifPresent {
       result.addAnnotation(AnnotationSpec.builder(it.asClassName())
-          .addMember("value = [%S]", MoshiKotlinCodeGenProcessor::class.java.canonicalName)
-          .addMember("comments = %S", "https://github.com/square/moshi")
+          .addMember("%S", MoshiKotlinCodeGenProcessor::class.java.canonicalName)
+          .addMember("%S", "https://github.com/square/moshi")
           .build())
     }
 
