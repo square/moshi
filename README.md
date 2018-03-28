@@ -498,7 +498,7 @@ Download [the latest JAR][dl] or depend via Maven:
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.moshi:moshi:1.5.0'
+implementation 'com.squareup.moshi:moshi:1.5.0'
 ```
 and for additional Kotlin support:
 ```xml
@@ -510,7 +510,7 @@ and for additional Kotlin support:
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup.moshi:moshi-kotlin:1.5.0'
+implementation 'com.squareup.moshi:moshi-kotlin:1.5.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
