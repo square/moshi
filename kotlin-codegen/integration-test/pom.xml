@@ -19,11 +19,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.squareup.moshi</groupId>
-      <artifactId>moshi-kotlin-codegen-runtime</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
     </dependency>
@@ -57,7 +52,6 @@
             <configuration>
               <sourceDirs>
                 <sourceDir>src/main/kotlin</sourceDir>
-                <sourceDir>src/main/java</sourceDir>
               </sourceDirs>
               <annotationProcessorPaths>
                 <annotationProcessorPath>

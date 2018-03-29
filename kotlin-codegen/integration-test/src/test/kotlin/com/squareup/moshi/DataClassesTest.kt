@@ -22,7 +22,7 @@ import org.junit.Test
 
 class DataClassesTest {
 
-  private val moshi = Moshi.Builder().add(MoshiSerializableFactory()).build()
+  private val moshi = Moshi.Builder().build()
 
   @Test
   fun jsonAnnotation() {
@@ -42,7 +42,7 @@ class DataClassesTest {
     assertThat(adapter.toJson(JsonAnnotation("baz"))).isEqualTo(expectedJson)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class JsonAnnotation(@Json(name = "foo") val bar: String)
 
   @Test
@@ -79,7 +79,7 @@ class DataClassesTest {
     assertThat(adapter.toJson(instance2)).isEqualTo(json2)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class DefaultValues(val foo: String,
       val bar: String = "",
       val nullableBar: String? = null,
@@ -97,7 +97,7 @@ class DataClassesTest {
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class NullableArray(val data: Array<String?>)
 
   @Test
@@ -112,7 +112,7 @@ class DataClassesTest {
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class PrimitiveArray(val ints: IntArray)
 
   @Test
@@ -136,7 +136,7 @@ class DataClassesTest {
     }
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class NullabeTypes(
       val foo: String,
       val nullableString: String?
@@ -160,7 +160,7 @@ class DataClassesTest {
     assertThat(newCollections).isEqualTo(specialCollections)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class SpecialCollections(
       val mutableList: MutableList<String>,
       val mutableSet: MutableSet<String>,
@@ -194,7 +194,7 @@ class DataClassesTest {
     assertThat(newMutableProperties).isEqualTo(mutableProperties)
   }
 
-  @MoshiSerializable
+  @JsonClass(generateAdapter = true)
   data class MutableProperties(
       val immutableProperty: String,
       var mutableProperty: String,
@@ -238,10 +238,24 @@ class DataClassesTest {
     val nullSerializedNullableTypeParams = adapter.fromJson(nullSerializedJson)
     assertThat(nullSerializedNullableTypeParams).isEqualTo(nullableTypeParams)
   }
+
+  @Test
+  fun doNotGenerateAdapter() {
+    try {
+      StandardJsonAdapters.generatedAdapter(
+          moshi, DoNotGenerateAdapter::class.java, DoNotGenerateAdapter::class.java)
+      fail("found a generated adapter for a type that shouldn't have one")
+    } catch (e: RuntimeException) {
+      assertThat(e).hasCauseInstanceOf(ClassNotFoundException::class.java)
+    }
+  }
+
+  @JsonClass(generateAdapter = false)
+  data class DoNotGenerateAdapter(val foo: String)
 }
 
 // Has to be outside to avoid Types seeing an owning class
-@MoshiSerializable
+@JsonClass(generateAdapter = true)
 data class NullableTypeParams<T>(
     val nullableList: List<String?>,
     val nullableSet: Set<String?>,
@@ -255,7 +269,7 @@ typealias TypeAliasName = String
  * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
  * nullability, primitive arrays, and some wacky generics.
  */
-@MoshiSerializable
+@JsonClass(generateAdapter = true)
 data class SmokeTestType(
     @Json(name = "first_name") val firstName: String,
     @Json(name = "last_name") val lastName: String,

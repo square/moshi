@@ -50,23 +50,25 @@ import javax.tools.Diagnostic.Kind.ERROR
  * adapter will also be internal).
  *
  * If you define a companion object, a jsonAdapter() extension function will be generated onto it.
- * If you don't want this though, you can use the runtime [MoshiSerializable] factory implementation.
+ * If you don't want this though, you can use the runtime [JsonClass] factory implementation.
  */
 @AutoService(Processor::class)
-class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
+class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
 
-  private val annotationName = MoshiSerializable::class.java.canonicalName
+  private val annotation = JsonClass::class.java
 
-  override fun getSupportedAnnotationTypes() = setOf(annotationName)
+  override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
 
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-    val annotationElement = elementUtils.getTypeElement(annotationName)
-    roundEnv.getElementsAnnotatedWith(annotationElement)
-        .asSequence()
-        .mapNotNull { processElement(it) }
-        .forEach { it.generateAndWrite() }
+    for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
+      val jsonClass = type.getAnnotation(annotation)
+      if (jsonClass.generateAdapter) {
+        val adapterGenerator = processElement(type) ?: continue
+        adapterGenerator.generateAndWrite()
+      }
+    }
 
     return true
   }
@@ -178,7 +180,7 @@ class MoshiKotlinCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUti
 
   private fun errorMustBeDataClass(element: Element) {
     messager.printMessage(ERROR,
-        "@${MoshiSerializable::class.java.simpleName} can't be applied to $element: must be a Kotlin data class",
+        "@${JsonClass::class.java.simpleName} can't be applied to $element: must be a Kotlin data class",
         element)
   }
 
