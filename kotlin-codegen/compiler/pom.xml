@@ -26,18 +26,8 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.squareup.moshi</groupId>
-      <artifactId>moshi-kotlin-codegen-runtime</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>me.eugeniomarletti</groupId>
-      <artifactId>kotlin-metadata</artifactId>
-      <version>1.2.1</version>
     </dependency>
     <dependency>
       <groupId>com.google.auto</groupId>
@@ -63,6 +53,32 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!--
+      The Kotlin compiler must be near the end of the list because its .jar file includes an
+      obsolete version of Guava!
+    -->
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-compiler-embeddable</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-annotation-processing-embeddable</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>me.eugeniomarletti</groupId>
+      <artifactId>kotlin-metadata</artifactId>
+    </dependency>
+    <!--
+      Though we don't use compile-testing, including it is a convenient way to get tools.jar on the
+      classpath. This dependency is required by kapt3.
+    -->
+    <dependency>
+      <groupId>com.google.testing.compile</groupId>
+      <artifactId>compile-testing</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -128,6 +144,18 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.21.0</version>
+        <configuration>
+          <!--
+            Suppress the surefire classloader which prevents introspecting the classpath.
+            http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html
+          -->
+          <useManifestOnlyJar>false</useManifestOnlyJar>
+        </configuration>
       </plugin>
     </plugins>
   </build>

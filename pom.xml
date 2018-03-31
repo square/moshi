@@ -30,11 +30,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
     <kotlin.version>1.2.21</kotlin.version>
+    <kotlin-metadata.version>1.2.1</kotlin-metadata.version>
 
     <!-- Dependencies -->
     <okio.version>1.13.0</okio.version>
 
     <!-- Test Dependencies -->
+    <compile-testing.version>0.8</compile-testing.version>
     <junit.version>4.12</junit.version>
     <assertj.version>1.7.0</assertj.version>
   </properties>
@@ -96,6 +98,26 @@
         <artifactId>kotlin-test</artifactId>
         <version>${kotlin.version}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-compiler-embeddable</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-annotation-processing-embeddable</artifactId>
+        <version>${kotlin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>me.eugeniomarletti</groupId>
+        <artifactId>kotlin-metadata</artifactId>
+        <version>${kotlin-metadata.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.testing.compile</groupId>
+        <artifactId>compile-testing</artifactId>
+        <version>${compile-testing.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
