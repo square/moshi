@@ -168,7 +168,7 @@ internal class AdapterGenerator(
       if (property.differentiateAbsentFromNull) {
         result.beginControlFlow("%L -> ", index)
         result.addStatement("%N = %N.fromJson(%N)",
-            property.localName, property.delegateName, readerParam);
+            property.localName, property.delegateName, readerParam)
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
       } else {
