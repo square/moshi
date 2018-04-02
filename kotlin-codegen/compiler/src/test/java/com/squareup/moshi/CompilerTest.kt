@@ -35,13 +35,11 @@ class CompilerTest {
         |import com.squareup.moshi.JsonClass
         |
         |@JsonClass(generateAdapter = true)
-        |class ConstructorParameters(var a: Int, var b: Int)
+        |class PrivateConstructorParameter(private var a: Int)
         |""".trimMargin())
 
     val result = call.execute()
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
-    assertThat(result.systemErr).contains(
-        "@JsonClass can't be applied to ConstructorParameters: must be a Kotlin data class")
+    assertThat(result.systemErr).contains("property a is not visible")
   }
-
 }

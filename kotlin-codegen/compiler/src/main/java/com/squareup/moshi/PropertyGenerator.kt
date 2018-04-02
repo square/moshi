@@ -32,6 +32,7 @@ import javax.lang.model.element.AnnotationMirror
 internal class PropertyGenerator(
   val name: String,
   val serializedName: String,
+  val hasConstructorParameter: Boolean,
   val hasDefault: Boolean,
   val nullable: Boolean,
   val typeName: TypeName,
