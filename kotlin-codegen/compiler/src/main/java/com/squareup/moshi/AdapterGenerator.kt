@@ -35,20 +35,17 @@ import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
-  val fqClassName: String,
-  val packageName: String,
+  val className: ClassName,
   val propertyList: List<PropertyGenerator>,
   val originalElement: Element,
-  name: String = fqClassName.substringAfter(packageName)
-      .replace('.', '_')
-      .removePrefix("_"),
+  val isDataClass: Boolean,
   val hasCompanionObject: Boolean,
   val visibility: ProtoBuf.Visibility,
   val elements: Elements,
   val genericTypeNames: List<TypeVariableName>?
 ) {
   val nameAllocator = NameAllocator()
-  val adapterName = "${name}JsonAdapter"
+  val adapterName = "${className.simpleNames().joinToString(separator = "_")}JsonAdapter"
   val originalTypeName = originalElement.asType().asTypeName()
 
   val moshiParam = ParameterSpec.builder(
@@ -92,7 +89,7 @@ internal class AdapterGenerator(
       property.allocateNames(nameAllocator)
     }
 
-    val result = FileSpec.builder(packageName, adapterName)
+    val result = FileSpec.builder(className.packageName(), adapterName)
     if (hasCompanionObject) {
       result.addFunction(generateJsonAdapterFun())
     }
@@ -148,6 +145,8 @@ internal class AdapterGenerator(
   }
 
   private fun generateFromJsonFun(): FunSpec {
+    val resultName = nameAllocator.newName("result")
+
     val result = FunSpec.builder("fromJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(readerParam)
@@ -187,36 +186,72 @@ internal class AdapterGenerator(
     result.endControlFlow() // while
     result.addStatement("%N.endObject()", readerParam)
 
-    val propertiesWithoutDefaults = propertyList.filter { !it.hasDefault }
-    result.addCode("%[return %T(\n", originalTypeName)
-    propertiesWithoutDefaults.forEachIndexed { index, property ->
+    // Call the constructor providing only required parameters.
+    var hasOptionalParameters = false
+    result.addCode("%[var %N = %T(", resultName, originalTypeName)
+    var separator = "\n"
+    for (property in propertyList) {
+      if (!property.hasConstructorParameter) {
+        continue
+      }
+      if (property.hasDefault) {
+        hasOptionalParameters = true
+        continue
+      }
+      result.addCode(separator)
       result.addCode("%N = %N", property.name, property.localName)
       if (property.isRequired) {
         result.addCode(" ?: throw %T(\"Required property '%L' missing at \${%N.path}\")",
             JsonDataException::class, property.localName, readerParam)
       }
-      result.addCode(if (index + 1 < propertiesWithoutDefaults.size) ",\n" else "\n")
+      separator = ",\n"
     }
-    result.addCode("%])\n", originalTypeName)
+    result.addCode(")%]\n", originalTypeName)
 
-    val propertiesWithDefaults = propertyList.filter { it.hasDefault }
-    if (!propertiesWithDefaults.isEmpty()) {
-      result.addCode(".let {%>\n")
-      result.addCode("%[it.copy(\n")
-      propertiesWithDefaults.forEachIndexed { index, property ->
-        if (property.differentiateAbsentFromNull) {
-          result.addCode("%1N = if (%2N) %3N else it.%1N",
-              property.name, property.localIsPresentName, property.localName)
-        } else {
-          result.addCode("%1N = %2N ?: it.%1N",
-              property.name, property.localName)
+    // Call either the constructor again, or the copy() method, this time providing any optional
+    // parameters that we have.
+    if (hasOptionalParameters) {
+      if (isDataClass) {
+        result.addCode("%[%1N = %1N.copy(", resultName)
+      } else {
+        result.addCode("%[%1N = %2T(", resultName, originalTypeName)
+      }
+      separator = "\n"
+      for (property in propertyList) {
+        if (!property.hasConstructorParameter) {
+          continue // No constructor parameter for this property.
         }
-        result.addCode(if (index + 1 < propertiesWithDefaults.size) ",\n" else "\n")
+        if (isDataClass && !property.hasDefault) {
+          continue // Property already assigned.
+        }
+
+        result.addCode(separator)
+        if (property.differentiateAbsentFromNull) {
+          result.addCode("%2N = if (%3N) %4N else %1N.%2N",
+              resultName, property.name, property.localIsPresentName, property.localName)
+        } else {
+          result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
+        }
+        separator = ",\n"
       }
       result.addCode("%])\n")
-      result.addCode("%<}\n")
     }
 
+    // Assign properties not present in the constructor.
+    for (property in propertyList) {
+      if (property.hasConstructorParameter) {
+        continue // Property already handled.
+      }
+      if (property.differentiateAbsentFromNull) {
+        result.addStatement("%1N.%2N = if (%3N) %4N else %1N.%2N",
+            resultName, property.name, property.localIsPresentName, property.localName)
+      } else {
+        result.addStatement("%1N.%2N = %3N ?: %1N.%2N",
+            resultName, property.name, property.localName)
+      }
+    }
+
+    result.addStatement("return %1N", resultName)
     return result.build()
   }
 
@@ -244,8 +279,7 @@ internal class AdapterGenerator(
 
   private fun generateJsonAdapterFun(): FunSpec {
     val rawType = when (originalTypeName) {
-      is TypeVariableName -> throw IllegalArgumentException(
-          "Cannot get raw type of TypeVariable!")
+      is TypeVariableName -> throw IllegalArgumentException("Cannot get raw type of TypeVariable!")
       is ParameterizedTypeName -> originalTypeName.rawType
       else -> originalTypeName as ClassName
     }

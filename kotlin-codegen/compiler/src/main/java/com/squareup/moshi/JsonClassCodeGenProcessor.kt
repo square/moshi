@@ -17,13 +17,16 @@ package com.squareup.moshi
 
 import com.google.auto.common.AnnotationMirrors
 import com.google.auto.service.AutoService
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier.OUT
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.asTypeName
 import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
+import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.metadata.extractFullName
 import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
 import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
@@ -31,14 +34,17 @@ import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.visibility
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import org.jetbrains.kotlin.serialization.ProtoBuf
+import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
 import java.io.File
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -77,24 +83,24 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     val metadata = element.kotlinMetadata
 
     if (metadata !is KotlinClassMetadata) {
-      errorMustBeDataClass(element)
+      errorMustBeKotlinClass(element)
       return null
     }
 
     val classData = metadata.data
     val (nameResolver, classProto) = classData
 
-    fun ProtoBuf.Type.extractFullName() = extractFullName(classData)
-
-    if (!classProto.isDataClass) {
-      errorMustBeDataClass(element)
+    if (classProto.classKind != ProtoBuf.Class.Kind.CLASS) {
+      errorMustBeKotlinClass(element)
       return null
     }
 
-    val fqClassName = nameResolver.getString(classProto.fqName).replace('/', '.')
-
-    val packageName = nameResolver.getString(classProto.fqName).substringBeforeLast('/').replace(
-        '/', '.')
+    val typeName = element.asType().asTypeName()
+    val className = when (typeName) {
+      is ClassName -> typeName
+      is ParameterizedTypeName -> typeName.rawType
+      else -> throw IllegalStateException("unexpected TypeName: ${typeName::class}")
+    }
 
     val hasCompanionObject = classProto.hasCompanionObjectName()
     // todo allow custom constructor
@@ -113,34 +119,49 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         .first()
     // TODO Temporary until jvm method signature matching is better
     //  .single { it.jvmMethodSignature == constructorJvmSignature }
-    val parameters = protoConstructor
-        .valueParameterList
-        .mapIndexed { index, valueParameter ->
-          val paramName = nameResolver.getString(valueParameter.name)
+    val parameters: Map<String, ValueParameter> = protoConstructor.valueParameterList.associateBy {
+      nameResolver.getString(it.name)
+    }
 
-          val nullable = valueParameter.type.nullable
-          val paramFqcn = valueParameter.type.extractFullName()
-              .replace("`", "")
-              .removeSuffix("?")
+    val properties = classData.classProto.propertyList.associateBy {
+      nameResolver.getString(it.name)
+    }
 
-          val actualElement = constructor.parameters[index]
+    val propertyGenerators = mutableListOf<PropertyGenerator>()
+    for (enclosedElement in element.enclosedElements) {
+      if (enclosedElement !is VariableElement) continue
 
-          val serializedName = actualElement.getAnnotation(Json::class.java)?.name
-              ?: paramName
+      val name = enclosedElement.simpleName.toString()
+      val property = properties[name] ?: continue
+      val parameter = parameters[name]
 
-          val jsonQualifiers = AnnotationMirrors.getAnnotatedAnnotations(actualElement,
-              JsonQualifier::class.java)
+      val parameterElement = if (parameter != null) {
+        val parameterIndex = protoConstructor.valueParameterList.indexOf(parameter)
+        constructor.parameters[parameterIndex]
+      } else {
+        null
+      }
 
-          PropertyGenerator(
-              name = paramName,
-              serializedName = serializedName,
-              hasDefault = valueParameter.declaresDefaultValue,
-              nullable = nullable,
-              typeName = valueParameter.type.asTypeName(nameResolver, classProto::getTypeParameter),
-              unaliasedName = valueParameter.type.asTypeName(nameResolver,
-                  classProto::getTypeParameter, true),
-              jsonQualifiers = jsonQualifiers)
-        }
+      if (property.visibility != ProtoBuf.Visibility.INTERNAL
+          && property.visibility != ProtoBuf.Visibility.PROTECTED
+          && property.visibility != ProtoBuf.Visibility.PUBLIC) {
+        messager.printMessage(ERROR, "property $name is not visible", enclosedElement)
+        return null
+      }
+
+      propertyGenerators += PropertyGenerator(
+          name,
+          serializedName(name, enclosedElement, parameterElement),
+          parameter != null,
+          parameter?.declaresDefaultValue ?: true,
+          property.returnType.nullable,
+          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter),
+          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
+          jsonQualifiers(enclosedElement, parameterElement))
+    }
+
+    // Sort properties so that those with constructor parameters come first.
+    propertyGenerators.sortBy { if (it.hasConstructorParameter) -1 else 1 }
 
     val genericTypeNames = classProto.typeParameterList
         .map {
@@ -168,19 +189,56 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         }
 
     return AdapterGenerator(
-        fqClassName = fqClassName,
-        packageName = packageName,
-        propertyList = parameters,
+        className,
+        propertyList = propertyGenerators,
         originalElement = element,
         hasCompanionObject = hasCompanionObject,
         visibility = classProto.visibility!!,
         genericTypeNames = genericTypeNames,
-        elements = elementUtils)
+        elements = elementUtils,
+        isDataClass = classProto.isDataClass)
   }
 
-  private fun errorMustBeDataClass(element: Element) {
+  /** Returns the JsonQualifiers on the field and parameter of a property. */
+  private fun jsonQualifiers(
+    field: VariableElement,
+    parameter: VariableElement?
+  ): Set<AnnotationMirror> {
+    val fieldJsonQualifiers = AnnotationMirrors.getAnnotatedAnnotations(
+        field, JsonQualifier::class.java)
+
+    val parameterJsonQualifiers: Set<AnnotationMirror> = if (parameter != null) {
+      AnnotationMirrors.getAnnotatedAnnotations(parameter, JsonQualifier::class.java)
+    } else {
+      setOf()
+    }
+
+    // TODO(jwilson): union the qualifiers somehow?
+    if (fieldJsonQualifiers.isNotEmpty()) {
+      return fieldJsonQualifiers
+    } else {
+      return parameterJsonQualifiers
+    }
+  }
+
+  /** Returns the @Json name of a property, or `propertyName` if none is provided. */
+  private fun serializedName(
+    propertyName: String,
+    field: VariableElement,
+    parameter: VariableElement?
+  ): String {
+    val fieldAnnotation = field.getAnnotation(Json::class.java)
+    if (fieldAnnotation != null) return fieldAnnotation.name
+
+    val parameterAnnotation = parameter?.getAnnotation(Json::class.java)
+    if (parameterAnnotation != null) return parameterAnnotation.name
+
+    return propertyName
+  }
+
+  private fun errorMustBeKotlinClass(element: Element) {
     messager.printMessage(ERROR,
-        "@${JsonClass::class.java.simpleName} can't be applied to $element: must be a Kotlin data class",
+        "@${JsonClass::class.java.simpleName} can't be applied to $element: must be a Kotlin class",
         element)
   }
 
