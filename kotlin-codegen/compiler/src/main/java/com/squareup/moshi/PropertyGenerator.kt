@@ -79,7 +79,7 @@ internal class PropertyGenerator(
           CodeBlock.of("<%T>", unaliasedName)
         },
         unaliasedName.makeType(
-            enclosing.env.elementUtils, enclosing.typesParam, enclosing.genericTypeNames ?: emptyList()))
+            enclosing.elements, enclosing.typesParam, enclosing.genericTypeNames ?: emptyList()))
     val standardArgsSize = standardArgs.size + 1
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()
