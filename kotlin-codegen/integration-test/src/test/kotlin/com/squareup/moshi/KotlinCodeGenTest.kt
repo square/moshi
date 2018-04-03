@@ -25,33 +25,19 @@ import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class KotlinCodeGenTest {
-  @Ignore @Test fun requiredValueAbsent() {
+  @Ignore @Test fun duplicatedValue() {
     val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(RequiredValueAbsent::class.java)
+    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
 
     try {
-      jsonAdapter.fromJson("""{"a":4}""")
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required value b missing at $")
+      assertThat(expected).hasMessage("Multiple values for a at $.a")
     }
   }
 
-  class RequiredValueAbsent(var a: Int = 3, var b: Int)
-
-  @Ignore @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
-
-    try {
-      jsonAdapter.fromJson("{\"a\":null}")
-      fail()
-    } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value a was null at \$")
-    }
-  }
-
-  class HasNonNullConstructorParameter(val a: String)
+  class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
   @Ignore @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
     val moshi = Moshi.Builder().build()
@@ -69,50 +55,6 @@ class KotlinCodeGenTest {
     var a: String = ""
   }
 
-  @Ignore @Test fun duplicatedValue() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
-
-    try {
-      jsonAdapter.fromJson("""{"a":4,"a":4}""")
-      fail()
-    } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for a at $.a")
-    }
-  }
-
-  class DuplicateValue(var a: Int = -1, var b: Int = -2)
-
-  @Ignore @Test fun explicitNull() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(ExplicitNull::class.java)
-
-    val encoded = ExplicitNull(null, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null,"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":null,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(null)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class ExplicitNull(var a: Int?, var b: Int?)
-
-  @Ignore @Test fun absentNull() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(AbsentNull::class.java)
-
-    val encoded = AbsentNull(null, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-    assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null,"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"b":6}""")!!
-    assertThat(decoded.a).isNull()
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class AbsentNull(var a: Int?, var b: Int?)
-
   @Ignore @Test fun repeatedValue() {
     val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(RepeatedValue::class.java)
@@ -127,90 +69,6 @@ class KotlinCodeGenTest {
 
   class RepeatedValue(var a: Int, var b: Int?)
 
-  @Ignore @Test fun constructorParameterWithQualifier() {
-    val moshi = Moshi.Builder()
-        .add(UppercaseJsonAdapter())
-        .build()
-    val jsonAdapter = moshi.adapter(ConstructorParameterWithQualifier::class.java)
-
-    val encoded = ConstructorParameterWithQualifier("Android", "Banana")
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"Banana"}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":"Android","b":"Banana"}""")!!
-    assertThat(decoded.a).isEqualTo("android")
-    assertThat(decoded.b).isEqualTo("Banana")
-  }
-
-  class ConstructorParameterWithQualifier(@Uppercase var a: String, var b: String)
-
-  @Ignore @Test fun propertyWithQualifier() {
-    val moshi = Moshi.Builder()
-        .add(UppercaseJsonAdapter())
-        .build()
-    val jsonAdapter = moshi.adapter(PropertyWithQualifier::class.java)
-
-    val encoded = PropertyWithQualifier()
-    encoded.a = "Android"
-    encoded.b = "Banana"
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"Banana"}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":"Android","b":"Banana"}""")!!
-    assertThat(decoded.a).isEqualTo("android")
-    assertThat(decoded.b).isEqualTo("Banana")
-  }
-
-  class PropertyWithQualifier {
-    @Uppercase var a: String = ""
-    var b: String = ""
-  }
-
-  @Ignore @Test fun constructorParameterWithJsonName() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(ConstructorParameterWithJsonName::class.java)
-
-    val encoded = ConstructorParameterWithJsonName(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"key a":3,"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"key a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class ConstructorParameterWithJsonName(@Json(name = "key a") var a: Int, var b: Int)
-
-  @Ignore @Test fun propertyWithJsonName() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(PropertyWithJsonName::class.java)
-
-    val encoded = PropertyWithJsonName()
-    encoded.a = 3
-    encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"key a":3,"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"key a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class PropertyWithJsonName {
-    @Json(name = "key a") var a: Int = -1
-    var b: Int = -1
-  }
-
-  @Ignore @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(TransientConstructorParameter::class.java)
-
-    val encoded = TransientConstructorParameter(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
-
   @Ignore @Test fun requiredTransientConstructorParameterFails() {
     val moshi = Moshi.Builder().build()
     try {
@@ -224,25 +82,6 @@ class KotlinCodeGenTest {
   }
 
   class RequiredTransientConstructorParameter(@Transient var a: Int)
-
-  @Ignore @Test fun transientProperty() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(TransientProperty::class.java)
-
-    val encoded = TransientProperty()
-    encoded.a = 3
-    encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class TransientProperty {
-    @Transient var a: Int = -1
-    var b: Int = -1
-  }
 
   @Ignore @Test fun supertypeConstructorParameters() {
     val moshi = Moshi.Builder().build()

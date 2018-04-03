@@ -52,7 +52,7 @@ internal class PropertyGenerator(
 
   fun reserveDelegateNames(nameAllocator: NameAllocator) {
     val qualifierNames = jsonQualifiers.joinToString("") {
-      "at${it.annotationType.asElement().simpleName.toString().capitalize()}"
+      "At${it.annotationType.asElement().simpleName.toString().capitalize()}"
     }
     nameAllocator.newName("${unaliasedName.toVariableName()}${qualifierNames}Adapter",
         delegateKey())
