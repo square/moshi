@@ -16,6 +16,7 @@
 package com.squareup.moshi
 
 import com.squareup.kotlinpoet.ARRAY
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -31,6 +32,7 @@ import com.squareup.kotlinpoet.asTypeName
 import org.jetbrains.kotlin.serialization.ProtoBuf
 import java.lang.reflect.Type
 import javax.lang.model.element.Element
+import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
@@ -81,7 +83,7 @@ internal class AdapterGenerator(
 
   val delegateAdapters = propertyList.distinctBy { it.delegateKey() }
 
-  fun generateFile(): FileSpec {
+  fun generateFile(generatedOption: TypeElement?): FileSpec {
     for (property in delegateAdapters) {
       property.reserveDelegateNames(nameAllocator)
     }
@@ -93,12 +95,20 @@ internal class AdapterGenerator(
     if (hasCompanionObject) {
       result.addFunction(generateJsonAdapterFun())
     }
-    result.addType(generateType())
+    result.addType(generateType(generatedOption))
     return result.build()
   }
 
-  private fun generateType(): TypeSpec {
+  private fun generateType(generatedOption: TypeElement?): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+
+    generatedOption?.let {
+      result.addAnnotation(AnnotationSpec.builder(it.asClassName())
+          .addMember("%S", JsonClassCodeGenProcessor::class.java.canonicalName)
+          .addMember("%S", "https://github.com/square/moshi")
+          .build())
+    }
+
     result.superclass(jsonAdapterTypeName)
 
     genericTypeNames?.let {

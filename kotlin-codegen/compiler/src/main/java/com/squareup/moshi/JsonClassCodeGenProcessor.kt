@@ -36,6 +36,7 @@ import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import org.jetbrains.kotlin.serialization.ProtoBuf
 import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
 import java.io.File
+import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
@@ -61,18 +62,49 @@ import javax.tools.Diagnostic.Kind.ERROR
 @AutoService(Processor::class)
 class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
 
+  companion object {
+    /**
+     * This annotation processing argument can be specified to have a `@Generated` annotation
+     * included in the generated code. It is not encouraged unless you need it for static analysis
+     * reasons and not enabled by default.
+     *
+     * Note that this can only be one of the following values:
+     *   * `"javax.annotation.processing.Generated"` (JRE 9+)
+     *   * `"javax.annotation.Generated"` (JRE <9)
+     */
+    const val OPTION_GENERATED = "moshi.generated"
+    private val POSSIBLE_GENERATED_NAMES = setOf(
+        "javax.annotation.processing.Generated",
+        "javax.annotation.Generated"
+    )
+  }
+
   private val annotation = JsonClass::class.java
+  private var generatedType: TypeElement? = null
 
   override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
 
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
+
+  override fun getSupportedOptions() = setOf(OPTION_GENERATED)
+
+  override fun init(processingEnv: ProcessingEnvironment) {
+    super.init(processingEnv)
+    generatedType = processingEnv.options[OPTION_GENERATED]?.let {
+      if (it !in POSSIBLE_GENERATED_NAMES) {
+        throw IllegalArgumentException(
+            "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are $POSSIBLE_GENERATED_NAMES.")
+      }
+      processingEnv.elementUtils.getTypeElement(it)
+    }
+  }
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter) {
         val adapterGenerator = processElement(type) ?: continue
-        adapterGenerator.generateAndWrite()
+        adapterGenerator.generateAndWrite(generatedType)
       }
     }
 
@@ -242,8 +274,8 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         element)
   }
 
-  private fun AdapterGenerator.generateAndWrite() {
-    val fileSpec = generateFile()
+  private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {
+    val fileSpec = generateFile(generatedOption)
     val adapterName = fileSpec.members.filterIsInstance<TypeSpec>().first().name!!
     val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
     fileSpec.writeTo(outputDir)
