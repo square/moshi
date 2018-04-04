@@ -12,13 +12,6 @@
 
   <artifactId>moshi-kotlin-codegen-compiler</artifactId>
 
-  <repositories>
-    <repository>
-      <id>jcenter</id>
-      <url>https://jcenter.bintray.com/</url>
-    </repository>
-  </repositories>
-
   <dependencies>
     <dependency>
       <groupId>com.squareup.moshi</groupId>
@@ -69,8 +62,9 @@
       <artifactId>kotlin-annotation-processing-embeddable</artifactId>
     </dependency>
     <dependency>
-      <groupId>me.eugeniomarletti</groupId>
+      <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
       <artifactId>kotlin-metadata</artifactId>
+      <version>1.3.0</version>
     </dependency>
     <!--
       Though we don't use compile-testing, including it is a convenient way to get tools.jar on the
