@@ -27,6 +27,7 @@ import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
 import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
+import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
 import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
 import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
@@ -34,6 +35,7 @@ import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.visibility
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import org.jetbrains.kotlin.serialization.ProtoBuf
+import org.jetbrains.kotlin.serialization.ProtoBuf.Property
 import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
 import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
@@ -44,6 +46,7 @@ import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic.Kind.ERROR
@@ -159,6 +162,14 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       nameResolver.getString(it.name)
     }
 
+    // The compiler might emit methods just so it has a place to put annotations. Find these.
+    val annotatedElements = mutableMapOf<Property, ExecutableElement>()
+    for (enclosedElement in element.enclosedElements) {
+      if (enclosedElement !is ExecutableElement) continue
+      val property = classData.getPropertyOrNull(enclosedElement) ?: continue
+      annotatedElements[property] = enclosedElement
+    }
+
     val propertyGenerators = mutableListOf<PropertyGenerator>()
     for (enclosedElement in element.enclosedElements) {
       if (enclosedElement !is VariableElement) continue
@@ -174,6 +185,8 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         null
       }
 
+      val annotatedElement = annotatedElements[property]
+
       if (property.visibility != ProtoBuf.Visibility.INTERNAL
           && property.visibility != ProtoBuf.Visibility.PROTECTED
           && property.visibility != ProtoBuf.Visibility.PUBLIC) {
@@ -181,15 +194,24 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         return null
       }
 
+      val hasDefault = parameter?.declaresDefaultValue ?: true
+
+      if (enclosedElement.modifiers.contains(Modifier.TRANSIENT)) {
+        if (!hasDefault) {
+          throw IllegalArgumentException("No default value for transient property $name")
+        }
+        continue
+      }
+
       propertyGenerators += PropertyGenerator(
           name,
-          serializedName(name, enclosedElement, parameterElement),
+          jsonName(name, enclosedElement, annotatedElement, parameterElement),
           parameter != null,
-          parameter?.declaresDefaultValue ?: true,
+          hasDefault,
           property.returnType.nullable,
           property.returnType.asTypeName(nameResolver, classProto::getTypeParameter),
           property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
-          jsonQualifiers(enclosedElement, parameterElement))
+          jsonQualifiers(enclosedElement, annotatedElement, parameterElement))
     }
 
     // Sort properties so that those with constructor parameters come first.
@@ -234,38 +256,39 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   /** Returns the JsonQualifiers on the field and parameter of a property. */
   private fun jsonQualifiers(
     field: VariableElement,
+    method: ExecutableElement?,
     parameter: VariableElement?
   ): Set<AnnotationMirror> {
-    val fieldJsonQualifiers = AnnotationMirrors.getAnnotatedAnnotations(
-        field, JsonQualifier::class.java)
-
-    val parameterJsonQualifiers: Set<AnnotationMirror> = if (parameter != null) {
-      AnnotationMirrors.getAnnotatedAnnotations(parameter, JsonQualifier::class.java)
-    } else {
-      setOf()
-    }
+    val fieldQualifiers = field.qualifiers
+    val methodQualifiers = method.qualifiers
+    val parameterQualifiers = parameter.qualifiers
 
     // TODO(jwilson): union the qualifiers somehow?
-    if (fieldJsonQualifiers.isNotEmpty()) {
-      return fieldJsonQualifiers
-    } else {
-      return parameterJsonQualifiers
+    return when {
+      fieldQualifiers.isNotEmpty() -> fieldQualifiers
+      methodQualifiers.isNotEmpty() -> methodQualifiers
+      parameterQualifiers.isNotEmpty() -> parameterQualifiers
+      else -> setOf()
     }
   }
 
   /** Returns the @Json name of a property, or `propertyName` if none is provided. */
-  private fun serializedName(
+  private fun jsonName(
     propertyName: String,
     field: VariableElement,
+    method: ExecutableElement?,
     parameter: VariableElement?
   ): String {
-    val fieldAnnotation = field.getAnnotation(Json::class.java)
-    if (fieldAnnotation != null) return fieldAnnotation.name
+    val fieldJsonName = field.jsonName
+    val methodJsonName = method.jsonName
+    val parameterJsonName = parameter.jsonName
 
-    val parameterAnnotation = parameter?.getAnnotation(Json::class.java)
-    if (parameterAnnotation != null) return parameterAnnotation.name
-
-    return propertyName
+    return when {
+      fieldJsonName != null -> fieldJsonName
+      methodJsonName != null -> methodJsonName
+      parameterJsonName != null -> parameterJsonName
+      else -> propertyName
+    }
   }
 
   private fun errorMustBeKotlinClass(element: Element) {
@@ -287,5 +310,16 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     val file = filer.createSourceFile(adapterName).toUri().let(::File)
     return file.parentFile.also { file.delete() }
   }
-}
 
+  private val Element?.qualifiers: Set<AnnotationMirror>
+    get() {
+      if (this == null) return setOf()
+      return AnnotationMirrors.getAnnotatedAnnotations(this, JsonQualifier::class.java)
+    }
+
+  private val Element?.jsonName: String?
+    get() {
+      if (this == null) return null
+      return getAnnotation(Json::class.java)?.name
+    }
+}
