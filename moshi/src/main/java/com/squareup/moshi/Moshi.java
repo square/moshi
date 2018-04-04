@@ -30,6 +30,8 @@ import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
+import static com.squareup.moshi.internal.Util.canonicalize;
+
 /**
  * Coordinates binding between JSON values and Java objects.
  */
@@ -93,7 +95,7 @@ public final class Moshi {
       throw new NullPointerException("annotations == null");
     }
 
-    type = Types.canonicalize(type);
+    type = canonicalize(type);
 
     // If there's an equivalent adapter in the cache, we're done!
     Object cacheKey = cacheKey(type, annotations);
@@ -146,7 +148,7 @@ public final class Moshi {
       Set<? extends Annotation> annotations) {
     if (annotations == null) throw new NullPointerException("annotations == null");
 
-    type = Types.canonicalize(type);
+    type = canonicalize(type);
 
     int skipPastIndex = factories.indexOf(skipPast);
     if (skipPastIndex == -1) {

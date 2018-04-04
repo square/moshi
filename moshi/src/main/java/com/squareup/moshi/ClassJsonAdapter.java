@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
 
+import static com.squareup.moshi.internal.Util.resolve;
+
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
  *
@@ -92,7 +94,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         if (!includeField(platformType, field.getModifiers())) continue;
 
         // Look up a type adapter for this type.
-        Type fieldType = Types.resolve(type, rawType, field.getGenericType());
+        Type fieldType = resolve(type, rawType, field.getGenericType());
         Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
         JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations);
 
