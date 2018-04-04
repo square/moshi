@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
+import static com.squareup.moshi.internal.Util.canonicalize;
 import static com.squareup.moshi.internal.Util.jsonAnnotations;
 
 final class AdapterMethodsFactory implements JsonAdapter.Factory {
@@ -289,7 +290,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
 
     AdapterMethod(Type type, Set<? extends Annotation> annotations, Object adapter,
         Method method, int parameterCount, int adaptersOffset, boolean nullable) {
-      this.type = Types.canonicalize(type);
+      this.type = canonicalize(type);
       this.annotations = annotations;
       this.adapter = adapter;
       this.method = method;

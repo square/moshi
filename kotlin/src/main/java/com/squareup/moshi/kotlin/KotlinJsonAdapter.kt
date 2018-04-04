@@ -23,6 +23,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.internal.Util
+import com.squareup.moshi.internal.Util.resolve
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
 import java.util.AbstractMap.SimpleEntry
@@ -225,7 +226,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val resolvedPropertyType = Types.resolve(type, rawType, property.returnType.javaType)
+      val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
       val adapter = moshi.adapter<Any>(
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
 

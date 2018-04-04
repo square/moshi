@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 import org.junit.Test;
 
+import static com.squareup.moshi.internal.Util.canonicalize;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -174,7 +175,7 @@ public final class TypesTest {
     ParameterizedType ptype = (ParameterizedType) type;
     Type[] actualTypeArguments = ptype.getActualTypeArguments();
     if (actualTypeArguments.length == 0) return null;
-    return Types.canonicalize(actualTypeArguments[0]);
+    return canonicalize(actualTypeArguments[0]);
   }
 
   Map<String, Integer> mapOfStringInteger;
