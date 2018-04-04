@@ -373,7 +373,8 @@ public final class Types {
     return new Type[] { Object.class, Object.class };
   }
 
-  static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
+  @CheckReturnValue // TODO(eric): Move this to internal Utils.
+  public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
