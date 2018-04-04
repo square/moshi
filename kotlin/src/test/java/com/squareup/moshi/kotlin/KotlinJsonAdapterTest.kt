@@ -21,6 +21,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
+import com.squareup.moshi.Types
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
 import org.junit.Test
@@ -763,7 +764,53 @@ class KotlinJsonAdapterTest {
       var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
       var v31: Int, var v32: Int, var v33: Int)
 
-  // TODO(jwilson): resolve generic types?
+  data class Box<out T>(val data: T)
+
+  @Test fun genericTypes() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val stringBoxAdapter = moshi.adapter<Box<String>>(
+        Types.newParameterizedTypeWithOwner(KotlinJsonAdapterTest::class.java, Box::class.java,
+            String::class.java))
+    assertThat(stringBoxAdapter.fromJson("""{"data":"hello"}""")).isEqualTo(Box("hello"))
+    assertThat(stringBoxAdapter.toJson(Box("hello"))).isEqualTo("""{"data":"hello"}""")
+  }
+
+  data class NestedGenerics<R, C, out V>(val value: Map<R, Map<C, List<V>>>)
+
+  @Test fun nestedGenericTypes() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val type = Types.newParameterizedTypeWithOwner(
+        KotlinJsonAdapterTest::class.java,
+        NestedGenerics::class.java,
+        String::class.java,
+        Int::class.javaObjectType,
+        Types.newParameterizedTypeWithOwner(
+            KotlinJsonAdapterTest::class.java,
+            Box::class.java,
+            String::class.java
+        )
+    )
+    val adapter = moshi.adapter<NestedGenerics<String, Int, Box<String>>>(type).indent("  ")
+    val json = """
+      |{
+      |  "value": {
+      |    "hello": {
+      |      "1": [
+      |        {
+      |          "data": " "
+      |        },
+      |        {
+      |          "data": "world!"
+      |        }
+      |      ]
+      |    }
+      |  }
+      |}
+      """.trimMargin()
+    val value = NestedGenerics(mapOf("hello" to mapOf(1 to listOf(Box(" "), Box("world!")))))
+    assertThat(adapter.fromJson(json)).isEqualTo(value)
+    assertThat(adapter.toJson(value)).isEqualTo(json)
+  }
 
   @Retention(RUNTIME)
   @JsonQualifier
