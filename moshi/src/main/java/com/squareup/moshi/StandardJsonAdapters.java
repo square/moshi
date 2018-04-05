@@ -263,7 +263,7 @@ final class StandardJsonAdapters {
     }
   }
 
-  static final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
+  static class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     private final Class<T> enumType;
     private final String[] nameStrings;
     private final T[] constants;
@@ -286,18 +286,22 @@ final class StandardJsonAdapters {
       }
     }
 
-    @Override public T fromJson(JsonReader reader) throws IOException {
+    @Override public final T fromJson(JsonReader reader) throws IOException {
       int index = reader.selectString(options);
       if (index != -1) return constants[index];
 
       // We can consume the string safely, we are terminating anyway.
       String name = reader.nextString();
+      return unexpectedName(name, reader);
+    }
+
+    T unexpectedName(String name, JsonReader reader) {
       throw new JsonDataException("Expected one of "
           + Arrays.asList(nameStrings) + " but was " + name + " at path "
           + reader.getPath());
     }
 
-    @Override public void toJson(JsonWriter writer, T value) throws IOException {
+    @Override public final void toJson(JsonWriter writer, T value) throws IOException {
       writer.value(nameStrings[value.ordinal()]);
     }
 
