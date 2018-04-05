@@ -46,7 +46,9 @@ final class FallbackEnum {
       @Nullable @Override @SuppressWarnings("unchecked")
       public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
         Class<?> rawType = Types.getRawType(type);
-        if (!rawType.isEnum()) return null;
+        if (!rawType.isEnum()) {
+          return null;
+        }
         if (annotations.size() != 1) {
           return null;
         }
