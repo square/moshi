@@ -196,7 +196,7 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
 
       val hasDefault = parameter?.declaresDefaultValue ?: true
 
-      if (enclosedElement.modifiers.contains(Modifier.TRANSIENT)) {
+      if (Modifier.TRANSIENT in enclosedElement.modifiers) {
         if (!hasDefault) {
           throw IllegalArgumentException("No default value for transient property $name")
         }
