@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -48,25 +46,18 @@ final class FallbackEnum {
       @Nullable @Override @SuppressWarnings("unchecked")
       public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
         Class<?> rawType = Types.getRawType(type);
-        if (!rawType.isEnum()) return null;
-        if (annotations.isEmpty()) {
+        if (!rawType.isEnum()) {
+          return null;
+        }
+        if (annotations.size() != 1) {
+          return null;
+        }
+        Annotation annotation = annotations.iterator().next();
+        if (!(annotation instanceof Fallback)) {
           return null;
         }
         Class<Enum> enumType = (Class<Enum>) rawType;
-        Set<? extends Annotation> delegateAnnotations = null;
-        Enum<?> fallback = null;
-        for (Annotation annotation : annotations) {
-          if (annotation instanceof Fallback) {
-            delegateAnnotations = new LinkedHashSet<>(annotations);
-            delegateAnnotations.remove(annotation);
-            delegateAnnotations = Collections.unmodifiableSet(delegateAnnotations);
-            fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
-            break;
-          }
-        }
-        if (delegateAnnotations == null) {
-          return null;
-        }
+        Enum<?> fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
         return new FallbackEnumJsonAdapter<>(enumType, fallback);
       }
     };
