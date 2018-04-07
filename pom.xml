@@ -33,7 +33,7 @@
     <kotlin-metadata.version>1.2.1</kotlin-metadata.version>
 
     <!-- Dependencies -->
-    <okio.version>1.13.0</okio.version>
+    <okio.version>1.14.0</okio.version>
 
     <!-- Test Dependencies -->
     <compile-testing.version>0.8</compile-testing.version>
