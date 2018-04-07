@@ -219,14 +219,14 @@ Say we have a JSON string of this structure:
 
 ```java
 [
-	 {
-	   "rank": "4",
-	   "suit": "CLUBS"
-	 },
-	 {
-	   "rank": "A",
-	   "suit": "HEARTS"
-	 }
+  {
+    "rank": "4",
+    "suit": "CLUBS"
+  },
+  {
+    "rank": "A",
+    "suit": "HEARTS"
+  }
 ]
 ```
 
