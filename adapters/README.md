@@ -34,4 +34,4 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 
  [1]: https://search.maven.org/remote_content?g=com.squareup.moshi&a=moshi-adapters&v=LATEST
  [2]: http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.squareup.moshi%22%20a%3A%22moshi-adapters%22
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/moshi-adapters/
