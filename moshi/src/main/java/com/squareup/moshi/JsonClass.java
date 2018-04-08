@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Customizes how a type is encoded as JSON.
  *
- * <p>This annotation is currently only permitted on declarations of data classes in Kotlin.
+ * <p>This annotation is currently only permitted on declarations of classes in Kotlin.
  */
 @Retention(RUNTIME)
 @Documented
