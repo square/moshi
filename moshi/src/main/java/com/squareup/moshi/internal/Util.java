@@ -45,7 +45,7 @@ public final class Util {
 
   public static boolean typesMatch(Type pattern, Type candidate) {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
-    return pattern.equals(candidate);
+    return Types.equals(pattern, candidate);
   }
 
   public static Set<? extends Annotation> jsonAnnotations(AnnotatedElement annotatedElement) {
