@@ -462,7 +462,7 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("No @FromJson adapter for interface "
-          + "com.squareup.moshi.AdapterMethodsTest$Shape annotated []");
+          + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
   }
 
@@ -481,7 +481,7 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("No @ToJson adapter for interface "
-          + "com.squareup.moshi.AdapterMethodsTest$Shape annotated []");
+          + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
   }
 

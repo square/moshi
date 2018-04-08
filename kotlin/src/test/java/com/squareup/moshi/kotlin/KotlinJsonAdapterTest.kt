@@ -438,7 +438,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter(Triple::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage("Platform class kotlin.Triple annotated [] "
+      assertThat(e).hasMessage("Platform class kotlin.Triple (with no annotations) "
           + "requires explicit JsonAdapter to be registered")
     }
   }
@@ -609,7 +609,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("No JsonAdapter for interface " +
-          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$Interface annotated []")
+          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$Interface (with no annotations)")
     }
   }
 

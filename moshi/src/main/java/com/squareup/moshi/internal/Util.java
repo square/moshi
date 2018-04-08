@@ -430,4 +430,9 @@ public final class Util {
       }
     }
   }
+
+  public static String typeAnnotatedWithAnnotations(Type type,
+      Set<? extends Annotation> annotations) {
+    return type + (annotations.isEmpty() ? " (with no annotations)" : " annotated " + annotations);
+  }
 }

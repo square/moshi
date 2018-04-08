@@ -31,6 +31,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
+import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -139,7 +140,8 @@ public final class Moshi {
       }
     }
 
-    throw new IllegalArgumentException("No JsonAdapter for " + type + " annotated " + annotations);
+    throw new IllegalArgumentException(
+        "No JsonAdapter for " + typeAnnotatedWithAnnotations(type, annotations));
   }
 
   @CheckReturnValue
@@ -159,7 +161,7 @@ public final class Moshi {
       if (result != null) return result;
     }
     throw new IllegalArgumentException("No next JsonAdapter for "
-        + type + " annotated " + annotations);
+        + typeAnnotatedWithAnnotations(type, annotations));
   }
 
   /** Returns a new builder containing all custom factories used by the current instance. */
