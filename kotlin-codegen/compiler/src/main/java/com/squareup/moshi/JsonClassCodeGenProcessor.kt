@@ -29,14 +29,18 @@ import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
 import me.eugeniomarletti.kotlin.metadata.isDataClass
+import me.eugeniomarletti.kotlin.metadata.isInnerClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
 import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
 import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
+import me.eugeniomarletti.kotlin.metadata.modality
 import me.eugeniomarletti.kotlin.metadata.visibility
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
-import org.jetbrains.kotlin.serialization.ProtoBuf
+import org.jetbrains.kotlin.serialization.ProtoBuf.Class
+import org.jetbrains.kotlin.serialization.ProtoBuf.Modality
 import org.jetbrains.kotlin.serialization.ProtoBuf.Property
 import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
+import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
@@ -118,16 +122,35 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     val metadata = element.kotlinMetadata
 
     if (metadata !is KotlinClassMetadata) {
-      errorMustBeKotlinClass(element)
+      messager.printMessage(
+          ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
       return null
     }
 
     val classData = metadata.data
     val (nameResolver, classProto) = classData
 
-    if (classProto.classKind != ProtoBuf.Class.Kind.CLASS) {
-      errorMustBeKotlinClass(element)
-      return null
+    when {
+      classProto.classKind != Class.Kind.CLASS -> {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+        return null
+      }
+      classProto.isInnerClass -> {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+        return null
+      }
+      classProto.modality == Modality.ABSTRACT -> {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
+        return null
+      }
+      classProto.visibility == Visibility.LOCAL -> {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be local", element)
+        return null
+      }
     }
 
     val typeName = element.asType().asTypeName()
@@ -187,9 +210,9 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
 
       val annotatedElement = annotatedElements[property]
 
-      if (property.visibility != ProtoBuf.Visibility.INTERNAL
-          && property.visibility != ProtoBuf.Visibility.PROTECTED
-          && property.visibility != ProtoBuf.Visibility.PUBLIC) {
+      if (property.visibility != Visibility.INTERNAL
+          && property.visibility != Visibility.PROTECTED
+          && property.visibility != Visibility.PUBLIC) {
         messager.printMessage(ERROR, "property $name is not visible", enclosedElement)
         return null
       }
@@ -203,15 +226,17 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         continue
       }
 
+      val delegateKey = DelegateKey(
+          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
+          jsonQualifiers(enclosedElement, annotatedElement, parameterElement))
+
       propertyGenerators += PropertyGenerator(
+          delegateKey,
           name,
           jsonName(name, enclosedElement, annotatedElement, parameterElement),
           parameter != null,
           hasDefault,
-          property.returnType.nullable,
-          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter),
-          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
-          jsonQualifiers(enclosedElement, annotatedElement, parameterElement))
+          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter))
     }
 
     // Sort properties so that those with constructor parameters come first.
