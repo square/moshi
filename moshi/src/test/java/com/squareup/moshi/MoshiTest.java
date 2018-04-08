@@ -541,7 +541,8 @@ public final class MoshiTest {
       moshi.adapter(Types.subtypeOf(String.class));
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("No JsonAdapter for ? extends java.lang.String annotated []");
+      assertThat(e).hasMessage(
+          "No JsonAdapter for ? extends java.lang.String (with no annotations)");
     }
   }
 
@@ -551,7 +552,7 @@ public final class MoshiTest {
       moshi.adapter(Types.supertypeOf(String.class));
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("No JsonAdapter for ? super java.lang.String annotated []");
+      assertThat(e).hasMessage("No JsonAdapter for ? super java.lang.String (with no annotations)");
     }
   }
 
@@ -908,22 +909,22 @@ public final class MoshiTest {
       moshi.adapter(File.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Platform class java.io.File annotated [] requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage("Platform class java.io.File (with no annotations) "
+          + "requires explicit JsonAdapter to be registered");
     }
     try {
       moshi.adapter(KeyGenerator.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Platform class javax.crypto.KeyGenerator annotated [] requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage("Platform class javax.crypto.KeyGenerator (with no annotations) "
+          + "requires explicit JsonAdapter to be registered");
     }
     try {
       moshi.adapter(Pair.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "Platform class android.util.Pair annotated [] requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage("Platform class android.util.Pair (with no annotations) "
+          + "requires explicit JsonAdapter to be registered");
     }
   }
 

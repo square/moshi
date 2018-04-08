@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.resolve;
+import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
@@ -56,9 +57,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (Util.isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
         throw new IllegalArgumentException("Platform "
-            + type
-            + " annotated "
-            + annotations
+            + typeAnnotatedWithAnnotations(type, annotations)
             + " requires explicit JsonAdapter to be registered");
       }
       if (!annotations.isEmpty()) return null;

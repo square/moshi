@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static com.squareup.moshi.internal.Util.jsonAnnotations;
+import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 final class AdapterMethodsFactory implements JsonAdapter.Factory {
   private final List<AdapterMethod> toAdapters;
@@ -52,7 +53,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       } catch (IllegalArgumentException e) {
         String missingAnnotation = toAdapter == null ? "@ToJson" : "@FromJson";
         throw new IllegalArgumentException("No " + missingAnnotation + " adapter for "
-            + type + " annotated " + annotations);
+            + typeAnnotatedWithAnnotations(type, annotations));
       }
     } else {
       delegate = null;
