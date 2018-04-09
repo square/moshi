@@ -81,11 +81,11 @@ internal class AdapterGenerator(
           .joinToString(", ") { "\"$it\"" }})", JsonReader.Options::class.asTypeName())
       .build()
 
-  val delegateAdapters = propertyList.distinctBy { it.delegateKey() }
+  val delegateAdapters = propertyList.distinctBy { it.delegateKey }
 
   fun generateFile(generatedOption: TypeElement?): FileSpec {
     for (property in delegateAdapters) {
-      property.reserveDelegateNames(nameAllocator)
+      property.delegateKey.reserveName(nameAllocator)
     }
     for (property in propertyList) {
       property.allocateNames(nameAllocator)
@@ -125,7 +125,7 @@ internal class AdapterGenerator(
 
     result.addProperty(optionsProperty)
     for (uniqueAdapter in delegateAdapters) {
-      result.addProperty(uniqueAdapter.generateDelegateProperty(this))
+      result.addProperty(uniqueAdapter.delegateKey.generateProperty(nameAllocator, this))
     }
 
     result.addFunction(generateToStringFun())
@@ -178,12 +178,12 @@ internal class AdapterGenerator(
       if (property.differentiateAbsentFromNull) {
         result.beginControlFlow("%L -> ", index)
         result.addStatement("%N = %N.fromJson(%N)",
-            property.localName, property.delegateName, readerParam)
+            property.localName, nameAllocator.get(property.delegateKey), readerParam)
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
       } else {
         result.addStatement("%L -> %N = %N.fromJson(%N)",
-            index, property.localName, property.delegateName, readerParam)
+            index, property.localName, nameAllocator.get(property.delegateKey), readerParam)
       }
     }
 
@@ -281,7 +281,7 @@ internal class AdapterGenerator(
     propertyList.forEach { property ->
       result.addStatement("%N.name(%S)", writerParam, property.serializedName)
       result.addStatement("%N.toJson(%N, %N.%L)",
-          property.delegateName, writerParam, valueParam, property.name)
+          nameAllocator.get(property.delegateKey), writerParam, valueParam, property.name)
     }
     result.addStatement("%N.endObject()", writerParam)
 
