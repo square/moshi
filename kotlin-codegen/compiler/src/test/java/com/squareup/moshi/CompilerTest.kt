@@ -154,4 +154,38 @@ class CompilerTest {
     assertThat(result.systemErr).contains(
         "error: @JsonClass can't be applied to expression\$annotations(): must be a Kotlin class")
   }
+
+  @Test fun requiredTransientConstructorParameterFails() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class RequiredTransientConstructorParameter(@Transient var a: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains(
+        "error: No default value for transient property a")
+  }
+
+  @Test fun nonPropertyConstructorParameter() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class NonPropertyConstructorParameter(a: Int, val b: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains(
+        "error: No property for required constructor parameter a")
+  }
 }

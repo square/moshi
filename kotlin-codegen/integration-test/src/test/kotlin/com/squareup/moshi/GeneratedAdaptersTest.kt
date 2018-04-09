@@ -20,6 +20,7 @@ import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
 import java.util.Locale
+import java.util.SimpleTimeZone
 
 class GeneratedAdaptersTest {
 
@@ -81,10 +82,11 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class DefaultValues(val foo: String,
-      val bar: String = "",
-      val nullableBar: String? = null,
-      val bazList: List<String> = emptyList())
+  data class DefaultValues(
+    val foo: String,
+    val bar: String = "",
+    val nullableBar: String? = null,
+    val bazList: List<String> = emptyList())
 
   @Test
   fun nullableArray() {
@@ -625,6 +627,88 @@ class GeneratedAdaptersTest {
     var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
     var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
     var v31: Int, var v32: Int, var v33: Int)
+
+  @Test fun extendsPlatformClassWithPrivateField() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
+
+    val encoded = ExtendsPlatformClassWithPrivateField(3)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"id":"B"}""")!!
+    assertThat(decoded.a).isEqualTo(4)
+    assertThat(decoded.id).isEqualTo("C")
+  }
+
+  @JsonClass(generateAdapter = true)
+  internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
+
+  @Test fun unsettablePropertyIgnored() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
+
+    val encoded = UnsettableProperty()
+    encoded.b = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class UnsettableProperty {
+    val a: Int = -1
+    var b: Int = -1
+  }
+
+  @Test fun getterOnlyNoBackingField() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(GetterOnly::class.java)
+
+    val encoded = GetterOnly(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(4)
+    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.total).isEqualTo(10)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class GetterOnly(var a: Int, var b: Int) {
+    val total : Int
+      get() = a + b
+  }
+
+  @Test fun getterAndSetterNoBackingField() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
+
+    val encoded = GetterAndSetter(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5,"total":8}""")
+
+    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
+    val decoded1 = jsonAdapter.fromJson("""{"a":4,"b":6,"total":11}""")!!
+    assertThat(decoded1.a).isEqualTo(4)
+    assertThat(decoded1.b).isEqualTo(7)
+    assertThat(decoded1.total).isEqualTo(11)
+
+    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
+    val decoded2 = jsonAdapter.fromJson("""{"a":4,"total":11,"b":6}""")!!
+    assertThat(decoded2.a).isEqualTo(4)
+    assertThat(decoded2.b).isEqualTo(7)
+    assertThat(decoded2.total).isEqualTo(11)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class GetterAndSetter(var a: Int, var b: Int) {
+    var total : Int
+      get() = a + b
+      set(value) {
+        b = value - a
+      }
+  }
 
   @Retention(AnnotationRetention.RUNTIME)
   @JsonQualifier

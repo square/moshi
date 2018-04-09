@@ -20,9 +20,6 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayOutputStream
-import java.util.Locale
-import java.util.SimpleTimeZone
-import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class KotlinCodeGenTest {
   @Ignore @Test fun duplicatedValue() {
@@ -52,20 +49,6 @@ class KotlinCodeGenTest {
   }
 
   class RepeatedValue(var a: Int, var b: Int?)
-
-  @Ignore @Test fun requiredTransientConstructorParameterFails() {
-    val moshi = Moshi.Builder().build()
-    try {
-      moshi.adapter(RequiredTransientConstructorParameter::class.java)
-      fail()
-    } catch (expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage("No default value for transient constructor parameter #0 " +
-          "a of fun <init>(kotlin.Int): " +
-          "com.squareup.moshi.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
-    }
-  }
-
-  class RequiredTransientConstructorParameter(@Transient var a: Int)
 
   @Ignore @Test fun supertypeConstructorParameters() {
     val moshi = Moshi.Builder().build()
@@ -104,20 +87,6 @@ class KotlinCodeGenTest {
   class SubtypeProperties : SupertypeProperties() {
     var b: Int = -1
   }
-
-  @Ignore @Test fun extendsPlatformClassWithPrivateField() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
-
-    val encoded = ExtendsPlatformClassWithPrivateField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"id":"B"}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.id).isEqualTo("C")
-  }
-
-  internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
   @Ignore @Test fun extendsPlatformClassWithProtectedField() {
     val moshi = Moshi.Builder().build()
@@ -216,84 +185,6 @@ class KotlinCodeGenTest {
     }
   }
 
-  @Ignore @Test fun unsettablePropertyIgnored() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
-
-    val encoded = UnsettableProperty()
-    encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class UnsettableProperty {
-    val a: Int = -1
-    var b: Int = -1
-  }
-
-  @Ignore @Test fun getterOnlyNoBackingField() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(GetterOnly::class.java)
-
-    val encoded = GetterOnly(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.b).isEqualTo(6)
-    assertThat(decoded.total).isEqualTo(10)
-  }
-
-  class GetterOnly(var a: Int, var b: Int) {
-    val total : Int
-      get() = a + b
-  }
-
-  @Ignore @Test fun getterAndSetterNoBackingField() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(GetterAndSetter::class.java)
-
-    val encoded = GetterAndSetter(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5,"total":8}""")
-
-    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
-    val decoded1 = jsonAdapter.fromJson("""{"a":4,"b":6,"total":11}""")!!
-    assertThat(decoded1.a).isEqualTo(4)
-    assertThat(decoded1.b).isEqualTo(7)
-    assertThat(decoded1.total).isEqualTo(11)
-
-    // Whether b is 6 or 7 is an implementation detail. Currently we call constructors then setters.
-    val decoded2 = jsonAdapter.fromJson("""{"a":4,"total":11,"b":6}""")!!
-    assertThat(decoded2.a).isEqualTo(4)
-    assertThat(decoded2.b).isEqualTo(7)
-    assertThat(decoded2.total).isEqualTo(11)
-  }
-
-  class GetterAndSetter(var a: Int, var b: Int) {
-    var total : Int
-      get() = a + b
-      set(value) {
-        b = value - a
-      }
-  }
-
-  @Ignore @Test fun nonPropertyConstructorParameter() {
-    val moshi = Moshi.Builder().build()
-    try {
-      moshi.adapter(NonPropertyConstructorParameter::class.java)
-      fail()
-    } catch(expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage(
-          "No property for required constructor parameter #0 a of fun <init>(" +
-              "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}")
-    }
-  }
-
-  class NonPropertyConstructorParameter(a: Int, val b: Int)
-
   @Ignore @Test fun kotlinEnumsAreNotCovered() {
     val moshi = Moshi.Builder().build()
     val adapter = moshi.adapter(UsingEnum::class.java)
@@ -305,20 +196,5 @@ class KotlinCodeGenTest {
 
   enum class KotlinEnum {
     A, B
-  }
-
-  // TODO(jwilson): resolve generic types?
-
-  @Retention(RUNTIME)
-  @JsonQualifier
-  annotation class Uppercase
-
-  class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase s: String) : String {
-      return s.toUpperCase(Locale.US)
-    }
-    @FromJson @Uppercase fun fromJson(s: String) : String {
-      return s.toLowerCase(Locale.US)
-    }
   }
 }
