@@ -25,7 +25,7 @@ internal class PropertyGenerator(
   val delegateKey: DelegateKey,
   val name: String,
   val serializedName: String,
-  val hasConstructorParameter: Boolean,
+  val parameterIndex: Int,
   val hasDefault: Boolean,
   val typeName: TypeName
 ) {
@@ -34,6 +34,9 @@ internal class PropertyGenerator(
 
   val isRequired
     get() = !delegateKey.nullable && !hasDefault
+
+  val hasConstructorParameter
+    get() = parameterIndex != -1
 
   /** We prefer to use 'null' to mean absent, but for some properties those are distinct. */
   val differentiateAbsentFromNull

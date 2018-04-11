@@ -28,6 +28,7 @@ import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
 import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
+import me.eugeniomarletti.kotlin.metadata.hasSetter
 import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isInnerClass
 import me.eugeniomarletti.kotlin.metadata.isPrimary
@@ -41,6 +42,7 @@ import org.jetbrains.kotlin.serialization.ProtoBuf.Modality
 import org.jetbrains.kotlin.serialization.ProtoBuf.Property
 import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
 import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeAsciiOnly
 import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
@@ -118,12 +120,12 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     return true
   }
 
-  private fun processElement(element: Element): AdapterGenerator? {
-    val metadata = element.kotlinMetadata
+  private fun processElement(model: Element): AdapterGenerator? {
+    val metadata = model.kotlinMetadata
 
     if (metadata !is KotlinClassMetadata) {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+          ERROR, "@JsonClass can't be applied to $model: must be a Kotlin class", model)
       return null
     }
 
@@ -133,27 +135,28 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     when {
       classProto.classKind != Class.Kind.CLASS -> {
         messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+            ERROR, "@JsonClass can't be applied to $model: must be a Kotlin class", model)
         return null
       }
       classProto.isInnerClass -> {
         messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+            ERROR, "@JsonClass can't be applied to $model: must not be an inner class",
+            model)
         return null
       }
       classProto.modality == Modality.ABSTRACT -> {
         messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
+            ERROR, "@JsonClass can't be applied to $model: must not be abstract", model)
         return null
       }
       classProto.visibility == Visibility.LOCAL -> {
         messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be local", element)
+            ERROR, "@JsonClass can't be applied to $model: must not be local", model)
         return null
       }
     }
 
-    val typeName = element.asType().asTypeName()
+    val typeName = model.asType().asTypeName()
     val className = when (typeName) {
       is ClassName -> typeName
       is ParameterizedTypeName -> typeName.rawType
@@ -185,62 +188,106 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       nameResolver.getString(it.name)
     }
 
-    // The compiler might emit methods just so it has a place to put annotations. Find these.
-    val annotatedElements = mutableMapOf<Property, ExecutableElement>()
-    for (enclosedElement in element.enclosedElements) {
-      if (enclosedElement !is ExecutableElement) continue
-      val property = classData.getPropertyOrNull(enclosedElement) ?: continue
-      annotatedElements[property] = enclosedElement
+    val annotationHolders = mutableMapOf<Property, ExecutableElement>()
+    val fields = mutableMapOf<String, VariableElement>()
+    val setters = mutableMapOf<String, ExecutableElement>()
+    val getters = mutableMapOf<String, ExecutableElement>()
+    for (element in model.enclosedElements) {
+      if (element is VariableElement) {
+        fields[element.name] = element
+      } else if (element is ExecutableElement) {
+        when {
+          element.name.startsWith("get") -> {
+            getters[element.name.substring("get".length).decapitalizeAsciiOnly()] = element
+          }
+          element.name.startsWith("is") -> {
+            getters[element.name.substring("is".length).decapitalizeAsciiOnly()] = element
+          }
+          element.name.startsWith("set") -> {
+            setters[element.name.substring("set".length).decapitalizeAsciiOnly()] = element
+          }
+        }
+
+        val property = classData.getPropertyOrNull(element)
+        if (property != null) {
+          annotationHolders[property] = element
+        }
+      }
     }
 
-    val propertyGenerators = mutableListOf<PropertyGenerator>()
-    for (enclosedElement in element.enclosedElements) {
-      if (enclosedElement !is VariableElement) continue
+    val propertiesByName = mutableMapOf<String, PropertyGenerator>()
+    for (property in properties.values) {
+      val name = nameResolver.getString(property.name)
 
-      val name = enclosedElement.simpleName.toString()
-      val property = properties[name] ?: continue
+      val fieldElement = fields[name]
+      val setterElement = setters[name]
+      val getterElement = getters[name]
+      val element = fieldElement ?: setterElement ?: getterElement!!
+
       val parameter = parameters[name]
-
-      val parameterElement = if (parameter != null) {
-        val parameterIndex = protoConstructor.valueParameterList.indexOf(parameter)
-        constructor.parameters[parameterIndex]
-      } else {
-        null
+      var parameterIndex: Int = -1
+      var parameterElement: VariableElement? = null
+      if (parameter != null) {
+        parameterIndex = protoConstructor.valueParameterList.indexOf(parameter)
+        parameterElement = constructor.parameters[parameterIndex]
       }
 
-      val annotatedElement = annotatedElements[property]
+      val annotationHolder = annotationHolders[property]
 
       if (property.visibility != Visibility.INTERNAL
           && property.visibility != Visibility.PROTECTED
           && property.visibility != Visibility.PUBLIC) {
-        messager.printMessage(ERROR, "property $name is not visible", enclosedElement)
+        messager.printMessage(ERROR, "property $name is not visible", element)
         return null
       }
 
       val hasDefault = parameter?.declaresDefaultValue ?: true
 
-      if (Modifier.TRANSIENT in enclosedElement.modifiers) {
+      if (Modifier.TRANSIENT in element.modifiers) {
         if (!hasDefault) {
-          throw IllegalArgumentException("No default value for transient property $name")
+          messager.printMessage(
+              ERROR, "No default value for transient property $name", element)
+          return null
         }
-        continue
+        continue // This property is transient and has a default value. Ignore it.
+      }
+
+      if (!property.hasSetter && parameter == null) {
+        continue // This property is not settable. Ignore it.
       }
 
       val delegateKey = DelegateKey(
           property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
-          jsonQualifiers(enclosedElement, annotatedElement, parameterElement))
+          jsonQualifiers(element, annotationHolder, parameterElement))
 
-      propertyGenerators += PropertyGenerator(
+      propertiesByName[name] = PropertyGenerator(
           delegateKey,
           name,
-          jsonName(name, enclosedElement, annotatedElement, parameterElement),
-          parameter != null,
+          jsonName(name, element, annotationHolder, parameterElement),
+          parameterIndex,
           hasDefault,
           property.returnType.asTypeName(nameResolver, classProto::getTypeParameter))
     }
 
+    for (parameterElement in constructor.parameters) {
+      val name = parameterElement.name
+      val valueParameter = parameters[name]!!
+      if (properties[name] == null && !valueParameter.declaresDefaultValue) {
+        messager.printMessage(
+            ERROR, "No property for required constructor parameter $name", parameterElement)
+        return null
+      }
+    }
+
     // Sort properties so that those with constructor parameters come first.
-    propertyGenerators.sortBy { if (it.hasConstructorParameter) -1 else 1 }
+    val propertyGenerators = propertiesByName.values.toMutableList()
+    propertyGenerators.sortBy {
+      if (it.hasConstructorParameter) {
+        it.parameterIndex
+      } else {
+        Integer.MAX_VALUE
+      }
+    }
 
     val genericTypeNames = classProto.typeParameterList
         .map {
@@ -268,9 +315,9 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
         }
 
     return AdapterGenerator(
-        className,
+        className = className,
         propertyList = propertyGenerators,
-        originalElement = element,
+        originalElement = model,
         hasCompanionObject = hasCompanionObject,
         visibility = classProto.visibility!!,
         genericTypeNames = genericTypeNames,
@@ -280,18 +327,18 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
 
   /** Returns the JsonQualifiers on the field and parameter of a property. */
   private fun jsonQualifiers(
-    field: VariableElement,
-    method: ExecutableElement?,
+    element: Element,
+    annotationHolder: ExecutableElement?,
     parameter: VariableElement?
   ): Set<AnnotationMirror> {
-    val fieldQualifiers = field.qualifiers
-    val methodQualifiers = method.qualifiers
+    val elementQualifiers = element.qualifiers
+    val annotationHolderQualifiers = annotationHolder.qualifiers
     val parameterQualifiers = parameter.qualifiers
 
     // TODO(jwilson): union the qualifiers somehow?
     return when {
-      fieldQualifiers.isNotEmpty() -> fieldQualifiers
-      methodQualifiers.isNotEmpty() -> methodQualifiers
+      elementQualifiers.isNotEmpty() -> elementQualifiers
+      annotationHolderQualifiers.isNotEmpty() -> annotationHolderQualifiers
       parameterQualifiers.isNotEmpty() -> parameterQualifiers
       else -> setOf()
     }
@@ -300,26 +347,20 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   /** Returns the @Json name of a property, or `propertyName` if none is provided. */
   private fun jsonName(
     propertyName: String,
-    field: VariableElement,
-    method: ExecutableElement?,
+    element: Element,
+    annotationHolder: ExecutableElement?,
     parameter: VariableElement?
   ): String {
-    val fieldJsonName = field.jsonName
-    val methodJsonName = method.jsonName
+    val fieldJsonName = element.jsonName
+    val annotationHolderJsonName = annotationHolder.jsonName
     val parameterJsonName = parameter.jsonName
 
     return when {
       fieldJsonName != null -> fieldJsonName
-      methodJsonName != null -> methodJsonName
+      annotationHolderJsonName != null -> annotationHolderJsonName
       parameterJsonName != null -> parameterJsonName
       else -> propertyName
     }
-  }
-
-  private fun errorMustBeKotlinClass(element: Element) {
-    messager.printMessage(ERROR,
-        "@${JsonClass::class.java.simpleName} can't be applied to $element: must be a Kotlin class",
-        element)
   }
 
   private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {
@@ -348,3 +389,8 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       return getAnnotation(Json::class.java)?.name
     }
 }
+
+private val Element.name: String
+  get() {
+    return simpleName.toString()
+  }
