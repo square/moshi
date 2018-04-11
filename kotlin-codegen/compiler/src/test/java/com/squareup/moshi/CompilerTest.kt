@@ -188,4 +188,22 @@ class CompilerTest {
     assertThat(result.systemErr).contains(
         "error: No property for required constructor parameter a")
   }
+
+  @Test fun badGeneratedAnnotation() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.kaptArgs[JsonClassCodeGenProcessor.OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |data class Foo(val a: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains(
+        "Invalid option value for ${JsonClassCodeGenProcessor.OPTION_GENERATED}")
+  }
 }
