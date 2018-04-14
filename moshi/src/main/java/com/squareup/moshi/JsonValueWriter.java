@@ -76,8 +76,11 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter endObject() throws IOException {
-    if (peekScope() != EMPTY_OBJECT || deferredName != null) {
+    if (peekScope() != EMPTY_OBJECT) {
       throw new IllegalStateException("Nesting problem.");
+    }
+    if (deferredName != null) {
+      throw new IllegalStateException("Dangling name: " + deferredName);
     }
     promoteValueToName = false;
     stackSize--;

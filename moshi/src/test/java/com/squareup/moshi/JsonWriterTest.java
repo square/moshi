@@ -571,4 +571,16 @@ public final class JsonWriterTest {
     writer.close();
     writer.close();
   }
+
+  @Test public void danglingNameFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    try {
+      writer.endObject();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Dangling name: a");
+    }
+  }
 }
