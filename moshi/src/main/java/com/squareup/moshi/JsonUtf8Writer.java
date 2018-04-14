@@ -138,7 +138,8 @@ final class JsonUtf8Writer extends JsonWriter {
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
     }
-    if (deferredName != null) {
+    int context = peekScope();
+    if ((context != EMPTY_OBJECT && context != NONEMPTY_OBJECT) || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
     }
     deferredName = name;

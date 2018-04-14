@@ -571,4 +571,37 @@ public final class JsonWriterTest {
     writer.close();
     writer.close();
   }
+
+  @Test public void nameNotInObjectFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    try {
+      writer.name("a");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Nesting problem.");
+    }
+  }
+
+  @Test public void missingValueInObjectIsANestingProblem() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    try {
+      writer.name("b");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Nesting problem.");
+    }
+  }
+
+  @Test public void nameInArrayIsANestingProblem() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    try {
+      writer.name("a");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Nesting problem.");
+    }
+  }
 }
