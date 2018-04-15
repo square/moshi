@@ -19,6 +19,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
@@ -36,10 +37,13 @@ import org.jetbrains.kotlin.serialization.deserialization.NameResolver
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeAsciiOnly
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
+import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
+import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Elements
+import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
 
 /** A user type that should be decoded and encoded by generated code. */
@@ -54,8 +58,10 @@ internal data class TargetType(
   val hasCompanionObject = proto.hasCompanionObjectName()
 
   companion object {
+    private val OBJECT_CLASS = ClassName("java.lang", "Object")
+
     /** Returns a target type for `element`, or null if it cannot be used with code gen. */
-    fun get(messager: Messager, elementUtils: Elements, element: Element): TargetType? {
+    fun get(messager: Messager, elements: Elements, types: Types, element: Element): TargetType? {
       val typeMetadata: KotlinMetadata? = element.kotlinMetadata
       if (element !is TypeElement || typeMetadata !is KotlinClassMetadata) {
         messager.printMessage(
@@ -87,17 +93,34 @@ internal data class TargetType(
         }
       }
 
-      val constructor = TargetConstructor.primary(typeMetadata, elementUtils)
-      val properties = properties(element, constructor)
+      val constructor = TargetConstructor.primary(typeMetadata, elements)
+      val properties = mutableMapOf<String, TargetProperty>()
+      for (supertype in element.supertypes(types)) {
+        if (supertype.asClassName() == OBJECT_CLASS) {
+          continue // Don't load properties for java.lang.Object.
+        }
+        if (supertype.kind != ElementKind.CLASS) {
+          continue // Don't load properties for interface types.
+        }
+        if (supertype.kotlinMetadata == null) {
+          messager.printMessage(ERROR,
+              "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+              element)
+        }
+        for ((name, property) in declaredProperties(supertype, constructor)) {
+          properties.putIfAbsent(name, property)
+        }
+      }
       val genericTypeNames = genericTypeNames(proto, typeMetadata.data.nameResolver)
       return TargetType(proto, element, constructor, properties, genericTypeNames)
     }
 
-    private fun properties(
-      model: TypeElement,
+    /** Returns the properties declared by `typeElement`. */
+    private fun declaredProperties(
+      typeElement: TypeElement,
       constructor: TargetConstructor
     ): Map<String, TargetProperty> {
-      val typeMetadata: KotlinClassMetadata = model.kotlinMetadata as KotlinClassMetadata
+      val typeMetadata: KotlinClassMetadata = typeElement.kotlinMetadata as KotlinClassMetadata
       val nameResolver = typeMetadata.data.nameResolver
       val classProto = typeMetadata.data.classProto
 
@@ -105,7 +128,7 @@ internal data class TargetType(
       val fields = mutableMapOf<String, VariableElement>()
       val setters = mutableMapOf<String, ExecutableElement>()
       val getters = mutableMapOf<String, ExecutableElement>()
-      for (element in model.enclosedElements) {
+      for (element in typeElement.enclosedElements) {
         if (element is VariableElement) {
           fields[element.name] = element
         } else if (element is ExecutableElement) {
@@ -156,6 +179,19 @@ internal data class TargetType(
           else -> throw IllegalStateException("unexpected TypeName: ${typeName::class}")
         }
       }
+
+    /** Returns all supertypes of this, recursively. Includes interface and class supertypes. */
+    private fun TypeElement.supertypes(
+      types: Types,
+      result: MutableSet<TypeElement> = mutableSetOf()
+    ): Set<TypeElement> {
+      result.add(this)
+      for (supertype in types.directSupertypes(asType())) {
+        val supertypeElement = (supertype as DeclaredType).asElement() as TypeElement
+        supertypeElement.supertypes(types, result)
+      }
+      return result
+    }
 
     private val Element.name get() = simpleName.toString()
 

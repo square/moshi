@@ -227,4 +227,21 @@ class CompilerTest {
     assertThat(result.systemErr).contains("property b is not visible")
     assertThat(result.systemErr).contains("property c is not visible")
   }
+
+  @Test fun extendPlatformType() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |import java.util.Date
+        |
+        |@JsonClass(generateAdapter = true)
+        |class ExtendsPlatformClass(var a: Int) : Date()
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("supertype java.util.Date is not a Kotlin type")
+  }
 }
