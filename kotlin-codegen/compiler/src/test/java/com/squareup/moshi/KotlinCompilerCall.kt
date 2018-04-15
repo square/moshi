@@ -20,14 +20,12 @@ import okio.Buffer
 import okio.Okio
 import org.jetbrains.kotlin.cli.common.CLITool
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.ObjectOutputStream
 import java.io.PrintStream
 import java.net.URLClassLoader
 import java.net.URLDecoder
-import java.util.Base64
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.reflect.KClass
@@ -178,18 +176,18 @@ class KotlinCompilerCall(var scratchDir: File) {
   }
 
   /**
-   * Base64 encodes a mapping of annotation processor args for kapt, borrowed from
+   * Base64 encodes a mapping of annotation processor args for kapt, as specified by
    * https://kotlinlang.org/docs/reference/kapt.html#apjavac-options-encoding
    */
   private fun encodeOptions(options: Map<String, String>): String {
-    val os = ByteArrayOutputStream()
-    ObjectOutputStream(os).use { oos ->
+    val buffer = Buffer()
+    ObjectOutputStream(buffer.outputStream()).use { oos ->
       oos.writeInt(options.size)
       for ((key, value) in options.entries) {
         oos.writeUTF(key)
         oos.writeUTF(value)
       }
     }
-    return Base64.getEncoder().encodeToString(os.toByteArray())
+    return buffer.readByteString().base64()
   }
 }

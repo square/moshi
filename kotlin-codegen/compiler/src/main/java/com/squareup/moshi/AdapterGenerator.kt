@@ -29,26 +29,28 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import org.jetbrains.kotlin.serialization.ProtoBuf
+import me.eugeniomarletti.kotlin.metadata.isDataClass
+import me.eugeniomarletti.kotlin.metadata.visibility
+import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import java.lang.reflect.Type
-import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
-  val className: ClassName,
-  val propertyList: List<PropertyGenerator>,
-  val originalElement: Element,
-  val isDataClass: Boolean,
-  val hasCompanionObject: Boolean,
-  val visibility: ProtoBuf.Visibility,
-  val elements: Elements,
-  val genericTypeNames: List<TypeVariableName>?
+  target: TargetType,
+  private val propertyList: List<PropertyGenerator>,
+  val elements: Elements
 ) {
-  val nameAllocator = NameAllocator()
-  val adapterName = "${className.simpleNames().joinToString(separator = "_")}JsonAdapter"
-  val originalTypeName = originalElement.asType().asTypeName()
+  private val className = target.name
+  private val isDataClass = target.proto.isDataClass
+  private val hasCompanionObject = target.hasCompanionObject
+  private val visibility = target.proto.visibility!!
+  val genericTypeNames = target.genericTypeNames
+
+  private val nameAllocator = NameAllocator()
+  private val adapterName = "${className.simpleNames().joinToString(separator = "_")}JsonAdapter"
+  private val originalTypeName = target.element.asType().asTypeName()
 
   val moshiParam = ParameterSpec.builder(
       nameAllocator.newName("moshi"),
@@ -58,30 +60,30 @@ internal class AdapterGenerator(
       ParameterizedTypeName.get(ARRAY,
           Type::class.asTypeName()))
       .build()
-  val readerParam = ParameterSpec.builder(
+  private val readerParam = ParameterSpec.builder(
       nameAllocator.newName("reader"),
       JsonReader::class)
       .build()
-  val writerParam = ParameterSpec.builder(
+  private val writerParam = ParameterSpec.builder(
       nameAllocator.newName("writer"),
       JsonWriter::class)
       .build()
-  val valueParam = ParameterSpec.builder(
+  private val valueParam = ParameterSpec.builder(
       nameAllocator.newName("value"),
       originalTypeName.asNullable())
       .build()
-  val jsonAdapterTypeName = ParameterizedTypeName.get(
+  private val jsonAdapterTypeName = ParameterizedTypeName.get(
       JsonAdapter::class.asClassName(), originalTypeName)
 
   // selectName() API setup
-  val optionsProperty = PropertySpec.builder(
+  private val optionsProperty = PropertySpec.builder(
       nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
       KModifier.PRIVATE)
-      .initializer("%T.of(${propertyList.map { it.serializedName }
+      .initializer("%T.of(${propertyList.map { it.jsonName }
           .joinToString(", ") { "\"$it\"" }})", JsonReader.Options::class.asTypeName())
       .build()
 
-  val delegateAdapters = propertyList.distinctBy { it.delegateKey }
+  private val delegateAdapters = propertyList.distinctBy { it.delegateKey }
 
   fun generateFile(generatedOption: TypeElement?): FileSpec {
     for (property in delegateAdapters) {
@@ -112,12 +114,12 @@ internal class AdapterGenerator(
 
     result.superclass(jsonAdapterTypeName)
 
-    genericTypeNames?.let {
+    if (genericTypeNames.isNotEmpty()) {
       result.addTypeVariables(genericTypeNames)
     }
 
     // TODO make this configurable. Right now it just matches the source model
-    if (visibility == ProtoBuf.Visibility.INTERNAL) {
+    if (visibility == Visibility.INTERNAL) {
       result.addModifiers(KModifier.INTERNAL)
     }
 
@@ -139,7 +141,7 @@ internal class AdapterGenerator(
     val result = FunSpec.constructorBuilder()
     result.addParameter(moshiParam)
 
-    genericTypeNames?.let {
+    if (genericTypeNames.isNotEmpty()) {
       result.addParameter(typesParam)
     }
 
@@ -279,7 +281,7 @@ internal class AdapterGenerator(
 
     result.addStatement("%N.beginObject()", writerParam)
     propertyList.forEach { property ->
-      result.addStatement("%N.name(%S)", writerParam, property.serializedName)
+      result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%L)",
           nameAllocator.get(property.delegateKey), writerParam, valueParam, property.name)
     }
@@ -301,16 +303,13 @@ internal class AdapterGenerator(
         .addParameter(moshiParam)
 
     // TODO make this configurable. Right now it just matches the source model
-    if (visibility == ProtoBuf.Visibility.INTERNAL) {
+    if (visibility == Visibility.INTERNAL) {
       result.addModifiers(KModifier.INTERNAL)
     }
 
-    genericTypeNames?.let {
+    if (genericTypeNames.isNotEmpty()) {
       result.addParameter(typesParam)
-      result.addTypeVariables(it)
-    }
-
-    if (genericTypeNames != null) {
+      result.addTypeVariables(genericTypeNames)
       result.addStatement("return %N(%N, %N)", adapterName, moshiParam, typesParam)
     } else {
       result.addStatement("return %N(%N)", adapterName, moshiParam)

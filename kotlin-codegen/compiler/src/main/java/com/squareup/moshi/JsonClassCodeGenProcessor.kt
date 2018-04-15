@@ -15,46 +15,18 @@
  */
 package com.squareup.moshi
 
-import com.google.auto.common.AnnotationMirrors
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.KModifier.OUT
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.asTypeName
-import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
-import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
-import me.eugeniomarletti.kotlin.metadata.hasSetter
-import me.eugeniomarletti.kotlin.metadata.isDataClass
-import me.eugeniomarletti.kotlin.metadata.isInnerClass
-import me.eugeniomarletti.kotlin.metadata.isPrimary
-import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
-import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.modality
-import me.eugeniomarletti.kotlin.metadata.visibility
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
-import org.jetbrains.kotlin.serialization.ProtoBuf.Class
-import org.jetbrains.kotlin.serialization.ProtoBuf.Modality
-import org.jetbrains.kotlin.serialization.ProtoBuf.Property
-import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
-import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
-import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeAsciiOnly
 import java.io.File
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -112,255 +84,44 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter) {
-        val adapterGenerator = processElement(type) ?: continue
-        adapterGenerator.generateAndWrite(generatedType)
+        val generator = adapterGenerator(type) ?: continue
+        generator.generateAndWrite(generatedType)
       }
     }
 
     return true
   }
 
-  private fun processElement(model: Element): AdapterGenerator? {
-    val metadata = model.kotlinMetadata
+  private fun adapterGenerator(element: Element): AdapterGenerator? {
+    val type = TargetType.get(messager, elementUtils, element) ?: return null
 
-    if (metadata !is KotlinClassMetadata) {
-      messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $model: must be a Kotlin class", model)
-      return null
+    val properties = mutableMapOf<String, PropertyGenerator>()
+    for (property in type.properties.values) {
+      val generator = property.generator(messager)
+      if (generator != null) {
+        properties[property.name] = generator
+      }
     }
 
-    val classData = metadata.data
-    val (nameResolver, classProto) = classData
-
-    when {
-      classProto.classKind != Class.Kind.CLASS -> {
+    for ((name, parameter) in type.constructor.parameters) {
+      if (type.properties[parameter.name] == null && !parameter.proto.declaresDefaultValue) {
         messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $model: must be a Kotlin class", model)
-        return null
-      }
-      classProto.isInnerClass -> {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $model: must not be an inner class",
-            model)
-        return null
-      }
-      classProto.modality == Modality.ABSTRACT -> {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $model: must not be abstract", model)
-        return null
-      }
-      classProto.visibility == Visibility.LOCAL -> {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $model: must not be local", model)
-        return null
-      }
-    }
-
-    val typeName = model.asType().asTypeName()
-    val className = when (typeName) {
-      is ClassName -> typeName
-      is ParameterizedTypeName -> typeName.rawType
-      else -> throw IllegalStateException("unexpected TypeName: ${typeName::class}")
-    }
-
-    val hasCompanionObject = classProto.hasCompanionObjectName()
-    // todo allow custom constructor
-    val protoConstructor = classProto.constructorList
-        .single { it.isPrimary }
-    val constructorJvmSignature = protoConstructor.getJvmConstructorSignature(nameResolver,
-        classProto.typeTable)
-    val constructor = classProto.fqName
-        .let(nameResolver::getString)
-        .replace('/', '.')
-        .let(elementUtils::getTypeElement)
-        .enclosedElements
-        .mapNotNull {
-          it.takeIf { it.kind == ElementKind.CONSTRUCTOR }?.let { it as ExecutableElement }
-        }
-        .first()
-    // TODO Temporary until jvm method signature matching is better
-    //  .single { it.jvmMethodSignature == constructorJvmSignature }
-    val parameters: Map<String, ValueParameter> = protoConstructor.valueParameterList.associateBy {
-      nameResolver.getString(it.name)
-    }
-
-    val properties = classData.classProto.propertyList.associateBy {
-      nameResolver.getString(it.name)
-    }
-
-    val annotationHolders = mutableMapOf<Property, ExecutableElement>()
-    val fields = mutableMapOf<String, VariableElement>()
-    val setters = mutableMapOf<String, ExecutableElement>()
-    val getters = mutableMapOf<String, ExecutableElement>()
-    for (element in model.enclosedElements) {
-      if (element is VariableElement) {
-        fields[element.name] = element
-      } else if (element is ExecutableElement) {
-        when {
-          element.name.startsWith("get") -> {
-            getters[element.name.substring("get".length).decapitalizeAsciiOnly()] = element
-          }
-          element.name.startsWith("is") -> {
-            getters[element.name.substring("is".length).decapitalizeAsciiOnly()] = element
-          }
-          element.name.startsWith("set") -> {
-            setters[element.name.substring("set".length).decapitalizeAsciiOnly()] = element
-          }
-        }
-
-        val property = classData.getPropertyOrNull(element)
-        if (property != null) {
-          annotationHolders[property] = element
-        }
-      }
-    }
-
-    val propertiesByName = mutableMapOf<String, PropertyGenerator>()
-    for (property in properties.values) {
-      val name = nameResolver.getString(property.name)
-
-      val fieldElement = fields[name]
-      val setterElement = setters[name]
-      val getterElement = getters[name]
-      val element = fieldElement ?: setterElement ?: getterElement!!
-
-      val parameter = parameters[name]
-      var parameterIndex: Int = -1
-      var parameterElement: VariableElement? = null
-      if (parameter != null) {
-        parameterIndex = protoConstructor.valueParameterList.indexOf(parameter)
-        parameterElement = constructor.parameters[parameterIndex]
-      }
-
-      val annotationHolder = annotationHolders[property]
-
-      if (property.visibility != Visibility.INTERNAL
-          && property.visibility != Visibility.PROTECTED
-          && property.visibility != Visibility.PUBLIC) {
-        messager.printMessage(ERROR, "property $name is not visible", element)
-        return null
-      }
-
-      val hasDefault = parameter?.declaresDefaultValue ?: true
-
-      if (Modifier.TRANSIENT in element.modifiers) {
-        if (!hasDefault) {
-          messager.printMessage(
-              ERROR, "No default value for transient property $name", element)
-          return null
-        }
-        continue // This property is transient and has a default value. Ignore it.
-      }
-
-      if (!property.hasSetter && parameter == null) {
-        continue // This property is not settable. Ignore it.
-      }
-
-      val delegateKey = DelegateKey(
-          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter, true),
-          jsonQualifiers(element, annotationHolder, parameterElement))
-
-      propertiesByName[name] = PropertyGenerator(
-          delegateKey,
-          name,
-          jsonName(name, element, annotationHolder, parameterElement),
-          parameterIndex,
-          hasDefault,
-          property.returnType.asTypeName(nameResolver, classProto::getTypeParameter))
-    }
-
-    for (parameterElement in constructor.parameters) {
-      val name = parameterElement.name
-      val valueParameter = parameters[name]!!
-      if (properties[name] == null && !valueParameter.declaresDefaultValue) {
-        messager.printMessage(
-            ERROR, "No property for required constructor parameter $name", parameterElement)
+            ERROR, "No property for required constructor parameter $name", parameter.element)
         return null
       }
     }
 
     // Sort properties so that those with constructor parameters come first.
-    val propertyGenerators = propertiesByName.values.toMutableList()
-    propertyGenerators.sortBy {
+    val sortedProperties = properties.values.toMutableList()
+    sortedProperties.sortBy {
       if (it.hasConstructorParameter) {
-        it.parameterIndex
+        it.target.parameterIndex
       } else {
         Integer.MAX_VALUE
       }
     }
 
-    val genericTypeNames = classProto.typeParameterList
-        .map {
-          val variance = it.variance.asKModifier().let {
-            // We don't redeclare out variance here
-            if (it == OUT) {
-              null
-            } else {
-              it
-            }
-          }
-          TypeVariableName(
-              name = nameResolver.getString(it.name),
-              bounds = *(it.upperBoundList
-                  .map { it.asTypeName(nameResolver, classProto::getTypeParameter) }
-                  .toTypedArray()),
-              variance = variance)
-              .reified(it.reified)
-        }.let {
-          if (it.isEmpty()) {
-            null
-          } else {
-            it
-          }
-        }
-
-    return AdapterGenerator(
-        className = className,
-        propertyList = propertyGenerators,
-        originalElement = model,
-        hasCompanionObject = hasCompanionObject,
-        visibility = classProto.visibility!!,
-        genericTypeNames = genericTypeNames,
-        elements = elementUtils,
-        isDataClass = classProto.isDataClass)
-  }
-
-  /** Returns the JsonQualifiers on the field and parameter of a property. */
-  private fun jsonQualifiers(
-    element: Element,
-    annotationHolder: ExecutableElement?,
-    parameter: VariableElement?
-  ): Set<AnnotationMirror> {
-    val elementQualifiers = element.qualifiers
-    val annotationHolderQualifiers = annotationHolder.qualifiers
-    val parameterQualifiers = parameter.qualifiers
-
-    // TODO(jwilson): union the qualifiers somehow?
-    return when {
-      elementQualifiers.isNotEmpty() -> elementQualifiers
-      annotationHolderQualifiers.isNotEmpty() -> annotationHolderQualifiers
-      parameterQualifiers.isNotEmpty() -> parameterQualifiers
-      else -> setOf()
-    }
-  }
-
-  /** Returns the @Json name of a property, or `propertyName` if none is provided. */
-  private fun jsonName(
-    propertyName: String,
-    element: Element,
-    annotationHolder: ExecutableElement?,
-    parameter: VariableElement?
-  ): String {
-    val fieldJsonName = element.jsonName
-    val annotationHolderJsonName = annotationHolder.jsonName
-    val parameterJsonName = parameter.jsonName
-
-    return when {
-      fieldJsonName != null -> fieldJsonName
-      annotationHolderJsonName != null -> annotationHolderJsonName
-      parameterJsonName != null -> parameterJsonName
-      else -> propertyName
-    }
+    return AdapterGenerator(type, sortedProperties, elementUtils)
   }
 
   private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {
@@ -376,21 +137,4 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     val file = filer.createSourceFile(adapterName).toUri().let(::File)
     return file.parentFile.also { file.delete() }
   }
-
-  private val Element?.qualifiers: Set<AnnotationMirror>
-    get() {
-      if (this == null) return setOf()
-      return AnnotationMirrors.getAnnotatedAnnotations(this, JsonQualifier::class.java)
-    }
-
-  private val Element?.jsonName: String?
-    get() {
-      if (this == null) return null
-      return getAnnotation(Json::class.java)?.name
-    }
 }
-
-private val Element.name: String
-  get() {
-    return simpleName.toString()
-  }
