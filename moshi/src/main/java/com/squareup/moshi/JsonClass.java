@@ -22,11 +22,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Customizes how a type is encoded as JSON.
- *
- * <p>This annotation is currently only permitted on declarations of classes in Kotlin.
  */
 @Retention(RUNTIME)
 @Documented
 public @interface JsonClass {
+  /**
+   * True to trigger the annotation processor to generate an adapter for this type.
+   *
+   * There are currently some restrictions on which types that can be used with generated adapters:
+   *
+   *  * The class must be implemented in Kotlin.
+   *  * The class may not be an abstract class, an inner class, or a local class.
+   *  * All superclasses must be implemented in Kotlin.
+   *  * All properties must be public, protected, or internal.
+   *  * All properties must be either non-transient or have a default value.
+   */
   boolean generateAdapter();
 }

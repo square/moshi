@@ -93,7 +93,7 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   }
 
   private fun adapterGenerator(element: Element): AdapterGenerator? {
-    val type = TargetType.get(messager, elementUtils, element) ?: return null
+    val type = TargetType.get(messager, elementUtils, typeUtils, element) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
@@ -112,8 +112,7 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     }
 
     // Sort properties so that those with constructor parameters come first.
-    val sortedProperties = properties.values.toMutableList()
-    sortedProperties.sortBy {
+    val sortedProperties = properties.values.sortedBy {
       if (it.hasConstructorParameter) {
         it.target.parameterIndex
       } else {
