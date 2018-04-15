@@ -29,11 +29,10 @@ import javax.lang.model.element.AnnotationMirror
 
 /** A JsonAdapter that can be used to encode and decode a particular field. */
 internal data class DelegateKey(
-  val type: TypeName,
-  val jsonQualifiers: Set<AnnotationMirror>
+  private val type: TypeName,
+  private val jsonQualifiers: Set<AnnotationMirror>
 ) {
-  val nullable
-    get() = type.nullable || type is TypeVariableName
+  val nullable get() = type.nullable || type is TypeVariableName
 
   fun reserveName(nameAllocator: NameAllocator) {
     val qualifierNames = jsonQualifiers.joinToString("") {
@@ -53,8 +52,7 @@ internal data class DelegateKey(
         } else {
           CodeBlock.of("<%T>", type)
         },
-        type.makeType(
-            enclosing.elements, enclosing.typesParam, enclosing.genericTypeNames ?: emptyList()))
+        type.makeType(enclosing.elements, enclosing.typesParam, enclosing.genericTypeNames))
     val standardArgsSize = standardArgs.size + 1
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()

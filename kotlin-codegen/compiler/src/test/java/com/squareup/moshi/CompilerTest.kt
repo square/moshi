@@ -206,4 +206,25 @@ class CompilerTest {
     assertThat(result.systemErr).contains(
         "Invalid option value for ${JsonClassCodeGenProcessor.OPTION_GENERATED}")
   }
+
+  @Test fun multipleErrors() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class Class1(private var a: Int, private var b: Int)
+        |
+        |@JsonClass(generateAdapter = true)
+        |class Class2(private var c: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("property a is not visible")
+    assertThat(result.systemErr).contains("property b is not visible")
+    assertThat(result.systemErr).contains("property c is not visible")
+  }
 }

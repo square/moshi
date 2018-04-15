@@ -18,29 +18,23 @@ package com.squareup.moshi
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 
 /** Generates functions to encode and decode a property as JSON. */
-internal class PropertyGenerator(
-  val delegateKey: DelegateKey,
-  val name: String,
-  val serializedName: String,
-  val parameterIndex: Int,
-  val hasDefault: Boolean,
-  val typeName: TypeName
-) {
+internal class PropertyGenerator(val target: TargetProperty) {
+  val delegateKey = target.delegateKey()
+  val name = target.name
+  val jsonName = target.jsonName()
+  val hasDefault = target.hasDefault
+
   lateinit var localName: String
   lateinit var localIsPresentName: String
 
-  val isRequired
-    get() = !delegateKey.nullable && !hasDefault
+  val isRequired get() = !delegateKey.nullable && !hasDefault
 
-  val hasConstructorParameter
-    get() = parameterIndex != -1
+  val hasConstructorParameter get() = target.parameterIndex != -1
 
   /** We prefer to use 'null' to mean absent, but for some properties those are distinct. */
-  val differentiateAbsentFromNull
-    get() = delegateKey.nullable && hasDefault
+  val differentiateAbsentFromNull get() = delegateKey.nullable && hasDefault
 
   fun allocateNames(nameAllocator: NameAllocator) {
     localName = nameAllocator.newName(name)
@@ -48,7 +42,7 @@ internal class PropertyGenerator(
   }
 
   fun generateLocalProperty(): PropertySpec {
-    return PropertySpec.builder(localName, typeName.asNullable())
+    return PropertySpec.builder(localName, target.type.asNullable())
         .mutable(true)
         .initializer("null")
         .build()
