@@ -41,7 +41,6 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
-import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
@@ -52,7 +51,7 @@ internal data class TargetType(
   val element: TypeElement,
   val constructor: TargetConstructor,
   val properties: Map<String, TargetProperty>,
-  val genericTypeNames: List<TypeVariableName>
+  val typeVariables: List<TypeVariableName>
 ) {
   val name = element.className
   val hasCompanionObject = proto.hasCompanionObjectName()
@@ -93,31 +92,37 @@ internal data class TargetType(
         }
       }
 
+      val typeVariables = genericTypeNames(proto, typeMetadata.data.nameResolver)
+      val appliedType = AppliedType.get(element)
+
       val constructor = TargetConstructor.primary(typeMetadata, elements)
       val properties = mutableMapOf<String, TargetProperty>()
-      for (supertype in element.supertypes(types)) {
-        if (supertype.asClassName() == OBJECT_CLASS) {
+      for (supertype in appliedType.supertypes(types)) {
+        if (supertype.element.asClassName() == OBJECT_CLASS) {
           continue // Don't load properties for java.lang.Object.
         }
-        if (supertype.kind != ElementKind.CLASS) {
+        if (supertype.element.kind != ElementKind.CLASS) {
           continue // Don't load properties for interface types.
         }
-        if (supertype.kotlinMetadata == null) {
+        if (supertype.element.kotlinMetadata == null) {
           messager.printMessage(ERROR,
               "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
               element)
+          return null
         }
-        for ((name, property) in declaredProperties(supertype, constructor)) {
+        val supertypeProperties = declaredProperties(
+            supertype.element, supertype.resolver, constructor)
+        for ((name, property) in supertypeProperties) {
           properties.putIfAbsent(name, property)
         }
       }
-      val genericTypeNames = genericTypeNames(proto, typeMetadata.data.nameResolver)
-      return TargetType(proto, element, constructor, properties, genericTypeNames)
+      return TargetType(proto, element, constructor, properties, typeVariables)
     }
 
     /** Returns the properties declared by `typeElement`. */
     private fun declaredProperties(
       typeElement: TypeElement,
+      typeResolver: TypeResolver,
       constructor: TargetConstructor
     ): Map<String, TargetProperty> {
       val typeMetadata: KotlinClassMetadata = typeElement.kotlinMetadata as KotlinClassMetadata
@@ -158,13 +163,10 @@ internal data class TargetType(
       val result = mutableMapOf<String, TargetProperty>()
       for (property in classProto.propertyList) {
         val name = nameResolver.getString(property.name)
-        val type = property.returnType.asTypeName(
-            nameResolver, classProto::getTypeParameter, false)
-        val typeWithResolvedAliases = property.returnType.asTypeName(
-            nameResolver, classProto::getTypeParameter, true)
-        result[name] = TargetProperty(name, type, typeWithResolvedAliases, property,
-            constructor.parameters[name], annotationHolders[name], fields[name],
-            setters[name], getters[name])
+        val type = typeResolver.resolve(property.returnType.asTypeName(
+            nameResolver, classProto::getTypeParameter, true))
+        result[name] = TargetProperty(name, type, property, constructor.parameters[name],
+            annotationHolders[name], fields[name], setters[name], getters[name])
       }
 
       return result
@@ -179,19 +181,6 @@ internal data class TargetType(
           else -> throw IllegalStateException("unexpected TypeName: ${typeName::class}")
         }
       }
-
-    /** Returns all supertypes of this, recursively. Includes interface and class supertypes. */
-    private fun TypeElement.supertypes(
-      types: Types,
-      result: MutableSet<TypeElement> = mutableSetOf()
-    ): Set<TypeElement> {
-      result.add(this)
-      for (supertype in types.directSupertypes(asType())) {
-        val supertypeElement = (supertype as DeclaredType).asElement() as TypeElement
-        supertypeElement.supertypes(types, result)
-      }
-      return result
-    }
 
     private val Element.name get() = simpleName.toString()
 
