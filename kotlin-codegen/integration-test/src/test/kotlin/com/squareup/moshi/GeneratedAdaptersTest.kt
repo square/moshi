@@ -20,7 +20,6 @@ import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
 import java.util.Locale
-import java.util.SimpleTimeZone
 
 class GeneratedAdaptersTest {
 
@@ -628,21 +627,6 @@ class GeneratedAdaptersTest {
     var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
     var v31: Int, var v32: Int, var v33: Int)
 
-  @Test fun extendsPlatformClassWithPrivateField() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(ExtendsPlatformClassWithPrivateField::class.java)
-
-    val encoded = ExtendsPlatformClassWithPrivateField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"id":"B"}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.id).isEqualTo("C")
-  }
-
-  @JsonClass(generateAdapter = true)
-  internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
-
   @Test fun unsettablePropertyIgnored() {
     val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter(UnsettableProperty::class.java)
@@ -708,6 +692,46 @@ class GeneratedAdaptersTest {
       set(value) {
         b = value - a
       }
+  }
+
+  @Test fun supertypeConstructorParameters() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(SubtypeConstructorParameters::class.java)
+
+    val encoded = SubtypeConstructorParameters(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(4)
+    assertThat(decoded.b).isEqualTo(6)
+  }
+
+  open class SupertypeConstructorParameters(var a: Int)
+
+  @JsonClass(generateAdapter = true)
+  class SubtypeConstructorParameters(a: Int, var b: Int) : SupertypeConstructorParameters(a)
+
+  @Test fun supertypeProperties() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(SubtypeProperties::class.java)
+
+    val encoded = SubtypeProperties()
+    encoded.a = 3
+    encoded.b = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5,"a":3}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(4)
+    assertThat(decoded.b).isEqualTo(6)
+  }
+
+  open class SupertypeProperties {
+    var a: Int = -1
+  }
+
+  @JsonClass(generateAdapter = true)
+  class SubtypeProperties : SupertypeProperties() {
+    var b: Int = -1
   }
 
   @Retention(AnnotationRetention.RUNTIME)
