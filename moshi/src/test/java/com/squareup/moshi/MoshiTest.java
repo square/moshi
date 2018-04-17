@@ -27,6 +27,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -723,6 +724,16 @@ public final class MoshiTest {
 
     assertThat(messageAdapter.toJson(message))
         .isEqualTo("{\"shout\":\"WHAT'S UP\",\"speak\":\"Yo dog\"}");
+  }
+
+  @Test public void adapterLookupDisallowsNullType() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(null, Collections.<Annotation>emptySet());
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("type == null");
+    }
   }
 
   @Test public void adapterLookupDisallowsNullAnnotations() {

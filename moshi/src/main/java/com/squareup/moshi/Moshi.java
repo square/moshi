@@ -92,6 +92,9 @@ public final class Moshi {
   @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
+    if (type == null) {
+      throw new NullPointerException("type == null");
+    }
     if (annotations == null) {
       throw new NullPointerException("annotations == null");
     }
