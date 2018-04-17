@@ -36,7 +36,6 @@ import javax.tools.Diagnostic
 internal data class TargetProperty(
   val name: String,
   val type: TypeName,
-  private val typeWithResolvedAliases: TypeName,
   private val proto: Property,
   private val parameter: TargetParameter?,
   private val annotationHolder: ExecutableElement?,
@@ -87,7 +86,7 @@ internal data class TargetProperty(
     return PropertyGenerator(this)
   }
 
-  fun delegateKey() = DelegateKey(typeWithResolvedAliases, jsonQualifiers())
+  fun delegateKey() = DelegateKey(type, jsonQualifiers())
 
   /** Returns the JsonQualifiers on the field and parameter of this property. */
   private fun jsonQualifiers(): Set<AnnotationMirror> {
@@ -107,8 +106,7 @@ internal data class TargetProperty(
   private val Element?.qualifiers: Set<AnnotationMirror>
     get() {
       if (this == null) return setOf()
-      return AnnotationMirrors.getAnnotatedAnnotations(this,
-          JsonQualifier::class.java)
+      return AnnotationMirrors.getAnnotatedAnnotations(this, JsonQualifier::class.java)
     }
 
   /** Returns the @Json name of this property, or this property's name if none is provided. */

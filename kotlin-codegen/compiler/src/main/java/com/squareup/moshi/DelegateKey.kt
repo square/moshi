@@ -19,6 +19,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.NameAllocator
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -34,25 +35,27 @@ internal data class DelegateKey(
 ) {
   val nullable get() = type.nullable || type is TypeVariableName
 
-  fun reserveName(nameAllocator: NameAllocator) {
+  /** Returns an adapter to use when encoding and decoding this property. */
+  fun generateProperty(
+    nameAllocator: NameAllocator,
+    typeRenderer: TypeRenderer,
+    moshiParameter: ParameterSpec): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
       "At${it.annotationType.asElement().simpleName}"
     }
-    nameAllocator.newName("${type.toVariableName().decapitalize()}${qualifierNames}Adapter", this)
-  }
+    val adapterName = nameAllocator.newName(
+        "${type.toVariableName().decapitalize()}${qualifierNames}Adapter", this)
 
-  /** Returns an adapter to use when encoding and decoding this property. */
-  fun generateProperty(nameAllocator: NameAllocator, enclosing: AdapterGenerator): PropertySpec {
     val adapterTypeName = ParameterizedTypeName.get(
         JsonAdapter::class.asTypeName(), type)
     val qualifiers = jsonQualifiers
-    val standardArgs = arrayOf(enclosing.moshiParam,
+    val standardArgs = arrayOf(moshiParameter,
         if (type is ClassName && qualifiers.isEmpty()) {
           ""
         } else {
           CodeBlock.of("<%T>", type)
         },
-        type.makeType(enclosing.elements, enclosing.typesParam, enclosing.genericTypeNames))
+        typeRenderer.render(type))
     val standardArgsSize = standardArgs.size + 1
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()
@@ -77,7 +80,7 @@ internal data class DelegateKey(
 
     val nullModifier = if (nullable) ".nullSafe()" else ".nonNull()"
 
-    return PropertySpec.builder(nameAllocator.get(this), adapterTypeName, KModifier.PRIVATE)
+    return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
         .initializer("%1N.adapter%2L(%3L$initializerString)$nullModifier", *finalArgs)
         .build()
   }

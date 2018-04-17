@@ -120,7 +120,7 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       }
     }
 
-    return AdapterGenerator(type, sortedProperties, elementUtils)
+    return AdapterGenerator(type, sortedProperties)
   }
 
   private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {

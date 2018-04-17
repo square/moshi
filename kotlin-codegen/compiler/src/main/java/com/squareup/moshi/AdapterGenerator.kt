@@ -18,6 +18,7 @@ package com.squareup.moshi
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -34,31 +35,28 @@ import me.eugeniomarletti.kotlin.metadata.visibility
 import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import java.lang.reflect.Type
 import javax.lang.model.element.TypeElement
-import javax.lang.model.util.Elements
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
   target: TargetType,
-  private val propertyList: List<PropertyGenerator>,
-  val elements: Elements
+  private val propertyList: List<PropertyGenerator>
 ) {
   private val className = target.name
   private val isDataClass = target.proto.isDataClass
   private val hasCompanionObject = target.hasCompanionObject
   private val visibility = target.proto.visibility!!
-  val genericTypeNames = target.genericTypeNames
+  private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames().joinToString(separator = "_")}JsonAdapter"
   private val originalTypeName = target.element.asType().asTypeName()
 
-  val moshiParam = ParameterSpec.builder(
+  private val moshiParam = ParameterSpec.builder(
       nameAllocator.newName("moshi"),
       Moshi::class).build()
-  val typesParam = ParameterSpec.builder(
+  private val typesParam = ParameterSpec.builder(
       nameAllocator.newName("types"),
-      ParameterizedTypeName.get(ARRAY,
-          Type::class.asTypeName()))
+      ParameterizedTypeName.get(ARRAY, Type::class.asTypeName()))
       .build()
   private val readerParam = ParameterSpec.builder(
       nameAllocator.newName("reader"),
@@ -83,12 +81,7 @@ internal class AdapterGenerator(
           .joinToString(", ") { "\"$it\"" }})", JsonReader.Options::class.asTypeName())
       .build()
 
-  private val delegateAdapters = propertyList.distinctBy { it.delegateKey }
-
   fun generateFile(generatedOption: TypeElement?): FileSpec {
-    for (property in delegateAdapters) {
-      property.delegateKey.reserveName(nameAllocator)
-    }
     for (property in propertyList) {
       property.allocateNames(nameAllocator)
     }
@@ -114,8 +107,8 @@ internal class AdapterGenerator(
 
     result.superclass(jsonAdapterTypeName)
 
-    if (genericTypeNames.isNotEmpty()) {
-      result.addTypeVariables(genericTypeNames)
+    if (typeVariables.isNotEmpty()) {
+      result.addTypeVariables(typeVariables)
     }
 
     // TODO make this configurable. Right now it just matches the source model
@@ -125,9 +118,18 @@ internal class AdapterGenerator(
 
     result.primaryConstructor(generateConstructor())
 
+    val typeRenderer: TypeRenderer = object : TypeRenderer() {
+      override fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock {
+        val index = typeVariables.indexOfFirst { it == typeVariable }
+        check(index != -1) { "Unexpected type variable $typeVariable" }
+        return CodeBlock.of("%N[%L]", typesParam, index)
+      }
+    }
+
     result.addProperty(optionsProperty)
-    for (uniqueAdapter in delegateAdapters) {
-      result.addProperty(uniqueAdapter.delegateKey.generateProperty(nameAllocator, this))
+    for (uniqueAdapter in propertyList.distinctBy { it.delegateKey }) {
+      result.addProperty(uniqueAdapter.delegateKey.generateProperty(
+          nameAllocator, typeRenderer, moshiParam))
     }
 
     result.addFunction(generateToStringFun())
@@ -141,7 +143,7 @@ internal class AdapterGenerator(
     val result = FunSpec.constructorBuilder()
     result.addParameter(moshiParam)
 
-    if (genericTypeNames.isNotEmpty()) {
+    if (typeVariables.isNotEmpty()) {
       result.addParameter(typesParam)
     }
 
@@ -307,9 +309,9 @@ internal class AdapterGenerator(
       result.addModifiers(KModifier.INTERNAL)
     }
 
-    if (genericTypeNames.isNotEmpty()) {
+    if (typeVariables.isNotEmpty()) {
       result.addParameter(typesParam)
-      result.addTypeVariables(genericTypeNames)
+      result.addTypeVariables(typeVariables)
       result.addStatement("return %N(%N, %N)", adapterName, moshiParam, typesParam)
     } else {
       result.addStatement("return %N(%N)", adapterName, moshiParam)
