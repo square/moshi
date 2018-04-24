@@ -152,6 +152,20 @@ class KotlinJsonAdapterTest {
     }
   }
 
+  @Test fun nonNullConstructorParameterCalledWithNullFromAdapterFailsWithJsonDataException() {
+    val moshi = Moshi.Builder().add(object {
+      @FromJson fun fromJson(string: String): String? = null
+    }).add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":\"hello\"}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
+    }
+  }
+
   class HasNonNullConstructorParameter(val a: String)
 
   @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
@@ -160,6 +174,20 @@ class KotlinJsonAdapterTest {
 
     try {
       jsonAdapter.fromJson("{\"a\":null}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
+    }
+  }
+
+  @Test fun nonNullPropertySetToNullFromAdapterFailsWithJsonDataException() {
+    val moshi = Moshi.Builder().add(object {
+      @FromJson fun fromJson(string: String): String? = null
+    }).add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(HasNonNullProperty::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
       assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
