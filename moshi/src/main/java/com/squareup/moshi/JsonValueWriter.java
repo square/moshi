@@ -47,6 +47,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter beginArray() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Array cannot be used as a map key in JSON at path " + getPath());
+    }
     checkStack();
     List<Object> list = new ArrayList<>();
     add(list);
@@ -67,6 +71,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter beginObject() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Object cannot be used as a map key in JSON at path " + getPath());
+    }
     checkStack();
     Map<String, Object> map = new LinkedHashTreeMap<>();
     add(map);
@@ -116,18 +124,30 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter nullValue() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "null cannot be used as a map key in JSON at path " + getPath());
+    }
     add(null);
     pathIndices[stackSize - 1]++;
     return this;
   }
 
   @Override public JsonWriter value(boolean value) throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Boolean cannot be used as a map key in JSON at path " + getPath());
+    }
     add(value);
     pathIndices[stackSize - 1]++;
     return this;
   }
 
   @Override public JsonWriter value(@Nullable Boolean value) throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Boolean cannot be used as a map key in JSON at path " + getPath());
+    }
     add(value);
     pathIndices[stackSize - 1]++;
     return this;

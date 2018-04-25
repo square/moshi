@@ -252,7 +252,7 @@ public final class PromoteNameToValueTest {
       writer.value(true);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Nesting problem.");
+      assertThat(e).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
     }
     writer.value("true");
     assertThat(writer.getPath()).isEqualTo("$.true");
@@ -283,7 +283,7 @@ public final class PromoteNameToValueTest {
       writer.nullValue();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Nesting problem.");
+      assertThat(e).hasMessage("null cannot be used as a map key in JSON at path $.");
     }
     writer.value("null");
     assertThat(writer.getPath()).isEqualTo("$.null");

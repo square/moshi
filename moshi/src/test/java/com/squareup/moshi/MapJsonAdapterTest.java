@@ -141,6 +141,65 @@ public final class MapJsonAdapterTest {
     assertThat(jsonAdapter.fromJsonValue(jsonObject)).isEqualTo(map);
   }
 
+  @Test public void booleanKeyTypeHasCoherentErrorMessage() {
+    Map<Boolean, String> map = new LinkedHashMap<>();
+    map.put(true, "");
+    JsonAdapter<Map<Boolean, String>> adapter = mapAdapter(Boolean.class, String.class);
+    try {
+      adapter.toJson(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
+    }
+    try {
+      adapter.toJsonValue(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
+    }
+  }
+
+  static final class Key {
+  }
+
+  @Test public void objectKeyTypeHasCoherentErrorMessage() {
+    Map<Key, String> map = new LinkedHashMap<>();
+    map.put(new Key(), "");
+    JsonAdapter<Map<Key, String>> adapter = mapAdapter(Key.class, String.class);
+    try {
+      adapter.toJson(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Object cannot be used as a map key in JSON at path $.");
+    }
+    try {
+      adapter.toJsonValue(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Object cannot be "
+          + "used as a map key in JSON at path $.");
+    }
+  }
+
+  @Test public void arrayKeyTypeHasCoherentErrorMessage() {
+    Map<String[], String> map = new LinkedHashMap<>();
+    map.put(new String[0], "");
+    JsonAdapter<Map<String[], String>> adapter =
+        mapAdapter(Types.arrayOf(String.class), String.class);
+    try {
+      adapter.toJson(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Array cannot be used as a map key in JSON at path $.");
+    }
+    try {
+      adapter.toJsonValue(map);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Array cannot be used as a map key in JSON at path $.");
+    }
+  }
+
   private <K, V> String toJson(Type keyType, Type valueType, Map<K, V> value) throws IOException {
     JsonAdapter<Map<K, V>> jsonAdapter = mapAdapter(keyType, valueType);
     Buffer buffer = new Buffer();
