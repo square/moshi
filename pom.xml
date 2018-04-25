@@ -30,7 +30,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
     <kotlin.version>1.2.21</kotlin.version>
-    <kotlin-metadata.version>1.2.1</kotlin-metadata.version>
+    <kotlin-metadata.version>1.3.0</kotlin-metadata.version>
 
     <!-- Dependencies -->
     <okio.version>1.14.0</okio.version>
@@ -110,7 +110,7 @@
         <version>${kotlin.version}</version>
       </dependency>
       <dependency>
-        <groupId>me.eugeniomarletti</groupId>
+        <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
         <artifactId>kotlin-metadata</artifactId>
         <version>${kotlin-metadata.version}</version>
       </dependency>
