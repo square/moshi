@@ -77,8 +77,7 @@ final class JsonUtf8Reader extends JsonReader {
   private long peekedLong;
 
   /**
-   * The number of characters in a peeked number literal. Increment 'pos' by
-   * this after reading a number.
+   * The number of characters in a peeked number literal.
    */
   private int peekedNumberLength;
 
@@ -564,7 +563,7 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   /**
-   * If {@code name} is in {@code options} this consumes it and returns it's index.
+   * If {@code name} is in {@code options} this consumes it and returns its index.
    * Otherwise this returns -1 and no name is consumed.
    */
   private int findName(String name, Options options) {
@@ -639,7 +638,7 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   /**
-   * If {@code string} is in {@code options} this consumes it and returns it's index.
+   * If {@code string} is in {@code options} this consumes it and returns its index.
    * Otherwise this returns -1 and no string is consumed.
    */
   private int findString(String string, Options options) {
@@ -751,7 +750,7 @@ final class JsonUtf8Reader extends JsonReader {
         pathIndices[stackSize - 1]++;
         return result;
       } catch (NumberFormatException ignored) {
-        // Fall back to parse as a double below.
+        // Fall back to parse as a BigDecimal below.
       }
     } else if (p != PEEKED_BUFFERED) {
       throw new JsonDataException("Expected a long but was " + peek()
@@ -939,8 +938,7 @@ final class JsonUtf8Reader extends JsonReader {
   /**
    * Returns the next character in the stream that is neither whitespace nor a
    * part of a comment. When this returns, the returned character is always at
-   * {@code buffer[pos-1]}; this means the caller can always push back the
-   * returned character by decrementing {@code pos}.
+   * {@code buffer.getByte(0)}.
    */
   private int nextNonWhitespace(boolean throwOnEof) throws IOException {
     /*
