@@ -77,6 +77,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter beginArray() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Array cannot be used as a map key in JSON at path " + getPath());
+    }
     writeDeferredName();
     return open(EMPTY_ARRAY, "[");
   }
@@ -86,6 +90,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter beginObject() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Object cannot be used as a map key in JSON at path " + getPath());
+    }
     writeDeferredName();
     return open(EMPTY_OBJECT, "{");
   }
@@ -171,6 +179,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter nullValue() throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "null cannot be used as a map key in JSON at path " + getPath());
+    }
     if (deferredName != null) {
       if (serializeNulls) {
         writeDeferredName();
@@ -186,6 +198,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(boolean value) throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "Boolean cannot be used as a map key in JSON at path " + getPath());
+    }
     writeDeferredName();
     beforeValue();
     sink.writeUtf8(value ? "true" : "false");
