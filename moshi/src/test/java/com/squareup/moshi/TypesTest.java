@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -260,5 +262,53 @@ public final class TypesTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Unexpected primitive boolean. Use the boxed type.");
     }
+  }
+
+  @Test public void getFieldJsonQualifierAnnotations_privateFieldTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "privateField");
+
+    assertThat(annotations).hasSize(1);
+    assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
+  }
+
+  @Test public void getFieldJsonQualifierAnnotations_publicFieldTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "publicField");
+
+    assertThat(annotations).hasSize(1);
+    assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
+  }
+
+  @Test public void getFieldJsonQualifierAnnotations_unannotatedTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "unannotatedField");
+
+    assertThat(annotations).hasSize(0);
+  }
+
+  @JsonQualifier
+  @Target(FIELD)
+  @Retention(RUNTIME)
+  @interface FieldAnnotation {
+
+  }
+
+  @Target(FIELD)
+  @Retention(RUNTIME)
+  @interface NoQualifierAnnotation {
+
+  }
+
+  static class ClassWithAnnotatedFields {
+    @FieldAnnotation
+    @NoQualifierAnnotation
+    private final int privateField = 0;
+
+    @FieldAnnotation
+    @NoQualifierAnnotation
+    public final int publicField = 0;
+
+    private final int unannotatedField = 0;
   }
 }

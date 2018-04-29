@@ -244,4 +244,60 @@ class CompilerTest {
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
     assertThat(result.systemErr).contains("supertype java.util.Date is not a Kotlin type")
   }
+
+  @Test
+  fun nonFieldApplicableQualifier() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |import com.squareup.moshi.JsonQualifier
+        |import kotlin.annotation.AnnotationRetention.RUNTIME
+        |import kotlin.annotation.AnnotationTarget.PROPERTY
+        |import kotlin.annotation.Retention
+        |import kotlin.annotation.Target
+        |
+        |@Retention(RUNTIME)
+        |@Target(PROPERTY)
+        |@JsonQualifier
+        |annotation class UpperCase
+        |
+        |@JsonClass(generateAdapter = true)
+        |class ClassWithQualifier(@UpperCase val a: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    println(result.systemErr)
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("JsonQualifier @UpperCase must support FIELD target")
+  }
+
+  @Test
+  fun nonRuntimeQualifier() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |import com.squareup.moshi.JsonQualifier
+        |import kotlin.annotation.AnnotationRetention.BINARY
+        |import kotlin.annotation.AnnotationTarget.FIELD
+        |import kotlin.annotation.AnnotationTarget.PROPERTY
+        |import kotlin.annotation.Retention
+        |import kotlin.annotation.Target
+        |
+        |@Retention(BINARY)
+        |@Target(PROPERTY, FIELD)
+        |@JsonQualifier
+        |annotation class UpperCase
+        |
+        |@JsonClass(generateAdapter = true)
+        |class ClassWithQualifier(@UpperCase val a: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("JsonQualifier @UpperCase must have RUNTIME retention")
+  }
 }

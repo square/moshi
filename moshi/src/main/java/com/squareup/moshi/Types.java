@@ -20,6 +20,7 @@ import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
 import com.squareup.moshi.internal.Util.WildcardTypeImpl;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -213,6 +214,36 @@ public final class Types {
     } else {
       // This isn't a supported type.
       return false;
+    }
+  }
+
+  /**
+   * @param clazz the target class to read the {@code fieldName} field annotations from.
+   * @param fieldName the target field name on {@code clazz}.
+   * @return a set of {@link JsonQualifier}-annotated {@link Annotation} instances retrieved from
+   *         the targeted field. Can be empty if none are found.
+   */
+  public static Set<? extends Annotation> getFieldJsonQualifierAnnotations(Class<?> clazz,
+      String fieldName) {
+    try {
+      Field field = clazz.getDeclaredField(fieldName);
+      if (!field.isAccessible()) {
+        field.setAccessible(true);
+      }
+      Annotation[] fieldAnnotations = field.getDeclaredAnnotations();
+      Set<Annotation> annotations = new LinkedHashSet<>(fieldAnnotations.length);
+      for (Annotation annotation : fieldAnnotations) {
+        if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
+          annotations.add(annotation);
+        }
+      }
+      return Collections.unmodifiableSet(annotations);
+    } catch (NoSuchFieldException e) {
+      throw new IllegalArgumentException("Could not access field "
+          + fieldName
+          + " on class "
+          + clazz.getCanonicalName(),
+          e);
     }
   }
 
