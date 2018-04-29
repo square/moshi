@@ -20,6 +20,7 @@ import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
 import com.squareup.moshi.internal.Util.WildcardTypeImpl;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -213,6 +214,39 @@ public final class Types {
     } else {
       // This isn't a supported type.
       return false;
+    }
+  }
+
+  /**
+   * @param clazz the target class to read the {@code fieldName} field annotations from.
+   * @param fieldName the target field name on {@code clazz}.
+   * @param targetAnnotations the target annotation classes to retrieve on the field.
+   * @return a set of {@link Annotation} instances retrieved from the targeted field. Can be empty
+   *         if none are found.
+   */
+  @SafeVarargs
+  public static Set<? extends Annotation> getFieldAnnotations(Class<?> clazz,
+      String fieldName,
+      Class<? extends Annotation>... targetAnnotations) {
+    try {
+      Field field = clazz.getDeclaredField(fieldName);
+      if (!field.isAccessible()) {
+        field.setAccessible(true);
+      }
+      Set<Annotation> annotations = new LinkedHashSet<>(targetAnnotations.length);
+      for (Class<? extends Annotation> annotationClass : targetAnnotations) {
+        @Nullable Annotation annotation = field.getAnnotation(annotationClass);
+        if (annotation != null) {
+          annotations.add(annotation);
+        }
+      }
+      return Collections.unmodifiableSet(annotations);
+    } catch (NoSuchFieldException e) {
+      throw new RuntimeException("Could not access field "
+          + fieldName
+          + " on class "
+          + clazz.getCanonicalName(),
+          e);
     }
   }
 
