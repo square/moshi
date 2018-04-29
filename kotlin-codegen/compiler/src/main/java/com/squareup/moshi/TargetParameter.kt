@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi
 
-import org.jetbrains.kotlin.serialization.ProtoBuf.ValueParameter
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.ValueParameter
 import javax.lang.model.element.VariableElement
 
 /** A parameter in user code that should be populated by generated code. */

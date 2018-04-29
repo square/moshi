@@ -18,7 +18,7 @@ package com.squareup.moshi
 import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.isPrimary
 import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
-import org.jetbrains.kotlin.serialization.ProtoBuf.Constructor
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Constructor
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.util.Elements
