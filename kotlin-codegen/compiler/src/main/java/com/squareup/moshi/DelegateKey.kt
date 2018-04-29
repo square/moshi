@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi
 
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget.FIELD
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
@@ -60,20 +62,25 @@ internal data class DelegateKey(
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()
       qualifiers.size == 1 -> {
-        ", %${standardArgsSize}T::class.java" to arrayOf(
+        ", %${standardArgsSize}T.getFieldAnnotations(javaClass, %${standardArgsSize + 1}S, %${standardArgsSize + 2}T::class.java)" to arrayOf(
+            Types::class.asTypeName(),
+            adapterName,
             qualifiers.first().annotationType.asTypeName())
       }
       else -> {
-        val initString = qualifiers
+        val initStringArgs = qualifiers
             .mapIndexed { index, _ ->
-              val annoClassIndex = standardArgsSize + index
+              val annoClassIndex = standardArgsSize + index + 2
               return@mapIndexed "%${annoClassIndex}T::class.java"
             }
             .joinToString()
+        val initString = "%${standardArgsSize}T.getFieldAnnotations(javaClass, %${standardArgsSize + 1}S, $initStringArgs)"
         val initArgs = qualifiers
             .map { it.annotationType.asTypeName() }
             .toTypedArray()
-        ", $initString" to initArgs
+        ", $initString" to arrayOf(Types::class.asTypeName(),
+            adapterName,
+            *initArgs)
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args)
@@ -81,6 +88,7 @@ internal data class DelegateKey(
     val nullModifier = if (nullable) ".nullSafe()" else ".nonNull()"
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
+        .addAnnotations(qualifiers.map { AnnotationSpec.get(it).toBuilder().useSiteTarget(FIELD).build() })
         .initializer("%1N.adapter%2L(%3L$initializerString)$nullModifier", *finalArgs)
         .build()
   }
