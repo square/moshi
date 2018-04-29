@@ -447,7 +447,7 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class ConstructorParameterWithQualifier(@Uppercase var a: String, var b: String)
+  class ConstructorParameterWithQualifier(@Uppercase(inFrench = true) var a: String, var b: String)
 
   @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()
@@ -467,7 +467,7 @@ class GeneratedAdaptersTest {
 
   @JsonClass(generateAdapter = true)
   class PropertyWithQualifier {
-    @Uppercase var a: String = ""
+    @Uppercase(inFrench = true) var a: String = ""
     var b: String = ""
   }
 
@@ -762,15 +762,14 @@ class GeneratedAdaptersTest {
     var b: Int = -1
   }
 
-  @Retention(AnnotationRetention.RUNTIME)
   @JsonQualifier
-  annotation class Uppercase
+  annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
 
   class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase s: String) : String {
+    @ToJson fun toJson(@Uppercase(inFrench = true) s: String) : String {
       return s.toUpperCase(Locale.US)
     }
-    @FromJson @Uppercase fun fromJson(s: String) : String {
+    @FromJson @Uppercase(inFrench = true) fun fromJson(s: String) : String {
       return s.toLowerCase(Locale.US)
     }
   }
