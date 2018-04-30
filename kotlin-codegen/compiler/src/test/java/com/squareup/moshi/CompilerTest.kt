@@ -245,7 +245,6 @@ class CompilerTest {
     assertThat(result.systemErr).contains("supertype java.util.Date is not a Kotlin type")
   }
 
-  @Ignore("This test needs the stdlib on the classpath to work")
   @Test
   fun nonFieldApplicableQualifier() {
     val call = KotlinCompilerCall(temporaryFolder.root)
@@ -274,7 +273,6 @@ class CompilerTest {
     assertThat(result.systemErr).contains("JsonQualifier @UpperCase must support FIELD target")
   }
 
-  @Ignore("This test needs the stdlib on the classpath to work")
   @Test
   fun nonRuntimeQualifier() {
     val call = KotlinCompilerCall(temporaryFolder.root)

@@ -50,12 +50,13 @@ internal data class DelegateKey(
     messager: Messager): PropertySpec {
     fun AnnotationMirror.validate(): AnnotationMirror {
       // Check java types since that covers both java and kotlin annotations
-      annotationType.getAnnotation(java.lang.annotation.Retention::class.java)?.let {
+      val annotationElement = MoreTypes.asTypeElement(annotationType)
+      annotationElement.getAnnotation(java.lang.annotation.Retention::class.java)?.let {
         if (it.value != RetentionPolicy.RUNTIME) {
           messager.printMessage(ERROR, "JsonQualifier @${MoreTypes.asTypeElement(annotationType).simpleName} must have RUNTIME retention")
         }
       }
-      annotationType.getAnnotation(java.lang.annotation.Target::class.java)?.let {
+      annotationElement.getAnnotation(java.lang.annotation.Target::class.java)?.let {
         if (ElementType.FIELD !in it.value) {
           messager.printMessage(ERROR, "JsonQualifier @${MoreTypes.asTypeElement(annotationType).simpleName} must support FIELD target")
         }
