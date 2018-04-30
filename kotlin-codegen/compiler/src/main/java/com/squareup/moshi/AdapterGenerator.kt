@@ -31,8 +31,8 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import me.eugeniomarletti.kotlin.metadata.isDataClass
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
 import me.eugeniomarletti.kotlin.metadata.visibility
-import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility
 import java.lang.reflect.Type
 import javax.lang.model.element.TypeElement
 

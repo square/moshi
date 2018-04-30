@@ -22,10 +22,10 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
-import org.jetbrains.kotlin.serialization.ProtoBuf.Type
-import org.jetbrains.kotlin.serialization.ProtoBuf.TypeParameter
-import org.jetbrains.kotlin.serialization.ProtoBuf.TypeParameter.Variance
-import org.jetbrains.kotlin.serialization.deserialization.NameResolver
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Type
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter.Variance
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
 
 internal fun TypeParameter.asTypeName(
   nameResolver: NameResolver,

@@ -19,11 +19,11 @@ import com.google.auto.common.AnnotationMirrors
 import com.squareup.kotlinpoet.TypeName
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.metadata.hasSetter
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Property
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
 import me.eugeniomarletti.kotlin.metadata.visibility
-import org.jetbrains.kotlin.serialization.ProtoBuf.Property
-import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.INTERNAL
-import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.PROTECTED
-import org.jetbrains.kotlin.serialization.ProtoBuf.Visibility.PUBLIC
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
