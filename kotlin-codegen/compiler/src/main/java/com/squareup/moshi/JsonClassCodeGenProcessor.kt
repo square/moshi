@@ -124,7 +124,7 @@ class JsonClassCodeGenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   }
 
   private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {
-    val fileSpec = generateFile(generatedOption)
+    val fileSpec = generateFile(messager, generatedOption)
     val adapterName = fileSpec.members.filterIsInstance<TypeSpec>().first().name!!
     val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
     fileSpec.writeTo(outputDir)

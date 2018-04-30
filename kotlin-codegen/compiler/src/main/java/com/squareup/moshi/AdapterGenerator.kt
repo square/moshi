@@ -34,6 +34,7 @@ import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
 import me.eugeniomarletti.kotlin.metadata.visibility
 import java.lang.reflect.Type
+import javax.annotation.processing.Messager
 import javax.lang.model.element.TypeElement
 
 /** Generates a JSON adapter for a target type. */
@@ -81,7 +82,7 @@ internal class AdapterGenerator(
           .joinToString(", ") { "\"$it\"" }})", JsonReader.Options::class.asTypeName())
       .build()
 
-  fun generateFile(generatedOption: TypeElement?): FileSpec {
+  fun generateFile(messager: Messager, generatedOption: TypeElement?): FileSpec {
     for (property in propertyList) {
       property.allocateNames(nameAllocator)
     }
@@ -91,11 +92,11 @@ internal class AdapterGenerator(
     if (hasCompanionObject) {
       result.addFunction(generateJsonAdapterFun())
     }
-    result.addType(generateType(generatedOption))
+    result.addType(generateType(messager, generatedOption))
     return result.build()
   }
 
-  private fun generateType(generatedOption: TypeElement?): TypeSpec {
+  private fun generateType(messager: Messager, generatedOption: TypeElement?): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
 
     generatedOption?.let {
@@ -129,7 +130,7 @@ internal class AdapterGenerator(
     result.addProperty(optionsProperty)
     for (uniqueAdapter in propertyList.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
-          nameAllocator, typeRenderer, moshiParam))
+          nameAllocator, typeRenderer, moshiParam, messager))
     }
 
     result.addFunction(generateToStringFun())
