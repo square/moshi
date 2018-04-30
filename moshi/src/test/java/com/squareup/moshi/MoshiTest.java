@@ -603,6 +603,12 @@ public final class MoshiTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("jsonAdapter == null");
     }
+    try {
+      builder.addEnumFallback(null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("fallback == null");
+    }
   }
 
   @Test public void customJsonAdapter() throws Exception {
@@ -886,6 +892,12 @@ public final class MoshiTest {
       assertThat(expected).hasMessage(
           "Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
+  }
+
+  @Test public void enumAdapterWithDefaultValue() throws Exception {
+    Moshi moshi = new Moshi.Builder().addEnumFallback(Roshambo.PAPER).build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class);
+    assertThat(adapter.fromJson("\"SPOCK\"")).isEqualTo(Roshambo.PAPER);
   }
 
   @Test public void nullEnum() throws Exception {

@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.StandardJsonAdapters.EnumJsonAdapter;
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -230,6 +231,26 @@ public final class Moshi {
     public Builder add(Object adapter) {
       if (adapter == null) throw new IllegalArgumentException("adapter == null");
       return add(AdapterMethodsFactory.get(adapter));
+    }
+
+    /**
+     * @param fallback the default value to use when a string is deserialized
+     * and does not match an existing enum value.
+     */
+    public <T extends Enum<T>> Builder addEnumFallback(final T fallback) {
+      if (fallback == null) {
+        throw new NullPointerException("fallback == null");
+      }
+      final Class<T> enumType = fallback.getDeclaringClass();
+      return add(enumType, new EnumJsonAdapter<T>(enumType) {
+        @Override public T unexpectedName(String name, JsonReader reader) {
+          return fallback;
+        }
+
+        @Override public String toString() {
+          return "JsonAdapter(" + enumType.getName() + ").enumFallback( " + fallback + ")";
+        }
+      });
     }
 
     Builder addAll(List<JsonAdapter.Factory> factories) {
