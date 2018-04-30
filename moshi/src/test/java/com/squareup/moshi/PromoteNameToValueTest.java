@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import java.util.List;
+import okio.Buffer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -332,5 +333,22 @@ public final class PromoteNameToValueTest {
     } catch (IllegalStateException expected) {
     }
     writer.name("a");
+  }
+
+  @Test public void writerSourceValueFails() throws Exception {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    try {
+      writer.value(new Buffer().writeUtf8("\"a\""));
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage(
+          "BufferedSource cannot be used as a map key in JSON at path $.");
+    }
+    writer.value("a");
+    writer.value("a value");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":\"a value\"}");
   }
 }

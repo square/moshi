@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import okio.BufferedSource;
 
 import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
@@ -201,6 +202,23 @@ final class JsonValueWriter extends JsonWriter {
       return name(bigDecimalValue.toString());
     }
     add(bigDecimalValue);
+    pathIndices[stackSize - 1]++;
+    return this;
+  }
+
+  @Override public JsonWriter value(BufferedSource source) throws IOException {
+    if (promoteValueToName) {
+      throw new IllegalStateException(
+          "BufferedSource cannot be used as a map key in JSON at path " + getPath());
+    }
+    Object value = JsonReader.of(source).readJsonValue();
+    boolean serializeNulls = this.serializeNulls;
+    this.serializeNulls = true;
+    try {
+      add(value);
+    } finally {
+      this.serializeNulls = serializeNulls;
+    }
     pathIndices[stackSize - 1]++;
     return this;
   }
