@@ -46,7 +46,7 @@ private val KOTLIN_METADATA = Class.forName("kotlin.Metadata") as Class<out Anno
  * Placeholder value used when a field is absent from the JSON. Note that this code
  * distinguishes between absent values and present-but-null values.
  */
-private object ABSENT_VALUE
+private val ABSENT_VALUE = Any()
 
 /**
  * This class encodes Kotlin classes using their properties. It decodes them by first invoking the
@@ -79,6 +79,11 @@ internal class KotlinJsonAdapter<T>(
       }
 
       values[index] = binding.adapter.fromJson(reader)
+
+      if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
+        throw JsonDataException(
+            "Non-null value '${binding.property.name}' was null at ${reader.path}")
+      }
     }
     reader.endObject()
 
@@ -90,9 +95,6 @@ internal class KotlinJsonAdapter<T>(
               "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
         }
         values[i] = null // Replace absent with null.
-      } else if (values[i] == null && !constructor.parameters[i].type.isMarkedNullable) {
-        throw JsonDataException("Non-null value '${constructor.parameters[i].name}' " +
-            "was null at ${reader.path}")
       }
     }
 
@@ -103,10 +105,6 @@ internal class KotlinJsonAdapter<T>(
     for (i in constructorSize until bindings.size) {
       val binding = bindings[i]!!
       val value = values[i]
-      if (value == null && !binding.property.returnType.isMarkedNullable) {
-        throw JsonDataException("Non-null value '${binding.property.name}' " +
-            "was null at ${reader.path}")
-      }
       binding.set(result, value)
     }
 

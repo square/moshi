@@ -148,7 +148,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -162,7 +162,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
 
