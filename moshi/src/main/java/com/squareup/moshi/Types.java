@@ -242,7 +242,7 @@ public final class Types {
       }
       return Collections.unmodifiableSet(annotations);
     } catch (NoSuchFieldException e) {
-      throw new RuntimeException("Could not access field "
+      throw new IllegalArgumentException("Could not access field "
           + fieldName
           + " on class "
           + clazz.getCanonicalName(),
