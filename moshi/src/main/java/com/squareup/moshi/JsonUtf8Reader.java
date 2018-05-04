@@ -562,6 +562,27 @@ final class JsonUtf8Reader extends JsonReader {
     return result;
   }
 
+  @Override public void skipName() throws IOException {
+    if (failOnUnknown) {
+      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+    }
+    int p = peeked;
+    if (p == PEEKED_NONE) {
+      p = doPeek();
+    }
+    if (p == PEEKED_UNQUOTED_NAME) {
+      skipUnquotedValue();
+    } else if (p == PEEKED_DOUBLE_QUOTED_NAME) {
+      skipQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+    } else if (p == PEEKED_SINGLE_QUOTED_NAME) {
+      skipQuotedValue(SINGLE_QUOTE_OR_SLASH);
+    } else if (p != PEEKED_BUFFERED_NAME) {
+      throw new JsonDataException("Expected a name but was " + peek() + " at path " + getPath());
+    }
+    peeked = PEEKED_NONE;
+    pathNames[stackSize - 1] = "null";
+  }
+
   /**
    * If {@code name} is in {@code options} this consumes it and returns its index.
    * Otherwise this returns -1 and no name is consumed.

@@ -960,4 +960,23 @@ public final class JsonReaderTest {
     assertThat(value).isEqualTo(
         Collections.singletonMap("pizzas", Arrays.asList("cheese", "pepperoni")));
   }
+
+  @Test public void skipName() throws IOException {
+    JsonReader reader = newReader("{\"a\":1}");
+    reader.beginObject();
+    reader.skipName();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.NUMBER);
+    reader.skipValue();
+    reader.endObject();
+  }
+
+  @Test public void skipNameOnValueFails() throws IOException {
+    JsonReader reader = newReader("1");
+    try {
+      reader.skipName();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertThat(reader.nextInt()).isEqualTo(1);
+  }
 }

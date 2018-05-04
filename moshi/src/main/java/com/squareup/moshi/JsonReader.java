@@ -279,7 +279,7 @@ public abstract class JsonReader implements Closeable {
   }
 
   /**
-   * Returns true if this parser forbids skipping values.
+   * Returns true if this parser forbids skipping names and values.
    */
   @CheckReturnValue public final boolean failOnUnknown() {
     return failOnUnknown;
@@ -331,6 +331,15 @@ public abstract class JsonReader implements Closeable {
    * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
    */
   public abstract int selectName(Options options) throws IOException;
+
+  /**
+   * Skips the next token, consuming it. This method is intended for use when the JSON token stream
+   * contains unrecognized or unhandled names.
+   *
+   * <p>This throws a {@link JsonDataException} if this parser has been configured to {@linkplain
+   * #failOnUnknown fail on unknown} names.
+   */
+  public abstract void skipName() throws IOException;
 
   /**
    * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next

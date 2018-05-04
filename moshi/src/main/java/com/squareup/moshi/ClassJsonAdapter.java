@@ -151,7 +151,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       while (reader.hasNext()) {
         int index = reader.selectName(options);
         if (index == -1) {
-          reader.nextName();
+          reader.skipName();
           reader.skipValue();
           continue;
         }

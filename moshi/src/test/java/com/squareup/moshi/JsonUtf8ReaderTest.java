@@ -994,6 +994,20 @@ public final class JsonUtf8ReaderTest {
     }
   }
 
+  @Test public void failureMessagePathFromSkipName() throws IOException {
+    JsonReader reader = newReader("{\"a\":[42,}");
+    reader.beginObject();
+    reader.skipName();
+    reader.beginArray();
+    reader.nextInt();
+    try {
+      reader.peek();
+      fail();
+    } catch (JsonEncodingException expected) {
+      assertThat(expected).hasMessage("Expected value at path $.null[1]");
+    }
+  }
+
   @Test @Ignore public void strictVeryLongNumber() throws IOException {
     JsonReader reader = newReader("[0." + repeat('9', 8192) + "]");
     reader.beginArray();

@@ -219,9 +219,9 @@ public abstract class JsonAdapter<T> {
 
   /**
    * Returns a JSON adapter equal to this, but that throws a {@link JsonDataException} when
-   * {@linkplain JsonReader#setFailOnUnknown(boolean) unknown values} are encountered. This
-   * constraint applies to both the top-level message handled by this type adapter as well as to
-   * nested messages.
+   * {@linkplain JsonReader#setFailOnUnknown(boolean) unknown names and values} are encountered.
+   * This constraint applies to both the top-level message handled by this type adapter as well as
+   * to nested messages.
    */
   @CheckReturnValue public final JsonAdapter<T> failOnUnknown() {
     final JsonAdapter<T> delegate = this;

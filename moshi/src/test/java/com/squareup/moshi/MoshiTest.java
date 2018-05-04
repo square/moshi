@@ -910,7 +910,7 @@ public final class MoshiTest {
       adapter.fromJson("{\"diameter\":5,\"crust\":\"thick\",\"extraCheese\":true}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Cannot skip unexpected STRING at $.crust");
+      assertThat(expected).hasMessage("Cannot skip unexpected NAME at $.diameter");
     }
   }
 

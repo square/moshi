@@ -68,7 +68,7 @@ internal class KotlinJsonAdapter<T>(
       val binding = if (index != -1) bindings[index] else null
 
       if (binding == null) {
-        reader.nextName()
+        reader.skipName()
         reader.skipValue()
         continue
       }
