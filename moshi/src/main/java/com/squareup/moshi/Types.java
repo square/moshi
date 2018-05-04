@@ -220,23 +220,20 @@ public final class Types {
   /**
    * @param clazz the target class to read the {@code fieldName} field annotations from.
    * @param fieldName the target field name on {@code clazz}.
-   * @param targetAnnotations the target annotation classes to retrieve on the field.
-   * @return a set of {@link Annotation} instances retrieved from the targeted field. Can be empty
-   *         if none are found.
+   * @return a set of {@link JsonQualifier}-annotated {@link Annotation} instances retrieved from
+   *         the targeted field. Can be empty if none are found.
    */
-  @SafeVarargs
-  public static Set<? extends Annotation> getFieldAnnotations(Class<?> clazz,
-      String fieldName,
-      Class<? extends Annotation>... targetAnnotations) {
+  public static Set<? extends Annotation> getFieldJsonQualifierAnnotations(Class<?> clazz,
+      String fieldName) {
     try {
       Field field = clazz.getDeclaredField(fieldName);
       if (!field.isAccessible()) {
         field.setAccessible(true);
       }
-      Set<Annotation> annotations = new LinkedHashSet<>(targetAnnotations.length);
-      for (Class<? extends Annotation> annotationClass : targetAnnotations) {
-        @Nullable Annotation annotation = field.getAnnotation(annotationClass);
-        if (annotation != null) {
+      Annotation[] fieldAnnotations = field.getDeclaredAnnotations();
+      Set<Annotation> annotations = new LinkedHashSet<>(fieldAnnotations.length);
+      for (Annotation annotation : fieldAnnotations) {
+        if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
           annotations.add(annotation);
         }
       }

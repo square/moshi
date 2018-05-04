@@ -264,41 +264,51 @@ public final class TypesTest {
     }
   }
 
-  @Test public void getFieldAnnotations_privateFieldTest() {
-    Set<? extends Annotation> annotations = Types.getFieldAnnotations(ClassWithAnnotatedFields.class,
-        "privateField",
-        FieldAnnotation.class);
+  @Test public void getFieldJsonQualifierAnnotations_privateFieldTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "privateField");
 
     assertThat(annotations).hasSize(1);
     assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
   }
 
-  @Test public void getFieldAnnotations_publicFieldTest() {
-    Set<? extends Annotation> annotations = Types.getFieldAnnotations(ClassWithAnnotatedFields.class,
-        "publicField",
-        FieldAnnotation.class);
+  @Test public void getFieldJsonQualifierAnnotations_publicFieldTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "publicField");
 
     assertThat(annotations).hasSize(1);
     assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
   }
 
-  @Test public void getFieldAnnotations_unannotatedTest() {
-    Set<? extends Annotation> annotations = Types.getFieldAnnotations(ClassWithAnnotatedFields.class,
-        "unannotatedField",
-        FieldAnnotation.class);
+  @Test public void getFieldJsonQualifierAnnotations_unannotatedTest() {
+    Set<? extends Annotation> annotations = Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class,
+        "unannotatedField");
 
     assertThat(annotations).hasSize(0);
   }
 
+  @JsonQualifier
   @Target(FIELD)
   @Retention(RUNTIME)
   @interface FieldAnnotation {
 
   }
 
+  @Target(FIELD)
+  @Retention(RUNTIME)
+  @interface NoQualifierAnnotation {
+
+  }
+
   static class ClassWithAnnotatedFields {
-    @FieldAnnotation private final int privateField = 0;
-    @FieldAnnotation public final int publicField = 0;
+    @FieldAnnotation
+    @NoQualifierAnnotation
+    private final int privateField = 0;
+
+    @FieldAnnotation
+    @NoQualifierAnnotation
+    public final int publicField = 0;
+
     private final int unannotatedField = 0;
   }
 }

@@ -83,26 +83,10 @@ internal data class DelegateKey(
     val standardArgsSize = standardArgs.size + 1
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()
-      qualifiers.size == 1 -> {
-        ", %${standardArgsSize}T.getFieldAnnotations(javaClass, %${standardArgsSize + 1}S, %${standardArgsSize + 2}T::class.java)" to arrayOf(
-            Types::class.asTypeName(),
-            adapterName,
-            qualifiers.first().annotationType.asTypeName())
-      }
       else -> {
-        val initStringArgs = qualifiers
-            .mapIndexed { index, _ ->
-              val annoClassIndex = standardArgsSize + index + 2
-              return@mapIndexed "%${annoClassIndex}T::class.java"
-            }
-            .joinToString()
-        val initString = "%${standardArgsSize}T.getFieldAnnotations(javaClass, %${standardArgsSize + 1}S, $initStringArgs)"
-        val initArgs = qualifiers
-            .map { it.annotationType.asTypeName() }
-            .toTypedArray()
-        ", $initString" to arrayOf(Types::class.asTypeName(),
-            adapterName,
-            *initArgs)
+        ", %${standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, %${standardArgsSize + 1}S)" to arrayOf(
+            Types::class.asTypeName(),
+            adapterName)
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args)
