@@ -33,7 +33,7 @@ internal data class DelegateKey(
   private val type: TypeName,
   private val jsonQualifiers: Set<AnnotationMirror>
 ) {
-  val nullable get() = type.nullable || type is TypeVariableName
+  val nullable get() = type.nullable
 
   /** Returns an adapter to use when encoding and decoding this property. */
   fun generateProperty(

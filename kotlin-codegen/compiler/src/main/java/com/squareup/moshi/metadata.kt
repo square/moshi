@@ -80,6 +80,7 @@ internal fun Type.asTypeName(
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
         .asTypeName(nameResolver, getTypeParameter, resolveAliases)
+        .let { if (nullable) it.asNullable() else it }
     hasTypeParameterName() -> typeParameterName
     hasAbbreviatedType() && !resolveAliases -> abbreviatedType.typeAliasName
     else -> className
