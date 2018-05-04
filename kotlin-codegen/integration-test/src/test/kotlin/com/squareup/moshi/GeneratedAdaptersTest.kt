@@ -383,6 +383,20 @@ class GeneratedAdaptersTest {
     }
   }
 
+  @Test fun nonNullConstructorParameterCalledWithNullFromAdapterFailsWithJsonDataException() {
+    val moshi = Moshi.Builder().add(object {
+      @FromJson fun fromJson(string: String): String? = null
+    }).build()
+    val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":\"hello\"}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
+    }
+  }
+
   @JsonClass(generateAdapter = true)
   class HasNonNullConstructorParameter(val a: String)
 
@@ -536,6 +550,20 @@ class GeneratedAdaptersTest {
       fail()
     } catch (expected: JsonDataException) {
       assertThat(expected).hasMessage("Unexpected null at \$.a")
+    }
+  }
+
+  @Test fun nonNullPropertySetToNullFromAdapterFailsWithJsonDataException() {
+    val moshi = Moshi.Builder().add(object {
+      @FromJson fun fromJson(string: String): String? = null
+    }).build()
+    val jsonAdapter = moshi.adapter(HasNonNullProperty::class.java)
+
+    try {
+      jsonAdapter.fromJson("{\"a\":\"hello\"}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
 

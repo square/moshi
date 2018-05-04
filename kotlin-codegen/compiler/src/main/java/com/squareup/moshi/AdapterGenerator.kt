@@ -181,13 +181,27 @@ internal class AdapterGenerator(
     propertyList.forEachIndexed { index, property ->
       if (property.differentiateAbsentFromNull) {
         result.beginControlFlow("%L -> ", index)
-        result.addStatement("%N = %N.fromJson(%N)",
-            property.localName, nameAllocator.get(property.delegateKey), readerParam)
+        if (property.delegateKey.nullable) {
+          result.addStatement("%N = %N.fromJson(%N)",
+              property.localName, nameAllocator.get(property.delegateKey), readerParam)
+        } else {
+          result.addStatement("%N = %N.fromJson(%N)" +
+              " ?: throw %T(\"Non-null value '%N' was null at \${%N.path}\")",
+              property.localName, nameAllocator.get(property.delegateKey), readerParam,
+              JsonDataException::class, property.localName, readerParam)
+        }
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
       } else {
-        result.addStatement("%L -> %N = %N.fromJson(%N)",
-            index, property.localName, nameAllocator.get(property.delegateKey), readerParam)
+        if (property.delegateKey.nullable) {
+          result.addStatement("%L -> %N = %N.fromJson(%N)",
+              index, property.localName, nameAllocator.get(property.delegateKey), readerParam)
+        } else {
+          result.addStatement("%L -> %N = %N.fromJson(%N)" +
+              " ?: throw %T(\"Non-null value '%N' was null at \${%N.path}\")",
+              index, property.localName, nameAllocator.get(property.delegateKey), readerParam,
+              JsonDataException::class, property.localName, readerParam)
+        }
       }
     }
 
