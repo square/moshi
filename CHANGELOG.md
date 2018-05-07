@@ -1,6 +1,49 @@
 Change Log
 ==========
 
+## Version 1.6.0-SNAPSHOT
+
+_UNRELEASED_
+
+ * **Moshi now resolves all type parameters.** Previously Moshi wouldn't resolve type parameters on
+   top-level classes.
+ * New: Support up to 255 levels of nesting when reading and writing JSON. Previously Moshi would
+   reject JSON input that contained more than 32 levels of nesting.
+ * New: Write encoded JSON to a stream with `JsonWriter.value(BufferedSource)`. Use this to emit a
+   JSON value without decoding it first.
+ * New: `JsonAdapter.nonNull()` returns a new JSON adapter that forbids explicit nulls in the JSON
+   body. Use this to detect and fail eagerly on unwanted nulls.
+ * New: `JsonReader.skipName()` is like `nextName()` but it avoids allocating when a name is
+   unknown. Use this when `JsonReader.selectName()` returns -1.
+ * New: Automatic module name of `com.squareup.moshi` for use with the Java Platform Module System.
+   This moves moshi-adapters into its own .adapters package and forwards the existing adapter. It
+   moves the moshi-kotlin into its own .kotlin package and forwards the existing adapter.
+ * New: Upgrade to Okio 1.15.0.
+
+    ```xml
+     <dependency>
+       <groupId>com.squareup.okio</groupId>
+       <artifactId>okio</artifactId>
+       <version>1.15.0</version>
+     </dependency>
+
+     com.squareup.okio:okio:1.15.0
+    ```
+
+ * Fix: Fail fast if there are trailing non-whitespace characters in the JSON passed to
+   `JsonAdapter.fromJson(String)`. Previously such data was ignored!
+ * Fix: Fail fast when Kotlin types are abstract, inner, or object instances.
+ * Fix: Fail fast if `name()` is called out of sequence.
+ * Fix: Handle asymmetric `Type.equals()` methods when doing type comparisons. Previously it was
+   possible that a registered type adapter would not be used because its `Type.equals()` method was
+   not consistent with a user-provided type.
+ * Fix: `JsonValueReader.selectString()` now returns -1 for non-strings instead of throwing.
+ * Fix: Permit reading numbers as strings when the `JsonReader` was created from a JSON value. This
+   was always supported when reading from a stream but broken when reading from a decoded value.
+ * Fix: Delegate to user-adapters in the adapter for Object.class. Previously when Moshi encountered
+   an opaque Object it would only use the built-in adapters. With this change user-installed
+   adapters for types like `String` will always be honored.
+
 ## Version 1.5.0
 
 _2017-05-14_
