@@ -107,4 +107,20 @@ public final class JsonUtf8WriterTest {
     // JsonWriter doesn't attempt to detect duplicate names
     assertThat(buffer.readUtf8()).isEqualTo("{\"a\":1,\"a\":2}");
   }
+
+  @Test public void valueFromSource() throws IOException {
+    Buffer buffer = new Buffer();
+    JsonWriter writer = JsonUtf8Writer.of(buffer);
+    writer.beginObject();
+    writer.name("a");
+    writer.value(new Buffer().writeUtf8("[\"value\"]"));
+    writer.name("b");
+    writer.value(new Buffer().writeUtf8("2"));
+    writer.name("c");
+    writer.value(3);
+    writer.name("d");
+    writer.value(new Buffer().writeUtf8("null"));
+    writer.endObject();
+    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":[\"value\"],\"b\":2,\"c\":3,\"d\":null}");
+  }
 }

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.BufferedSink;
+import okio.BufferedSource;
 
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
 import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
@@ -334,6 +335,15 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * @return this writer.
    */
   public abstract JsonWriter value(@Nullable Number value) throws IOException;
+
+  /**
+   * Writes {@code source} directly without encoding its contents.
+   * Since no validation is performed, {@link #setSerializeNulls} and other writer configurations
+   * are not respected.
+   *
+   * @return this writer.
+   */
+  public abstract JsonWriter value(BufferedSource source) throws IOException;
 
   /**
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so

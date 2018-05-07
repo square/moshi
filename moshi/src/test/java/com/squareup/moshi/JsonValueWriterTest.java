@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import okio.Buffer;
 import org.junit.Test;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.fail;
@@ -239,6 +241,22 @@ public final class JsonValueWriterTest {
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
+  @Test public void valueFromSource() throws IOException {
+    JsonValueWriter writer = new JsonValueWriter();
+    writer.beginObject();
+    writer.name("a");
+    writer.value(new Buffer().writeUtf8("[\"value\"]"));
+    writer.name("b");
+    writer.value(new Buffer().writeUtf8("2"));
+    writer.name("c");
+    writer.value(3);
+    writer.name("d");
+    writer.value(new Buffer().writeUtf8("null"));
+    writer.endObject();
+    assertThat((Map<?, ?>) writer.root()).containsExactly(
+      entry("a", singletonList("value")), entry("b", 2.0d), entry("c", 3L), entry("d", null));
+  }
+
   /**
    * Returns an instance of number whose {@link #toString} is {@code s}. Using the standard number
    * methods like {@link Number#doubleValue} are awkward because they may truncate or discard
@@ -268,4 +286,3 @@ public final class JsonValueWriterTest {
     };
   }
 }
-
