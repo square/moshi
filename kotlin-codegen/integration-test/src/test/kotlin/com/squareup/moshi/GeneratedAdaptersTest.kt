@@ -222,14 +222,16 @@ class GeneratedAdaptersTest {
         listOf("foo", null, "bar"),
         setOf("foo", null, "bar"),
         mapOf("foo" to "bar", "baz" to null),
-        null
+        null,
+        1
     )
 
     val noNullsTypeParams = NullableTypeParams<Int>(
         nullableTypeParams.nullableList,
         nullableTypeParams.nullableSet,
         nullableTypeParams.nullableMap.filterValues { it != null },
-        null
+        null,
+        1
     )
 
     val json = adapter.toJson(nullableTypeParams)
@@ -781,7 +783,8 @@ data class NullableTypeParams<T>(
     val nullableList: List<String?>,
     val nullableSet: Set<String?>,
     val nullableMap: Map<String, String?>,
-    val nullableT: T?
+    val nullableT: T?,
+    val nonNullT: T
 )
 
 typealias TypeAliasName = String
