@@ -72,15 +72,17 @@ internal fun Type.asTypeName(
   if (hasFlexibleUpperBound()) {
     return WildcardTypeName.subtypeOf(
         flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, resolveAliases))
+        .asNullableIf(nullable)
   } else if (hasOuterType()) {
     return WildcardTypeName.supertypeOf(
         outerType.asTypeName(nameResolver, getTypeParameter, resolveAliases))
+        .asNullableIf(nullable)
   }
 
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
         .asTypeName(nameResolver, getTypeParameter, resolveAliases)
-        .let { if (nullable) it.asNullable() else it }
+        .asNullableIf(nullable)
     hasTypeParameterName() -> typeParameterName
     hasAbbreviatedType() && !resolveAliases -> abbreviatedType.typeAliasName
     else -> className
@@ -91,43 +93,36 @@ internal fun Type.asTypeName(
           .replace("/", "."))
 
   if (argumentList.isNotEmpty()) {
-    val remappedArgs: Array<TypeName> = argumentList.map {
-      val projection = if (it.hasProjection()) {
-        it.projection
+    val remappedArgs: Array<TypeName> = argumentList.map { argumentType ->
+      val nullableProjection = if (argumentType.hasProjection()) {
+        argumentType.projection
       } else null
-      if (it.hasType()) {
-        it.type.asTypeName(nameResolver, getTypeParameter, resolveAliases)
-            .let { typeName ->
-              projection?.let {
-                when (it) {
-                  Type.Argument.Projection.IN -> WildcardTypeName.supertypeOf(
-                      typeName)
+      if (argumentType.hasType()) {
+        argumentType.type.asTypeName(nameResolver, getTypeParameter, resolveAliases)
+            .let { argumentTypeName ->
+              nullableProjection?.let { projection ->
+                when (projection) {
+                  Type.Argument.Projection.IN -> WildcardTypeName.supertypeOf(argumentTypeName)
                   Type.Argument.Projection.OUT -> {
-                    if (typeName == ANY) {
+                    if (argumentTypeName == ANY) {
                       // This becomes a *, which we actually don't want here.
                       // List<Any> works with List<*>, but List<*> doesn't work with List<Any>
-                      typeName
+                      argumentTypeName
                     } else {
-                      WildcardTypeName.subtypeOf(typeName)
+                      WildcardTypeName.subtypeOf(argumentTypeName)
                     }
                   }
-                  Type.Argument.Projection.STAR -> WildcardTypeName.subtypeOf(
-                      ANY)
+                  Type.Argument.Projection.STAR -> WildcardTypeName.subtypeOf(ANY)
                   Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
                 }
-              } ?: typeName
+              } ?: argumentTypeName
             }
       } else {
         WildcardTypeName.subtypeOf(ANY)
       }
     }.toTypedArray()
-    typeName = ParameterizedTypeName.get(
-        typeName as ClassName, *remappedArgs)
+    typeName = ParameterizedTypeName.get(typeName as ClassName, *remappedArgs)
   }
 
-  if (nullable) {
-    typeName = typeName.asNullable()
-  }
-
-  return typeName
+  return typeName.asNullableIf(nullable)
 }
