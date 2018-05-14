@@ -523,8 +523,8 @@ class KotlinJsonAdapterTest {
   }
 
   class PrivateProperties {
-    var a: Int = -1
-    var b: Int = -1
+    private var a: Int = -1
+    private var b: Int = -1
 
     fun a() = a
 

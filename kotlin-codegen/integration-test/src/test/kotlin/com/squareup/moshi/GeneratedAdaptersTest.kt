@@ -18,6 +18,7 @@ package com.squareup.moshi
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
+import org.junit.Ignore
 import org.junit.Test
 import java.util.Locale
 
@@ -763,6 +764,22 @@ class GeneratedAdaptersTest {
   class SubtypeProperties : SupertypeProperties() {
     var b: Int = -1
   }
+
+  /** Generated adapters don't track enough state to detect duplicated values. */
+  @Ignore @Test fun duplicatedValue() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
+      fail()
+    } catch(expected: JsonDataException) {
+      assertThat(expected).hasMessage("Multiple values for a at $.a")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)

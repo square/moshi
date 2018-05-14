@@ -319,7 +319,6 @@ internal class AdapterGenerator(
         .returns(jsonAdapterTypeName)
         .addParameter(moshiParam)
 
-    // TODO make this configurable. Right now it just matches the source model
     if (visibility == Visibility.INTERNAL) {
       result.addModifiers(KModifier.INTERNAL)
     }
