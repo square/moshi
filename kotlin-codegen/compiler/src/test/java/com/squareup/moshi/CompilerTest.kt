@@ -27,7 +27,29 @@ import javax.annotation.processing.Processor
 class CompilerTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
-  @Test fun privateProperty() {
+  @Test fun privateConstructor() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class PrivateConstructor private constructor(var a: Int, var b: Int) {
+        |  fun a() = a
+        |  fun b() = b
+        |  companion object {
+        |    fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
+        |  }
+        |}
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("constructor is not internal or public")
+  }
+
+  @Test fun privateConstructorParameter() {
     val call = KotlinCompilerCall(temporaryFolder.root)
     call.inheritClasspath = true
     call.addService(Processor::class, JsonClassCodeGenProcessor::class)
@@ -36,6 +58,25 @@ class CompilerTest {
         |
         |@JsonClass(generateAdapter = true)
         |class PrivateConstructorParameter(private var a: Int)
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains("property a is not visible")
+  }
+
+  @Test fun privateProperties() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class PrivateProperties {
+        |  private var a: Int = -1
+        |  private var b: Int = -1
+        |}
         |""".trimMargin())
 
     val result = call.execute()
@@ -94,6 +135,25 @@ class CompilerTest {
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
     assertThat(result.systemErr).contains(
         "error: @JsonClass can't be applied to Outer.InnerClass: must not be an inner class")
+  }
+
+  @Test fun enumClassesNotSupported() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |
+        |@JsonClass(generateAdapter = true)
+        |enum class KotlinEnum {
+        |  A, B
+        |}
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr).contains(
+        "error: @JsonClass can't be applied to KotlinEnum: must not be an enum class")
   }
 
   // Annotation processors don't get called for local classes, so we don't have the opportunity to
@@ -243,6 +303,24 @@ class CompilerTest {
     val result = call.execute()
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
     assertThat(result.systemErr).contains("supertype java.util.Date is not a Kotlin type")
+  }
+
+  @Test fun extendJavaType() {
+    val call = KotlinCompilerCall(temporaryFolder.root)
+    call.inheritClasspath = true
+    call.addService(Processor::class, JsonClassCodeGenProcessor::class)
+    call.addKt("source.kt", """
+        |import com.squareup.moshi.JsonClass
+        |import com.squareup.moshi.JavaSuperclass
+        |
+        |@JsonClass(generateAdapter = true)
+        |class ExtendsJavaType(var b: Int) : JavaSuperclass()
+        |""".trimMargin())
+
+    val result = call.execute()
+    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
+    assertThat(result.systemErr)
+        .contains("supertype com.squareup.moshi.JavaSuperclass is not a Kotlin type")
   }
 
   @Test

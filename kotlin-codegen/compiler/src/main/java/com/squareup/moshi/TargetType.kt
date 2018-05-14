@@ -31,7 +31,9 @@ import me.eugeniomarletti.kotlin.metadata.modality
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LOCAL
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
 import me.eugeniomarletti.kotlin.metadata.shadow.util.capitalizeDecapitalize.decapitalizeAsciiOnly
 import me.eugeniomarletti.kotlin.metadata.visibility
@@ -70,6 +72,11 @@ internal data class TargetType(
 
       val proto = typeMetadata.data.classProto
       when {
+        proto.classKind == Class.Kind.ENUM_CLASS -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
+          return null
+        }
         proto.classKind != Class.Kind.CLASS -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
@@ -96,6 +103,12 @@ internal data class TargetType(
       val appliedType = AppliedType.get(element)
 
       val constructor = TargetConstructor.primary(typeMetadata, elements)
+      if (constructor.proto.visibility != INTERNAL && constructor.proto.visibility != PUBLIC) {
+        messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
+            "primary constructor is not internal or public", element)
+        return null
+      }
+
       val properties = mutableMapOf<String, TargetProperty>()
       for (supertype in appliedType.supertypes(types)) {
         if (supertype.element.asClassName() == OBJECT_CLASS) {

@@ -53,12 +53,14 @@ internal data class DelegateKey(
       val annotationElement = MoreTypes.asTypeElement(annotationType)
       annotationElement.getAnnotation(java.lang.annotation.Retention::class.java)?.let {
         if (it.value != RetentionPolicy.RUNTIME) {
-          messager.printMessage(ERROR, "JsonQualifier @${MoreTypes.asTypeElement(annotationType).simpleName} must have RUNTIME retention")
+          messager.printMessage(ERROR, "JsonQualifier " +
+              "@${MoreTypes.asTypeElement(annotationType).simpleName} must have RUNTIME retention")
         }
       }
       annotationElement.getAnnotation(java.lang.annotation.Target::class.java)?.let {
         if (ElementType.FIELD !in it.value) {
-          messager.printMessage(ERROR, "JsonQualifier @${MoreTypes.asTypeElement(annotationType).simpleName} must support FIELD target")
+          messager.printMessage(ERROR, "JsonQualifier " +
+              "@${MoreTypes.asTypeElement(annotationType).simpleName} must support FIELD target")
         }
       }
       return this
@@ -84,9 +86,8 @@ internal data class DelegateKey(
     val (initializerString, args) = when {
       qualifiers.isEmpty() -> "" to emptyArray()
       else -> {
-        ", %${standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, %${standardArgsSize + 1}S)" to arrayOf(
-            Types::class.asTypeName(),
-            adapterName)
+        ", %${standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, " +
+            "%${standardArgsSize + 1}S)" to arrayOf(Types::class.asTypeName(), adapterName)
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args)
@@ -94,7 +95,9 @@ internal data class DelegateKey(
     val nullModifier = if (nullable) ".nullSafe()" else ".nonNull()"
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-        .addAnnotations(qualifiers.map { AnnotationSpec.get(it).toBuilder().useSiteTarget(FIELD).build() })
+        .addAnnotations(qualifiers.map {
+          AnnotationSpec.get(it).toBuilder().useSiteTarget(FIELD).build()
+        })
         .initializer("%1N.adapter%2L(%3L$initializerString)$nullModifier", *finalArgs)
         .build()
   }
@@ -104,9 +107,7 @@ internal data class DelegateKey(
  * Returns a suggested variable name derived from a list of type names. This just concatenates,
  * yielding types like MapOfStringLong.
  */
-private fun List<TypeName>.toVariableNames(): String {
-  return joinToString("") { it.toVariableName() }
-}
+private fun List<TypeName>.toVariableNames() = joinToString("") { it.toVariableName() }
 
 /** Returns a suggested variable name derived from a type name, like nullableListOfString. */
 private fun TypeName.toVariableName(): String {
