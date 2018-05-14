@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin
+package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
@@ -228,8 +228,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val adapter = moshi.adapter<Any>(
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()))
 
-      bindingsByName[property.name] =
-          KotlinJsonAdapter.Binding(name, adapter, property as KProperty1<Any, Any?>, parameter)
+      bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
+          property as KProperty1<Any, Any?>, parameter)
     }
 
     val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()

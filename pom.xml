@@ -21,8 +21,8 @@
     <module>moshi</module>
     <module>examples</module>
     <module>adapters</module>
-    <module>kotlin</module>
     <module>kotlin/codegen</module>
+    <module>kotlin/reflect</module>
     <module>kotlin/tests</module>
   </modules>
 

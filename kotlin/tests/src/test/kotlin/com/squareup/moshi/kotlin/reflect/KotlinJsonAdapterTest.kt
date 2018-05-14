@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin
+package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
@@ -350,7 +350,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessage("No default value for transient constructor parameter #0 " +
           "a of fun <init>(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
     }
   }
 
@@ -637,7 +637,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("No JsonAdapter for interface " +
-          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$Interface (with no annotations)")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$Interface (with no annotations)")
     }
   }
 
@@ -650,7 +650,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize abstract class " +
-              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$AbstractClass")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$AbstractClass")
     }
   }
 
@@ -663,7 +663,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize inner class " +
-              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$InnerClass")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$InnerClass")
     }
   }
 
@@ -677,7 +677,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize local class or object expression " +
-          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass")
     }
   }
 
@@ -688,7 +688,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize object declaration " +
-          "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$ObjectDeclaration")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$ObjectDeclaration")
     }
   }
 
@@ -706,8 +706,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessage("Cannot serialize local class or object expression " +
-              "com.squareup.moshi.kotlin.KotlinJsonAdapterTest\$objectExpressionsNotSupported" +
-              "\$expression$1")
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$objectExpressionsNotSupported" +
+          "\$expression$1")
     }
   }
 
@@ -743,13 +743,13 @@ class KotlinJsonAdapterTest {
   }
 
   class ManyProperties32(
-      var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
-      var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
-      var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
-      var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
-      var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
-      var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
-      var v31: Int, var v32: Int)
+    var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
+    var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
+    var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
+    var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
+    var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
+    var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
+    var v31: Int, var v32: Int)
 
   @Test fun manyProperties33() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -784,13 +784,13 @@ class KotlinJsonAdapterTest {
   }
 
   class ManyProperties33(
-      var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
-      var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
-      var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
-      var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
-      var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
-      var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
-      var v31: Int, var v32: Int, var v33: Int)
+    var v01: Int, var v02: Int, var v03: Int, var v04: Int, var v05: Int,
+    var v06: Int, var v07: Int, var v08: Int, var v09: Int, var v10: Int,
+    var v11: Int, var v12: Int, var v13: Int, var v14: Int, var v15: Int,
+    var v16: Int, var v17: Int, var v18: Int, var v19: Int, var v20: Int,
+    var v21: Int, var v22: Int, var v23: Int, var v24: Int, var v25: Int,
+    var v26: Int, var v27: Int, var v28: Int, var v29: Int, var v30: Int,
+    var v31: Int, var v32: Int, var v33: Int)
 
   data class Box<out T>(val data: T)
 
