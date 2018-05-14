@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
@@ -173,6 +174,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
     if (Util.isPlatformType(rawType)) return null
+    val jsonClass = rawType.getAnnotation(JsonClass::class.java)
+    if (jsonClass != null && jsonClass.generateAdapter) return null
 
     if (rawType.isLocalClass) {
       throw IllegalArgumentException("Cannot serialize local class or object expression ${rawType.name}")
