@@ -589,7 +589,7 @@ If you are using ProGuard you might need to add the following options:
 ```
 Additional rules are needed if you are using Kotlin:
 
-*...If you are using the reflect API (i.e. `KotlinJsonAdapter`):*
+*...If you are using the reflect API (i.e. `KotlinJsonAdapterFactory`):*
 ```
 -keepclassmembers class kotlin.Metadata {
     public <methods>;
