@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
@@ -839,6 +840,25 @@ class KotlinJsonAdapterTest {
     assertThat(adapter.fromJson(json)).isEqualTo(value)
     assertThat(adapter.toJson(value)).isEqualTo(json)
   }
+
+  @Test fun mixingReflectionAndCodegen() {
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+    val generatedAdapter = moshi.adapter(UsesGeneratedAdapter::class.java)
+    val reflectionAdapter = moshi.adapter(UsesReflectionAdapter::class.java)
+
+    assertThat(generatedAdapter.javaClass.name)
+        .contains("KotlinJsonAdapterTest_UsesGeneratedAdapterJsonAdapter")
+    assertThat(reflectionAdapter.javaClass.name)
+        .doesNotContain("KotlinJsonAdapterTest_UsesReflectionAdapterJsonAdapter")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class UsesGeneratedAdapter(var a: Int, var b: Int)
+
+  @JsonClass(generateAdapter = false)
+  class UsesReflectionAdapter(var a: Int, var b: Int)
 
   @Retention(RUNTIME)
   @JsonQualifier
