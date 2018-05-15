@@ -548,7 +548,7 @@ annotationProcessor 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
 
 If your Kotlin class has a superclass, it must also be a Kotlin class. Neither reflection or codegen
 support Kotlin types with Java supertypes or Java types with Kotlin supertypes. If you need to
-convert such classes to JSON you must create a custom type adatper.
+convert such classes to JSON you must create a custom type adapter.
 
 The JSON encoding of Kotlin types is the same whether using reflection or codegen. Prefer codegen
 for better performance and to avoid the `kotlin-reflect` dependency; prefer reflection to convert
