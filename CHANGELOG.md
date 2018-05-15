@@ -1,12 +1,17 @@
 Change Log
 ==========
 
-## Version 1.6.0-SNAPSHOT
+## Version 1.6.0
 
-_UNRELEASED_
+_2018-05-14_
+
+ * **Moshi now supports codegen for Kotlin.** We've added a new annotation processor that generates
+   a small and fast JSON adapter for your Kotlin types. It can be used on its own or with the
+   existing `KotlinJsonAdapterFactory` adapter.
 
  * **Moshi now resolves all type parameters.** Previously Moshi wouldn't resolve type parameters on
    top-level classes.
+
  * New: Support up to 255 levels of nesting when reading and writing JSON. Previously Moshi would
    reject JSON input that contained more than 32 levels of nesting.
  * New: Write encoded JSON to a stream with `JsonWriter.value(BufferedSource)`. Use this to emit a
@@ -16,18 +21,18 @@ _UNRELEASED_
  * New: `JsonReader.skipName()` is like `nextName()` but it avoids allocating when a name is
    unknown. Use this when `JsonReader.selectName()` returns -1.
  * New: Automatic module name of `com.squareup.moshi` for use with the Java Platform Module System.
-   This moves moshi-adapters into its own .adapters package and forwards the existing adapter. It
-   moves the moshi-kotlin into its own .kotlin package and forwards the existing adapter.
- * New: Upgrade to Okio 1.15.0.
+   This moves moshi-adapters into its own `.adapters` package and forwards the existing adapter. It
+   moves the moshi-kotlin into its own `.kotlin.reflect` package and forwards the existing adapter.
+ * New: Upgrade to Okio 1.14.0.
 
     ```xml
      <dependency>
        <groupId>com.squareup.okio</groupId>
        <artifactId>okio</artifactId>
-       <version>1.15.0</version>
+       <version>1.14.0</version>
      </dependency>
 
-     com.squareup.okio:okio:1.15.0
+     com.squareup.okio:okio:1.14.0
     ```
 
  * Fix: Fail fast if there are trailing non-whitespace characters in the JSON passed to
