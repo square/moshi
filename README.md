@@ -520,8 +520,8 @@ encode as JSON:
 ```kotlin
 @JsonClass(generateAdapter = true)
 data class BlackjackHand(
-  hidden_card: Card,
-  visible_cards: List<Card>
+        val hidden_card: Card,
+        val visible_cards: List<Card>
 )
 ```
 
