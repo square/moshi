@@ -472,45 +472,104 @@ public final class BlackjackHand {
 }
 ```
 
-### Kotlin Support
+Kotlin
+------
 
-Kotlin classes work with Moshi out of the box. However, you need to add the `KotlinJsonAdapterFactory` if you want to activate the validation for non-nullable properties. Add it last to allow other installed Kotlin type factories to be used, since factories are called in order.
+Moshi is a great JSON library for Kotlin. It understands Kotlin’s non-nullable types and default
+parameter values. When you use Kotlin with Moshi you may use reflection, codegen, or both.
+
+#### Reflection
+
+The reflection adapter uses Kotlin’s reflection library to convert your Kotlin classes to and from
+JSON. Enable it by adding the `KotlinJsonAdapterFactory` to your `Moshi.Builder`:
+
 ```kotlin
 val moshi = Moshi.Builder()
-    // Add any other JsonAdapter factories.
+    // ... add your own JsonAdapters and factories ...
     .add(KotlinJsonAdapterFactory())
     .build()
 ```
 
-If you need to annotate your Kotlin classes with an `@Json` annotation or otherwise, you need to add `KotlinJsonAdapterFactory` as well. In both cases you have to add `moshi-kotlin` as dependency (see below). 
+Moshi’s adapters are ordered by precedence, so you always want to add the Kotlin adapter after your
+own custom adapters. Otherwise the `KotlinJsonAdapterFactory` will take precedence and your custom
+adapters will not be called.
 
+The reflection adapter requires the following additional dependency:
+
+```xml
+<dependency>
+  <groupId>com.squareup.moshi</groupId>
+  <artifactId>moshi-kotlin</artifactId>
+  <version>1.6.0</version>
+</dependency>
+```
+
+```groovy
+implementation 'com.squareup.moshi:moshi-kotlin:1.5.0'
+```
+
+Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
+2.5 MiB .jar file.
+
+#### Codegen
+
+Moshi’s Kotlin codegen support is an annotation processor. It generates a small and fast adapter for
+each of your Kotlin classes at compile time. Enable it by annotating each class that you want to
+encode as JSON:
+
+```kotlin
+@JsonClass(generateAdapter = true)
+data class BlackjackHand(
+  hidden_card: Card,
+  visible_cards: List<Card>
+)
+```
+
+The codegen adapter requires that your Kotlin types and their properties be either `internal` or
+`public` (this is Kotlin’s default visibility).
+
+Kotlin codegen has no additional runtime dependency. You’ll need to add the following to your build
+to enable the annotation processor:
+
+```xml
+<dependency>
+  <groupId>com.squareup.moshi</groupId>
+  <artifactId>moshi-kotlin-codegen</artifactId>
+  <version>1.6.0</version>
+  <scope>provided</scope>
+</dependency>
+```
+
+```groovy
+annotationProcessor 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
+```
+
+#### Limitations
+
+Neither reflection nor codegen supports Kotlin types that have a Java superclass other than
+`Object`. Symmetrically, Java types that extend Kotlin types are also unsupported. If you need to
+convert these classes to JSON you must create a custom type adatper.
+
+The JSON encoding of Kotlin types is the same whether using reflection or codegen. Prefer codegen
+for better performance and to avoid the `kotlin-reflect` dependency; prefer reflection to convert
+both private and protected properties. If you have configured both, generated adapters will be used
+on types that are annotated `@JsonClass(generateAdapter = true)`.
 
 Download
 --------
 
 Download [the latest JAR][dl] or depend via Maven:
+
 ```xml
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.5.0</version>
+  <version>1.6.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
 implementation 'com.squareup.moshi:moshi:1.5.0'
-```
-and for additional Kotlin support:
-```xml
-<dependency>
-  <groupId>com.squareup.moshi</groupId>
-  <artifactId>moshi-kotlin</artifactId>
-  <version>1.5.0</version>
-</dependency>
-```
-or Gradle:
-```groovy
-implementation 'com.squareup.moshi:moshi-kotlin:1.5.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -528,7 +587,7 @@ If you are using ProGuard you might need to add the following options:
 }
 -keep @com.squareup.moshi.JsonQualifier interface *
 ```
-Additional rules are needed if you are using the Kotlin artifact:
+Additional rules are needed if you are using Kotlin:
 ```
 -keepclassmembers class kotlin.Metadata {
     public <methods>;
