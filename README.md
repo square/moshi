@@ -592,6 +592,8 @@ Additional rules are needed if you are using Kotlin:
 -keepclassmembers class kotlin.Metadata {
     public <methods>;
 }
+-keepnames class **JsonAdapter
+-keepnames @com.squareup.moshi.JsonClass class *
 ```
 
 License
