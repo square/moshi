@@ -505,7 +505,7 @@ The reflection adapter requires the following additional dependency:
 ```
 
 ```groovy
-implementation 'com.squareup.moshi:moshi-kotlin:1.5.0'
+implementation 'com.squareup.moshi:moshi-kotlin:1.6.0'
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -546,9 +546,9 @@ annotationProcessor 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
 
 #### Limitations
 
-Neither reflection nor codegen supports Kotlin types that have a Java superclass other than
-`Object`. Symmetrically, Java types that extend Kotlin types are also unsupported. If you need to
-convert these classes to JSON you must create a custom type adatper.
+If your Kotlin class has a superclass, it must also be a Kotlin class. Neither reflection or codegen
+support Kotlin types with Java supertypes or Java types with Kotlin supertypes. If you need to
+convert such classes to JSON you must create a custom type adatper.
 
 The JSON encoding of Kotlin types is the same whether using reflection or codegen. Prefer codegen
 for better performance and to avoid the `kotlin-reflect` dependency; prefer reflection to convert
@@ -569,7 +569,7 @@ Download [the latest JAR][dl] or depend via Maven:
 ```
 or Gradle:
 ```groovy
-implementation 'com.squareup.moshi:moshi:1.5.0'
+implementation 'com.squareup.moshi:moshi:1.6.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
