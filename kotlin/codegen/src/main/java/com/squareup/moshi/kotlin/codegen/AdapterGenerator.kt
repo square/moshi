@@ -213,7 +213,7 @@ internal class AdapterGenerator(
 
     result.beginControlFlow("-1 ->")
     result.addComment("Unknown name, skip it.")
-    result.addStatement("%N.nextName()", readerParam)
+    result.addStatement("%N.skipName()", readerParam)
     result.addStatement("%N.skipValue()", readerParam)
     result.endControlFlow()
 
