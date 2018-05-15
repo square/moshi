@@ -23,6 +23,11 @@
       <artifactId>kotlin-stdlib</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet</artifactId>
+      <version>0.7.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.auto</groupId>
       <artifactId>auto-common</artifactId>
       <version>0.10</version>
@@ -32,11 +37,6 @@
       <artifactId>auto-service</artifactId>
       <version>1.0-rc4</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup</groupId>
-      <artifactId>kotlinpoet</artifactId>
-      <version>0.7.0</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -150,6 +150,36 @@
           -->
           <useManifestOnlyJar>false</useManifestOnlyJar>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>com.squareup:kotlinpoet</include>
+                </includes>
+              </artifactSet>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+              <relocations>
+                <!-- Repackage KotlinPoet until its API is stable. -->
+                <relocation>
+                  <pattern>com.squareup.kotlinpoet</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinpoet</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

@@ -528,8 +528,8 @@ data class BlackjackHand(
 The codegen adapter requires that your Kotlin types and their properties be either `internal` or
 `public` (this is Kotlin’s default visibility).
 
-Kotlin codegen has no additional runtime dependency. You’ll need to add the following to your build
-to enable the annotation processor:
+Kotlin codegen has no additional runtime dependency. You’ll need to [enable kapt][kapt] and then
+add the following to your build to enable the annotation processor:
 
 ```xml
 <dependency>
@@ -618,3 +618,4 @@ License
  [okhttp]: https://github.com/square/okhttp/
  [gson]: https://github.com/google/gson/
  [javadoc]: https://square.github.io/moshi/1.x/moshi/
+ [kapt]: https://kotlinlang.org/docs/reference/kapt.html
