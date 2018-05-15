@@ -588,10 +588,15 @@ If you are using ProGuard you might need to add the following options:
 -keep @com.squareup.moshi.JsonQualifier interface *
 ```
 Additional rules are needed if you are using Kotlin:
+
+*...If you are using the reflect API (i.e. `KotlinJsonAdapter`):*
 ```
 -keepclassmembers class kotlin.Metadata {
     public <methods>;
 }
+```
+*...If you are using the codegen API (i.e. `JsonClass(generateAdapter = true)`):*
+```
 -keepnames class **JsonAdapter
 -keepnames @com.squareup.moshi.JsonClass class *
 ```
