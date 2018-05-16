@@ -599,6 +599,7 @@ Additional rules are needed if you are using Kotlin:
 ```
 -keep class **JsonAdapter {
     <init>(...);
+    <fields>;
 }
 -keepnames @com.squareup.moshi.JsonClass class *
 ```
