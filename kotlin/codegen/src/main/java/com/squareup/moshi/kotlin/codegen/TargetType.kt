@@ -131,7 +131,9 @@ internal data class TargetType(
       }
       val companionObjectName = if (proto.hasCompanionObjectName()) {
         typeMetadata.data.nameResolver.getQualifiedClassName(proto.companionObjectName)
-      } else null
+      } else {
+        null
+      }
       return TargetType(proto, element, constructor, properties, typeVariables, companionObjectName)
     }
 
