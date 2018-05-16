@@ -597,7 +597,10 @@ Additional rules are needed if you are using Kotlin:
 ```
 *...If you are using the codegen API (i.e. `JsonClass(generateAdapter = true)`):*
 ```
--keepnames class **JsonAdapter
+-keep class **JsonAdapter {
+    <init>(...);
+    <fields>;
+}
 -keepnames @com.squareup.moshi.JsonClass class *
 ```
 
