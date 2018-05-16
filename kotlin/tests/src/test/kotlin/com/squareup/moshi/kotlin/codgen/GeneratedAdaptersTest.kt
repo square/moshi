@@ -786,6 +786,22 @@ class GeneratedAdaptersTest {
   @JsonClass(generateAdapter = true)
   class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
+  @Test fun companionObjectsTests() {
+    val moshi = Moshi.Builder().build()
+    val standardAdapter = CompanionObjectClass.jsonAdapter(moshi)
+    val customNameAdapter = NamedCompanionObjectClass.jsonAdapter(moshi)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class CompanionObjectClass(val foo: String) {
+    companion object
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class NamedCompanionObjectClass(val foo: String) {
+    companion object CustomCompanionObject
+  }
+
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
 

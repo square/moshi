@@ -53,10 +53,10 @@ internal data class TargetType(
   val element: TypeElement,
   val constructor: TargetConstructor,
   val properties: Map<String, TargetProperty>,
-  val typeVariables: List<TypeVariableName>
+  val typeVariables: List<TypeVariableName>,
+  val companionObjectName: String?
 ) {
   val name = element.className
-  val hasCompanionObject = proto.hasCompanionObjectName()
 
   companion object {
     private val OBJECT_CLASS = ClassName("java.lang", "Object")
@@ -129,7 +129,12 @@ internal data class TargetType(
           properties.putIfAbsent(name, property)
         }
       }
-      return TargetType(proto, element, constructor, properties, typeVariables)
+      val companionObjectName = if (proto.hasCompanionObjectName()) {
+        typeMetadata.data.nameResolver.getQualifiedClassName(proto.companionObjectName)
+      } else {
+        null
+      }
+      return TargetType(proto, element, constructor, properties, typeVariables, companionObjectName)
     }
 
     /** Returns the properties declared by `typeElement`. */
