@@ -826,6 +826,7 @@ data class NullableTypeParams<T>(
 )
 
 typealias TypeAliasName = String
+typealias GenericTypeAlias = List<String>
 
 /**
  * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
@@ -852,5 +853,6 @@ data class SmokeTestType(
     val favoriteArrayValues: Array<String>,
     val favoriteNullableArrayValues: Array<String?>,
     val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
-    val aliasedName: TypeAliasName = "Woah"
+    val aliasedName: TypeAliasName = "Woah",
+    val genericAlias: GenericTypeAlias = listOf("Woah")
 )
