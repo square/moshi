@@ -35,6 +35,7 @@ public final class JsonReaderPathTest {
     return JsonCodecFactory.factories();
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void path() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
     assertThat(reader.getPath()).isEqualTo("$");
@@ -114,6 +115,7 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void objectPath() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":1,\"b\":2}");
     assertThat(reader.getPath()).isEqualTo("$");
@@ -154,6 +156,7 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void arrayPath() throws IOException {
     JsonReader reader = factory.newReader("[1,2]");
     assertThat(reader.getPath()).isEqualTo("$");
@@ -212,6 +215,7 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$.null");
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void skipObjectValues() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":1,\"b\":2}");
     reader.beginObject();

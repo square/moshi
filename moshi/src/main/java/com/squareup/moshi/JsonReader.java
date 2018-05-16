@@ -312,25 +312,25 @@ public abstract class JsonReader implements Closeable {
   /**
    * Returns true if the current array or object has another element.
    */
-  public abstract boolean hasNext() throws IOException;
+  @CheckReturnValue public abstract boolean hasNext() throws IOException;
 
   /**
    * Returns the type of the next token without consuming it.
    */
-  public abstract Token peek() throws IOException;
+  @CheckReturnValue public abstract Token peek() throws IOException;
 
   /**
    * Returns the next token, a {@linkplain Token#NAME property name}, and consumes it.
    *
    * @throws JsonDataException if the next token in the stream is not a property name.
    */
-  public abstract String nextName() throws IOException;
+  @CheckReturnValue public abstract String nextName() throws IOException;
 
   /**
    * If the next token is a {@linkplain Token#NAME property name} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
    */
-  public abstract int selectName(Options options) throws IOException;
+  @CheckReturnValue public abstract int selectName(Options options) throws IOException;
 
   /**
    * Skips the next token, consuming it. This method is intended for use when the JSON token stream
@@ -353,7 +353,7 @@ public abstract class JsonReader implements Closeable {
    * If the next token is a {@linkplain Token#STRING string} that's in {@code options}, this
    * consumes it and returns its index. Otherwise this returns -1 and no string is consumed.
    */
-  public abstract int selectString(Options options) throws IOException;
+  @CheckReturnValue public abstract int selectString(Options options) throws IOException;
 
   /**
    * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.

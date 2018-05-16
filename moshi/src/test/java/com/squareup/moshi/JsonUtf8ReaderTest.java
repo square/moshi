@@ -393,6 +393,7 @@ public final class JsonUtf8ReaderTest {
     }
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void prematurelyClosed() throws IOException {
     try {
       JsonReader reader = newReader("{\"a\":[]}");
@@ -977,6 +978,7 @@ public final class JsonUtf8ReaderTest {
     }
   }
 
+  @SuppressWarnings("CheckReturnValue")
   @Test public void failWithPositionDeepPath() throws IOException {
     JsonReader reader = newReader("[1,{\"a\":[2,3,}");
     reader.beginArray();
