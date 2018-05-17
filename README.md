@@ -541,7 +541,7 @@ add the following to your build to enable the annotation processor:
 ```
 
 ```groovy
-annotationProcessor 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
+kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
 ```
 
 #### Limitations
