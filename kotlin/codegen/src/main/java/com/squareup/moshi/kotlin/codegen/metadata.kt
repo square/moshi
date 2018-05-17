@@ -65,7 +65,7 @@ internal fun Type.asTypeName(
 ): TypeName {
 
   val argumentList = when {
-    hasAbbreviatedType() -> abbreviatedType.argumentList
+    hasAbbreviatedType() && !resolveAliases -> abbreviatedType.argumentList
     else -> argumentList
   }
 
