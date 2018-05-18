@@ -182,7 +182,7 @@ internal data class TargetType(
       for (property in classProto.propertyList) {
         val name = nameResolver.getString(property.name)
         val type = typeResolver.resolve(property.returnType.asTypeName(
-            nameResolver, classProto::getTypeParameter, true))
+            nameResolver, classProto::getTypeParameter, false))
         result[name] = TargetProperty(name, type, property, constructor.parameters[name],
             annotationHolders[name], fields[name], setters[name], getters[name])
       }
@@ -207,7 +207,7 @@ internal data class TargetType(
         TypeVariableName(
             name = nameResolver.getString(it.name),
             bounds = *(it.upperBoundList
-                .map { it.asTypeName(nameResolver, proto::getTypeParameter) }
+                .map { it.asTypeName(nameResolver, proto::getTypeParameter, false) }
                 .toTypedArray()),
             variance = it.varianceModifier)
             .reified(it.reified)

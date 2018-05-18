@@ -61,30 +61,30 @@ internal fun TypeParameter.Variance.asKModifier(): KModifier? {
 internal fun Type.asTypeName(
   nameResolver: NameResolver,
   getTypeParameter: (index: Int) -> TypeParameter,
-  resolveAliases: Boolean = false
+  useAbbreviatedType: Boolean = true
 ): TypeName {
 
   val argumentList = when {
-    hasAbbreviatedType() -> abbreviatedType.argumentList
+    useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.argumentList
     else -> argumentList
   }
 
   if (hasFlexibleUpperBound()) {
     return WildcardTypeName.subtypeOf(
-        flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, resolveAliases))
+        flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
         .asNullableIf(nullable)
   } else if (hasOuterType()) {
     return WildcardTypeName.supertypeOf(
-        outerType.asTypeName(nameResolver, getTypeParameter, resolveAliases))
+        outerType.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
         .asNullableIf(nullable)
   }
 
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
-        .asTypeName(nameResolver, getTypeParameter, resolveAliases)
+        .asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
         .asNullableIf(nullable)
     hasTypeParameterName() -> typeParameterName
-    hasAbbreviatedType() && !resolveAliases -> abbreviatedType.typeAliasName
+    useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.typeAliasName
     else -> className
   }
 
@@ -98,7 +98,7 @@ internal fun Type.asTypeName(
         argumentType.projection
       } else null
       if (argumentType.hasType()) {
-        argumentType.type.asTypeName(nameResolver, getTypeParameter, resolveAliases)
+        argumentType.type.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
             .let { argumentTypeName ->
               nullableProjection?.let { projection ->
                 when (projection) {
