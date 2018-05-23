@@ -292,7 +292,7 @@ public abstract class JsonAdapter<T> {
      * returns the adapter if one was created, or null if this factory isn't capable of creating
      * such an adapter.
      *
-     * <p>Implementations may use to {@link Moshi#adapter} to compose adapters of other types, or
+     * <p>Implementations may use {@link Moshi#adapter} to compose adapters of other types, or
      * {@link Moshi#nextAdapter} to delegate to the underlying adapter of the same type.
      */
     @CheckReturnValue
