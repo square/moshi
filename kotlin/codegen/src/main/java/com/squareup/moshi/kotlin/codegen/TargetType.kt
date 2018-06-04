@@ -16,27 +16,12 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
-import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.classKind
-import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
-import me.eugeniomarletti.kotlin.metadata.isInnerClass
-import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.modality
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LOCAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
-import me.eugeniomarletti.kotlin.metadata.shadow.util.capitalizeDecapitalize.decapitalizeAsciiOnly
-import me.eugeniomarletti.kotlin.metadata.visibility
+import kotlinx.metadata.Flag
+import kotlinx.metadata.jvm.KotlinClassMetadata
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -49,12 +34,12 @@ import javax.tools.Diagnostic.Kind.ERROR
 
 /** A user type that should be decoded and encoded by generated code. */
 internal data class TargetType(
-  val proto: Class,
-  val element: TypeElement,
-  val constructor: TargetConstructor,
-  val properties: Map<String, TargetProperty>,
-  val typeVariables: List<TypeVariableName>,
-  val companionObjectName: String?
+    val data: ClassData,
+    val element: TypeElement,
+    val constructor: TargetConstructor,
+    val properties: Map<String, TargetProperty>,
+    val typeVariables: List<TypeVariableName>,
+    val companionObjectName: String?
 ) {
   val name = element.className
 
@@ -63,47 +48,43 @@ internal data class TargetType(
 
     /** Returns a target type for `element`, or null if it cannot be used with code gen. */
     fun get(messager: Messager, elements: Elements, types: Types, element: Element): TargetType? {
-      val typeMetadata: KotlinMetadata? = element.kotlinMetadata
-      if (element !is TypeElement || typeMetadata !is KotlinClassMetadata) {
+      val classMetadata = element.readMetadata()?.readKotlinClassMetadata()
+      if (element !is TypeElement || classMetadata !is KotlinClassMetadata) {
         messager.printMessage(
             ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
         return null
       }
 
-      val proto = typeMetadata.data.classProto
-      when {
-        proto.classKind == Class.Kind.ENUM_CLASS -> {
-          messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
-          return null
-        }
-        proto.classKind != Class.Kind.CLASS -> {
-          messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
-          return null
-        }
-        proto.isInnerClass -> {
-          messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
-          return null
-        }
-        proto.modality == ABSTRACT -> {
-          messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
-          return null
-        }
-        proto.visibility == LOCAL -> {
-          messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must not be local", element)
-          return null
-        }
+      val typeMetadata = classMetadata as KotlinClassMetadata.Class
+      val classData = typeMetadata.readClassData()
+      if (Flag.Class.IS_ENUM_CLASS(classData.flags)) {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
+        return null
+      } else if (!Flag.Class.IS_CLASS(classData.flags)) {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+        return null
+      } else if (Flag.IS_ABSTRACT(classData.flags)) {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
+        return null
+      } else if (Flag.IS_LOCAL(classData.flags)) {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be local", element)
+        return null
+      } else if (Flag.Class.IS_INNER(classData.flags)) {
+        messager.printMessage(
+            ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+        return null
       }
 
-      val typeVariables = genericTypeNames(proto, typeMetadata.data.nameResolver)
+      val typeVariables = classData.typeVariables
       val appliedType = AppliedType.get(element)
 
-      val constructor = TargetConstructor.primary(typeMetadata, elements)
-      if (constructor.proto.visibility != INTERNAL && constructor.proto.visibility != PUBLIC) {
+      val constructor = TargetConstructor.primary(classData.constructorData!!,
+          elements.getTypeElement(classData.name))
+      if (!Flag.IS_INTERNAL(constructor.data.flags) && !Flag.IS_PUBLIC(constructor.data.flags)) {
         messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
             "primary constructor is not internal or public", element)
         return null
@@ -117,7 +98,7 @@ internal data class TargetType(
         if (supertype.element.kind != ElementKind.CLASS) {
           continue // Don't load properties for interface types.
         }
-        if (supertype.element.kotlinMetadata == null) {
+        if (supertype.element.readMetadata() == null) {
           messager.printMessage(ERROR,
               "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
               element)
@@ -129,23 +110,19 @@ internal data class TargetType(
           properties.putIfAbsent(name, property)
         }
       }
-      val companionObjectName = if (proto.hasCompanionObjectName()) {
-        typeMetadata.data.nameResolver.getQualifiedClassName(proto.companionObjectName)
-      } else {
-        null
-      }
-      return TargetType(proto, element, constructor, properties, typeVariables, companionObjectName)
+      return TargetType(classData, element, constructor, properties, typeVariables,
+          classData.companionObjectName)
     }
 
     /** Returns the properties declared by `typeElement`. */
     private fun declaredProperties(
-      typeElement: TypeElement,
-      typeResolver: TypeResolver,
-      constructor: TargetConstructor
+        typeElement: TypeElement,
+        typeResolver: TypeResolver,
+        constructor: TargetConstructor
     ): Map<String, TargetProperty> {
-      val typeMetadata: KotlinClassMetadata = typeElement.kotlinMetadata as KotlinClassMetadata
-      val nameResolver = typeMetadata.data.nameResolver
-      val classProto = typeMetadata.data.classProto
+      val classMetadata = typeElement.readMetadata()?.readKotlinClassMetadata()
+      val typeMetadata = classMetadata as KotlinClassMetadata.Class
+      val classData = typeMetadata.readClassData()
 
       val annotationHolders = mutableMapOf<String, ExecutableElement>()
       val fields = mutableMapOf<String, VariableElement>()
@@ -170,19 +147,17 @@ internal data class TargetType(
             }
           }
 
-          val propertyProto = typeMetadata.data.getPropertyOrNull(element)
-          if (propertyProto != null) {
-            val name = nameResolver.getString(propertyProto.name)
-            annotationHolders[name] = element
+          val propertyData = classData.getPropertyOrNull(element)
+          if (propertyData != null) {
+            annotationHolders[propertyData.name] = element
           }
         }
       }
 
       val result = mutableMapOf<String, TargetProperty>()
-      for (property in classProto.propertyList) {
-        val name = nameResolver.getString(property.name)
-        val type = typeResolver.resolve(property.returnType.asTypeName(
-            nameResolver, classProto::getTypeParameter, false))
+      for (property in classData.properties) {
+        val name = property.name
+        val type = typeResolver.resolve(property.type)
         result[name] = TargetProperty(name, type, property, constructor.parameters[name],
             annotationHolders[name], fields[name], setters[name], getters[name])
       }
@@ -202,34 +177,14 @@ internal data class TargetType(
 
     private val Element.name get() = simpleName.toString()
 
-    private fun genericTypeNames(proto: Class, nameResolver: NameResolver): List<TypeVariableName> {
-      return proto.typeParameterList.map {
-        val possibleBounds = it.upperBoundList
-            .map { it.asTypeName(nameResolver, proto::getTypeParameter, false) }
-        val typeVar = if (possibleBounds.isEmpty()) {
-          TypeVariableName(
-              name = nameResolver.getString(it.name),
-              variance = it.varianceModifier)
-        } else {
-        TypeVariableName(
-            name = nameResolver.getString(it.name),
-            bounds = *possibleBounds.toTypedArray(),
-            variance = it.varianceModifier)
-        }
-        return@map typeVar.reified(it.reified)
-      }
-    }
-
-    private val TypeParameter.varianceModifier: KModifier?
-      get() {
-        return variance.asKModifier().let {
-          // We don't redeclare out variance here
-          if (it == KModifier.OUT) {
-            null
-          } else {
-            it
-          }
-        }
-      }
   }
+}
+
+private fun String.decapitalizeAsciiOnly(): String {
+  if (isEmpty()) return this
+  val c = this[0]
+  return if (c in 'A'..'Z')
+    c.toLowerCase() + substring(1)
+  else
+    this
 }
