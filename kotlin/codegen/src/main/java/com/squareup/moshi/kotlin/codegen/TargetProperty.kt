@@ -19,13 +19,7 @@ import com.google.auto.common.AnnotationMirrors
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
-import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.metadata.hasSetter
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Property
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
-import me.eugeniomarletti.kotlin.metadata.visibility
+import kotlinx.metadata.Flag
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -38,7 +32,7 @@ import javax.tools.Diagnostic
 internal data class TargetProperty(
   val name: String,
   val type: TypeName,
-  private val proto: Property,
+  private val data: PropertyData,
   private val parameter: TargetParameter?,
   private val annotationHolder: ExecutableElement?,
   private val field: VariableElement?,
@@ -47,19 +41,19 @@ internal data class TargetProperty(
 ) {
   val parameterIndex get() = parameter?.index ?: -1
 
-  val hasDefault get() = parameter?.proto?.declaresDefaultValue ?: true
+  val hasDefault get() = parameter?.data?.declaresDefaultValue ?: true
 
   private val isTransient get() = field != null && Modifier.TRANSIENT in field.modifiers
 
   private val element get() = field ?: setter ?: getter!!
 
-  private val isSettable get() = proto.hasSetter || parameter != null
+  private val isSettable get() = data.hasSetter || parameter != null
 
   private val isVisible: Boolean
     get() {
-      return proto.visibility == INTERNAL
-          || proto.visibility == PROTECTED
-          || proto.visibility == PUBLIC
+      return Flag.IS_INTERNAL(data.flags)
+          || Flag.IS_PROTECTED(data.flags)
+          || Flag.IS_PUBLIC(data.flags)
     }
 
   /**
