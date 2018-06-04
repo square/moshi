@@ -15,13 +15,12 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.ValueParameter
 import javax.lang.model.element.VariableElement
 
 /** A parameter in user code that should be populated by generated code. */
 internal data class TargetParameter(
   val name: String,
-  val proto: ValueParameter,
+  val data: ParameterData,
   val index: Int,
   val element: VariableElement
 )

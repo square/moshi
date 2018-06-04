@@ -121,7 +121,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     }
 
     for ((name, parameter) in type.constructor.parameters) {
-      if (type.properties[parameter.name] == null && !parameter.proto.declaresDefaultValue) {
+      if (type.properties[parameter.name] == null && !parameter.data.declaresDefaultValue) {
         messager.printMessage(
             ERROR, "No property for required constructor parameter $name", parameter.element)
         return null
