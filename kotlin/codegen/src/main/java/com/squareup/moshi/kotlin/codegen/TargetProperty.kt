@@ -67,11 +67,6 @@ internal data class TargetProperty(
    * cannot be used with code gen, or if no codegen is necessary for this property.
    */
   fun generator(messager: Messager): PropertyGenerator? {
-    if (!isVisible) {
-      messager.printMessage(Diagnostic.Kind.ERROR, "property ${this} is not visible", element)
-      return null
-    }
-
     if (isTransient) {
       if (!hasDefault) {
         messager.printMessage(
@@ -79,6 +74,11 @@ internal data class TargetProperty(
         return null
       }
       return null // This property is transient and has a default value. Ignore it.
+    }
+
+    if (!isVisible) {
+      messager.printMessage(Diagnostic.Kind.ERROR, "property ${this} is not visible", element)
+      return null
     }
 
     if (!isSettable) {

@@ -535,18 +535,27 @@ class GeneratedAdaptersTest {
 
     val encoded = TransientProperty()
     encoded.a = 3
-    encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+    encoded.setB(4)
+    encoded.c = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.getB()).isEqualTo(-1)
+    assertThat(decoded.c).isEqualTo(6)
   }
 
   @JsonClass(generateAdapter = true)
   class TransientProperty {
     @Transient var a: Int = -1
-    var b: Int = -1
+    @Transient private var b: Int = -1
+    var c: Int = -1
+
+    fun getB() = b
+
+    fun setB(b: Int) {
+      this.b = b
+    }
   }
 
   @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
