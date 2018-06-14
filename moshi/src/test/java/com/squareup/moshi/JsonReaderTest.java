@@ -165,6 +165,20 @@ public final class JsonReaderTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+  @Test public void failOnTrailingComma() throws IOException {
+    JsonReader reader = newReader("{\"a\": \"android\", }");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.nextString()).isEqualTo("android");
+    try {
+      //noinspection ResultOfMethodCallIgnored
+      reader.nextName();
+      fail();
+    } catch (JsonEncodingException expected) {
+      assertThat(expected).hasMessage("Expected name at path $.a");
+    }
+  }
+
   @Test public void failOnUnknownFailsOnUnknownObjectValue() throws IOException {
     JsonReader reader = newReader("{\"a\": 123}");
     reader.setFailOnUnknown(true);
