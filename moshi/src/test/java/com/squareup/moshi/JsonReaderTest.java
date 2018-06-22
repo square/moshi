@@ -979,4 +979,10 @@ public final class JsonReaderTest {
     }
     assertThat(reader.nextInt()).isEqualTo(1);
   }
+
+  @Test public void emptyDocumentHasNextReturnsFalse() throws IOException {
+    JsonReader reader = newReader("1");
+    reader.readJsonValue();
+    assertThat(reader.hasNext()).isFalse();
+  }
 }

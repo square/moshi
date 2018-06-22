@@ -162,7 +162,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek();
     }
-    return p != PEEKED_END_OBJECT && p != PEEKED_END_ARRAY;
+    return p != PEEKED_END_OBJECT && p != PEEKED_END_ARRAY && p != PEEKED_EOF;
   }
 
   @Override public Token peek() throws IOException {
