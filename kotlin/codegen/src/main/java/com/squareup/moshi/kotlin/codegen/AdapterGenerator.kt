@@ -106,8 +106,8 @@ internal class AdapterGenerator(
 
     generatedOption?.let {
       result.addAnnotation(AnnotationSpec.builder(it.asClassName())
-          .addMember("%S", JsonClassCodegenProcessor::class.java.canonicalName)
-          .addMember("%S", "https://github.com/square/moshi")
+          .addMember("value = [%S]", JsonClassCodegenProcessor::class.java.canonicalName)
+          .addMember("comments = %S", "https://github.com/square/moshi")
           .build())
     }
 
