@@ -101,8 +101,7 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public boolean hasNext() throws IOException {
-    // TODO(jwilson): this is consistent with BufferedSourceJsonReader but it doesn't make sense.
-    if (stackSize == 0) return true;
+    if (stackSize == 0) return false;
 
     Object peeked = stack[stackSize - 1];
     return !(peeked instanceof Iterator) || ((Iterator) peeked).hasNext();
