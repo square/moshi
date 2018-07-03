@@ -544,6 +544,9 @@ add the following to your build to enable the annotation processor:
 kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.6.0'
 ```
 
+You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
+the compiled code to have the required metadata annotations that Moshi's processor looks for.
+
 #### Limitations
 
 If your Kotlin class has a superclass, it must also be a Kotlin class. Neither reflection or codegen
