@@ -35,9 +35,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import me.eugeniomarletti.kotlin.metadata.isDataClass
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
-import me.eugeniomarletti.kotlin.metadata.visibility
+import kotlinx.metadata.Flag
 import java.lang.reflect.Type
 import javax.annotation.processing.Messager
 import javax.lang.model.element.TypeElement
@@ -48,9 +46,9 @@ internal class AdapterGenerator(
   private val propertyList: List<PropertyGenerator>
 ) {
   private val className = target.name
-  private val isDataClass = target.proto.isDataClass
+  private val isDataClass = Flag.Class.IS_DATA(target.data.flags)
   private val companionObjectName = target.companionObjectName
-  private val visibility = target.proto.visibility!!
+  private val isInternal = Flag.IS_INTERNAL(target.data.flags)
   private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()
@@ -118,7 +116,7 @@ internal class AdapterGenerator(
     }
 
     // TODO make this configurable. Right now it just matches the source model
-    if (visibility == Visibility.INTERNAL) {
+    if (isInternal) {
       result.addModifiers(KModifier.INTERNAL)
     }
 
@@ -324,7 +322,7 @@ internal class AdapterGenerator(
         .returns(jsonAdapterTypeName)
         .addParameter(moshiParam)
 
-    if (visibility == Visibility.INTERNAL) {
+    if (isInternal) {
       result.addModifiers(KModifier.INTERNAL)
     }
 
