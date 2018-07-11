@@ -849,6 +849,14 @@ class KotlinJsonAdapterTest {
     assertThat(adapter.fromJson(json)).isEqualTo(value)
     assertThat(adapter.toJson(value)).isEqualTo(json)
   }
+  
+  @Test fun backAndForthMap() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val json = """{"map-key1":"map-value","map-key2":"map-value"}"""
+    val map = moshi.adapter(Map::class.java).fromJson(json)!!
+    val value = moshi.adapter(map.javaClass).toJson(map)
+    assertThat(value).isEqualTo(json)
+  }
 
   @Test fun mixingReflectionAndCodegen() {
     val moshi = Moshi.Builder()
