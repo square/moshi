@@ -54,7 +54,7 @@ internal class AdapterGenerator(
   private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()
-  private val adapterName = "${className.simpleNames().joinToString(separator = "_")}JsonAdapter"
+  private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
   private val originalTypeName = target.element.asType().asTypeName()
 
   private val moshiParam = ParameterSpec.builder(
@@ -161,7 +161,7 @@ internal class AdapterGenerator(
         .addModifiers(KModifier.OVERRIDE)
         .returns(String::class)
         .addStatement("return %S",
-            "GeneratedJsonAdapter(${originalTypeName.rawType().simpleNames().joinToString(".")})")
+            "GeneratedJsonAdapter(${originalTypeName.rawType().simpleNames.joinToString(".")})")
         .build()
   }
 
