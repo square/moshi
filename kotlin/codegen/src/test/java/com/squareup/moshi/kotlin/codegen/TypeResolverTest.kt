@@ -16,10 +16,9 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
-import com.squareup.moshi.kotlin.codegen.TypeResolver
 import org.junit.Test
 
 class TypeResolverTest {
@@ -32,9 +31,7 @@ class TypeResolverTest {
 
   @Test
   fun ensureParameterizedNullabilityIsPreserved() {
-    val nullableTypeName = ParameterizedTypeName.get(
-        List::class.asClassName(),
-        String::class.asClassName())
+    val nullableTypeName = List::class.plusParameter(String::class)
         .asNullable()
 
     assertThat(resolver.resolve(nullableTypeName).nullable).isTrue()

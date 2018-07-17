@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 /**
  * Resolves type parameters against a type declaration. Use this to fill in type variables with
@@ -33,8 +34,7 @@ open class TypeResolver {
       is ClassName -> typeName
 
       is ParameterizedTypeName -> {
-        ParameterizedTypeName.get(
-            typeName.rawType, *(typeName.typeArguments.map { resolve(it) }.toTypedArray()))
+            typeName.rawType.parameterizedBy(*(typeName.typeArguments.map { resolve(it) }.toTypedArray()))
             .asNullableIf(typeName.nullable)
       }
 

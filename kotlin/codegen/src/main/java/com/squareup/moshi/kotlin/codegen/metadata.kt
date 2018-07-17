@@ -18,7 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
@@ -126,7 +126,7 @@ internal fun Type.asTypeName(
         WildcardTypeName.STAR
       }
     }.toTypedArray()
-    typeName = ParameterizedTypeName.get(typeName as ClassName, *remappedArgs)
+    typeName = (typeName as ClassName).parameterizedBy(*remappedArgs)
   }
 
   return typeName.asNullableIf(nullable)

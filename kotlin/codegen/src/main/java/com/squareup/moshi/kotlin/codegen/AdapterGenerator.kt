@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
@@ -62,7 +63,7 @@ internal class AdapterGenerator(
       Moshi::class).build()
   private val typesParam = ParameterSpec.builder(
       nameAllocator.newName("types"),
-      ParameterizedTypeName.get(ARRAY, Type::class.asTypeName()))
+      ARRAY.parameterizedBy(Type::class.asTypeName()))
       .build()
   private val readerParam = ParameterSpec.builder(
       nameAllocator.newName("reader"),
@@ -76,8 +77,7 @@ internal class AdapterGenerator(
       nameAllocator.newName("value"),
       originalTypeName.asNullable())
       .build()
-  private val jsonAdapterTypeName = ParameterizedTypeName.get(
-      JsonAdapter::class.asClassName(), originalTypeName)
+  private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(originalTypeName)
 
   // selectName() API setup
   private val optionsProperty = PropertySpec.builder(
