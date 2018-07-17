@@ -31,15 +31,20 @@ internal fun TypeParameter.asTypeName(
   nameResolver: NameResolver,
   getTypeParameter: (index: Int) -> TypeParameter,
   resolveAliases: Boolean = false
-): TypeName {
-  return TypeVariableName(
-      name = nameResolver.getString(name),
-      bounds = *(upperBoundList.map {
-        it.asTypeName(nameResolver, getTypeParameter, resolveAliases)
-      }
-          .toTypedArray()),
-      variance = variance.asKModifier()
-  )
+): TypeVariableName {
+  val possibleBounds = upperBoundList.map {
+    it.asTypeName(nameResolver, getTypeParameter, resolveAliases)
+  }
+  return if (possibleBounds.isEmpty()) {
+    TypeVariableName(
+        name = nameResolver.getString(name),
+        variance = variance.asKModifier())
+  } else {
+    TypeVariableName(
+        name = nameResolver.getString(name),
+        bounds = *possibleBounds.toTypedArray(),
+        variance = variance.asKModifier())
+  }
 }
 
 internal fun TypeParameter.Variance.asKModifier(): KModifier? {
