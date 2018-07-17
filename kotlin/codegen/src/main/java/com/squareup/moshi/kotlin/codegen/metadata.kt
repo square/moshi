@@ -112,13 +112,13 @@ internal fun Type.asTypeName(
                       WildcardTypeName.subtypeOf(argumentTypeName)
                     }
                   }
-                  Type.Argument.Projection.STAR -> WildcardTypeName.subtypeOf(ANY)
+                  Type.Argument.Projection.STAR -> WildcardTypeName.STAR
                   Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
                 }
               } ?: argumentTypeName
             }
       } else {
-        WildcardTypeName.subtypeOf(ANY)
+        WildcardTypeName.STAR
       }
     }.toTypedArray()
     typeName = ParameterizedTypeName.get(typeName as ClassName, *remappedArgs)
