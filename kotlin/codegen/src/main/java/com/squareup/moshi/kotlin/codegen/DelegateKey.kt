@@ -114,8 +114,8 @@ private fun List<TypeName>.toVariableNames() = joinToString("") { it.toVariableN
 /** Returns a suggested variable name derived from a type name, like nullableListOfString. */
 private fun TypeName.toVariableName(): String {
   val base = when (this) {
-    is ClassName -> simpleName()
-    is ParameterizedTypeName -> rawType.simpleName() + "Of" + typeArguments.toVariableNames()
+    is ClassName -> simpleName
+    is ParameterizedTypeName -> rawType.simpleName + "Of" + typeArguments.toVariableNames()
     is WildcardTypeName -> (lowerBounds + upperBounds).toVariableNames()
     is TypeVariableName -> name + bounds.toVariableNames()
     else -> throw IllegalArgumentException("Unrecognized type! $this")
