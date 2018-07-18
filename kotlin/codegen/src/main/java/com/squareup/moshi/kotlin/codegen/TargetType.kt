@@ -204,13 +204,19 @@ internal data class TargetType(
 
     private fun genericTypeNames(proto: Class, nameResolver: NameResolver): List<TypeVariableName> {
       return proto.typeParameterList.map {
+        val possibleBounds = it.upperBoundList
+            .map { it.asTypeName(nameResolver, proto::getTypeParameter, false) }
+        val typeVar = if (possibleBounds.isEmpty()) {
+          TypeVariableName(
+              name = nameResolver.getString(it.name),
+              variance = it.varianceModifier)
+        } else {
         TypeVariableName(
             name = nameResolver.getString(it.name),
-            bounds = *(it.upperBoundList
-                .map { it.asTypeName(nameResolver, proto::getTypeParameter, false) }
-                .toTypedArray()),
+            bounds = *possibleBounds.toTypedArray(),
             variance = it.varianceModifier)
-            .reified(it.reified)
+        }
+        return@map typeVar.reified(it.reified)
       }
     }
 

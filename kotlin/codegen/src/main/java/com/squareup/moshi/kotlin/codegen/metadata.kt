@@ -18,7 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
@@ -31,15 +31,20 @@ internal fun TypeParameter.asTypeName(
   nameResolver: NameResolver,
   getTypeParameter: (index: Int) -> TypeParameter,
   resolveAliases: Boolean = false
-): TypeName {
-  return TypeVariableName(
-      name = nameResolver.getString(name),
-      bounds = *(upperBoundList.map {
-        it.asTypeName(nameResolver, getTypeParameter, resolveAliases)
-      }
-          .toTypedArray()),
-      variance = variance.asKModifier()
-  )
+): TypeVariableName {
+  val possibleBounds = upperBoundList.map {
+    it.asTypeName(nameResolver, getTypeParameter, resolveAliases)
+  }
+  return if (possibleBounds.isEmpty()) {
+    TypeVariableName(
+        name = nameResolver.getString(name),
+        variance = variance.asKModifier())
+  } else {
+    TypeVariableName(
+        name = nameResolver.getString(name),
+        bounds = *possibleBounds.toTypedArray(),
+        variance = variance.asKModifier())
+  }
 }
 
 internal fun TypeParameter.Variance.asKModifier(): KModifier? {
@@ -112,16 +117,16 @@ internal fun Type.asTypeName(
                       WildcardTypeName.subtypeOf(argumentTypeName)
                     }
                   }
-                  Type.Argument.Projection.STAR -> WildcardTypeName.subtypeOf(ANY)
+                  Type.Argument.Projection.STAR -> WildcardTypeName.STAR
                   Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
                 }
               } ?: argumentTypeName
             }
       } else {
-        WildcardTypeName.subtypeOf(ANY)
+        WildcardTypeName.STAR
       }
     }.toTypedArray()
-    typeName = ParameterizedTypeName.get(typeName as ClassName, *remappedArgs)
+    typeName = (typeName as ClassName).parameterizedBy(*remappedArgs)
   }
 
   return typeName.asNullableIf(nullable)

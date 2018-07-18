@@ -24,10 +24,12 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
@@ -74,8 +76,7 @@ internal data class DelegateKey(
     val adapterName = nameAllocator.newName(
         "${type.toVariableName().decapitalize()}${qualifierNames}Adapter", this)
 
-    val adapterTypeName = ParameterizedTypeName.get(
-        JsonAdapter::class.asTypeName(), type)
+    val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
     val qualifiers = jsonQualifiers
     val standardArgs = arrayOf(moshiParameter,
         if (type is ClassName && qualifiers.isEmpty()) {
@@ -114,8 +115,8 @@ private fun List<TypeName>.toVariableNames() = joinToString("") { it.toVariableN
 /** Returns a suggested variable name derived from a type name, like nullableListOfString. */
 private fun TypeName.toVariableName(): String {
   val base = when (this) {
-    is ClassName -> simpleName()
-    is ParameterizedTypeName -> rawType.simpleName() + "Of" + typeArguments.toVariableNames()
+    is ClassName -> simpleName
+    is ParameterizedTypeName -> rawType.simpleName + "Of" + typeArguments.toVariableNames()
     is WildcardTypeName -> (lowerBounds + upperBounds).toVariableNames()
     is TypeVariableName -> name + bounds.toVariableNames()
     else -> throw IllegalArgumentException("Unrecognized type! $this")
