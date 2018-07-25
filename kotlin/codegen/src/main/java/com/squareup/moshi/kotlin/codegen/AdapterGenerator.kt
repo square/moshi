@@ -303,7 +303,7 @@ internal class AdapterGenerator(
 
     result.addStatement("%N.beginObject()", writerParam)
     propertyList.forEach { property ->
-      result.addStatement("%N.name(%S)", writerParam, property.jsonName)
+      result.addStatement("%N.name(\"${property.jsonName}\")", writerParam)
       result.addStatement("%N.toJson(%N, %N.%L)",
           nameAllocator.get(property.delegateKey), writerParam, valueParam, property.name)
     }
