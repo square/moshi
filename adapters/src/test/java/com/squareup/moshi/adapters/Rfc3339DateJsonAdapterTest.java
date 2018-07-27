@@ -16,7 +16,6 @@
 package com.squareup.moshi.adapters;
 
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
