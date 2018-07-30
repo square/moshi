@@ -143,6 +143,19 @@ public final class RuntimeJsonAdapterFactoryTest {
     }
   }
 
+  @Test public void nullSafe() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+            .registerSubtype(Success.class, "success")
+            .registerSubtype(Error.class, "error"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8("null"));
+    assertThat(adapter.fromJson(reader)).isNull();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   interface Message {
   }
 

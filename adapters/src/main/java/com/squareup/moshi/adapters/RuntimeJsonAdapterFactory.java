@@ -71,7 +71,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
       labelToAdapter.put(label, adapter);
       typeToAdapter.put(typeValue, adapter);
     }
-    return new RuntimeJsonAdapter(labelKey, labelToAdapter, typeToAdapter);
+    return new RuntimeJsonAdapter(labelKey, labelToAdapter, typeToAdapter).nullSafe();
   }
 
   static final class RuntimeJsonAdapter extends JsonAdapter<Object> {
