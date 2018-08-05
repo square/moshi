@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
@@ -117,7 +116,7 @@ internal class TypeNameKmTypeVisitor(flags: Flags,
   }
 
   override fun visitStarProjection() {
-    argumentList.add(WildcardTypeName.subtypeOf(ANY))
+    argumentList.add(WildcardTypeName.STAR)
   }
 
   override fun visitTypeAlias(name: kotlinx.metadata.ClassName) {
@@ -179,18 +178,27 @@ internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
         }
 
         override fun visitEnd() {
-          typeParameters[id] = TypeVariableName(
-              name = name,
-              bounds = *(upperBoundList.toTypedArray()),
-              variance = variance.asKModifier().let {
-                if (it == KModifier.OUT) {
-                  // We don't redeclare out variance here
-                  null
-                } else {
-                  it
-                }
-              }
-          )
+          val finalVariance = variance.asKModifier().let {
+            if (it == KModifier.OUT) {
+              // We don't redeclare out variance here
+              null
+            } else {
+              it
+            }
+          }
+          val typeVariableName = if (upperBoundList.isEmpty()) {
+            TypeVariableName(
+                name = name,
+                variance = finalVariance
+            )
+          } else {
+            TypeVariableName(
+                name = name,
+                bounds = *(upperBoundList.toTypedArray()),
+                variance = finalVariance
+            )
+          }
+          typeParameters[id] = typeVariableName
               .reified(Flag.TypeParameter.IS_REIFIED(flags))
         }
       }
