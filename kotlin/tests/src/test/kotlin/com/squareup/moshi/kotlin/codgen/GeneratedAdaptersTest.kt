@@ -795,10 +795,12 @@ class GeneratedAdaptersTest {
   @JsonClass(generateAdapter = true)
   class DuplicateValue(var a: Int = -1, var b: Int = -2)
 
-  @Test fun companionObjectsTests() {
+  @Suppress("DEPRECATION")
+  @Test
+  fun companionObjectsTests() {
     val moshi = Moshi.Builder().build()
     val standardAdapter = CompanionObjectClass.jsonAdapter(moshi)
-    val customNameAdapter = NamedCompanionObjectClass.jsonAdapter(moshi)
+    val customNameAdapter = NamedGenericCompanionObjectClass.jsonAdapter<String, String>(moshi)
   }
 
   @JsonClass(generateAdapter = true)
@@ -807,9 +809,17 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class NamedCompanionObjectClass(val foo: String) {
+  internal data class NamedGenericCompanionObjectClass<T, R>(val foo: T, val bar: R) {
     companion object CustomCompanionObject
   }
+
+  @Test fun kclassJsonAdapterTest() {
+    val moshi = Moshi.Builder().build()
+    val adapter = KClassJsonAdapterExtension::class.jsonAdapter(moshi)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class KClassJsonAdapterExtension(val name: String)
 
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
