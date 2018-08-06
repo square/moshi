@@ -811,6 +811,28 @@ class GeneratedAdaptersTest {
     companion object CustomCompanionObject
   }
 
+  @Test fun extensionProperty() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(ExtensionProperty::class.java)
+
+    val encoded = ExtensionProperty(3)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(4)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class ExtensionProperty(var a: Int)
+
+  var ExtensionProperty.b: Int
+    get() {
+      throw AssertionError()
+    }
+    set(value) {
+      throw AssertionError()
+    }
+
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
 
