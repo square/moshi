@@ -128,7 +128,7 @@ internal data class TargetProperty(
   private val Element?.jsonName: String?
     get() {
       if (this == null) return null
-      return getAnnotation(Json::class.java)?.name
+      return getAnnotation(Json::class.java)?.name?.replace("$", "\\$")
     }
 
   override fun toString() = name
