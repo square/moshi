@@ -878,7 +878,7 @@ public final class MoshiTest {
 
   @Test public void invalidEnum() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
-    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class).lenient();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class);
     try {
       adapter.fromJson("\"SPOCK\"");
       fail();
@@ -886,6 +886,22 @@ public final class MoshiTest {
       assertThat(expected).hasMessage(
           "Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
+  }
+
+  @Test public void invalidEnumHasCorrectPathInExceptionMessage() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<Roshambo> adapter = moshi.adapter(Roshambo.class);
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8("[\"SPOCK\"]"));
+    reader.beginArray();
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage(
+          "Expected one of [ROCK, PAPER, scr] but was SPOCK at path $[0]");
+    }
+    reader.endArray();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
   @Test public void nullEnum() throws Exception {

@@ -291,10 +291,10 @@ final class StandardJsonAdapters {
       if (index != -1) return constants[index];
 
       // We can consume the string safely, we are terminating anyway.
+      String path = reader.getPath();
       String name = reader.nextString();
       throw new JsonDataException("Expected one of "
-          + Arrays.asList(nameStrings) + " but was " + name + " at path "
-          + reader.getPath());
+          + Arrays.asList(nameStrings) + " but was " + name + " at path " + path);
     }
 
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
