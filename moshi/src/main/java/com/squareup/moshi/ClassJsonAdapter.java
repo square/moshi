@@ -95,7 +95,13 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         // Look up a type adapter for this type.
         Type fieldType = resolve(type, rawType, field.getGenericType());
         Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
-        JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations);
+        JsonAdapter<Object> adapter;
+        try {
+          adapter = moshi.adapter(fieldType, annotations);
+        } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException("Error creating adapter for field '" + field.getName()
+              + "' in " + type, e);
+        }
 
         // Create the binding between field and JSON.
         field.setAccessible(true);
