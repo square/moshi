@@ -625,7 +625,7 @@ License
     limitations under the License.
 
 
- [dl]: https://search.maven.org/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
+ [dl]: https://search.maven.org/classic/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/
  [okio]: https://github.com/square/okio/
  [okhttp]: https://github.com/square/okhttp/
