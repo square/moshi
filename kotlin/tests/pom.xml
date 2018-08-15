@@ -38,6 +38,11 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <properties>
+    <maven.javadoc.skip>true</maven.javadoc.skip><!-- We use Dokka instead. -->
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -140,6 +145,37 @@
             <id>java-test-compile</id>
             <phase>test-compile</phase>
             <goals> <goal>testCompile</goal> </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>${maven-assembly.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/dokka.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jetbrains.dokka</groupId>
+        <artifactId>dokka-maven-plugin</artifactId>
+        <version>${dokka.version}</version>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>dokka</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
