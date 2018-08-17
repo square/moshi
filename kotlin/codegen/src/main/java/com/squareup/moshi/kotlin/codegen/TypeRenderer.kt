@@ -43,6 +43,16 @@ abstract class TypeRenderer {
 
   fun render(typeName: TypeName): CodeBlock {
     if (typeName.nullable) {
+      if (typeName == BOOLEAN.asNullable()
+          || typeName == BYTE.asNullable()
+          || typeName == CHAR.asNullable()
+          || typeName == DOUBLE.asNullable()
+          || typeName == FLOAT.asNullable()
+          || typeName == INT.asNullable()
+          || typeName == LONG.asNullable()
+          || typeName == SHORT.asNullable()) {
+        return CodeBlock.of("%T::class.javaObjectType", typeName.asNonNullable())
+      }
       return render(typeName.asNonNullable())
     }
 
