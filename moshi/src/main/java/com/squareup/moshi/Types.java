@@ -227,9 +227,7 @@ public final class Types {
       String fieldName) {
     try {
       Field field = clazz.getDeclaredField(fieldName);
-      if (!field.isAccessible()) {
-        field.setAccessible(true);
-      }
+      field.setAccessible(true);
       Annotation[] fieldAnnotations = field.getDeclaredAnnotations();
       Set<Annotation> annotations = new LinkedHashSet<>(fieldAnnotations.length);
       for (Annotation annotation : fieldAnnotations) {
