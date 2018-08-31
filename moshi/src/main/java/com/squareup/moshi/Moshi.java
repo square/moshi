@@ -90,8 +90,14 @@ public final class Moshi {
   }
 
   @CheckReturnValue
-  @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations) {
+    return adapter(type, annotations, null);
+  }
+
+  @CheckReturnValue
+  @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
+  <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations,
+      @Nullable String fieldName) {
     if (type == null) {
       throw new NullPointerException("type == null");
     }
@@ -123,8 +129,25 @@ public final class Moshi {
     }
 
     // Prepare for re-entrant calls, then ask each factory to create a type adapter.
-    DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(cacheKey);
+    DeferredAdapter<T> deferredAdapter;
+    List<Object> typesAndFieldNames;
+    if (deferredAdapters.isEmpty()) {
+      TopLevelDeferredAdapter<T> topLevelDeferredAdapter = new TopLevelDeferredAdapter<>(cacheKey);
+      deferredAdapter = topLevelDeferredAdapter;
+      typesAndFieldNames = topLevelDeferredAdapter.typesAndFieldNames;
+    } else {
+      deferredAdapter = new DeferredAdapter<>(cacheKey);
+      typesAndFieldNames =
+          ((TopLevelDeferredAdapter<T>) deferredAdapters.get(0)).typesAndFieldNames;
+    }
+
     deferredAdapters.add(deferredAdapter);
+    int lastIndex = deferredAdapters.size() - 1;
+    if (fieldName == null) {
+      typesAndFieldNames.add(type);
+    } else {
+      typesAndFieldNames.add(fieldName);
+    }
     try {
       for (int i = 0, size = factories.size(); i < size; i++) {
         JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
@@ -133,12 +156,20 @@ public final class Moshi {
           synchronized (adapterCache) {
             adapterCache.put(cacheKey, result);
           }
+          // Remove the type or field name only when we succeed in creating the adapter,
+          // so we have the full stack  at the top level.
+          typesAndFieldNames.remove(lastIndex);
+          deferredAdapters.remove(lastIndex);
           return result;
         }
       }
+    } catch (RuntimeException e) {
+      if (lastIndex == 0) { // Rewrite the exception at the top level.
+        e = errorWithFields(typesAndFieldNames, e);
+      }
+      throw e;
     } finally {
-      deferredAdapters.remove(deferredAdapters.size() - 1);
-      if (deferredAdapters.isEmpty()) {
+      if (lastIndex == 0) {
         reentrantCalls.remove();
       }
     }
@@ -179,6 +210,39 @@ public final class Moshi {
   private Object cacheKey(Type type, Set<? extends Annotation> annotations) {
     if (annotations.isEmpty()) return type;
     return Arrays.asList(type, annotations);
+  }
+
+  static RuntimeException errorWithFields(List<Object> typesAndFieldNames, RuntimeException e) {
+    if (typesAndFieldNames.size() == 1) {
+      return e;
+    }
+    StringBuilder errorMessageBuilder = new StringBuilder("Error creating adapter for ");
+    int size = typesAndFieldNames.size();
+    int lastIndex = size;
+    for (int i = size - 1; i >= 0; i--) {
+      Object typeOrFieldName = typesAndFieldNames.get(i);
+      if (typeOrFieldName instanceof Type) {
+        String typeName = Types.getRawType((Type) typeOrFieldName).getName();
+        if (lastIndex - i == 1) {
+          errorMessageBuilder.append(typeName);
+        } else {
+          errorMessageBuilder
+              .append("field '")
+              .append(typeName);
+          for (int j = i + 1; j < lastIndex; j++) {
+            errorMessageBuilder
+                .append('.')
+                .append(typesAndFieldNames.get(j));
+          }
+          errorMessageBuilder.append('\'');
+        }
+        lastIndex = i;
+        if (i != 0) {
+          errorMessageBuilder.append(" in ");
+        }
+      }
+    }
+    return new IllegalArgumentException(errorMessageBuilder.toString(), e);
   }
 
   public static final class Builder {
@@ -271,6 +335,14 @@ public final class Moshi {
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
       if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
       delegate.toJson(writer, value);
+    }
+  }
+
+  static final class TopLevelDeferredAdapter<T> extends DeferredAdapter<T> {
+    final List<Object> typesAndFieldNames = new ArrayList<>();
+
+    TopLevelDeferredAdapter(Object cacheKey) {
+      super(cacheKey);
     }
   }
 }
