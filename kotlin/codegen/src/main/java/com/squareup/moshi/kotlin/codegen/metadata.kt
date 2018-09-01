@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
@@ -36,9 +37,17 @@ import javax.lang.model.element.ExecutableElement
 
 @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 internal fun Element.readMetadata(): KotlinClassHeader? {
-  return getAnnotation(Metadata::class.java)?.run {
-    KotlinClassHeader(k, mv, bv, d1, d2, xs, pn, xi)
-  }
+  return getAnnotation(Metadata::class.java)?.asClassHeader()
+}
+
+@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+internal fun Class<*>.readMetadata(): KotlinClassHeader? {
+  return getAnnotation(Metadata::class.java)?.asClassHeader()
+}
+
+@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+internal fun Metadata.asClassHeader(): KotlinClassHeader {
+  return KotlinClassHeader(k, mv, bv, d1, d2, xs, pn, xi)
 }
 
 internal fun KotlinClassHeader.readKotlinClassMetadata(): KotlinClassMetadata? {
@@ -141,6 +150,9 @@ internal class TypeNameKmTypeVisitor(flags: Flags,
         finalType = typeAliasType ?: className?.let { ClassName.bestGuess(it.replace("/", ".")) }
             ?: throw IllegalStateException("No valid typename found!")
       }
+      if (argumentList.isNotEmpty()) {
+        finalType = (finalType as ClassName).parameterizedBy(*argumentList.toTypedArray())
+      }
     }
 
     finalType = finalType.asNullableIf(nullable)
@@ -215,16 +227,24 @@ internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
           override fun visitValueParameter(flags: Flags, name: String): KmValueParameterVisitor? {
             val parameterFlags = flags
             return object : KmValueParameterVisitor() {
+              lateinit var type: TypeName
+              var isVarArg = false
+              var varargElementType: TypeName? = null
               override fun visitType(flags: Flags): KmTypeVisitor? {
                 return TypeNameKmTypeVisitor(flags, typeParamResolver) {
-                  params += ParameterData(parameterFlags, name, it)
+                  type = it
                 }
               }
 
               override fun visitVarargElementType(flags: Flags): KmTypeVisitor? {
                 return TypeNameKmTypeVisitor(flags, typeParamResolver) {
-                  params += ParameterData(parameterFlags, name, it, true)
+                  isVarArg = true
+                  varargElementType = it
                 }
+              }
+
+              override fun visitEnd() {
+                params += ParameterData(parameterFlags, name, type, isVarArg, varargElementType)
               }
             }
           }
@@ -306,7 +326,8 @@ internal data class ParameterData(
     val flags: Flags,
     val name: String,
     val type: TypeName,
-    val isVarArg: Boolean = false
+    val isVarArg: Boolean = false,
+    val varargElementType: TypeName? = null
 ) {
   val declaresDefaultValue = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(flags)
 }

@@ -31,7 +31,6 @@ import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
-import java.lang.reflect.Type
 import java.util.Locale
 
 class GeneratedAdaptersTest {
