@@ -213,16 +213,17 @@ internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
         object : KmConstructorVisitor() {
           val params = mutableListOf<ParameterData>()
           override fun visitValueParameter(flags: Flags, name: String): KmValueParameterVisitor? {
+            val parameterFlags = flags
             return object : KmValueParameterVisitor() {
               override fun visitType(flags: Flags): KmTypeVisitor? {
                 return TypeNameKmTypeVisitor(flags, typeParamResolver) {
-                  params += ParameterData(flags, name, it)
+                  params += ParameterData(parameterFlags, name, it)
                 }
               }
 
               override fun visitVarargElementType(flags: Flags): KmTypeVisitor? {
                 return TypeNameKmTypeVisitor(flags, typeParamResolver) {
-                  params += ParameterData(flags, name, it, true)
+                  params += ParameterData(parameterFlags, name, it, true)
                 }
               }
             }
