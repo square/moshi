@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -74,7 +75,7 @@ internal fun KmVariance.asKModifier(): KModifier? {
  */
 internal class TypeNameKmTypeVisitor(flags: Flags,
     private val getTypeParameter: ((index: Int) -> TypeName)? = null,
-    private val useTypeAlias: Boolean = true,
+    private val useTypeAlias: Boolean = false,
     private val receiver: (TypeName) -> Unit) : KmTypeVisitor() {
 
   private val nullable = Flag.Type.IS_NULLABLE(flags)
@@ -100,7 +101,15 @@ internal class TypeNameKmTypeVisitor(flags: Flags,
       argumentList.add(
           when (variance) {
             KmVariance.IN -> WildcardTypeName.supertypeOf(it)
-            KmVariance.OUT -> WildcardTypeName.subtypeOf(it)
+            KmVariance.OUT -> {
+              if (it == ANY) {
+                // This becomes a *, which we actually don't want here.
+                // List<Any> works with List<*>, but List<*> doesn't work with List<Any>
+                it
+              } else {
+                WildcardTypeName.subtypeOf(it)
+              }
+            }
             KmVariance.INVARIANT -> it
           }
       )
@@ -144,14 +153,14 @@ internal class TypeNameKmTypeVisitor(flags: Flags,
     var finalType = flexibleTypeUpperBound ?: outerType ?: typeParameter
     if (finalType == null) {
       if (useTypeAlias) {
-        finalType = typeAliasName?.let { ClassName.bestGuess(it.replace("/", ".")) }
+        finalType = typeAliasType ?: typeAliasName?.let { ClassName.bestGuess(it.replace("/", ".")) }
       }
       if (finalType == null) {
-        finalType = typeAliasType ?: className?.let { ClassName.bestGuess(it.replace("/", ".")) }
+        finalType = className?.let { ClassName.bestGuess(it.replace("/", ".")) }
             ?: throw IllegalStateException("No valid typename found!")
-      }
-      if (argumentList.isNotEmpty()) {
-        finalType = (finalType as ClassName).parameterizedBy(*argumentList.toTypedArray())
+        if (argumentList.isNotEmpty()) {
+          finalType = (finalType as ClassName).parameterizedBy(*argumentList.toTypedArray())
+        }
       }
     }
 
