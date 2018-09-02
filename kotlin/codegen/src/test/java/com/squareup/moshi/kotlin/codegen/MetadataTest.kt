@@ -16,14 +16,17 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
 import kotlinx.metadata.jvm.KotlinClassMetadata.Class
 import org.junit.Test
 import kotlin.reflect.KClass
 
+@Suppress("unused", "UNUSED_PARAMETER")
 class MetadataTest {
 
   private fun KClass<out Any>.loadClassData(): ClassData {
@@ -137,6 +140,48 @@ class MetadataTest {
 
   class Generics<out T, in R, V>(val genericInput: T)
 
-  // TODO?
-  // Types - mutability, wildcard types, typealias
+  @Test
+  fun typeAliases() {
+    val classData = TypeAliases::class.loadClassData()
+
+    assertThat(classData.constructorData?.parameters).hasSize(2)
+
+    val (param1, param2) = classData.constructorData!!.parameters
+    // We always resolve the underlying type of typealiases
+    assertThat(param1.type).isEqualTo(String::class.asClassName())
+    assertThat(param2.type).isEqualTo(List::class.parameterizedBy(String::class))
+  }
+
+  class TypeAliases(val foo: TypeAliasName, val bar: GenericTypeAlias)
+
+  @Test
+  fun propertyMutability() {
+    val classData = PropertyMutability::class.loadClassData()
+
+    assertThat(classData.constructorData?.parameters).hasSize(2)
+
+    val fooProp = classData.properties.find { it.name == "foo" } ?: throw AssertionError("foo property not found!")
+    val mutableFooProp = classData.properties.find { it.name == "mutableFoo" } ?: throw AssertionError("mutableFoo property not found!")
+    assertThat(fooProp.hasSetter).isFalse()
+    assertThat(mutableFooProp.hasSetter).isTrue()
+  }
+
+  class PropertyMutability(val foo: String, var mutableFoo: String)
+
+  @Test
+  fun collectionMutability() {
+    val classData = CollectionMutability::class.loadClassData()
+
+    assertThat(classData.constructorData?.parameters).hasSize(2)
+
+    val (immutableProp, mutableListProp) = classData.constructorData!!.parameters
+    assertThat(immutableProp.type).isEqualTo(List::class.parameterizedBy(String::class))
+    assertThat(mutableListProp.type).isEqualTo(ClassName.bestGuess("kotlin.collections.MutableList").parameterizedBy(String::class.asTypeName()))
+  }
+
+  class CollectionMutability(val immutableList: List<String>, val mutableList: MutableList<String>)
+
 }
+
+typealias TypeAliasName = String
+typealias GenericTypeAlias = List<String>
