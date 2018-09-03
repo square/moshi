@@ -44,6 +44,14 @@ public final class EnumJsonAdapterTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+  @Test public void withNullFallbackValue() throws Exception {
+    EnumJsonAdapter<Roshambo> adapter = EnumJsonAdapter.create(Roshambo.class)
+        .withUnknownFallback(null);
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
+    assertThat(adapter.fromJson(reader)).isNull();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   enum Roshambo {
     ROCK,
     PAPER,

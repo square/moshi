@@ -19,10 +19,11 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
   final String[] nameStrings;
   final T[] constants;
   final JsonReader.Options options;
+  final boolean useFallbackValue;
   final @Nullable T fallbackValue;
 
   public static <T extends Enum<T>> EnumJsonAdapter<T> create(Class<T> enumType) {
-    return new EnumJsonAdapter<>(enumType, null);
+    return new EnumJsonAdapter<>(enumType, null, false);
   }
 
   /**
@@ -31,16 +32,14 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
    * null, absent, or not a string. Also, the string values are case-sensitive, and this fallback
    * value will be used even on case mismatches.
    */
-  public EnumJsonAdapter<T> withUnknownFallback(T fallbackValue) {
-    if (fallbackValue == null) {
-      throw new NullPointerException("fallbackValue == null");
-    }
-    return new EnumJsonAdapter<>(enumType, fallbackValue);
+  public EnumJsonAdapter<T> withUnknownFallback(@Nullable T fallbackValue) {
+    return new EnumJsonAdapter<>(enumType, fallbackValue, true);
   }
 
-  EnumJsonAdapter(Class<T> enumType, @Nullable T fallbackValue) {
+  EnumJsonAdapter(Class<T> enumType, @Nullable T fallbackValue, boolean useFallbackValue) {
     this.enumType = enumType;
     this.fallbackValue = fallbackValue;
+    this.useFallbackValue = useFallbackValue;
     try {
       constants = enumType.getEnumConstants();
       nameStrings = new String[constants.length];
@@ -61,7 +60,7 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     if (index != -1) return constants[index];
 
     String path = reader.getPath();
-    if (fallbackValue == null) {
+    if (!useFallbackValue) {
       String name = reader.nextString();
       throw new JsonDataException("Expected one of "
           + Arrays.asList(nameStrings) + " but was " + name + " at path " + path);
