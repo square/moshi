@@ -129,25 +129,11 @@ public final class Moshi {
     }
 
     // Prepare for re-entrant calls, then ask each factory to create a type adapter.
-    DeferredAdapter<T> deferredAdapter;
-    List<Object> typesAndFieldNames;
-    if (deferredAdapters.isEmpty()) {
-      TopLevelDeferredAdapter<T> topLevelDeferredAdapter = new TopLevelDeferredAdapter<>(cacheKey);
-      deferredAdapter = topLevelDeferredAdapter;
-      typesAndFieldNames = topLevelDeferredAdapter.typesAndFieldNames;
-    } else {
-      deferredAdapter = new DeferredAdapter<>(cacheKey);
-      typesAndFieldNames =
-          ((TopLevelDeferredAdapter<T>) deferredAdapters.get(0)).typesAndFieldNames;
-    }
+    DeferredAdapter<T> deferredAdapter =
+        new DeferredAdapter<>(fieldName != null ? fieldName : type, cacheKey);
 
     deferredAdapters.add(deferredAdapter);
     int lastIndex = deferredAdapters.size() - 1;
-    if (fieldName == null) {
-      typesAndFieldNames.add(type);
-    } else {
-      typesAndFieldNames.add(fieldName);
-    }
     try {
       for (int i = 0, size = factories.size(); i < size; i++) {
         JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
@@ -158,14 +144,13 @@ public final class Moshi {
           }
           // Remove the type or field name only when we succeed in creating the adapter,
           // so we have the full stack  at the top level.
-          typesAndFieldNames.remove(lastIndex);
           deferredAdapters.remove(lastIndex);
           return result;
         }
       }
     } catch (RuntimeException e) {
       if (lastIndex == 0) { // Rewrite the exception at the top level.
-        e = errorWithFields(typesAndFieldNames, e);
+        e = errorWithFields(deferredAdapters, e);
       }
       throw e;
     } finally {
@@ -212,7 +197,8 @@ public final class Moshi {
     return Arrays.asList(type, annotations);
   }
 
-  static RuntimeException errorWithFields(List<Object> typesAndFieldNames, RuntimeException e) {
+  static RuntimeException errorWithFields(List<DeferredAdapter<?>> typesAndFieldNames,
+      RuntimeException e) {
     if (typesAndFieldNames.size() == 1) {
       return e;
     }
@@ -220,7 +206,7 @@ public final class Moshi {
     int size = typesAndFieldNames.size();
     int lastIndex = size;
     for (int i = size - 1; i >= 0; i--) {
-      Object typeOrFieldName = typesAndFieldNames.get(i);
+      Object typeOrFieldName = typesAndFieldNames.get(i).typeOrFieldName;
       if (typeOrFieldName instanceof Type) {
         String typeName = Types.getRawType((Type) typeOrFieldName).getName();
         if (lastIndex - i == 1) {
@@ -232,7 +218,7 @@ public final class Moshi {
           for (int j = i + 1; j < lastIndex; j++) {
             errorMessageBuilder
                 .append('.')
-                .append(typesAndFieldNames.get(j));
+                .append(typesAndFieldNames.get(j).typeOrFieldName);
           }
           errorMessageBuilder.append('\'');
         }
@@ -314,11 +300,13 @@ public final class Moshi {
    * <p>Typically this is necessary in self-referential object models, such as an {@code Employee}
    * class that has a {@code List<Employee>} field for an organization's management hierarchy.
    */
-  private static class DeferredAdapter<T> extends JsonAdapter<T> {
+  private static final class DeferredAdapter<T> extends JsonAdapter<T> {
+    final Object typeOrFieldName;
     @Nullable Object cacheKey;
     private @Nullable JsonAdapter<T> delegate;
 
-    DeferredAdapter(Object cacheKey) {
+    DeferredAdapter(Object typeOrFieldName, Object cacheKey) {
+      this.typeOrFieldName = typeOrFieldName;
       this.cacheKey = cacheKey;
     }
 
@@ -335,14 +323,6 @@ public final class Moshi {
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
       if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
       delegate.toJson(writer, value);
-    }
-  }
-
-  static final class TopLevelDeferredAdapter<T> extends DeferredAdapter<T> {
-    final List<Object> typesAndFieldNames = new ArrayList<>();
-
-    TopLevelDeferredAdapter(Object cacheKey) {
-      super(cacheKey);
     }
   }
 }
