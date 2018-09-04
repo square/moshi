@@ -53,7 +53,9 @@ class MetadataTest {
   }
 
   class ConstructorClass(val foo: String, vararg bar: Int) {
-    constructor(bar: Int) : this("defaultFoo") // Secondary constructors are ignored
+    // Secondary constructors are ignored, so we expect this constructor to not be the one picked
+    // up in the test.
+    constructor(bar: Int) : this("defaultFoo")
   }
 
   @Test
