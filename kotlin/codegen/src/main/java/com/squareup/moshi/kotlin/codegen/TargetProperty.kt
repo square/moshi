@@ -32,7 +32,7 @@ import javax.tools.Diagnostic
 internal data class TargetProperty(
   val name: String,
   val type: TypeName,
-  private val data: PropertyData,
+  private val kmProperty: KmProperty,
   private val parameter: TargetParameter?,
   private val annotationHolder: ExecutableElement?,
   private val field: VariableElement?,
@@ -47,13 +47,13 @@ internal data class TargetProperty(
 
   private val element get() = field ?: setter ?: getter!!
 
-  private val isSettable get() = data.hasSetter || parameter != null
+  private val isSettable get() = kmProperty.hasSetter || parameter != null
 
   private val isVisible: Boolean
     get() {
-      return Flag.IS_INTERNAL(data.flags)
-          || Flag.IS_PROTECTED(data.flags)
-          || Flag.IS_PUBLIC(data.flags)
+      return Flag.IS_INTERNAL(kmProperty.flags)
+          || Flag.IS_PROTECTED(kmProperty.flags)
+          || Flag.IS_PUBLIC(kmProperty.flags)
     }
 
   /**

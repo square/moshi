@@ -71,18 +71,18 @@ class MetadataTest {
   fun properties() {
     val classData = Properties::class.loadClassData()
 
-    assertThat(classData.properties).hasSize(4)
+    assertThat(classData.kmProperties).hasSize(4)
 
-    val fooProp = classData.properties.find { it.name == "foo" } ?: throw AssertionError("Missing foo property")
+    val fooProp = classData.kmProperties.find { it.name == "foo" } ?: throw AssertionError("Missing foo property")
     assertThat(fooProp.type).isEqualTo(String::class.asClassName())
     assertThat(fooProp.hasSetter).isFalse()
-    val barProp = classData.properties.find { it.name == "bar" } ?: throw AssertionError("Missing bar property")
+    val barProp = classData.kmProperties.find { it.name == "bar" } ?: throw AssertionError("Missing bar property")
     assertThat(barProp.type).isEqualTo(String::class.asClassName().asNullable())
     assertThat(barProp.hasSetter).isFalse()
-    val bazProp = classData.properties.find { it.name == "baz" } ?: throw AssertionError("Missing baz property")
+    val bazProp = classData.kmProperties.find { it.name == "baz" } ?: throw AssertionError("Missing baz property")
     assertThat(bazProp.type).isEqualTo(Int::class.asClassName())
     assertThat(bazProp.hasSetter).isTrue()
-    val listProp = classData.properties.find { it.name == "aList" } ?: throw AssertionError("Missing baz property")
+    val listProp = classData.kmProperties.find { it.name == "aList" } ?: throw AssertionError("Missing baz property")
     assertThat(listProp.type).isEqualTo(List::class.parameterizedBy(Int::class))
     assertThat(listProp.hasSetter).isTrue()
   }
@@ -128,11 +128,11 @@ class MetadataTest {
     assertThat(vType.reified).isFalse()
     assertThat(vType.variance).isNull() // invariance is routed to null
 
-    assertThat(classData.properties).hasSize(1)
+    assertThat(classData.kmProperties).hasSize(1)
     assertThat(classData.kmConstructor?.kmParameters).hasSize(1)
 
     val param = classData.kmConstructor!!.kmParameters[0]
-    val property = classData.properties[0]
+    val property = classData.kmProperties[0]
 
     assertThat(param.type).isEqualTo(tType)
     assertThat(property.type).isEqualTo(tType)
@@ -160,8 +160,8 @@ class MetadataTest {
 
     assertThat(classData.kmConstructor?.kmParameters).hasSize(2)
 
-    val fooProp = classData.properties.find { it.name == "foo" } ?: throw AssertionError("foo property not found!")
-    val mutableFooProp = classData.properties.find { it.name == "mutableFoo" } ?: throw AssertionError("mutableFoo property not found!")
+    val fooProp = classData.kmProperties.find { it.name == "foo" } ?: throw AssertionError("foo property not found!")
+    val mutableFooProp = classData.kmProperties.find { it.name == "mutableFoo" } ?: throw AssertionError("mutableFoo property not found!")
     assertThat(fooProp.hasSetter).isFalse()
     assertThat(mutableFooProp.hasSetter).isTrue()
   }

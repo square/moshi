@@ -181,7 +181,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
   val typeParameters = LinkedHashMap<Int, TypeVariableName>()
   val typeParamResolver = { id: Int -> typeParameters[id]!! }
   val superTypes = mutableListOf<TypeName>()
-  val properties = mutableListOf<PropertyData>()
+  val properties = mutableListOf<KmProperty>()
   accept(object : KmClassVisitor() {
     override fun visit(flags: Flags, name: kotlinx.metadata.ClassName) {
       super.visit(flags, name)
@@ -283,7 +283,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
       return object : KmPropertyVisitor() {
         lateinit var type: TypeName
         override fun visitEnd() {
-          properties += PropertyData(flags, name, type)
+          properties += KmProperty(flags, name, type)
         }
 
         override fun visitReturnType(flags: Flags): KmTypeVisitor? {
@@ -311,13 +311,13 @@ internal data class KmClass(
     val kmConstructor: KmConstructor?,
     val superTypes: MutableList<TypeName>,
     val typeVariables: List<TypeVariableName>,
-    val properties: List<PropertyData>
+    val kmProperties: List<KmProperty>
 ) {
-  fun getPropertyOrNull(methodElement: ExecutableElement): PropertyData? {
+  fun getPropertyOrNull(methodElement: ExecutableElement): KmProperty? {
     return methodElement.simpleName.toString()
         .takeIf { it.endsWith(kotlinPropertyAnnotationsFunPostfix) }
         ?.substringBefore(kotlinPropertyAnnotationsFunPostfix)
-        ?.let { propertyName -> properties.firstOrNull { propertyName == it.name } }
+        ?.let { propertyName -> kmProperties.firstOrNull { propertyName == it.name } }
   }
 
   companion object {
@@ -344,7 +344,7 @@ internal data class KmParameter(
   val declaresDefaultValue = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(flags)
 }
 
-internal data class PropertyData(
+internal data class KmProperty(
     val flags: Flags,
     val name: String,
     val type: TypeName

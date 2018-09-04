@@ -155,7 +155,7 @@ internal data class TargetType(
       }
 
       val result = mutableMapOf<String, TargetProperty>()
-      for (property in classData.properties) {
+      for (property in classData.kmProperties) {
         val name = property.name
         val type = typeResolver.resolve(property.type)
         result[name] = TargetProperty(name, type, property, constructor.parameters[name],
