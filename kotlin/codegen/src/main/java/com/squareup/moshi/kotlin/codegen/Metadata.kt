@@ -313,7 +313,7 @@ internal data class KmClass(
     val typeVariables: List<TypeVariableName>,
     val kmProperties: List<KmProperty>
 ) {
-  fun getPropertyOrNull(methodElement: ExecutableElement): KmProperty? {
+  fun getProperty(methodElement: ExecutableElement): KmProperty? {
     return methodElement.simpleName.toString()
         .takeIf { it.endsWith(kotlinPropertyAnnotationsFunPostfix) }
         ?.substringBefore(kotlinPropertyAnnotationsFunPostfix)
@@ -323,7 +323,7 @@ internal data class KmClass(
   companion object {
     /**
      * Postfix of the method name containing the [kotlin.Metadata] annotation for the relative property.
-     * @see [getPropertyOrNull]
+     * @see [getProperty]
      */
     const val kotlinPropertyAnnotationsFunPostfix = "\$annotations"
   }

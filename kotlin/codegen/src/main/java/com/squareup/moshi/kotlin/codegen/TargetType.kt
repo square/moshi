@@ -147,7 +147,7 @@ internal data class TargetType(
             }
           }
 
-          val propertyData = classData.getPropertyOrNull(element)
+          val propertyData = classData.getProperty(element)
           if (propertyData != null) {
             annotationHolders[propertyData.name] = element
           }
