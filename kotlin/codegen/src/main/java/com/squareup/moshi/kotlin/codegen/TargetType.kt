@@ -57,61 +57,70 @@ internal data class TargetType(
 
       val typeMetadata = classMetadata as KotlinClassMetadata.Class
       val classData = typeMetadata.readClassData()
-      if (Flag.Class.IS_ENUM_CLASS(classData.flags)) {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
-        return null
-      } else if (!Flag.Class.IS_CLASS(classData.flags)) {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
-        return null
-      } else if (Flag.IS_ABSTRACT(classData.flags)) {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
-        return null
-      } else if (Flag.IS_LOCAL(classData.flags)) {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be local", element)
-        return null
-      } else if (Flag.Class.IS_INNER(classData.flags)) {
-        messager.printMessage(
-            ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
-        return null
-      }
-
-      val typeVariables = classData.typeVariables
-      val appliedType = AppliedType.get(element)
-
-      val constructor = TargetConstructor.primary(classData.kmConstructor!!,
-          elements.getTypeElement(classData.name))
-      if (!Flag.IS_INTERNAL(constructor.kmConstructor.flags) && !Flag.IS_PUBLIC(constructor.kmConstructor.flags)) {
-        messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
-            "primary constructor is not internal or public", element)
-        return null
-      }
-
-      val properties = mutableMapOf<String, TargetProperty>()
-      for (supertype in appliedType.supertypes(types)) {
-        if (supertype.element.asClassName() == OBJECT_CLASS) {
-          continue // Don't load properties for java.lang.Object.
-        }
-        if (supertype.element.kind != ElementKind.CLASS) {
-          continue // Don't load properties for interface types.
-        }
-        if (supertype.element.readMetadata() == null) {
-          messager.printMessage(ERROR,
-              "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
-              element)
+      when {
+        Flag.Class.IS_ENUM_CLASS(classData.flags) -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
           return null
         }
-        val supertypeProperties = declaredProperties(
-            supertype.element, supertype.resolver, constructor)
-        for ((name, property) in supertypeProperties) {
-          properties.putIfAbsent(name, property)
+        !Flag.Class.IS_CLASS(classData.flags) -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+          return null
+        }
+        Flag.IS_ABSTRACT(classData.flags) -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
+          return null
+        }
+        Flag.IS_LOCAL(classData.flags) -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must not be local", element)
+          return null
+        }
+        Flag.Class.IS_INNER(classData.flags) -> {
+          messager.printMessage(
+              ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+          return null
+        }
+        else -> {
+          val typeVariables = classData.typeVariables
+          val appliedType = AppliedType.get(element)
+
+          val constructor = TargetConstructor.primary(classData.kmConstructor!!,
+              elements.getTypeElement(classData.name))
+          if (!Flag.IS_INTERNAL(constructor.kmConstructor.flags) && !Flag.IS_PUBLIC(
+                  constructor.kmConstructor.flags)) {
+            messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
+                "primary constructor is not internal or public", element)
+            return null
+          }
+
+          val properties = mutableMapOf<String, TargetProperty>()
+          for (supertype in appliedType.supertypes(types)) {
+            if (supertype.element.asClassName() == OBJECT_CLASS) {
+              continue // Don't load properties for java.lang.Object.
+            }
+            if (supertype.element.kind != ElementKind.CLASS) {
+              continue // Don't load properties for interface types.
+            }
+            if (supertype.element.readMetadata() == null) {
+              messager.printMessage(ERROR,
+                  "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+                  element)
+              return null
+            }
+            val supertypeProperties = declaredProperties(
+                supertype.element, supertype.resolver, constructor)
+            for ((name, property) in supertypeProperties) {
+              properties.putIfAbsent(name, property)
+            }
+          }
+          return TargetType(classData, element, constructor, properties, typeVariables,
+              classData.companionObjectName)
         }
       }
-      return TargetType(classData, element, constructor, properties, typeVariables,
-          classData.companionObjectName)
+
     }
 
     /** Returns the properties declared by `typeElement`. */
