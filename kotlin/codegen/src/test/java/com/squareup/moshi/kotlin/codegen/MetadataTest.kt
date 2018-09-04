@@ -57,15 +57,15 @@ class MetadataTest {
   }
 
   @Test
-  fun superType() {
-    val classData = SuperType::class.loadClassData()
+  fun supertype() {
+    val classData = Supertype::class.loadClassData()
 
     assertThat(classData.superTypes).hasSize(1)
     assertThat(classData.superTypes[0]).isEqualTo(BaseType::class.asClassName())
   }
 
   abstract class BaseType
-  class SuperType : BaseType()
+  class Supertype : BaseType()
 
   @Test
   fun properties() {
