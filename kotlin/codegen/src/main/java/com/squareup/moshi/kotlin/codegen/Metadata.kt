@@ -147,8 +147,9 @@ internal class TypeNameKmTypeVisitor(
   }
 
   override fun visitTypeParameter(id: Int) {
-    typeParameter = getTypeParameter?.invoke(id) ?: throw IllegalStateException(
-        "Visiting TypeParameter when there are no type parameters!")
+    typeParameter = (getTypeParameter
+        ?: throw IllegalStateException("Visiting TypeParameter when there are no type parameters!")
+        ).invoke(id)
   }
 
   override fun visitEnd() {
