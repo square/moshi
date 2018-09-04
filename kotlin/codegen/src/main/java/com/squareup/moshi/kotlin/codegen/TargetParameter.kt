@@ -20,7 +20,7 @@ import javax.lang.model.element.VariableElement
 /** A parameter in user code that should be populated by generated code. */
 internal data class TargetParameter(
   val name: String,
-  val data: ParameterData,
+  val kmParameter: KmParameter,
   val index: Int,
   val element: VariableElement
 )

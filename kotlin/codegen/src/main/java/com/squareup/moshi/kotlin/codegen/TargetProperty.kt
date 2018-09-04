@@ -41,7 +41,7 @@ internal data class TargetProperty(
 ) {
   val parameterIndex get() = parameter?.index ?: -1
 
-  val hasDefault get() = parameter?.data?.declaresDefaultValue ?: true
+  val hasDefault get() = parameter?.kmParameter?.declaresDefaultValue ?: true
 
   private val isTransient get() = field != null && Modifier.TRANSIENT in field.modifiers
 

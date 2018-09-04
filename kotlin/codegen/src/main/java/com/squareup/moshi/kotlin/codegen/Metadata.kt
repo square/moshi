@@ -235,7 +235,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
     override fun visitConstructor(flags: Flags): KmConstructorVisitor? {
       return if (Flag.Constructor.IS_PRIMARY(flags)) {
         object : KmConstructorVisitor() {
-          val params = mutableListOf<ParameterData>()
+          val params = mutableListOf<KmParameter>()
           override fun visitValueParameter(flags: Flags, name: String): KmValueParameterVisitor? {
             val parameterFlags = flags
             return object : KmValueParameterVisitor() {
@@ -256,7 +256,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
               }
 
               override fun visitEnd() {
-                params += ParameterData(parameterFlags, name, type, isVarArg, varargElementType)
+                params += KmParameter(parameterFlags, name, type, isVarArg, varargElementType)
               }
             }
           }
@@ -331,10 +331,10 @@ internal data class KmClass(
 
 internal data class KmConstructor(
     val flags: Flags,
-    val parameters: List<ParameterData>
+    val kmParameters: List<KmParameter>
 )
 
-internal data class ParameterData(
+internal data class KmParameter(
     val flags: Flags,
     val name: String,
     val type: TypeName,

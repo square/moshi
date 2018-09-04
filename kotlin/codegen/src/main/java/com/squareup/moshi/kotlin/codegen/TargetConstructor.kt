@@ -35,7 +35,7 @@ internal data class TargetConstructor(
           .first()
 
       val parameters = mutableMapOf<String, TargetParameter>()
-      for ((index, parameter) in kmConstructor.parameters.withIndex()) {
+      for ((index, parameter) in kmConstructor.kmParameters.withIndex()) {
         val name = parameter.name
         parameters[name] = TargetParameter(name, parameter, index, element.parameters[index])
       }
