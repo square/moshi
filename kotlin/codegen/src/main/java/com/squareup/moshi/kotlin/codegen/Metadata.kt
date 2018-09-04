@@ -73,10 +73,12 @@ internal fun KmVariance.asKModifier(): KModifier? {
  * @param useTypeAlias indicates whether or not to use type aliases or resolve their underlying
  *     types
  */
-internal class TypeNameKmTypeVisitor(flags: Flags,
+internal class TypeNameKmTypeVisitor(
+    flags: Flags,
     private val getTypeParameter: ((index: Int) -> TypeName)? = null,
     private val useTypeAlias: Boolean = false,
-    private val receiver: (TypeName) -> Unit) : KmTypeVisitor() {
+    private val receiver: (TypeName) -> Unit
+) : KmTypeVisitor() {
 
   private val nullable = Flag.Type.IS_NULLABLE(flags)
   private var className: String? = null
