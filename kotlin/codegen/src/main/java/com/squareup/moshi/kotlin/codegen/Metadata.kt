@@ -313,19 +313,19 @@ internal data class KmClass(
     val typeVariables: List<TypeVariableName>,
     val kmProperties: List<KmProperty>
 ) {
-  fun getProperty(methodElement: ExecutableElement): KmProperty? {
+  fun getPropertyForAnnotationHolder(methodElement: ExecutableElement): KmProperty? {
     return methodElement.simpleName.toString()
-        .takeIf { it.endsWith(kotlinPropertyAnnotationsFunPostfix) }
-        ?.substringBefore(kotlinPropertyAnnotationsFunPostfix)
+        .takeIf { it.endsWith(KOTLIN_PROPERTY_ANNOTATIONS_FUN_SUFFIX) }
+        ?.substringBefore(KOTLIN_PROPERTY_ANNOTATIONS_FUN_SUFFIX)
         ?.let { propertyName -> kmProperties.firstOrNull { propertyName == it.name } }
   }
 
   companion object {
     /**
      * Postfix of the method name containing the [kotlin.Metadata] annotation for the relative property.
-     * @see [getProperty]
+     * @see [getPropertyForAnnotationHolder]
      */
-    const val kotlinPropertyAnnotationsFunPostfix = "\$annotations"
+    const val KOTLIN_PROPERTY_ANNOTATIONS_FUN_SUFFIX = "\$annotations"
   }
 }
 
