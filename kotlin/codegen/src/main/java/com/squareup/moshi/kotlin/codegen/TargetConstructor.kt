@@ -22,11 +22,11 @@ import javax.lang.model.element.TypeElement
 /** A constructor in user code that should be called by generated code. */
 internal data class TargetConstructor(
     val element: ExecutableElement,
-    val data: ConstructorData,
+    val kmConstructor: KmConstructor,
     val parameters: Map<String, TargetParameter>
 ) {
   companion object {
-    fun primary(constructorData: ConstructorData, typeElement: TypeElement): TargetConstructor {
+    fun primary(kmConstructor: KmConstructor, typeElement: TypeElement): TargetConstructor {
       val element = typeElement
           .enclosedElements
           .mapNotNull {
@@ -35,12 +35,12 @@ internal data class TargetConstructor(
           .first()
 
       val parameters = mutableMapOf<String, TargetParameter>()
-      for ((index, parameter) in constructorData.parameters.withIndex()) {
+      for ((index, parameter) in kmConstructor.parameters.withIndex()) {
         val name = parameter.name
         parameters[name] = TargetParameter(name, parameter, index, element.parameters[index])
       }
 
-      return TargetConstructor(element, constructorData, parameters)
+      return TargetConstructor(element, kmConstructor, parameters)
     }
   }
 }

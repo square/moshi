@@ -82,9 +82,9 @@ internal data class TargetType(
       val typeVariables = classData.typeVariables
       val appliedType = AppliedType.get(element)
 
-      val constructor = TargetConstructor.primary(classData.constructorData!!,
+      val constructor = TargetConstructor.primary(classData.kmConstructor!!,
           elements.getTypeElement(classData.name))
-      if (!Flag.IS_INTERNAL(constructor.data.flags) && !Flag.IS_PUBLIC(constructor.data.flags)) {
+      if (!Flag.IS_INTERNAL(constructor.kmConstructor.flags) && !Flag.IS_PUBLIC(constructor.kmConstructor.flags)) {
         messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
             "primary constructor is not internal or public", element)
         return null

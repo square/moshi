@@ -176,7 +176,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
   @Suppress("RedundantExplicitType")
   var classFlags: Flags = 0
   lateinit var className: String
-  var constructorData: ConstructorData? = null
+  var kmConstructor: KmConstructor? = null
   var companionObjectName: String? = null
   val typeParameters = LinkedHashMap<Int, TypeVariableName>()
   val typeParamResolver = { id: Int -> typeParameters[id]!! }
@@ -262,7 +262,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
           }
 
           override fun visitEnd() {
-            constructorData = ConstructorData(flags, params)
+            kmConstructor = KmConstructor(flags, params)
           }
         }
       } else {
@@ -298,7 +298,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
   return KmClass(className.replace("/", "."),
       classFlags,
       companionObjectName,
-      constructorData,
+      kmConstructor,
       superTypes,
       typeParameters.values.toList(),
       properties)
@@ -308,7 +308,7 @@ internal data class KmClass(
     val name: String,
     val flags: Flags,
     val companionObjectName: String?,
-    val constructorData: ConstructorData?,
+    val kmConstructor: KmConstructor?,
     val superTypes: MutableList<TypeName>,
     val typeVariables: List<TypeVariableName>,
     val properties: List<PropertyData>
@@ -329,7 +329,7 @@ internal data class KmClass(
   }
 }
 
-internal data class ConstructorData(
+internal data class KmConstructor(
     val flags: Flags,
     val parameters: List<ParameterData>
 )
