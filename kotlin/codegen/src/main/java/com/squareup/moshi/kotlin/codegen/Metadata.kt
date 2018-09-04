@@ -22,7 +22,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
-import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClassVisitor
 import kotlinx.metadata.KmConstructorVisitor
@@ -80,7 +79,7 @@ internal class TypeNameKmTypeVisitor(
     private val receiver: (TypeName) -> Unit
 ) : KmTypeVisitor() {
 
-  private val nullable = Flag.Type.IS_NULLABLE(flags)
+  private val nullable = flags.isNullableType
   private var className: String? = null
   private var typeAliasName: String? = null
   private var typeAliasType: TypeName? = null
@@ -223,7 +222,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
             )
           }
           typeParameters[id] = typeVariableName
-              .reified(Flag.TypeParameter.IS_REIFIED(flags))
+              .reified(flags.isReifiedTypeParameter)
         }
       }
     }
@@ -233,7 +232,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
     }
 
     override fun visitConstructor(flags: Flags): KmConstructorVisitor? {
-      return if (Flag.Constructor.IS_PRIMARY(flags)) {
+      return if (flags.isPrimaryConstructor) {
         object : KmConstructorVisitor() {
           val params = mutableListOf<KmParameter>()
           override fun visitValueParameter(flags: Flags, name: String): KmValueParameterVisitor? {
@@ -306,13 +305,13 @@ internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
 
 internal data class KmClass(
     val name: String,
-    val flags: Flags,
+    override val flags: Flags,
     val companionObjectName: String?,
     val kmConstructor: KmConstructor?,
     val superTypes: MutableList<TypeName>,
     val typeVariables: List<TypeVariableName>,
     val kmProperties: List<KmProperty>
-) {
+): KmCommon {
   fun getPropertyForAnnotationHolder(methodElement: ExecutableElement): KmProperty? {
     return methodElement.simpleName.toString()
         .takeIf { it.endsWith(KOTLIN_PROPERTY_ANNOTATIONS_FUN_SUFFIX) }
@@ -330,24 +329,24 @@ internal data class KmClass(
 }
 
 internal data class KmConstructor(
-    val flags: Flags,
+    override val flags: Flags,
     val kmParameters: List<KmParameter>
-)
+): KmCommon
 
 internal data class KmParameter(
-    val flags: Flags,
+    override val flags: Flags,
     val name: String,
     val type: TypeName,
     val isVarArg: Boolean = false,
     val varargElementType: TypeName? = null
-) {
-  val declaresDefaultValue = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(flags)
-}
+): KmCommon
 
 internal data class KmProperty(
-    val flags: Flags,
+    override val flags: Flags,
     val name: String,
     val type: TypeName
-) {
-  val hasSetter = Flag.Property.HAS_SETTER(flags)
+): KmCommon
+
+interface KmCommon {
+  val flags: Flags
 }

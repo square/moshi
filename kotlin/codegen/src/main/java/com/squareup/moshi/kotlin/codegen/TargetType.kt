@@ -20,7 +20,6 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import kotlinx.metadata.Flag
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
@@ -58,27 +57,27 @@ internal data class TargetType(
       val typeMetadata = classMetadata as KotlinClassMetadata.Class
       val classData = typeMetadata.readClassData()
       when {
-        Flag.Class.IS_ENUM_CLASS(classData.flags) -> {
+        classData.isEnum -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
           return null
         }
-        !Flag.Class.IS_CLASS(classData.flags) -> {
+        !classData.isClass -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
           return null
         }
-        Flag.IS_ABSTRACT(classData.flags) -> {
+        classData.isAbstract -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
           return null
         }
-        Flag.IS_LOCAL(classData.flags) -> {
+        classData.isLocal -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must not be local", element)
           return null
         }
-        Flag.Class.IS_INNER(classData.flags) -> {
+        classData.isInner -> {
           messager.printMessage(
               ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
           return null
@@ -89,8 +88,7 @@ internal data class TargetType(
 
           val constructor = TargetConstructor.primary(classData.kmConstructor!!,
               elements.getTypeElement(classData.name))
-          if (!Flag.IS_INTERNAL(constructor.kmConstructor.flags) && !Flag.IS_PUBLIC(
-                  constructor.kmConstructor.flags)) {
+          if (!constructor.kmConstructor.isInternal && !constructor.kmConstructor.isPublic) {
             messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
                 "primary constructor is not internal or public", element)
             return null

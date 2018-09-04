@@ -36,7 +36,6 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import kotlinx.metadata.Flag
 import java.lang.reflect.Type
 import javax.annotation.processing.Messager
 import javax.lang.model.element.TypeElement
@@ -47,9 +46,9 @@ internal class AdapterGenerator(
   private val propertyList: List<PropertyGenerator>
 ) {
   private val className = target.name
-  private val isDataClass = Flag.Class.IS_DATA(target.kmClass.flags)
+  private val isDataClass = target.kmClass.isData
   private val companionObjectName = target.companionObjectName
-  private val isInternal = Flag.IS_INTERNAL(target.kmClass.flags)
+  private val isInternal = target.kmClass.isInternal
   private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()

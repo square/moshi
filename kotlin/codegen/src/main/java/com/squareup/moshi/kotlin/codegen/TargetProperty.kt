@@ -19,7 +19,6 @@ import com.google.auto.common.AnnotationMirrors
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
-import kotlinx.metadata.Flag
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -51,9 +50,9 @@ internal data class TargetProperty(
 
   private val isVisible: Boolean
     get() {
-      return Flag.IS_INTERNAL(kmProperty.flags)
-          || Flag.IS_PROTECTED(kmProperty.flags)
-          || Flag.IS_PUBLIC(kmProperty.flags)
+      return kmProperty.isInternal
+          || kmProperty.isProtected
+          || kmProperty.isPublic
     }
 
   /**
