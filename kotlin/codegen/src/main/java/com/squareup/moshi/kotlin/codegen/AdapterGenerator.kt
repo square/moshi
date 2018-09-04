@@ -47,9 +47,9 @@ internal class AdapterGenerator(
   private val propertyList: List<PropertyGenerator>
 ) {
   private val className = target.name
-  private val isDataClass = Flag.Class.IS_DATA(target.data.flags)
+  private val isDataClass = Flag.Class.IS_DATA(target.kmClass.flags)
   private val companionObjectName = target.companionObjectName
-  private val isInternal = Flag.IS_INTERNAL(target.data.flags)
+  private val isInternal = Flag.IS_INTERNAL(target.kmClass.flags)
   private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()

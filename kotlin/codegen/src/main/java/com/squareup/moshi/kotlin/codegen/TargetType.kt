@@ -34,7 +34,7 @@ import javax.tools.Diagnostic.Kind.ERROR
 
 /** A user type that should be decoded and encoded by generated code. */
 internal data class TargetType(
-    val data: ClassData,
+    val kmClass: KmClass,
     val element: TypeElement,
     val constructor: TargetConstructor,
     val properties: Map<String, TargetProperty>,

@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
 @Suppress("unused", "UNUSED_PARAMETER")
 class MetadataTest {
 
-  private fun KClass<out Any>.loadClassData(): ClassData {
+  private fun KClass<out Any>.loadClassData(): KmClass {
     val metadata = java.readMetadata()?.readKotlinClassMetadata() as? Class
         ?: throw AssertionError("No class metadata found for $simpleName")
     return metadata.readClassData()

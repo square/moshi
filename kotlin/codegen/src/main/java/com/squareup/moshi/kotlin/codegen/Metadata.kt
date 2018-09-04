@@ -172,7 +172,7 @@ internal class TypeNameKmTypeVisitor(
   }
 }
 
-internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
+internal fun KotlinClassMetadata.Class.readClassData(): KmClass {
   @Suppress("RedundantExplicitType")
   var classFlags: Flags = 0
   lateinit var className: String
@@ -295,7 +295,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
     }
   })
 
-  return ClassData(className.replace("/", "."),
+  return KmClass(className.replace("/", "."),
       classFlags,
       companionObjectName,
       constructorData,
@@ -304,7 +304,7 @@ internal fun KotlinClassMetadata.Class.readClassData(): ClassData {
       properties)
 }
 
-internal data class ClassData(
+internal data class KmClass(
     val name: String,
     val flags: Flags,
     val companionObjectName: String?,
