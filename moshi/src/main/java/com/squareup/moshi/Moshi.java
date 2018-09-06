@@ -94,9 +94,13 @@ public final class Moshi {
     return adapter(type, annotations, null);
   }
 
+  /**
+   * @param fieldName An optional field name associated with this type. The field name is used as a
+   * hint for better adapter lookup error messages for nested structures.
+   */
   @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
-  <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations,
+  public <T> JsonAdapter<T> adapter(Type type, Set<? extends Annotation> annotations,
       @Nullable String fieldName) {
     if (type == null) {
       throw new NullPointerException("type == null");
