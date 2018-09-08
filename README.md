@@ -578,34 +578,14 @@ implementation 'com.squareup.moshi:moshi:1.6.0'
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
 
 
-ProGuard
+R8 / ProGuard
 --------
 
-If you are using ProGuard you might need to add the following options:
-```
--dontwarn okio.**
--dontwarn javax.annotation.**
--keepclasseswithmembers class * {
-    @com.squareup.moshi.* <methods>;
-}
--keep @com.squareup.moshi.JsonQualifier interface *
-```
-Additional rules are needed if you are using Kotlin:
+If you are using R8 or ProGuard add the options from [this file](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro).
 
-*...If you are using the reflect API (i.e. `KotlinJsonAdapterFactory`):*
-```
--keepclassmembers class kotlin.Metadata {
-    public <methods>;
-}
-```
-*...If you are using the codegen API (i.e. `JsonClass(generateAdapter = true)`):*
-```
--keep class **JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--keepnames @com.squareup.moshi.JsonClass class *
-```
+The `moshi-kotlin` artifact additionally requires the options from [this file](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
+
+You might also need rules for Okio which is a dependency of this library.
 
 License
 --------
