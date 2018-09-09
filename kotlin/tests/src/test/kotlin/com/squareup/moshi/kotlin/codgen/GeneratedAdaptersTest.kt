@@ -28,6 +28,7 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
@@ -900,6 +901,55 @@ class GeneratedAdaptersTest {
       return CustomFromJsonOnly(v[0], v[1])
     }
   }
+
+  @Test fun propertyIsNothing() {
+    val moshi = Moshi.Builder()
+        .add(NothingAdapter())
+        .build()
+    val jsonAdapter = moshi.adapter(HasNothingProperty::class.java).serializeNulls()
+
+    val toJson = HasNothingProperty()
+    toJson.a = "1"
+    assertThat(jsonAdapter.toJson(toJson)).isEqualTo("""{"a":"1","b":null}""")
+
+    val fromJson = jsonAdapter.fromJson("""{"a":"3","b":null}""")!!
+    assertThat(fromJson.a).isEqualTo("3")
+    assertNull(fromJson.b)
+  }
+
+  class NothingAdapter {
+    @ToJson fun toJson(jsonWriter: JsonWriter, unused: Nothing?) {
+      jsonWriter.nullValue()
+    }
+
+    @FromJson fun fromJson(jsonReader: JsonReader) : Nothing? {
+      jsonReader.skipValue()
+      return null
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  class HasNothingProperty {
+    var a: String? = null
+    var b: Nothing? = null
+  }
+
+  @Test fun enclosedParameterizedType() {
+    val jsonAdapter = moshi.adapter(HasParameterizedProperty::class.java)
+
+    assertThat(jsonAdapter.toJson(HasParameterizedProperty(Twins("1", "2"))))
+        .isEqualTo("""{"twins":{"a":"1","b":"2"}}""")
+
+    val hasParameterizedProperty = jsonAdapter.fromJson("""{"twins":{"a":"3","b":"4"}}""")!!
+    assertThat(hasParameterizedProperty.twins.a).isEqualTo("3")
+    assertThat(hasParameterizedProperty.twins.b).isEqualTo("4")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class Twins<T>(var a: T, var b: T)
+
+  @JsonClass(generateAdapter = true)
+  class HasParameterizedProperty(val twins: Twins<String>)
 
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
