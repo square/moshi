@@ -925,6 +925,33 @@ class GeneratedAdaptersTest {
     }
   }
 
+  @Test fun privateTransientIsIgnored() {
+    val jsonAdapter = moshi.adapter(PrivateTransient::class.java)
+
+    val privateTransient = PrivateTransient()
+    privateTransient.writeA(1)
+    privateTransient.b = 2
+    assertThat(jsonAdapter.toJson(privateTransient)).isEqualTo("""{"b":2}""")
+
+    val fromJson = jsonAdapter.fromJson("""{"a":3,"b":4}""")!!
+    assertThat(fromJson.readA()).isEqualTo(-1)
+    assertThat(fromJson.b).isEqualTo(4)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class PrivateTransient {
+    @Transient private var a: Int = -1
+    var b: Int = -1
+
+    fun readA(): Int {
+      return a
+    }
+
+    fun writeA(a: Int) {
+      this.a = a
+    }
+  }
+
   @Test fun propertyIsNothing() {
     val moshi = Moshi.Builder()
         .add(NothingAdapter())
