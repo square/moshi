@@ -31,7 +31,6 @@ import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
-import java.lang.reflect.Type
 import java.util.Locale
 
 class GeneratedAdaptersTest {
@@ -857,6 +856,50 @@ class GeneratedAdaptersTest {
     set(value) {
       throw AssertionError()
     }
+
+  @Test fun toJsonOnly() {
+    val moshi = Moshi.Builder()
+        .add(CustomToJsonOnlyAdapter())
+        .build()
+    val jsonAdapter = moshi.adapter(CustomToJsonOnly::class.java)
+
+    assertThat(jsonAdapter.toJson(CustomToJsonOnly(1, 2))).isEqualTo("""[1,2]""")
+
+    val fromJson = jsonAdapter.fromJson("""{"a":3,"b":4}""")!!
+    assertThat(fromJson.a).isEqualTo(3)
+    assertThat(fromJson.b).isEqualTo(4)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class CustomToJsonOnly(var a: Int, var b: Int)
+
+  class CustomToJsonOnlyAdapter {
+    @ToJson fun toJson(v: CustomToJsonOnly) : List<Int> {
+      return listOf(v.a, v.b)
+    }
+  }
+
+  @Test fun fromJsonOnly() {
+    val moshi = Moshi.Builder()
+        .add(CustomFromJsonOnlyAdapter())
+        .build()
+    val jsonAdapter = moshi.adapter(CustomFromJsonOnly::class.java)
+
+    assertThat(jsonAdapter.toJson(CustomFromJsonOnly(1, 2))).isEqualTo("""{"a":1,"b":2}""")
+
+    val fromJson = jsonAdapter.fromJson("""[3,4]""")!!
+    assertThat(fromJson.a).isEqualTo(3)
+    assertThat(fromJson.b).isEqualTo(4)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class CustomFromJsonOnly(var a: Int, var b: Int)
+
+  class CustomFromJsonOnlyAdapter {
+    @FromJson fun fromJson(v: List<Int>) : CustomFromJsonOnly {
+      return CustomFromJsonOnly(v[0], v[1])
+    }
+  }
 
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
