@@ -16,6 +16,8 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.common.AnnotationMirrors
+import com.google.auto.common.MoreTypes
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
@@ -26,11 +28,16 @@ import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.IN
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
 import me.eugeniomarletti.kotlin.metadata.visibility
+import java.lang.annotation.ElementType
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
+import java.lang.annotation.Target
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.Name
 import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic
 
@@ -85,10 +92,32 @@ internal data class TargetProperty(
       return null // This property is not settable. Ignore it.
     }
 
-    return PropertyGenerator(this)
-  }
+    val jsonQualifierMirrors = jsonQualifiers()
+    for (jsonQualifier in jsonQualifierMirrors) {
+      // Check Java types since that covers both Java and Kotlin annotations.
+      val annotationElement = MoreTypes.asTypeElement(jsonQualifier.annotationType)
+      annotationElement.getAnnotation(Retention::class.java)?.let {
+        if (it.value != RetentionPolicy.RUNTIME) {
+          messager.printMessage(Diagnostic.Kind.ERROR,
+              "JsonQualifier @${jsonQualifier.simpleName} must have RUNTIME retention")
+        }
+      }
+      annotationElement.getAnnotation(Target::class.java)?.let {
+        if (ElementType.FIELD !in it.value) {
+          messager.printMessage(Diagnostic.Kind.ERROR,
+              "JsonQualifier @${jsonQualifier.simpleName} must support FIELD target")
+        }
+      }
+    }
 
-  fun delegateKey() = DelegateKey(type, jsonQualifiers())
+    val jsonQualifierSpecs = jsonQualifierMirrors.map {
+      AnnotationSpec.get(it).toBuilder()
+          .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
+          .build()
+    }
+
+    return PropertyGenerator(this, DelegateKey(type, jsonQualifierSpecs))
+  }
 
   /** Returns the JsonQualifiers on the field and parameter of this property. */
   private fun jsonQualifiers(): Set<AnnotationMirror> {
@@ -130,6 +159,9 @@ internal data class TargetProperty(
       if (this == null) return null
       return getAnnotation(Json::class.java)?.name?.replace("$", "\\$")
     }
+
+  private val AnnotationMirror.simpleName: Name
+    get() = MoreTypes.asTypeElement(annotationType).simpleName!!
 
   override fun toString() = name
 }
