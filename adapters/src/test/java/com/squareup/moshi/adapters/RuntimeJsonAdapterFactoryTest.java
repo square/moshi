@@ -53,9 +53,9 @@ public final class RuntimeJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     assertThat(adapter.toJson(new Success("Okay!")))
-        .isEqualTo("{\"value\":\"Okay!\"}");
+        .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
     assertThat(adapter.toJson(new Error(Collections.<String, Object>singletonMap("order", 66))))
-        .isEqualTo("{\"error_logs\":{\"order\":66}}");
+        .isEqualTo("{\"type\":\"error\",\"error_logs\":{\"order\":66}}");
   }
 
   @Test public void unregisteredLabelValue() throws IOException {
