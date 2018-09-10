@@ -18,16 +18,18 @@ package com.squareup.moshi.kotlin.codegen
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.moshi.JsonClass
-import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
-import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import java.io.File
+import javax.annotation.processing.AbstractProcessor
+import javax.annotation.processing.Filer
+import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.lang.model.util.Elements
+import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -42,9 +44,13 @@ import javax.tools.Diagnostic.Kind.ERROR
  * If you don't want this though, you can use the runtime [JsonClass] factory implementation.
  */
 @AutoService(Processor::class)
-class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
+class JsonClassCodegenProcessor : AbstractProcessor() {
 
   companion object {
+    /**
+     * Name of the processor option containing the path to the Kotlin generated src dir.
+     */
+    private const val OPTION_KAPT_GENERATED = "kapt.kotlin.generated"
     /**
      * This annotation processing argument can be specified to have a `@Generated` annotation
      * included in the generated code. It is not encouraged unless you need it for static analysis
@@ -63,6 +69,11 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
 
   private val annotation = JsonClass::class.java
   private var generatedType: TypeElement? = null
+  private lateinit var messager: Messager
+  private lateinit var elementUtils: Elements
+  private lateinit var typeUtils: Types
+  private lateinit var filer: Filer
+  private var generatedDir: File? = null
 
   override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
 
@@ -72,6 +83,11 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
 
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
+    messager = processingEnv.messager
+    elementUtils = processingEnv.elementUtils
+    typeUtils = processingEnv.typeUtils
+    filer = processingEnv.filer
+    generatedDir = processingEnv.options[OPTION_KAPT_GENERATED]?.let(::File)
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
       if (it !in POSSIBLE_GENERATED_NAMES) {
         throw IllegalArgumentException("Invalid option value for $OPTION_GENERATED. Found $it, " +
@@ -105,7 +121,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     }
 
     for ((name, parameter) in type.constructor.parameters) {
-      if (type.properties[parameter.name] == null && !parameter.proto.declaresDefaultValue) {
+      if (type.properties[parameter.name] == null && !parameter.kmParameter.declaresDefaultValue) {
         messager.printMessage(
             ERROR, "No property for required constructor parameter $name", parameter.element)
         return null

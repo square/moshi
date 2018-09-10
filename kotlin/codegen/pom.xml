@@ -12,6 +12,14 @@
 
   <artifactId>moshi-kotlin-codegen</artifactId>
 
+  <repositories>
+    <repository>
+      <id>bintray-kotlin-kotlinx</id>
+      <name>bintray</name>
+      <url>https://kotlin.bintray.com/kotlinx</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>com.squareup.moshi</groupId>
@@ -56,15 +64,17 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-compiler-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-annotation-processing-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
-      <artifactId>kotlin-metadata</artifactId>
-      <version>1.4.0</version>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-metadata-jvm</artifactId>
+      <version>0.0.4</version>
     </dependency>
     <!--
       Though we don't use compile-testing, including it is a convenient way to get tools.jar on the
@@ -179,6 +189,11 @@
                 <relocation>
                   <pattern>com.squareup.kotlinpoet</pattern>
                   <shadedPattern>com.squareup.moshi.kotlinpoet</shadedPattern>
+                </relocation>
+                <!-- Repackage Kotlinx-metadata until its API is stable. -->
+                <relocation>
+                  <pattern>kotlinx.metadata.jvm</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinx.metadata.jvm</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

@@ -15,49 +15,32 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
-import me.eugeniomarletti.kotlin.metadata.isPrimary
-import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Constructor
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
-import javax.lang.model.util.Elements
+import javax.lang.model.element.TypeElement
 
 /** A constructor in user code that should be called by generated code. */
 internal data class TargetConstructor(
-  val element: ExecutableElement,
-  val proto: Constructor,
-  val parameters: Map<String, TargetParameter>
+    val element: ExecutableElement,
+    val kmConstructor: KmConstructor,
+    val parameters: Map<String, TargetParameter>
 ) {
   companion object {
-    fun primary(metadata: KotlinClassMetadata, elements: Elements): TargetConstructor {
-      val (nameResolver, classProto) = metadata.data
-
-      // todo allow custom constructor
-      val proto = classProto.constructorList
-          .single { it.isPrimary }
-      val constructorJvmSignature = proto.getJvmConstructorSignature(
-          nameResolver, classProto.typeTable)
-      val element = classProto.fqName
-          .let(nameResolver::getString)
-          .replace('/', '.')
-          .let(elements::getTypeElement)
+    fun primary(kmConstructor: KmConstructor, typeElement: TypeElement): TargetConstructor {
+      val element = typeElement
           .enclosedElements
           .mapNotNull {
             it.takeIf { it.kind == ElementKind.CONSTRUCTOR }?.let { it as ExecutableElement }
           }
           .first()
-      // TODO Temporary until JVM method signature matching is better
-      //  .single { it.jvmMethodSignature == constructorJvmSignature }
 
       val parameters = mutableMapOf<String, TargetParameter>()
-      for (parameter in proto.valueParameterList) {
-        val name = nameResolver.getString(parameter.name)
-        val index = proto.valueParameterList.indexOf(parameter)
+      for ((index, parameter) in kmConstructor.kmParameters.withIndex()) {
+        val name = parameter.name
         parameters[name] = TargetParameter(name, parameter, index, element.parameters[index])
       }
 
-      return TargetConstructor(element, proto, parameters)
+      return TargetConstructor(element, kmConstructor, parameters)
     }
   }
 }
