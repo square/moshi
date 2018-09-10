@@ -860,10 +860,11 @@ class KotlinJsonAdapterTest {
     val generatedAdapter = moshi.adapter(UsesGeneratedAdapter::class.java)
     val reflectionAdapter = moshi.adapter(UsesReflectionAdapter::class.java)
 
-    assertThat(generatedAdapter.javaClass.name)
-        .contains("KotlinJsonAdapterTest_UsesGeneratedAdapterJsonAdapter")
-    assertThat(reflectionAdapter.javaClass.name)
-        .doesNotContain("KotlinJsonAdapterTest_UsesReflectionAdapterJsonAdapter")
+    assertThat(generatedAdapter.toString())
+        .isEqualTo("GeneratedJsonAdapter(KotlinJsonAdapterTest.UsesGeneratedAdapter)")
+    assertThat(reflectionAdapter.toString())
+        .isEqualTo("KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest" +
+            ".UsesReflectionAdapter).nullSafe()")
   }
 
   @JsonClass(generateAdapter = true)
