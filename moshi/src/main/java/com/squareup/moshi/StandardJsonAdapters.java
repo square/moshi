@@ -59,7 +59,7 @@ final class StandardJsonAdapters {
 
       JsonClass jsonClass = rawType.getAnnotation(JsonClass.class);
       if (jsonClass != null && jsonClass.generateAdapter()) {
-        return generatedAdapter(moshi, type, rawType);
+        return generatedAdapter(moshi, type, rawType).nullSafe();
       }
 
       if (rawType.isEnum()) {

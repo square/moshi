@@ -860,10 +860,11 @@ class KotlinJsonAdapterTest {
     val generatedAdapter = moshi.adapter(UsesGeneratedAdapter::class.java)
     val reflectionAdapter = moshi.adapter(UsesReflectionAdapter::class.java)
 
-    assertThat(generatedAdapter.javaClass.name)
-        .contains("KotlinJsonAdapterTest_UsesGeneratedAdapterJsonAdapter")
-    assertThat(reflectionAdapter.javaClass.name)
-        .doesNotContain("KotlinJsonAdapterTest_UsesReflectionAdapterJsonAdapter")
+    assertThat(generatedAdapter.toString())
+        .isEqualTo("GeneratedJsonAdapter(KotlinJsonAdapterTest.UsesGeneratedAdapter).nullSafe()")
+    assertThat(reflectionAdapter.toString())
+        .isEqualTo("KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest" +
+            ".UsesReflectionAdapter).nullSafe()")
   }
 
   @JsonClass(generateAdapter = true)
@@ -912,5 +913,12 @@ class KotlinJsonAdapterTest {
     assertThat(adapter.fromJson("""{"boolean":"not a boolean"}"""))
         .isEqualTo(HasNullableBoolean(null))
     assertThat(adapter.toJson(HasNullableBoolean(null))).isEqualTo("""{"boolean":null}""")
+  }
+
+  @Test fun adaptersAreNullSafe() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
+    assertThat(adapter.fromJson("null")).isNull()
+    assertThat(adapter.toJson(null)).isEqualTo("null")
   }
 }
