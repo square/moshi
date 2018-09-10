@@ -1075,6 +1075,13 @@ class GeneratedAdaptersTest {
         .isEqualTo(HasNullableBoolean(null))
     assertThat(adapter.toJson(HasNullableBoolean(null))).isEqualTo("""{"boolean":null}""")
   }
+
+  @Test fun adaptersAreNullSafe() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
+    assertThat(adapter.fromJson("null")).isNull()
+    assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
 }
 
 // Has to be outside to avoid Types seeing an owning class
