@@ -1001,6 +1001,39 @@ class GeneratedAdaptersTest {
   @JsonClass(generateAdapter = true)
   class HasParameterizedProperty(val twins: Twins<String>)
 
+  @Test fun uppercasePropertyName() {
+    val adapter = moshi.adapter(UppercasePropertyName::class.java)
+
+    val instance = adapter.fromJson("""{"AAA":1,"BBB":2}""")!!
+    assertThat(instance.AAA).isEqualTo(1)
+    assertThat(instance.BBB).isEqualTo(2)
+
+    assertThat(adapter.toJson(UppercasePropertyName(3, 4))).isEqualTo("""{"AAA":3,"BBB":4}""")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class UppercasePropertyName(val AAA: Int, val BBB: Int)
+
+  /** https://github.com/square/moshi/issues/574 */
+  @Test fun mutableUppercasePropertyName() {
+    val adapter = moshi.adapter(MutableUppercasePropertyName::class.java)
+
+    val instance = adapter.fromJson("""{"AAA":1,"BBB":2}""")!!
+    assertThat(instance.AAA).isEqualTo(1)
+    assertThat(instance.BBB).isEqualTo(2)
+
+    val value = MutableUppercasePropertyName()
+    value.AAA = 3
+    value.BBB = 4
+    assertThat(adapter.toJson(value)).isEqualTo("""{"AAA":3,"BBB":4}""")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class MutableUppercasePropertyName {
+    var AAA: Int = -1
+    var BBB: Int = -1
+  }
+
   @JsonQualifier
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
 
