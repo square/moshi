@@ -66,12 +66,21 @@ abstract class TypeRenderer {
               Types::class,
               render(typeName.typeArguments[0].objectType()))
         } else {
-          val placeholders = typeName.typeArguments.joinToString(", ") { "%L" }
-          CodeBlock.of(
-              "%T.newParameterizedType(%T::class.java, $placeholders)",
-              Types::class,
-              typeName.rawType.objectType(),
-              *(typeName.typeArguments.map { render(it.objectType()) }.toTypedArray()))
+          val builder = CodeBlock.builder().apply {
+            add("%T.", Types::class)
+            val enclosingClassName = typeName.rawType.enclosingClassName()
+            if (enclosingClassName != null) {
+              add("newParameterizedTypeWithOwner(%L, ", render(enclosingClassName))
+            } else {
+              add("newParameterizedType(")
+            }
+            add("%T::class.java", typeName.rawType.objectType())
+            for (typeArgument in typeName.typeArguments) {
+              add(", %L", render(typeArgument.objectType()))
+            }
+            add(")")
+          }
+          builder.build()
         }
       }
 
