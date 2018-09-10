@@ -15,9 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.google.auto.common.MoreTypes
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget.FIELD
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
@@ -33,16 +31,11 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
-import java.lang.annotation.ElementType
-import java.lang.annotation.RetentionPolicy
-import javax.annotation.processing.Messager
-import javax.lang.model.element.AnnotationMirror
-import javax.tools.Diagnostic.Kind.ERROR
 
 /** A JsonAdapter that can be used to encode and decode a particular field. */
 internal data class DelegateKey(
   private val type: TypeName,
-  private val jsonQualifiers: Set<AnnotationMirror>
+  private val jsonQualifiers: List<AnnotationSpec>
 ) {
   val nullable get() = type.nullable
 
@@ -50,36 +43,17 @@ internal data class DelegateKey(
   fun generateProperty(
     nameAllocator: NameAllocator,
     typeRenderer: TypeRenderer,
-    moshiParameter: ParameterSpec,
-    messager: Messager): PropertySpec {
-    fun AnnotationMirror.validate(): AnnotationMirror {
-      // Check java types since that covers both java and kotlin annotations
-      val annotationElement = MoreTypes.asTypeElement(annotationType)
-      annotationElement.getAnnotation(java.lang.annotation.Retention::class.java)?.let {
-        if (it.value != RetentionPolicy.RUNTIME) {
-          messager.printMessage(ERROR, "JsonQualifier " +
-              "@${MoreTypes.asTypeElement(annotationType).simpleName} must have RUNTIME retention")
-        }
-      }
-      annotationElement.getAnnotation(java.lang.annotation.Target::class.java)?.let {
-        if (ElementType.FIELD !in it.value) {
-          messager.printMessage(ERROR, "JsonQualifier " +
-              "@${MoreTypes.asTypeElement(annotationType).simpleName} must support FIELD target")
-        }
-      }
-      return this
-    }
-    jsonQualifiers.forEach { it.validate() }
+    moshiParameter: ParameterSpec
+  ): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
-      "At${it.annotationType.asElement().simpleName}"
+      "At${(it.type as ClassName).simpleName}"
     }
     val adapterName = nameAllocator.newName(
         "${type.toVariableName().decapitalize()}${qualifierNames}Adapter", this)
 
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
-    val qualifiers = jsonQualifiers
     val standardArgs = arrayOf(moshiParameter,
-        if (type is ClassName && qualifiers.isEmpty()) {
+        if (type is ClassName && jsonQualifiers.isEmpty()) {
           ""
         } else {
           CodeBlock.of("<%T>", type)
@@ -87,7 +61,7 @@ internal data class DelegateKey(
         typeRenderer.render(type))
     val standardArgsSize = standardArgs.size + 1
     val (initializerString, args) = when {
-      qualifiers.isEmpty() -> "" to emptyArray()
+      jsonQualifiers.isEmpty() -> "" to emptyArray()
       else -> {
         ", %${standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, " +
             "%${standardArgsSize + 1}S)" to arrayOf(Types::class.asTypeName(), adapterName)
@@ -98,9 +72,7 @@ internal data class DelegateKey(
     val nullModifier = if (nullable) ".nullSafe()" else ".nonNull()"
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-        .addAnnotations(qualifiers.map {
-          AnnotationSpec.get(it).toBuilder().useSiteTarget(FIELD).build()
-        })
+        .addAnnotations(jsonQualifiers)
         .initializer("%1N.adapter%2L(%3L$initializerString)$nullModifier", *finalArgs)
         .build()
   }

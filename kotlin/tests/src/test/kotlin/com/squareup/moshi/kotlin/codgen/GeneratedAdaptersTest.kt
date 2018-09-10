@@ -32,6 +32,7 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 import java.util.Locale
+import kotlin.reflect.full.memberProperties
 
 class GeneratedAdaptersTest {
 
@@ -856,6 +857,28 @@ class GeneratedAdaptersTest {
     set(value) {
       throw AssertionError()
     }
+
+  /** https://github.com/square/moshi/issues/563 */
+  @Test fun qualifiedAdaptersAreShared() {
+    val moshi = Moshi.Builder()
+        .add(UppercaseJsonAdapter())
+        .build()
+    val jsonAdapter = moshi.adapter(MultiplePropertiesShareAdapter::class.java)
+
+    val encoded = MultiplePropertiesShareAdapter("Android", "Banana")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"BANANA"}""")
+
+    val delegateAdapters = jsonAdapter::class.memberProperties.filter {
+      it.returnType.classifier == JsonAdapter::class
+    }
+    assertThat(delegateAdapters).hasSize(1)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class MultiplePropertiesShareAdapter(
+    @Uppercase(true) var a: String,
+    @Uppercase(true) var b: String
+  )
 
   @Test fun toJsonOnly() {
     val moshi = Moshi.Builder()
