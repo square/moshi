@@ -21,6 +21,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -93,6 +94,14 @@ public final class Util {
         || name.startsWith("javax.")
         || name.startsWith("kotlin.")
         || name.startsWith("scala.");
+  }
+
+  /** Throws the cause of {@code e}, wrapping it if it is checked. */
+  public static RuntimeException rethrowCause(InvocationTargetException e) {
+    Throwable cause = e.getTargetException();
+    if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+    if (cause instanceof Error) throw (Error) cause;
+    throw new RuntimeException(cause);
   }
 
   /**
