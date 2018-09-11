@@ -69,11 +69,9 @@ internal data class DelegateKey(
     }
     val finalArgs = arrayOf(*standardArgs, *args)
 
-    val nullModifier = if (nullable) ".nullSafe()" else ".nonNull()"
-
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
         .addAnnotations(jsonQualifiers)
-        .initializer("%1N.adapter%2L(%3L$initializerString)$nullModifier", *finalArgs)
+        .initializer("%1N.adapter%2L(%3L$initializerString)", *finalArgs)
         .build()
   }
 }

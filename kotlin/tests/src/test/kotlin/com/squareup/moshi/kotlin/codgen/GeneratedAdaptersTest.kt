@@ -413,7 +413,7 @@ class GeneratedAdaptersTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Unexpected null at \$.a")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -432,7 +432,10 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class HasNonNullConstructorParameter(val a: String)
+  data class HasNonNullConstructorParameter(val a: String)
+
+  @JsonClass(generateAdapter = true)
+  data class HasNullableConstructorParameter(val a: String?)
 
   @Test fun explicitNull() {
     val moshi = Moshi.Builder().build()
@@ -592,7 +595,7 @@ class GeneratedAdaptersTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Unexpected null at \$.a")
+      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -1082,6 +1085,50 @@ class GeneratedAdaptersTest {
     val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
+
+  @Retention(AnnotationRetention.RUNTIME)
+  annotation class Nullable
+
+  @Test fun delegatesToInstalledAdaptersBeforeNullChecking() {
+    val moshi = Moshi.Builder()
+        .add(object {
+          @FromJson fun fromJson(@Nullable string: String?): String {
+            return string ?: "fallback"
+          }
+
+          @ToJson fun toJson(@Nullable value: String?): String {
+            return value ?: "fallback"
+          }
+        })
+        .build()
+
+    val hasNonNullConstructorParameterAdapter =
+        moshi.adapter(HasNonNullConstructorParameter::class.java)
+    assertThat(hasNonNullConstructorParameterAdapter
+        .fromJson("{\"a\":null}")).isEqualTo(HasNonNullConstructorParameter("fallback"))
+
+    val hasNullableConstructorParameterAdapter =
+        moshi.adapter(HasNullableConstructorParameter::class.java)
+    assertThat(hasNullableConstructorParameterAdapter
+        .fromJson("{\"a\":null}")).isEqualTo(HasNullableConstructorParameter("fallback"))
+    assertThat(hasNullableConstructorParameterAdapter
+        .toJson(HasNullableConstructorParameter(null))).isEqualTo("{\"a\":\"fallback\"}")
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class HasNullableTypeWithGeneratedAdapter(val a: HasNonNullConstructorParameter?)
+
+  @Test fun delegatesToInstalledAdaptersBeforeNullCheckingWithGeneratedAdapter() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(HasNullableTypeWithGeneratedAdapter::class.java)
+
+    val encoded = HasNullableTypeWithGeneratedAdapter(null)
+    assertThat(adapter.toJson(encoded)).isEqualTo("""{}""")
+    assertThat(adapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null}""")
+
+    val decoded = adapter.fromJson("""{"a":null}""")!!
+    assertThat(decoded.a).isEqualTo(null)
   }
 }
 

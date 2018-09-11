@@ -170,7 +170,9 @@ class KotlinJsonAdapterTest {
     }
   }
 
-  class HasNonNullConstructorParameter(val a: String)
+  data class HasNonNullConstructorParameter(val a: String)
+
+  data class HasNullableConstructorParameter(val a: String?)
 
   @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -851,6 +853,31 @@ class KotlinJsonAdapterTest {
     val value = NestedGenerics(mapOf("hello" to mapOf(1 to listOf(Box(" "), Box("world!")))))
     assertThat(adapter.fromJson(json)).isEqualTo(value)
     assertThat(adapter.toJson(value)).isEqualTo(json)
+  }
+
+  @Retention(RUNTIME)
+  annotation class Nullable
+
+  @Test fun delegatesToInstalledAdaptersBeforeNullChecking() {
+    val moshi = Moshi.Builder()
+        .add(object {
+          @FromJson fun fromJson(@Nullable string: String?): String {
+            return string ?: "fallback"
+          }
+
+          @ToJson fun toJson(@Nullable value: String?): String {
+            return value ?: "fallback"
+          }
+        })
+        .build()
+
+    assertThat(moshi.adapter(HasNonNullConstructorParameter::class.java)
+        .fromJson("{\"a\":null}")).isEqualTo(HasNonNullConstructorParameter("fallback"))
+
+    assertThat(moshi.adapter(HasNullableConstructorParameter::class.java)
+        .fromJson("{\"a\":null}")).isEqualTo(HasNullableConstructorParameter("fallback"))
+    assertThat(moshi.adapter(HasNullableConstructorParameter::class.java)
+        .toJson(HasNullableConstructorParameter(null))).isEqualTo("{\"a\":\"fallback\"}")
   }
 
   @Test fun mixingReflectionAndCodegen() {
