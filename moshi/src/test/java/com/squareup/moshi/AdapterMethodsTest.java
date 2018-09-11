@@ -463,6 +463,9 @@ public final class AdapterMethodsTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("No @FromJson adapter for interface "
           + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
+      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getCause()).hasMessage("No next JsonAdapter for interface "
+          + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
   }
 
@@ -481,6 +484,9 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("No @ToJson adapter for interface "
+          + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
+      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getCause()).hasMessage("No next JsonAdapter for interface "
           + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
   }

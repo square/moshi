@@ -334,6 +334,9 @@ public final class JsonQualifiersTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("No @FromJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause()).hasMessage("No next JsonAdapter for class "
+          + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
 
@@ -355,6 +358,9 @@ public final class JsonQualifiersTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("No @ToJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause()).hasMessage("No next JsonAdapter for class "
+          + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
 
