@@ -332,8 +332,10 @@ public final class JsonQualifiersTest {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Error creating adapter for field "
-          + "\'com.squareup.moshi.JsonQualifiersTest$StringAndFooString.b\'");
+      assertThat(expected).hasMessage("No @FromJson adapter for class java.lang.String annotated "
+          + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+          + "\nfor class java.lang.String b"
+          + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause()).hasMessage("No @FromJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
@@ -356,8 +358,10 @@ public final class JsonQualifiersTest {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Error creating adapter for field "
-          + "\'com.squareup.moshi.JsonQualifiersTest$StringAndFooString.b\'");
+      assertThat(expected).hasMessage("No @ToJson adapter for class java.lang.String annotated "
+          + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+          + "\nfor class java.lang.String b"
+          + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause()).hasMessage("No @ToJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");

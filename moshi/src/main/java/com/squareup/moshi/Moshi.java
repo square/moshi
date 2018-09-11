@@ -133,8 +133,7 @@ public final class Moshi {
     }
 
     // Prepare for re-entrant calls, then ask each factory to create a type adapter.
-    DeferredAdapter<T> deferredAdapter =
-        new DeferredAdapter<>(fieldName != null ? fieldName : type, cacheKey);
+    DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(type, fieldName, cacheKey);
 
     deferredAdapters.add(deferredAdapter);
     int lastIndex = deferredAdapters.size() - 1;
@@ -152,7 +151,7 @@ public final class Moshi {
           return result;
         }
       }
-    } catch (RuntimeException e) {
+    } catch (IllegalArgumentException e) {
       if (lastIndex == 0) { // Rewrite the exception at the top level.
         e = errorWithFields(deferredAdapters, e);
       }
@@ -201,35 +200,22 @@ public final class Moshi {
     return Arrays.asList(type, annotations);
   }
 
-  static RuntimeException errorWithFields(List<DeferredAdapter<?>> typesAndFieldNames,
-      RuntimeException e) {
-    if (typesAndFieldNames.size() == 1) {
+  static IllegalArgumentException errorWithFields(List<DeferredAdapter<?>> typesAndFieldNames,
+      IllegalArgumentException e) {
+    int size = typesAndFieldNames.size();
+    if (size == 1 && typesAndFieldNames.get(0).fieldName == null) {
       return e;
     }
-    StringBuilder errorMessageBuilder = new StringBuilder("Error creating adapter for ");
-    int size = typesAndFieldNames.size();
-    int lastIndex = size;
+    StringBuilder errorMessageBuilder = new StringBuilder(e.getMessage());
     for (int i = size - 1; i >= 0; i--) {
-      Object typeOrFieldName = typesAndFieldNames.get(i).typeOrFieldName;
-      if (typeOrFieldName instanceof Type) {
-        String typeName = Types.getRawType((Type) typeOrFieldName).getName();
-        if (lastIndex - i == 1) {
-          errorMessageBuilder.append(typeName);
-        } else {
-          errorMessageBuilder
-              .append("field '")
-              .append(typeName);
-          for (int j = i + 1; j < lastIndex; j++) {
-            errorMessageBuilder
-                .append('.')
-                .append(typesAndFieldNames.get(j).typeOrFieldName);
-          }
-          errorMessageBuilder.append('\'');
-        }
-        lastIndex = i;
-        if (i != 0) {
-          errorMessageBuilder.append(" in ");
-        }
+      DeferredAdapter<?> deferredAdapter = typesAndFieldNames.get(i);
+      errorMessageBuilder
+          .append("\nfor ")
+          .append(deferredAdapter.type);
+      if (deferredAdapter.fieldName != null) {
+        errorMessageBuilder
+            .append(' ')
+            .append(deferredAdapter.fieldName);
       }
     }
     return new IllegalArgumentException(errorMessageBuilder.toString(), e);
@@ -305,12 +291,14 @@ public final class Moshi {
    * class that has a {@code List<Employee>} field for an organization's management hierarchy.
    */
   private static final class DeferredAdapter<T> extends JsonAdapter<T> {
-    final Object typeOrFieldName;
+    final Type type;
+    final @Nullable String fieldName;
     @Nullable Object cacheKey;
     private @Nullable JsonAdapter<T> delegate;
 
-    DeferredAdapter(Object typeOrFieldName, Object cacheKey) {
-      this.typeOrFieldName = typeOrFieldName;
+    DeferredAdapter(Type type, @Nullable String fieldName, Object cacheKey) {
+      this.type = type;
+      this.fieldName = fieldName;
       this.cacheKey = cacheKey;
     }
 
