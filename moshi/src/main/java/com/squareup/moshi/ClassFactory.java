@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.Util;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Constructor;
@@ -103,7 +104,7 @@ abstract class ClassFactory<T> {
     } catch (IllegalAccessException e) {
       throw new AssertionError();
     } catch (InvocationTargetException e) {
-      throw new RuntimeException(e);
+      throw Util.rethrowCause(e);
     } catch (NoSuchMethodException ignored) {
       // Not the expected version of Dalvik/libcore!
     }

@@ -254,12 +254,11 @@ final class StandardJsonAdapters {
     } catch (IllegalAccessException e) {
       throw new RuntimeException(
           "Failed to access the generated JsonAdapter for " + rawType, e);
-    } catch (InvocationTargetException e) {
-      throw new RuntimeException(
-          "Failed to construct the generated JsonAdapter for " + rawType, e);
     } catch (InstantiationException e) {
       throw new RuntimeException(
           "Failed to instantiate the generated JsonAdapter for " + rawType, e);
+    } catch (InvocationTargetException e) {
+      throw Util.rethrowCause(e);
     }
   }
 
