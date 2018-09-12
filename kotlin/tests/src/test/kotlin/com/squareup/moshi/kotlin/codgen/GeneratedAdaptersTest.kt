@@ -869,7 +869,8 @@ class GeneratedAdaptersTest {
     val encoded = MultiplePropertiesShareAdapter("Android", "Banana")
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID","b":"BANANA"}""")
 
-    val delegateAdapters = jsonAdapter::class.memberProperties.filter {
+    val delegateAdapters = GeneratedAdaptersTest_MultiplePropertiesShareAdapterJsonAdapter::class
+        .memberProperties.filter {
       it.returnType.classifier == JsonAdapter::class
     }
     assertThat(delegateAdapters).hasSize(1)
