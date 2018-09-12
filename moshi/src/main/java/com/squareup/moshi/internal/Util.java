@@ -90,6 +90,7 @@ public final class Util {
   public static boolean isPlatformType(Class<?> rawType) {
     String name = rawType.getName();
     return name.startsWith("android.")
+        || name.startsWith("androidx.")
         || name.startsWith("java.")
         || name.startsWith("javax.")
         || name.startsWith("kotlin.")
