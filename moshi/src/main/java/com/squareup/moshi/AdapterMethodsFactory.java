@@ -53,7 +53,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       } catch (IllegalArgumentException e) {
         String missingAnnotation = toAdapter == null ? "@ToJson" : "@FromJson";
         throw new IllegalArgumentException("No " + missingAnnotation + " adapter for "
-            + typeAnnotatedWithAnnotations(type, annotations));
+            + typeAnnotatedWithAnnotations(type, annotations), e);
       }
     } else {
       delegate = null;
