@@ -45,6 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+@SuppressWarnings("CheckReturnValue")
 public final class MoshiTest {
   @Test public void booleanAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
@@ -952,6 +953,74 @@ public final class MoshiTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Platform class android.util.Pair (with no annotations) "
           + "requires explicit JsonAdapter to be registered");
+    }
+  }
+
+  static final class HasPlatformType {
+    ArrayList<String> strings;
+
+    static final class Wrapper {
+      HasPlatformType hasPlatformType;
+    }
+
+    static final class ListWrapper {
+      List<HasPlatformType> platformTypes;
+    }
+  }
+
+  @Test public void reentrantFieldErrorMessagesTopLevelMap() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(Types.newParameterizedType(Map.class, String.class, HasPlatformType.class));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+              + "JsonAdapter to be registered"
+              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
+              + "\nfor java.util.Map<java.lang.String, "
+              + "com.squareup.moshi.MoshiTest$HasPlatformType>");
+      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+          + "(with no annotations) requires explicit JsonAdapter to be registered");
+    }
+  }
+
+  @Test public void reentrantFieldErrorMessagesWrapper() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(HasPlatformType.Wrapper.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+              + "JsonAdapter to be registered"
+              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType hasPlatformType"
+              + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
+      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+          + "(with no annotations) requires explicit JsonAdapter to be registered");
+    }
+  }
+
+  @Test public void reentrantFieldErrorMessagesListWrapper() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(HasPlatformType.ListWrapper.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage(
+          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+              + "JsonAdapter to be registered"
+              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
+              + "\nfor java.util.List<com.squareup.moshi.MoshiTest$HasPlatformType> platformTypes"
+              + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
+      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+          + "(with no annotations) requires explicit JsonAdapter to be registered");
     }
   }
 
