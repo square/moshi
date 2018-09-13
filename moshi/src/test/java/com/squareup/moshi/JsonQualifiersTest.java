@@ -339,8 +339,8 @@ public final class JsonQualifiersTest {
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause()).hasMessage("No @FromJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause()).hasMessage("No next JsonAdapter for class "
+      assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause().getCause()).hasMessage("No next JsonAdapter for class "
           + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
@@ -368,8 +368,8 @@ public final class JsonQualifiersTest {
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause()).hasMessage("No @ToJson adapter for class java.lang.String "
           + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause()).hasMessage("No next JsonAdapter for class "
+      assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause().getCause()).hasMessage("No next JsonAdapter for class "
           + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
