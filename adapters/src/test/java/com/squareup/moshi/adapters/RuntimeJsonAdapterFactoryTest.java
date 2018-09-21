@@ -15,11 +15,13 @@
  */
 package com.squareup.moshi.adapters;
 
+import com.squareup.moshi.FromJson;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.Moshi;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
 import okio.Buffer;
@@ -179,6 +181,27 @@ public final class RuntimeJsonAdapterFactoryTest {
       assertThat(expected).hasMessage(
           "The base type must not be Object. Consider using a marker interface.");
     }
+  }
+
+  @Test public void usesObjectAdapterFromJson() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+            .registerSubtype(Success.class, "success"))
+        .add(new Object() {
+          @FromJson Object fromJson(JsonReader reader, JsonAdapter<Object> delegate)
+              throws IOException {
+            if (reader.peek() != JsonReader.Token.NUMBER) {
+              return delegate.fromJson(reader);
+            } else {
+              return new BigDecimal(reader.nextString());
+            }
+          }
+        })
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":9223372036854775808}"))
+        .isEqualTo(new Success("9223372036854775808"));
   }
 
   interface Message {

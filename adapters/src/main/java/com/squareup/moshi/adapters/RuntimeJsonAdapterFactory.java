@@ -114,7 +114,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
         throw new JsonDataException("Expected BEGIN_OBJECT but was " + peekedToken
             + " at path " + reader.getPath());
       }
-      Object jsonValue = reader.readJsonValue();
+      Object jsonValue = objectJsonAdapter.fromJson(reader);
       Map<String, Object> jsonObject = (Map<String, Object>) jsonValue;
       Object label = jsonObject.get(labelKey);
       if (label == null) {
