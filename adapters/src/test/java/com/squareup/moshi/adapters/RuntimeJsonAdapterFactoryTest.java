@@ -15,19 +15,15 @@
  */
 package com.squareup.moshi.adapters;
 
+import com.squareup.moshi.FromJson;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
-import javax.annotation.Nullable;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -187,32 +183,20 @@ public final class RuntimeJsonAdapterFactoryTest {
     }
   }
 
-  @Test public void usesObjectAdapter() throws IOException {
-    JsonAdapter.Factory objectFactory = new JsonAdapter.Factory() {
-      @Override public @Nullable JsonAdapter<?> create(
-          Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-        if (type != Object.class) return null;
-
-        final JsonAdapter<Object> delegate = moshi.nextAdapter(this, Object.class, annotations);
-        return new JsonAdapter<Object>() {
-          @Override public @Nullable Object fromJson(JsonReader reader) throws IOException {
+  @Test public void usesObjectAdapterFromJson() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+            .registerSubtype(Success.class, "success"))
+        .add(new Object() {
+          @FromJson Object fromJson(JsonReader reader, JsonAdapter<Object> delegate)
+              throws IOException {
             if (reader.peek() != JsonReader.Token.NUMBER) {
               return delegate.fromJson(reader);
             } else {
               return new BigDecimal(reader.nextString());
             }
           }
-
-          @Override public void toJson(JsonWriter writer, @Nullable Object value) {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
-    Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success"))
-        .add(objectFactory)
+        })
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
