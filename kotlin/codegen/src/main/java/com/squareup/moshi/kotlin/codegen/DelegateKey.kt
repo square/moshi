@@ -43,7 +43,8 @@ internal data class DelegateKey(
   fun generateProperty(
     nameAllocator: NameAllocator,
     typeRenderer: TypeRenderer,
-    moshiParameter: ParameterSpec
+    moshiParameter: ParameterSpec,
+    propertyName: String
   ): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
       "At${(it.type as ClassName).simpleName}"
@@ -53,25 +54,23 @@ internal data class DelegateKey(
 
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
     val standardArgs = arrayOf(moshiParameter,
-        if (type is ClassName && jsonQualifiers.isEmpty()) {
-          ""
-        } else {
-          CodeBlock.of("<%T>", type)
-        },
+        CodeBlock.of("<%T>", type),
         typeRenderer.render(type))
-    val standardArgsSize = standardArgs.size + 1
+    var standardArgsSize = standardArgs.size
     val (initializerString, args) = when {
-      jsonQualifiers.isEmpty() -> "" to emptyArray()
+      // TODO: Reference top-level function emptySet().
+      // TODO: https://github.com/square/kotlinpoet/issues/433/
+      jsonQualifiers.isEmpty() -> ", kotlin.collections.emptySet()" to emptyArray()
       else -> {
-        ", %${standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, " +
-            "%${standardArgsSize + 1}S)" to arrayOf(Types::class.asTypeName(), adapterName)
+        ", %${++standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, " +
+            "%${++standardArgsSize}S)" to arrayOf(Types::class.asTypeName(), adapterName)
       }
     }
-    val finalArgs = arrayOf(*standardArgs, *args)
+    val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
         .addAnnotations(jsonQualifiers)
-        .initializer("%1N.adapter%2L(%3L$initializerString)", *finalArgs)
+        .initializer("%1N.adapter%2L(%3L$initializerString, %${++standardArgsSize}S)", *finalArgs)
         .build()
   }
 }

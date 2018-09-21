@@ -135,7 +135,7 @@ internal class AdapterGenerator(
     result.addProperty(optionsProperty)
     for (uniqueAdapter in propertyList.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
-          nameAllocator, typeRenderer, moshiParam))
+          nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
     }
 
     result.addFunction(generateToStringFun())
