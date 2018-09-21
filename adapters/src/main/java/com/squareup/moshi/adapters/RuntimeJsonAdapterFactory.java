@@ -21,7 +21,6 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
-import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -41,7 +40,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Map<String, Type> labelToType = new LinkedHashMap<>();
 
   /**
-   * @param baseType The base type for which this factory will create adapters.
+   * @param baseType The base type for which this factory will create adapters. Cannot be Object.
    * @param labelKey The key in the JSON object whose value determines the type to which to map the
    *     JSON object.
    */
@@ -49,6 +48,10 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
   public static <T> RuntimeJsonAdapterFactory<T> of(Class<T> baseType, String labelKey) {
     if (baseType == null) throw new NullPointerException("baseType == null");
     if (labelKey == null) throw new NullPointerException("labelKey == null");
+    if (baseType == Object.class) {
+      throw new IllegalArgumentException(
+          "The base type must not be Object. Consider using a marker interface.");
+    }
     return new RuntimeJsonAdapterFactory<>(baseType, labelKey);
   }
 
@@ -86,10 +89,9 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
       typeToLabel.put(typeValue, label);
       labelToAdapter.put(label, moshi.adapter(typeValue));
     }
-    JsonAdapter<Object> objectJsonAdapter = moshi.nextAdapter(
-        this, Object.class, Util.NO_ANNOTATIONS);
-    return new RuntimeJsonAdapter(labelKey, labelToAdapter, typeToLabel, objectJsonAdapter)
-        .nullSafe();
+    JsonAdapter<Object> objectJsonAdapter = moshi.adapter(Object.class);
+    return new RuntimeJsonAdapter(labelKey, labelToAdapter, typeToLabel,
+        objectJsonAdapter).nullSafe();
   }
 
   static final class RuntimeJsonAdapter extends JsonAdapter<Object> {

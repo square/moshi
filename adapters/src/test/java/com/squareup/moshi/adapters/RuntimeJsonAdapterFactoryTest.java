@@ -171,6 +171,16 @@ public final class RuntimeJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+  @Test public void disallowObjectBaseType() {
+    try {
+      RuntimeJsonAdapterFactory.of(Object.class, "type");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "The base type must not be Object. Consider using a marker interface.");
+    }
+  }
+
   interface Message {
   }
 
