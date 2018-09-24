@@ -1059,6 +1059,10 @@ final class JsonUtf8Reader extends JsonReader {
     return false;
   }
 
+  @Override JsonReader peekJson() {
+    throw new UnsupportedOperationException("TODO");
+  }
+
   @Override public String toString() {
     return "JsonReader(" + source + ")";
   }

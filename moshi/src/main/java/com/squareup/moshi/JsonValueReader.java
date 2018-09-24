@@ -20,9 +20,10 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import javax.annotation.Nullable;
+
+import static com.squareup.moshi.JsonScope.CLOSED;
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -32,11 +33,11 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>The next element to act upon is on the top of the stack.
  *   <li>When the top of the stack is a {@link List}, calling {@link #beginArray()} replaces the
- *       list with a {@link ListIterator}. The first element of the iterator is pushed on top of the
+ *       list with a {@link JsonIterator}. The first element of the iterator is pushed on top of the
  *       iterator.
  *   <li>Similarly, when the top of the stack is a {@link Map}, calling {@link #beginObject()}
- *       replaces the map with an {@link Iterator} of its entries. The first element of the iterator
- *       is pushed on top of the iterator.
+ *       replaces the map with an {@link JsonIterator} of its entries. The first element of the
+ *       iterator is pushed on top of the iterator.
  *   <li>When the top of the stack is a {@link Map.Entry}, calling {@link #nextName()} returns the
  *       entry's key and replaces the entry with its value on the stack.
  *   <li>When an element is consumed it is popped. If the new top of the stack has a non-exhausted
@@ -49,17 +50,31 @@ final class JsonValueReader extends JsonReader {
   /** Sentinel object pushed on {@link #stack} when the reader is closed. */
   private static final Object JSON_READER_CLOSED = new Object();
 
-  private Object[] stack = new Object[32];
+  private Object[] stack;
 
   JsonValueReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
+    stack = new Object[32];
     stack[stackSize++] = root;
+  }
+
+  /** Copy-constructor makes a deep copy for peeking. */
+  JsonValueReader(JsonValueReader copyFrom) {
+    super(copyFrom);
+
+    stack = copyFrom.stack.clone();
+    for (int i = 0; i < stackSize; i++) {
+      if (stack[i] instanceof JsonIterator) {
+        stack[i] = ((JsonIterator) stack[i]).clone();
+      }
+    }
   }
 
   @Override public void beginArray() throws IOException {
     List<?> peeked = require(List.class, Token.BEGIN_ARRAY);
 
-    ListIterator<?> iterator = peeked.listIterator();
+    JsonIterator iterator = new JsonIterator(
+        Token.END_ARRAY, peeked.toArray(new Object[peeked.size()]), 0);
     stack[stackSize - 1] = iterator;
     scopes[stackSize - 1] = JsonScope.EMPTY_ARRAY;
     pathIndices[stackSize - 1] = 0;
@@ -71,8 +86,8 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public void endArray() throws IOException {
-    ListIterator<?> peeked = require(ListIterator.class, Token.END_ARRAY);
-    if (peeked.hasNext()) {
+    JsonIterator peeked = require(JsonIterator.class, Token.END_ARRAY);
+    if (peeked.endToken != Token.END_ARRAY || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_ARRAY);
     }
     remove();
@@ -81,7 +96,8 @@ final class JsonValueReader extends JsonReader {
   @Override public void beginObject() throws IOException {
     Map<?, ?> peeked = require(Map.class, Token.BEGIN_OBJECT);
 
-    Iterator<?> iterator = peeked.entrySet().iterator();
+    JsonIterator iterator = new JsonIterator(
+        Token.END_OBJECT, peeked.entrySet().toArray(new Object[peeked.size()]), 0);
     stack[stackSize - 1] = iterator;
     scopes[stackSize - 1] = JsonScope.EMPTY_OBJECT;
 
@@ -92,8 +108,8 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public void endObject() throws IOException {
-    Iterator<?> peeked = require(Iterator.class, Token.END_OBJECT);
-    if (peeked instanceof ListIterator || peeked.hasNext()) {
+    JsonIterator peeked = require(JsonIterator.class, Token.END_OBJECT);
+    if (peeked.endToken != Token.END_OBJECT || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_OBJECT);
     }
     pathNames[stackSize - 1] = null;
@@ -112,8 +128,7 @@ final class JsonValueReader extends JsonReader {
 
     // If the top of the stack is an iterator, take its first element and push it on the stack.
     Object peeked = stack[stackSize - 1];
-    if (peeked instanceof ListIterator) return Token.END_ARRAY;
-    if (peeked instanceof Iterator) return Token.END_OBJECT;
+    if (peeked instanceof JsonIterator) return ((JsonIterator) peeked).endToken;
     if (peeked instanceof List) return Token.BEGIN_ARRAY;
     if (peeked instanceof Map) return Token.BEGIN_OBJECT;
     if (peeked instanceof Map.Entry) return Token.NAME;
@@ -303,6 +318,10 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
+  @Override JsonReader peekJson() {
+    return new JsonValueReader(this);
+  }
+
   @Override void promoteNameToValue() throws IOException {
     if (hasNext()) {
       String name = nextName();
@@ -313,7 +332,7 @@ final class JsonValueReader extends JsonReader {
   @Override public void close() throws IOException {
     Arrays.fill(stack, 0, stackSize, null);
     stack[0] = JSON_READER_CLOSED;
-    scopes[0] = JsonScope.CLOSED;
+    scopes[0] = CLOSED;
     stackSize = 1;
   }
 
@@ -372,6 +391,35 @@ final class JsonValueReader extends JsonReader {
       if (parent instanceof Iterator && ((Iterator<?>) parent).hasNext()) {
         push(((Iterator<?>) parent).next());
       }
+    }
+  }
+
+  static final class JsonIterator implements Iterator<Object>, Cloneable {
+    final Token endToken;
+    final Object[] array;
+    int next;
+
+    JsonIterator(Token endToken, Object[] array, int next) {
+      this.endToken = endToken;
+      this.array = array;
+      this.next = next;
+    }
+
+    @Override public boolean hasNext() {
+      return next < array.length;
+    }
+
+    @Override public Object next() {
+      return array[next++];
+    }
+
+    @Override public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override protected JsonIterator clone() {
+      // No need to copy the array; it's read-only.
+      return new JsonIterator(endToken, array, next);
     }
   }
 }
