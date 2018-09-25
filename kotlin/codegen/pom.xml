@@ -64,7 +64,6 @@
     <dependency>
       <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
       <artifactId>kotlin-metadata</artifactId>
-      <version>1.4.0</version>
     </dependency>
     <!--
       Though we don't use compile-testing, including it is a convenient way to get tools.jar on the
