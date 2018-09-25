@@ -47,6 +47,17 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.4</version>
+        <configuration>
+          <excludePackageNames>com.squareup.moshi.internal:com.squareup.moshi.internal.*</excludePackageNames>
+          <links>
+            <link>https://square.github.io/okio/</link>
+          </links>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
