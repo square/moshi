@@ -1,6 +1,46 @@
 Change Log
 ==========
 
+## Version 1.7.0
+
+_2018-09-24_
+
+ * New: `EnumJsonAdapter` makes it easy to specify a fallback value for unknown enum constants.
+   By default Moshi throws an `JsonDataException` if it reads an unknown enum constant. With this
+   you can specify a fallback value or null.
+
+   ```java
+   new Moshi.Builder()
+       .add(EnumJsonAdapter.create(IsoCurrency.class)
+           .withUnknownFallback(IsoCurrency.USD))
+       .build();
+   ```
+
+   Note that this adapter is in the optional `moshi-adapters` module.
+
+   ```groovy
+   implementation 'com.squareup.moshi:moshi-adapters:1.7.0'
+   ```
+
+ * New: Embed R8/ProGuard rules in the `.jar` file.
+ * New: Use `@CheckReturnValue` in more places. We hope this will encourage you to use `skipName()`
+   instead of `nextName()` for better performance!
+ * New: Forbid automatic encoding of platform classes in `androidx`. As with `java.*`, `android.*`,
+   and `kotlin.*` Moshi wants you to specify how to encode platform types.
+ * New: Improve error reporting when creating an adapter fails.
+ * New: Upgrade to Okio 1.15.0. We don't yet require Kotlin-friendly Okio 2.x but Moshi works fine
+   with that release.
+
+   ```groovy
+   implementation 'com.squareup.okio:okio:1.15.0'
+   ```
+
+ * Fix: Return false from `JsonReader.hasNext()` at document's end.
+ * Fix: Improve code gen to handle several broken cases. Our generated adapters had problems with
+   nulls, nested parameterized types, private transient properties, generic type aliases, fields
+   with dollar signs in their names, and named companion objects.
+
+
 ## Version 1.6.0
 
 _2018-05-14_
