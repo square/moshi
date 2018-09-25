@@ -34,7 +34,8 @@ import javax.annotation.CheckReturnValue;
  * decoding the JSON. This factory's adapters expect JSON in the format of a JSON object with a
  * key whose value is a label that determines the type to which to map the JSON object.
  */
-public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
+// TODO(jwilson): make this class public in Moshi 1.8.
+final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
   final String labelKey;
   final Map<String, Type> labelToType = new LinkedHashMap<>();
