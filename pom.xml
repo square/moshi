@@ -29,8 +29,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
-    <kotlin.version>1.2.21</kotlin.version>
-    <kotlin-metadata.version>1.3.0</kotlin-metadata.version>
+    <kotlin.version>1.2.71</kotlin.version>
+    <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
     <dokka.version>0.9.17</dokka.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
 
@@ -38,9 +38,9 @@
     <okio.version>1.15.0</okio.version>
 
     <!-- Test Dependencies -->
-    <compile-testing.version>0.8</compile-testing.version>
+    <compile-testing.version>0.15</compile-testing.version>
     <junit.version>4.12</junit.version>
-    <assertj.version>1.7.0</assertj.version>
+    <assertj.version>3.11.1</assertj.version>
   </properties>
 
   <scm>

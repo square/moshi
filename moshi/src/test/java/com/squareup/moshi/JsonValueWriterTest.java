@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,6 @@ import org.junit.Test;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.junit.Assert.fail;
 
 public final class JsonValueWriterTest {
@@ -57,8 +57,11 @@ public final class JsonValueWriterTest {
     writer.name("d").nullValue();
     writer.endObject();
 
-    assertThat((Map<?, ?>) writer.root()).containsExactly(
-        entry("a", "s"), entry("b", 1.5d), entry("c", true), entry("d", null));
+    assertThat((Map<String, Object>) writer.root()).containsExactly(
+        new SimpleEntry<String, Object>("a", "s"),
+        new SimpleEntry<String, Object>("b", 1.5d),
+        new SimpleEntry<String, Object>("c", true),
+        new SimpleEntry<String, Object>("d", null));
   }
 
   @Test public void repeatedNameThrows() throws IOException {
@@ -253,8 +256,11 @@ public final class JsonValueWriterTest {
     writer.name("d");
     writer.value(new Buffer().writeUtf8("null"));
     writer.endObject();
-    assertThat((Map<?, ?>) writer.root()).containsExactly(
-      entry("a", singletonList("value")), entry("b", 2.0d), entry("c", 3L), entry("d", null));
+    assertThat((Map<String, Object>) writer.root()).containsExactly(
+        new SimpleEntry<String, Object>("a", singletonList("value")),
+        new SimpleEntry<String, Object>("b", 2.0d),
+        new SimpleEntry<String, Object>("c", 3L),
+        new SimpleEntry<String, Object>("d", null));
   }
 
   /**
