@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.8.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -64,7 +64,6 @@
     <dependency>
       <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
       <artifactId>kotlin-metadata</artifactId>
-      <version>1.4.0</version>
     </dependency>
     <!--
       Though we don't use compile-testing, including it is a convenient way to get tools.jar on the

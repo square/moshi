@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.8.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -108,7 +108,7 @@
               <sourceDirs>
                 <sourceDir>src/test/kotlin</sourceDir>
                 <sourceDir>src/test/java</sourceDir>
-                <sourceDir>target/generated-sources/kapt/test</sourceDir>
+                <sourceDir>target/generated-sources/kaptKotlin/test</sourceDir>
               </sourceDirs>
             </configuration>
           </execution>
@@ -144,7 +144,9 @@
           <execution>
             <id>java-test-compile</id>
             <phase>test-compile</phase>
-            <goals> <goal>testCompile</goal> </goals>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

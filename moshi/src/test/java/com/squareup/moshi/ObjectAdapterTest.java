@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.AbstractCollection;
 import java.util.AbstractList;
 import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,10 +41,9 @@ import org.junit.Test;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 public final class ObjectAdapterTest {
-  @Test public void toJsonUsesRuntimeType() throws Exception {
+  @Test public void toJsonUsesRuntimeType() {
     Delivery delivery = new Delivery();
     delivery.address = "1455 Market St.";
     Pizza pizza = new Pizza();
@@ -62,7 +62,7 @@ public final class ObjectAdapterTest {
         + "}");
   }
 
-  @Test public void toJsonJavaLangObject() throws Exception {
+  @Test public void toJsonJavaLangObject() {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
     assertThat(adapter.toJson(new Object())).isEqualTo("{}");
@@ -104,7 +104,7 @@ public final class ObjectAdapterTest {
         .isEqualTo(emptyDelivery);
   }
 
-  @Test public void toJsonCoercesRuntimeTypeForCollections() throws Exception {
+  @Test public void toJsonCoercesRuntimeTypeForCollections() {
     Collection<String> collection = new AbstractCollection<String>() {
       @Override public Iterator<String> iterator() {
         return Collections.singleton("A").iterator();
@@ -119,7 +119,7 @@ public final class ObjectAdapterTest {
     assertThat(adapter.toJson(collection)).isEqualTo("[\"A\"]");
   }
 
-  @Test public void toJsonCoercesRuntimeTypeForLists() throws Exception {
+  @Test public void toJsonCoercesRuntimeTypeForLists() {
     List<String> list = new AbstractList<String>() {
       @Override public String get(int i) {
         return "A";
@@ -135,7 +135,7 @@ public final class ObjectAdapterTest {
     assertThat(adapter.toJson(list)).isEqualTo("[\"A\"]");
   }
 
-  @Test public void toJsonCoercesRuntimeTypeForSets() throws Exception {
+  @Test public void toJsonCoercesRuntimeTypeForSets() {
     Set<String> set = new AbstractSet<String>() {
       @Override public Iterator<String> iterator() {
         return Collections.singleton("A").iterator();
@@ -151,7 +151,7 @@ public final class ObjectAdapterTest {
   }
 
   @Ignore // We don't support raw maps, like Map<Object, Object>. (Even if the keys are strings!)
-  @Test public void toJsonCoercesRuntimeTypeForMaps() throws Exception {
+  @Test public void toJsonCoercesRuntimeTypeForMaps() {
     Map<String, Boolean> map = new AbstractMap<String, Boolean>() {
       @Override public Set<Entry<String, Boolean>> entrySet() {
         return Collections.singletonMap("A", true).entrySet();
@@ -163,7 +163,7 @@ public final class ObjectAdapterTest {
     assertThat(adapter.toJson(map)).isEqualTo("{\"A\":true}");
   }
 
-  @Test public void toJsonUsesTypeAdapters() throws Exception {
+  @Test public void toJsonUsesTypeAdapters() {
     Object dateAdapter = new Object() {
       @ToJson Long dateToJson(Date d) {
         return d.getTime();
@@ -185,7 +185,7 @@ public final class ObjectAdapterTest {
    */
   @Test public void objectAdapterDelegatesStringNamesAndValues() throws Exception {
     JsonAdapter<String> stringAdapter = new JsonAdapter<String>() {
-      @Nullable @Override public String fromJson(JsonReader reader) throws IOException {
+      @Override public String fromJson(JsonReader reader) throws IOException {
         return reader.nextString().toUpperCase(Locale.US);
       }
 
@@ -198,8 +198,9 @@ public final class ObjectAdapterTest {
         .add(String.class, stringAdapter)
         .build();
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
-    Map<?, ?> value = (Map<?, ?>) objectAdapter.fromJson("{\"a\":\"b\", \"c\":\"d\"}");
-    assertThat(value).containsExactly(entry("A", "B"), entry("C", "D"));
+    Map<String, String> value
+        = (Map<String, String>) objectAdapter.fromJson("{\"a\":\"b\", \"c\":\"d\"}");
+    assertThat(value).containsExactly(new SimpleEntry<>("A", "B"), new SimpleEntry<>("C", "D"));
   }
 
   /**
@@ -241,7 +242,7 @@ public final class ObjectAdapterTest {
   /** Confirm that the built-in adapter for Object delegates to user-supplied adapters for lists. */
   @Test public void objectAdapterDelegatesLists() throws Exception {
     JsonAdapter<List<?>> listAdapter = new JsonAdapter<List<?>>() {
-      @Override public @Nullable List<?> fromJson(JsonReader reader) throws IOException {
+      @Override public List<?> fromJson(JsonReader reader) throws IOException {
         reader.skipValue();
         return singletonList("z");
       }
@@ -262,7 +263,7 @@ public final class ObjectAdapterTest {
   /** Confirm that the built-in adapter for Object delegates to user-supplied adapters for maps. */
   @Test public void objectAdapterDelegatesMaps() throws Exception {
     JsonAdapter<Map<?, ?>> mapAdapter = new JsonAdapter<Map<?, ?>>() {
-      @Override public @Nullable Map<?, ?> fromJson(JsonReader reader) throws IOException {
+      @Override public Map<?, ?> fromJson(JsonReader reader) throws IOException {
         reader.skipValue();
         return singletonMap("x", "y");
       }

@@ -17,12 +17,12 @@ package com.squareup.moshi;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import okio.Buffer;
-import org.assertj.core.data.MapEntry;
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.newReader;
@@ -45,7 +45,9 @@ public final class MapJsonAdapterTest {
     Map<String, Boolean> fromJson = fromJson(
         String.class, Boolean.class, "{\"a\":true,\"b\":false,\"c\":null}");
     assertThat(fromJson).containsExactly(
-        MapEntry.entry("a", true), MapEntry.entry("b", false), MapEntry.entry("c", null));
+        new SimpleEntry<String, Boolean>("a", true),
+        new SimpleEntry<String, Boolean>("b", false),
+        new SimpleEntry<String, Boolean>("c", null));
   }
 
   @Test public void mapWithNullKeyFailsToEmit() throws Exception {
@@ -119,13 +121,15 @@ public final class MapJsonAdapterTest {
     String toJson = toJson(Integer.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{\"5\":true,\"6\":false,\"7\":null}");
 
-    Map<String, Boolean> fromJson = fromJson(
+    Map<Integer, Boolean> fromJson = fromJson(
         Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
     assertThat(fromJson).containsExactly(
-        MapEntry.entry(5, true), MapEntry.entry(6, false), MapEntry.entry(7, null));
+        new SimpleEntry<Integer, Boolean>(5, true),
+        new SimpleEntry<Integer, Boolean>(6, false),
+        new SimpleEntry<Integer, Boolean>(7, null));
   }
 
-  @Test public void mapWithNonStringKeysToJsonObject() throws Exception {
+  @Test public void mapWithNonStringKeysToJsonObject() {
     Map<Integer, Boolean> map = new LinkedHashMap<>();
     map.put(5, true);
     map.put(6, false);
