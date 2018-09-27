@@ -73,7 +73,7 @@ internal data class TargetType(
       when {
         proto.classKind == Class.Kind.ENUM_CLASS -> {
           messager.printMessage(
-              ERROR, "@JsonClass can't be applied to $element: must not be an enum class", element)
+              ERROR, "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary", element)
           return null
         }
         proto.classKind != Class.Kind.CLASS -> {
