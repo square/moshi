@@ -9,7 +9,7 @@
 
 # Enum field names are used by the integrated EnumJsonAdapter.
 # Annotate enums with @JsonClass(generateAdapter = false) to use them with Moshi.
--keepclassmembernames @com.squareup.moshi.JsonClass class * extends java.lang.Enum {
+-keepclassmembers @com.squareup.moshi.JsonClass class * extends java.lang.Enum {
     <fields>;
 }
 
