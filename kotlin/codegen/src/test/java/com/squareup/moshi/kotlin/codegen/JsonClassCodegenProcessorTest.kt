@@ -153,7 +153,7 @@ class JsonClassCodegenProcessorTest {
     val result = call.execute()
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
     assertThat(result.systemErr).contains(
-        "error: @JsonClass can't be applied to KotlinEnum: must not be an enum class")
+        "error: @JsonClass with 'generateAdapter = \"true\"' can't be applied to KotlinEnum: code gen for enums is not supported or necessary")
   }
 
   // Annotation processors don't get called for local classes, so we don't have the opportunity to
