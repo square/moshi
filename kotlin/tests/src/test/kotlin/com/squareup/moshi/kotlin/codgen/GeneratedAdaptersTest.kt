@@ -65,14 +65,12 @@ class GeneratedAdaptersTest {
     val adapter = moshi.adapter(JsonAnnotationWithDollarSign::class.java)
 
     // Read
-    @Language("JSON")
     val json = "{\"\$foo\": \"bar\"}"
 
     val instance = adapter.fromJson(json)!!
     assertThat(instance.bar).isEqualTo("bar")
 
     // Write
-    @Language("JSON")
     val expectedJson = "{\"\$foo\":\"baz\"}"
 
     assertThat(adapter.toJson(JsonAnnotationWithDollarSign("baz"))).isEqualTo(expectedJson)
