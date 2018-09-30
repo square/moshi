@@ -581,7 +581,7 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 R8 / ProGuard
 --------
 
-If you are using R8 or ProGuard add the options from [this file](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro).
+If you are using R8 or ProGuard add the options from [this file](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro). If using Android, this requires Android Gradle Plugin 3.2.0+.
 
 The `moshi-kotlin` artifact additionally requires the options from [this file](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
 
