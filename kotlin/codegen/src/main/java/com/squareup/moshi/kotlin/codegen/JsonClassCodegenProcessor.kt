@@ -90,7 +90,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       }
     }
 
-    return true
+    return false
   }
 
   private fun adapterGenerator(element: Element): AdapterGenerator? {
