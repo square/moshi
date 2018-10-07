@@ -318,7 +318,7 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
-  @Override JsonReader peekJson() {
+  @Override public JsonReader peekJson() {
     return new JsonValueReader(this);
   }
 

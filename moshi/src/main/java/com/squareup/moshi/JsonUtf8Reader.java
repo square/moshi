@@ -98,6 +98,27 @@ final class JsonUtf8Reader extends JsonReader {
     pushScope(JsonScope.EMPTY_DOCUMENT);
   }
 
+  /** Copy-constructor makes a deep copy for peeking. */
+  JsonUtf8Reader(JsonUtf8Reader copyFrom) {
+    super(copyFrom);
+
+    BufferedSource sourcePeek = copyFrom.source.peek();
+    this.source = sourcePeek;
+    this.buffer = sourcePeek.getBuffer();
+    this.peeked = copyFrom.peeked;
+    this.peekedLong = copyFrom.peekedLong;
+    this.peekedNumberLength = copyFrom.peekedNumberLength;
+    this.peekedString = copyFrom.peekedString;
+
+    // Make sure our buffer has as many bytes as the source's buffer. This is necessary because
+    // JsonUtf8Reader assumes any data it has peeked (like the peekedNumberLength) are buffered.
+    try {
+      sourcePeek.require(copyFrom.buffer.size());
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
+  }
+
   @Override public void beginArray() throws IOException {
     int p = peeked;
     if (p == PEEKED_NONE) {
@@ -1051,8 +1072,8 @@ final class JsonUtf8Reader extends JsonReader {
     return found;
   }
 
-  @Override JsonReader peekJson() {
-    throw new UnsupportedOperationException("TODO");
+  @Override public JsonReader peekJson() {
+    return new JsonUtf8Reader(this);
   }
 
   @Override public String toString() {
