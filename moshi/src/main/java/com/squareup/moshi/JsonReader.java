@@ -180,10 +180,10 @@ public abstract class JsonReader implements Closeable {
   // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack will
   // grow itself up to 256 levels of nesting including the top-level document. Deeper nesting is
   // prone to trigger StackOverflowErrors.
-  int stackSize = 0;
-  int[] scopes = new int[32];
-  String[] pathNames = new String[32];
-  int[] pathIndices = new int[32];
+  int stackSize;
+  int[] scopes;
+  String[] pathNames;
+  int[] pathIndices;
 
   /** True to accept non-spec compliant JSON. */
   boolean lenient;
@@ -196,8 +196,21 @@ public abstract class JsonReader implements Closeable {
     return new JsonUtf8Reader(source);
   }
 
+  // Package-private to control subclasses.
   JsonReader() {
-    // Package-private to control subclasses.
+    scopes = new int[32];
+    pathNames = new String[32];
+    pathIndices = new int[32];
+  }
+
+  // Package-private to control subclasses.
+  JsonReader(JsonReader copyFrom) {
+    this.stackSize = copyFrom.stackSize;
+    this.scopes = copyFrom.scopes.clone();
+    this.pathNames = copyFrom.pathNames.clone();
+    this.pathIndices = copyFrom.pathIndices.clone();
+    this.lenient = copyFrom.lenient;
+    this.failOnUnknown = copyFrom.failOnUnknown;
   }
 
   final void pushScope(int newTop) {
@@ -460,6 +473,32 @@ public abstract class JsonReader implements Closeable {
             "Expected a value but was " + peek() + " at path " + getPath());
     }
   }
+
+  /**
+   * Returns a new {@code JsonReader} that can read data from this {@code JsonReader} without
+   * consuming it. The returned reader becomes invalid once this one is next read or closed.
+   *
+   * For example, we can use `peek()` to lookahead and read the same data multiple times.
+   *
+   * <pre> {@code
+   *
+   *   Buffer buffer = new Buffer();
+   *   buffer.writeUtf8("[123, 456, 789]")
+   *
+   *   JsonReader jsonReader = JsonReader.of(buffer);
+   *   jsonReader.beginArray();
+   *   jsonReader.nextInt(); // Returns 123, reader contains 456, 789 and ].
+   *
+   *   JsonReader peek = reader.peekReader();
+   *   peek.nextInt() // Returns 456.
+   *   peek.nextInt() // Returns 789.
+   *   peek.endArray()
+   *
+   *   jsonReader.nextInt() // Returns 456, reader contains 789 and ].
+   * }</pre>
+   */
+  // TODO(jwilson): make this public once it's supported in JsonUtf8Reader.
+  abstract JsonReader peekJson();
 
   /**
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to

@@ -96,9 +96,38 @@ abstract class JsonCodecFactory {
       }
     };
 
+    final JsonCodecFactory valuePeek = new JsonCodecFactory() {
+      @Override public JsonReader newReader(String json) throws IOException {
+        return value.newReader(json).peekJson();
+      }
+
+      // TODO(jwilson): fix precision checks and delete his method.
+      @Override boolean implementsStrictPrecision() {
+        return false;
+      }
+
+      @Override JsonWriter newWriter() {
+        return value.newWriter();
+      }
+
+      @Override String json() {
+        return value.json();
+      }
+
+      // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
+      @Override boolean supportsBigNumbers() {
+        return false;
+      }
+
+      @Override public String toString() {
+        return "ValuePeek";
+      }
+    };
+
     return Arrays.asList(
         new Object[] { utf8 },
-        new Object[] { value });
+        new Object[] { value },
+        new Object[] { valuePeek });
   }
 
   abstract JsonReader newReader(String json) throws IOException;
