@@ -32,7 +32,17 @@ import javax.annotation.CheckReturnValue;
 /**
  * A JsonAdapter factory for polymorphic types. This is useful when the type is not known before
  * decoding the JSON. This factory's adapters expect JSON in the format of a JSON object with a
- * key whose value is a label that determines the type to which to map the JSON object.
+ * key whose value is a label that determines the type to which to map the JSON object. To use, add
+ * this factory to your {@link Moshi.Builder}:
+ *
+ * <pre> {@code
+ *
+ *   Moshi moshi = new Moshi.Builder()
+ *       .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+ *           .registerSubtype(Success.class, "success")
+ *           .registerSubtype(Error.class, "error"))
+ *       .build();
+ * }</pre>
  */
 // TODO(jwilson): make this class public in Moshi 1.8.
 final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {

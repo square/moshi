@@ -26,7 +26,16 @@ import javax.annotation.Nullable;
 
 /**
  * A JsonAdapter for enums that allows having a fallback enum value when a deserialized string does
- * not match any enum value.
+ * not match any enum value. To use, add this as an adapter for your enum type on your {@link
+ * com.squareup.moshi.Moshi.Builder Moshi.Builder}:
+ *
+ * <pre> {@code
+ *
+ *   Moshi moshi = new Moshi.Builder()
+ *       .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
+ *           .withUnknownFallback(CurrencyCode.USD))
+ *       .build();
+ * }</pre>
  */
 public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
   final Class<T> enumType;
