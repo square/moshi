@@ -35,7 +35,7 @@
     <maven-assembly.version>3.1.0</maven-assembly.version>
 
     <!-- Dependencies -->
-    <okio.version>1.15.0</okio.version>
+    <okio.version>1.16.0</okio.version>
 
     <!-- Test Dependencies -->
     <compile-testing.version>0.15</compile-testing.version>

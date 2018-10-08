@@ -497,8 +497,7 @@ public abstract class JsonReader implements Closeable {
    *   jsonReader.nextInt() // Returns 456, reader contains 789 and ].
    * }</pre>
    */
-  // TODO(jwilson): make this public once it's supported in JsonUtf8Reader.
-  abstract JsonReader peekJson();
+  public abstract JsonReader peekJson();
 
   /**
    * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to
