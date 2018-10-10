@@ -33,8 +33,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void fromJson() throws IOException {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -47,8 +47,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void toJson() {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -61,8 +61,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void unregisteredLabelValue() throws IOException {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -75,14 +75,14 @@ public final class RuntimeJsonAdapterFactoryTest {
       assertThat(expected).hasMessage("Expected one of [success, error] for key 'type' but found"
           + " 'data'. Register a subtype for this label.");
     }
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
   }
 
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -101,8 +101,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void nonStringLabelValue() throws IOException {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -110,16 +110,15 @@ public final class RuntimeJsonAdapterFactoryTest {
       adapter.fromJson("{\"type\":{},\"value\":\"Okay!\"}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Label for 'type' must be a string but was {},"
-          + " a class com.squareup.moshi.LinkedHashTreeMap");
+      assertThat(expected).hasMessage("Expected a string but was BEGIN_OBJECT at path $.type");
     }
   }
 
   @Test public void nonObjectDoesNotConsume() throws IOException {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
@@ -137,9 +136,9 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void uniqueSubtypes() {
     RuntimeJsonAdapterFactory<Message> factory =
         RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success");
+            .withSubtype(Success.class, "success");
     try {
-      factory.registerSubtype(Success.class, "data");
+      factory.withSubtype(Success.class, "data");
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Subtypes and labels must be unique.");
@@ -149,9 +148,9 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void uniqueLabels() {
     RuntimeJsonAdapterFactory<Message> factory =
         RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "data");
+            .withSubtype(Success.class, "data");
     try {
-      factory.registerSubtype(Error.class, "data");
+      factory.withSubtype(Error.class, "data");
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Subtypes and labels must be unique.");
@@ -161,8 +160,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   @Test public void nullSafe() throws IOException {
     Moshi moshi = new Moshi.Builder()
         .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
-            .registerSubtype(Success.class, "success")
-            .registerSubtype(Error.class, "error"))
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
