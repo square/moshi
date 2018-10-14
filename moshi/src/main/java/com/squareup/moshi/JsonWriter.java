@@ -24,7 +24,9 @@ import javax.annotation.Nullable;
 import okio.BufferedSink;
 import okio.BufferedSource;
 
+import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
+import static com.squareup.moshi.JsonScope.NONEMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
 
 /**
@@ -139,6 +141,26 @@ public abstract class JsonWriter implements Closeable, Flushable {
   boolean lenient;
   boolean serializeNulls;
   boolean promoteValueToName;
+
+  /**
+   * Controls the deepest stack size that has begin/end pairs flattened:
+   *
+   * <ul>
+   *     <li>If -1, no begin/end pairs are being suppressed.
+   *     <li>If positive, this is the deepest stack size whose begin/end pairs are eligible to be
+   *         flattened.
+   *     <li>If negative, it is the bitwise inverse (~) of the deepest stack size whose begin/end
+   *         pairs have been flattened.
+   * </ul>
+   *
+   * <p>We differentiate between what layer would be flattened (positive) from what layer is being
+   * flattened (negative) so that we don't double-flatten.
+   *
+   * <p>To accommodate nested flattening we require callers to track the previous state when they
+   * provide a new state. The previous state is returned from {@link #beginFlatten} and restored
+   * with {@link #endFlatten}.
+   */
+  int flattenStackSize = -1;
 
   /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
   @CheckReturnValue public static JsonWriter of(BufferedSink sink) {
@@ -355,6 +377,88 @@ public abstract class JsonWriter implements Closeable, Flushable {
       throw new IllegalStateException("Nesting problem.");
     }
     promoteValueToName = true;
+  }
+
+  /**
+   * Cancels immediately-nested calls to {@link #beginArray()} or {@link #beginObject()} and their
+   * matching calls to {@link #endArray} or {@link #endObject()}. Use this to compose JSON adapters
+   * without nesting.
+   *
+   * <p>For example, the following creates JSON with nested arrays: {@code [1,[2,3,4],5]}.
+   *
+   * <pre>{@code
+   *
+   *   JsonAdapter<List<Integer>> integersAdapter = ...
+   *
+   *   public void writeNumbers(JsonWriter writer) {
+   *     writer.beginArray();
+   *     writer.value(1);
+   *     integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
+   *     writer.value(5);
+   *     writer.endArray();
+   *   }
+   * }</pre>
+   *
+   * <p>With flattening we can create JSON with a single array {@code [1,2,3,4,5]}:
+   *
+   * <pre>{@code
+   *
+   *   JsonAdapter<List<Integer>> integersAdapter = ...
+   *
+   *   public void writeNumbers(JsonWriter writer) {
+   *     writer.beginArray();
+   *     int token = writer.beginFlatten();
+   *     writer.value(1);
+   *     integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
+   *     writer.value(5);
+   *     writer.endFlatten(token);
+   *     writer.endArray();
+   *   }
+   * }</pre>
+   *
+   * <p>This method flattens arrays within arrays:
+   *
+   * <pre>{@code
+   *
+   *   Emit:       [1, [2, 3, 4], 5]
+   *   To produce: [1, 2, 3, 4, 5]
+   * }</pre>
+   *
+   * It also flattens objects within objects. Do not call {@link #name} before writing a flattened
+   * object.
+   *
+   * <pre>{@code
+   *
+   *   Emit:       {"a": 1, {"b": 2}, "c": 3}
+   *   To Produce: {"a": 1, "b": 2, "c": 3}
+   * }</pre>
+   *
+   * Other combinations are permitted but do not perform flattening. For example, objects inside of
+   * arrays are not flattened:
+   *
+   * <pre>{@code
+   *
+   *   Emit:       [1, {"b": 2}, 3, [4, 5], 6]
+   *   To Produce: [1, {"b": 2}, 3, 4, 5, 6]
+   * }</pre>
+   *
+   * <p>This method returns an opaque token. Callers must match all calls to this method with a call
+   * to {@link #endFlatten} with the matching token.
+   */
+  public final int beginFlatten() {
+    int context = peekScope();
+    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT
+        && context != NONEMPTY_ARRAY && context != EMPTY_ARRAY) {
+      throw new IllegalStateException("Nesting problem.");
+    }
+    int token = flattenStackSize;
+    flattenStackSize = stackSize;
+    return token;
+  }
+
+  /** Ends nested call flattening created by {@link #beginFlatten}. */
+  public final void endFlatten(int token) {
+    flattenStackSize = token;
   }
 
   /**
