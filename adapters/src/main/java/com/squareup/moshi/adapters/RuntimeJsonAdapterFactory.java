@@ -24,7 +24,10 @@ import com.squareup.moshi.Types;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
@@ -39,8 +42,8 @@ import javax.annotation.CheckReturnValue;
  *
  *   Moshi moshi = new Moshi.Builder()
  *       .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
- *           .registerSubtype(Success.class, "success")
- *           .registerSubtype(Error.class, "error"))
+ *           .withSubtype(Success.class, "success")
+ *           .withSubtype(Error.class, "error"))
  *       .build();
  * }</pre>
  */
@@ -48,7 +51,16 @@ import javax.annotation.CheckReturnValue;
 final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
   final String labelKey;
-  final Map<String, Type> labelToType = new LinkedHashMap<>();
+  final List<String> labels;
+  final List<Type> subtypes;
+
+  RuntimeJsonAdapterFactory(
+      Class<T> baseType, String labelKey, List<String> labels, List<Type> subtypes) {
+    this.baseType = baseType;
+    this.labelKey = labelKey;
+    this.labels = labels;
+    this.subtypes = subtypes;
+  }
 
   /**
    * @param baseType The base type for which this factory will create adapters. Cannot be Object.
@@ -63,27 +75,26 @@ final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
       throw new IllegalArgumentException(
           "The base type must not be Object. Consider using a marker interface.");
     }
-    return new RuntimeJsonAdapterFactory<>(baseType, labelKey);
-  }
-
-  RuntimeJsonAdapterFactory(Class<T> baseType, String labelKey) {
-    this.baseType = baseType;
-    this.labelKey = labelKey;
+    return new RuntimeJsonAdapterFactory<>(
+        baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList());
   }
 
   /**
-   * Register the subtype that can be created based on the label. When an unknown type is found
+   * Returns a new factory that decodes instances of {@code subtype}. When an unknown type is found
    * during encoding an {@linkplain IllegalArgumentException} will be thrown. When an unknown label
    * is found during decoding a {@linkplain JsonDataException} will be thrown.
    */
-  public RuntimeJsonAdapterFactory<T> registerSubtype(Class<? extends T> subtype, String label) {
+  public RuntimeJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
     if (subtype == null) throw new NullPointerException("subtype == null");
     if (label == null) throw new NullPointerException("label == null");
-    if (labelToType.containsKey(label) || labelToType.containsValue(subtype)) {
+    if (labels.contains(label) || subtypes.contains(subtype)) {
       throw new IllegalArgumentException("Subtypes and labels must be unique.");
     }
-    labelToType.put(label, subtype);
-    return this;
+    List<String> newLabels = new ArrayList<>(labels);
+    newLabels.add(label);
+    List<Type> newSubtypes = new ArrayList<>(subtypes);
+    newSubtypes.add(subtype);
+    return new RuntimeJsonAdapterFactory<>(baseType, labelKey, newLabels, newSubtypes);
   }
 
   @Override
@@ -91,84 +102,90 @@ final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
     if (Types.getRawType(type) != baseType || !annotations.isEmpty()) {
       return null;
     }
-    int size = labelToType.size();
-    Map<String, JsonAdapter<Object>> labelToAdapter = new LinkedHashMap<>(size);
-    Map<Type, String> typeToLabel = new LinkedHashMap<>(size);
-    for (Map.Entry<String, Type> entry : labelToType.entrySet()) {
-      String label = entry.getKey();
-      Type typeValue = entry.getValue();
-      typeToLabel.put(typeValue, label);
-      labelToAdapter.put(label, moshi.adapter(typeValue));
+
+    List<JsonAdapter<Object>> jsonAdapters = new ArrayList<>();
+    for (int i = 0, size = subtypes.size(); i < size; i++) {
+      jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }
+
     JsonAdapter<Object> objectJsonAdapter = moshi.adapter(Object.class);
-    return new RuntimeJsonAdapter(labelKey, labelToAdapter, typeToLabel,
-        objectJsonAdapter).nullSafe();
+    return new RuntimeJsonAdapter(
+        labelKey, labels, subtypes, jsonAdapters, objectJsonAdapter).nullSafe();
   }
 
   static final class RuntimeJsonAdapter extends JsonAdapter<Object> {
     final String labelKey;
-    final Map<String, JsonAdapter<Object>> labelToAdapter;
-    final Map<Type, String> typeToLabel;
+    final List<String> labels;
+    final List<Type> subtypes;
+    final List<JsonAdapter<Object>> jsonAdapters;
     final JsonAdapter<Object> objectJsonAdapter;
 
-    RuntimeJsonAdapter(String labelKey, Map<String, JsonAdapter<Object>> labelToAdapter,
-        Map<Type, String> typeToLabel, JsonAdapter<Object> objectJsonAdapter) {
+    /** Single-element options containing the label's key only. */
+    final JsonReader.Options labelKeyOptions;
+    /** Corresponds to subtypes. */
+    final JsonReader.Options labelOptions;
+
+    RuntimeJsonAdapter(String labelKey, List<String> labels,
+        List<Type> subtypes, List<JsonAdapter<Object>> jsonAdapters,
+        JsonAdapter<Object> objectJsonAdapter) {
       this.labelKey = labelKey;
-      this.labelToAdapter = labelToAdapter;
-      this.typeToLabel = typeToLabel;
+      this.labels = labels;
+      this.subtypes = subtypes;
+      this.jsonAdapters = jsonAdapters;
       this.objectJsonAdapter = objectJsonAdapter;
+
+      this.labelKeyOptions = JsonReader.Options.of(labelKey);
+      this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
     }
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
-      JsonReader.Token peekedToken = reader.peek();
-      if (peekedToken != JsonReader.Token.BEGIN_OBJECT) {
-        throw new JsonDataException("Expected BEGIN_OBJECT but was " + peekedToken
-            + " at path " + reader.getPath());
+      int labelIndex = labelIndex(reader.peekJson());
+      return jsonAdapters.get(labelIndex).fromJson(reader);
+    }
+
+    private int labelIndex(JsonReader reader) throws IOException {
+      reader.beginObject();
+      while (reader.hasNext()) {
+        if (reader.selectName(labelKeyOptions) == -1) {
+          reader.skipName();
+          reader.skipValue();
+          continue;
+        }
+
+        int labelIndex = reader.selectString(labelOptions);
+        if (labelIndex == -1) {
+          throw new JsonDataException("Expected one of "
+              + labels
+              + " for key '"
+              + labelKey
+              + "' but found '"
+              + reader.nextString()
+              + "'. Register a subtype for this label.");
+        }
+        reader.close();
+        return labelIndex;
       }
-      Object jsonValue = reader.readJsonValue();
-      Map<String, Object> jsonObject = (Map<String, Object>) jsonValue;
-      Object label = jsonObject.get(labelKey);
-      if (label == null) {
-        throw new JsonDataException("Missing label for " + labelKey);
-      }
-      if (!(label instanceof String)) {
-        throw new JsonDataException("Label for '"
-            + labelKey
-            + "' must be a string but was "
-            + label
-            + ", a "
-            + label.getClass());
-      }
-      JsonAdapter<Object> adapter = labelToAdapter.get(label);
-      if (adapter == null) {
-        throw new JsonDataException("Expected one of "
-            + labelToAdapter.keySet()
-            + " for key '"
-            + labelKey
-            + "' but found '"
-            + label
-            + "'. Register a subtype for this label.");
-      }
-      return adapter.fromJsonValue(jsonValue);
+
+      throw new JsonDataException("Missing label for " + labelKey);
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
       Class<?> type = value.getClass();
-      String label = typeToLabel.get(type);
-      if (label == null) {
+      int labelIndex = subtypes.indexOf(type);
+      if (labelIndex == -1) {
         throw new IllegalArgumentException("Expected one of "
-            + typeToLabel.keySet()
+            + subtypes
             + " but found "
             + value
             + ", a "
             + value.getClass()
             + ". Register this subtype.");
       }
-      JsonAdapter<Object> adapter = labelToAdapter.get(label);
+      JsonAdapter<Object> adapter = jsonAdapters.get(labelIndex);
       Map<String, Object> jsonValue = (Map<String, Object>) adapter.toJsonValue(value);
 
       Map<String, Object> valueWithLabel = new LinkedHashMap<>(1 + jsonValue.size());
-      valueWithLabel.put(labelKey, label);
+      valueWithLabel.put(labelKey, labels.get(labelIndex));
       valueWithLabel.putAll(jsonValue);
       objectJsonAdapter.toJson(writer, valueWithLabel);
     }
