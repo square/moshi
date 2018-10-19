@@ -26,9 +26,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
 
@@ -182,12 +180,12 @@ final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
             + ". Register this subtype.");
       }
       JsonAdapter<Object> adapter = jsonAdapters.get(labelIndex);
-      Map<String, Object> jsonValue = (Map<String, Object>) adapter.toJsonValue(value);
-
-      Map<String, Object> valueWithLabel = new LinkedHashMap<>(1 + jsonValue.size());
-      valueWithLabel.put(labelKey, labels.get(labelIndex));
-      valueWithLabel.putAll(jsonValue);
-      objectJsonAdapter.toJson(writer, valueWithLabel);
+      writer.beginObject();
+      writer.name(labelKey).value(labels.get(labelIndex));
+      int flattenToken = writer.beginFlatten();
+      adapter.toJson(writer, value);
+      writer.endFlatten(flattenToken);
+      writer.endObject();
     }
 
     @Override public String toString() {
