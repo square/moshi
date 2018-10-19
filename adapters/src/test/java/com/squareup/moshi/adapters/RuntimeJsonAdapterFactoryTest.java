@@ -180,6 +180,24 @@ public final class RuntimeJsonAdapterFactoryTest {
     }
   }
 
+  /**
+   * Longs that do not have an exact double representation are problematic for JSON. It is a bad
+   * idea to use JSON for these values! But Moshi tries to retain long precision where possible.
+   */
+  @Test public void unportableTypes() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithUnportableTypes.class, "unportable"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new MessageWithUnportableTypes(9007199254740993L)))
+        .isEqualTo("{\"type\":\"unportable\",\"long_value\":9007199254740993}");
+    MessageWithUnportableTypes decoded = (MessageWithUnportableTypes) adapter.fromJson(
+        "{\"type\":\"unportable\",\"long_value\":9007199254740993}");
+    assertThat(decoded.long_value).isEqualTo(9007199254740993L);
+  }
+
   interface Message {
   }
 
@@ -224,6 +242,14 @@ public final class RuntimeJsonAdapterFactoryTest {
   static final class EmptyMessage implements Message {
     @Override public String toString() {
       return "EmptyMessage";
+    }
+  }
+
+  static final class MessageWithUnportableTypes implements Message {
+    final long long_value;
+
+    MessageWithUnportableTypes(long long_value) {
+      this.long_value = long_value;
     }
   }
 }
