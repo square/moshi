@@ -103,7 +103,7 @@ final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
       return null;
     }
 
-    List<JsonAdapter<Object>> jsonAdapters = new ArrayList<>();
+    List<JsonAdapter<Object>> jsonAdapters = new ArrayList<>(subtypes.size());
     for (int i = 0, size = subtypes.size(); i < size; i++) {
       jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }

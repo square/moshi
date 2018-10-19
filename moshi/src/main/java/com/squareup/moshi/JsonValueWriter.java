@@ -52,6 +52,11 @@ final class JsonValueWriter extends JsonWriter {
       throw new IllegalStateException(
           "Array cannot be used as a map key in JSON at path " + getPath());
     }
+    if (stackSize == flattenStackSize && scopes[stackSize - 1] == EMPTY_ARRAY) {
+      // Cancel this open. Invert the flatten stack size until this is closed.
+      flattenStackSize = ~flattenStackSize;
+      return this;
+    }
     checkStack();
     List<Object> list = new ArrayList<>();
     add(list);
@@ -65,6 +70,11 @@ final class JsonValueWriter extends JsonWriter {
     if (peekScope() != EMPTY_ARRAY) {
       throw new IllegalStateException("Nesting problem.");
     }
+    if (stackSize == ~flattenStackSize) {
+      // Cancel this close. Restore the flattenStackSize so we're ready to flatten again!
+      flattenStackSize = ~flattenStackSize;
+      return this;
+    }
     stackSize--;
     stack[stackSize] = null;
     pathIndices[stackSize - 1]++;
@@ -75,6 +85,11 @@ final class JsonValueWriter extends JsonWriter {
     if (promoteValueToName) {
       throw new IllegalStateException(
           "Object cannot be used as a map key in JSON at path " + getPath());
+    }
+    if (stackSize == flattenStackSize && scopes[stackSize - 1] == EMPTY_OBJECT) {
+      // Cancel this open. Invert the flatten stack size until this is closed.
+      flattenStackSize = ~flattenStackSize;
+      return this;
     }
     checkStack();
     Map<String, Object> map = new LinkedHashTreeMap<>();
@@ -90,6 +105,11 @@ final class JsonValueWriter extends JsonWriter {
     }
     if (deferredName != null) {
       throw new IllegalStateException("Dangling name: " + deferredName);
+    }
+    if (stackSize == ~flattenStackSize) {
+      // Cancel this close. Restore the flattenStackSize so we're ready to flatten again!
+      flattenStackSize = ~flattenStackSize;
+      return this;
     }
     promoteValueToName = false;
     stackSize--;

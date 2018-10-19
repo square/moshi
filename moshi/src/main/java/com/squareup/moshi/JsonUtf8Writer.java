@@ -83,7 +83,7 @@ final class JsonUtf8Writer extends JsonWriter {
           "Array cannot be used as a map key in JSON at path " + getPath());
     }
     writeDeferredName();
-    return open(EMPTY_ARRAY, "[");
+    return open(EMPTY_ARRAY, NONEMPTY_ARRAY, "[");
   }
 
   @Override public JsonWriter endArray() throws IOException {
@@ -96,7 +96,7 @@ final class JsonUtf8Writer extends JsonWriter {
           "Object cannot be used as a map key in JSON at path " + getPath());
     }
     writeDeferredName();
-    return open(EMPTY_OBJECT, "{");
+    return open(EMPTY_OBJECT, NONEMPTY_OBJECT, "{");
   }
 
   @Override public JsonWriter endObject() throws IOException {
@@ -108,7 +108,13 @@ final class JsonUtf8Writer extends JsonWriter {
    * Enters a new scope by appending any necessary whitespace and the given
    * bracket.
    */
-  private JsonWriter open(int empty, String openBracket) throws IOException {
+  private JsonWriter open(int empty, int nonempty, String openBracket) throws IOException {
+    if (stackSize == flattenStackSize
+        && (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)) {
+      // Cancel this open. Invert the flatten stack size until this is closed.
+      flattenStackSize = ~flattenStackSize;
+      return this;
+    }
     beforeValue();
     checkStack();
     pushScope(empty);
@@ -128,6 +134,11 @@ final class JsonUtf8Writer extends JsonWriter {
     }
     if (deferredName != null) {
       throw new IllegalStateException("Dangling name: " + deferredName);
+    }
+    if (stackSize == ~flattenStackSize) {
+      // Cancel this close. Restore the flattenStackSize so we're ready to flatten again!
+      flattenStackSize = ~flattenStackSize;
+      return this;
     }
 
     stackSize--;
