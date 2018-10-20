@@ -45,8 +45,8 @@ import javax.annotation.CheckReturnValue;
  *       .build();
  * }</pre>
  */
-// TODO(jwilson): make this class public in Moshi 1.8.
-final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
+
+public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
   final String labelKey;
   final List<String> labels;
