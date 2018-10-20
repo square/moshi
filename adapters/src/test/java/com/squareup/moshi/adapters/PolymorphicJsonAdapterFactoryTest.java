@@ -29,10 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 @SuppressWarnings("CheckReturnValue")
-public final class RuntimeJsonAdapterFactoryTest {
+public final class PolymorphicJsonAdapterFactoryTest {
   @Test public void fromJson() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -46,7 +46,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void toJson() {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -60,7 +60,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void unregisteredLabelValue() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -80,7 +80,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -90,17 +90,17 @@ public final class RuntimeJsonAdapterFactoryTest {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Expected one of [class"
-          + " com.squareup.moshi.adapters.RuntimeJsonAdapterFactoryTest$Success, class"
-          + " com.squareup.moshi.adapters.RuntimeJsonAdapterFactoryTest$Error] but found"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
           + " EmptyMessage, a class"
-          + " com.squareup.moshi.adapters.RuntimeJsonAdapterFactoryTest$EmptyMessage. Register"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
           + " this subtype.");
     }
   }
 
   @Test public void nonStringLabelValue() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -116,7 +116,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void nonObjectDoesNotConsume() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -134,8 +134,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   }
 
   @Test public void uniqueSubtypes() {
-    RuntimeJsonAdapterFactory<Message> factory =
-        RuntimeJsonAdapterFactory.of(Message.class, "type")
+    PolymorphicJsonAdapterFactory<Message> factory =
+        PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success");
     try {
       factory.withSubtype(Success.class, "data");
@@ -146,8 +146,8 @@ public final class RuntimeJsonAdapterFactoryTest {
   }
 
   @Test public void uniqueLabels() {
-    RuntimeJsonAdapterFactory<Message> factory =
-        RuntimeJsonAdapterFactory.of(Message.class, "type")
+    PolymorphicJsonAdapterFactory<Message> factory =
+        PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "data");
     try {
       factory.withSubtype(Error.class, "data");
@@ -159,7 +159,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void nullSafe() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error"))
         .build();
@@ -172,7 +172,7 @@ public final class RuntimeJsonAdapterFactoryTest {
 
   @Test public void disallowObjectBaseType() {
     try {
-      RuntimeJsonAdapterFactory.of(Object.class, "type");
+      PolymorphicJsonAdapterFactory.of(Object.class, "type");
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage(
@@ -186,7 +186,7 @@ public final class RuntimeJsonAdapterFactoryTest {
    */
   @Test public void unportableTypes() throws IOException {
     Moshi moshi = new Moshi.Builder()
-        .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
             .withSubtype(MessageWithUnportableTypes.class, "unportable"))
         .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);

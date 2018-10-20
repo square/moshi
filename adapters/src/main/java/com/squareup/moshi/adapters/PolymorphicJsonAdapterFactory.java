@@ -31,28 +31,84 @@ import java.util.Set;
 import javax.annotation.CheckReturnValue;
 
 /**
- * A JsonAdapter factory for polymorphic types. This is useful when the type is not known before
- * decoding the JSON. This factory's adapters expect JSON in the format of a JSON object with a
- * key whose value is a label that determines the type to which to map the JSON object. To use, add
- * this factory to your {@link Moshi.Builder}:
+ * A JsonAdapter factory for objects that include type information in the JSON. When decoding JSON
+ * Moshi uses this type information to determine which class to decode to. When encoding Moshi uses
+ * the object’s class to determine what type information to include.
+ *
+ * <p>Suppose we have an interface, its implementations, and a class that uses them:
+ *
+ * <pre> {@code
+ *
+ *   interface HandOfCards {
+ *   }
+ *
+ *   class BlackjackHand extends HandOfCards {
+ *     Card hidden_card;
+ *     List<Card> visible_cards;
+ *   }
+ *
+ *   class HoldemHand extends HandOfCards {
+ *     Set<Card> hidden_cards;
+ *   }
+ *
+ *   class Player {
+ *     String name;
+ *     HandOfCards hand;
+ *   }
+ * }</pre>
+ *
+ * <p>We want to decode the following JSON into the player model above:
+ *
+ * <pre> {@code
+ *
+ *   {
+ *     "name": "Jesse",
+ *     "hand": {
+ *       "hand_type": "blackjack",
+ *       "hidden_card": "9D",
+ *       "visible_cards": ["8H", "4C"]
+ *     }
+ *   }
+ * }</pre>
+ *
+ * <p>Left unconfigured, Moshi would incorrectly attempt to decode the hand object to the abstract
+ * {@code HandOfCards} interface. We configure it to use the appropriate subtype instead:
  *
  * <pre> {@code
  *
  *   Moshi moshi = new Moshi.Builder()
- *       .add(RuntimeJsonAdapterFactory.of(Message.class, "type")
- *           .withSubtype(Success.class, "success")
- *           .withSubtype(Error.class, "error"))
+ *       .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
+ *           .withSubtype(BlackjackHand.class, "blackjack")
+ *           .withSubtype(HoldemHand.class, "holdem"))
  *       .build();
  * }</pre>
+ *
+ * <p>This class imposes strict requirements on its use:
+ *
+ * <ul>
+ *   <li>Base types may be classes or interfaces. You may not use {@code Object.class} as a base
+ *       type.
+ *   <li>Subtypes must encode as JSON objects.
+ *   <li>Type information must be in the encoded object. Each message must have a type label like
+ *       {@code hand_type} whose value is a string like {@code blackjack} that identifies which type
+ *       to use.
+ *   <li>Each type identifier must be unique.
+ * </ul>
+ *
+ * <p>For best performance type information should be the first field in the object. Otherwise Moshi
+ * must reprocess the JSON stream once it knows the object's type.
+ *
+ * <p>If an unknown subtype is encountered when decoding, this will throw a {@link
+ * JsonDataException}. If an unknown type is encountered when encoding, this will throw an {@link
+ * IllegalArgumentException}.
  */
-
-public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
+public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
   final String labelKey;
   final List<String> labels;
   final List<Type> subtypes;
 
-  RuntimeJsonAdapterFactory(
+  PolymorphicJsonAdapterFactory(
       Class<T> baseType, String labelKey, List<String> labels, List<Type> subtypes) {
     this.baseType = baseType;
     this.labelKey = labelKey;
@@ -66,14 +122,14 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
    *     JSON object.
    */
   @CheckReturnValue
-  public static <T> RuntimeJsonAdapterFactory<T> of(Class<T> baseType, String labelKey) {
+  public static <T> PolymorphicJsonAdapterFactory<T> of(Class<T> baseType, String labelKey) {
     if (baseType == null) throw new NullPointerException("baseType == null");
     if (labelKey == null) throw new NullPointerException("labelKey == null");
     if (baseType == Object.class) {
       throw new IllegalArgumentException(
           "The base type must not be Object. Consider using a marker interface.");
     }
-    return new RuntimeJsonAdapterFactory<>(
+    return new PolymorphicJsonAdapterFactory<>(
         baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList());
   }
 
@@ -82,7 +138,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
    * during encoding an {@linkplain IllegalArgumentException} will be thrown. When an unknown label
    * is found during decoding a {@linkplain JsonDataException} will be thrown.
    */
-  public RuntimeJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
+  public PolymorphicJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
     if (subtype == null) throw new NullPointerException("subtype == null");
     if (label == null) throw new NullPointerException("label == null");
     if (labels.contains(label) || subtypes.contains(subtype)) {
@@ -92,7 +148,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
     newLabels.add(label);
     List<Type> newSubtypes = new ArrayList<>(subtypes);
     newSubtypes.add(subtype);
-    return new RuntimeJsonAdapterFactory<>(baseType, labelKey, newLabels, newSubtypes);
+    return new PolymorphicJsonAdapterFactory<>(baseType, labelKey, newLabels, newSubtypes);
   }
 
   @Override
@@ -107,11 +163,11 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
     }
 
     JsonAdapter<Object> objectJsonAdapter = moshi.adapter(Object.class);
-    return new RuntimeJsonAdapter(
+    return new PolymorphicJsonAdapter(
         labelKey, labels, subtypes, jsonAdapters, objectJsonAdapter).nullSafe();
   }
 
-  static final class RuntimeJsonAdapter extends JsonAdapter<Object> {
+  static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {
     final String labelKey;
     final List<String> labels;
     final List<Type> subtypes;
@@ -123,7 +179,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
     /** Corresponds to subtypes. */
     final JsonReader.Options labelOptions;
 
-    RuntimeJsonAdapter(String labelKey, List<String> labels,
+    PolymorphicJsonAdapter(String labelKey, List<String> labels,
         List<Type> subtypes, List<JsonAdapter<Object>> jsonAdapters,
         JsonAdapter<Object> objectJsonAdapter) {
       this.labelKey = labelKey;
@@ -189,7 +245,7 @@ public final class RuntimeJsonAdapterFactory<T> implements JsonAdapter.Factory {
     }
 
     @Override public String toString() {
-      return "RuntimeJsonAdapter(" + labelKey + ")";
+      return "PolymorphicJsonAdapter(" + labelKey + ")";
     }
   }
 }
