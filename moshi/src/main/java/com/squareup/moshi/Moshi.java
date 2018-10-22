@@ -19,9 +19,12 @@ import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,7 +51,7 @@ public final class Moshi {
   }
 
   private final List<JsonAdapter.Factory> factories;
-  private final ThreadLocal<List<DeferredAdapter<?>>> reentrantCalls = new ThreadLocal<>();
+  private final ThreadLocal<LookupChain> lookupChainThreadLocal = new ThreadLocal<>();
   private final Map<Object, JsonAdapter<?>> adapterCache = new LinkedHashMap<>();
 
   Moshi(Builder builder) {
@@ -118,52 +121,35 @@ public final class Moshi {
       if (result != null) return (JsonAdapter<T>) result;
     }
 
-    // Short-circuit if this is a reentrant call.
-    List<DeferredAdapter<?>> deferredAdapters = reentrantCalls.get();
-    if (deferredAdapters != null) {
-      for (int i = 0, size = deferredAdapters.size(); i < size; i++) {
-        DeferredAdapter<?> deferredAdapter = deferredAdapters.get(i);
-        if (deferredAdapter.cacheKey.equals(cacheKey)) {
-          return (JsonAdapter<T>) deferredAdapter;
-        }
-      }
-    } else {
-      deferredAdapters = new ArrayList<>();
-      reentrantCalls.set(deferredAdapters);
+    LookupChain lookupChain = lookupChainThreadLocal.get();
+    if (lookupChain == null) {
+      lookupChain = new LookupChain();
+      lookupChainThreadLocal.set(lookupChain);
     }
 
-    // Prepare for re-entrant calls, then ask each factory to create a type adapter.
-    DeferredAdapter<T> deferredAdapter = new DeferredAdapter<>(type, fieldName, cacheKey);
-
-    deferredAdapters.add(deferredAdapter);
-    int lastIndex = deferredAdapters.size() - 1;
+    boolean success = false;
+    JsonAdapter<T> adapterFromCall = lookupChain.push(type, fieldName, cacheKey);
     try {
+      if (adapterFromCall != null) return adapterFromCall;
+
+      // Ask each factory to create the JSON adapter.
       for (int i = 0, size = factories.size(); i < size; i++) {
         JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
-        if (result != null) {
-          deferredAdapter.ready(result);
-          synchronized (adapterCache) {
-            adapterCache.put(cacheKey, result);
-          }
-          // Remove the type or field name only when we succeed in creating the adapter,
-          // so we have the full stack  at the top level.
-          deferredAdapters.remove(lastIndex);
-          return result;
-        }
-      }
-    } catch (IllegalArgumentException e) {
-      if (lastIndex == 0) { // Rewrite the exception at the top level.
-        e = errorWithFields(deferredAdapters, e);
-      }
-      throw e;
-    } finally {
-      if (lastIndex == 0) {
-        reentrantCalls.remove();
-      }
-    }
+        if (result == null) continue;
 
-    throw new IllegalArgumentException(
-        "No JsonAdapter for " + typeAnnotatedWithAnnotations(type, annotations));
+        // Success! Notify the LookupChain so it is cached and can be used by re-entrant calls.
+        lookupChain.adapterFound(result);
+        success = true;
+        return result;
+      }
+
+      throw new IllegalArgumentException(
+          "No JsonAdapter for " + typeAnnotatedWithAnnotations(type, annotations));
+    } catch (IllegalArgumentException e) {
+      throw lookupChain.exceptionWithLookupStack(e);
+    } finally {
+      lookupChain.pop(success);
+    }
   }
 
   @CheckReturnValue
@@ -198,27 +184,6 @@ public final class Moshi {
   private Object cacheKey(Type type, Set<? extends Annotation> annotations) {
     if (annotations.isEmpty()) return type;
     return Arrays.asList(type, annotations);
-  }
-
-  static IllegalArgumentException errorWithFields(List<DeferredAdapter<?>> typesAndFieldNames,
-      IllegalArgumentException e) {
-    int size = typesAndFieldNames.size();
-    if (size == 1 && typesAndFieldNames.get(0).fieldName == null) {
-      return e;
-    }
-    StringBuilder errorMessageBuilder = new StringBuilder(e.getMessage());
-    for (int i = size - 1; i >= 0; i--) {
-      DeferredAdapter<?> deferredAdapter = typesAndFieldNames.get(i);
-      errorMessageBuilder
-          .append("\nfor ")
-          .append(deferredAdapter.type);
-      if (deferredAdapter.fieldName != null) {
-        errorMessageBuilder
-            .append(' ')
-            .append(deferredAdapter.fieldName);
-      }
-    }
-    return new IllegalArgumentException(errorMessageBuilder.toString(), e);
   }
 
   public static final class Builder {
@@ -283,38 +248,132 @@ public final class Moshi {
   }
 
   /**
-   * Sometimes a type adapter factory depends on its own product; either directly or indirectly.
-   * To make this work, we offer this type adapter stub while the final adapter is being computed.
-   * When it is ready, we wire this to delegate to that finished adapter.
+   * A possibly-reentrant chain of lookups a JSON adapter.
    *
-   * <p>Typically this is necessary in self-referential object models, such as an {@code Employee}
-   * class that has a {@code List<Employee>} field for an organization's management hierarchy.
+   * <p>We keep track of the current stack of lookups: we may start by looking up the JSON adapter
+   * for Employee, re-enter looking for the JSON adapter of HomeAddress, and re-enter again looking
+   * up the JSON adapter of PostalCode. If any of these lookups fail we can provide a stack trace
+   * with all of the lookups.
+   *
+   * <p>Sometimes a JSON adapter factory depends on its own product; either directly or indirectly.
+   * To make this work, we offer a JSON adapter stub while the final adapter is being computed.
+   * When it is ready, we wire the stub to that finished adapter. This is necessary in
+   * self-referential object models, such as an {@code Employee} class that has a {@code
+   * List<Employee>} field for an organization's management hierarchy.
+   *
+   * <p>This class defers putting any JSON adapters in the cache until the topmost JSON adapter has
+   * successfully been computed. That way we don't pollute the cache with incomplete stubs, or
+   * adapters that may transitively depend on incomplete stubs.
    */
-  private static final class DeferredAdapter<T> extends JsonAdapter<T> {
+  final class LookupChain {
+    final List<Lookup<?>> callLookups = new ArrayList<>();
+    final Deque<Lookup<?>> stack = new ArrayDeque<>();
+    boolean exceptionAnnotated;
+
+    /**
+     * Returns a JSON adapter that was already created for this call, or null if this is the first
+     * time in this call that the cache key has been requested in this call. This may return a
+     * lookup that isn't yet ready if this lookup is reentrant.
+     */
+    <T> JsonAdapter<T> push(Type type, @Nullable String fieldName, Object cacheKey) {
+      // Try to find a lookup with the same key for the same call.
+      for (int i = 0, size = callLookups.size(); i < size; i++) {
+        Lookup<?> lookup = callLookups.get(i);
+        if (lookup.cacheKey.equals(cacheKey)) {
+          Lookup<T> hit = (Lookup<T>) lookup;
+          stack.add(hit);
+          return hit.adapter != null ? hit.adapter : hit;
+        }
+      }
+
+      // We might need to know about this cache key later in this call. Prepare for that.
+      Lookup<Object> lookup = new Lookup<>(type, fieldName, cacheKey);
+      callLookups.add(lookup);
+      stack.add(lookup);
+      return null;
+    }
+
+    /** Sets the adapter result of the current lookup. */
+    <T> void adapterFound(JsonAdapter<T> result) {
+      Lookup<T> currentLookup = (Lookup<T>) stack.getLast();
+      currentLookup.adapter = result;
+    }
+
+    /**
+     * Completes the current lookup by removing a stack frame.
+     *
+     * @param success true if the adapter cache should be populated if this is the topmost lookup.
+     */
+    void pop(boolean success) {
+      stack.removeLast();
+      if (!stack.isEmpty()) return;
+
+      lookupChainThreadLocal.remove();
+
+      if (success) {
+        synchronized (adapterCache) {
+          for (int i = 0, size = callLookups.size(); i < size; i++) {
+            Lookup<?> lookup = callLookups.get(i);
+            JsonAdapter<?> replaced = adapterCache.put(lookup.cacheKey, lookup.adapter);
+            if (replaced != null) {
+              ((Lookup<Object>) lookup).adapter = (JsonAdapter<Object>) replaced;
+              adapterCache.put(lookup.cacheKey, replaced);
+            }
+          }
+        }
+      }
+    }
+
+    IllegalArgumentException exceptionWithLookupStack(IllegalArgumentException e) {
+      // Don't add the lookup stack to more than one exception; the deepest is sufficient.
+      if (exceptionAnnotated) return e;
+      exceptionAnnotated = true;
+
+      int size = stack.size();
+      if (size == 1 && stack.getFirst().fieldName == null) return e;
+
+      StringBuilder errorMessageBuilder = new StringBuilder(e.getMessage());
+      for (Iterator<Lookup<?>> i = stack.descendingIterator(); i.hasNext(); ) {
+        Lookup<?> lookup = i.next();
+        errorMessageBuilder
+            .append("\nfor ")
+            .append(lookup.type);
+        if (lookup.fieldName != null) {
+          errorMessageBuilder
+              .append(' ')
+              .append(lookup.fieldName);
+        }
+      }
+
+      return new IllegalArgumentException(errorMessageBuilder.toString(), e);
+    }
+  }
+
+  /** This class implements {@code JsonAdapter} so it can be used as a stub for re-entrant calls. */
+  static final class Lookup<T> extends JsonAdapter<T> {
     final Type type;
     final @Nullable String fieldName;
-    @Nullable Object cacheKey;
-    private @Nullable JsonAdapter<T> delegate;
+    final Object cacheKey;
+    @Nullable JsonAdapter<T> adapter;
 
-    DeferredAdapter(Type type, @Nullable String fieldName, Object cacheKey) {
+    Lookup(Type type, @Nullable String fieldName, Object cacheKey) {
       this.type = type;
       this.fieldName = fieldName;
       this.cacheKey = cacheKey;
     }
 
-    void ready(JsonAdapter<T> delegate) {
-      this.delegate = delegate;
-      this.cacheKey = null;
-    }
-
     @Override public T fromJson(JsonReader reader) throws IOException {
-      if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
-      return delegate.fromJson(reader);
+      if (adapter == null) throw new IllegalStateException("JsonAdapter isn't ready");
+      return adapter.fromJson(reader);
     }
 
     @Override public void toJson(JsonWriter writer, T value) throws IOException {
-      if (delegate == null) throw new IllegalStateException("Type adapter isn't ready");
-      delegate.toJson(writer, value);
+      if (adapter == null) throw new IllegalStateException("JsonAdapter isn't ready");
+      adapter.toJson(writer, value);
+    }
+
+    @Override public String toString() {
+      return adapter != null ? adapter.toString() : super.toString();
     }
   }
 }
