@@ -505,7 +505,10 @@ The reflection adapter requires the following additional dependency:
 ```
 
 ```groovy
+// Groovy DSL
 implementation 'com.squareup.moshi:moshi-kotlin:1.7.0'
+// Kotlin DSL
+implementation("com.squareup.moshi:moshi-kotlin:1.7.0")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -541,7 +544,10 @@ add the following to your build to enable the annotation processor:
 ```
 
 ```groovy
+// Groovy DSL
 kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.7.0'
+// Kotlin DSL
+kapt("com.squareup.moshi:moshi-kotlin-codegen:1.7.0")
 ```
 
 You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
@@ -572,7 +578,10 @@ Download [the latest JAR][dl] or depend via Maven:
 ```
 or Gradle:
 ```groovy
+// Groovy DSL
 implementation 'com.squareup.moshi:moshi:1.7.0'
+// Kotlin DSL
+implementation("com.squareup.moshi:moshi:1.7.0")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
