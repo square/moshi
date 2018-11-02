@@ -51,9 +51,9 @@ abstract class TypeRenderer {
           || typeName == INT.asNullable()
           || typeName == LONG.asNullable()
           || typeName == SHORT.asNullable()) {
-        return CodeBlock.of("%T::class.javaObjectType", typeName.asNonNullable())
+        return CodeBlock.of("%T::class.javaObjectType", typeName.asNonNull())
       }
-      return render(typeName.asNonNullable())
+      return render(typeName.asNonNull())
     }
 
     return when (typeName) {

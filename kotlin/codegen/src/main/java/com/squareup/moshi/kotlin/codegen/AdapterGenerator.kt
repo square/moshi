@@ -79,8 +79,9 @@ internal class AdapterGenerator(
   private val optionsProperty = PropertySpec.builder(
       nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
       KModifier.PRIVATE)
-      .initializer("%T.of(${propertyList.joinToString(", ") { "\"${it.jsonName}\"" }})",
-          JsonReader.Options::class.asTypeName())
+      .initializer("%T.of(${propertyList.joinToString(", ") {
+        CodeBlock.of("%S", it.jsonName).toString()
+      }})", JsonReader.Options::class.asTypeName())
       .build()
 
   fun generateFile(generatedOption: TypeElement?): FileSpec {
@@ -296,7 +297,7 @@ internal class AdapterGenerator(
 
     result.addStatement("%N.beginObject()", writerParam)
     propertyList.forEach { property ->
-      result.addStatement("%N.name(\"${property.jsonName}\")", writerParam)
+      result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%L)",
           nameAllocator.get(property.delegateKey), writerParam, valueParam, property.name)
     }
