@@ -94,7 +94,7 @@ final class JsonUtf8Reader extends JsonReader {
       throw new NullPointerException("source == null");
     }
     this.source = source;
-    this.buffer = source.buffer();
+    this.buffer = source.getBuffer();
     pushScope(JsonScope.EMPTY_DOCUMENT);
   }
 
