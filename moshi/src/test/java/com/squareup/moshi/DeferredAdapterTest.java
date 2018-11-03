@@ -35,10 +35,13 @@ public final class DeferredAdapterTest {
    * the cycle work. It's important that any adapters that depend on this deferred adapter don't
    * leak out until it's ready.
    *
-   * <p>This test sets up a circular dependency BlueNode to GreenNode to BlueNode and then tries to
-   * use it before the BlueNode JSON adapter is built, but after the GreenNode adapter is built. It
-   * creates a similar cycle for BlueNode to RedNode to BlueNode so the order adapters are retrieved
-   * is insignificant.
+   * <p>This test sets up a circular dependency [BlueNode -> GreenNode -> BlueNode] and then tries
+   * to use a GreenNode JSON adapter before the BlueNode JSON adapter is built. It creates a
+   * similar cycle [BlueNode -> RedNode -> BlueNode] so the order adapters are retrieved is
+   * insignificant.
+   *
+   * <p>This used to trigger a crash because we'd incorrectly put the GreenNode JSON adapter in the
+   * cache even though it depended upon an incomplete BlueNode JSON adapter.
    */
   @Test public void concurrentSafe() {
     final List<Throwable> failures = new ArrayList<>();
