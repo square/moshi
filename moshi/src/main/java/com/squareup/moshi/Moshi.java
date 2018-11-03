@@ -248,7 +248,7 @@ public final class Moshi {
   }
 
   /**
-   * A possibly-reentrant chain of lookups a JSON adapter.
+   * A possibly-reentrant chain of lookups for JSON adapters.
    *
    * <p>We keep track of the current stack of lookups: we may start by looking up the JSON adapter
    * for Employee, re-enter looking for the JSON adapter of HomeAddress, and re-enter again looking
