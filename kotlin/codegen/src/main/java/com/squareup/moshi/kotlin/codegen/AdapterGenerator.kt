@@ -258,6 +258,8 @@ internal class AdapterGenerator(
         if (property.differentiateAbsentFromNull) {
           result.addCode("%2N = if (%3N) %4N else %1N.%2N",
               resultName, property.name, property.localIsPresentName, property.localName)
+        } else if (property.isRequired) {
+          result.addCode("%1N = %2N", property.name, property.localName)
         } else {
           result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
         }
