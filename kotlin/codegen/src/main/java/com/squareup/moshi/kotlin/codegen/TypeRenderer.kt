@@ -30,7 +30,6 @@ import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.moshi.Types
 
 /**
@@ -43,17 +42,7 @@ abstract class TypeRenderer {
 
   fun render(typeName: TypeName): CodeBlock {
     if (typeName.nullable) {
-      if (typeName == BOOLEAN.asNullable()
-          || typeName == BYTE.asNullable()
-          || typeName == CHAR.asNullable()
-          || typeName == DOUBLE.asNullable()
-          || typeName == FLOAT.asNullable()
-          || typeName == INT.asNullable()
-          || typeName == LONG.asNullable()
-          || typeName == SHORT.asNullable()) {
-        return CodeBlock.of("%T::class.javaObjectType", typeName.asNonNull())
-      }
-      return render(typeName.asNonNull())
+      return renderObjectType(typeName.asNonNull())
     }
 
     return when (typeName) {
@@ -64,7 +53,7 @@ abstract class TypeRenderer {
         if (typeName.rawType == ARRAY) {
           CodeBlock.of("%T.arrayOf(%L)",
               Types::class,
-              render(typeName.typeArguments[0].objectType()))
+              renderObjectType(typeName.typeArguments[0]))
         } else {
           val builder = CodeBlock.builder().apply {
             add("%T.", Types::class)
@@ -74,9 +63,9 @@ abstract class TypeRenderer {
             } else {
               add("newParameterizedType(")
             }
-            add("%T::class.java", typeName.rawType.objectType())
+            add("%T::class.java", typeName.rawType)
             for (typeArgument in typeName.typeArguments) {
-              add(", %L", render(typeArgument.objectType()))
+              add(", %L", renderObjectType(typeArgument))
             }
             add(")")
           }
@@ -108,17 +97,18 @@ abstract class TypeRenderer {
     }
   }
 
-  private fun TypeName.objectType(): TypeName {
+  private fun renderObjectType(typeName: TypeName): CodeBlock {
+    return if (typeName.isPrimitive()) {
+      CodeBlock.of("%T::class.javaObjectType", typeName)
+    } else {
+      render(typeName)
+    }
+  }
+
+  private fun TypeName.isPrimitive(): Boolean {
     return when (this) {
-      BOOLEAN -> Boolean::class.javaObjectType.asTypeName()
-      BYTE -> Byte::class.javaObjectType.asTypeName()
-      SHORT -> Short::class.javaObjectType.asTypeName()
-      INT -> Integer::class.javaObjectType.asTypeName()
-      LONG -> Long::class.javaObjectType.asTypeName()
-      CHAR -> Character::class.javaObjectType.asTypeName()
-      FLOAT -> Float::class.javaObjectType.asTypeName()
-      DOUBLE -> Double::class.javaObjectType.asTypeName()
-      else -> this
+      BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE -> true
+      else -> false
     }
   }
 }

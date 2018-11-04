@@ -1112,6 +1112,20 @@ class GeneratedAdaptersTest {
     val decoded = adapter.fromJson("""{"a":null}""")!!
     assertThat(decoded.a).isEqualTo(null)
   }
+
+  @JsonClass(generateAdapter = true)
+  data class HasCollectionOfPrimitives(val listOfInts: List<Int>)
+
+  @Test fun hasCollectionOfPrimitives() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(HasCollectionOfPrimitives::class.java)
+
+    val encoded = HasCollectionOfPrimitives(listOf(1, 2, -3))
+    assertThat(adapter.toJson(encoded)).isEqualTo("""{"listOfInts":[1,2,-3]}""")
+
+    val decoded = adapter.fromJson("""{"listOfInts":[4,-5,6]}""")!!
+    assertThat(decoded).isEqualTo(HasCollectionOfPrimitives(listOf(4, -5, 6)))
+  }
 }
 
 // Has to be outside to avoid Types seeing an owning class
