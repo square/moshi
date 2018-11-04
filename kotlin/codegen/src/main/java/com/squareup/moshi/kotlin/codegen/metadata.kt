@@ -108,15 +108,7 @@ internal fun Type.asTypeName(
               nullableProjection?.let { projection ->
                 when (projection) {
                   Type.Argument.Projection.IN -> WildcardTypeName.supertypeOf(argumentTypeName)
-                  Type.Argument.Projection.OUT -> {
-                    if (argumentTypeName == ANY) {
-                      // This becomes a *, which we actually don't want here.
-                      // List<Any> works with List<*>, but List<*> doesn't work with List<Any>
-                      argumentTypeName
-                    } else {
-                      WildcardTypeName.subtypeOf(argumentTypeName)
-                    }
-                  }
+                  Type.Argument.Projection.OUT -> WildcardTypeName.subtypeOf(argumentTypeName)
                   Type.Argument.Projection.STAR -> WildcardTypeName.STAR
                   Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
                 }
