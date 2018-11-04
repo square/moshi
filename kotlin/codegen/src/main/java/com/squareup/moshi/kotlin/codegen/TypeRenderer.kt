@@ -88,7 +88,7 @@ abstract class TypeRenderer {
           else -> throw IllegalArgumentException(
               "Unrepresentable wildcard type. Cannot have more than one bound: $typeName")
         }
-        CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target)
+        CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target.asNonNull())
       }
 
       is TypeVariableName -> renderTypeVariable(typeName)
