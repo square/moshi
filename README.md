@@ -504,10 +504,7 @@ The reflection adapter requires the following additional dependency:
 </dependency>
 ```
 
-```groovy
-// Groovy DSL
-implementation 'com.squareup.moshi:moshi-kotlin:1.7.0'
-// Kotlin DSL
+```kotlin
 implementation("com.squareup.moshi:moshi-kotlin:1.7.0")
 ```
 
@@ -543,10 +540,7 @@ add the following to your build to enable the annotation processor:
 </dependency>
 ```
 
-```groovy
-// Groovy DSL
-kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.7.0'
-// Kotlin DSL
+```kotlin
 kapt("com.squareup.moshi:moshi-kotlin-codegen:1.7.0")
 ```
 
@@ -577,10 +571,7 @@ Download [the latest JAR][dl] or depend via Maven:
 </dependency>
 ```
 or Gradle:
-```groovy
-// Groovy DSL
-implementation 'com.squareup.moshi:moshi:1.7.0'
-// Kotlin DSL
+```kotlin
 implementation("com.squareup.moshi:moshi:1.7.0")
 ```
 
