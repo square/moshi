@@ -445,7 +445,7 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * <p>This method returns an opaque token. Callers must match all calls to this method with a call
    * to {@link #endFlatten} with the matching token.
    */
-  public final int beginFlatten() {
+  @CheckReturnValue public final int beginFlatten() {
     int context = peekScope();
     if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT
         && context != NONEMPTY_ARRAY && context != EMPTY_ARRAY) {
