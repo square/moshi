@@ -15,10 +15,14 @@
  */
 package com.squareup.moshi.internal;
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonClass;
 import com.squareup.moshi.JsonQualifier;
+import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.InvocationTargetException;
@@ -444,5 +448,49 @@ public final class Util {
   public static String typeAnnotatedWithAnnotations(Type type,
       Set<? extends Annotation> annotations) {
     return type + (annotations.isEmpty() ? " (with no annotations)" : " annotated " + annotations);
+  }
+
+  /**
+   * Loads the generated JsonAdapter for classes annotated {@link JsonClass}. This works because it
+   * uses the same naming conventions as {@code JsonClassCodeGenProcessor}.
+   */
+  public static @Nullable JsonAdapter<?> generatedAdapter(Moshi moshi, Type type,
+      Class<?> rawType) {
+    JsonClass jsonClass = rawType.getAnnotation(JsonClass.class);
+    if (jsonClass == null || !jsonClass.generateAdapter()) {
+      return null;
+    }
+    String adapterClassName = rawType.getName().replace("$", "_") + "JsonAdapter";
+    try {
+      @SuppressWarnings("unchecked") // We generate types to match.
+          Class<? extends JsonAdapter<?>> adapterClass = (Class<? extends JsonAdapter<?>>)
+          Class.forName(adapterClassName, true, rawType.getClassLoader());
+      if (type instanceof ParameterizedType) {
+        Constructor<? extends JsonAdapter<?>> constructor
+            = adapterClass.getDeclaredConstructor(Moshi.class, Type[].class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(moshi, ((ParameterizedType) type).getActualTypeArguments())
+            .nullSafe();
+      } else {
+        Constructor<? extends JsonAdapter<?>> constructor
+            = adapterClass.getDeclaredConstructor(Moshi.class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(moshi).nullSafe();
+      }
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(
+          "Failed to find the generated JsonAdapter class for " + rawType, e);
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(
+          "Failed to find the generated JsonAdapter constructor for " + rawType, e);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(
+          "Failed to access the generated JsonAdapter for " + rawType, e);
+    } catch (InstantiationException e) {
+      throw new RuntimeException(
+          "Failed to instantiate the generated JsonAdapter for " + rawType, e);
+    } catch (InvocationTargetException e) {
+      throw rethrowCause(e);
+    }
   }
 }
