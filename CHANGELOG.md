@@ -1,6 +1,35 @@
 Change Log
 ==========
 
+## Version 1.8.0
+
+_2018-11-09_
+
+ * New: Support JSON objects that include type information in the JSON. The new
+   `PolymorphicJsonAdapterFactory` writes a type field when encoding, and reads it when decoding.
+ * New: Fall back to the reflection-based `KotlinJsonAdapterFactory` if it is enabled and a
+   generated adapter is not found. This makes it possible to use reflection-based JSON adapters in
+   development (so you don't have to wait for code to be regenerated on every build) and generated
+   JSON adapters in production (so you don't need the kotlin-reflect library).
+ * New: The `peekJson()` method on `JsonReader` let you read ahead on a JSON stream without
+   consuming it. This builds on Okio's new `Buffer.peek()` API.
+ * New: The `beginFlatten()` and `endFlatten()` methods on `JsonWriter` suppress unwanted nesting
+   when composing adapters. Previously it was necessary to flatten objects in memory before writing.
+ * New: Upgrade to Okio 1.16.0. We don't yet require Kotlin-friendly Okio 2.x but Moshi works fine
+   with that release.
+
+   ```kotlin
+   implementation("com.squareup.okio:okio:1.16.0")
+   ```
+
+ * Fix: Don't return partially-constructed adapters when using a Moshi instance concurrently.
+ * Fix: Eliminate warnings and errors in generated `.kt` triggered by type variance, primitive
+   types, and required values.
+ * Fix: Improve the supplied rules (`moshi.pro`) to better retain symbols used by Moshi. We
+   recommend R8 when shrinking code.
+ * Fix: Remove code generation companion objects. This API was neither complete nor necessary.
+
+
 ## Version 1.7.0
 
 _2018-09-24_
