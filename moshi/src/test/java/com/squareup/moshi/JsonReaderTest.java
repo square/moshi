@@ -38,6 +38,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
+@SuppressWarnings("CheckReturnValue")
 public final class JsonReaderTest {
   @Parameter public JsonCodecFactory factory;
 
