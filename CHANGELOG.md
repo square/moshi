@@ -15,7 +15,7 @@ _2018-11-09_
    consuming it. This builds on Okio's new `Buffer.peek()` API.
  * New: The `beginFlatten()` and `endFlatten()` methods on `JsonWriter` suppress unwanted nesting
    when composing adapters. Previously it was necessary to flatten objects in memory before writing.
- * New: Upgrade to Okio 1.16.0. We don't yet require Kotlin-friendly Okio 2.x but Moshi works fine
+ * New: Upgrade to Okio 1.16.0. We don't yet require Kotlin-friendly Okio 2.1 but Moshi works fine
    with that release.
 
    ```kotlin
