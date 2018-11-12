@@ -38,4 +38,9 @@ public @interface JsonClass {
    *  * All properties must be either non-transient or have a default value.
    */
   boolean generateAdapter();
+
+  /**
+   * For polymorphic adapters, this can specify a specific name for the type key.
+   */
+  String typeName() default "";
 }
