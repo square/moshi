@@ -26,10 +26,12 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
+import com.squareup.moshi.adapters.PolymorphicType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayOutputStream
+import java.util.Collections
 import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
@@ -947,5 +949,34 @@ class KotlinJsonAdapterTest {
     val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
+
+  // TODO failure cases, likely need to run in moshi-kotlin/test directly because code gen could
+  // report failures at compile time, and we want to catch both
+  @Test fun polymorphic() {
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    val adapter = moshi.adapter<Message>(Message::class.java)
+
+    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
+        .isEqualTo(Message.Success("Okay!"))
+    assertThat(adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"))
+        .isEqualTo(Message.Error(Collections.singletonMap<String, Any>("order", 66.0)))
+    assertThat(adapter.fromJson("{\"type\":\"taco\",\"junkdata\":100}"))
+        .isSameAs(Message.Unknown)
+  }
+
+  @PolymorphicType(typeLabel = "type", fallbackType = Message.Unknown::class)
+  sealed class Message {
+
+    @JsonClass(generateAdapter = true, typeName = "success")
+    data class Success(val value: String) : Message()
+
+    @JsonClass(generateAdapter = true, typeName = "error")
+    data class Error(val error_logs: Map<String, Any>) : Message()
+
+    object Unknown : Message()
   }
 }
