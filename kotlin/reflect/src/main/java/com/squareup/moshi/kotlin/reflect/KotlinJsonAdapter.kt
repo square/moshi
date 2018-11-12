@@ -23,6 +23,8 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
+import com.squareup.moshi.adapters.PolymorphicType
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
@@ -187,10 +189,40 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       // Fall back to a reflective adapter when the generated adapter is not found.
     }
 
+    val rawTypeKotlin = rawType.kotlin
+    rawType.getAnnotation(PolymorphicType::class.java)?.let { polymorphicType ->
+      if (!rawTypeKotlin.isSealed) {
+        throw IllegalArgumentException("PolymorphicType cannot be applied to non-sealed class ${rawType.name}")
+      }
+      var sealedSubclasses = rawTypeKotlin.sealedSubclasses
+
+      // Pull out the default instance as necessary
+      var defaultObjectInstance: Any? = null
+      if (polymorphicType.fallbackType != Void::class.javaPrimitiveType) {
+        val defaultClassType = sealedSubclasses.find { it == polymorphicType.fallbackType }
+            ?: throw IllegalArgumentException("Default type cannot be applied to non-sealed class ${rawType.name}")
+        defaultObjectInstance = defaultClassType.objectInstance
+            ?: throw IllegalArgumentException("Default type must be an object ${defaultClassType.qualifiedName}")
+        sealedSubclasses = sealedSubclasses.filterNot { it == polymorphicType.fallbackType }
+      }
+
+      @Suppress("UNCHECKED_CAST")
+      val polymorphicFactory = PolymorphicJsonAdapterFactory.of<Any>(rawType as Class<Any>?, polymorphicType.typeLabel)
+          .withDefaultValue(defaultObjectInstance)
+          .let {
+            sealedSubclasses.fold(it) { factory, sealedSubclass ->
+              val label = sealedSubclass.findAnnotation<JsonClass>()?.typeName?.ifEmpty { null }
+                  ?: throw IllegalArgumentException("@JsonClass-annotated polymorphic subtype must have a \"typeName\" value ${sealedSubclass.qualifiedName}")
+              factory.withSubtype(sealedSubclass.java, label)
+            }
+          }
+
+      return polymorphicFactory.create(rawType, annotations, moshi)
+    }
+
     if (rawType.isLocalClass) {
       throw IllegalArgumentException("Cannot serialize local class or object expression ${rawType.name}")
     }
-    val rawTypeKotlin = rawType.kotlin
     if (rawTypeKotlin.isAbstract) {
       throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}")
     }
