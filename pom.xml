@@ -29,7 +29,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
-    <kotlin.version>1.2.71</kotlin.version>
+    <kotlin.version>1.3.0</kotlin.version>
     <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
     <dokka.version>0.9.17</dokka.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
