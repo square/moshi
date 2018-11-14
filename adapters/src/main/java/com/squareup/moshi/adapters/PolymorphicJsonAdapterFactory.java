@@ -243,12 +243,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     @Override public Object fromJson(JsonReader reader) throws IOException {
       int labelIndex = labelIndex(reader.peekJson());
       if (labelIndex == -1) {
-        if (defaultValueSet) {
-          reader.skipValue();
-          return defaultValue;
-        } else {
-          throw new JsonDataException("Missing label for " + labelKey);
-        }
+        reader.skipValue();
+        return defaultValue;
       }
       return jsonAdapters.get(labelIndex).fromJson(reader);
     }
@@ -276,7 +272,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         return labelIndex;
       }
 
-      return -1;
+      throw new JsonDataException("Missing label for " + labelKey);
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
