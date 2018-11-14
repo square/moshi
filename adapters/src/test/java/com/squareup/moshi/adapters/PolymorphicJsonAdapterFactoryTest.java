@@ -78,6 +78,33 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
   }
 
+  @Test public void specifiedFallbackSubtype() throws IOException {
+    Error fallbackError = new Error(Collections.<String, Object>emptyMap());
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(fallbackError))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
+    assertThat(message).isSameAs(fallbackError);
+  }
+
+  @Test public void specifiedNullFallbackSubtype() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(null))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
+    assertThat(message).isNull();
+  }
+
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
         .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
