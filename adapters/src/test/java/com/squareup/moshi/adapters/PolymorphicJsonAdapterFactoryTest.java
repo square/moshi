@@ -170,19 +170,6 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void objectBaseType() throws IOException {
-    Moshi moshi = new Moshi.Builder()
-        .add(PolymorphicJsonAdapterFactory.of(Object.class, "type")
-            .withSubtype(Success.class, "success"))
-        .build();
-    JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-
-    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
-        .isEqualTo(new Success("Okay!"));
-    assertThat(adapter.toJson(new Success("Okay!")))
-        .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
-  }
-
   /**
    * Longs that do not have an exact double representation are problematic for JSON. It is a bad
    * idea to use JSON for these values! But Moshi tries to retain long precision where possible.
