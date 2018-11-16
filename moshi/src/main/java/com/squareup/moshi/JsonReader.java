@@ -424,6 +424,12 @@ public abstract class JsonReader implements Closeable {
   public abstract void skipValue() throws IOException;
 
   /**
+   * Reads the next JSON name or value without decoding it. White space and comments will be
+   * removed.
+   */
+  public abstract ByteString readJsonString() throws IOException;
+
+  /**
    * Returns the value of the next token, consuming it. The result may be a string, number, boolean,
    * null, map, or list, according to the JSON structure.
    *

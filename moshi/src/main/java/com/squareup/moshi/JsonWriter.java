@@ -19,6 +19,8 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.BufferedSink;
@@ -467,5 +469,38 @@ public abstract class JsonWriter implements Closeable, Flushable {
    */
   @CheckReturnValue public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
+
+  JsonWriter writeJsonValue(@Nullable Object jsonValue) throws IOException {
+    if (jsonValue == null) {
+      return nullValue();
+    }
+    if (jsonValue instanceof Number) {
+      return value((Number) jsonValue);
+    }
+    if (jsonValue instanceof String) {
+      return value((String) jsonValue);
+    }
+    if (jsonValue instanceof Boolean) {
+      return value((Boolean) jsonValue);
+    }
+    if (jsonValue instanceof Map) {
+      beginObject();
+      for (Map.Entry<String, Object> entry : ((Map<String, Object>) jsonValue).entrySet()) {
+        name(entry.getKey());
+        writeJsonValue(entry.getValue());
+      }
+      return endObject();
+    }
+    if (jsonValue instanceof List) {
+      beginArray();
+      List<Object> list = (List<Object>) jsonValue;
+      for (int i = 0, size = list.size(); i < size; i++) {
+        writeJsonValue(list.get(i));
+      }
+      return endArray();
+    }
+    throw new IllegalArgumentException(
+        "Expected a JSON value but found " + jsonValue + ", a " + jsonValue.getClass());
   }
 }

@@ -1147,4 +1147,54 @@ public final class JsonReaderTest {
         throw new AssertionError();
     }
   }
+
+  @Test public void readJsonStringObject() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", \"pepperoni\"]}");
+    reader.setLenient(true);
+    assertEquals("{\"pizzas\":[\"cheese\",\"pepperoni\"]}", reader.readJsonString().utf8());
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void readJsonStringArray() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", \"pepperoni\"]}");
+    reader.beginObject();
+    reader.skipName();
+    assertEquals("[\"cheese\",\"pepperoni\"]", reader.readJsonString().utf8());
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void readJsonStringName() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", \"pepperoni\"]}");
+    reader.beginObject();
+    assertEquals("\"pizzas\"", reader.readJsonString().utf8());
+    reader.skipValue();
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void readJsonStringString() throws IOException {
+    JsonReader reader = newReader("{\"pizzas\": [\"cheese\", \"pepperoni\"]}");
+    reader.beginObject();
+    reader.skipName();
+    reader.beginArray();
+    reader.skipValue();
+    assertEquals("\"pepperoni\"", reader.readJsonString().utf8());
+    reader.endArray();
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void readJsonStringSkipsWhiteSpaceAndComments() throws IOException {
+    JsonReader reader = newReader(" {\n"
+        + "\t\"pizzas\": [\n"
+        + "\t  /* toppings */\n"
+        + "\t  \"cheese\",\n"
+        + "\t  \"pepperoni\" // the best one.\n"
+        + "\t]\n"
+        + "} ");
+    reader.setLenient(true);
+    assertEquals("{\"pizzas\":[\"cheese\",\"pepperoni\"]}", reader.readJsonString().utf8());
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
 }

@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import javax.annotation.Nullable;
 import okio.Buffer;
+import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.ByteString;
+import okio.Okio;
 
 final class JsonUtf8Reader extends JsonReader {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
@@ -64,6 +66,8 @@ final class JsonUtf8Reader extends JsonReader {
   private static final int NUMBER_CHAR_EXP_E = 5;
   private static final int NUMBER_CHAR_EXP_SIGN = 6;
   private static final int NUMBER_CHAR_EXP_DIGIT = 7;
+
+  static final BufferedSink BLACKHOLE = Okio.buffer(Okio.blackhole());
 
   /** The input JSON. */
   private final BufferedSource source;
@@ -228,13 +232,17 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private int doPeek() throws IOException {
+    return doPeek(BLACKHOLE);
+  }
+
+  int doPeek(BufferedSink sink) throws IOException {
     int peekStack = scopes[stackSize - 1];
     if (peekStack == JsonScope.EMPTY_ARRAY) {
       scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
     } else if (peekStack == JsonScope.NONEMPTY_ARRAY) {
       // Look for a comma before the next element.
       int c = nextNonWhitespace(true);
-      buffer.readByte(); // consume ']' or ','.
+      sink.write(buffer, 1); // consume ']' or ','.
       switch (c) {
         case ']':
           return peeked = PEEKED_END_ARRAY;
@@ -250,7 +258,7 @@ final class JsonUtf8Reader extends JsonReader {
       // Look for a comma before the next element.
       if (peekStack == JsonScope.NONEMPTY_OBJECT) {
         int c = nextNonWhitespace(true);
-        buffer.readByte(); // Consume '}' or ','.
+        sink.write(buffer, 1); // Consume '}' or ','.
         switch (c) {
           case '}':
             return peeked = PEEKED_END_OBJECT;
@@ -265,15 +273,15 @@ final class JsonUtf8Reader extends JsonReader {
       int c = nextNonWhitespace(true);
       switch (c) {
         case '"':
-          buffer.readByte(); // consume the '\"'.
+          sink.write(buffer, 1); // consume the '\"'.
           return peeked = PEEKED_DOUBLE_QUOTED_NAME;
         case '\'':
-          buffer.readByte(); // consume the '\''.
+          sink.write(buffer, 1); // consume the '\''.
           checkLenient();
           return peeked = PEEKED_SINGLE_QUOTED_NAME;
         case '}':
           if (peekStack != JsonScope.NONEMPTY_OBJECT) {
-            buffer.readByte(); // consume the '}'.
+            sink.write(buffer, 1); // consume the '}'.
             return peeked = PEEKED_END_OBJECT;
           } else {
             throw syntaxError("Expected name");
@@ -290,14 +298,14 @@ final class JsonUtf8Reader extends JsonReader {
       scopes[stackSize - 1] = JsonScope.NONEMPTY_OBJECT;
       // Look for a colon before the value.
       int c = nextNonWhitespace(true);
-      buffer.readByte(); // Consume ':'.
+      sink.write(buffer, 1); // Consume ':'.
       switch (c) {
         case ':':
           break;
         case '=':
           checkLenient();
           if (source.request(1) && buffer.getByte(0) == '>') {
-            buffer.readByte(); // Consume '>'.
+            sink.write(buffer, 1); // Consume '>'.
           }
           break;
         default:
@@ -320,7 +328,7 @@ final class JsonUtf8Reader extends JsonReader {
     switch (c) {
       case ']':
         if (peekStack == JsonScope.EMPTY_ARRAY) {
-          buffer.readByte(); // Consume ']'.
+          sink.write(buffer, 1); // Consume ']'.
           return peeked = PEEKED_END_ARRAY;
         }
         // fall-through to handle ",]"
@@ -335,16 +343,16 @@ final class JsonUtf8Reader extends JsonReader {
         }
       case '\'':
         checkLenient();
-        buffer.readByte(); // Consume '\''.
+        sink.write(buffer, 1); // Consume '\''.
         return peeked = PEEKED_SINGLE_QUOTED;
       case '"':
-        buffer.readByte(); // Consume '\"'.
+        sink.write(buffer, 1); // Consume '\"'.
         return peeked = PEEKED_DOUBLE_QUOTED;
       case '[':
-        buffer.readByte(); // Consume '['.
+        sink.write(buffer, 1); // Consume '['.
         return peeked = PEEKED_BEGIN_ARRAY;
       case '{':
-        buffer.readByte(); // Consume '{'.
+        sink.write(buffer, 1); // Consume '{'.
         return peeked = PEEKED_BEGIN_OBJECT;
       default:
     }
@@ -857,23 +865,31 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private void skipQuotedValue(ByteString runTerminator) throws IOException {
+    readQuotedValue(runTerminator, BLACKHOLE);
+  }
+
+  private void readQuotedValue(ByteString runTerminator, BufferedSink sink) throws IOException {
     while (true) {
       long index = source.indexOfElement(runTerminator);
       if (index == -1L) throw syntaxError("Unterminated string");
 
       if (buffer.getByte(index) == '\\') {
-        buffer.skip(index + 1);
-        readEscapeCharacter();
+        sink.write(buffer, index + 1);
+        readEscapeCharacter(sink);
       } else {
-        buffer.skip(index + 1);
+        sink.write(buffer, index + 1);
         return;
       }
     }
   }
 
   private void skipUnquotedValue() throws IOException {
+    readUnquotedValue(BLACKHOLE);
+  }
+
+  private void readUnquotedValue(BufferedSink sink) throws IOException {
     long i = source.indexOfElement(UNQUOTED_STRING_TERMINALS);
-    buffer.skip(i != -1L ? i : buffer.size());
+    sink.write(buffer, i != -1L ? i : buffer.size());
   }
 
   @Override public int nextInt() throws IOException {
@@ -970,6 +986,62 @@ final class JsonUtf8Reader extends JsonReader {
         skipQuotedValue(SINGLE_QUOTE_OR_SLASH);
       } else if (p == PEEKED_NUMBER) {
         buffer.skip(peekedNumberLength);
+      }
+      peeked = PEEKED_NONE;
+    } while (count != 0);
+
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = "null";
+  }
+
+  @Override public ByteString readJsonString() throws IOException {
+    Buffer buffer = new Buffer();
+    readJsonValue(buffer);
+    return buffer.readByteString();
+  }
+
+  void readJsonValue(BufferedSink sink) throws IOException {
+    int p = peeked;
+    if (p == PEEKED_NONE) {
+      p = doPeek();
+    }
+    if (p == PEEKED_BEGIN_ARRAY) {
+      sink.writeUtf8("[");
+    } else if (p == PEEKED_BEGIN_OBJECT) {
+      sink.writeUtf8("{");
+    } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
+      sink.writeUtf8("\"");
+    } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_SINGLE_QUOTED_NAME) {
+      sink.writeUtf8("'");
+    }
+
+    int count = 0;
+    do {
+      p = peeked;
+      if (p == PEEKED_NONE) {
+        p = doPeek(sink);
+      }
+
+      if (p == PEEKED_BEGIN_ARRAY) {
+        pushScope(JsonScope.EMPTY_ARRAY);
+        count++;
+      } else if (p == PEEKED_BEGIN_OBJECT) {
+        pushScope(JsonScope.EMPTY_OBJECT);
+        count++;
+      } else if (p == PEEKED_END_ARRAY) {
+        stackSize--;
+        count--;
+      } else if (p == PEEKED_END_OBJECT) {
+        stackSize--;
+        count--;
+      } else if (p == PEEKED_UNQUOTED_NAME || p == PEEKED_UNQUOTED) {
+        readUnquotedValue(sink);
+      } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
+        readQuotedValue(DOUBLE_QUOTE_OR_SLASH, sink);
+      } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_SINGLE_QUOTED_NAME) {
+        readQuotedValue(SINGLE_QUOTE_OR_SLASH, sink);
+      } else if (p == PEEKED_NUMBER) {
+        sink.write(buffer, peekedNumberLength);
       }
       peeked = PEEKED_NONE;
     } while (count != 0);
@@ -1088,11 +1160,16 @@ final class JsonUtf8Reader extends JsonReader {
    * @throws IOException if any unicode escape sequences are malformed.
    */
   private char readEscapeCharacter() throws IOException {
+    return readEscapeCharacter(BLACKHOLE);
+  }
+
+  private char readEscapeCharacter(BufferedSink sink) throws IOException {
     if (!source.request(1)) {
       throw syntaxError("Unterminated escape sequence");
     }
 
     byte escaped = buffer.readByte();
+    sink.writeByte(escaped);
     switch (escaped) {
       case 'u':
         if (!source.request(4)) {
@@ -1113,7 +1190,7 @@ final class JsonUtf8Reader extends JsonReader {
             throw syntaxError("\\u" + buffer.readUtf8(4));
           }
         }
-        buffer.skip(4);
+        sink.write(buffer, 4);
         return result;
 
       case 't':

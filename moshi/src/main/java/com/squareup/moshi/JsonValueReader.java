@@ -22,6 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import okio.Buffer;
+import okio.BufferedSink;
+import okio.ByteString;
 
 import static com.squareup.moshi.JsonScope.CLOSED;
 
@@ -310,7 +313,7 @@ final class JsonValueReader extends JsonReader {
 
     if (skipped instanceof Map.Entry) {
       // We're skipping a name. Promote the map entry's value.
-      Map.Entry<?, ?> entry = (Map.Entry<?, ?>) stack[stackSize - 1];
+      Map.Entry<String, ?> entry = (Map.Entry<String, ?>) stack[stackSize - 1];
       stack[stackSize - 1] = entry.getValue();
     } else if (stackSize > 0) {
       // We're skipping a value.
@@ -320,6 +323,36 @@ final class JsonValueReader extends JsonReader {
 
   @Override public JsonReader peekJson() {
     return new JsonValueReader(this);
+  }
+
+  @Override public ByteString readJsonString() throws IOException {
+    Buffer buffer = new Buffer();
+    readJsonValue(buffer);
+    return buffer.readByteString();
+  }
+
+  void readJsonValue(BufferedSink sink) throws IOException {
+    if (failOnUnknown) {
+      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+    }
+
+    // If this element is in an object clear out the key.
+    if (stackSize > 1) {
+      pathNames[stackSize - 2] = "null";
+    }
+
+    Object skipped = stackSize != 0 ? stack[stackSize - 1] : null;
+
+    if (skipped instanceof Map.Entry) {
+      // We're skipping a name. Promote the map entry's value.
+      Map.Entry<String, ?> entry = (Map.Entry<String, ?>) stack[stackSize - 1];
+      JsonUtf8Writer.string(sink, entry.getKey());
+      stack[stackSize - 1] = entry.getValue();
+    } else if (stackSize > 0) {
+      // We're skipping a value.
+      JsonWriter.of(sink).writeJsonValue(stack[stackSize - 1]);
+      remove();
+    }
   }
 
   @Override void promoteNameToValue() throws IOException {
