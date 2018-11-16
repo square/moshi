@@ -170,14 +170,17 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void disallowObjectBaseType() {
-    try {
-      PolymorphicJsonAdapterFactory.of(Object.class, "type");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
-          "The base type must not be Object. Consider using a marker interface.");
-    }
+  @Test public void objectBaseType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Object.class, "type")
+            .withSubtype(Success.class, "success"))
+        .build();
+    JsonAdapter<Object> adapter = moshi.adapter(Object.class);
+
+    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
+        .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.toJson(new Success("Okay!")))
+        .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
   }
 
   /**
