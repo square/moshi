@@ -943,7 +943,9 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun adaptersAreNullSafe() {
-    val moshi = Moshi.Builder().build()
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
     val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
