@@ -1,0 +1,4 @@
+$dokka.format:html
+$dokka.linkExtension:html
+
+com.squareup.moshi.kotlin.codegen

@@ -1,0 +1,92 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>JsonClassCodegenProcessor - moshi-kotlin-codegen</title>
+<link rel="stylesheet" href="../../../style.css">
+</HEAD>
+<BODY>
+<a href="../../index.html">moshi-kotlin-codegen</a>&nbsp;/&nbsp;<a href="../index.html">com.squareup.moshi.kotlin.codegen</a>&nbsp;/&nbsp;<a href="./index.html">JsonClassCodegenProcessor</a><br/>
+<br/>
+<h1>JsonClassCodegenProcessor</h1>
+<code><span class="identifier">@AutoService</span><span class="symbol">(</span>[Processor]<span class="symbol">)</span> <span class="keyword">class </span><span class="identifier">JsonClassCodegenProcessor</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">KotlinAbstractProcessor</span><span class="symbol">, </span><span class="identifier">KotlinMetadataUtils</span></code>
+<p>An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
+This generates Kotlin code, and understands basic Kotlin language features like default values
+and companion objects.</p>
+<p>The generated class will match the visibility of the given data class (i.e. if it's internal, the
+adapter will also be internal).</p>
+<p>If you define a companion object, a jsonAdapter() extension function will be generated onto it.
+If you don't want this though, you can use the runtime <a href="#">JsonClass</a> factory implementation.</p>
+<h3>Constructors</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-init-.html">&lt;init&gt;</a></p>
+</td>
+<td>
+<code><span class="identifier">JsonClassCodegenProcessor</span><span class="symbol">(</span><span class="symbol">)</span></code>
+<p>An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
+This generates Kotlin code, and understands basic Kotlin language features like default values
+and companion objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3>Functions</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="get-supported-annotation-types.html">getSupportedAnnotationTypes</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSupportedAnnotationTypes</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-supported-options.html">getSupportedOptions</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSupportedOptions</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a><span class="symbol">&gt;</span></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="get-supported-source-version.html">getSupportedSourceVersion</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">getSupportedSourceVersion</span><span class="symbol">(</span><span class="symbol">)</span><span class="symbol">: </span><a href="http://docs.oracle.com/javase/6/docs/api/javax/lang/model/SourceVersion.html"><span class="identifier">SourceVersion</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="init.html">init</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">init</span><span class="symbol">(</span><span class="identifier" id="com.squareup.moshi.kotlin.codegen.JsonClassCodegenProcessor$init(javax.annotation.processing.ProcessingEnvironment)/processingEnv">processingEnv</span><span class="symbol">:</span>&nbsp;<a href="http://docs.oracle.com/javase/6/docs/api/javax/annotation/processing/ProcessingEnvironment.html"><span class="identifier">ProcessingEnvironment</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html"><span class="identifier">Unit</span></a></code></td>
+</tr>
+<tr>
+<td>
+<p><a href="process.html">process</a></p>
+</td>
+<td>
+<code><span class="keyword">fun </span><span class="identifier">process</span><span class="symbol">(</span><span class="identifier" id="com.squareup.moshi.kotlin.codegen.JsonClassCodegenProcessor$process(kotlin.collections.Set((javax.lang.model.element.TypeElement)), javax.annotation.processing.RoundEnvironment)/annotations">annotations</span><span class="symbol">:</span>&nbsp;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html"><span class="identifier">Set</span></a><span class="symbol">&lt;</span><a href="http://docs.oracle.com/javase/6/docs/api/javax/lang/model/element/TypeElement.html"><span class="identifier">TypeElement</span></a><span class="symbol">&gt;</span><span class="symbol">, </span><span class="identifier" id="com.squareup.moshi.kotlin.codegen.JsonClassCodegenProcessor$process(kotlin.collections.Set((javax.lang.model.element.TypeElement)), javax.annotation.processing.RoundEnvironment)/roundEnv">roundEnv</span><span class="symbol">:</span>&nbsp;<a href="http://docs.oracle.com/javase/6/docs/api/javax/annotation/processing/RoundEnvironment.html"><span class="identifier">RoundEnvironment</span></a><span class="symbol">)</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html"><span class="identifier">Boolean</span></a></code></td>
+</tr>
+</tbody>
+</table>
+<h3>Companion Object Properties</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-o-p-t-i-o-n_-g-e-n-e-r-a-t-e-d.html">OPTION_GENERATED</a></p>
+</td>
+<td>
+<code><span class="keyword">const</span> <span class="keyword">val </span><span class="identifier">OPTION_GENERATED</span><span class="symbol">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html"><span class="identifier">String</span></a></code>
+<p>This annotation processing argument can be specified to have a <code>@Generated</code> annotation
+included in the generated code. It is not encouraged unless you need it for static analysis
+reasons and not enabled by default.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>

@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+<meta charset="UTF-8">
+<title>com.squareup.moshi.kotlin.codegen - moshi-kotlin-codegen</title>
+<link rel="stylesheet" href="../../style.css">
+</HEAD>
+<BODY>
+<a href="../index.html">moshi-kotlin-codegen</a>&nbsp;/&nbsp;<a href="./index.html">com.squareup.moshi.kotlin.codegen</a><br/>
+<br/>
+<h2>Package com.squareup.moshi.kotlin.codegen</h2>
+<h3>Types</h3>
+<table>
+<tbody>
+<tr>
+<td>
+<p><a href="-json-class-codegen-processor/index.html">JsonClassCodegenProcessor</a></p>
+</td>
+<td>
+<code><span class="keyword">class </span><span class="identifier">JsonClassCodegenProcessor</span>&nbsp;<span class="symbol">:</span>&nbsp;<span class="identifier">KotlinAbstractProcessor</span><span class="symbol">, </span><span class="identifier">KotlinMetadataUtils</span></code>
+<p>An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
+This generates Kotlin code, and understands basic Kotlin language features like default values
+and companion objects.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-type-renderer/index.html">TypeRenderer</a></p>
+</td>
+<td>
+<code><span class="keyword">abstract</span> <span class="keyword">class </span><span class="identifier">TypeRenderer</span></code>
+<p>Renders literals like <code>Types.newParameterizedType(List::class.java, String::class.java)</code>.
+Rendering is pluggable so that type variables can either be resolved or emitted as other code
+blocks.</p>
+</td>
+</tr>
+<tr>
+<td>
+<p><a href="-type-resolver/index.html">TypeResolver</a></p>
+</td>
+<td>
+<code><span class="keyword">open</span> <span class="keyword">class </span><span class="identifier">TypeResolver</span></code>
+<p>Resolves type parameters against a type declaration. Use this to fill in type variables with
+their actual type parameters.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</BODY>
+</HTML>
