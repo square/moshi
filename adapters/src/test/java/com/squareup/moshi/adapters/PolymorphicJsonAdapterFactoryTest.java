@@ -170,16 +170,6 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void disallowObjectBaseType() {
-    try {
-      PolymorphicJsonAdapterFactory.of(Object.class, "type");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
-          "The base type must not be Object. Consider using a marker interface.");
-    }
-  }
-
   /**
    * Longs that do not have an exact double representation are problematic for JSON. It is a bad
    * idea to use JSON for these values! But Moshi tries to retain long precision where possible.

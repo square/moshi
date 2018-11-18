@@ -86,8 +86,7 @@ import javax.annotation.CheckReturnValue;
  * <p>This class imposes strict requirements on its use:
  *
  * <ul>
- *   <li>Base types may be classes or interfaces. You may not use {@code Object.class} as a base
- *       type.
+ *   <li>Base types may be classes or interfaces.
  *   <li>Subtypes must encode as JSON objects.
  *   <li>Type information must be in the encoded object. Each message must have a type label like
  *       {@code hand_type} whose value is a string like {@code blackjack} that identifies which type
@@ -125,10 +124,6 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
   public static <T> PolymorphicJsonAdapterFactory<T> of(Class<T> baseType, String labelKey) {
     if (baseType == null) throw new NullPointerException("baseType == null");
     if (labelKey == null) throw new NullPointerException("labelKey == null");
-    if (baseType == Object.class) {
-      throw new IllegalArgumentException(
-          "The base type must not be Object. Consider using a marker interface.");
-    }
     return new PolymorphicJsonAdapterFactory<>(
         baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList());
   }
@@ -162,9 +157,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }
 
-    JsonAdapter<Object> objectJsonAdapter = moshi.adapter(Object.class);
-    return new PolymorphicJsonAdapter(
-        labelKey, labels, subtypes, jsonAdapters, objectJsonAdapter).nullSafe();
+    return new PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters).nullSafe();
   }
 
   static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {
@@ -172,7 +165,6 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     final List<String> labels;
     final List<Type> subtypes;
     final List<JsonAdapter<Object>> jsonAdapters;
-    final JsonAdapter<Object> objectJsonAdapter;
 
     /** Single-element options containing the label's key only. */
     final JsonReader.Options labelKeyOptions;
@@ -180,13 +172,11 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     final JsonReader.Options labelOptions;
 
     PolymorphicJsonAdapter(String labelKey, List<String> labels,
-        List<Type> subtypes, List<JsonAdapter<Object>> jsonAdapters,
-        JsonAdapter<Object> objectJsonAdapter) {
+        List<Type> subtypes, List<JsonAdapter<Object>> jsonAdapters) {
       this.labelKey = labelKey;
       this.labels = labels;
       this.subtypes = subtypes;
       this.jsonAdapters = jsonAdapters;
-      this.objectJsonAdapter = objectJsonAdapter;
 
       this.labelKeyOptions = JsonReader.Options.of(labelKey);
       this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
