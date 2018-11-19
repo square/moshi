@@ -481,8 +481,8 @@ class KotlinJsonAdapterTest {
       moshi.adapter(Triple::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage("Platform class kotlin.Triple (with no annotations) "
-          + "requires explicit JsonAdapter to be registered")
+      assertThat(e).hasMessage(
+          "Platform class kotlin.Triple requires explicit JsonAdapter to be registered")
     }
   }
 

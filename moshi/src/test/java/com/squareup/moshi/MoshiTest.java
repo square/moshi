@@ -937,22 +937,22 @@ public final class MoshiTest {
       moshi.adapter(File.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Platform class java.io.File (with no annotations) "
-          + "requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage(
+          "Platform class java.io.File requires explicit JsonAdapter to be registered");
     }
     try {
       moshi.adapter(KeyGenerator.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Platform class javax.crypto.KeyGenerator (with no annotations) "
-          + "requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage("Platform class javax.crypto.KeyGenerator requires explicit "
+          + "JsonAdapter to be registered");
     }
     try {
       moshi.adapter(Pair.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Platform class android.util.Pair (with no annotations) "
-          + "requires explicit JsonAdapter to be registered");
+      assertThat(e).hasMessage(
+          "Platform class android.util.Pair requires explicit JsonAdapter to be registered");
     }
   }
 
@@ -975,7 +975,7 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+          "Platform java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
@@ -983,7 +983,7 @@ public final class MoshiTest {
               + "com.squareup.moshi.MoshiTest$HasPlatformType>");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
-          + "(with no annotations) requires explicit JsonAdapter to be registered");
+          + "requires explicit JsonAdapter to be registered");
     }
   }
 
@@ -994,14 +994,14 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+          "Platform java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType hasPlatformType"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
-          + "(with no annotations) requires explicit JsonAdapter to be registered");
+          + "requires explicit JsonAdapter to be registered");
     }
   }
 
@@ -1012,7 +1012,7 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> (with no annotations) requires explicit "
+          "Platform java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
@@ -1020,7 +1020,7 @@ public final class MoshiTest {
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
-          + "(with no annotations) requires explicit JsonAdapter to be registered");
+          + "requires explicit JsonAdapter to be registered");
     }
   }
 
