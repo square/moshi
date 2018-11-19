@@ -869,6 +869,7 @@ class KotlinJsonAdapterTest {
             return value ?: "fallback"
           }
         })
+        .add(KotlinJsonAdapterFactory())
         .build()
 
     assertThat(moshi.adapter(HasNonNullConstructorParameter::class.java)
@@ -935,6 +936,7 @@ class KotlinJsonAdapterTest {
           }
           null
         })
+        .add(KotlinJsonAdapterFactory())
         .build()
     val adapter = moshi.adapter(HasNullableBoolean::class.java).serializeNulls()
     assertThat(adapter.fromJson("""{"boolean":"not a boolean"}"""))
