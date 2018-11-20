@@ -952,4 +952,16 @@ class KotlinJsonAdapterTest {
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
   }
+
+  @Test fun kotlinClassesWithoutAdapterAreRefused() {
+    val moshi = Moshi.Builder().build()
+    try {
+      moshi.adapter<PlainKotlinClass>(PlainKotlinClass::class.java)
+      fail("Should not pass here")
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageContaining("Reflective serialization of Kotlin classes")
+    }
+  }
+
+  class PlainKotlinClass
 }
