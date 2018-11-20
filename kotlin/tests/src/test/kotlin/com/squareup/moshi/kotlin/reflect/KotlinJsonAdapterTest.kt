@@ -957,7 +957,7 @@ class KotlinJsonAdapterTest {
     val moshi = Moshi.Builder().build()
     try {
       moshi.adapter<PlainKotlinClass>(PlainKotlinClass::class.java)
-      throw AssertionError("Should not pass here")
+      fail("Should not pass here")
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageContaining("Reflective serialization of Kotlin classes")
     }
