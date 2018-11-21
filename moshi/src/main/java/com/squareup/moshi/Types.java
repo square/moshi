@@ -326,20 +326,4 @@ public final class Types {
       return null;
     }
   }
-
-  /**
-   * Returns true if this is a Type supported by {@link StandardJsonAdapters#FACTORY}.
-   */
-  static boolean isAllowedPlatformType(Type type) {
-    return type == Boolean.class
-        || type == Byte.class
-        || type == Character.class
-        || type == Double.class
-        || type == Float.class
-        || type == Integer.class
-        || type == Long.class
-        || type == Short.class
-        || type == String.class
-        || type == Object.class;
-  }
 }
