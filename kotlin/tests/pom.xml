@@ -113,6 +113,11 @@
             </configuration>
           </execution>
         </executions>
+        <configuration>
+          <args>
+            <arg>-Werror</arg>
+          </args>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

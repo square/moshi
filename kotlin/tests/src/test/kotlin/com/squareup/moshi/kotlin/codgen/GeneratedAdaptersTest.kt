@@ -35,6 +35,7 @@ import org.junit.Test
 import java.util.Locale
 import kotlin.reflect.full.memberProperties
 
+@Suppress("UNUSED", "UNUSED_PARAMETER")
 class GeneratedAdaptersTest {
 
   private val moshi = Moshi.Builder().build()
@@ -1037,7 +1038,7 @@ class GeneratedAdaptersTest {
 
   @Test fun nullablePrimitivesUseBoxedPrimitiveAdapters() {
     val moshi = Moshi.Builder()
-        .add(JsonAdapter.Factory { type, annotations, moshi ->
+        .add(JsonAdapter.Factory { type, _, _ ->
           if (Boolean::class.javaObjectType == type) {
             return@Factory object:JsonAdapter<Boolean?>() {
               override fun fromJson(reader: JsonReader): Boolean? {

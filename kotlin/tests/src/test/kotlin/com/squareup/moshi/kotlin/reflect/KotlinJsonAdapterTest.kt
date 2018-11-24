@@ -34,6 +34,7 @@ import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
+@Suppress("UNUSED", "UNUSED_PARAMETER")
 class KotlinJsonAdapterTest {
   @Test fun constructorParameters() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -918,7 +919,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun nullablePrimitivesUseBoxedPrimitiveAdapters() {
     val moshi = Moshi.Builder()
-        .add(JsonAdapter.Factory { type, annotations, moshi ->
+        .add(JsonAdapter.Factory { type, _, _ ->
           if (Boolean::class.javaObjectType == type) {
             return@Factory object: JsonAdapter<Boolean?>() {
               override fun fromJson(reader: JsonReader): Boolean? {
