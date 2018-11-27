@@ -213,6 +213,36 @@ JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
 Event event = jsonAdapter.fromJson(json);
 ```
 
+### Adapter convenience methods
+
+Moshi provides a number of convenience methods for `JsonAdapter` objects:
+- `nullSafe()`
+- `nonNull()`
+- `lenient()`
+- `isLenient()`
+- `failOnUnknown()`
+- `indent()`
+- `serializeNulls()`
+
+These factory methods wrap an existing `JsonAdapter` into additional functionality.
+For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
+
+```kotlin
+// Example in Kotlin
+
+// RFC 3339 date adapter, doesn't support null by default
+// See also: https://github.com/square/moshi/tree/master/adapters
+val adapter = Rfc3339DateJsonAdapter()
+
+val dateJson = """"2018-11-26T11:04:19.342668Z""""
+val date = adapter.fromJson(dateJson) // OK, println(date): Mon Nov 26 12:04:19 CET 2018
+
+val nullDate = adapter.fromJson("null") // Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
+val nullDate = adapter.nullSafe().fromJson("null") // OK, println(nullDate): null
+```
+
+In contrast to `nullSafe()` there is `nonNull()` to make an adapter refuse null values. Refer to the Moshi JavaDoc for details on the various methods.
+
 ### Parse JSON Arrays
 
 Say we have a JSON string of this structure:
@@ -557,23 +587,6 @@ The JSON encoding of Kotlin types is the same whether using reflection or codege
 for better performance and to avoid the `kotlin-reflect` dependency; prefer reflection to convert
 both private and protected properties. If you have configured both, generated adapters will be used
 on types that are annotated `@JsonClass(generateAdapter = true)`.
-
-#### Null safety
-
-A Moshi adapter can be modified to work with Kotlin's nullable and non-nullable types. For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
-
-```kotlin
-// RFC 3339 date adapter, doesn't support null by default
-// See also: https://github.com/square/moshi/tree/master/adapters
-val adapter = Rfc3339DateJsonAdapter()
-
-val dateJson = """"2018-11-26T11:04:19.342668Z""""
-val date = adapter.fromJson(dateJson) // OK, println(date): Mon Nov 26 12:04:19 CET 2018
-val nullDate = adapter.fromJson("null") // Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
-val nullDate = adapter.nullSafe().fromJson("null") // OK, println(nullDate): null
-```
-
-In contrast to `nullSafe()` there is also `nonNull()` to make an adapter refuse null values.
 
 Download
 --------
