@@ -247,7 +247,7 @@ In contrast to `nullSafe()` there is `nonNull()` to make an adapter refuse null 
 
 Say we have a JSON string of this structure:
 
-```java
+```json
 [
   {
     "rank": "4",
