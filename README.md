@@ -226,18 +226,22 @@ Moshi provides a number of convenience methods for `JsonAdapter` objects:
 These factory methods wrap an existing `JsonAdapter` into additional functionality.
 For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
 
-```kotlin
-// Example in Kotlin
+```java
+String dateJson = "\"2018-11-26T11:04:19.342668Z\"";
+String nullDateJson = "null";
 
 // RFC 3339 date adapter, doesn't support null by default
 // See also: https://github.com/square/moshi/tree/master/adapters
-val adapter = Rfc3339DateJsonAdapter()
+JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter();
 
-val dateJson = """"2018-11-26T11:04:19.342668Z""""
-val date = adapter.fromJson(dateJson) // OK, println(date): Mon Nov 26 12:04:19 CET 2018
+Date date = adapter.fromJson(dateJson);
+System.out.println(date); // Mon Nov 26 12:04:19 CET 2018
 
-val nullDate = adapter.fromJson("null") // Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
-val nullDate = adapter.nullSafe().fromJson("null") // OK, println(nullDate): null
+Date nullDate = adapter.fromJson(nullDateJson);
+// Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
+
+Date nullDate = adapter.nullSafe().fromJson(nullDateJson);
+System.out.println(nullDate); // null
 ```
 
 In contrast to `nullSafe()` there is `nonNull()` to make an adapter refuse null values. Refer to the Moshi JavaDoc for details on the various methods.
