@@ -150,7 +150,6 @@ public final class ObjectAdapterTest {
     assertThat(adapter.toJson(set)).isEqualTo("[\"A\"]");
   }
 
-  @Ignore // We don't support raw maps, like Map<Object, Object>. (Even if the keys are strings!)
   @Test public void toJsonCoercesRuntimeTypeForMaps() {
     Map<String, Boolean> map = new AbstractMap<String, Boolean>() {
       @Override public Set<Entry<String, Boolean>> entrySet() {
