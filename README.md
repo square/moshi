@@ -219,7 +219,6 @@ Moshi provides a number of convenience methods for `JsonAdapter` objects:
 - `nullSafe()`
 - `nonNull()`
 - `lenient()`
-- `isLenient()`
 - `failOnUnknown()`
 - `indent()`
 - `serializeNulls()`
