@@ -41,8 +41,8 @@ abstract class TypeRenderer {
   abstract fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock
 
   fun render(typeName: TypeName): CodeBlock {
-    if (typeName.nullable) {
-      return renderObjectType(typeName.asNonNull())
+    if (typeName.isNullable) {
+      return renderObjectType(typeName.copy(nullable = false))
     }
 
     return when (typeName) {
@@ -77,18 +77,18 @@ abstract class TypeRenderer {
         val target: TypeName
         val method: String
         when {
-          typeName.lowerBounds.size == 1 -> {
-            target = typeName.lowerBounds[0]
+          typeName.inTypes.size == 1 -> {
+            target = typeName.inTypes[0]
             method = "supertypeOf"
           }
-          typeName.upperBounds.size == 1 -> {
-            target = typeName.upperBounds[0]
+          typeName.outTypes.size == 1 -> {
+            target = typeName.outTypes[0]
             method = "subtypeOf"
           }
           else -> throw IllegalArgumentException(
               "Unrepresentable wildcard type. Cannot have more than one bound: $typeName")
         }
-        CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target.asNonNull())
+        CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target.copy(nullable = false))
       }
 
       is TypeVariableName -> renderTypeVariable(typeName)

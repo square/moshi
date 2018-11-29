@@ -210,7 +210,7 @@ internal data class TargetType(
             bounds = *possibleBounds.toTypedArray(),
             variance = it.varianceModifier)
         }
-        return@map typeVar.reified(it.reified)
+        return@map typeVar.copy(reified = it.reified)
       }
     }
 
