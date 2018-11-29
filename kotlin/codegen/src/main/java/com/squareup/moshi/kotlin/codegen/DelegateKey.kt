@@ -37,7 +37,7 @@ internal data class DelegateKey(
   private val type: TypeName,
   private val jsonQualifiers: List<AnnotationSpec>
 ) {
-  val nullable get() = type.nullable
+  val nullable get() = type.isNullable
 
   /** Returns an adapter to use when encoding and decoding this property. */
   fun generateProperty(
@@ -86,12 +86,12 @@ private fun TypeName.toVariableName(): String {
   val base = when (this) {
     is ClassName -> simpleName
     is ParameterizedTypeName -> rawType.simpleName + "Of" + typeArguments.toVariableNames()
-    is WildcardTypeName -> (lowerBounds + upperBounds).toVariableNames()
+    is WildcardTypeName -> (inTypes + outTypes).toVariableNames()
     is TypeVariableName -> name + bounds.toVariableNames()
     else -> throw IllegalArgumentException("Unrecognized type! $this")
   }
 
-  return if (nullable) {
+  return if (isNullable) {
     "Nullable$base"
   } else {
     base

@@ -26,22 +26,21 @@ class TypeResolverTest {
 
   @Test
   fun ensureClassNameNullabilityIsPreserved() {
-    assertThat(resolver.resolve(Int::class.asClassName().asNullable()).nullable).isTrue()
+    assertThat(resolver.resolve(Int::class.asClassName().copy(nullable = true)).isNullable).isTrue()
   }
 
   @Test
   fun ensureParameterizedNullabilityIsPreserved() {
-    val nullableTypeName = List::class.plusParameter(String::class)
-        .asNullable()
+    val nullableTypeName = List::class.plusParameter(String::class).copy(nullable = true)
 
-    assertThat(resolver.resolve(nullableTypeName).nullable).isTrue()
+    assertThat(resolver.resolve(nullableTypeName).isNullable).isTrue()
   }
 
   @Test
   fun ensureWildcardNullabilityIsPreserved() {
-    val nullableTypeName = WildcardTypeName.subtypeOf(List::class.asClassName())
-        .asNullable()
+    val nullableTypeName = WildcardTypeName.producerOf(List::class.asClassName())
+        .copy(nullable = true)
 
-    assertThat(resolver.resolve(nullableTypeName).nullable).isTrue()
+    assertThat(resolver.resolve(nullableTypeName).isNullable).isTrue()
   }
 }
