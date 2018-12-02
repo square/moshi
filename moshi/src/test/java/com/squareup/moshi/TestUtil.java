@@ -40,6 +40,9 @@ final class TestUtil {
     return result.toString();
   }
 
+  static class Empty {
+  }
+
   private TestUtil() {
     throw new AssertionError("No instances.");
   }

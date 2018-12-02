@@ -47,3 +47,6 @@
     <init>(...);
     <fields>;
 }
+
+# Top-level functions that can only be used by Kotlin.
+-dontwarn com.squareup.moshi.-KotlinExtensions
