@@ -156,36 +156,6 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <artifactSet>
-                <includes>
-                  <include>com.squareup:kotlinpoet</include>
-                </includes>
-              </artifactSet>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-              </transformers>
-              <relocations>
-                <!-- Repackage KotlinPoet until its API is stable. -->
-                <relocation>
-                  <pattern>com.squareup.kotlinpoet</pattern>
-                  <shadedPattern>com.squareup.moshi.kotlinpoet</shadedPattern>
-                </relocation>
-              </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>${maven-assembly.version}</version>
         <executions>
