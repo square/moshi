@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 
 /**
  * A JsonAdapter factory for objects that include type information in the JSON. When decoding JSON
@@ -100,19 +101,31 @@ import javax.annotation.CheckReturnValue;
  * <p>If an unknown subtype is encountered when decoding, this will throw a {@link
  * JsonDataException}. If an unknown type is encountered when encoding, this will throw an {@link
  * IllegalArgumentException}.
+ *
+ * <p>If you want to specify a custom unknown fallback for decoding, you can do so via
+ * {@link #withDefaultValue(Object)}. This instance should be immutable, as it is shared.
  */
 public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
   final String labelKey;
   final List<String> labels;
   final List<Type> subtypes;
+  @Nullable final T defaultValue;
+  final boolean defaultValueSet;
 
   PolymorphicJsonAdapterFactory(
-      Class<T> baseType, String labelKey, List<String> labels, List<Type> subtypes) {
+      Class<T> baseType,
+      String labelKey,
+      List<String> labels,
+      List<Type> subtypes,
+      @Nullable T defaultValue,
+      boolean defaultValueSet) {
     this.baseType = baseType;
     this.labelKey = labelKey;
     this.labels = labels;
     this.subtypes = subtypes;
+    this.defaultValue = defaultValue;
+    this.defaultValueSet = defaultValueSet;
   }
 
   /**
@@ -125,7 +138,12 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     if (baseType == null) throw new NullPointerException("baseType == null");
     if (labelKey == null) throw new NullPointerException("labelKey == null");
     return new PolymorphicJsonAdapterFactory<>(
-        baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList());
+        baseType,
+        labelKey,
+        Collections.<String>emptyList(),
+        Collections.<Type>emptyList(),
+        null,
+        false);
   }
 
   /**
@@ -143,7 +161,25 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     newLabels.add(label);
     List<Type> newSubtypes = new ArrayList<>(subtypes);
     newSubtypes.add(subtype);
-    return new PolymorphicJsonAdapterFactory<>(baseType, labelKey, newLabels, newSubtypes);
+    return new PolymorphicJsonAdapterFactory<>(baseType,
+        labelKey,
+        newLabels,
+        newSubtypes,
+        defaultValue,
+        defaultValueSet);
+  }
+
+  /**
+   * Returns a new factory that with default to {@code defaultValue} upon decoding of unrecognized
+   * labels. The default value should be immutable.
+   */
+  public PolymorphicJsonAdapterFactory<T> withDefaultValue(@Nullable T defaultValue) {
+    return new PolymorphicJsonAdapterFactory<>(baseType,
+        labelKey,
+        labels,
+        subtypes,
+        defaultValue,
+        true);
   }
 
   @Override
@@ -157,7 +193,13 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }
 
-    return new PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters).nullSafe();
+    return new PolymorphicJsonAdapter(labelKey,
+        labels,
+        subtypes,
+        jsonAdapters,
+        defaultValue,
+        defaultValueSet
+    ).nullSafe();
   }
 
   static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {
@@ -165,18 +207,26 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     final List<String> labels;
     final List<Type> subtypes;
     final List<JsonAdapter<Object>> jsonAdapters;
+    @Nullable final Object defaultValue;
+    final boolean defaultValueSet;
 
     /** Single-element options containing the label's key only. */
     final JsonReader.Options labelKeyOptions;
     /** Corresponds to subtypes. */
     final JsonReader.Options labelOptions;
 
-    PolymorphicJsonAdapter(String labelKey, List<String> labels,
-        List<Type> subtypes, List<JsonAdapter<Object>> jsonAdapters) {
+    PolymorphicJsonAdapter(String labelKey,
+        List<String> labels,
+        List<Type> subtypes,
+        List<JsonAdapter<Object>> jsonAdapters,
+        @Nullable Object defaultValue,
+        boolean defaultValueSet) {
       this.labelKey = labelKey;
       this.labels = labels;
       this.subtypes = subtypes;
       this.jsonAdapters = jsonAdapters;
+      this.defaultValue = defaultValue;
+      this.defaultValueSet = defaultValueSet;
 
       this.labelKeyOptions = JsonReader.Options.of(labelKey);
       this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
@@ -184,6 +234,10 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
       int labelIndex = labelIndex(reader.peekJson());
+      if (labelIndex == -1) {
+        reader.skipValue();
+        return defaultValue;
+      }
       return jsonAdapters.get(labelIndex).fromJson(reader);
     }
 
@@ -197,7 +251,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         }
 
         int labelIndex = reader.selectString(labelOptions);
-        if (labelIndex == -1) {
+        if (labelIndex == -1 && !defaultValueSet) {
           throw new JsonDataException("Expected one of "
               + labels
               + " for key '"
