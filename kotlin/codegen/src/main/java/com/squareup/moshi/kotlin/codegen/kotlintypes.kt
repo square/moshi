@@ -26,7 +26,3 @@ internal fun TypeName.rawType(): ClassName {
     else -> throw IllegalArgumentException("Cannot get raw type from $this")
   }
 }
-
-internal fun TypeName.asNullableIf(condition: Boolean): TypeName {
-  return if (condition) copy(nullable = true) else this
-}
