@@ -77,17 +77,17 @@ internal fun Type.asTypeName(
   if (hasFlexibleUpperBound()) {
     return WildcardTypeName.producerOf(
         flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
   } else if (hasOuterType()) {
     return WildcardTypeName.consumerOf(
         outerType.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
   }
 
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
         .asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
     hasTypeParameterName() -> typeParameterName
     useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.typeAliasName
     else -> className
@@ -121,5 +121,5 @@ internal fun Type.asTypeName(
     typeName = (typeName as ClassName).parameterizedBy(*remappedArgs)
   }
 
-  return typeName.asNullableIf(nullable)
+  return typeName.copy(nullable = nullable)
 }

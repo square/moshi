@@ -35,18 +35,18 @@ open class TypeResolver {
 
       is ParameterizedTypeName -> {
             typeName.rawType.parameterizedBy(*(typeName.typeArguments.map { resolve(it) }.toTypedArray()))
-            .asNullableIf(typeName.isNullable)
+            .copy(nullable = typeName.isNullable)
       }
 
       is WildcardTypeName -> {
         when {
           typeName.inTypes.size == 1 -> {
             WildcardTypeName.consumerOf(resolve(typeName.inTypes[0]))
-                .asNullableIf(typeName.isNullable)
+                .copy(nullable = typeName.isNullable)
           }
           typeName.outTypes.size == 1 -> {
             WildcardTypeName.producerOf(resolve(typeName.outTypes[0]))
-                .asNullableIf(typeName.isNullable)
+                .copy(nullable = typeName.isNullable)
           }
           else -> {
             throw IllegalArgumentException(
