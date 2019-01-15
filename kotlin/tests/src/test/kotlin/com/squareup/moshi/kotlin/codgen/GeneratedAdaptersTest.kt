@@ -249,10 +249,11 @@ class GeneratedAdaptersTest {
   @Test
   fun nullableTypeParams() {
     val adapter = moshi.adapter<NullableTypeParams<Int>>(
-        Types.newParameterizedType(NullableTypeParams::class.java, Int::class.javaObjectType))
+        Types.newParameterizedTypeWithOwner(GeneratedAdaptersTest::class.java,
+            NullableTypeParams::class.java, Int::class.javaObjectType))
     val nullSerializing = adapter.serializeNulls()
 
-    val nullableTypeParams = NullableTypeParams<Int>(
+    val nullableTypeParams = NullableTypeParams(
         listOf("foo", null, "bar"),
         setOf("foo", null, "bar"),
         mapOf("foo" to "bar", "baz" to null),
@@ -260,7 +261,7 @@ class GeneratedAdaptersTest {
         1
     )
 
-    val noNullsTypeParams = NullableTypeParams<Int>(
+    val noNullsTypeParams = NullableTypeParams(
         nullableTypeParams.nullableList,
         nullableTypeParams.nullableSet,
         nullableTypeParams.nullableMap.filterValues { it != null },
@@ -276,6 +277,15 @@ class GeneratedAdaptersTest {
     val nullSerializedNullableTypeParams = adapter.fromJson(nullSerializedJson)
     assertThat(nullSerializedNullableTypeParams).isEqualTo(nullableTypeParams)
   }
+
+  @JsonClass(generateAdapter = true)
+  data class NullableTypeParams<T>(
+    val nullableList: List<String?>,
+    val nullableSet: Set<String?>,
+    val nullableMap: Map<String, String?>,
+    val nullableT: T?,
+    val nonNullT: T
+  )
 
   @Test fun doNotGenerateAdapter() {
     try {
@@ -1127,27 +1137,13 @@ class GeneratedAdaptersTest {
     val decoded = adapter.fromJson("""{"listOfInts":[4,-5,6]}""")!!
     assertThat(decoded).isEqualTo(HasCollectionOfPrimitives(listOf(4, -5, 6)))
   }
-}
 
-// Has to be outside to avoid Types seeing an owning class
-@JsonClass(generateAdapter = true)
-data class NullableTypeParams<T>(
-    val nullableList: List<String?>,
-    val nullableSet: Set<String?>,
-    val nullableMap: Map<String, String?>,
-    val nullableT: T?,
-    val nonNullT: T
-)
-
-typealias TypeAliasName = String
-typealias GenericTypeAlias = List<String>
-
-/**
- * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
- * nullability, primitive arrays, and some wacky generics.
- */
-@JsonClass(generateAdapter = true)
-data class SmokeTestType(
+  /**
+   * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
+   * nullability, primitive arrays, and some wacky generics.
+   */
+  @JsonClass(generateAdapter = true)
+  data class SmokeTestType(
     @Json(name = "first_name") val firstName: String,
     @Json(name = "last_name") val lastName: String,
     val age: Int,
@@ -1163,7 +1159,7 @@ data class SmokeTestType(
     val wildcardIn: Array<in String>,
     val any: List<*>,
     val anyTwo: List<Any>,
-//    val anyOut: MutableList<out Any>, waiting for fix in kotlinpoet https://github.com/square/kotlinpoet/issues/520
+    val anyOut: MutableList<out Any>,
     val nullableAnyOut: MutableList<out Any?>,
     val favoriteThreeNumbers: IntArray,
     val favoriteArrayValues: Array<String>,
@@ -1171,4 +1167,8 @@ data class SmokeTestType(
     val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
     val aliasedName: TypeAliasName = "Woah",
     val genericAlias: GenericTypeAlias = listOf("Woah")
-)
+  )
+}
+
+typealias TypeAliasName = String
+typealias GenericTypeAlias = List<String>
