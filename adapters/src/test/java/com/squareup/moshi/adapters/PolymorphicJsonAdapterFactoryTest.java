@@ -215,6 +215,18 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.long_value).isEqualTo(9007199254740993L);
   }
 
+  @Test public void failOnUnknownMissingTypeLabel() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithType.class, "success"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class).failOnUnknown();
+
+    MessageWithType decoded = (MessageWithType) adapter.fromJson(
+        "{\"value\":\"Okay!\",\"type\":\"success\"}");
+    assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
   interface Message {
   }
 
@@ -267,6 +279,16 @@ public final class PolymorphicJsonAdapterFactoryTest {
 
     MessageWithUnportableTypes(long long_value) {
       this.long_value = long_value;
+    }
+  }
+
+  static final class MessageWithType implements Message {
+    final String type;
+    final String value;
+
+    MessageWithType(String type, String value) {
+      this.type = type;
+      this.value = value;
     }
   }
 }

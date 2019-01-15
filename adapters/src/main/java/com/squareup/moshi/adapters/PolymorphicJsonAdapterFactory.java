@@ -233,7 +233,9 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     }
 
     @Override public Object fromJson(JsonReader reader) throws IOException {
-      int labelIndex = labelIndex(reader.peekJson());
+      JsonReader peeked = reader.peekJson();
+      peeked.setFailOnUnknown(false);
+      int labelIndex = labelIndex(peeked);
       if (labelIndex == -1) {
         reader.skipValue();
         return defaultValue;
