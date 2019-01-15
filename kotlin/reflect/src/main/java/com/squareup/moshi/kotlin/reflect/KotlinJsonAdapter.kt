@@ -54,35 +54,36 @@ private val ABSENT_VALUE = Any()
  * constructor, and then by setting any additional properties that exist, if any.
  */
 internal class KotlinJsonAdapter<T>(
-  private val constructor: KFunction<T>,
-  private val bindings: List<Binding<T, Any?>?>,
-  private val options: JsonReader.Options
+  val constructor: KFunction<T>,
+  val allBindings: List<Binding<T, Any?>?>,
+  val nonTransientBindings: List<Binding<T, Any?>>,
+  val options: JsonReader.Options
 ) : JsonAdapter<T>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
 
     // Read each value into its slot in the array.
-    val values = Array<Any?>(bindings.size) { ABSENT_VALUE }
+    val values = Array<Any?>(allBindings.size) { ABSENT_VALUE }
     reader.beginObject()
     while (reader.hasNext()) {
       val index = reader.selectName(options)
-      val binding = if (index != -1) bindings[index] else null
-
-      if (binding == null) {
+      if (index == -1) {
         reader.skipName()
         reader.skipValue()
         continue
       }
+      val binding = nonTransientBindings[index]
 
-      if (values[index] !== ABSENT_VALUE) {
+      val propertyIndex = binding.propertyIndex
+      if (values[propertyIndex] !== ABSENT_VALUE) {
         throw JsonDataException(
             "Multiple values for '${binding.property.name}' at ${reader.path}")
       }
 
-      values[index] = binding.adapter.fromJson(reader)
+      values[propertyIndex] = binding.adapter.fromJson(reader)
 
-      if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
+      if (values[propertyIndex] == null && !binding.property.returnType.isMarkedNullable) {
         throw Util.unexpectedNull(
             binding.property.name,
             binding.jsonName,
@@ -98,7 +99,7 @@ internal class KotlinJsonAdapter<T>(
         if (!constructor.parameters[i].type.isMarkedNullable) {
           throw Util.missingProperty(
               constructor.parameters[i].name,
-              bindings[i]?.jsonName,
+              allBindings[i]?.jsonName,
               reader
           )
         }
@@ -110,8 +111,8 @@ internal class KotlinJsonAdapter<T>(
     val result = constructor.callBy(IndexedParameterMap(constructor.parameters, values))
 
     // Set remaining properties.
-    for (i in constructorSize until bindings.size) {
-      val binding = bindings[i]!!
+    for (i in constructorSize until allBindings.size) {
+      val binding = allBindings[i]!!
       val value = values[i]
       binding.set(result, value)
     }
@@ -123,7 +124,7 @@ internal class KotlinJsonAdapter<T>(
     if (value == null) throw NullPointerException("value == null")
 
     writer.beginObject()
-    for (binding in bindings) {
+    for (binding in allBindings) {
       if (binding == null) continue // Skip constructor parameters that aren't properties.
 
       writer.name(binding.name)
@@ -135,11 +136,13 @@ internal class KotlinJsonAdapter<T>(
   override fun toString() = "KotlinJsonAdapter(${constructor.returnType})"
 
   data class Binding<K, P>(
-      val name: String,
-      val jsonName: String?,
-      val adapter: JsonAdapter<P>,
-      val property: KProperty1<K, P>,
-      val parameter: KParameter?) {
+    val name: String,
+    val jsonName: String?,
+    val adapter: JsonAdapter<P>,
+    val property: KProperty1<K, P>,
+    val parameter: KParameter?,
+    val propertyIndex: Int
+  ) {
     fun get(value: K) = property.get(value)
 
     fun set(result: K, value: P) {
@@ -257,7 +260,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           jsonAnnotation?.name ?: name,
           adapter,
           property as KProperty1<Any, Any?>,
-          parameter
+          parameter,
+          parameter?.index ?: -1
       )
     }
 
@@ -271,9 +275,13 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       bindings += binding
     }
 
-    bindings += bindingsByName.values
+    var index = bindings.size
+    for (bindingByName in bindingsByName) {
+      bindings += bindingByName.value.copy(propertyIndex = index++)
+    }
 
-    val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
-    return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
+    val nonTransientBindings = bindings.filterNotNull()
+    val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
+    return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
   }
 }
