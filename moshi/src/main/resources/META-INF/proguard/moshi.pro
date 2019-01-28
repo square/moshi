@@ -7,6 +7,11 @@
 
 -keep @com.squareup.moshi.JsonQualifier interface *
 
+# Retain annotated Enum field names.
+-keepclassmembers class * extends java.lang.Enum {
+    @com.squareup.moshi.* <fields>;
+}
+
 # Enum field names are used by the integrated EnumJsonAdapter.
 # Annotate enums with @JsonClass(generateAdapter = false) to use them with Moshi.
 -keepclassmembers @com.squareup.moshi.JsonClass class * extends java.lang.Enum {
