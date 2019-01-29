@@ -188,7 +188,7 @@ internal class AdapterGenerator(
           result.addStatement("%N = %N.fromJson(%N) ?: throw·%T(%P)",
               property.localName, nameAllocator[property.delegateKey], readerParam,
               JsonDataException::class,
-              "Non-null value '${property.localName}' was null at \${${readerParam.name}.path}")
+              "Non-null value '${property.jsonName}' was null at \${${readerParam.name}.path}")
         }
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
