@@ -17,7 +17,6 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
@@ -77,7 +76,7 @@ internal class KotlinJsonAdapter<T>(
 
       if (values[index] !== ABSENT_VALUE) {
         throw JsonDataException(
-            "Multiple values for '${constructor.parameters[index].name}' at ${reader.path}")
+            "Multiple values for '${binding.property.name}' at ${reader.path}")
       }
 
       values[index] = binding.adapter.fromJson(reader)

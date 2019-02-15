@@ -205,9 +205,9 @@ class KotlinJsonAdapterTest {
     var a: String = ""
   }
 
-  @Test fun duplicatedValue() {
+  @Test fun duplicatedValueParameter() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
+    val jsonAdapter = moshi.adapter(DuplicateValueParameter::class.java)
 
     try {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
@@ -217,7 +217,24 @@ class KotlinJsonAdapterTest {
     }
   }
 
-  class DuplicateValue(var a: Int = -1, var b: Int = -2)
+  class DuplicateValueParameter(var a: Int = -1, var b: Int = -2)
+
+  @Test fun duplicatedValueProperty() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(DuplicateValueProperty::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
+      fail()
+    } catch(expected: JsonDataException) {
+      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+    }
+  }
+
+  class DuplicateValueProperty {
+    var a: Int = -1
+    var b: Int = -2
+  }
 
   @Test fun explicitNull() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()

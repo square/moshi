@@ -818,20 +818,37 @@ class GeneratedAdaptersTest {
   }
 
   /** Generated adapters don't track enough state to detect duplicated values. */
-  @Ignore @Test fun duplicatedValue() {
+  @Ignore @Test fun duplicatedValueParameter() {
     val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
+    val jsonAdapter = moshi.adapter(DuplicateValueParameter::class.java)
 
     try {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for a at $.a")
+      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
     }
   }
 
-  @JsonClass(generateAdapter = true)
-  class DuplicateValue(var a: Int = -1, var b: Int = -2)
+  class DuplicateValueParameter(var a: Int = -1, var b: Int = -2)
+
+  /** Generated adapters don't track enough state to detect duplicated values. */
+  @Ignore @Test fun duplicatedValueProperty() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(DuplicateValueProperty::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
+      fail()
+    } catch(expected: JsonDataException) {
+      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+    }
+  }
+
+  class DuplicateValueProperty {
+    var a: Int = -1
+    var b: Int = -2
+  }
 
   @Test fun extensionProperty() {
     val moshi = Moshi.Builder().build()
