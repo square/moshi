@@ -36,17 +36,20 @@ public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
   }
 
   @Override public T fromJson(JsonReader reader) throws IOException {
-    // Read the value first so that the reader will be in a known state even if there's an
-    // exception. Otherwise it may be awkward to recover: it might be between calls to
-    // beginObject() and endObject() for example.
-    Object jsonValue = reader.readJsonValue();
-
-    // Use the delegate to convert the JSON value to the target type.
+    // Use a peeked reader to leave the reader in a known state even if there's an exception.
+    JsonReader peeked = reader.peekJson();
+    T result;
     try {
-      return delegate.fromJsonValue(jsonValue);
+      // Attempt to decode to the target type with the peeked reader.
+      result = delegate.fromJson(peeked);
     } catch (JsonDataException e) {
-      return defaultValue;
+      result = defaultValue;
+    } finally {
+      peeked.close();
     }
+    // Skip the value back on the reader, no matter the state of the peeked reader.
+    reader.skipValue();
+    return result;
   }
 
   @Override public void toJson(JsonWriter writer, T value) throws IOException {
