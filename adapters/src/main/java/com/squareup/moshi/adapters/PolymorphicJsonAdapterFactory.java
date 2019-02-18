@@ -235,7 +235,12 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     @Override public Object fromJson(JsonReader reader) throws IOException {
       JsonReader peeked = reader.peekJson();
       peeked.setFailOnUnknown(false);
-      int labelIndex = labelIndex(peeked);
+      int labelIndex;
+      try {
+        labelIndex = labelIndex(peeked);
+      } finally {
+        peeked.close();
+      }
       if (labelIndex == -1) {
         reader.skipValue();
         return defaultValue;
@@ -262,7 +267,6 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
               + reader.nextString()
               + "'. Register a subtype for this label.");
         }
-        reader.close();
         return labelIndex;
       }
 
