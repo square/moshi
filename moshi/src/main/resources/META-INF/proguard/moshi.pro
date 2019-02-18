@@ -17,33 +17,7 @@
 -keepnames @com.squareup.moshi.JsonClass class *
 
 # Retain generated JsonAdapters if annotated type is retained.
--if @com.squareup.moshi.JsonClass class *
--keep class <1>JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--if @com.squareup.moshi.JsonClass class **$*
--keep class <1>_<2>JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--if @com.squareup.moshi.JsonClass class **$*$*
--keep class <1>_<2>_<3>JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--if @com.squareup.moshi.JsonClass class **$*$*$*
--keep class <1>_<2>_<3>_<4>JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--if @com.squareup.moshi.JsonClass class **$*$*$*$*
--keep class <1>_<2>_<3>_<4>_<5>JsonAdapter {
-    <init>(...);
-    <fields>;
-}
--if @com.squareup.moshi.JsonClass class **$*$*$*$*$*
--keep class <1>_<2>_<3>_<4>_<5>_<6>JsonAdapter {
+-keep public class * extends com.squareup.moshi.JsonAdapter {
     <init>(...);
     <fields>;
 }
