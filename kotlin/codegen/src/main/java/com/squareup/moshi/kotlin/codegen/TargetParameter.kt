@@ -15,13 +15,13 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.ValueParameter
-import javax.lang.model.element.VariableElement
+import com.squareup.kotlinpoet.AnnotationSpec
 
 /** A parameter in user code that should be populated by generated code. */
 internal data class TargetParameter(
   val name: String,
-  val proto: ValueParameter,
   val index: Int,
-  val element: VariableElement
+  val hasDefault: Boolean,
+  val jsonName: String = name,
+  val qualifiers: Set<AnnotationSpec>? = null
 )

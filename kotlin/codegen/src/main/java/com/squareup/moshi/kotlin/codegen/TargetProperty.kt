@@ -16,57 +16,44 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.common.AnnotationMirrors
-import com.google.auto.common.MoreTypes
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
-import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.metadata.hasSetter
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Property
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
-import me.eugeniomarletti.kotlin.metadata.visibility
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.Modifier
-import javax.lang.model.element.Name
 import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic
 
 /** A property in user code that maps to JSON. */
-internal data class TargetProperty(
+internal data class TargetProperty constructor(
   val name: String,
   val type: TypeName,
-  private val proto: Property,
   private val parameter: TargetParameter?,
   private val annotationHolder: ExecutableElement?,
   private val field: VariableElement?,
   private val setter: ExecutableElement?,
-  private val getter: ExecutableElement?
+  private val getter: ExecutableElement?,
+  private val visibility: KModifier
 ) {
   val parameterIndex get() = parameter?.index ?: -1
-
-  val hasDefault get() = parameter?.proto?.declaresDefaultValue ?: true
+  val hasDefault get() = parameter?.hasDefault ?: true
 
   private val isTransient get() = field != null && Modifier.TRANSIENT in field.modifiers
 
   private val element get() = field ?: setter ?: getter!!
 
-  private val isSettable get() = proto.hasSetter || parameter != null
+  private val isSettable get() = setter != null || parameter != null
 
   private val isVisible: Boolean
     get() {
-      return proto.visibility == INTERNAL
-          || proto.visibility == PROTECTED
-          || proto.visibility == PUBLIC
+      return visibility == KModifier.INTERNAL
+          || visibility == KModifier.PROTECTED
+          || visibility == KModifier.PUBLIC
     }
 
   /**
@@ -93,25 +80,25 @@ internal data class TargetProperty(
     }
 
     val jsonQualifierMirrors = jsonQualifiers()
-    for (jsonQualifier in jsonQualifierMirrors) {
-      // Check Java types since that covers both Java and Kotlin annotations.
-      val annotationElement = MoreTypes.asTypeElement(jsonQualifier.annotationType)
-      annotationElement.getAnnotation(Retention::class.java)?.let {
-        if (it.value != RetentionPolicy.RUNTIME) {
-          messager.printMessage(Diagnostic.Kind.ERROR,
-              "JsonQualifier @${jsonQualifier.simpleName} must have RUNTIME retention")
-        }
-      }
-      annotationElement.getAnnotation(Target::class.java)?.let {
-        if (ElementType.FIELD !in it.value) {
-          messager.printMessage(Diagnostic.Kind.ERROR,
-              "JsonQualifier @${jsonQualifier.simpleName} must support FIELD target")
-        }
-      }
-    }
+    // TODO Can we check this after? Should we move this check to jsonQualifiers?
+//    for (jsonQualifier in jsonQualifierMirrors) {
+//      // Check Java types since that covers both Java and Kotlin annotations.
+//      annotationElement.getAnnotation(Retention::class.java)?.let {
+//        if (it.value != RetentionPolicy.RUNTIME) {
+//          messager.printMessage(Diagnostic.Kind.ERROR,
+//              "JsonQualifier @${jsonQualifier.simpleName} must have RUNTIME retention")
+//        }
+//      }
+//      annotationElement.getAnnotation(Target::class.java)?.let {
+//        if (ElementType.FIELD !in it.value) {
+//          messager.printMessage(Diagnostic.Kind.ERROR,
+//              "JsonQualifier @${jsonQualifier.simpleName} must support FIELD target")
+//        }
+//      }
+//    }
 
     val jsonQualifierSpecs = jsonQualifierMirrors.map {
-      AnnotationSpec.get(it).toBuilder()
+      it.toBuilder()
           .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
           .build()
     }
@@ -120,15 +107,15 @@ internal data class TargetProperty(
   }
 
   /** Returns the JsonQualifiers on the field and parameter of this property. */
-  private fun jsonQualifiers(): Set<AnnotationMirror> {
+  private fun jsonQualifiers(): Set<AnnotationSpec> {
     val elementQualifiers = element.qualifiers
     val annotationHolderQualifiers = annotationHolder.qualifiers
-    val parameterQualifiers = parameter?.element.qualifiers
+    val parameterQualifiers = parameter?.qualifiers.orEmpty()
 
     // TODO(jwilson): union the qualifiers somehow?
     return when {
-      elementQualifiers.isNotEmpty() -> elementQualifiers
-      annotationHolderQualifiers.isNotEmpty() -> annotationHolderQualifiers
+      elementQualifiers.isNotEmpty() -> elementQualifiers.mapTo(mutableSetOf()) { AnnotationSpec.get(it) }
+      annotationHolderQualifiers.isNotEmpty() -> annotationHolderQualifiers.mapTo(mutableSetOf()) { AnnotationSpec.get(it) }
       parameterQualifiers.isNotEmpty() -> parameterQualifiers
       else -> setOf()
     }
@@ -144,7 +131,7 @@ internal data class TargetProperty(
   fun jsonName(): String {
     val fieldJsonName = element.jsonName
     val annotationHolderJsonName = annotationHolder.jsonName
-    val parameterJsonName = parameter?.element.jsonName
+    val parameterJsonName = parameter?.jsonName
 
     return when {
       fieldJsonName != null -> fieldJsonName
@@ -154,14 +141,14 @@ internal data class TargetProperty(
     }
   }
 
-  private val Element?.jsonName: String?
-    get() {
-      if (this == null) return null
-      return getAnnotation(Json::class.java)?.name
-    }
-
-  private val AnnotationMirror.simpleName: Name
-    get() = MoreTypes.asTypeElement(annotationType).simpleName!!
+//  private val AnnotationMirror.simpleName: Name
+//    get() = MoreTypes.asTypeElement(annotationType).simpleName!!
 
   override fun toString() = name
 }
+
+internal val Element?.jsonName: String?
+  get() {
+    if (this == null) return null
+    return getAnnotation(Json::class.java)?.name
+  }
