@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -37,7 +38,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import java.lang.reflect.Constructor
 import java.lang.reflect.Type
-import javax.lang.model.element.TypeElement
 
 private val MOSHI_UTIL = Util::class.asClassName()
 
@@ -96,7 +96,7 @@ internal class AdapterGenerator(
       .initializer("null")
       .build()
 
-  fun generateFile(generatedOption: TypeElement?): FileSpec {
+  fun generateFile(generatedOption: ClassName?): FileSpec {
     for (property in nonTransientProperties) {
       property.allocateNames(nameAllocator)
     }
@@ -107,12 +107,12 @@ internal class AdapterGenerator(
     return result.build()
   }
 
-  private fun generateType(generatedOption: TypeElement?): TypeSpec {
+  private fun generateType(generatedOption: ClassName?): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
         .addOriginatingElement(originalElement)
 
     generatedOption?.let {
-      result.addAnnotation(AnnotationSpec.builder(it.asClassName())
+      result.addAnnotation(AnnotationSpec.builder(it)
           .addMember("value = [%S]", JsonClassCodegenProcessor::class.java.canonicalName)
           .addMember("comments = %S", "https://github.com/square/moshi")
           .build())

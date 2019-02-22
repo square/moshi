@@ -16,6 +16,7 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.service.AutoService
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonClass
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
@@ -87,7 +88,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
-        generator.generateFile(generatedType)
+        generator.generateFile(generatedType?.asClassName())
             .writeTo(filer)
       }
     }
