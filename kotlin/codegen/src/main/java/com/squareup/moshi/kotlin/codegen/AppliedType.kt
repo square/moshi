@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.moshi.kotlin.codegen.api.TypeResolver
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Types

@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin.codegen
+package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.moshi.kotlin.codegen.TargetProperty
 
 /** Generates functions to encode and decode a property as JSON. */
 internal class PropertyGenerator(

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin.codegen
+package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -37,6 +37,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import java.lang.reflect.Constructor
+import com.squareup.moshi.kotlin.codegen.JsonClassCodegenProcessor
 import java.lang.reflect.Type
 
 private val MOSHI_UTIL = Util::class.asClassName()

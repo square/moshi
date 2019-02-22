@@ -19,6 +19,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.plusParameter
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.moshi.kotlin.codegen.api.TypeResolver
 import org.junit.Test
 
 class TypeResolverTest {

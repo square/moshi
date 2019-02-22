@@ -21,6 +21,9 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
+import com.squareup.moshi.kotlin.codegen.api.DelegateKey
+import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
+import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -103,7 +106,8 @@ internal data class TargetProperty constructor(
           .build()
     }
 
-    return PropertyGenerator(this, DelegateKey(type, jsonQualifierSpecs))
+    return PropertyGenerator(this,
+        DelegateKey(type, jsonQualifierSpecs))
   }
 
   /** Returns the JsonQualifiers on the field and parameter of this property. */

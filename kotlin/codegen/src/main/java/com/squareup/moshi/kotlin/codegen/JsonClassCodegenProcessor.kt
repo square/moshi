@@ -18,6 +18,8 @@ package com.squareup.moshi.kotlin.codegen
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor

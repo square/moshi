@@ -18,7 +18,6 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.PUBLIC
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
@@ -26,6 +25,10 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
+import com.squareup.moshi.kotlin.codegen.api.TargetParameter
+import com.squareup.moshi.kotlin.codegen.api.TargetType
+import com.squareup.moshi.kotlin.codegen.api.TypeResolver
 import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.classKind
@@ -204,7 +207,8 @@ internal fun primaryConstructor(metadata: KotlinClassMetadata, elements: Element
     )
   }
 
-  return TargetConstructor(parameters, proto.visibility.asKModifier())
+  return TargetConstructor(parameters,
+      proto.visibility.asKModifier())
 }
 
 private val OBJECT_CLASS = ClassName("java.lang", "Object")
