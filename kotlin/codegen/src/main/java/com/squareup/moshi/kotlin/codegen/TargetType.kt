@@ -60,9 +60,7 @@ internal data class TargetType(
   val name = element.className
 
   init {
-    require(visibility.ordinal <= KModifier.INTERNAL.ordinal) {
-      "Visibility must be one of ${(0..KModifier.INTERNAL.ordinal).joinToString { KModifier.values()[it].name }}. Is $visibility"
-    }
+    visibility.checkIsVisibility()
   }
 
   companion object {
