@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.KModifier.PUBLIC
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
@@ -25,6 +26,12 @@ import com.squareup.kotlinpoet.WildcardTypeName
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Type
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter.Variance
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LOCAL
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PRIVATE
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PRIVATE_TO_THIS
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
 
 internal fun TypeParameter.asTypeName(
@@ -52,6 +59,18 @@ internal fun TypeParameter.Variance.asKModifier(): KModifier? {
     Variance.IN -> KModifier.IN
     Variance.OUT -> KModifier.OUT
     Variance.INV -> null
+  }
+}
+
+internal fun Visibility?.asKModifier(): KModifier {
+  return when (this) {
+    INTERNAL -> KModifier.INTERNAL
+    PRIVATE -> KModifier.PRIVATE
+    PROTECTED -> KModifier.PROTECTED
+    Visibility.PUBLIC -> KModifier.PUBLIC
+    PRIVATE_TO_THIS -> KModifier.PRIVATE
+    LOCAL -> KModifier.PRIVATE
+    else -> PUBLIC
   }
 }
 

@@ -25,6 +25,7 @@ import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.classKind
 import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
+import me.eugeniomarletti.kotlin.metadata.isDataClass
 import me.eugeniomarletti.kotlin.metadata.isInnerClass
 import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.modality
@@ -49,13 +50,20 @@ import javax.tools.Diagnostic.Kind.ERROR
 
 /** A user type that should be decoded and encoded by generated code. */
 internal data class TargetType(
-  val proto: Class,
   val element: TypeElement,
   val constructor: TargetConstructor,
   val properties: Map<String, TargetProperty>,
-  val typeVariables: List<TypeVariableName>
+  val typeVariables: List<TypeVariableName>,
+  val isDataClass: Boolean,
+  val visibility: KModifier
 ) {
   val name = element.className
+
+  init {
+    require(visibility.ordinal <= KModifier.INTERNAL.ordinal) {
+      "Visibility must be one of ${(0..KModifier.INTERNAL.ordinal).joinToString { KModifier.values()[it].name }}. Is $visibility"
+    }
+  }
 
   companion object {
     private val OBJECT_CLASS = ClassName("java.lang", "Object")
@@ -128,7 +136,13 @@ internal data class TargetType(
           properties.putIfAbsent(name, property)
         }
       }
-      return TargetType(proto, element, constructor, properties, typeVariables)
+      return TargetType(
+          element = element,
+          constructor = constructor,
+          properties = properties,
+          typeVariables = typeVariables,
+          isDataClass = proto.isDataClass,
+          visibility = proto.visibility.asKModifier())
     }
 
     /** Returns the properties declared by `typeElement`. */
