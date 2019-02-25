@@ -30,6 +30,7 @@ import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -111,7 +112,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     for ((name, parameter) in type.constructor.parameters) {
       if (type.properties[parameter.name] == null && !parameter.hasDefault) {
         messager.printMessage(
-            ERROR, "No property for required constructor parameter $name" /*, parameter.element // TODO how do we pass this? */)
+            ERROR, "No property for required constructor parameter $name", parameter.tag<VariableElement>())
         return null
       }
     }

@@ -15,21 +15,25 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeVariableName
 
-/** A user type that should be decoded and encoded by generated code. */
-internal data class TargetType(
-  val typeName: TypeName,
-  val constructor: TargetConstructor,
-  val properties: Map<String, TargetProperty>,
-  val typeVariables: List<TypeVariableName>,
-  val isDataClass: Boolean,
-  val visibility: KModifier
+/** A property in user code that maps to JSON. */
+internal data class TargetProperty(
+  val name: String,
+  val type: TypeName,
+  val parameter: TargetParameter?,
+  val annotationHolder: FunSpec?,
+  val field: PropertySpec?,
+  val setter: FunSpec?,
+  val getter: FunSpec?,
+  val visibility: KModifier,
+  val jsonName: String
 ) {
+  val parameterIndex get() = parameter?.index ?: -1
+  val hasDefault get() = parameter?.hasDefault ?: true
 
-  init {
-    visibility.checkIsVisibility()
-  }
+  override fun toString() = name
 }

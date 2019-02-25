@@ -18,7 +18,6 @@ package com.squareup.moshi.kotlin.codegen.api
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.moshi.kotlin.codegen.TargetProperty
 
 /** Generates functions to encode and decode a property as JSON. */
 internal class PropertyGenerator(
@@ -27,7 +26,7 @@ internal class PropertyGenerator(
   val isTransient: Boolean = false
 ) {
   val name = target.name
-  val jsonName = target.jsonName()
+  val jsonName = target.jsonName
   val hasDefault = target.hasDefault
 
   lateinit var localName: String
