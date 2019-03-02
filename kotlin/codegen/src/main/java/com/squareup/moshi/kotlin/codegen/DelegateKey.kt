@@ -19,6 +19,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -56,21 +57,18 @@ internal data class DelegateKey(
     val standardArgs = arrayOf(moshiParameter,
         CodeBlock.of("<%T>", type),
         typeRenderer.render(type))
-    var standardArgsSize = standardArgs.size
     val (initializerString, args) = when {
-      // TODO: Reference top-level function emptySet().
-      // TODO: https://github.com/square/kotlinpoet/issues/433/
-      jsonQualifiers.isEmpty() -> ", kotlin.collections.emptySet()" to emptyArray()
+      jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
       else -> {
-        ", %${++standardArgsSize}T.getFieldJsonQualifierAnnotations(javaClass, " +
-            "%${++standardArgsSize}S)" to arrayOf(Types::class.asTypeName(), adapterName)
+        ", %T.getFieldJsonQualifierAnnotations(javaClass, " +
+            "%S)" to arrayOf(Types::class.asTypeName(), adapterName)
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
         .addAnnotations(jsonQualifiers)
-        .initializer("%1N.adapter%2L(%3L$initializerString, %${++standardArgsSize}S)", *finalArgs)
+        .initializer("%N.adapter%L(%L$initializerString, %S)", *finalArgs)
         .build()
   }
 }
