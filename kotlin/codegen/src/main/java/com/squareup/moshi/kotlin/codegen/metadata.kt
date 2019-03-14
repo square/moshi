@@ -16,17 +16,24 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.common.AnnotationMirrors
+import com.google.auto.common.MoreTypes
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.KModifier.PUBLIC
+import com.squareup.kotlinpoet.KModifier.VARARG
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.asTypeVariableName
 import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
@@ -37,9 +44,6 @@ import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.TypeResolver
-import com.squareup.moshi.kotlin.codegen.api.asAnnotationSpec
-import com.squareup.moshi.kotlin.codegen.api.asFunSpec
-import com.squareup.moshi.kotlin.codegen.api.asPropertySpec
 import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.classKind
@@ -74,12 +78,22 @@ import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.ExecutableElement
+import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.DEFAULT
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.NATIVE
+import javax.lang.model.element.Modifier.STATIC
+import javax.lang.model.element.Modifier.SYNCHRONIZED
+import javax.lang.model.element.Modifier.TRANSIENT
+import javax.lang.model.element.Modifier.VOLATILE
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
+import javax.lang.model.type.TypeVariable
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import javax.tools.Diagnostic.Kind.ERROR
+import kotlin.reflect.KClass
 
 private fun TypeParameter.asTypeName(
     nameResolver: NameResolver,
@@ -436,6 +450,96 @@ private val TypeParameter.varianceModifier: KModifier?
     }
   }
 
+/**
+ * Returns a new [PropertySpec] representation of [this].
+ *
+ * This will copy its name, type, visibility modifiers, constant value, and annotations. Note that
+ * Java modifiers that correspond to annotations in kotlin will be added as well (`volatile`,
+ * `transient`, etc`.
+ *
+ * The original `field` ([this]) is stored in [PropertySpec.tag].
+ */
+internal fun VariableElement.asPropertySpec(asJvmField: Boolean = false): PropertySpec {
+  require(kind == ElementKind.FIELD) {
+    "Must be a field!"
+  }
+  val modifiers: Set<Modifier> = modifiers
+  val fieldName = simpleName.toString()
+  val propertyBuilder = PropertySpec.builder(fieldName, asType().asTypeName())
+  propertyBuilder.addModifiers(*modifiers.mapNotNull { it.asKModifier() }.toTypedArray())
+  constantValue?.let {
+    if (it is String) {
+      propertyBuilder.initializer(CodeBlock.of("%S", it))
+    } else {
+      propertyBuilder.initializer(CodeBlock.of("%L", it))
+    }
+  }
+  propertyBuilder.addAnnotations(annotationMirrors.map(AnnotationMirror::asAnnotationSpec))
+  propertyBuilder.addAnnotations(modifiers.mapNotNull { it.asAnnotation() })
+  propertyBuilder.tag(this)
+  if (asJvmField && KModifier.PRIVATE !in propertyBuilder.modifiers) {
+    propertyBuilder.addAnnotation(JvmField::class)
+  }
+  return propertyBuilder.build()
+}
+
+/**
+ * Returns a new [AnnotationSpec] representation of [this].
+ *
+ * Identical and delegates to [AnnotationSpec.get], but the original `mirror` is also stored
+ * in [AnnotationSpec.tag].
+ */
+internal fun AnnotationMirror.asAnnotationSpec(): AnnotationSpec {
+  return AnnotationSpec.get(this)
+      .toBuilder()
+      .tag(MoreTypes.asTypeElement(annotationType))
+      .build()
+}
+
+/**
+ * Returns a new [FunSpec] representation of [this].
+ *
+ * This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+ * throws declarations.
+ *
+ * The original `method` ([this]) is stored in [FunSpec.tag].
+ *
+ * Nearly identical to [FunSpec.overriding], but no override modifier is added nor are checks around
+ * overridability done
+ */
+internal fun ExecutableElement.asFunSpec(): FunSpec {
+  var modifiers: Set<Modifier> = modifiers
+  val methodName = simpleName.toString()
+  val funBuilder = FunSpec.builder(methodName)
+
+  modifiers = modifiers.toMutableSet()
+  funBuilder.jvmModifiers(modifiers)
+
+  typeParameters
+      .map { it.asType() as TypeVariable }
+      .map { it.asTypeVariableName() }
+      .forEach { funBuilder.addTypeVariable(it) }
+
+  funBuilder.returns(returnType.asTypeName())
+  funBuilder.addParameters(ParameterSpec.parametersOf(this))
+  if (isVarArgs) {
+    funBuilder.parameters[funBuilder.parameters.lastIndex] = funBuilder.parameters.last()
+        .toBuilder()
+        .addModifiers(VARARG)
+        .build()
+  }
+
+  if (thrownTypes.isNotEmpty()) {
+    val throwsValueString = thrownTypes.joinToString { "%T::class" }
+    funBuilder.addAnnotation(AnnotationSpec.builder(Throws::class)
+        .addMember(throwsValueString, *thrownTypes.toTypedArray())
+        .build())
+  }
+
+  funBuilder.tag(this)
+  return funBuilder.build()
+}
+
 private val TargetProperty.isTransient get() = field != null && field.annotations.any { it.className == Transient::class.asClassName() }
 private val TargetProperty.isSettable get() = setter != null || parameter != null
 private val TargetProperty.isVisible: Boolean
@@ -518,6 +622,33 @@ private fun TargetProperty.jsonQualifiers(element: Element?): Set<AnnotationSpec
     parameterQualifiers.isNotEmpty() -> parameterQualifiers
     else -> setOf()
   }
+}
+
+private fun Modifier.asKModifier(): KModifier? {
+  return when (this) {
+    Modifier.PUBLIC -> KModifier.PUBLIC
+    Modifier.PROTECTED -> KModifier.PROTECTED
+    Modifier.PRIVATE -> KModifier.PRIVATE
+    Modifier.ABSTRACT -> KModifier.ABSTRACT
+    FINAL -> KModifier.FINAL
+    else -> null
+  }
+}
+
+private fun Modifier.asAnnotation(): AnnotationSpec? {
+  return when (this) {
+    DEFAULT -> JvmDefault::class.asAnnotationSpec()
+    STATIC -> JvmStatic::class.asAnnotationSpec()
+    TRANSIENT -> Transient::class.asAnnotationSpec()
+    VOLATILE -> Volatile::class.asAnnotationSpec()
+    SYNCHRONIZED -> Synchronized::class.asAnnotationSpec()
+    NATIVE -> JvmDefault::class.asAnnotationSpec()
+    else -> null
+  }
+}
+
+private fun <T : Annotation> KClass<T>.asAnnotationSpec(): AnnotationSpec {
+  return AnnotationSpec.builder(this).build()
 }
 
 private val Element?.qualifiers: Set<AnnotationMirror>
