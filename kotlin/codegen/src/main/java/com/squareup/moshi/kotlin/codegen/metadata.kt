@@ -27,6 +27,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
