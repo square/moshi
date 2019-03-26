@@ -25,7 +25,15 @@
     <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
-      <version>1.1.0</version>
+      <!-- TODO Pending a KotlinPoet release with https://github.com/square/kotlinpoet/pull/647 -->
+      <version>1.2.0-LOCAL</version>
+    </dependency>
+    <dependency>
+      <groupId>net.ltgt.gradle.incap</groupId>
+      <artifactId>incap</artifactId>
+      <version>${incap.version}</version>
+      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.auto</groupId>
@@ -35,7 +43,7 @@
     <dependency>
       <groupId>com.google.auto.service</groupId>
       <artifactId>auto-service</artifactId>
-      <version>1.0-rc4</version>
+      <version>${autoservice.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -101,7 +109,12 @@
                 <annotationProcessorPath>
                   <groupId>com.google.auto.service</groupId>
                   <artifactId>auto-service</artifactId>
-                  <version>1.0-rc4</version>
+                  <version>${autoservice.version}</version>
+                </annotationProcessorPath>
+                <annotationProcessorPath>
+                  <groupId>net.ltgt.gradle.incap</groupId>
+                  <artifactId>incap-processor</artifactId>
+                  <version>${incap.version}</version>
                 </annotationProcessorPath>
               </annotationProcessorPaths>
             </configuration>

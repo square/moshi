@@ -52,6 +52,7 @@ internal class AdapterGenerator(
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
+  private val originalElement = target.element
   private val originalTypeName = target.element.asType().asTypeName()
 
   private val moshiParam = ParameterSpec.builder(
@@ -97,6 +98,7 @@ internal class AdapterGenerator(
 
   private fun generateType(generatedOption: TypeElement?): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+        .addOriginatingElement(originalElement)
 
     generatedOption?.let {
       result.addAnnotation(AnnotationSpec.builder(it.asClassName())

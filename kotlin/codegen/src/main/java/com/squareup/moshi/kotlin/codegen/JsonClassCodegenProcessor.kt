@@ -16,12 +16,12 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.service.AutoService
-import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.moshi.JsonClass
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
 import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
-import java.io.File
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType.ISOLATING
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
@@ -42,6 +42,7 @@ import javax.tools.Diagnostic.Kind.ERROR
  * If you don't want this though, you can use the runtime [JsonClass] factory implementation.
  */
 @AutoService(Processor::class)
+@IncrementalAnnotationProcessor(ISOLATING)
 class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
 
   companion object {
@@ -86,7 +87,8 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter) {
         val generator = adapterGenerator(type) ?: continue
-        generator.generateAndWrite(generatedType)
+        generator.generateFile(generatedType)
+            .writeTo(filer)
       }
     }
 
@@ -122,19 +124,5 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     }
 
     return AdapterGenerator(type, sortedProperties)
-  }
-
-  private fun AdapterGenerator.generateAndWrite(generatedOption: TypeElement?) {
-    val fileSpec = generateFile(generatedOption)
-    val adapterName = fileSpec.members.filterIsInstance<TypeSpec>().first().name!!
-    val outputDir = generatedDir ?: mavenGeneratedDir(adapterName)
-    fileSpec.writeTo(outputDir)
-  }
-
-  private fun mavenGeneratedDir(adapterName: String): File {
-    // Hack since the maven plugin doesn't supply `kapt.kotlin.generated` option
-    // Bug filed at https://youtrack.jetbrains.com/issue/KT-22783
-    val file = filer.createSourceFile(adapterName).toUri().let(::File)
-    return file.parentFile.also { file.delete() }
   }
 }
