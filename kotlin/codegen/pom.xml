@@ -25,8 +25,7 @@
     <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
-      <!-- TODO Pending a KotlinPoet release with https://github.com/square/kotlinpoet/pull/647 -->
-      <version>1.2.0-LOCAL</version>
+      <version>1.2.0</version>
     </dependency>
     <dependency>
       <groupId>net.ltgt.gradle.incap</groupId>
