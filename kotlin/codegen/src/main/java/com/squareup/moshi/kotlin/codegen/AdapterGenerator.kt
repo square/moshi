@@ -135,7 +135,6 @@ internal class AdapterGenerator(
     result.addFunction(generateToStringFun())
     result.addFunction(generateFromJsonFun())
     result.addFunction(generateToJsonFun())
-    result.addFunction(generateJsonDataExceptionFun())
 
     return result.build()
   }
@@ -160,17 +159,9 @@ internal class AdapterGenerator(
         .build()
   }
 
-  private fun generateJsonDataExceptionFun(): FunSpec {
-    return FunSpec.builder("jsonDataException")
-        .addModifiers(KModifier.PRIVATE)
-        .returns(JsonDataException::class)
-        .addParameter("s1", String::class)
-        .addParameter("ident", String::class)
-        .addParameter("s2", String::class)
-        .addParameter("reader", JsonReader::class)
-        .addStatement("return %T(%T(s1).append(ident).append(s2).append(reader.path).toString())",
-            JsonDataException::class, StringBuilder::class)
-        .build()
+  private fun jsonDataException(description: String, identifier: String, condition: String, reader: ParameterSpec): CodeBlock {
+    return CodeBlock.of("%T(%T(%S).append(%S).append(%S).append(%N.path).toString())",
+            JsonDataException::class, StringBuilder::class, description, identifier, condition, reader)
   }
 
   private fun generateFromJsonFun(): FunSpec {
@@ -199,9 +190,13 @@ internal class AdapterGenerator(
           result.addStatement("%N = %N.fromJson(%N)",
               property.localName, nameAllocator[property.delegateKey], readerParam)
         } else {
-          result.addStatement("%N = %N.fromJson(%N) ?: throw·jsonDataException(%S, %S, %S, %N)",
-              property.localName, nameAllocator[property.delegateKey], readerParam,
-              "Non-null value '", property.localName, "' was null at ", readerParam)
+          result.addCode("«%N = %N.fromJson(%N) ?: throw·",
+              property.localName, nameAllocator[property.delegateKey], readerParam)
+
+          result.addCode(jsonDataException(
+              "Non-null value '", property.localName, "' was null at ", readerParam))
+
+          result.addCode("\n»")
         }
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
@@ -210,9 +205,13 @@ internal class AdapterGenerator(
           result.addStatement("%L -> %N = %N.fromJson(%N)",
               index, property.localName, nameAllocator[property.delegateKey], readerParam)
         } else {
-          result.addStatement("%L -> %N = %N.fromJson(%N) ?: throw·jsonDataException(%S, %S, %S, %N)",
-              index, property.localName, nameAllocator[property.delegateKey], readerParam,
-              "Non-null value '", property.localName, "' was null at ", readerParam)
+          result.addCode("«%L -> %N = %N.fromJson(%N) ?: throw·",
+              index, property.localName, nameAllocator[property.delegateKey], readerParam)
+
+          result.addCode(jsonDataException(
+              "Non-null value '", property.localName, "' was null at ", readerParam))
+
+          result.addCode("\n»")
         }
       }
     }
@@ -242,8 +241,8 @@ internal class AdapterGenerator(
       result.addCode(separator)
       result.addCode("%N = %N", property.name, property.localName)
       if (property.isRequired) {
-        result.addCode(" ?: throw·jsonDataException(%S, %S, %S, %N)",
-            "Required property '", property.localName, "' missing at ", readerParam)
+        result.addCode(" ?: throw·").addCode(jsonDataException(
+            "Required property '", property.localName, "' missing at ", readerParam))
       }
       separator = ",\n"
     }
