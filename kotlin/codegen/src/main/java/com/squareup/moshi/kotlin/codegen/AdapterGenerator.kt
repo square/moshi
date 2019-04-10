@@ -308,7 +308,7 @@ internal class AdapterGenerator(
         .addParameter(valueParam)
 
     result.beginControlFlow("if (%N == null)", valueParam)
-    result.addStatement("throw %T(%S)", NullPointerException::class,
+    result.addStatement("throw·%T(%S)", NullPointerException::class,
         "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.")
     result.endControlFlow()
 
