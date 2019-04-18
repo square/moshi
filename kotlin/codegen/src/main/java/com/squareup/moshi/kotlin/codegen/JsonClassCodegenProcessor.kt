@@ -90,7 +90,12 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
-        generator.generateFile(generatedType?.asClassName())
+        generator
+            .generateFile(generatedType?.asClassName()) {
+              it.toBuilder()
+                  .addOriginatingElement(type)
+                  .build()
+            }
             .writeTo(filer)
       }
     }
