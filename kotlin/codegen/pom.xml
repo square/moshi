@@ -64,10 +64,12 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-compiler-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-annotation-processing-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
