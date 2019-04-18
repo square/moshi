@@ -33,6 +33,8 @@
     <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
     <dokka.version>0.9.17</dokka.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
+    <incap.version>0.2</incap.version>
+    <autoservice.version>1.0-rc5</autoservice.version>
 
     <!-- Dependencies -->
     <okio.version>1.16.0</okio.version>

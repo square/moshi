@@ -25,7 +25,14 @@
     <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet</artifactId>
-      <version>1.1.0</version>
+      <version>1.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>net.ltgt.gradle.incap</groupId>
+      <artifactId>incap</artifactId>
+      <version>${incap.version}</version>
+      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>com.google.auto</groupId>
@@ -34,9 +41,10 @@
     </dependency>
     <dependency>
       <groupId>com.google.auto.service</groupId>
-      <artifactId>auto-service</artifactId>
-      <version>1.0-rc4</version>
+      <artifactId>auto-service-annotations</artifactId>
+      <version>${autoservice.version}</version>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -56,10 +64,12 @@
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-compiler-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-annotation-processing-embeddable</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
@@ -101,7 +111,12 @@
                 <annotationProcessorPath>
                   <groupId>com.google.auto.service</groupId>
                   <artifactId>auto-service</artifactId>
-                  <version>1.0-rc4</version>
+                  <version>${autoservice.version}</version>
+                </annotationProcessorPath>
+                <annotationProcessorPath>
+                  <groupId>net.ltgt.gradle.incap</groupId>
+                  <artifactId>incap-processor</artifactId>
+                  <version>${incap.version}</version>
                 </annotationProcessorPath>
               </annotationProcessorPaths>
             </configuration>
