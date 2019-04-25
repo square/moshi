@@ -56,11 +56,14 @@ private val ABSENT_VALUE = Any()
 internal class KotlinJsonAdapter<T>(
     val constructor: KFunction<T>,
     val bindings: List<Binding<T, Any?>?>,
-    val options: JsonReader.Options) : JsonAdapter<T>() {
+    val options: JsonReader.Options,
+    val failureStrategy: FailureStrategy) : JsonAdapter<T>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
 
+    // accumulator for Non-null values that are null or required fields that are missing
+    var failures: MutableList<String>? = null
     // Read each value into its slot in the array.
     val values = Array<Any?>(bindings.size) { ABSENT_VALUE }
     reader.beginObject()
@@ -82,21 +85,37 @@ internal class KotlinJsonAdapter<T>(
       values[index] = binding.adapter.fromJson(reader)
 
       if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
-        throw JsonDataException(
-            "Non-null value '${binding.property.name}' was null at ${reader.path}")
+        when(failureStrategy) {
+            FailureStrategy.FAIL_FAST -> throw JsonDataException(
+                    "Non-null value '${binding.property.name}' was null at ${reader.path}")
+            FailureStrategy.ACCUMULATE_ERRORS -> {
+              if (failures == null) failures = mutableListOf()
+              failures.add("'${binding.property.name}' was null at ${reader.path}")
+            }
+        }
       }
     }
     reader.endObject()
+
 
     // Confirm all parameters are present, optional, or nullable.
     for (i in 0 until constructorSize) {
       if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
         if (!constructor.parameters[i].type.isMarkedNullable) {
-          throw JsonDataException(
-              "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
+          when(failureStrategy){
+            FailureStrategy.FAIL_FAST -> throw JsonDataException(
+                    "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
+            FailureStrategy.ACCUMULATE_ERRORS -> {
+              if (failures == null) failures = mutableListOf()
+              failures.add("'${constructor.parameters[i].name}' missing at ${reader.path}")
+            }
+          }
         }
         values[i] = null // Replace absent with null.
       }
+    }
+    if (failureStrategy == FailureStrategy.ACCUMULATE_ERRORS && !failures.isNullOrEmpty()) {
+      throw JsonDataException("Required value(s) ${failures.joinToString()}")
     }
 
     // Call the constructor using a Map so that absent optionals get defaults.
@@ -164,7 +183,25 @@ internal class KotlinJsonAdapter<T>(
   }
 }
 
-class KotlinJsonAdapterFactory : JsonAdapter.Factory {
+/**
+ * Failure strategy when a required value is missing or non-null value is null
+ */
+enum class FailureStrategy {
+
+    /**
+     * Throw a [JsonDataException] on the first violation
+     */
+    FAIL_FAST,
+
+    /**
+     * Accumulate all the violations and throw a [JsonDataException] at the end
+     */
+    ACCUMULATE_ERRORS
+}
+
+class KotlinJsonAdapterFactory @JvmOverloads constructor(
+    val failureStrategy: FailureStrategy = FailureStrategy.FAIL_FAST) : JsonAdapter.Factory {
+
   override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi)
       : JsonAdapter<*>? {
     if (!annotations.isEmpty()) return null
@@ -237,8 +274,14 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val name = jsonAnnotation?.name ?: property.name
       val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
-      val adapter = moshi.adapter<Any>(
-          resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
+      val adapter = if(failureStrategy == FailureStrategy.ACCUMULATE_ERRORS &&
+              !property.returnType.isMarkedNullable) {
+        // Use nullSafe() so it accumulates null violations
+        moshi.adapter<Any>(resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
+                .nullSafe()
+      } else {
+        moshi.adapter<Any>(resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
+      }
 
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
           property as KProperty1<Any, Any?>, parameter)
@@ -257,6 +300,6 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     bindings += bindingsByName.values
 
     val options = JsonReader.Options.of(*bindings.map { it?.name ?: "\u0000" }.toTypedArray())
-    return KotlinJsonAdapter(constructor, bindings, options).nullSafe()
+    return KotlinJsonAdapter(constructor, bindings, options, failureStrategy).nullSafe()
   }
 }

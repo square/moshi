@@ -145,6 +145,20 @@ class KotlinJsonAdapterTest {
 
   class RequiredValueAbsent(var a: Int = 3, var b: Int)
 
+  @Test fun multipleRequiredValuesAreAbsentWhenAccumulateErrors() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory(FailureStrategy.ACCUMULATE_ERRORS)).build()
+    val jsonAdapter = moshi.adapter(MultipleRequiredValuesAbsent::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"c":5}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Required value(s) 'a' missing at $, 'd' missing at $")
+    }
+  }
+
+  class MultipleRequiredValuesAbsent(var a: Int, var b: Int = 42, var c: Int, var d: Int, var e: Int?)
+
   @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
@@ -186,6 +200,20 @@ class KotlinJsonAdapterTest {
       assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
     }
   }
+
+  @Test fun multipleNonNullPropertiesSetToNullFailWhenAccumulateErrors() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory(FailureStrategy.ACCUMULATE_ERRORS)).build()
+    val jsonAdapter = moshi.adapter(HasNonNullConstructorParameters::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"a":null, "b":2, "c":null}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Required value(s) 'a' was null at $.a, 'c' was null at $.c")
+    }
+  }
+
+  data class HasNonNullConstructorParameters(val a: Int, val b: Int, val c: Int, val d: Int?)
 
   @Test fun nonNullPropertySetToNullFromAdapterFailsWithJsonDataException() {
     val moshi = Moshi.Builder().add(object {
