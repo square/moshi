@@ -34,6 +34,7 @@ import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
+import static com.squareup.moshi.internal.Util.removeSubtypeWildcard;
 import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 /**
@@ -112,7 +113,7 @@ public final class Moshi {
       throw new NullPointerException("annotations == null");
     }
 
-    type = canonicalize(type);
+    type = removeSubtypeWildcard(canonicalize(type));
 
     // If there's an equivalent adapter in the cache, we're done!
     Object cacheKey = cacheKey(type, annotations);
@@ -158,7 +159,7 @@ public final class Moshi {
       Set<? extends Annotation> annotations) {
     if (annotations == null) throw new NullPointerException("annotations == null");
 
-    type = canonicalize(type);
+    type = removeSubtypeWildcard(canonicalize(type));
 
     int skipPastIndex = factories.indexOf(skipPast);
     if (skipPastIndex == -1) {

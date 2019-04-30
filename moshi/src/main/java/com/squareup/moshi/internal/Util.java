@@ -139,6 +139,21 @@ public final class Util {
     }
   }
 
+  /**
+   * If type is a "? extends X" wildcard, returns X; otherwise returns type unchanged.
+   */
+  public static Type removeSubtypeWildcard(Type type) {
+    if (!(type instanceof WildcardType)) return type;
+
+    Type[] lowerBounds = ((WildcardType) type).getLowerBounds();
+    if (lowerBounds.length != 0) return type;
+
+    Type[] upperBounds = ((WildcardType) type).getUpperBounds();
+    if (upperBounds.length != 1) throw new IllegalArgumentException();
+
+    return upperBounds[0];
+  }
+
   public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
