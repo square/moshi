@@ -1,3 +1,5 @@
+<img src="moshi.png" width="150" height="150" align="right">
+
 Moshi
 =====
 
@@ -504,6 +506,8 @@ public final class BlackjackHand {
   }
 }
 ```
+
+<img src="spiral.png" width="150" height="150" align="right">
 
 Kotlin
 ------
