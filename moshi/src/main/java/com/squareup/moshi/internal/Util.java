@@ -460,7 +460,7 @@ public final class Util {
     if (jsonClass == null || !jsonClass.generateAdapter()) {
       return null;
     }
-    String adapterClassName = rawType.getName().replace("$", "_") + "JsonAdapter";
+    String adapterClassName = Types.generatedJsonAdapterName(rawType.getName());
     try {
       @SuppressWarnings("unchecked") // We generate types to match.
           Class<? extends JsonAdapter<?>> adapterClass = (Class<? extends JsonAdapter<?>>)
