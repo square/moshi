@@ -1190,37 +1190,36 @@ data class NullableTypeParams<T>(
     val nonNullT: T
 )
 
-  /**
-   * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
-   * nullability, primitive arrays, and some wacky generics.
-   */
-  @JsonClass(generateAdapter = true)
-  data class SmokeTestType(
-    @Json(name = "first_name") val firstName: String,
-    @Json(name = "last_name") val lastName: String,
-    val age: Int,
-    val nationalities: List<String> = emptyList(),
-    val weight: Float,
-    val tattoos: Boolean = false,
-    val race: String?,
-    val hasChildren: Boolean = false,
-    val favoriteFood: String? = null,
-    val favoriteDrink: String? = "Water",
-    val wildcardOut: MutableList<out String> = mutableListOf(),
-    val nullableWildcardOut: MutableList<out String?> = mutableListOf(),
-    val wildcardIn: Array<in String>,
-    val any: List<*>,
-    val anyTwo: List<Any>,
-    val anyOut: MutableList<out Any>,
-    val nullableAnyOut: MutableList<out Any?>,
-    val favoriteThreeNumbers: IntArray,
-    val favoriteArrayValues: Array<String>,
-    val favoriteNullableArrayValues: Array<String?>,
-    val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
-    val aliasedName: TypeAliasName = "Woah",
-    val genericAlias: GenericTypeAlias = listOf("Woah")
-  )
-}
+/**
+ * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
+ * nullability, primitive arrays, and some wacky generics.
+ */
+@JsonClass(generateAdapter = true)
+data class SmokeTestType(
+  @Json(name = "first_name") val firstName: String,
+  @Json(name = "last_name") val lastName: String,
+  val age: Int,
+  val nationalities: List<String> = emptyList(),
+  val weight: Float,
+  val tattoos: Boolean = false,
+  val race: String?,
+  val hasChildren: Boolean = false,
+  val favoriteFood: String? = null,
+  val favoriteDrink: String? = "Water",
+  val wildcardOut: MutableList<out String> = mutableListOf(),
+  val nullableWildcardOut: MutableList<out String?> = mutableListOf(),
+  val wildcardIn: Array<in String>,
+  val any: List<*>,
+  val anyTwo: List<Any>,
+  val anyOut: MutableList<out Any>,
+  val nullableAnyOut: MutableList<out Any?>,
+  val favoriteThreeNumbers: IntArray,
+  val favoriteArrayValues: Array<String>,
+  val favoriteNullableArrayValues: Array<String?>,
+  val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
+  val aliasedName: TypeAliasName = "Woah",
+  val genericAlias: GenericTypeAlias = listOf("Woah")
+)
 
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
