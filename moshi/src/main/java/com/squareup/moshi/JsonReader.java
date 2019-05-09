@@ -478,7 +478,8 @@ public abstract class JsonReader implements Closeable {
    * Returns a new {@code JsonReader} that can read data from this {@code JsonReader} without
    * consuming it. The returned reader becomes invalid once this one is next read or closed.
    *
-   * For example, we can use {@code peek()} to lookahead and read the same data multiple times.
+   * <p>For example, we can use {@code peekJson()} to lookahead and read the same data multiple
+   * times.
    *
    * <pre> {@code
    *
@@ -489,7 +490,7 @@ public abstract class JsonReader implements Closeable {
    *   jsonReader.beginArray();
    *   jsonReader.nextInt(); // Returns 123, reader contains 456, 789 and ].
    *
-   *   JsonReader peek = reader.peekReader();
+   *   JsonReader peek = reader.peekJson();
    *   peek.nextInt() // Returns 456.
    *   peek.nextInt() // Returns 789.
    *   peek.endArray()

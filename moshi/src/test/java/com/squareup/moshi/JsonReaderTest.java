@@ -988,6 +988,44 @@ public final class JsonReaderTest {
     assertThat(reader.hasNext()).isFalse();
   }
 
+  @Test public void skipValueAtEndOfObjectFails() throws IOException {
+    JsonReader reader = newReader("{}");
+    reader.beginObject();
+    try {
+      reader.skipValue();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected a value but was END_OBJECT at path $.");
+    }
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void skipValueAtEndOfArrayFails() throws IOException {
+    JsonReader reader = newReader("[]");
+    reader.beginArray();
+    try {
+      reader.skipValue();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected a value but was END_ARRAY at path $[0]");
+    }
+    reader.endArray();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void skipValueAtEndOfDocumentFails() throws IOException {
+    JsonReader reader = newReader("1");
+    reader.nextInt();
+    try {
+      reader.skipValue();
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessage("Expected a value but was END_DOCUMENT at path $");
+    }
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   @Test public void basicPeekJson() throws IOException {
     JsonReader reader = newReader("{\"a\":12,\"b\":[34,56],\"c\":78}");
     reader.beginObject();

@@ -44,7 +44,7 @@ internal class PropertyGenerator(
   }
 
   fun generateLocalProperty(): PropertySpec {
-    return PropertySpec.builder(localName, target.type.asNullable())
+    return PropertySpec.builder(localName, target.type.copy(nullable = true))
         .mutable(true)
         .initializer("null")
         .build()

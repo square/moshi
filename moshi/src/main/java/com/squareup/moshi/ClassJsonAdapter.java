@@ -29,7 +29,6 @@ import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.resolve;
-import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
@@ -55,12 +54,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       }
       Class<?> rawType = Types.getRawType(type);
       if (rawType.isInterface() || rawType.isEnum()) return null;
-      if (Util.isPlatformType(rawType) && !Types.isAllowedPlatformType(rawType)) {
-        throw new IllegalArgumentException("Platform "
-            + typeAnnotatedWithAnnotations(type, annotations)
-            + " requires explicit JsonAdapter to be registered");
-      }
       if (!annotations.isEmpty()) return null;
+      if (Util.isPlatformType(rawType)) {
+        throw new IllegalArgumentException(
+            "Platform " + type + " requires explicit JsonAdapter to be registered");
+      }
 
       if (rawType.isAnonymousClass()) {
         throw new IllegalArgumentException("Cannot serialize anonymous class " + rawType.getName());
@@ -74,6 +72,19 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       }
       if (Modifier.isAbstract(rawType.getModifiers())) {
         throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
+      }
+      try {
+        //noinspection unchecked if the Class.forName works, the cast will work.
+        Class<? extends Annotation> metadataClass =
+            (Class<? extends Annotation>) Class.forName("kotlin.Metadata");
+        if (rawType.isAnnotationPresent(metadataClass)) {
+          throw new IllegalArgumentException("Cannot serialize Kotlin type " + rawType.getName()
+              + ". Reflective serialization of Kotlin classes without using kotlin-reflect has "
+              + "undefined and unexpected behavior. Please use KotlinJsonAdapter from the "
+              + "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact.");
+        }
+      } catch (ClassNotFoundException ignored) {
+
       }
 
       ClassFactory<Object> classFactory = ClassFactory.get(rawType);

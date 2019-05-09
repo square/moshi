@@ -52,6 +52,7 @@ internal class AdapterGenerator(
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
+  private val originalElement = target.element
   private val originalTypeName = target.element.asType().asTypeName()
 
   private val moshiParam = ParameterSpec.builder(
@@ -71,7 +72,7 @@ internal class AdapterGenerator(
       .build()
   private val valueParam = ParameterSpec.builder(
       nameAllocator.newName("value"),
-      originalTypeName.asNullable())
+      originalTypeName.copy(nullable = true))
       .build()
   private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(originalTypeName)
 
@@ -97,6 +98,7 @@ internal class AdapterGenerator(
 
   private fun generateType(generatedOption: TypeElement?): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+        .addOriginatingElement(originalElement)
 
     generatedOption?.let {
       result.addAnnotation(AnnotationSpec.builder(it.asClassName())
@@ -159,6 +161,16 @@ internal class AdapterGenerator(
         .build()
   }
 
+  private fun jsonDataException(
+    description: String,
+    identifier: String,
+    condition: String,
+    reader: ParameterSpec
+  ): CodeBlock {
+    return CodeBlock.of("%T(%T(%S).append(%S).append(%S).append(%N.path).toString())",
+        JsonDataException::class, StringBuilder::class, description, identifier, condition, reader)
+  }
+
   private fun generateFromJsonFun(): FunSpec {
     val resultName = nameAllocator.newName("result")
 
@@ -183,24 +195,25 @@ internal class AdapterGenerator(
         result.beginControlFlow("%L -> ", index)
         if (property.delegateKey.nullable) {
           result.addStatement("%N = %N.fromJson(%N)",
-              property.localName, nameAllocator.get(property.delegateKey), readerParam)
+              property.localName, nameAllocator[property.delegateKey], readerParam)
         } else {
-          result.addStatement("%N = %N.fromJson(%N)" +
-              " ?: throw %T(\"Non-null value '%N' was null at \${%N.path}\")",
-              property.localName, nameAllocator.get(property.delegateKey), readerParam,
-              JsonDataException::class, property.localName, readerParam)
+          val exception = jsonDataException(
+              "Non-null value '", property.localName, "' was null at ", readerParam)
+          result.addStatement("%N = %N.fromJson(%N) ?: throw·%L",
+              property.localName, nameAllocator[property.delegateKey], readerParam, exception)
         }
         result.addStatement("%N = true", property.localIsPresentName)
         result.endControlFlow()
       } else {
         if (property.delegateKey.nullable) {
           result.addStatement("%L -> %N = %N.fromJson(%N)",
-              index, property.localName, nameAllocator.get(property.delegateKey), readerParam)
+              index, property.localName, nameAllocator[property.delegateKey], readerParam)
         } else {
-          result.addStatement("%L -> %N = %N.fromJson(%N)" +
-              " ?: throw %T(\"Non-null value '%N' was null at \${%N.path}\")",
-              index, property.localName, nameAllocator.get(property.delegateKey), readerParam,
-              JsonDataException::class, property.localName, readerParam)
+          val exception = jsonDataException(
+              "Non-null value '", property.localName, "' was null at ", readerParam)
+          result.addStatement("%L -> %N = %N.fromJson(%N) ?: throw·%L",
+              index, property.localName, nameAllocator[property.delegateKey], readerParam,
+              exception)
         }
       }
     }
@@ -217,7 +230,7 @@ internal class AdapterGenerator(
 
     // Call the constructor providing only required parameters.
     var hasOptionalParameters = false
-    result.addCode("%[var %N = %T(", resultName, originalTypeName)
+    result.addCode("«var %N = %T(", resultName, originalTypeName)
     var separator = "\n"
     for (property in propertyList) {
       if (!property.hasConstructorParameter) {
@@ -230,20 +243,20 @@ internal class AdapterGenerator(
       result.addCode(separator)
       result.addCode("%N = %N", property.name, property.localName)
       if (property.isRequired) {
-        result.addCode(" ?: throw %T(\"Required property '%L' missing at \${%N.path}\")",
-            JsonDataException::class, property.localName, readerParam)
+        result.addCode(" ?: throw·%L", jsonDataException(
+            "Required property '", property.localName, "' missing at ", readerParam))
       }
       separator = ",\n"
     }
-    result.addCode(")%]\n", originalTypeName)
+    result.addCode(")»\n", originalTypeName)
 
     // Call either the constructor again, or the copy() method, this time providing any optional
     // parameters that we have.
     if (hasOptionalParameters) {
       if (isDataClass) {
-        result.addCode("%[%1N = %1N.copy(", resultName)
+        result.addCode("«%1N = %1N.copy(", resultName)
       } else {
-        result.addCode("%[%1N = %2T(", resultName, originalTypeName)
+        result.addCode("«%1N = %2T(", resultName, originalTypeName)
       }
       separator = "\n"
       for (property in propertyList) {
@@ -255,17 +268,21 @@ internal class AdapterGenerator(
         }
 
         result.addCode(separator)
-        if (property.differentiateAbsentFromNull) {
-          result.addCode("%2N = if (%3N) %4N else %1N.%2N",
-              resultName, property.name, property.localIsPresentName, property.localName)
-        } else if (property.isRequired) {
-          result.addCode("%1N = %2N", property.name, property.localName)
-        } else {
-          result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
+        when {
+          property.differentiateAbsentFromNull -> {
+            result.addCode("%2N = if (%3N) %4N else %1N.%2N",
+                resultName, property.name, property.localIsPresentName, property.localName)
+          }
+          property.isRequired -> {
+            result.addCode("%1N = %2N", property.name, property.localName)
+          }
+          else -> {
+            result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
+          }
         }
         separator = ",\n"
       }
-      result.addCode("%])\n")
+      result.addCode("»)\n")
     }
 
     // Assign properties not present in the constructor.
@@ -293,7 +310,7 @@ internal class AdapterGenerator(
         .addParameter(valueParam)
 
     result.beginControlFlow("if (%N == null)", valueParam)
-    result.addStatement("throw %T(%S)", NullPointerException::class,
+    result.addStatement("throw·%T(%S)", NullPointerException::class,
         "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.")
     result.endControlFlow()
 
@@ -301,7 +318,7 @@ internal class AdapterGenerator(
     propertyList.forEach { property ->
       result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%L)",
-          nameAllocator.get(property.delegateKey), writerParam, valueParam, property.name)
+          nameAllocator[property.delegateKey], writerParam, valueParam, property.name)
     }
     result.addStatement("%N.endObject()", writerParam)
 

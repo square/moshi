@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
@@ -75,19 +75,19 @@ internal fun Type.asTypeName(
   }
 
   if (hasFlexibleUpperBound()) {
-    return WildcardTypeName.subtypeOf(
+    return WildcardTypeName.producerOf(
         flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
   } else if (hasOuterType()) {
-    return WildcardTypeName.supertypeOf(
+    return WildcardTypeName.consumerOf(
         outerType.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
   }
 
   val realType = when {
     hasTypeParameter() -> return getTypeParameter(typeParameter)
         .asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
-        .asNullableIf(nullable)
+        .copy(nullable = nullable)
     hasTypeParameterName() -> typeParameterName
     useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.typeAliasName
     else -> className
@@ -107,19 +107,19 @@ internal fun Type.asTypeName(
             .let { argumentTypeName ->
               nullableProjection?.let { projection ->
                 when (projection) {
-                  Type.Argument.Projection.IN -> WildcardTypeName.supertypeOf(argumentTypeName)
-                  Type.Argument.Projection.OUT -> WildcardTypeName.subtypeOf(argumentTypeName)
-                  Type.Argument.Projection.STAR -> WildcardTypeName.STAR
+                  Type.Argument.Projection.IN -> WildcardTypeName.consumerOf(argumentTypeName)
+                  Type.Argument.Projection.OUT -> WildcardTypeName.producerOf(argumentTypeName)
+                  Type.Argument.Projection.STAR -> STAR
                   Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
                 }
               } ?: argumentTypeName
             }
       } else {
-        WildcardTypeName.STAR
+        STAR
       }
     }.toTypedArray()
     typeName = (typeName as ClassName).parameterizedBy(*remappedArgs)
   }
 
-  return typeName.asNullableIf(nullable)
+  return typeName.copy(nullable = nullable)
 }

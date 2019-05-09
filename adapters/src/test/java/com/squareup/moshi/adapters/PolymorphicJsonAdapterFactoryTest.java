@@ -78,6 +78,33 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
   }
 
+  @Test public void specifiedFallbackSubtype() throws IOException {
+    Error fallbackError = new Error(Collections.<String, Object>emptyMap());
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(fallbackError))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
+    assertThat(message).isSameAs(fallbackError);
+  }
+
+  @Test public void specifiedNullFallbackSubtype() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(null))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
+    assertThat(message).isNull();
+  }
+
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
         .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
@@ -170,16 +197,6 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void disallowObjectBaseType() {
-    try {
-      PolymorphicJsonAdapterFactory.of(Object.class, "type");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
-          "The base type must not be Object. Consider using a marker interface.");
-    }
-  }
-
   /**
    * Longs that do not have an exact double representation are problematic for JSON. It is a bad
    * idea to use JSON for these values! But Moshi tries to retain long precision where possible.
@@ -196,6 +213,18 @@ public final class PolymorphicJsonAdapterFactoryTest {
     MessageWithUnportableTypes decoded = (MessageWithUnportableTypes) adapter.fromJson(
         "{\"type\":\"unportable\",\"long_value\":9007199254740993}");
     assertThat(decoded.long_value).isEqualTo(9007199254740993L);
+  }
+
+  @Test public void failOnUnknownMissingTypeLabel() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithType.class, "success"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class).failOnUnknown();
+
+    MessageWithType decoded = (MessageWithType) adapter.fromJson(
+        "{\"value\":\"Okay!\",\"type\":\"success\"}");
+    assertThat(decoded.value).isEqualTo("Okay!");
   }
 
   interface Message {
@@ -250,6 +279,16 @@ public final class PolymorphicJsonAdapterFactoryTest {
 
     MessageWithUnportableTypes(long long_value) {
       this.long_value = long_value;
+    }
+  }
+
+  static final class MessageWithType implements Message {
+    final String type;
+    final String value;
+
+    MessageWithType(String type, String value) {
+      this.type = type;
+      this.value = value;
     }
   }
 }

@@ -17,10 +17,10 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
 /**
  * Resolves type parameters against a type declaration. Use this to fill in type variables with
@@ -35,18 +35,18 @@ open class TypeResolver {
 
       is ParameterizedTypeName -> {
             typeName.rawType.parameterizedBy(*(typeName.typeArguments.map { resolve(it) }.toTypedArray()))
-            .asNullableIf(typeName.nullable)
+            .copy(nullable = typeName.isNullable)
       }
 
       is WildcardTypeName -> {
         when {
-          typeName.lowerBounds.size == 1 -> {
-            WildcardTypeName.supertypeOf(resolve(typeName.lowerBounds[0]))
-                .asNullableIf(typeName.nullable)
+          typeName.inTypes.size == 1 -> {
+            WildcardTypeName.consumerOf(resolve(typeName.inTypes[0]))
+                .copy(nullable = typeName.isNullable)
           }
-          typeName.upperBounds.size == 1 -> {
-            WildcardTypeName.subtypeOf(resolve(typeName.upperBounds[0]))
-                .asNullableIf(typeName.nullable)
+          typeName.outTypes.size == 1 -> {
+            WildcardTypeName.producerOf(resolve(typeName.outTypes[0]))
+                .copy(nullable = typeName.isNullable)
           }
           else -> {
             throw IllegalArgumentException(

@@ -140,7 +140,7 @@ class KotlinCompilerCall(var scratchDir: File) {
             ZipEntry("META-INF/services/${entry.key.qualifiedName}"))
         val serviceFile = Okio.buffer(Okio.sink(zipOutputStream))
         for (implementation in entry.value) {
-          serviceFile.writeUtf8(implementation.qualifiedName)
+          serviceFile.writeUtf8(implementation.qualifiedName!!)
           serviceFile.writeUtf8("\n")
         }
         serviceFile.emit() // Don't close the entry; that closes the file.

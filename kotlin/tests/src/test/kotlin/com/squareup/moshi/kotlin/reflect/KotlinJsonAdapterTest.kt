@@ -34,6 +34,7 @@ import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
+@Suppress("UNUSED", "UNUSED_PARAMETER")
 class KotlinJsonAdapterTest {
   @Test fun constructorParameters() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -204,9 +205,9 @@ class KotlinJsonAdapterTest {
     var a: String = ""
   }
 
-  @Test fun duplicatedValue() {
+  @Test fun duplicatedValueParameter() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(DuplicateValue::class.java)
+    val jsonAdapter = moshi.adapter(DuplicateValueParameter::class.java)
 
     try {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
@@ -216,7 +217,24 @@ class KotlinJsonAdapterTest {
     }
   }
 
-  class DuplicateValue(var a: Int = -1, var b: Int = -2)
+  class DuplicateValueParameter(var a: Int = -1, var b: Int = -2)
+
+  @Test fun duplicatedValueProperty() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(DuplicateValueProperty::class.java)
+
+    try {
+      jsonAdapter.fromJson("""{"a":4,"a":4}""")
+      fail()
+    } catch(expected: JsonDataException) {
+      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+    }
+  }
+
+  class DuplicateValueProperty {
+    var a: Int = -1
+    var b: Int = -2
+  }
 
   @Test fun explicitNull() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -481,8 +499,8 @@ class KotlinJsonAdapterTest {
       moshi.adapter(Triple::class.java)
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage("Platform class kotlin.Triple (with no annotations) "
-          + "requires explicit JsonAdapter to be registered")
+      assertThat(e).hasMessage(
+          "Platform class kotlin.Triple requires explicit JsonAdapter to be registered")
     }
   }
 
@@ -869,6 +887,7 @@ class KotlinJsonAdapterTest {
             return value ?: "fallback"
           }
         })
+        .add(KotlinJsonAdapterFactory())
         .build()
 
     assertThat(moshi.adapter(HasNonNullConstructorParameter::class.java)
@@ -917,7 +936,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun nullablePrimitivesUseBoxedPrimitiveAdapters() {
     val moshi = Moshi.Builder()
-        .add(JsonAdapter.Factory { type, annotations, moshi ->
+        .add(JsonAdapter.Factory { type, _, _ ->
           if (Boolean::class.javaObjectType == type) {
             return@Factory object: JsonAdapter<Boolean?>() {
               override fun fromJson(reader: JsonReader): Boolean? {
@@ -935,6 +954,7 @@ class KotlinJsonAdapterTest {
           }
           null
         })
+        .add(KotlinJsonAdapterFactory())
         .build()
     val adapter = moshi.adapter(HasNullableBoolean::class.java).serializeNulls()
     assertThat(adapter.fromJson("""{"boolean":"not a boolean"}"""))
@@ -943,9 +963,23 @@ class KotlinJsonAdapterTest {
   }
 
   @Test fun adaptersAreNullSafe() {
-    val moshi = Moshi.Builder().build()
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
     val adapter = moshi.adapter(HasNonNullConstructorParameter::class.java)
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
   }
+
+  @Test fun kotlinClassesWithoutAdapterAreRefused() {
+    val moshi = Moshi.Builder().build()
+    try {
+      moshi.adapter<PlainKotlinClass>(PlainKotlinClass::class.java)
+      fail("Should not pass here")
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageContaining("Reflective serialization of Kotlin classes")
+    }
+  }
+
+  class PlainKotlinClass
 }

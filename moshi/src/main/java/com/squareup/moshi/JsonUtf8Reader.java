@@ -957,11 +957,19 @@ final class JsonUtf8Reader extends JsonReader {
         pushScope(JsonScope.EMPTY_OBJECT);
         count++;
       } else if (p == PEEKED_END_ARRAY) {
-        stackSize--;
         count--;
+        if (count < 0) {
+          throw new JsonDataException(
+              "Expected a value but was " + peek() + " at path " + getPath());
+        }
+        stackSize--;
       } else if (p == PEEKED_END_OBJECT) {
-        stackSize--;
         count--;
+        if (count < 0) {
+          throw new JsonDataException(
+              "Expected a value but was " + peek() + " at path " + getPath());
+        }
+        stackSize--;
       } else if (p == PEEKED_UNQUOTED_NAME || p == PEEKED_UNQUOTED) {
         skipUnquotedValue();
       } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
@@ -970,6 +978,9 @@ final class JsonUtf8Reader extends JsonReader {
         skipQuotedValue(SINGLE_QUOTE_OR_SLASH);
       } else if (p == PEEKED_NUMBER) {
         buffer.skip(peekedNumberLength);
+      } else if (p == PEEKED_EOF) {
+        throw new JsonDataException(
+            "Expected a value but was " + peek() + " at path " + getPath());
       }
       peeked = PEEKED_NONE;
     } while (count != 0);

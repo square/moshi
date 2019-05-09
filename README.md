@@ -213,11 +213,44 @@ JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
 Event event = jsonAdapter.fromJson(json);
 ```
 
+### Adapter convenience methods
+
+Moshi provides a number of convenience methods for `JsonAdapter` objects:
+- `nullSafe()`
+- `nonNull()`
+- `lenient()`
+- `failOnUnknown()`
+- `indent()`
+- `serializeNulls()`
+
+These factory methods wrap an existing `JsonAdapter` into additional functionality.
+For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
+
+```java
+String dateJson = "\"2018-11-26T11:04:19.342668Z\"";
+String nullDateJson = "null";
+
+// RFC 3339 date adapter, doesn't support null by default
+// See also: https://github.com/square/moshi/tree/master/adapters
+JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter();
+
+Date date = adapter.fromJson(dateJson);
+System.out.println(date); // Mon Nov 26 12:04:19 CET 2018
+
+Date nullDate = adapter.fromJson(nullDateJson);
+// Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
+
+Date nullDate = adapter.nullSafe().fromJson(nullDateJson);
+System.out.println(nullDate); // null
+```
+
+In contrast to `nullSafe()` there is `nonNull()` to make an adapter refuse null values. Refer to the Moshi JavaDoc for details on the various methods.
+
 ### Parse JSON Arrays
 
 Say we have a JSON string of this structure:
 
-```java
+```json
 [
   {
     "rank": "4",

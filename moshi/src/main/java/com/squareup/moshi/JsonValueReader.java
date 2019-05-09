@@ -308,6 +308,9 @@ final class JsonValueReader extends JsonReader {
 
     Object skipped = stackSize != 0 ? stack[stackSize - 1] : null;
 
+    if (skipped instanceof JsonIterator) {
+      throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
+    }
     if (skipped instanceof Map.Entry) {
       // We're skipping a name. Promote the map entry's value.
       Map.Entry<?, ?> entry = (Map.Entry<?, ?>) stack[stackSize - 1];
@@ -315,6 +318,8 @@ final class JsonValueReader extends JsonReader {
     } else if (stackSize > 0) {
       // We're skipping a value.
       remove();
+    } else {
+      throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
     }
   }
 
