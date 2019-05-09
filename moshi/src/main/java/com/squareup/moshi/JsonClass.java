@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
+import java.lang.reflect.Type;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -38,4 +39,34 @@ public @interface JsonClass {
    *  * All properties must be either non-transient or have a default value.
    */
   boolean generateAdapter();
+
+  /**
+   * An optional custom generator tag used to indicate which generator should be used. If empty,
+   * Moshi's annotation processor will generate an adapter for the annotated type. If not empty,
+   * Moshi's processor will skip it and defer to a custom generator. This can be used to allow
+   * other custom code generation tools to run and still allow Moshi to read their generated
+   * JsonAdapter outputs.
+   *
+   * <p>Requirements for :
+   * <ul>
+   *   <li>
+   *     The generated adapter must subclass {@link JsonAdapter} and be parameterized by this type.
+   *   </li>
+   *   <li>
+   *     {@link Types#generatedJsonAdapterName} should be used for the fully qualified class name in
+   *     order for Moshi to correctly resolve and load the generated JsonAdapter.
+   *   </li>
+   *   <li>The first parameter must be a {@link Moshi} instance.</li>
+   *   <li>
+   *     If generic, a second {@link Type[]} parameter should be declared to accept type arguments.
+   *   </li>
+   * </ul>
+   *
+   * <p>Example for a class "CustomType":<pre>{@code
+   *   class CustomTypeJsonAdapter(moshi: Moshi, types: Array<Type>) : JsonAdapter<CustomType>() {
+   *     // ...
+   *   }
+   * }</pre>
+   */
+  String generator() default "";
 }
