@@ -26,6 +26,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
@@ -1125,6 +1126,29 @@ class GeneratedAdaptersTest {
 
     val decoded = adapter.fromJson("""{"listOfInts":[4,-5,6]}""")!!
     assertThat(decoded).isEqualTo(HasCollectionOfPrimitives(listOf(4, -5, 6)))
+  }
+
+  @JsonClass(generateAdapter = true, generator = "custom")
+  data class CustomGeneratedClass(val foo: String)
+
+  @Test fun customGenerator_withClassPresent() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(CustomGeneratedClass::class.java)
+    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate()
+    assertThat(unwrapped).isInstanceOf(GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter::class.java)
+  }
+
+  @JsonClass(generateAdapter = true, generator = "custom")
+  data class CustomGeneratedClassMissing(val foo: String)
+
+  @Test fun customGenerator_withClassMissing() {
+    val moshi = Moshi.Builder().build()
+    try {
+      moshi.adapter(CustomGeneratedClassMissing::class.java)
+      fail()
+    } catch (e: RuntimeException) {
+      assertThat(e).hasMessageContaining("Failed to find the generated JsonAdapter class")
+    }
   }
 }
 
