@@ -68,6 +68,10 @@ public @interface JsonClass {
    *     // ...
    *   }
    * }</pre>
+   *
+   * <p>To help ensure your own generator meets requirements above, you can use Moshi’s built-in
+   * generator to create the API signature to get started, then make your own generator match that
+   * expected signature.
    */
   String generator() default "";
 }
