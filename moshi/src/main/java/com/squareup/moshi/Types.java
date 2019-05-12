@@ -57,6 +57,7 @@ public final class Types {
    *
    * @param clazz the class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
+   *         Note that this name will always be a top-level class name and not a nested class.
    */
   public static String generatedJsonAdapterName(Class<?> clazz) {
     if (clazz.getAnnotation(JsonClass.class) == null) {
@@ -73,6 +74,7 @@ public final class Types {
    *
    * @param className the fully qualified class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
+   *         Note that this name will always be a top-level class name and not a nested class.
    */
   public static String generatedJsonAdapterName(String className) {
     return className.replace("$", "_") + "JsonAdapter";
