@@ -48,7 +48,7 @@ public @interface JsonClass {
    * other custom code generation tools to run and still allow Moshi to read their generated
    * JsonAdapter outputs.
    *
-   * <p>Requirements for :
+   * <p>Requirements for generated adapter class signatures:
    * <ul>
    *   <li>
    *     The generated adapter must subclass {@link JsonAdapter} and be parameterized by this type.
