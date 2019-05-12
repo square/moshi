@@ -30,9 +30,13 @@ public @interface JsonClass {
   /**
    * True to trigger the annotation processor to generate an adapter for this type.
    *
-   * <p>There are currently some restrictions on which types that can be used with generated adapters:
+   * <p>There are currently some restrictions on which types that can be used with generated
+   * adapters:
    * <ul>
-   *  <li>The class must be implemented in Kotlin (unless using a custom generator, see {@link #generator()}).</li>
+   *  <li>
+   *    The class must be implemented in Kotlin (unless using a custom generator, see
+   *    {@link #generator()}).
+   *  </li>
    *  <li>The class may not be an abstract class, an inner class, or a local class.</li>
    *  <li>All superclasses must be implemented in Kotlin.</li>
    *  <li>All properties must be public, protected, or internal.</li>
