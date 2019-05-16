@@ -50,6 +50,37 @@ public final class Types {
   }
 
   /**
+   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given
+   * {@link JsonClass JsonClass-annotated} {@code clazz}. This is the same lookup logic used by
+   * both the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can
+   * be useful if generating your own JsonAdapters without using Moshi's first party code gen.
+   *
+   * @param clazz the class to calculate a generated JsonAdapter name for.
+   * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
+   *         Note that this name will always be a top-level class name and not a nested class.
+   */
+  public static String generatedJsonAdapterName(Class<?> clazz) {
+    if (clazz.getAnnotation(JsonClass.class) == null) {
+      throw new IllegalArgumentException("Class does not have a JsonClass annotation: " + clazz);
+    }
+    return generatedJsonAdapterName(clazz.getName());
+  }
+
+  /**
+   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given
+   * {@link JsonClass JsonClass-annotated} {@code className}. This is the same lookup logic used by
+   * both the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can
+   * be useful if generating your own JsonAdapters without using Moshi's first party code gen.
+   *
+   * @param className the fully qualified class to calculate a generated JsonAdapter name for.
+   * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
+   *         Note that this name will always be a top-level class name and not a nested class.
+   */
+  public static String generatedJsonAdapterName(String className) {
+    return className.replace("$", "_") + "JsonAdapter";
+  }
+
+  /**
    * Checks if {@code annotations} contains {@code jsonQualifier}.
    * Returns the subset of {@code annotations} without {@code jsonQualifier}, or null if {@code
    * annotations} does not contain {@code jsonQualifier}.

@@ -85,7 +85,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       val jsonClass = type.getAnnotation(annotation)
-      if (jsonClass.generateAdapter) {
+      if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
         generator.generateFile(generatedType)
             .writeTo(filer)

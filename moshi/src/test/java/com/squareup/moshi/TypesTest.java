@@ -287,6 +287,33 @@ public final class TypesTest {
     assertThat(annotations).hasSize(0);
   }
 
+  @Test public void generatedJsonAdapterName_strings() {
+    assertThat(Types.generatedJsonAdapterName("com.foo.Test")).isEqualTo("com.foo.TestJsonAdapter");
+    assertThat(Types.generatedJsonAdapterName("com.foo.Test$Bar")).isEqualTo("com.foo.Test_BarJsonAdapter");
+  }
+
+  @Test public void generatedJsonAdapterName_class() {
+    assertThat(Types.generatedJsonAdapterName(TestJsonClass.class)).isEqualTo("com.squareup.moshi.TypesTest_TestJsonClassJsonAdapter");
+  }
+
+  @Test public void generatedJsonAdapterName_class_missingJsonClass() {
+    try {
+      Types.generatedJsonAdapterName(TestNonJsonClass.class);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining("Class does not have a JsonClass annotation");
+    }
+  }
+
+  @JsonClass(generateAdapter = false)
+  static class TestJsonClass {
+
+  }
+
+  static class TestNonJsonClass {
+
+  }
+
   @JsonQualifier
   @Target(FIELD)
   @Retention(RUNTIME)

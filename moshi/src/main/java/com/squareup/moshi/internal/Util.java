@@ -460,23 +460,35 @@ public final class Util {
     if (jsonClass == null || !jsonClass.generateAdapter()) {
       return null;
     }
-    String adapterClassName = rawType.getName().replace("$", "_") + "JsonAdapter";
+    String adapterClassName = Types.generatedJsonAdapterName(rawType.getName());
     try {
       @SuppressWarnings("unchecked") // We generate types to match.
           Class<? extends JsonAdapter<?>> adapterClass = (Class<? extends JsonAdapter<?>>)
           Class.forName(adapterClassName, true, rawType.getClassLoader());
+      Constructor<? extends JsonAdapter<?>> constructor;
+      Object[] args;
       if (type instanceof ParameterizedType) {
-        Constructor<? extends JsonAdapter<?>> constructor
-            = adapterClass.getDeclaredConstructor(Moshi.class, Type[].class);
-        constructor.setAccessible(true);
-        return constructor.newInstance(moshi, ((ParameterizedType) type).getActualTypeArguments())
-            .nullSafe();
+        Type[] typeArgs = ((ParameterizedType) type).getActualTypeArguments();
+        try {
+          // Common case first
+          constructor = adapterClass.getDeclaredConstructor(Moshi.class, Type[].class);
+          args = new Object[] { moshi, typeArgs };
+        } catch (NoSuchMethodException e) {
+          constructor = adapterClass.getDeclaredConstructor(Type[].class);
+          args = new Object[] { typeArgs };
+        }
       } else {
-        Constructor<? extends JsonAdapter<?>> constructor
-            = adapterClass.getDeclaredConstructor(Moshi.class);
-        constructor.setAccessible(true);
-        return constructor.newInstance(moshi).nullSafe();
+        try {
+          // Common case first
+          constructor = adapterClass.getDeclaredConstructor(Moshi.class);
+          args = new Object[] { moshi };
+        } catch (NoSuchMethodException e) {
+          constructor = adapterClass.getDeclaredConstructor();
+          args = new Object[0];
+        }
       }
+      constructor.setAccessible(true);
+      return constructor.newInstance(args).nullSafe();
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(
           "Failed to find the generated JsonAdapter class for " + rawType, e);

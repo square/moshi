@@ -26,6 +26,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
@@ -1155,37 +1156,70 @@ class GeneratedAdaptersTest {
     assertThat(decoded).isEqualTo(HasCollectionOfPrimitives(listOf(4, -5, 6)))
   }
 
-  /**
-   * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
-   * nullability, primitive arrays, and some wacky generics.
-   */
-  @JsonClass(generateAdapter = true)
-  data class SmokeTestType(
-    @Json(name = "first_name") val firstName: String,
-    @Json(name = "last_name") val lastName: String,
-    val age: Int,
-    val nationalities: List<String> = emptyList(),
-    val weight: Float,
-    val tattoos: Boolean = false,
-    val race: String?,
-    val hasChildren: Boolean = false,
-    val favoriteFood: String? = null,
-    val favoriteDrink: String? = "Water",
-    val wildcardOut: MutableList<out String> = mutableListOf(),
-    val nullableWildcardOut: MutableList<out String?> = mutableListOf(),
-    val wildcardIn: Array<in String>,
-    val any: List<*>,
-    val anyTwo: List<Any>,
-    val anyOut: MutableList<out Any>,
-    val nullableAnyOut: MutableList<out Any?>,
-    val favoriteThreeNumbers: IntArray,
-    val favoriteArrayValues: Array<String>,
-    val favoriteNullableArrayValues: Array<String?>,
-    val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
-    val aliasedName: TypeAliasName = "Woah",
-    val genericAlias: GenericTypeAlias = listOf("Woah")
-  )
+  @JsonClass(generateAdapter = true, generator = "custom")
+  data class CustomGeneratedClass(val foo: String)
+
+  @Test fun customGenerator_withClassPresent() {
+    val moshi = Moshi.Builder().build()
+    val adapter = moshi.adapter(CustomGeneratedClass::class.java)
+    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate()
+    assertThat(unwrapped).isInstanceOf(GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter::class.java)
+  }
+
+  @JsonClass(generateAdapter = true, generator = "custom")
+  data class CustomGeneratedClassMissing(val foo: String)
+
+  @Test fun customGenerator_withClassMissing() {
+    val moshi = Moshi.Builder().build()
+    try {
+      moshi.adapter(CustomGeneratedClassMissing::class.java)
+      fail()
+    } catch (e: RuntimeException) {
+      assertThat(e).hasMessageContaining("Failed to find the generated JsonAdapter class")
+    }
+  }
 }
+
+// Has to be outside to avoid Types seeing an owning class
+@JsonClass(generateAdapter = true)
+data class NullableTypeParams<T>(
+    val nullableList: List<String?>,
+    val nullableSet: Set<String?>,
+    val nullableMap: Map<String, String?>,
+    val nullableT: T?,
+    val nonNullT: T
+)
+
+/**
+ * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
+ * nullability, primitive arrays, and some wacky generics.
+ */
+@JsonClass(generateAdapter = true)
+data class SmokeTestType(
+  @Json(name = "first_name") val firstName: String,
+  @Json(name = "last_name") val lastName: String,
+  val age: Int,
+  val nationalities: List<String> = emptyList(),
+  val weight: Float,
+  val tattoos: Boolean = false,
+  val race: String?,
+  val hasChildren: Boolean = false,
+  val favoriteFood: String? = null,
+  val favoriteDrink: String? = "Water",
+  val wildcardOut: MutableList<out String> = mutableListOf(),
+  val nullableWildcardOut: MutableList<out String?> = mutableListOf(),
+  val wildcardIn: Array<in String>,
+  val any: List<*>,
+  val anyTwo: List<Any>,
+  val anyOut: MutableList<out Any>,
+  val nullableAnyOut: MutableList<out Any?>,
+  val favoriteThreeNumbers: IntArray,
+  val favoriteArrayValues: Array<String>,
+  val favoriteNullableArrayValues: Array<String?>,
+  val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
+  val aliasedName: TypeAliasName = "Woah",
+  val genericAlias: GenericTypeAlias = listOf("Woah")
+)
 
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
