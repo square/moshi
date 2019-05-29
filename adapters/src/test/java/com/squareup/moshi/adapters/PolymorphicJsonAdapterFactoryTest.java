@@ -160,16 +160,22 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
-  @Test public void uniqueSubtypes() {
-    PolymorphicJsonAdapterFactory<Message> factory =
-        PolymorphicJsonAdapterFactory.of(Message.class, "type")
-            .withSubtype(Success.class, "success");
-    try {
-      factory.withSubtype(Success.class, "data");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Subtypes and labels must be unique.");
-    }
+  @Test public void nonUniqueSubtypes() throws IOException  {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Success.class, "data")
+            .withSubtype(Error.class, "error"))
+        .build();
+
+      JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+      assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
+          .isEqualTo(new Success("Okay!"));
+      assertThat(adapter.fromJson("{\"type\":\"data\",\"value\":\"Data!\"}"))
+          .isEqualTo(new Success("Data!"));
+      assertThat(adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"))
+              .isEqualTo(new Error(Collections.<String, Object>singletonMap("order", 66d)));
   }
 
   @Test public void uniqueLabels() {
@@ -180,7 +186,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
       factory.withSubtype(Error.class, "data");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Subtypes and labels must be unique.");
+      assertThat(expected).hasMessage("Labels must be unique.");
     }
   }
 
