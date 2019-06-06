@@ -30,6 +30,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayOutputStream
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.WildcardType
 import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
@@ -982,4 +984,144 @@ class KotlinJsonAdapterTest {
   }
 
   class PlainKotlinClass
+
+  @Test fun mapOfStringToStandardReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToStandardReflection::class.java,
+        """{"map":{"key":"value"}}""",
+        MapOfStringToStandardReflection(mapOf("key" to "value")))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToStandardReflection(val map: Map<String, String> = mapOf())
+
+  @Test fun mapOfStringToStandardCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToStandardCodegen::class.java,
+        """{"map":{"key":"value"}}""",
+        MapOfStringToStandardCodegen(mapOf("key" to "value")))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToStandardCodegen(val map: Map<String, String> = mapOf())
+
+  @Test fun mapOfStringToEnumReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToEnumReflection::class.java,
+        """{"map":{"key":"A"}}""",
+        MapOfStringToEnumReflection(mapOf("key" to KotlinEnum.A)))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToEnumReflection(val map: Map<String, KotlinEnum> = mapOf())
+
+  @Test fun mapOfStringToEnumCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToEnumCodegen::class.java,
+        """{"map":{"key":"A"}}""",
+        MapOfStringToEnumCodegen(mapOf("key" to KotlinEnum.A)))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToEnumCodegen(val map: Map<String, KotlinEnum> = mapOf())
+
+  @Test fun mapOfStringToCollectionReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToCollectionReflection::class.java,
+        """{"map":{"key":[]}}""",
+        MapOfStringToCollectionReflection(mapOf("key" to listOf())))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToCollectionReflection(val map: Map<String, List<Int>> = mapOf())
+
+  @Test fun mapOfStringToCollectionCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToCollectionCodegen::class.java,
+        """{"map":{"key":[]}}""",
+        MapOfStringToCollectionCodegen(mapOf("key" to listOf())))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToCollectionCodegen(val map: Map<String, List<Int>> = mapOf())
+
+  @Test fun mapOfStringToMapReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToMapReflection::class.java,
+        """{"map":{"key":{}}}""",
+        MapOfStringToMapReflection(mapOf("key" to mapOf())))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToMapReflection(val map: Map<String, Map<String, Int>> = mapOf())
+
+  @Test fun mapOfStringToMapCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToMapCodegen::class.java,
+        """{"map":{"key":{}}}""",
+        MapOfStringToMapCodegen(mapOf("key" to mapOf())))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToMapCodegen(val map: Map<String, Map<String, Int>> = mapOf())
+
+  @Test fun mapOfStringToArrayReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToArrayReflection::class.java,
+        """{"map":{"key":[]}}""",
+        MapOfStringToArrayReflection(mapOf("key" to arrayOf())))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToArrayReflection(val map: Map<String, Array<Int>> = mapOf())
+
+  @Test fun mapOfStringToArrayCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToArrayCodegen::class.java,
+        """{"map":{"key":[]}}""",
+        MapOfStringToArrayCodegen(mapOf("key" to arrayOf())))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToArrayCodegen(val map: Map<String, Array<Int>> = mapOf())
+
+  @Test fun mapOfStringToClassReflectionWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToClassReflection::class.java,
+        """{"map":{"key":{"a":19,"b":42}}}""",
+        MapOfStringToClassReflection(mapOf("key" to ConstructorParameters(19, 42))))
+  }
+
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToClassReflection(val map: Map<String, ConstructorParameters> = mapOf())
+
+  @Test fun mapOfStringToClassCodegenWildcards() {
+    mapWildcardsParameterizedTest(
+        MapOfStringToClassCodegen::class.java,
+        """{"map":{"key":{"a":19,"b":42}}}""",
+        MapOfStringToClassCodegen(mapOf("key" to ConstructorParameters(19, 42))))
+  }
+
+  @JsonClass(generateAdapter = true)
+  @JvmSuppressWildcards(suppress = false)
+  data class MapOfStringToClassCodegen(val map: Map<String, ConstructorParameters> = mapOf())
+
+  private fun <T> mapWildcardsParameterizedTest(type: Class<T>, json: String, value: T) {
+    // Ensure the map was created with the expected wildcards of a Kotlin map.
+    val fieldType = type.getDeclaredField("map").genericType
+    val fieldTypeArguments = (fieldType as ParameterizedType).actualTypeArguments
+    assertThat(fieldTypeArguments[0]).isNotInstanceOf(WildcardType::class.java)
+    assertThat(fieldTypeArguments[1]).isInstanceOf(WildcardType::class.java)
+
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter(type)
+
+    assertThat(adapter.fromJson(json)).isEqualToComparingFieldByFieldRecursively(value)
+    assertThat(adapter.toJson(value)).isEqualTo(json)
+  }
 }

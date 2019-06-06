@@ -86,6 +86,27 @@ public final class MapJsonAdapterTest {
     assertThat(jsonAdapter.fromJson(jsonReader)).isEqualTo(null);
   }
 
+  @Test public void covariantValue() throws Exception {
+    // Important for Kotlin maps, which are all Map<K, ? extends T>.
+    JsonAdapter<Map<String, Object>> jsonAdapter =
+        mapAdapter(String.class, Types.subtypeOf(Object.class));
+
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("boolean", true);
+    map.put("float", 42.0);
+    map.put("String", "value");
+
+    String asJson = "{\"boolean\":true,\"float\":42.0,\"String\":\"value\"}";
+
+    Buffer buffer = new Buffer();
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    jsonAdapter.toJson(jsonWriter, map);
+    assertThat(buffer.readUtf8()).isEqualTo(asJson);
+
+    JsonReader jsonReader = newReader(asJson);
+    assertThat(jsonAdapter.fromJson(jsonReader)).isEqualTo(map);
+  }
+
   @Test public void orderIsRetained() throws Exception {
     Map<String, Integer> map = new LinkedHashMap<>();
     map.put("c", 1);

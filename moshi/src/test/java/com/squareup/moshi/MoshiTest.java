@@ -537,15 +537,13 @@ public final class MoshiTest {
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
-  @Test public void upperBoundedWildcardsAreNotHandled() {
+  @Test public void upperBoundedWildcardsAreHandled() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
-    try {
-      moshi.adapter(Types.subtypeOf(String.class));
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage(
-          "No JsonAdapter for ? extends java.lang.String (with no annotations)");
-    }
+    JsonAdapter<Object> adapter = moshi.adapter(Types.subtypeOf(String.class));
+    assertThat(adapter.fromJson("\"a\"")).isEqualTo("a");
+    assertThat(adapter.toJson("b")).isEqualTo("\"b\"");
+    assertThat(adapter.fromJson("null")).isEqualTo(null);
+    assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
   @Test public void lowerBoundedWildcardsAreNotHandled() {
