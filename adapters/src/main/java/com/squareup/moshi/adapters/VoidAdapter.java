@@ -15,8 +15,10 @@ import java.io.IOException;
 public final class VoidAdapter extends JsonAdapter<Void> {
 
     /**
-     * Adapts from JSON using specified JSON reader. The {@code fromJson} method of {@code VoidAdapter} class invokes
-     * {@link JsonReader#skipValue()} on specified {@code reader} and always returns {@code null}.
+     * Adapts from JSON using specified JSON reader. The {@code fromJson}
+     * method of {@code VoidAdapter} class invokes
+     * {@link JsonReader#skipValue()} on specified {@code reader} and always
+     * returns {@code null}.
      *
      * @param reader the JSON reader.
      * @return {@code null}.
@@ -31,8 +33,9 @@ public final class VoidAdapter extends JsonAdapter<Void> {
     }
 
     /**
-     * Adapts specified value to JSON using specified JSON writer. The {@code toJson} method of {@code VoidAdapter}
-     * invokes {@link JsonWriter#nullValue()} on specified {@code writer} and returns.
+     * Adapts specified value to JSON using specified JSON writer. The
+     * {@code toJson} method of {@code VoidAdapter} invokes
+     * {@link JsonWriter#nullValue()} on specified {@code writer} and returns.
      *
      * @param writer the JSON writer.
      * @param value  the value to adapt.
@@ -40,7 +43,8 @@ public final class VoidAdapter extends JsonAdapter<Void> {
      * @see JsonWriter#nullValue()
      */
     @Override
-    public void toJson(final JsonWriter writer, final @Nullable Void value) throws IOException {
+    public void toJson(final JsonWriter writer, final @Nullable Void value)
+            throws IOException {
         writer.nullValue();
     }
 }
