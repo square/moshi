@@ -154,8 +154,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
   public PolymorphicJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
     if (subtype == null) throw new NullPointerException("subtype == null");
     if (label == null) throw new NullPointerException("label == null");
-    if (labels.contains(label) || subtypes.contains(subtype)) {
-      throw new IllegalArgumentException("Subtypes and labels must be unique.");
+    if (labels.contains(label)) {
+      throw new IllegalArgumentException("Labels must be unique.");
     }
     List<String> newLabels = new ArrayList<>(labels);
     newLabels.add(label);
