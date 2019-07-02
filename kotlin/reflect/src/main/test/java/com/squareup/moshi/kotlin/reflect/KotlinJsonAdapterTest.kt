@@ -9,7 +9,9 @@ class KotlinJsonAdapterTest {
   @JsonClass(generateAdapter = true)
   class Data
 
-  @Test fun fallsBackToReflectiveAdapterWithoutCodegen() {
+  @ExperimentalStdlibApi
+  @Test
+  fun fallsBackToReflectiveAdapterWithoutCodegen() {
     val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
