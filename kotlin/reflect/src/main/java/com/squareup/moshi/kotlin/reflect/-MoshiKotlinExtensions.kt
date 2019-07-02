@@ -3,6 +3,8 @@ package com.squareup.moshi.kotlin.reflect
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.squareup.moshi.internal.NonNullJsonAdapter
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -30,7 +32,10 @@ inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(t
  */
 fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.toType())
-  return if (ktype.isMarkedNullable) {
+  return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
+    // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
+    adapter
+  } else if (ktype.isMarkedNullable) {
     adapter.nullSafe()
   } else {
     adapter.nonNull()
