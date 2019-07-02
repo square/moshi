@@ -69,6 +69,11 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <args>
+            <arg>-Xuse-experimental=kotlin.ExperimentalStdlibApi</arg>
+          </args>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
