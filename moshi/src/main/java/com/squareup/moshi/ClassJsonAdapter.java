@@ -57,7 +57,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (!annotations.isEmpty()) return null;
       if (Util.isPlatformType(rawType)) {
         throw new IllegalArgumentException(
-            "Platform " + type + " requires explicit JsonAdapter to be registered");
+            "Platform " + rawType + " requires explicit JsonAdapter to be registered");
       }
 
       if (rawType.isAnonymousClass()) {
