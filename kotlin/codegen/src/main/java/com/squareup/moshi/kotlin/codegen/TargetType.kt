@@ -21,13 +21,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
-import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.classKind
-import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
-import me.eugeniomarletti.kotlin.metadata.isInnerClass
-import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.modality
+import me.eugeniomarletti.kotlin.metadata.*
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
@@ -36,7 +30,7 @@ import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LO
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
 import me.eugeniomarletti.kotlin.metadata.shadow.util.capitalizeDecapitalize.decapitalizeAsciiOnly
-import me.eugeniomarletti.kotlin.metadata.visibility
+import java.lang.IllegalArgumentException
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -101,7 +95,15 @@ internal data class TargetType(
       val typeVariables = genericTypeNames(proto, typeMetadata.data.nameResolver)
       val appliedType = AppliedType.get(element)
 
-      val constructor = TargetConstructor.primary(typeMetadata, elements)
+      val constructor = try {
+        TargetConstructor.primary(typeMetadata, elements)
+      } catch (moreThanOne: IllegalArgumentException) {
+        messager.printMessage(ERROR, "$element has more than one primary constructor!", element)
+        return null
+      } catch (hasNoElement: NoSuchElementException) {
+        messager.printMessage(ERROR, "$element has no primary constructor!", element)
+        return null
+      }
       if (constructor.proto.visibility != INTERNAL && constructor.proto.visibility != PUBLIC) {
         messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
             "primary constructor is not internal or public", element)
