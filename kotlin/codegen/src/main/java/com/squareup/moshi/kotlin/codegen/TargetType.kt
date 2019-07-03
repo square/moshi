@@ -21,7 +21,13 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import me.eugeniomarletti.kotlin.metadata.*
+import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
+import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
+import me.eugeniomarletti.kotlin.metadata.classKind
+import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
+import me.eugeniomarletti.kotlin.metadata.isInnerClass
+import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
+import me.eugeniomarletti.kotlin.metadata.modality
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
@@ -30,6 +36,7 @@ import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LO
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PUBLIC
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
 import me.eugeniomarletti.kotlin.metadata.shadow.util.capitalizeDecapitalize.decapitalizeAsciiOnly
+import me.eugeniomarletti.kotlin.metadata.visibility
 import java.lang.IllegalArgumentException
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element

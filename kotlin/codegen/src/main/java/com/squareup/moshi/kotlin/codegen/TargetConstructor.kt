@@ -34,8 +34,8 @@ internal data class TargetConstructor(
       val (nameResolver, classProto) = metadata.data
 
       // todo allow custom constructor
-      val proto = classProto.constructorList.single { it.isPrimary }
-
+      val proto = classProto.constructorList
+          .single { it.isPrimary }
       val constructorJvmSignature = proto.getJvmConstructorSignature(
           nameResolver, classProto.typeTable)
       val element = classProto.fqName
