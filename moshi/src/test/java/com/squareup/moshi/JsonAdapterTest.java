@@ -282,7 +282,7 @@ public final class JsonAdapterTest {
       @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
         throw new AssertionError();
       }
-    }.lenient().nonNull();
+    }.lenient().serializeNulls();
     assertThat(adapter.fromJson("true true")).isEqualTo(true);
   }
 }
