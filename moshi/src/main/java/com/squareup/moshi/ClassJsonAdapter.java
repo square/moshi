@@ -56,8 +56,12 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (!annotations.isEmpty()) return null;
       if (Util.isPlatformType(rawType)) {
+        String messagePrefix = "Platform " + rawType;
+        if (type instanceof ParameterizedType) {
+          messagePrefix += " in " + type;
+        }
         throw new IllegalArgumentException(
-            "Platform " + rawType + " requires explicit JsonAdapter to be registered");
+            messagePrefix + " requires explicit JsonAdapter to be registered");
       }
 
       if (rawType.isAnonymousClass()) {
