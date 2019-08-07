@@ -11,7 +11,6 @@ import kotlin.reflect.KType
 import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
-import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -24,7 +23,7 @@ inline fun <reified T> Moshi.adapter(): JsonAdapter<T> {
 }
 
 @ExperimentalStdlibApi
-inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(typeOf<T>().javaType, adapter)
+inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(typeOf<T>().toType(), adapter)
 
 /**
  * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
@@ -42,6 +41,7 @@ fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   }
 }
 
+@PublishedApi
 internal fun KType.toType(): Type {
   classifier?.let {
     when (it) {
