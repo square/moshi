@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 after_success:
   - .buildscript/deploy_snapshot.sh
