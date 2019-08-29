@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 import static com.squareup.moshi.Types.arrayOf;
@@ -44,6 +45,19 @@ import static com.squareup.moshi.Types.supertypeOf;
 public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
+  @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
+  private static final ConcurrentHashMap<Class<?>, Constructor<?>> DEFAULT_CONSTRUCTOR_CACHE
+      = new ConcurrentHashMap<>();
+
+  static {
+    Class<?> clazz;
+    try {
+      clazz = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
+    } catch (ClassNotFoundException e) {
+      clazz = null;
+    }
+    DEFAULT_CONSTRUCTOR_MARKER = clazz;
+  }
 
   private Util() {
   }
@@ -519,5 +533,70 @@ public final class Util {
     } catch (InvocationTargetException e) {
       throw rethrowCause(e);
     }
+  }
+
+  /**
+   * Reflectively invokes the defaults constructor of a kotlin class. This allows indicating which
+   * arguments are "set" or not, and thus recreate the behavior of named a arguments invocation
+   * dynamically.
+   *
+   * @param targetClass the target kotlin class to instantiate.
+   * @param args the constructor arguments, including "unset" values (set to null or the primitive
+   *             default).
+   * @param argPresentValues a boolean array indicating which {@code args} are present.
+   * @param <T> the type of {@code targetClass}.
+   * @return the instantiated {@code targetClass} instance.
+   */
+  public static <T> T invokeDefaultConstructor(
+      Class<T> targetClass,
+      Object[] args,
+      boolean[] argPresentValues) {
+    if (DEFAULT_CONSTRUCTOR_MARKER == null) {
+      throw new IllegalStateException("DefaultConstructorMarker not on classpath. Make sure the "
+          + "Kotlin stdlib is on the classpath.");
+    }
+    Constructor<?> defaultConstructor = DEFAULT_CONSTRUCTOR_CACHE.get(targetClass);
+    if (defaultConstructor == null) {
+      defaultConstructor = findConstructor(targetClass);
+      defaultConstructor.setAccessible(true);
+      DEFAULT_CONSTRUCTOR_CACHE.put(targetClass, defaultConstructor);
+    }
+    int mask = createMask(argPresentValues);
+    Object[] finalArgs = new Object[args.length + 2];
+    System.arraycopy(args, 0, finalArgs, 0, args.length);
+    finalArgs[finalArgs.length - 2] = mask;
+    finalArgs[finalArgs.length - 1] = null; // DefaultConstructorMarker param
+    try {
+      //noinspection unchecked
+      return (T) defaultConstructor.newInstance(finalArgs);
+    } catch (InstantiationException e) {
+      throw new IllegalStateException("Could not instantiate instance of " + targetClass);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Could not access defaults constructor of " + targetClass);
+    } catch (InvocationTargetException e) {
+      throw new IllegalStateException("Could not invoke defaults constructor of " + targetClass);
+    }
+  }
+
+  private static Constructor<?> findConstructor(Class<?> targetClass) {
+    for (Constructor<?> constructor : targetClass.getDeclaredConstructors()) {
+      Class<?>[] paramTypes = constructor.getParameterTypes();
+      if (paramTypes.length != 0
+          && paramTypes[paramTypes.length - 1].equals(DEFAULT_CONSTRUCTOR_MARKER)) {
+        return constructor;
+      }
+    }
+
+    throw new IllegalStateException("No defaults constructor found for " + targetClass);
+  }
+
+  private static int createMask(boolean[] argPresentValues) {
+    int mask = 0;
+    for (int i = 0; i < argPresentValues.length; ++i) {
+      if (!argPresentValues[i]) {
+        mask = mask | (1 << (i % Integer.SIZE));
+      }
+    }
+    return mask;
   }
 }
