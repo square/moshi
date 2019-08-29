@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
@@ -29,12 +30,13 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import me.eugeniomarletti.kotlin.metadata.isDataClass
+import com.squareup.moshi.internal.Util
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
 import me.eugeniomarletti.kotlin.metadata.visibility
 import java.lang.reflect.Type
@@ -47,7 +49,6 @@ internal class AdapterGenerator(
 ) {
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.name
-  private val isDataClass = target.proto.isDataClass
   private val visibility = target.proto.visibility!!
   private val typeVariables = target.typeVariables
 
@@ -182,7 +183,7 @@ internal class AdapterGenerator(
 
     for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
-      if (property.differentiateAbsentFromNull) {
+      if (property.hasLocalIsPresentName) {
         result.addCode("%L", property.generateLocalIsPresentProperty())
       }
     }
@@ -191,8 +192,8 @@ internal class AdapterGenerator(
     result.beginControlFlow("while (%N.hasNext())", readerParam)
     result.beginControlFlow("when (%N.selectName(%N))", readerParam, optionsProperty)
 
-    propertyList.forEachIndexed { index, property ->
-      if (property.differentiateAbsentFromNull) {
+    nonTransientProperties.forEachIndexed { index, property ->
+      if (property.hasLocalIsPresentName) {
         result.beginControlFlow("%L -> ", index)
         if (property.delegateKey.nullable) {
           result.addStatement("%N = %N.fromJson(%N)",
@@ -229,61 +230,60 @@ internal class AdapterGenerator(
     result.endControlFlow() // while
     result.addStatement("%N.endObject()", readerParam)
 
-    // Call the constructor providing only required parameters.
-    var hasOptionalParameters = false
-    result.addCode("«var %N = %T(", resultName, originalTypeName)
     var separator = "\n"
-    for (property in propertyList) {
-      if (!property.hasConstructorParameter) {
-        continue
-      }
-      if (property.hasDefault) {
-        hasOptionalParameters = true
-        continue
-      }
+    var useDefaultsConstructor = false
+    val parameterProperties = propertyList.asSequence()
+        .filter { it.hasConstructorParameter }
+        .onEach {
+          useDefaultsConstructor = useDefaultsConstructor || it.hasDefault
+        }
+        .toList()
+
+    if (useDefaultsConstructor) {
+      // Dynamic default constructor call
+      val booleanArrayBlock = parameterProperties.map { param ->
+        when {
+          param.isTransient -> CodeBlock.of("false")
+          param.hasLocalIsPresentName -> CodeBlock.of(param.localIsPresentName)
+          else -> CodeBlock.of("true")
+        }
+      }.joinToCode(", ")
+      result.addStatement("val argPresentValues = booleanArrayOf(%L)", booleanArrayBlock)
+      result.addCode("«val args: %T = arrayOf(", ARRAY.parameterizedBy(ANY.copy(nullable = true)))
+    } else {
+      // Standard constructor call
+      result.addCode("«val %N = %T(", resultName, originalTypeName)
+    }
+
+    for (property in parameterProperties) {
       result.addCode(separator)
-      result.addCode("%N = %N", property.name, property.localName)
-      if (property.isRequired) {
+      if (useDefaultsConstructor) {
+        if (property.isTransient) {
+          // We have to use the default primitive for the available type in order for
+          // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
+          // the transient type may be a primitive type.
+          result.addCode(property.target.type.defaultPrimitiveValue())
+        } else {
+          result.addCode("%N", property.localName)
+        }
+      } else {
+        result.addCode("%N = %N", property.name, property.localName)
+      }
+      if (!property.isTransient && property.isRequired) {
         result.addCode(" ?: throw·%L", jsonDataException(
             "Required property '", property.localName, "' missing at ", readerParam))
       }
       separator = ",\n"
     }
-    result.addCode(")»\n", originalTypeName)
 
-    // Call either the constructor again, or the copy() method, this time providing any optional
-    // parameters that we have.
-    if (hasOptionalParameters) {
-      if (isDataClass) {
-        result.addCode("«%1N = %1N.copy(", resultName)
-      } else {
-        result.addCode("«%1N = %2T(", resultName, originalTypeName)
-      }
-      separator = "\n"
-      for (property in propertyList) {
-        if (!property.hasConstructorParameter) {
-          continue // No constructor parameter for this property.
-        }
-        if (isDataClass && !property.hasDefault) {
-          continue // Property already assigned.
-        }
-
-        result.addCode(separator)
-        when {
-          property.differentiateAbsentFromNull -> {
-            result.addCode("%2N = if (%3N) %4N else %1N.%2N",
-                resultName, property.name, property.localIsPresentName, property.localName)
-          }
-          property.isRequired -> {
-            result.addCode("%1N = %2N", property.name, property.localName)
-          }
-          else -> {
-            result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
-          }
-        }
-        separator = ",\n"
-      }
-      result.addCode("»)\n")
+    result.addCode(")»\n")
+    if (useDefaultsConstructor) {
+      result.addStatement(
+          "val %N = %T.invokeDefaultConstructor(%T::class.java, args, argPresentValues)",
+          resultName,
+          Util::class.asClassName(),
+          originalTypeName
+      )
     }
 
     // Assign properties not present in the constructor.
