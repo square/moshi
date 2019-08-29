@@ -15,9 +15,20 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.BYTE
+import com.squareup.kotlinpoet.CHAR
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.FLOAT
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.asTypeName
 
 internal fun TypeName.rawType(): ClassName {
   return when (this) {
@@ -26,3 +37,17 @@ internal fun TypeName.rawType(): ClassName {
     else -> throw IllegalArgumentException("Cannot get raw type from $this")
   }
 }
+
+internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
+    when (this) {
+      BOOLEAN -> CodeBlock.of("false")
+      CHAR -> CodeBlock.of("0.toChar()")
+      BYTE -> CodeBlock.of("0.toByte()")
+      SHORT -> CodeBlock.of("0.toShort()")
+      INT -> CodeBlock.of("0")
+      FLOAT -> CodeBlock.of("0f")
+      LONG -> CodeBlock.of("0L")
+      DOUBLE -> CodeBlock.of("0.0")
+      UNIT, Void::class.asTypeName() -> throw IllegalStateException("Parameter with void or Unit type is illegal")
+      else -> CodeBlock.of("null")
+    }
