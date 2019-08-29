@@ -45,6 +45,7 @@ internal class AdapterGenerator(
   target: TargetType,
   private val propertyList: List<PropertyGenerator>
 ) {
+  private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.name
   private val isDataClass = target.proto.isDataClass
   private val visibility = target.proto.visibility!!
@@ -80,13 +81,13 @@ internal class AdapterGenerator(
   private val optionsProperty = PropertySpec.builder(
       nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
       KModifier.PRIVATE)
-      .initializer("%T.of(${propertyList.joinToString(", ") {
+      .initializer("%T.of(${nonTransientProperties.joinToString(", ") {
         CodeBlock.of("%S", it.jsonName).toString()
       }})", JsonReader.Options::class.asTypeName())
       .build()
 
   fun generateFile(generatedOption: TypeElement?): FileSpec {
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       property.allocateNames(nameAllocator)
     }
 
@@ -129,7 +130,7 @@ internal class AdapterGenerator(
     }
 
     result.addProperty(optionsProperty)
-    for (uniqueAdapter in propertyList.distinctBy { it.delegateKey }) {
+    for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
           nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
     }
@@ -179,7 +180,7 @@ internal class AdapterGenerator(
         .addParameter(readerParam)
         .returns(originalTypeName)
 
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
       if (property.differentiateAbsentFromNull) {
         result.addCode("%L", property.generateLocalIsPresentProperty())
@@ -286,7 +287,7 @@ internal class AdapterGenerator(
     }
 
     // Assign properties not present in the constructor.
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       if (property.hasConstructorParameter) {
         continue // Property already handled.
       }
@@ -315,7 +316,7 @@ internal class AdapterGenerator(
     result.endControlFlow()
 
     result.addStatement("%N.beginObject()", writerParam)
-    propertyList.forEach { property ->
+    nonTransientProperties.forEach { property ->
       result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%L)",
           nameAllocator[property.delegateKey], writerParam, valueParam, property.name)

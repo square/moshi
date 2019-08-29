@@ -22,7 +22,8 @@ import com.squareup.kotlinpoet.PropertySpec
 /** Generates functions to encode and decode a property as JSON. */
 internal class PropertyGenerator(
   val target: TargetProperty,
-  val delegateKey: DelegateKey
+  val delegateKey: DelegateKey,
+  val isTransient: Boolean = false
 ) {
   val name = target.name
   val jsonName = target.jsonName()
