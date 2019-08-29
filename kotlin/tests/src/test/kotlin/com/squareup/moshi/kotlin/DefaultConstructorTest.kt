@@ -17,7 +17,7 @@ class DefaultConstructorTest {
     }
   }
 
-  @Test fun customDynamic() {
+  @Test fun allSet() {
     val expected = TestClass("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val args = arrayOf("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val argPresentValues = booleanArrayOf(true, true, true, true, true, true)
@@ -27,7 +27,7 @@ class DefaultConstructorTest {
     }
   }
 
-  @Test fun allSet() {
+  @Test fun customDynamic() {
     val expected = TestClass("requiredClass", "customOptional")
     val args = arrayOf("requiredClass", "customOptional", 0, null, 0, 0)
     val argPresentValues = booleanArrayOf(true, true, false, false, false, false)
@@ -47,7 +47,7 @@ class DefaultConstructorTest {
     }
   }
 
-  @Test fun customDynamic_codeGen() {
+  @Test fun allSet_codeGen() {
     val expected = TestClass("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val json = """{"required":"requiredClass","optional":"customOptional","optional2":4,"dynamicSelfReferenceOptional":"setDynamic","dynamicOptional":5,"dynamicInlineOptional":6}"""
     val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
@@ -57,7 +57,7 @@ class DefaultConstructorTest {
     }
   }
 
-  @Test fun allSet_codeGen() {
+  @Test fun customDynamic_codeGen() {
     val expected = TestClass("requiredClass", "customOptional")
     val json = """{"required":"requiredClass","optional":"customOptional"}"""
     val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
