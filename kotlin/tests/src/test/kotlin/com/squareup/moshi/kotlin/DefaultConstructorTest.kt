@@ -1,5 +1,7 @@
 package com.squareup.moshi.kotlin
 
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import org.junit.Test
 
@@ -34,8 +36,39 @@ class DefaultConstructorTest {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
   }
+
+  @Test fun minimal_codeGen() {
+    val expected = TestClass("requiredClass")
+    val json = """{"required":"requiredClass"}"""
+    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+        .fromJson(json)!!
+    check(instance == expected) {
+      "No match:\nActual  : $instance\nExpected: $expected"
+    }
+  }
+
+  @Test fun customDynamic_codeGen() {
+    val expected = TestClass("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
+    val json = """{"required":"requiredClass","optional":"customOptional","optional2":4,"dynamicSelfReferenceOptional":"setDynamic","dynamicOptional":5,"dynamicInlineOptional":6}"""
+    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+        .fromJson(json)!!
+    check(instance == expected) {
+      "No match:\nActual  : $instance\nExpected: $expected"
+    }
+  }
+
+  @Test fun allSet_codeGen() {
+    val expected = TestClass("requiredClass", "customOptional")
+    val json = """{"required":"requiredClass","optional":"customOptional"}"""
+    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+        .fromJson(json)!!
+    check(instance == expected) {
+      "No match:\nActual  : $instance\nExpected: $expected"
+    }
+  }
 }
 
+@JsonClass(generateAdapter = true)
 data class TestClass(
     val required: String,
     val optional: String = "optional",
