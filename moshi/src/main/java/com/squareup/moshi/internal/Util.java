@@ -606,7 +606,7 @@ public final class Util {
     int mask = 0;
     for (int i = 0; i < argPresentValues.length; ++i) {
       if (!argPresentValues[i]) {
-        mask = mask | (1 << (i % Integer.SIZE));
+        mask = mask | (1 << i);
       }
     }
     return mask;
