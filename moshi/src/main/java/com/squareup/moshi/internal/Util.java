@@ -562,8 +562,7 @@ public final class Util {
       DEFAULT_CONSTRUCTOR_CACHE.put(targetClass, defaultConstructor);
     }
     int mask = createMask(argPresentValues);
-    Object[] finalArgs = new Object[args.length + 2];
-    System.arraycopy(args, 0, finalArgs, 0, args.length);
+    Object[] finalArgs = Arrays.copyOf(args, args.length + 2);
     finalArgs[finalArgs.length - 2] = mask;
     finalArgs[finalArgs.length - 1] = null; // DefaultConstructorMarker param
     try {
