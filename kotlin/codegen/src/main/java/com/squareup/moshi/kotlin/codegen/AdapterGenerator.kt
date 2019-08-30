@@ -239,6 +239,8 @@ internal class AdapterGenerator(
         }
         .toList()
 
+    val argPresentValuesName = nameAllocator.newName("argPresentValues")
+    val argsName = nameAllocator.newName("ars")
     if (useDefaultsConstructor) {
       // Dynamic default constructor call
       val booleanArrayBlock = parameterProperties.map { param ->
@@ -248,8 +250,8 @@ internal class AdapterGenerator(
           else -> CodeBlock.of("true")
         }
       }.joinToCode(", ")
-      result.addStatement("val argPresentValues = booleanArrayOf(%L)", booleanArrayBlock)
-      result.addCode("«val args: %T = arrayOf(", ARRAY.parameterizedBy(ANY.copy(nullable = true)))
+      result.addStatement("val %L = booleanArrayOf(%L)", argPresentValuesName, booleanArrayBlock)
+      result.addCode("«val %L: %T = arrayOf(", argsName, ARRAY.parameterizedBy(ANY.copy(nullable = true)))
     } else {
       // Standard constructor call
       result.addCode("«val %N = %T(", resultName, originalTypeName)
@@ -279,10 +281,12 @@ internal class AdapterGenerator(
     result.addCode(")»\n")
     if (useDefaultsConstructor) {
       result.addStatement(
-          "val %N = %T.invokeDefaultConstructor(%T::class.java, args, argPresentValues)",
+          "val %N = %T.invokeDefaultConstructor(%T::class.java, %L, %L)",
           resultName,
           Util::class.asClassName(),
-          originalTypeName
+          originalTypeName,
+          argsName,
+          argPresentValuesName
       )
     }
 
