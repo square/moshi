@@ -573,7 +573,10 @@ public final class Util {
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Could not access defaults constructor of " + targetClass);
     } catch (InvocationTargetException e) {
-      throw new IllegalStateException("Could not invoke defaults constructor of " + targetClass);
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+      if (cause instanceof Error) throw (Error) cause;
+      throw new RuntimeException("Could not invoke defaults constructor of " + targetClass, cause);
     }
   }
 
