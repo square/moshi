@@ -176,8 +176,6 @@ internal class AdapterGenerator(
   }
 
   private fun generateFromJsonFun(): FunSpec {
-    val resultName = nameAllocator.newName("result")
-
     val result = FunSpec.builder("fromJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(readerParam)
@@ -241,6 +239,14 @@ internal class AdapterGenerator(
         }
         .toList()
 
+    val resultName = nameAllocator.newName("result")
+    val hasNonConstructorProperties = nonTransientProperties.any { !it.hasConstructorParameter }
+    val returnOrResultAssignment = if (hasNonConstructorProperties) {
+      // Save the result var for reuse
+      CodeBlock.of("val %N = ", resultName)
+    } else {
+      CodeBlock.of("return·")
+    }
     val maskName = nameAllocator.newName("make")
     val argsName = nameAllocator.newName("ars")
     if (useDefaultsConstructor) {
@@ -257,7 +263,7 @@ internal class AdapterGenerator(
       result.addCode("«val %L: %T = arrayOf(", argsName, ARRAY.parameterizedBy(ANY.copy(nullable = true)))
     } else {
       // Standard constructor call
-      result.addCode("«val %N = %T(", resultName, originalTypeName)
+      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
     }
 
     for (property in parameterProperties) {
@@ -284,8 +290,8 @@ internal class AdapterGenerator(
     result.addCode(")»\n")
     if (useDefaultsConstructor) {
       result.addStatement(
-          "val %N = %T.invokeDefaultConstructor(%T::class.java, %L, %L)",
-          resultName,
+          "%L%T.invokeDefaultConstructor(%T::class.java, %L, %L)",
+          returnOrResultAssignment,
           MOSHI_UTIL,
           originalTypeName,
           argsName,
@@ -307,7 +313,9 @@ internal class AdapterGenerator(
       }
     }
 
-    result.addStatement("return %1N", resultName)
+    if (hasNonConstructorProperties) {
+      result.addStatement("return·%1N", resultName)
+    }
     return result.build()
   }
 
