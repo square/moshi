@@ -247,7 +247,7 @@ internal class AdapterGenerator(
     } else {
       CodeBlock.of("return·")
     }
-    val maskName = nameAllocator.newName("make")
+    val maskName = nameAllocator.newName("mask")
     val argsName = nameAllocator.newName("ars")
     if (useDefaultsConstructor) {
       // Dynamic default constructor call
