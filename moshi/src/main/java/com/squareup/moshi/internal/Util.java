@@ -543,14 +543,15 @@ public final class Util {
    * @param targetClass the target kotlin class to instantiate.
    * @param args the constructor arguments, including "unset" values (set to null or the primitive
    *             default).
-   * @param argPresentValues a boolean array indicating which {@code args} are present.
+   * @param mask an int mask indicating which {@code args} are present.
    * @param <T> the type of {@code targetClass}.
    * @return the instantiated {@code targetClass} instance.
+   * @see #createDefaultValuesParametersMask(boolean...)
    */
   public static <T> T invokeDefaultConstructor(
       Class<T> targetClass,
       Object[] args,
-      boolean[] argPresentValues) {
+      int mask) {
     if (DEFAULT_CONSTRUCTOR_MARKER == null) {
       throw new IllegalStateException("DefaultConstructorMarker not on classpath. Make sure the "
           + "Kotlin stdlib is on the classpath.");
@@ -561,7 +562,6 @@ public final class Util {
       defaultConstructor.setAccessible(true);
       DEFAULT_CONSTRUCTOR_CACHE.put(targetClass, defaultConstructor);
     }
-    int mask = createMask(argPresentValues);
     Object[] finalArgs = Arrays.copyOf(args, args.length + 2);
     finalArgs[finalArgs.length - 2] = mask;
     finalArgs[finalArgs.length - 1] = null; // DefaultConstructorMarker param
@@ -592,7 +592,17 @@ public final class Util {
     throw new IllegalStateException("No defaults constructor found for " + targetClass);
   }
 
-  private static int createMask(boolean[] argPresentValues) {
+  /**
+   * Creates an mask with bits set to indicate which indices of a default constructor's parameters
+   * are set.
+   *
+   * @param argPresentValues vararg of all present values (set or unset). Max allowable size is 32.
+   * @return the created mask.
+   */
+  public static int createDefaultValuesParametersMask(boolean... argPresentValues) {
+    if (argPresentValues.length > 32) {
+      throw new IllegalArgumentException("Arg present values exceeds max allowable 32.");
+    }
     int mask = 0;
     for (int i = 0; i < argPresentValues.length; ++i) {
       if (!argPresentValues[i]) {

@@ -42,6 +42,8 @@ import me.eugeniomarletti.kotlin.metadata.visibility
 import java.lang.reflect.Type
 import javax.lang.model.element.TypeElement
 
+private val MOSHI_UTIL = Util::class.asClassName()
+
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
   target: TargetType,
@@ -239,7 +241,7 @@ internal class AdapterGenerator(
         }
         .toList()
 
-    val argPresentValuesName = nameAllocator.newName("argPresentValues")
+    val maskName = nameAllocator.newName("make")
     val argsName = nameAllocator.newName("ars")
     if (useDefaultsConstructor) {
       // Dynamic default constructor call
@@ -250,7 +252,8 @@ internal class AdapterGenerator(
           else -> CodeBlock.of("true")
         }
       }.joinToCode(", ")
-      result.addStatement("val %L = booleanArrayOf(%L)", argPresentValuesName, booleanArrayBlock)
+      result.addStatement("val %L = %T.createDefaultValuesParametersMask(%L)",
+          maskName, MOSHI_UTIL, booleanArrayBlock)
       result.addCode("«val %L: %T = arrayOf(", argsName, ARRAY.parameterizedBy(ANY.copy(nullable = true)))
     } else {
       // Standard constructor call
@@ -283,10 +286,10 @@ internal class AdapterGenerator(
       result.addStatement(
           "val %N = %T.invokeDefaultConstructor(%T::class.java, %L, %L)",
           resultName,
-          Util::class.asClassName(),
+          MOSHI_UTIL,
           originalTypeName,
           argsName,
-          argPresentValuesName
+          maskName
       )
     }
 
