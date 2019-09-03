@@ -16,8 +16,10 @@
 package com.squareup.moshi.adapters;
 
 import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.Moshi;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -71,5 +73,38 @@ public final class EnumJsonAdapterTest {
     ROCK,
     PAPER,
     @Json(name = "scr") SCISSORS
+  }
+
+  static class Model {
+    Roshambo val1;
+    Roshambo val2;
+    Roshambo val3;
+    Roshambo val4;
+    Roshambo val5;
+  }
+
+  @Test public void nullFallbackFactory() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new EnumJsonAdapter.NullFallbackFactory()).build();
+    JsonAdapter<Model> adapter = moshi.adapter(Model.class);
+    Model obj = adapter.fromJson(
+        "{\"val1\":\"ROCK\"," +
+        "\"val2\":\"scr\"," +
+        "\"val3\":\"SCISSORS\"," +
+        "\"val4\":null," +
+        "\"val5\":\"FOOBAR\"}");
+
+    assertThat(obj).isNotNull();
+    assertThat(obj.val1).isEqualTo(Roshambo.ROCK);
+    assertThat(obj.val2).isEqualTo(Roshambo.SCISSORS);
+    assertThat(obj.val3).isNull();
+    assertThat(obj.val4).isNull();
+    assertThat(obj.val5).isNull();
+    assertThat(adapter.toJson(obj)).isEqualTo("{\"val1\":\"ROCK\",\"val2\":\"scr\"}");
+    assertThat(adapter.serializeNulls().toJson(obj)).isEqualTo(
+        "{\"val1\":\"ROCK\"," +
+        "\"val2\":\"scr\"," +
+        "\"val3\":null," +
+        "\"val4\":null," +
+        "\"val5\":null}");
   }
 }

@@ -20,8 +20,15 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
+
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -34,6 +41,16 @@ import javax.annotation.Nullable;
  *   Moshi moshi = new Moshi.Builder()
  *       .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
  *           .withUnknownFallback(CurrencyCode.USD))
+ *       .build();
+ * }</pre>
+ *
+ * If you want to map all unrecognized enum values within the same {@link com.squareup.moshi.Moshi
+ * Moshi instance} to null, you can add a {@link NullFallbackFactory}:
+ *
+ * <pre> {@code
+ *
+ *   Moshi moshi = new Moshi.Builder()
+ *       .add(new EnumJsonAdapter.NullFallbackFactory())
  *       .build();
  * }</pre>
  */
@@ -106,5 +123,30 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
 
   @Override public String toString() {
     return "EnumJsonAdapter(" + enumType.getName() + ")";
+  }
+
+  /**
+   * A {@link JsonAdapter.Factory} that uses {@link EnumJsonAdapter} with {@link
+   * EnumJsonAdapter#withUnknownFallback(Enum) null fallback} to serialize all
+   * enums.
+   *
+   * The returned adapter is wrapped in {@link #nullSafe()} to allow both serializing and
+   * deserializing null values.
+   */
+  public static class NullFallbackFactory implements JsonAdapter.Factory {
+    @CheckReturnValue
+    @Nullable
+    @Override
+    public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      if (!annotations.isEmpty()) {
+        return null;
+      }
+      Class<?> rawType = Types.getRawType(type);
+      if (rawType.isEnum()) {
+        //noinspection unchecked
+        return new EnumJsonAdapter(rawType, null, true).nullSafe();
+      }
+      return null;
+    }
   }
 }
