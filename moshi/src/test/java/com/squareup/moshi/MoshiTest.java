@@ -973,14 +973,14 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
               + "\nfor java.util.Map<java.lang.String, "
               + "com.squareup.moshi.MoshiTest$HasPlatformType>");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
           + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -992,13 +992,13 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType hasPlatformType"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
           + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -1010,14 +1010,14 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
               + "JsonAdapter to be registered"
               + "\nfor java.util.ArrayList<java.lang.String> strings"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
               + "\nfor java.util.List<com.squareup.moshi.MoshiTest$HasPlatformType> platformTypes"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
           + "requires explicit JsonAdapter to be registered");
     }
   }
