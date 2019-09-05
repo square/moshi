@@ -233,7 +233,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       if (parameter != null) {
         allAnnotations += parameter.annotations
         if (jsonAnnotation == null) {
-          jsonAnnotation = parameter.findAnnotation<Json>()
+          jsonAnnotation = parameter.findAnnotation()
         }
       }
 
