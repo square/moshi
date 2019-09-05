@@ -39,9 +39,11 @@ import static com.squareup.moshi.internal.Util.resolve;
  *
  * <ul>
  *   <li>android.*
+ *   <li>androidx.*
  *   <li>java.*
  *   <li>javax.*
  *   <li>kotlin.*
+ *   <li>kotlinx.*
  *   <li>scala.*
  * </ul>
  */
