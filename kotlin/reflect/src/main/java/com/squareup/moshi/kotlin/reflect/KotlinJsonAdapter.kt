@@ -54,9 +54,10 @@ private val ABSENT_VALUE = Any()
  * constructor, and then by setting any additional properties that exist, if any.
  */
 internal class KotlinJsonAdapter<T>(
-    val constructor: KFunction<T>,
-    val bindings: List<Binding<T, Any?>?>,
-    val options: JsonReader.Options) : JsonAdapter<T>() {
+  private val constructor: KFunction<T>,
+  private val bindings: List<Binding<T, Any?>?>,
+  private val options: JsonReader.Options
+) : JsonAdapter<T>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
