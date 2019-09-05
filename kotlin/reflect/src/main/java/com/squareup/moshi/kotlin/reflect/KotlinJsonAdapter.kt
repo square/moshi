@@ -213,6 +213,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val parameter = parametersByName[property.name]
 
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
+        @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
         if (parameter != null && !parameter.isOptional) {
           throw IllegalArgumentException(
               "No default value for transient constructor $parameter")
@@ -220,6 +221,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         continue
       }
 
+      @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
       if (parameter != null && parameter.type != property.returnType) {
         throw IllegalArgumentException("'${property.name}' has a constructor parameter of type " +
             "${parameter.type} but a property of type ${property.returnType}.")
@@ -243,6 +245,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val adapter = moshi.adapter<Any>(
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
+      @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
           property as KProperty1<Any, Any?>, parameter)
     }
