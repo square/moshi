@@ -41,7 +41,7 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
 /** Classes annotated with this are eligible for this adapter. */
-private val KOTLIN_METADATA = Class.forName("kotlin.Metadata") as Class<out Annotation>
+private val KOTLIN_METADATA = Metadata::class.java
 
 /**
  * Placeholder value used when a field is absent from the JSON. Note that this code
