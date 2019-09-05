@@ -250,7 +250,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
-      require(!(binding == null && !parameter.isOptional)) { "No property for required constructor ${parameter}" }
+      require(!(binding == null && !parameter.isOptional)) { "No property for required constructor $parameter" }
       bindings += binding
     }
 
