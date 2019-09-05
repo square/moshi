@@ -41,7 +41,7 @@ import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
 /** Classes annotated with this are eligible for this adapter. */
-private val KOTLIN_METADATA = Class.forName("kotlin.Metadata") as Class<out Annotation>
+private val KOTLIN_METADATA = Metadata::class.java
 
 /**
  * Placeholder value used when a field is absent from the JSON. Note that this code
@@ -54,9 +54,10 @@ private val ABSENT_VALUE = Any()
  * constructor, and then by setting any additional properties that exist, if any.
  */
 internal class KotlinJsonAdapter<T>(
-    val constructor: KFunction<T>,
-    val bindings: List<Binding<T, Any?>?>,
-    val options: JsonReader.Options) : JsonAdapter<T>() {
+  private val constructor: KFunction<T>,
+  private val bindings: List<Binding<T, Any?>?>,
+  private val options: JsonReader.Options
+) : JsonAdapter<T>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
@@ -142,8 +143,10 @@ internal class KotlinJsonAdapter<T>(
   }
 
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
-  class IndexedParameterMap(val parameterKeys: List<KParameter>, val parameterValues: Array<Any?>)
-    : AbstractMap<KParameter, Any?>() {
+  class IndexedParameterMap(
+    private val parameterKeys: List<KParameter>,
+    private val parameterValues: Array<Any?>
+  ) : AbstractMap<KParameter, Any?>() {
 
     override val entries: Set<Entry<KParameter, Any?>>
       get() {
@@ -167,7 +170,7 @@ internal class KotlinJsonAdapter<T>(
 class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi)
       : JsonAdapter<*>? {
-    if (!annotations.isEmpty()) return null
+    if (annotations.isNotEmpty()) return null
 
     val rawType = Types.getRawType(type)
     if (rawType.isInterface) return null
@@ -186,18 +189,18 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       // Fall back to a reflective adapter when the generated adapter is not found.
     }
 
-    if (rawType.isLocalClass) {
-      throw IllegalArgumentException("Cannot serialize local class or object expression ${rawType.name}")
+    require(!rawType.isLocalClass) {
+      "Cannot serialize local class or object expression ${rawType.name}"
     }
     val rawTypeKotlin = rawType.kotlin
-    if (rawTypeKotlin.isAbstract) {
-      throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}")
+    require(!rawTypeKotlin.isAbstract) {
+      "Cannot serialize abstract class ${rawType.name}"
     }
-    if (rawTypeKotlin.isInner) {
-      throw IllegalArgumentException("Cannot serialize inner class ${rawType.name}")
+    require(!rawTypeKotlin.isInner) {
+      "Cannot serialize inner class ${rawType.name}"
     }
-    if (rawTypeKotlin.objectInstance != null) {
-      throw IllegalArgumentException("Cannot serialize object declaration ${rawType.name}")
+    require(rawTypeKotlin.objectInstance == null) {
+      "Cannot serialize object declaration ${rawType.name}"
     }
 
     val constructor = rawTypeKotlin.primaryConstructor ?: return null
@@ -210,6 +213,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val parameter = parametersByName[property.name]
 
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
+        @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
         if (parameter != null && !parameter.isOptional) {
           throw IllegalArgumentException(
               "No default value for transient constructor $parameter")
@@ -217,6 +221,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         continue
       }
 
+      @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
       if (parameter != null && parameter.type != property.returnType) {
         throw IllegalArgumentException("'${property.name}' has a constructor parameter of type " +
             "${parameter.type} but a property of type ${property.returnType}.")
@@ -225,13 +230,13 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       if (property !is KMutableProperty1 && parameter == null) continue
 
       property.isAccessible = true
-      var allAnnotations = property.annotations
+      val allAnnotations = property.annotations.toMutableList()
       var jsonAnnotation = property.findAnnotation<Json>()
 
       if (parameter != null) {
         allAnnotations += parameter.annotations
         if (jsonAnnotation == null) {
-          jsonAnnotation = parameter.findAnnotation<Json>()
+          jsonAnnotation = parameter.findAnnotation()
         }
       }
 
@@ -240,6 +245,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val adapter = moshi.adapter<Any>(
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
+      @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
           property as KProperty1<Any, Any?>, parameter)
     }
@@ -248,9 +254,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
-      if (binding == null && !parameter.isOptional) {
-        throw IllegalArgumentException("No property for required constructor ${parameter}")
-      }
+      require(!(binding == null && !parameter.isOptional)) { "No property for required constructor $parameter" }
       bindings += binding
     }
 
