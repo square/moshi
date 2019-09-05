@@ -98,6 +98,7 @@ public final class Util {
         || name.startsWith("java.")
         || name.startsWith("javax.")
         || name.startsWith("kotlin.")
+        || name.startsWith("kotlinx.")
         || name.startsWith("scala.");
   }
 
