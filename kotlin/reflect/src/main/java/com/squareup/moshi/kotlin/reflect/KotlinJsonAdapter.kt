@@ -188,18 +188,18 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       // Fall back to a reflective adapter when the generated adapter is not found.
     }
 
-    if (rawType.isLocalClass) {
-      throw IllegalArgumentException("Cannot serialize local class or object expression ${rawType.name}")
+    require(!rawType.isLocalClass) {
+      "Cannot serialize local class or object expression ${rawType.name}"
     }
     val rawTypeKotlin = rawType.kotlin
-    if (rawTypeKotlin.isAbstract) {
-      throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}")
+    require(!rawTypeKotlin.isAbstract) {
+      "Cannot serialize abstract class ${rawType.name}"
     }
-    if (rawTypeKotlin.isInner) {
-      throw IllegalArgumentException("Cannot serialize inner class ${rawType.name}")
+    require(!rawTypeKotlin.isInner) {
+      "Cannot serialize inner class ${rawType.name}"
     }
-    if (rawTypeKotlin.objectInstance != null) {
-      throw IllegalArgumentException("Cannot serialize object declaration ${rawType.name}")
+    require(rawTypeKotlin.objectInstance == null) {
+      "Cannot serialize object declaration ${rawType.name}"
     }
 
     val constructor = rawTypeKotlin.primaryConstructor ?: return null
@@ -250,9 +250,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
-      if (binding == null && !parameter.isOptional) {
-        throw IllegalArgumentException("No property for required constructor ${parameter}")
-      }
+      require(!(binding == null && !parameter.isOptional)) { "No property for required constructor ${parameter}" }
       bindings += binding
     }
 
