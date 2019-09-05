@@ -116,6 +116,7 @@
         <configuration>
           <args>
             <arg>-Werror</arg>
+            <arg>-Xuse-experimental=kotlin.ExperimentalStdlibApi</arg>
           </args>
         </configuration>
       </plugin>
