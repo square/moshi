@@ -39,6 +39,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
 import me.eugeniomarletti.kotlin.metadata.visibility
+import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 import javax.lang.model.element.TypeElement
 
@@ -46,8 +47,8 @@ private val MOSHI_UTIL = Util::class.asClassName()
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
-  target: TargetType,
-  private val propertyList: List<PropertyGenerator>
+    target: TargetType,
+    private val propertyList: List<PropertyGenerator>
 ) {
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.name
@@ -78,7 +79,8 @@ internal class AdapterGenerator(
       nameAllocator.newName("value"),
       originalTypeName.copy(nullable = true))
       .build()
-  private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(originalTypeName)
+  private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(
+      originalTypeName)
 
   // selectName() API setup
   private val optionsProperty = PropertySpec.builder(
@@ -87,6 +89,14 @@ internal class AdapterGenerator(
       .initializer("%T.of(${nonTransientProperties.joinToString(", ") {
         CodeBlock.of("%S", it.jsonName).toString()
       }})", JsonReader.Options::class.asTypeName())
+      .build()
+
+  private val constructorProperty = PropertySpec.builder(
+      nameAllocator.newName("constructorRef"),
+      Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true))
+      .addAnnotation(Volatile::class)
+      .mutable(true)
+      .initializer("null")
       .build()
 
   fun generateFile(generatedOption: TypeElement?): FileSpec {
@@ -133,6 +143,7 @@ internal class AdapterGenerator(
     }
 
     result.addProperty(optionsProperty)
+    result.addProperty(constructorProperty)
     for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
           nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
@@ -166,10 +177,10 @@ internal class AdapterGenerator(
   }
 
   private fun jsonDataException(
-    description: String,
-    identifier: String,
-    condition: String,
-    reader: ParameterSpec
+      description: String,
+      identifier: String,
+      condition: String,
+      reader: ParameterSpec
   ): CodeBlock {
     return CodeBlock.of("%T(%T(%S).append(%S).append(%S).append(%N.path).toString())",
         JsonDataException::class, StringBuilder::class, description, identifier, condition, reader)
@@ -248,7 +259,8 @@ internal class AdapterGenerator(
       CodeBlock.of("return·")
     }
     val maskName = nameAllocator.newName("mask")
-    val argsName = nameAllocator.newName("ars")
+    val argsName = nameAllocator.newName("args")
+    val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
       // Dynamic default constructor call
       val booleanArrayBlock = parameterProperties.map { param ->
@@ -258,9 +270,17 @@ internal class AdapterGenerator(
           else -> CodeBlock.of("true")
         }
       }.joinToCode(", ")
+      result.addStatement(
+          "val %1L = this.%2L ?: %3T.lookupDefaultsConstructor(%4T::class.java).also { this.%2L = it  }",
+          localConstructorName,
+          constructorProperty,
+          MOSHI_UTIL,
+          originalTypeName
+      )
       result.addStatement("val %L = %T.createDefaultValuesParametersMask(%L)",
           maskName, MOSHI_UTIL, booleanArrayBlock)
-      result.addCode("«val %L: %T = arrayOf(", argsName, ARRAY.parameterizedBy(ANY.copy(nullable = true)))
+      result.addCode("«val %L: %T = arrayOf(", argsName,
+          ARRAY.parameterizedBy(ANY.copy(nullable = true)))
     } else {
       // Standard constructor call
       result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
@@ -290,10 +310,11 @@ internal class AdapterGenerator(
     result.addCode(")»\n")
     if (useDefaultsConstructor) {
       result.addStatement(
-          "%L%T.invokeDefaultConstructor(%T::class.java, %L, %L)",
+          "%L%T.invokeDefaultConstructor(%T::class.java, %L, %L, %L)",
           returnOrResultAssignment,
           MOSHI_UTIL,
           originalTypeName,
+          localConstructorName,
           argsName,
           maskName
       )
