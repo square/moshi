@@ -227,7 +227,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       if (property !is KMutableProperty1 && parameter == null) continue
 
       property.isAccessible = true
-      var allAnnotations = property.annotations
+      val allAnnotations = property.annotations.toMutableList()
       var jsonAnnotation = property.findAnnotation<Json>()
 
       if (parameter != null) {
