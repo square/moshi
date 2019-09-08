@@ -27,17 +27,20 @@ import javax.lang.model.util.Elements
 internal data class TargetConstructor(
   val element: ExecutableElement,
   val proto: Constructor,
-  val parameters: Map<String, TargetParameter>
+  val parameters: Map<String, TargetParameter>,
+  val signature: String
 ) {
   companion object {
     fun primary(metadata: KotlinClassMetadata, elements: Elements): TargetConstructor {
       val (nameResolver, classProto) = metadata.data
 
-      // todo allow custom constructor
       val proto = classProto.constructorList
           .single { it.isPrimary }
-      val constructorJvmSignature = proto.getJvmConstructorSignature(
-          nameResolver, classProto.typeTable)
+      val constructorJvmSignature = requireNotNull(proto.getJvmConstructorSignature(
+          nameResolver, classProto.typeTable)) {
+        "No JVM signature for primary constructor in ${classProto.fqName
+            .let(nameResolver::getString)}"
+      }
       val element = classProto.fqName
           .let(nameResolver::getString)
           .replace('/', '.')
@@ -57,7 +60,7 @@ internal data class TargetConstructor(
         parameters[name] = TargetParameter(name, parameter, index, element.parameters[index])
       }
 
-      return TargetConstructor(element, proto, parameters)
+      return TargetConstructor(element, proto, parameters, constructorJvmSignature)
     }
   }
 }
