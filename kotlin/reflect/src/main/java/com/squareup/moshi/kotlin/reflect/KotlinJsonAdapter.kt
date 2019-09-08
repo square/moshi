@@ -213,18 +213,14 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val parameter = parametersByName[property.name]
 
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
-        @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
-        if (parameter != null && !parameter.isOptional) {
-          throw IllegalArgumentException(
-              "No default value for transient constructor $parameter")
+        require(parameter == null || parameter.isOptional) {
+          "No default value for transient constructor $parameter"
         }
         continue
       }
 
-      @Suppress("ReplaceGuardClauseWithFunctionCall") // More readable this way
-      if (parameter != null && parameter.type != property.returnType) {
-        throw IllegalArgumentException("'${property.name}' has a constructor parameter of type " +
-            "${parameter.type} but a property of type ${property.returnType}.")
+      require(parameter == null || parameter.type == property.returnType) {
+        "'${property.name}' has a constructor parameter of type ${parameter!!.type} but a property of type ${property.returnType}."
       }
 
       if (property !is KMutableProperty1 && parameter == null) continue
@@ -254,7 +250,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     for (parameter in constructor.parameters) {
       val binding = bindingsByName.remove(parameter.name)
-      require(!(binding == null && !parameter.isOptional)) { "No property for required constructor $parameter" }
+      require(binding != null || parameter.isOptional) {
+        "No property for required constructor $parameter"
+      }
       bindings += binding
     }
 
