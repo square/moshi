@@ -28,6 +28,16 @@
       <version>1.2.0</version>
     </dependency>
     <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>7.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-util</artifactId>
+      <version>7.1</version>
+    </dependency>
+    <dependency>
       <groupId>net.ltgt.gradle.incap</groupId>
       <artifactId>incap</artifactId>
       <version>${incap.version}</version>
