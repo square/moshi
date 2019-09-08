@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
@@ -260,7 +259,6 @@ internal class AdapterGenerator(
       CodeBlock.of("return·")
     }
     val maskName = nameAllocator.newName("mask")
-    val argsName = nameAllocator.newName("args")
     val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
       // Dynamic default constructor call
@@ -280,8 +278,14 @@ internal class AdapterGenerator(
       )
       result.addStatement("val %L = %T.createDefaultValuesParametersMask(%L)",
           maskName, MOSHI_UTIL, booleanArrayBlock)
-      result.addCode("«val %L: %T = arrayOf(", argsName,
-          ARRAY.parameterizedBy(ANY.copy(nullable = true)))
+      result.addCode(
+          "«%L%T.invokeDefaultConstructor(%T::class.java, %L, %L, ",
+          returnOrResultAssignment,
+          MOSHI_UTIL,
+          originalTypeName,
+          localConstructorName,
+          maskName
+      )
     } else {
       // Standard constructor call
       result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
@@ -308,18 +312,7 @@ internal class AdapterGenerator(
       separator = ",\n"
     }
 
-    result.addCode(")»\n")
-    if (useDefaultsConstructor) {
-      result.addStatement(
-          "%L%T.invokeDefaultConstructor(%T::class.java, %L, %L, %L)",
-          returnOrResultAssignment,
-          MOSHI_UTIL,
-          originalTypeName,
-          localConstructorName,
-          argsName,
-          maskName
-      )
-    }
+    result.addCode("\n»)\n")
 
     // Assign properties not present in the constructor.
     for (property in nonTransientProperties) {

@@ -12,7 +12,7 @@ class DefaultConstructorTest {
     val args = arrayOf("requiredClass", null, 0, null, 0, 0)
     val mask = Util.createDefaultValuesParametersMask(true, false, false, false, false, false)
     val constructor = Util.lookupDefaultsConstructor(TestClass::class.java)
-    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, args, mask)
+    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, mask, *args)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
@@ -23,7 +23,7 @@ class DefaultConstructorTest {
     val args = arrayOf("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val mask = Util.createDefaultValuesParametersMask(true, true, true, true, true, true)
     val constructor = Util.lookupDefaultsConstructor(TestClass::class.java)
-    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, args, mask)
+    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, mask, *args)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
@@ -34,7 +34,7 @@ class DefaultConstructorTest {
     val args = arrayOf("requiredClass", "customOptional", 0, null, 0, 0)
     val mask = Util.createDefaultValuesParametersMask(true, true, false, false, false, false)
     val constructor = Util.lookupDefaultsConstructor(TestClass::class.java)
-    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, args, mask)
+    val instance = Util.invokeDefaultConstructor(TestClass::class.java, constructor, mask, *args)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
