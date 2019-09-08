@@ -271,7 +271,7 @@ internal class AdapterGenerator(
         }
       }.joinToCode(", ")
       result.addStatement(
-          "val %1L = this.%2L ?: %3T.lookupDefaultsConstructor(%4T::class.java).also { this.%2L = it  }",
+          "val·%1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{·this.%2N·=·it·}",
           localConstructorName,
           constructorProperty,
           MOSHI_UTIL,
