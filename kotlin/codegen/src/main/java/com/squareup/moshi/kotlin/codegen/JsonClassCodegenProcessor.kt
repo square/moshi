@@ -88,7 +88,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
         generator.generateFile(generatedType)
-            .writeTo(filer)
+            .invoke(filer)
       }
     }
 
