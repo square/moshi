@@ -17,7 +17,9 @@ package com.squareup.moshi.internal;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonClass;
+import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
+import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
 import java.lang.annotation.Annotation;
@@ -42,6 +44,8 @@ import static com.squareup.moshi.Types.subtypeOf;
 import static com.squareup.moshi.Types.supertypeOf;
 
 public final class Util {
+  private static final String REQUIRED_PROPERTY_TEMPLATE = "Required property '%s' missing at %s";
+  private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
@@ -618,5 +622,19 @@ public final class Util {
       }
     }
     return mask;
+  }
+
+  public static JsonDataException missingProperty(String property, JsonReader reader) {
+    return jsonDataException(REQUIRED_PROPERTY_TEMPLATE, property, reader);
+  }
+
+  public static JsonDataException unexpectedNull(String property, JsonReader reader) {
+    return jsonDataException(UNEXPECTED_NULL_TEMPLATE, property, reader);
+  }
+
+  private static JsonDataException jsonDataException(
+      String template, String property, JsonReader reader) {
+    return new JsonDataException(
+        String.format(template, property, reader.getPath()));
   }
 }
