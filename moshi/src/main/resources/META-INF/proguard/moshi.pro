@@ -16,6 +16,12 @@
 # The name of @JsonClass types is used to look up the generated adapter.
 -keepnames @com.squareup.moshi.JsonClass class *
 
+# Retain generated target class's synthetic defaults constructor.
+# We will look this up reflectively to invoke the type's constructor.
+-keepclassmembers @com.squareup.moshi.JsonClass class * {
+    <init>(..., kotlin.jvm.internal.DefaultConstructorMarker);
+}
+
 # Retain generated JsonAdapters if annotated type is retained.
 -if @com.squareup.moshi.JsonClass class *
 -keep class <1>JsonAdapter {
