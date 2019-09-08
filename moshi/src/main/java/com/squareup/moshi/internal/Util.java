@@ -44,17 +44,6 @@ import static com.squareup.moshi.Types.supertypeOf;
 public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
-  @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
-
-  static {
-    Class<?> clazz;
-    try {
-      clazz = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
-    } catch (ClassNotFoundException e) {
-      clazz = null;
-    }
-    DEFAULT_CONSTRUCTOR_MARKER = clazz;
-  }
 
   private Util() {
   }
@@ -530,73 +519,6 @@ public final class Util {
     } catch (InvocationTargetException e) {
       throw rethrowCause(e);
     }
-  }
-
-  /**
-   * Reflectively looks up the defaults constructor of a kotlin class.
-   *
-   * @param targetClass the target kotlin class to instantiate.
-   * @param <T> the type of {@code targetClass}.
-   * @return the instantiated {@code targetClass} instance.
-   * @see #createDefaultValuesParametersMask(boolean...)
-   */
-  public static <T> Constructor<T> lookupDefaultsConstructor(Class<T> targetClass) {
-    if (DEFAULT_CONSTRUCTOR_MARKER == null) {
-      throw new IllegalStateException("DefaultConstructorMarker not on classpath. Make sure the "
-          + "Kotlin stdlib is on the classpath.");
-    }
-    Constructor<T> defaultConstructor = findConstructor(targetClass);
-    defaultConstructor.setAccessible(true);
-    return defaultConstructor;
-  }
-
-  /**
-   * Reflectively invokes the defaults constructor of a kotlin class. This allows indicating which
-   * arguments are "set" or not, and thus recreate the behavior of named a arguments invocation
-   * dynamically.
-   *
-   * @param targetClass the target kotlin class to instantiate.
-   * @param defaultsConstructor the target class's defaults constructor in kotlin invoke.
-   * @param args the constructor arguments, including "unset" values (set to null or the primitive
-   *             default).
-   * @param mask an int mask indicating which {@code args} are present.
-   * @param <T> the type of {@code targetClass}.
-   * @return the instantiated {@code targetClass} instance.
-   * @see #createDefaultValuesParametersMask(boolean...)
-   */
-  public static <T> T invokeDefaultConstructor(
-      Class<T> targetClass,
-      Constructor<T> defaultsConstructor,
-      Object[] args,
-      int mask) {
-    Object[] finalArgs = Arrays.copyOf(args, args.length + 2);
-    finalArgs[finalArgs.length - 2] = mask;
-    finalArgs[finalArgs.length - 1] = null; // DefaultConstructorMarker param
-    try {
-      return defaultsConstructor.newInstance(finalArgs);
-    } catch (InstantiationException e) {
-      throw new IllegalStateException("Could not instantiate instance of " + targetClass);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Could not access defaults constructor of " + targetClass);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-      if (cause instanceof Error) throw (Error) cause;
-      throw new RuntimeException("Could not invoke defaults constructor of " + targetClass, cause);
-    }
-  }
-
-  private static <T> Constructor<T> findConstructor(Class<T> targetClass) {
-    for (Constructor<?> constructor : targetClass.getDeclaredConstructors()) {
-      Class<?>[] paramTypes = constructor.getParameterTypes();
-      if (paramTypes.length != 0
-          && paramTypes[paramTypes.length - 1].equals(DEFAULT_CONSTRUCTOR_MARKER)) {
-        //noinspection unchecked
-        return (Constructor<T>) constructor;
-      }
-    }
-
-    throw new IllegalStateException("No defaults constructor found for " + targetClass);
   }
 
   /**
