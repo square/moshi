@@ -22,7 +22,8 @@ import com.squareup.kotlinpoet.PropertySpec
 /** Generates functions to encode and decode a property as JSON. */
 internal class PropertyGenerator(
   val target: TargetProperty,
-  val delegateKey: DelegateKey
+  val delegateKey: DelegateKey,
+  val isTransient: Boolean = false
 ) {
   val name = target.name
   val jsonName = target.jsonName()
@@ -38,6 +39,16 @@ internal class PropertyGenerator(
   /** We prefer to use 'null' to mean absent, but for some properties those are distinct. */
   val differentiateAbsentFromNull get() = delegateKey.nullable && hasDefault
 
+  /**
+   * IsPresent is required if the following conditions are met:
+   * - Is not transient
+   * - Has a default and one of the below
+   *   - Is a constructor property
+   *   - Is a nullable non-constructor property
+   */
+  val hasLocalIsPresentName = !isTransient && hasDefault &&
+      (hasConstructorParameter || delegateKey.nullable)
+
   fun allocateNames(nameAllocator: NameAllocator) {
     localName = nameAllocator.newName(name)
     localIsPresentName = nameAllocator.newName("${name}Set")
@@ -46,7 +57,13 @@ internal class PropertyGenerator(
   fun generateLocalProperty(): PropertySpec {
     return PropertySpec.builder(localName, target.type.copy(nullable = true))
         .mutable(true)
-        .initializer("null")
+        .apply {
+          if (hasLocalIsPresentName) {
+            initializer(target.type.defaultPrimitiveValue())
+          } else {
+            initializer("null")
+          }
+        }
         .build()
   }
 

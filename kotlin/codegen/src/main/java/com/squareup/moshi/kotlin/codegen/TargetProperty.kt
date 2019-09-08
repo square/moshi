@@ -80,7 +80,7 @@ internal data class TargetProperty(
             Diagnostic.Kind.ERROR, "No default value for transient property ${this}", element)
         return null
       }
-      return null // This property is transient and has a default value. Ignore it.
+      return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
     }
 
     if (!isVisible) {

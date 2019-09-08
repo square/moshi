@@ -29,24 +29,28 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import me.eugeniomarletti.kotlin.metadata.isDataClass
+import com.squareup.moshi.internal.Util
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
 import me.eugeniomarletti.kotlin.metadata.visibility
+import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 import javax.lang.model.element.TypeElement
 
+private val MOSHI_UTIL = Util::class.asClassName()
+
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
-  target: TargetType,
-  private val propertyList: List<PropertyGenerator>
+    target: TargetType,
+    private val propertyList: List<PropertyGenerator>
 ) {
+  private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.name
-  private val isDataClass = target.proto.isDataClass
   private val visibility = target.proto.visibility!!
   private val typeVariables = target.typeVariables
 
@@ -74,19 +78,29 @@ internal class AdapterGenerator(
       nameAllocator.newName("value"),
       originalTypeName.copy(nullable = true))
       .build()
-  private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(originalTypeName)
+  private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(
+      originalTypeName)
 
   // selectName() API setup
   private val optionsProperty = PropertySpec.builder(
       nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
       KModifier.PRIVATE)
-      .initializer("%T.of(${propertyList.joinToString(", ") {
+      .initializer("%T.of(${nonTransientProperties.joinToString(", ") {
         CodeBlock.of("%S", it.jsonName).toString()
       }})", JsonReader.Options::class.asTypeName())
       .build()
 
+  private val constructorProperty = PropertySpec.builder(
+      nameAllocator.newName("constructorRef"),
+      Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true),
+      KModifier.PRIVATE)
+      .addAnnotation(Volatile::class)
+      .mutable(true)
+      .initializer("null")
+      .build()
+
   fun generateFile(generatedOption: TypeElement?): FileSpec {
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       property.allocateNames(nameAllocator)
     }
 
@@ -129,7 +143,8 @@ internal class AdapterGenerator(
     }
 
     result.addProperty(optionsProperty)
-    for (uniqueAdapter in propertyList.distinctBy { it.delegateKey }) {
+    result.addProperty(constructorProperty)
+    for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
           nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
     }
@@ -162,26 +177,24 @@ internal class AdapterGenerator(
   }
 
   private fun jsonDataException(
-    description: String,
-    identifier: String,
-    condition: String,
-    reader: ParameterSpec
+      description: String,
+      identifier: String,
+      condition: String,
+      reader: ParameterSpec
   ): CodeBlock {
     return CodeBlock.of("%T(%T(%S).append(%S).append(%S).append(%N.path).toString())",
         JsonDataException::class, StringBuilder::class, description, identifier, condition, reader)
   }
 
   private fun generateFromJsonFun(): FunSpec {
-    val resultName = nameAllocator.newName("result")
-
     val result = FunSpec.builder("fromJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(readerParam)
         .returns(originalTypeName)
 
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
-      if (property.differentiateAbsentFromNull) {
+      if (property.hasLocalIsPresentName) {
         result.addCode("%L", property.generateLocalIsPresentProperty())
       }
     }
@@ -190,8 +203,8 @@ internal class AdapterGenerator(
     result.beginControlFlow("while (%N.hasNext())", readerParam)
     result.beginControlFlow("when (%N.selectName(%N))", readerParam, optionsProperty)
 
-    propertyList.forEachIndexed { index, property ->
-      if (property.differentiateAbsentFromNull) {
+    nonTransientProperties.forEachIndexed { index, property ->
+      if (property.hasLocalIsPresentName) {
         result.beginControlFlow("%L -> ", index)
         if (property.delegateKey.nullable) {
           result.addStatement("%N = %N.fromJson(%N)",
@@ -228,65 +241,81 @@ internal class AdapterGenerator(
     result.endControlFlow() // while
     result.addStatement("%N.endObject()", readerParam)
 
-    // Call the constructor providing only required parameters.
-    var hasOptionalParameters = false
-    result.addCode("«var %N = %T(", resultName, originalTypeName)
     var separator = "\n"
-    for (property in propertyList) {
-      if (!property.hasConstructorParameter) {
-        continue
-      }
-      if (property.hasDefault) {
-        hasOptionalParameters = true
-        continue
-      }
+    var useDefaultsConstructor = false
+    val parameterProperties = propertyList.asSequence()
+        .filter { it.hasConstructorParameter }
+        .onEach {
+          useDefaultsConstructor = useDefaultsConstructor || it.hasDefault
+        }
+        .toList()
+
+    val resultName = nameAllocator.newName("result")
+    val hasNonConstructorProperties = nonTransientProperties.any { !it.hasConstructorParameter }
+    val returnOrResultAssignment = if (hasNonConstructorProperties) {
+      // Save the result var for reuse
+      CodeBlock.of("val %N = ", resultName)
+    } else {
+      CodeBlock.of("return·")
+    }
+    val maskName = nameAllocator.newName("mask")
+    val localConstructorName = nameAllocator.newName("localConstructor")
+    if (useDefaultsConstructor) {
+      // Dynamic default constructor call
+      val booleanArrayBlock = parameterProperties.map { param ->
+        when {
+          param.isTransient -> CodeBlock.of("false")
+          param.hasLocalIsPresentName -> CodeBlock.of(param.localIsPresentName)
+          else -> CodeBlock.of("true")
+        }
+      }.joinToCode(", ")
+      result.addStatement(
+          "val %1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{ this.%2N·= it }",
+          localConstructorName,
+          constructorProperty,
+          MOSHI_UTIL,
+          originalTypeName
+      )
+      result.addStatement("val %L = %T.createDefaultValuesParametersMask(%L)",
+          maskName, MOSHI_UTIL, booleanArrayBlock)
+      result.addCode(
+          "«%L%T.invokeDefaultConstructor(%T::class.java, %L, %L, ",
+          returnOrResultAssignment,
+          MOSHI_UTIL,
+          originalTypeName,
+          localConstructorName,
+          maskName
+      )
+    } else {
+      // Standard constructor call
+      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
+    }
+
+    for (property in parameterProperties) {
       result.addCode(separator)
-      result.addCode("%N = %N", property.name, property.localName)
-      if (property.isRequired) {
+      if (useDefaultsConstructor) {
+        if (property.isTransient) {
+          // We have to use the default primitive for the available type in order for
+          // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
+          // the transient type may be a primitive type.
+          result.addCode(property.target.type.defaultPrimitiveValue())
+        } else {
+          result.addCode("%N", property.localName)
+        }
+      } else {
+        result.addCode("%N = %N", property.name, property.localName)
+      }
+      if (!property.isTransient && property.isRequired) {
         result.addCode(" ?: throw·%L", jsonDataException(
             "Required property '", property.localName, "' missing at ", readerParam))
       }
       separator = ",\n"
     }
-    result.addCode(")»\n", originalTypeName)
 
-    // Call either the constructor again, or the copy() method, this time providing any optional
-    // parameters that we have.
-    if (hasOptionalParameters) {
-      if (isDataClass) {
-        result.addCode("«%1N = %1N.copy(", resultName)
-      } else {
-        result.addCode("«%1N = %2T(", resultName, originalTypeName)
-      }
-      separator = "\n"
-      for (property in propertyList) {
-        if (!property.hasConstructorParameter) {
-          continue // No constructor parameter for this property.
-        }
-        if (isDataClass && !property.hasDefault) {
-          continue // Property already assigned.
-        }
-
-        result.addCode(separator)
-        when {
-          property.differentiateAbsentFromNull -> {
-            result.addCode("%2N = if (%3N) %4N else %1N.%2N",
-                resultName, property.name, property.localIsPresentName, property.localName)
-          }
-          property.isRequired -> {
-            result.addCode("%1N = %2N", property.name, property.localName)
-          }
-          else -> {
-            result.addCode("%2N = %3N ?: %1N.%2N", resultName, property.name, property.localName)
-          }
-        }
-        separator = ",\n"
-      }
-      result.addCode("»)\n")
-    }
+    result.addCode("\n»)\n")
 
     // Assign properties not present in the constructor.
-    for (property in propertyList) {
+    for (property in nonTransientProperties) {
       if (property.hasConstructorParameter) {
         continue // Property already handled.
       }
@@ -299,7 +328,9 @@ internal class AdapterGenerator(
       }
     }
 
-    result.addStatement("return %1N", resultName)
+    if (hasNonConstructorProperties) {
+      result.addStatement("return·%1N", resultName)
+    }
     return result.build()
   }
 
@@ -315,7 +346,7 @@ internal class AdapterGenerator(
     result.endControlFlow()
 
     result.addStatement("%N.beginObject()", writerParam)
-    propertyList.forEach { property ->
+    nonTransientProperties.forEach { property ->
       result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%L)",
           nameAllocator[property.delegateKey], writerParam, valueParam, property.name)
