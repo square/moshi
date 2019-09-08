@@ -109,6 +109,7 @@
                 <sourceDir>src/test/kotlin</sourceDir>
                 <sourceDir>src/test/java</sourceDir>
                 <sourceDir>target/generated-sources/kapt/test</sourceDir>
+                <sourceDir>target/test-classes</sourceDir>
               </sourceDirs>
             </configuration>
           </execution>
