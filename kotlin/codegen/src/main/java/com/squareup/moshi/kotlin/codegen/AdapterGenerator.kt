@@ -93,7 +93,8 @@ internal class AdapterGenerator(
 
   private val constructorProperty = PropertySpec.builder(
       nameAllocator.newName("constructorRef"),
-      Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true))
+      Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true),
+      KModifier.PRIVATE)
       .addAnnotation(Volatile::class)
       .mutable(true)
       .initializer("null")
