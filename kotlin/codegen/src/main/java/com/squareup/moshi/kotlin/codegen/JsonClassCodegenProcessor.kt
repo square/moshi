@@ -20,10 +20,11 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
-import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
-import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType.ISOLATING
+import javax.annotation.processing.AbstractProcessor
+import javax.annotation.processing.Filer
+import javax.annotation.processing.Messager
 import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
@@ -31,6 +32,8 @@ import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
+import javax.lang.model.util.Elements
+import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -46,7 +49,7 @@ import javax.tools.Diagnostic.Kind.ERROR
  */
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(ISOLATING)
-class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils {
+class JsonClassCodegenProcessor : AbstractProcessor() {
 
   companion object {
     /**
@@ -65,6 +68,10 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     )
   }
 
+  private lateinit var types: Types
+  private lateinit var elements: Elements
+  private lateinit var filer: Filer
+  private lateinit var messager: Messager
   private val annotation = JsonClass::class.java
   private var generatedType: TypeElement? = null
 
@@ -83,6 +90,10 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       }
       processingEnv.elementUtils.getTypeElement(it)
     }
+    this.types = processingEnv.typeUtils
+    this.elements = processingEnv.elementUtils
+    this.filer = processingEnv.filer
+    this.messager = processingEnv.messager
   }
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
@@ -104,7 +115,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   }
 
   private fun adapterGenerator(element: Element): AdapterGenerator? {
-    val type = targetType(messager, elementUtils, typeUtils, element) ?: return null
+    val type = targetType(messager, elements, types, element) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
