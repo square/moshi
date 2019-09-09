@@ -565,7 +565,7 @@ internal fun TargetProperty.generator(messager: Messager): PropertyGenerator? {
       }
       return null
     }
-    return null // This property is transient and has a default value. Ignore it.
+    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
