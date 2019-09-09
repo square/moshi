@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
@@ -31,10 +32,9 @@ import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
-import javax.tools.Diagnostic.Kind.ERROR
+import javax.tools.Diagnostic
 
 /**
  * An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
@@ -43,10 +43,8 @@ import javax.tools.Diagnostic.Kind.ERROR
  *
  * The generated class will match the visibility of the given data class (i.e. if it's internal, the
  * adapter will also be internal).
- *
- * If you define a companion object, a jsonAdapter() extension function will be generated onto it.
- * If you don't want this though, you can use the runtime [JsonClass] factory implementation.
  */
+@UseExperimental(KotlinPoetMetadataPreview::class)
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(ISOLATING)
 class JsonClassCodegenProcessor : AbstractProcessor() {
@@ -98,7 +96,12 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
-      check(type is TypeElement) // JsonClass is only applicable to types anyway
+      if (type !is TypeElement) {
+        messager.printMessage(
+            Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $type: must be a Kotlin class",
+            type)
+        continue
+      }
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
@@ -131,7 +134,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
-      val generator = property.generator(messager)
+      val generator = property.generator(messager, element, elements)
       if (generator != null) {
         properties[property.name] = generator
       }
@@ -140,7 +143,9 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     for ((name, parameter) in type.constructor.parameters) {
       if (type.properties[parameter.name] == null && !parameter.hasDefault) {
         messager.printMessage(
-            ERROR, "No property for required constructor parameter $name", parameter.tag<VariableElement>())
+            Diagnostic.Kind.ERROR,
+            "No property for required constructor parameter $name",
+            element)
         return null
       }
     }
