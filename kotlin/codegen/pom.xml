@@ -150,6 +150,12 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <args>
+            <!-- So we can declare ourselves as users of KotlinPoetMetadataPreview -->
+            <arg>-Xuse-experimental=kotlin.Experimental</arg>
+          </args>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
