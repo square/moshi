@@ -55,11 +55,6 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>com.google.auto</groupId>
-      <artifactId>auto-common</artifactId>
-      <version>${auto-common.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.google.auto.service</groupId>
       <artifactId>auto-service-annotations</artifactId>
       <version>${auto-service.version}</version>

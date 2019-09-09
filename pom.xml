@@ -31,7 +31,6 @@
     <java.version>1.7</java.version>
 
     <!-- Dependencies -->
-    <auto-common.version>0.10</auto-common.version>
     <auto-service.version>1.0-rc5</auto-service.version>
     <dokka.version>0.9.17</dokka.version>
     <incap.version>0.2</incap.version>
