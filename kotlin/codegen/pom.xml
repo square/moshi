@@ -28,6 +28,21 @@
       <version>${kotlinpoet.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-metadata</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-metadata-specs</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-elementhandler-elements</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
       <groupId>net.ltgt.gradle.incap</groupId>
       <artifactId>incap</artifactId>
       <version>${incap.version}</version>
