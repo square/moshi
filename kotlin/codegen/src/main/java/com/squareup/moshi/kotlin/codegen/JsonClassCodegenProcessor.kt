@@ -16,6 +16,7 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.service.AutoService
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
@@ -102,8 +103,19 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
         generator
-            .generateFile(generatedType?.asClassName()) {
+            .generateFile {
               it.toBuilder()
+                  .apply {
+                    generatedType?.asClassName()?.let { generatedClassName ->
+                      addAnnotation(
+                          AnnotationSpec.builder(generatedClassName)
+                              .addMember("value = [%S]",
+                                  JsonClassCodegenProcessor::class.java.canonicalName)
+                              .addMember("comments = %S", "https://github.com/square/moshi")
+                              .build()
+                      )
+                    }
+                  }
                   .addOriginatingElement(type)
                   .build()
             }
