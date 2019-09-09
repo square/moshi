@@ -28,6 +28,11 @@
       <version>${kotlinpoet.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-metadata-jvm</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.squareup</groupId>
       <artifactId>kotlinpoet-metadata</artifactId>
       <version>${kotlinpoet.version}</version>
