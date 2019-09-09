@@ -15,23 +15,19 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 
 /** A property in user code that maps to JSON. */
 internal data class TargetProperty(
-  val name: String,
-  val type: TypeName,
+  val propertySpec: PropertySpec,
   val parameter: TargetParameter?,
-  val annotationHolder: FunSpec?,
-  val field: PropertySpec?,
-  val setter: FunSpec?,
-  val getter: FunSpec?,
   val visibility: KModifier,
   val jsonName: String
 ) {
+  val name: String get() = propertySpec.name
+  val type: TypeName get() = propertySpec.type
   val parameterIndex get() = parameter?.index ?: -1
   val hasDefault get() = parameter?.hasDefault ?: true
 
