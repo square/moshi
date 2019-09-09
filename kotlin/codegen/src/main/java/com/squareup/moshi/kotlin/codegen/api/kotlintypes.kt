@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin.codegen
+package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE
@@ -23,6 +23,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.SHORT
@@ -51,3 +52,9 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
       UNIT, Void::class.asTypeName() -> throw IllegalStateException("Parameter with void or Unit type is illegal")
       else -> CodeBlock.of("null")
     }
+
+internal fun KModifier.checkIsVisibility() {
+  require(ordinal <= ordinal) {
+    "Visibility must be one of ${(0..ordinal).joinToString { KModifier.values()[it].name }}. Is $name"
+  }
+}

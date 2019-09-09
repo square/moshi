@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin.codegen
+package com.squareup.moshi.kotlin.codegen.api
 
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.ValueParameter
-import javax.lang.model.element.VariableElement
+import com.squareup.kotlinpoet.KModifier
 
-/** A parameter in user code that should be populated by generated code. */
-internal data class TargetParameter(
-  val name: String,
-  val proto: ValueParameter,
-  val index: Int,
-  val element: VariableElement
-)
+/** A constructor in user code that should be called by generated code. */
+internal data class TargetConstructor(
+  val parameters: Map<String, TargetParameter>,
+  val visibility: KModifier
+) {
+  init {
+    visibility.checkIsVisibility()
+  }
+}

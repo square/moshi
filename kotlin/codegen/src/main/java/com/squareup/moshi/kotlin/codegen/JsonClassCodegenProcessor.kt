@@ -16,9 +16,11 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.service.AutoService
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import me.eugeniomarletti.kotlin.metadata.KotlinMetadataUtils
-import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
 import me.eugeniomarletti.kotlin.processing.KotlinAbstractProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType.ISOLATING
@@ -28,6 +30,7 @@ import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
+import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic.Kind.ERROR
 
 /**
@@ -74,9 +77,9 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
-      if (it !in POSSIBLE_GENERATED_NAMES) {
-        throw IllegalArgumentException("Invalid option value for $OPTION_GENERATED. Found $it, " +
-            "allowable values are $POSSIBLE_GENERATED_NAMES.")
+      require(it in POSSIBLE_GENERATED_NAMES) {
+        "Invalid option value for $OPTION_GENERATED. Found $it, " +
+            "allowable values are $POSSIBLE_GENERATED_NAMES."
       }
       processingEnv.elementUtils.getTypeElement(it)
     }
@@ -87,7 +90,12 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
-        generator.generateFile(generatedType)
+        generator
+            .generateFile(generatedType?.asClassName()) {
+              it.toBuilder()
+                  .addOriginatingElement(type)
+                  .build()
+            }
             .writeTo(filer)
       }
     }
@@ -96,7 +104,7 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   }
 
   private fun adapterGenerator(element: Element): AdapterGenerator? {
-    val type = TargetType.get(messager, elementUtils, typeUtils, element) ?: return null
+    val type = targetType(messager, elementUtils, typeUtils, element) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
@@ -107,9 +115,9 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
     }
 
     for ((name, parameter) in type.constructor.parameters) {
-      if (type.properties[parameter.name] == null && !parameter.proto.declaresDefaultValue) {
+      if (type.properties[parameter.name] == null && !parameter.hasDefault) {
         messager.printMessage(
-            ERROR, "No property for required constructor parameter $name", parameter.element)
+            ERROR, "No property for required constructor parameter $name", parameter.tag<VariableElement>())
         return null
       }
     }
