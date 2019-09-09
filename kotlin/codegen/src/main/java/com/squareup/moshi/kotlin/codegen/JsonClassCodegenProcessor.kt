@@ -77,9 +77,9 @@ class JsonClassCodegenProcessor : KotlinAbstractProcessor(), KotlinMetadataUtils
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
-      if (it !in POSSIBLE_GENERATED_NAMES) {
-        throw IllegalArgumentException("Invalid option value for $OPTION_GENERATED. Found $it, " +
-            "allowable values are $POSSIBLE_GENERATED_NAMES.")
+      require(it in POSSIBLE_GENERATED_NAMES) {
+        "Invalid option value for $OPTION_GENERATED. Found $it, " +
+            "allowable values are $POSSIBLE_GENERATED_NAMES."
       }
       processingEnv.elementUtils.getTypeElement(it)
     }
