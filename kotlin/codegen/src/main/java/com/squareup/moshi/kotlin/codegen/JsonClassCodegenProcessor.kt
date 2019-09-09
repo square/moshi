@@ -29,7 +29,6 @@ import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
 import javax.lang.model.util.Elements
@@ -98,6 +97,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
+      check(type is TypeElement) // JsonClass is only applicable to types anyway
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type) ?: continue
@@ -114,7 +114,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     return false
   }
 
-  private fun adapterGenerator(element: Element): AdapterGenerator? {
+  private fun adapterGenerator(element: TypeElement): AdapterGenerator? {
     val type = targetType(messager, elements, types, element) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
