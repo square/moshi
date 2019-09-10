@@ -23,7 +23,7 @@
 # matching preceding parameters.
 -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
 -keepclassmembers @com.squareup.moshi.JsonClass class * {
-    <init>(...);
+    synthetic <init>(...);
 }
 
 # Retain generated JsonAdapters if annotated type is retained.
