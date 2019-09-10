@@ -36,8 +36,8 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
-import java.lang.reflect.Constructor
 import com.squareup.moshi.kotlin.codegen.JsonClassCodegenProcessor
+import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 
 private val MOSHI_UTIL = Util::class.asClassName()
@@ -226,13 +226,8 @@ internal class AdapterGenerator(
     result.addStatement("%N.endObject()", readerParam)
 
     var separator = "\n"
-    var useDefaultsConstructor = false
-    val parameterProperties = propertyList.asSequence()
-        .filter { it.hasConstructorParameter }
-        .onEach {
-          useDefaultsConstructor = useDefaultsConstructor || it.hasDefault
-        }
-        .toList()
+    val parameterProperties = propertyList.filter { it.hasConstructorParameter }
+    val useDefaultsConstructor = parameterProperties.any { it.hasDefault }
 
     val resultName = nameAllocator.newName("result")
     val hasNonConstructorProperties = nonTransientProperties.any { !it.hasConstructorParameter }
