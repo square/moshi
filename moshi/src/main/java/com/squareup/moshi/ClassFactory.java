@@ -56,7 +56,7 @@ abstract class ClassFactory<T> {
 
     boolean tryUnsafe = true;
     try {
-      Class<?> androidBuildClass = Class.forName("android.os.Build.VERSION");
+      Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
       Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
       int sdk = (int) sdkIntField.get(null);
       if (sdk >= 29) {
