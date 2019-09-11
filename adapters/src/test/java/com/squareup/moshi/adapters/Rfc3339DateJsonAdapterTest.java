@@ -63,6 +63,11 @@ public final class Rfc3339DateJsonAdapterTest {
         .isEqualTo("\"1937-01-01T11:40:27.870Z\"");
   }
 
+  @Test public void nullSafety() throws Exception {
+    assertThat(adapter.toJson(null)).isEqualTo("null");
+    assertThat(adapter.fromJson("null")).isNull();
+  }
+
   private Date newDate(
       int year, int month, int day, int hour, int minute, int second, int millis, int offset) {
     Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
