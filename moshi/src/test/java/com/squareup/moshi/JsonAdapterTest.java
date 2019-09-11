@@ -285,4 +285,14 @@ public final class JsonAdapterTest {
     }.lenient().serializeNulls();
     assertThat(adapter.fromJson("true true")).isEqualTo(true);
   }
+
+  @Test public void nullSafeDoesntDuplicate() {
+    JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nullSafe();
+    assertThat(adapter.nullSafe()).isSameAs(adapter);
+  }
+
+  @Test public void nonNullDoesntDuplicate() {
+    JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
+    assertThat(adapter.nonNull()).isSameAs(adapter);
+  }
 }
