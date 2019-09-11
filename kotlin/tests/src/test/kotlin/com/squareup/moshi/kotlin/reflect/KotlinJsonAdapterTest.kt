@@ -1113,6 +1113,21 @@ class KotlinJsonAdapterTest {
   @JvmSuppressWildcards(suppress = false)
   data class MapOfStringToClassCodegen(val map: Map<String, ConstructorParameters> = mapOf())
 
+  @Test fun sealedClassesAreRejected() {
+    val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    try {
+      moshi.adapter<SealedClass>()
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageContaining("Cannot reflectively serialize sealed class")
+    }
+  }
+
+  sealed class SealedClass
+
   private fun <T> mapWildcardsParameterizedTest(type: Class<T>, json: String, value: T) {
     // Ensure the map was created with the expected wildcards of a Kotlin map.
     val fieldType = type.getDeclaredField("map").genericType

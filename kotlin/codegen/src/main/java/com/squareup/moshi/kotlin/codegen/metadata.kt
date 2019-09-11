@@ -57,6 +57,7 @@ import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
 import me.eugeniomarletti.kotlin.metadata.modality
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
+import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.SEALED
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Type
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
 import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter.Variance
@@ -275,6 +276,11 @@ internal fun targetType(messager: Messager,
     proto.isInnerClass -> {
       messager.printMessage(
           ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+      return null
+    }
+    proto.modality == SEALED -> {
+      messager.printMessage(
+          ERROR, "@JsonClass can't be applied to $element: must not be sealed", element)
       return null
     }
     proto.modality == ABSTRACT -> {
