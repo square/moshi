@@ -153,7 +153,7 @@
         <configuration>
           <args>
             <!-- So we can declare ourselves as users of KotlinPoetMetadataPreview -->
-            <arg>-Xuse-experimental=kotlin.Experimental</arg>
+            <arg>-Xuse-experimental=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview</arg>
           </args>
         </configuration>
       </plugin>

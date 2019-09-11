@@ -44,7 +44,7 @@ import javax.tools.Diagnostic
  * The generated class will match the visibility of the given data class (i.e. if it's internal, the
  * adapter will also be internal).
  */
-@UseExperimental(KotlinPoetMetadataPreview::class)
+@KotlinPoetMetadataPreview
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(ISOLATING)
 class JsonClassCodegenProcessor : AbstractProcessor() {
