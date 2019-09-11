@@ -59,6 +59,9 @@ internal class PropertyGenerator(
         .mutable(true)
         .apply {
           if (hasConstructorDefault) {
+            // We default to the primitive default type, as reflectively invoking the constructor
+            // without this (even though it's a throwaway) will fail argument type resolution in
+            // the reflective invocation.
             initializer(target.type.defaultPrimitiveValue())
           } else {
             initializer("null")
