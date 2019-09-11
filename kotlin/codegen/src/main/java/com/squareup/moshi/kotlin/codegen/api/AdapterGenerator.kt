@@ -24,6 +24,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -265,13 +266,30 @@ internal class AdapterGenerator(
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
       val rawOriginalTypeName = originalTypeName.rawType()
-      result.addStatement(
-          "val %1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{ this.%2N·= it }",
-          localConstructorName,
-          constructorProperty,
+      val coreLookupBlock = CodeBlock.of(
+          "%T.lookupDefaultsConstructor(%T::class.java)",
           MOSHI_UTIL,
           rawOriginalTypeName
       )
+      val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
+        CodeBlock.of("(%L·as·%T)", coreLookupBlock, constructorProperty.type)
+      } else {
+        coreLookupBlock
+      }
+      val initializerBlock = CodeBlock.of(
+          "this.%1N ?:·%2L.also·{ this.%1N·= it }",
+          constructorProperty,
+          lookupBlock
+      )
+      val localConstructorProperty = PropertySpec.builder(
+          nameAllocator.newName("localConstructor"),
+          constructorProperty.type)
+          .addAnnotation(AnnotationSpec.builder(Suppress::class)
+              .addMember("%S", "UNCHECKED_CAST")
+              .build())
+          .initializer(initializerBlock)
+          .build()
+      result.addCode("%L", localConstructorProperty)
       result.addCode(
           "«%L%L.newInstance(",
           returnOrResultAssignment,
