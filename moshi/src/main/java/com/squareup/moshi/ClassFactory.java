@@ -78,7 +78,8 @@ abstract class ClassFactory<T> {
         final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
         return new ClassFactory<T>() {
           @SuppressWarnings("unchecked")
-          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+          @Override
+          public T newInstance() throws InvocationTargetException, IllegalAccessException {
             return (T) allocateInstance.invoke(unsafe, rawType);
           }
           @Override public String toString() {
