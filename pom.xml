@@ -37,7 +37,7 @@
     <okio.version>1.16.0</okio.version>
     <okio2.version>2.1.0</okio2.version>
     <kotlin.version>1.3.40</kotlin.version>
-    <kotlinpoet.version>1.4.0-LOCAL</kotlinpoet.version>
+    <kotlinpoet.version>1.4.0-SNAPSHOT</kotlinpoet.version>
     <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
 

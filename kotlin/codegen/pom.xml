@@ -12,6 +12,20 @@
 
   <artifactId>moshi-kotlin-codegen</artifactId>
 
+  <repositories>
+    <repository>
+      <id>sonatypeSnapshots</id>
+      <name>Sonatype Snapshots</name>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
+
   <dependencies>
     <dependency>
       <groupId>com.squareup.moshi</groupId>
