@@ -264,12 +264,13 @@ internal class AdapterGenerator(
     if (useDefaultsConstructor) {
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
+      val rawOriginalTypeName = originalTypeName.rawType()
       result.addStatement(
           "val %1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{ this.%2N·= it }",
           localConstructorName,
           constructorProperty,
           MOSHI_UTIL,
-          originalTypeName
+          rawOriginalTypeName
       )
       result.addCode(
           "«%L%L.newInstance(",
