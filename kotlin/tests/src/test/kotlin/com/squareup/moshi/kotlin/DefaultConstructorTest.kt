@@ -50,8 +50,9 @@ data class TestClass(
 // Regression test for https://github.com/square/moshi/issues/905
 // Just needs to compile
 @JsonClass(generateAdapter = true)
-data class GenericTestClassWithDefaults(
-    val input: String = ""
+data class GenericTestClassWithDefaults<T>(
+    val input: String = "",
+    val genericInput: T
 )
 
 private fun createInt(): Int {
