@@ -62,8 +62,7 @@ abstract class ClassFactory<T> {
       if (sdk >= 29) {
         tryUnsafe = false;
       }
-    } catch (Exception e) {
-      // Ignore, not running on android
+    } catch (Exception ignored) {
     }
     if (tryUnsafe) {
       // Try the JVM's Unsafe mechanism.
