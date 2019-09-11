@@ -23,7 +23,7 @@ import java.util.Date;
  *     The new class is {@code com.squareup.moshi.adapters.Rfc3339DateJsonAdapter}.
  */
 public final class Rfc3339DateJsonAdapter extends JsonAdapter<Date> {
-  com.squareup.moshi.adapters.Rfc3339DateJsonAdapter delegate
+  private final com.squareup.moshi.adapters.Rfc3339DateJsonAdapter delegate
       = new com.squareup.moshi.adapters.Rfc3339DateJsonAdapter();
 
   @Override public Date fromJson(JsonReader reader) throws IOException {
