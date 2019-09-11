@@ -54,29 +54,42 @@ abstract class ClassFactory<T> {
       // No no-args constructor. Fall back to something more magical...
     }
 
-    // Try the JVM's Unsafe mechanism.
-    // public class Unsafe {
-    //   public Object allocateInstance(Class<?> type);
-    // }
+    boolean tryUnsafe = true;
     try {
-      Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-      Field f = unsafeClass.getDeclaredField("theUnsafe");
-      f.setAccessible(true);
-      final Object unsafe = f.get(null);
-      final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
-      return new ClassFactory<T>() {
-        @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
-          return (T) allocateInstance.invoke(unsafe, rawType);
-        }
-        @Override public String toString() {
-          return rawType.getName();
-        }
-      };
-    } catch (IllegalAccessException e) {
-      throw new AssertionError();
-    } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignored) {
-      // Not the expected version of the Oracle Java library!
+      Class<?> androidBuildClass = Class.forName("android.os.Build.VERSION");
+      Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
+      int sdk = (int) sdkIntField.get(null);
+      if (sdk >= 29) {
+        tryUnsafe = false;
+      }
+    } catch (Exception e) {
+      // Ignore, not running on android
+    }
+    if (tryUnsafe) {
+      // Try the JVM's Unsafe mechanism.
+      // public class Unsafe {
+      //   public Object allocateInstance(Class<?> type);
+      // }
+      try {
+        Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+        Field f = unsafeClass.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        final Object unsafe = f.get(null);
+        final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
+        return new ClassFactory<T>() {
+          @SuppressWarnings("unchecked")
+          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+            return (T) allocateInstance.invoke(unsafe, rawType);
+          }
+          @Override public String toString() {
+            return rawType.getName();
+          }
+        };
+      } catch (IllegalAccessException e) {
+        throw new AssertionError();
+      } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignored) {
+        // Not the expected version of the Oracle Java library!
+      }
     }
 
     // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
