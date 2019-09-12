@@ -34,6 +34,9 @@ abstract class ClassFactory<T> {
   abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
+  private static volatile boolean androidChecked = false;
+  private static volatile boolean tryUnsafe = true;
+
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
     // Try to find a no-args constructor. May be any visibility including private.
     try {
@@ -54,15 +57,18 @@ abstract class ClassFactory<T> {
       // No no-args constructor. Fall back to something more magical...
     }
 
-    boolean tryUnsafe = true;
-    try {
-      Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
-      Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
-      int sdk = (int) sdkIntField.get(null);
-      if (sdk >= 29) {
-        tryUnsafe = false;
+    if (!androidChecked) {
+      try {
+        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
+        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
+        int sdk = (int) sdkIntField.get(null);
+        if (sdk >= 29) {
+          tryUnsafe = false;
+        }
+      } catch (Exception ignored) {
+      } finally {
+        androidChecked = true;
       }
-    } catch (Exception ignored) {
     }
     if (tryUnsafe) {
       // Try the JVM's Unsafe mechanism.
