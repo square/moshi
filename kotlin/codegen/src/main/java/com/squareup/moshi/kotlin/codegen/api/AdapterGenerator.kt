@@ -139,14 +139,13 @@ internal class AdapterGenerator(
     }
 
     result.addProperty(optionsProperty)
-    result.addProperty(constructorProperty)
     for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
           nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
     }
 
     result.addFunction(generateToStringFun())
-    result.addFunction(generateFromJsonFun())
+    result.addFunction(generateFromJsonFun(result))
     result.addFunction(generateToJsonFun())
 
     return result.build()
@@ -172,7 +171,7 @@ internal class AdapterGenerator(
         .build()
   }
 
-  private fun generateFromJsonFun(): FunSpec {
+  private fun generateFromJsonFun(classBuilder: TypeSpec.Builder): FunSpec {
     val result = FunSpec.builder("fromJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(readerParam)
@@ -240,6 +239,7 @@ internal class AdapterGenerator(
     val maskName = nameAllocator.newName("mask")
     val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
+      classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
       val booleanArrayBlock = parameterProperties.map { param ->
         when {
