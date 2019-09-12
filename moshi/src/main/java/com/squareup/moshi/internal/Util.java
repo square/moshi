@@ -49,7 +49,7 @@ public final class Util {
       = "Required value '%s' (JSON name '%s') missing at %s";
   private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
   private static final String UNEXPECTED_NULL_WITH_NAME_TEMPLATE
-      = "Non-null value '%s' (json name '%s') was null at %s";
+      = "Non-null value '%s' (JSON name '%s') was null at %s";
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
