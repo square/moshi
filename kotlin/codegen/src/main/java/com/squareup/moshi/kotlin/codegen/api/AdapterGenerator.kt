@@ -261,18 +261,18 @@ internal class AdapterGenerator(
     } else {
       CodeBlock.of("return·")
     }
-    val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
       val rawOriginalTypeName = originalTypeName.rawType()
+      val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
       val coreLookupBlock = CodeBlock.of(
           "%T.lookupDefaultsConstructor(%T::class.java)",
           MOSHI_UTIL,
           rawOriginalTypeName
       )
       val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
-        CodeBlock.of("(%L·as·%T)", coreLookupBlock, constructorProperty.type)
+        CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
       } else {
         coreLookupBlock
       }
@@ -283,7 +283,7 @@ internal class AdapterGenerator(
       )
       val localConstructorProperty = PropertySpec.builder(
           nameAllocator.newName("localConstructor"),
-          constructorProperty.type)
+          nonNullConstructorType)
           .addAnnotation(AnnotationSpec.builder(Suppress::class)
               .addMember("%S", "UNCHECKED_CAST")
               .build())
@@ -291,9 +291,9 @@ internal class AdapterGenerator(
           .build()
       result.addCode("%L", localConstructorProperty)
       result.addCode(
-          "«%L%L.newInstance(",
+          "«%L%N.newInstance(",
           returnOrResultAssignment,
-          localConstructorName
+          localConstructorProperty
       )
     } else {
       // Standard constructor call
