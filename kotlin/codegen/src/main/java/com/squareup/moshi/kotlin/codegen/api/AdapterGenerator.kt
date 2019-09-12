@@ -215,12 +215,7 @@ internal class AdapterGenerator(
               property.localName, nameAllocator[property.delegateKey], readerParam, exception)
         }
         if (property.hasConstructorDefault) {
-          val shiftValue = if (maskIndex == 0) {
-            1
-          } else {
-            1 shl maskIndex
-          }
-          val inverted = shiftValue.inv()
+          val inverted = (1 shl maskIndex).inv()
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
           result.addStatement("%1L = %1L and %2L", maskName, inverted)
         } else {
