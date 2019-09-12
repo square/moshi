@@ -44,12 +44,6 @@ import static com.squareup.moshi.Types.subtypeOf;
 import static com.squareup.moshi.Types.supertypeOf;
 
 public final class Util {
-  private static final String REQUIRED_PROPERTY_TEMPLATE = "Required value '%s' missing at %s";
-  private static final String REQUIRED_PROPERTY_NAME_TEMPLATE
-      = "Required value '%s' (JSON name '%s') missing at %s";
-  private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
-  private static final String UNEXPECTED_NULL_WITH_NAME_TEMPLATE
-      = "Non-null value '%s' (JSON name '%s') was null at %s";
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
@@ -579,9 +573,10 @@ public final class Util {
     String path = reader.getPath();
     String message;
     if (jsonName == null) {
-      message = String.format(REQUIRED_PROPERTY_TEMPLATE, property, path);
+      message = String.format("Required value '%s' missing at %s", property, path);
     } else {
-      message = String.format(REQUIRED_PROPERTY_NAME_TEMPLATE, property, jsonName, path);
+      message = String.format("Required value '%s' (JSON name '%s') missing at %s",
+          property, jsonName, path);
     }
     return new JsonDataException(message);
   }
@@ -594,9 +589,10 @@ public final class Util {
     String path = reader.getPath();
     String message;
     if (jsonName == null) {
-      message = String.format(UNEXPECTED_NULL_TEMPLATE, property, path);
+      message = String.format("Non-null value '%s' was null at %s", property, path);
     } else {
-      message = String.format(UNEXPECTED_NULL_WITH_NAME_TEMPLATE, property, jsonName, path);
+      message = String.format("Non-null value '%s' (JSON name '%s') was null at %s",
+          property, jsonName, path);
     }
     return new JsonDataException(message);
   }
