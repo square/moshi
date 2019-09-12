@@ -418,7 +418,7 @@ class GeneratedAdaptersTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch(expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required property 'b' missing at \$")
+      assertThat(expected).hasMessage("Required value 'b' missing at \$")
     }
   }
 
