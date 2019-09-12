@@ -130,6 +130,9 @@ public abstract class JsonAdapter<T> {
    * nulls.
    */
   @CheckReturnValue public final JsonAdapter<T> nullSafe() {
+    if (this instanceof NullSafeJsonAdapter) {
+      return this;
+    }
     return new NullSafeJsonAdapter<>(this);
   }
 
@@ -141,6 +144,9 @@ public abstract class JsonAdapter<T> {
    * handled elsewhere. This should only be used to fail on explicit nulls.
    */
   @CheckReturnValue public final JsonAdapter<T> nonNull() {
+    if (this instanceof NonNullJsonAdapter) {
+      return this;
+    }
     return new NonNullJsonAdapter<>(this);
   }
 
