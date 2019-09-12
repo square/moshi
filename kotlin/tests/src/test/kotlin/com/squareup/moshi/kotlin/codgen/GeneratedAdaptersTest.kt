@@ -1223,5 +1223,11 @@ data class SmokeTestType(
   val genericAlias: GenericTypeAlias = listOf("Woah")
 )
 
+// Compile only, regression test for https://github.com/square/moshi/issues/848
+@JsonClass(generateAdapter = true)
+data class Hotwords(
+    val `class`: List<String>?
+)
+
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
