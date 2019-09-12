@@ -543,7 +543,6 @@ public final class Util {
    * @param targetClass the target kotlin class to instantiate.
    * @param <T> the type of {@code targetClass}.
    * @return the instantiated {@code targetClass} instance.
-   * @see #createDefaultValuesParametersMask(boolean...)
    */
   public static <T> Constructor<T> lookupDefaultsConstructor(Class<T> targetClass) {
     if (DEFAULT_CONSTRUCTOR_MARKER == null) {
@@ -553,42 +552,6 @@ public final class Util {
     Constructor<T> defaultConstructor = findConstructor(targetClass);
     defaultConstructor.setAccessible(true);
     return defaultConstructor;
-  }
-
-  /**
-   * Reflectively invokes the defaults constructor of a kotlin class. This allows indicating which
-   * arguments are "set" or not, and thus recreate the behavior of named a arguments invocation
-   * dynamically.
-   *
-   * @param targetClass the target kotlin class to instantiate.
-   * @param defaultsConstructor the target class's defaults constructor in kotlin invoke.
-   * @param mask an int mask indicating which {@code args} are present.
-   * @param args the constructor arguments, including "unset" values (set to null or the primitive
-   *             default).
-   * @param <T> the type of {@code targetClass}.
-   * @return the instantiated {@code targetClass} instance.
-   * @see #createDefaultValuesParametersMask(boolean...)
-   */
-  public static <T> T invokeDefaultConstructor(
-      Class<T> targetClass,
-      Constructor<T> defaultsConstructor,
-      int mask,
-      Object... args) {
-    Object[] finalArgs = Arrays.copyOf(args, args.length + 2);
-    finalArgs[finalArgs.length - 2] = mask;
-    finalArgs[finalArgs.length - 1] = null; // DefaultConstructorMarker param
-    try {
-      return defaultsConstructor.newInstance(finalArgs);
-    } catch (InstantiationException e) {
-      throw new IllegalStateException("Could not instantiate instance of " + targetClass);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException("Could not access defaults constructor of " + targetClass);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-      if (cause instanceof Error) throw (Error) cause;
-      throw new RuntimeException("Could not invoke defaults constructor of " + targetClass, cause);
-    }
   }
 
   private static <T> Constructor<T> findConstructor(Class<T> targetClass) {
@@ -602,26 +565,6 @@ public final class Util {
     }
 
     throw new IllegalStateException("No defaults constructor found for " + targetClass);
-  }
-
-  /**
-   * Creates an mask with bits set to indicate which indices of a default constructor's parameters
-   * are set.
-   *
-   * @param argPresentValues vararg of all present values (set or unset). Max allowable size is 32.
-   * @return the created mask.
-   */
-  public static int createDefaultValuesParametersMask(boolean... argPresentValues) {
-    if (argPresentValues.length > 32) {
-      throw new IllegalArgumentException("Arg present values exceeds max allowable 32.");
-    }
-    int mask = 0;
-    for (int i = 0; i < argPresentValues.length; ++i) {
-      if (!argPresentValues[i]) {
-        mask = mask | (1 << i);
-      }
-    }
-    return mask;
   }
 
   public static JsonDataException missingProperty(String property, JsonReader reader) {

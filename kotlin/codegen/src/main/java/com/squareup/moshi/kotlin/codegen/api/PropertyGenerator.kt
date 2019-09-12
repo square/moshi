@@ -36,18 +36,18 @@ internal class PropertyGenerator(
 
   val hasConstructorParameter get() = target.parameterIndex != -1
 
-  /** We prefer to use 'null' to mean absent, but for some properties those are distinct. */
-  val differentiateAbsentFromNull get() = delegateKey.nullable && hasDefault
-
   /**
    * IsPresent is required if the following conditions are met:
    * - Is not transient
-   * - Has a default and one of the below
-   *   - Is a constructor property
-   *   - Is a nullable non-constructor property
+   * - Has a default
+   * - Is not a constructor parameter (for constructors we use a defaults mask)
+   * - Is nullable (because we differentiate absent from null)
+   *
+   * This is used to indicate that presence should be checked first before possible assigning null
+   * to an absent value
    */
-  val hasLocalIsPresentName = !isTransient && hasDefault &&
-      (hasConstructorParameter || delegateKey.nullable)
+  val hasLocalIsPresentName = !isTransient && hasDefault && !hasConstructorParameter && delegateKey.nullable
+  val hasConstructorDefault = hasDefault && hasConstructorParameter
 
   fun allocateNames(nameAllocator: NameAllocator) {
     localName = nameAllocator.newName(name)
@@ -58,7 +58,10 @@ internal class PropertyGenerator(
     return PropertySpec.builder(localName, target.type.copy(nullable = true))
         .mutable(true)
         .apply {
-          if (hasLocalIsPresentName) {
+          if (hasConstructorDefault) {
+            // We default to the primitive default type, as reflectively invoking the constructor
+            // without this (even though it's a throwaway) will fail argument type resolution in
+            // the reflective invocation.
             initializer(target.type.defaultPrimitiveValue())
           } else {
             initializer("null")

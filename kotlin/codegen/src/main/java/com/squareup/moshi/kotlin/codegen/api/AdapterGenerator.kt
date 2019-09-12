@@ -30,7 +30,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
@@ -184,13 +183,29 @@ internal class AdapterGenerator(
       }
     }
 
+    val maskName = nameAllocator.newName("mask")
+    val useConstructorDefaults = nonTransientProperties.any { it.hasConstructorDefault }
+    if (useConstructorDefaults) {
+      result.addStatement("var %L = -1", maskName)
+    }
     result.addStatement("%N.beginObject()", readerParam)
     result.beginControlFlow("while (%N.hasNext())", readerParam)
     result.beginControlFlow("when (%N.selectName(%N))", readerParam, optionsProperty)
 
-    nonTransientProperties.forEachIndexed { index, property ->
-      if (property.hasLocalIsPresentName) {
-        result.beginControlFlow("%L -> ", index)
+    // We track property index and mask index separately, because mask index is based on _all_
+    // constructor arguments, while property index is only based on the index passed into
+    // JsonReader.Options.
+    var propertyIndex = 0
+    var maskIndex = 0
+    for (property in propertyList) {
+      if (property.isTransient) {
+        if (property.hasConstructorParameter) {
+          maskIndex++
+        }
+        continue
+      }
+      if (property.hasLocalIsPresentName || property.hasConstructorDefault) {
+        result.beginControlFlow("%L ->", propertyIndex)
         if (property.delegateKey.nullable) {
           result.addStatement("%N = %N.fromJson(%N)",
               property.localName, nameAllocator[property.delegateKey], readerParam)
@@ -199,19 +214,28 @@ internal class AdapterGenerator(
           result.addStatement("%N = %N.fromJson(%N) ?: throw·%L",
               property.localName, nameAllocator[property.delegateKey], readerParam, exception)
         }
-        result.addStatement("%N = true", property.localIsPresentName)
+        if (property.hasConstructorDefault) {
+          val inverted = (1 shl maskIndex).inv()
+          result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
+          result.addStatement("%1L = %1L and %2L", maskName, inverted)
+        } else {
+          // Presence tracker for a mutable property
+          result.addStatement("%N = true", property.localIsPresentName)
+        }
         result.endControlFlow()
       } else {
         if (property.delegateKey.nullable) {
           result.addStatement("%L -> %N = %N.fromJson(%N)",
-              index, property.localName, nameAllocator[property.delegateKey], readerParam)
+              propertyIndex, property.localName, nameAllocator[property.delegateKey], readerParam)
         } else {
           val exception = unexpectedNull(property.localName, readerParam)
           result.addStatement("%L -> %N = %N.fromJson(%N) ?: throw·%L",
-              index, property.localName, nameAllocator[property.delegateKey], readerParam,
+              propertyIndex, property.localName, nameAllocator[property.delegateKey], readerParam,
               exception)
         }
       }
+      propertyIndex++
+      maskIndex++
     }
 
     result.beginControlFlow("-1 ->")
@@ -236,18 +260,10 @@ internal class AdapterGenerator(
     } else {
       CodeBlock.of("return·")
     }
-    val maskName = nameAllocator.newName("mask")
     val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
-      val booleanArrayBlock = parameterProperties.map { param ->
-        when {
-          param.isTransient -> CodeBlock.of("false")
-          param.hasLocalIsPresentName -> CodeBlock.of(param.localIsPresentName)
-          else -> CodeBlock.of("true")
-        }
-      }.joinToCode(", ")
       result.addStatement(
           "val %1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{ this.%2N·= it }",
           localConstructorName,
@@ -255,15 +271,10 @@ internal class AdapterGenerator(
           MOSHI_UTIL,
           originalTypeName
       )
-      result.addStatement("val %L = %T.createDefaultValuesParametersMask(%L)",
-          maskName, MOSHI_UTIL, booleanArrayBlock)
       result.addCode(
-          "«%L%T.invokeDefaultConstructor(%T::class.java, %L, %L, ",
+          "«%L%L.newInstance(",
           returnOrResultAssignment,
-          MOSHI_UTIL,
-          originalTypeName,
-          localConstructorName,
-          maskName
+          localConstructorName
       )
     } else {
       // Standard constructor call
@@ -292,6 +303,11 @@ internal class AdapterGenerator(
       separator = ",\n"
     }
 
+    if (useDefaultsConstructor) {
+      // Add the mask and a null instance for the trailing default marker instance
+      result.addCode(",\n%L,\nnull", maskName)
+    }
+
     result.addCode("\n»)\n")
 
     // Assign properties not present in the constructor.
@@ -299,7 +315,7 @@ internal class AdapterGenerator(
       if (property.hasConstructorParameter) {
         continue // Property already handled.
       }
-      if (property.differentiateAbsentFromNull) {
+      if (property.hasLocalIsPresentName) {
         result.addStatement("%1N.%2N = if (%3N) %4N else %1N.%2N",
             resultName, property.name, property.localIsPresentName, property.localName)
       } else {
