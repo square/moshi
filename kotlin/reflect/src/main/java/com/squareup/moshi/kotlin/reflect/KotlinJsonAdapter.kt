@@ -83,8 +83,11 @@ internal class KotlinJsonAdapter<T>(
       values[index] = binding.adapter.fromJson(reader)
 
       if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
-        throw JsonDataException(
-            "Non-null value '${binding.property.name}' was null at ${reader.path}")
+        throw Util.unexpectedNull(
+            binding.property.name,
+            binding.jsonNameIfDifferent(),
+            reader
+        )
       }
     }
     reader.endObject()
@@ -93,8 +96,11 @@ internal class KotlinJsonAdapter<T>(
     for (i in 0 until constructorSize) {
       if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
         if (!constructor.parameters[i].type.isMarkedNullable) {
-          throw JsonDataException(
-              "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
+          throw Util.missingProperty(
+              constructor.parameters[i].name,
+              bindings[i]?.jsonNameIfDifferent(),
+              reader
+          )
         }
         values[i] = null // Replace absent with null.
       }
@@ -128,8 +134,9 @@ internal class KotlinJsonAdapter<T>(
 
   override fun toString() = "KotlinJsonAdapter(${constructor.returnType})"
 
-  data class Binding<K, P>(
+  data class Binding<K, P> constructor(
       val name: String,
+      val jsonName: String?,
       val adapter: JsonAdapter<P>,
       val property: KProperty1<K, P>,
       val parameter: KParameter?) {
@@ -140,6 +147,8 @@ internal class KotlinJsonAdapter<T>(
         (property as KMutableProperty1<K, P>).set(result, value)
       }
     }
+
+    fun jsonNameIfDifferent() = jsonName?.takeIf { it != name }
   }
 
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
@@ -245,7 +254,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
       @Suppress("UNCHECKED_CAST")
-      bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
+      bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, jsonAnnotation?.name, adapter,
           property as KProperty1<Any, Any?>, parameter)
     }
 
