@@ -186,7 +186,7 @@ internal class AdapterGenerator(
     val maskName = nameAllocator.newName("mask")
     val useConstructorDefaults = nonTransientProperties.any { it.hasConstructorDefault }
     if (useConstructorDefaults) {
-      result.addStatement("var %L = 0.inv()", maskName)
+      result.addStatement("var %L = -1", maskName)
     }
     result.addStatement("%N.beginObject()", readerParam)
     result.beginControlFlow("while (%N.hasNext())", readerParam)
@@ -215,13 +215,14 @@ internal class AdapterGenerator(
               property.localName, nameAllocator[property.delegateKey], readerParam, exception)
         }
         if (property.hasConstructorDefault) {
-          // $mask = $mask and (1 shl $index).inv()
-          val shiftBlock = if (maskIndex == 0) {
-            CodeBlock.of("1")
+          val shiftValue = if (maskIndex == 0) {
+            1
           } else {
-            CodeBlock.of("(1 shl %L)", maskIndex)
+            1 shl maskIndex
           }
-          result.addStatement("%1L = %1L and %2L.inv()", maskName, shiftBlock)
+          val inverted = shiftValue.inv()
+          result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
+          result.addStatement("%1L = %1L and %2L", maskName, inverted)
         } else {
           // Presence tracker for a mutable property
           result.addStatement("%N = true", property.localIsPresentName)
