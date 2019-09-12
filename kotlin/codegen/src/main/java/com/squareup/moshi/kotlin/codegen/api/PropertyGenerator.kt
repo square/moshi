@@ -16,6 +16,7 @@
 package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.PropertySpec
 
@@ -75,5 +76,11 @@ internal class PropertyGenerator(
         .mutable(true)
         .initializer("false")
         .build()
+  }
+
+  fun jsonNameIfDifferent() = if (jsonName == localName) {
+    CodeBlock.of("null")
+  } else {
+    CodeBlock.of("%S", jsonName)
   }
 }

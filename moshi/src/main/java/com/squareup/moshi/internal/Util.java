@@ -45,7 +45,11 @@ import static com.squareup.moshi.Types.supertypeOf;
 
 public final class Util {
   private static final String REQUIRED_PROPERTY_TEMPLATE = "Required property '%s' missing at %s";
+  private static final String REQUIRED_PROPERTY_NAME_TEMPLATE
+      = "Required property '%s' (json name '%s') missing at %s";
   private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
+  private static final String UNEXPECTED_NULL_WITH_NAME_TEMPLATE
+      = "Non-null value '%s' (json name '%s') was null at %s";
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
@@ -567,17 +571,33 @@ public final class Util {
     throw new IllegalStateException("No defaults constructor found for " + targetClass);
   }
 
-  public static JsonDataException missingProperty(String property, JsonReader reader) {
-    return jsonDataException(REQUIRED_PROPERTY_TEMPLATE, property, reader);
+  public static JsonDataException missingProperty(
+      String property,
+      @Nullable String jsonName,
+      JsonReader reader
+  ) {
+    String path = reader.getPath();
+    String message;
+    if (jsonName == null) {
+      message = String.format(REQUIRED_PROPERTY_TEMPLATE, property, path);
+    } else {
+      message = String.format(REQUIRED_PROPERTY_NAME_TEMPLATE, property, jsonName, path);
+    }
+    return new JsonDataException(message);
   }
 
-  public static JsonDataException unexpectedNull(String property, JsonReader reader) {
-    return jsonDataException(UNEXPECTED_NULL_TEMPLATE, property, reader);
-  }
-
-  private static JsonDataException jsonDataException(
-      String template, String property, JsonReader reader) {
-    return new JsonDataException(
-        String.format(template, property, reader.getPath()));
+  public static JsonDataException unexpectedNull(
+      String property,
+      @Nullable String jsonName,
+      JsonReader reader
+  ) {
+    String path = reader.getPath();
+    String message;
+    if (jsonName == null) {
+      message = String.format(UNEXPECTED_NULL_TEMPLATE, property, path);
+    } else {
+      message = String.format(UNEXPECTED_NULL_WITH_NAME_TEMPLATE, property, jsonName, path);
+    }
+    return new JsonDataException(message);
   }
 }
