@@ -217,7 +217,7 @@ internal class AdapterGenerator(
         if (property.hasConstructorDefault) {
           // $mask = $mask and (1 shl $index).inv()
           val shiftBlock = if (maskIndex == 0) {
-            CodeBlock.of("1", maskIndex)
+            CodeBlock.of("1")
           } else {
             CodeBlock.of("(1 shl %L)", maskIndex)
           }
