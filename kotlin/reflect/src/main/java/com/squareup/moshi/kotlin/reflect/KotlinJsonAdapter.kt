@@ -85,7 +85,7 @@ internal class KotlinJsonAdapter<T>(
       if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
         throw Util.unexpectedNull(
             binding.property.name,
-            binding.jsonNameIfDifferent(),
+            binding.jsonName,
             reader
         )
       }
@@ -98,7 +98,7 @@ internal class KotlinJsonAdapter<T>(
         if (!constructor.parameters[i].type.isMarkedNullable) {
           throw Util.missingProperty(
               constructor.parameters[i].name,
-              bindings[i]?.jsonNameIfDifferent(),
+              bindings[i]?.jsonName,
               reader
           )
         }
@@ -147,8 +147,6 @@ internal class KotlinJsonAdapter<T>(
         (property as KMutableProperty1<K, P>).set(result, value)
       }
     }
-
-    fun jsonNameIfDifferent() = jsonName?.takeIf { it != name }
   }
 
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
@@ -254,8 +252,13 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
       @Suppress("UNCHECKED_CAST")
-      bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, jsonAnnotation?.name, adapter,
-          property as KProperty1<Any, Any?>, parameter)
+      bindingsByName[property.name] = KotlinJsonAdapter.Binding(
+          name,
+          jsonAnnotation?.name ?: name,
+          adapter,
+          property as KProperty1<Any, Any?>,
+          parameter
+      )
     }
 
     val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()

@@ -566,33 +566,33 @@ public final class Util {
   }
 
   public static JsonDataException missingProperty(
-      String property,
-      @Nullable String jsonName,
+      String propertyName,
+      String jsonName,
       JsonReader reader
   ) {
     String path = reader.getPath();
     String message;
-    if (jsonName == null) {
-      message = String.format("Required value '%s' missing at %s", property, path);
+    if (jsonName.equals(propertyName)) {
+      message = String.format("Required value '%s' missing at %s", propertyName, path);
     } else {
       message = String.format("Required value '%s' (JSON name '%s') missing at %s",
-          property, jsonName, path);
+          propertyName, jsonName, path);
     }
     return new JsonDataException(message);
   }
 
   public static JsonDataException unexpectedNull(
-      String property,
-      @Nullable String jsonName,
+      String propertyName,
+      String jsonName,
       JsonReader reader
   ) {
     String path = reader.getPath();
     String message;
-    if (jsonName == null) {
-      message = String.format("Non-null value '%s' was null at %s", property, path);
+    if (jsonName.equals(propertyName)) {
+      message = String.format("Non-null value '%s' was null at %s", propertyName, path);
     } else {
       message = String.format("Non-null value '%s' (JSON name '%s') was null at %s",
-          property, jsonName, path);
+          propertyName, jsonName, path);
     }
     return new JsonDataException(message);
   }

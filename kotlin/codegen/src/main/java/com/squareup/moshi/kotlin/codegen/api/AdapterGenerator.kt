@@ -308,8 +308,8 @@ internal class AdapterGenerator(
       }
       if (!property.isTransient && property.isRequired) {
         val missingPropertyBlock =
-            CodeBlock.of("%T.missingProperty(%S, %L, %N)",
-                Util::class, property.localName, property.jsonNameIfDifferent(), readerParam)
+            CodeBlock.of("%T.missingProperty(%S, %S, %N)",
+                MOSHI_UTIL, property.localName, property.jsonName, readerParam)
         result.addCode(" ?: throw·%L", missingPropertyBlock)
       }
       separator = ",\n"
@@ -343,8 +343,8 @@ internal class AdapterGenerator(
   }
 
   private fun unexpectedNull(property: PropertyGenerator, reader: ParameterSpec): CodeBlock {
-    return CodeBlock.of("%T.unexpectedNull(%S, %L, %N)",
-        Util::class, property.localName, property.jsonNameIfDifferent(), reader)
+    return CodeBlock.of("%T.unexpectedNull(%S, %S, %N)",
+        MOSHI_UTIL, property.localName, property.jsonName, reader)
   }
 
   private fun generateToJsonFun(): FunSpec {
