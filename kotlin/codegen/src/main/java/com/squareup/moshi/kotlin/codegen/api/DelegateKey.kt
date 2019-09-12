@@ -17,7 +17,6 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
@@ -55,7 +54,6 @@ internal data class DelegateKey(
 
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
     val standardArgs = arrayOf(moshiParameter,
-        CodeBlock.of("<%T>", type),
         typeRenderer.render(type))
     val (initializerString, args) = when {
       jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
@@ -68,7 +66,7 @@ internal data class DelegateKey(
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
         .addAnnotations(jsonQualifiers)
-        .initializer("%N.adapter%L(%L$initializerString, %S)", *finalArgs)
+        .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
         .build()
   }
 }
