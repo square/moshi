@@ -332,7 +332,7 @@ internal class AdapterGenerator(
     result.addStatement("%N.beginObject()", writerParam)
     nonTransientProperties.forEach { property ->
       result.addStatement("%N.name(%S)", writerParam, property.jsonName)
-      result.addStatement("%N.toJson(%N, %N.%L)",
+      result.addStatement("%N.toJson(%N, %N.%N)",
           nameAllocator[property.delegateKey], writerParam, valueParam, property.name)
     }
     result.addStatement("%N.endObject()", writerParam)
