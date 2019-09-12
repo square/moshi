@@ -46,7 +46,7 @@ import static com.squareup.moshi.Types.supertypeOf;
 public final class Util {
   private static final String REQUIRED_PROPERTY_TEMPLATE = "Required value '%s' missing at %s";
   private static final String REQUIRED_PROPERTY_NAME_TEMPLATE
-      = "Required value '%s' (json name '%s') missing at %s";
+      = "Required value '%s' (JSON name '%s') missing at %s";
   private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
   private static final String UNEXPECTED_NULL_WITH_NAME_TEMPLATE
       = "Non-null value '%s' (json name '%s') was null at %s";
