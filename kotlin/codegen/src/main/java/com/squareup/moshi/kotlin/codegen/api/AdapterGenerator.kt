@@ -205,7 +205,7 @@ internal class AdapterGenerator(
         continue
       }
       if (property.hasLocalIsPresentName || property.hasConstructorDefault) {
-        result.beginControlFlow("%L -> ", propertyIndex)
+        result.beginControlFlow("%L ->", propertyIndex)
         if (property.delegateKey.nullable) {
           result.addStatement("%N = %N.fromJson(%N)",
               property.localName, nameAllocator[property.delegateKey], readerParam)
