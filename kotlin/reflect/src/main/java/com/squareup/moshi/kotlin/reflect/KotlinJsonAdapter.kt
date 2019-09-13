@@ -202,6 +202,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     require(rawTypeKotlin.objectInstance == null) {
       "Cannot serialize object declaration ${rawType.name}"
     }
+    require(!rawTypeKotlin.isSealed) {
+      "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
+    }
 
     val constructor = rawTypeKotlin.primaryConstructor ?: return null
     val parametersByName = constructor.parameters.associateBy { it.name }
