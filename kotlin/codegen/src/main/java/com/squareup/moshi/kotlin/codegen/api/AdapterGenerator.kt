@@ -24,6 +24,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -260,21 +261,39 @@ internal class AdapterGenerator(
     } else {
       CodeBlock.of("return·")
     }
-    val localConstructorName = nameAllocator.newName("localConstructor")
     if (useDefaultsConstructor) {
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
-      result.addStatement(
-          "val %1L·= this.%2N ?: %3T.lookupDefaultsConstructor(%4T::class.java).also·{ this.%2N·= it }",
-          localConstructorName,
-          constructorProperty,
+      val rawOriginalTypeName = originalTypeName.rawType()
+      val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
+      val coreLookupBlock = CodeBlock.of(
+          "%T.lookupDefaultsConstructor(%T::class.java)",
           MOSHI_UTIL,
-          originalTypeName
+          rawOriginalTypeName
       )
+      val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
+        CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
+      } else {
+        coreLookupBlock
+      }
+      val initializerBlock = CodeBlock.of(
+          "this.%1N ?:·%2L.also·{ this.%1N·= it }",
+          constructorProperty,
+          lookupBlock
+      )
+      val localConstructorProperty = PropertySpec.builder(
+          nameAllocator.newName("localConstructor"),
+          nonNullConstructorType)
+          .addAnnotation(AnnotationSpec.builder(Suppress::class)
+              .addMember("%S", "UNCHECKED_CAST")
+              .build())
+          .initializer(initializerBlock)
+          .build()
+      result.addCode("%L", localConstructorProperty)
       result.addCode(
-          "«%L%L.newInstance(",
+          "«%L%N.newInstance(",
           returnOrResultAssignment,
-          localConstructorName
+          localConstructorProperty
       )
     } else {
       // Standard constructor call
