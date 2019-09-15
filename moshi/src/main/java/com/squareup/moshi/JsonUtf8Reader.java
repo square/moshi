@@ -89,6 +89,9 @@ final class JsonUtf8Reader extends JsonReader {
    */
   private @Nullable String peekedString;
 
+  @Nullable private String skipNextName = null;
+  private boolean skipNextValue = false;
+
   JsonUtf8Reader(BufferedSource source) {
     if (source == null) {
       throw new NullPointerException("source == null");
@@ -584,9 +587,18 @@ final class JsonUtf8Reader extends JsonReader {
     return result;
   }
 
+  @Override public void skipNextName(String nameToSkip) {
+    skipNextName = nameToSkip;
+  }
+
   @Override public void skipName() throws IOException {
     if (failOnUnknown) {
-      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      if (peekedString != null && peekedString.equals(skipNextName)) {
+        skipNextName = null;
+        skipNextValue = true;
+      } else {
+        throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      }
     }
     int p = peeked;
     if (p == PEEKED_NONE) {
@@ -941,7 +953,11 @@ final class JsonUtf8Reader extends JsonReader {
 
   @Override public void skipValue() throws IOException {
     if (failOnUnknown) {
-      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      if (skipNextValue) {
+        skipNextValue = false;
+      } else {
+        throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      }
     }
     int count = 0;
     do {

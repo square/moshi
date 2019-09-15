@@ -346,6 +346,16 @@ public abstract class JsonReader implements Closeable {
   @CheckReturnValue public abstract int selectName(Options options) throws IOException;
 
   /**
+   * Skips the next name equal to {@code nameToSkip}. Useful in conditions where a name has already
+   * been handled by a delegating adapter and allow for skipping the given name in delegate adapters
+   * in {@link #failOnUnknown()} conditions. The name should only be skipped once.
+   *
+   * <p>Skipping the given name should also result in quietly skipping the subsequent value. even if
+   * {@link #failOnUnknown()} is true.
+   */
+  public abstract void skipNextName(String nameToSkip);
+
+  /**
    * Skips the next token, consuming it. This method is intended for use when the JSON token stream
    * contains unrecognized or unhandled names.
    *

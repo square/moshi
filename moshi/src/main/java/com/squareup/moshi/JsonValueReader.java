@@ -51,6 +51,8 @@ final class JsonValueReader extends JsonReader {
   private static final Object JSON_READER_CLOSED = new Object();
 
   private Object[] stack;
+  @Nullable private String skipNextName = null;
+  private boolean skipNextValue = false;
 
   JsonValueReader(Object root) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
@@ -165,12 +167,20 @@ final class JsonValueReader extends JsonReader {
     return -1;
   }
 
-  @Override public void skipName() throws IOException {
-    if (failOnUnknown) {
-      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
-    }
+  @Override public void skipNextName(String nameToSkip) {
+    skipNextName = nameToSkip;
+  }
 
+  @Override public void skipName() throws IOException {
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
+    if (failOnUnknown) {
+      if (peeked != null && stringKey(peeked).equals(skipNextName)) {
+        skipNextName = null;
+        skipNextValue = true;
+      } else {
+        throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      }
+    }
 
     // Swap the Map.Entry for its value on the stack.
     stack[stackSize - 1] = peeked.getValue();
@@ -298,7 +308,11 @@ final class JsonValueReader extends JsonReader {
 
   @Override public void skipValue() throws IOException {
     if (failOnUnknown) {
-      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      if (skipNextValue) {
+        skipNextValue = false;
+      } else {
+        throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      }
     }
 
     // If this element is in an object clear out the key.
