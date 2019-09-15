@@ -233,6 +233,21 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  // Subtype doesn't have a type label, we should allow this because we have already processed the
+  // type label in the context of the polymorphic adapter.
+  // This is a regression test for https://github.com/square/moshi/issues/858
+  @Test public void failOnUnknownMissingTypeLabel_and_noTypeKeyUsed() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithoutType.class, "success"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class).failOnUnknown();
+
+    MessageWithoutType decoded = (MessageWithoutType) adapter.fromJson(
+        "{\"value\":\"Okay!\",\"type\":\"success\"}");
+    assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
   interface Message {
   }
 
