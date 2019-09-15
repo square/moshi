@@ -248,6 +248,21 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  // Subtype doesn't have a type, polymorphic adapter writes the type label name and value
+  @Test public void missingTypeLabel_and_noTypeKeyUsed_toJson() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithoutType.class, "success"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    MessageWithoutType message = new MessageWithoutType("Okay!");
+    String encoded = adapter.toJson(message);
+    assertThat(encoded).isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
+    MessageWithoutType decoded = (MessageWithoutType) adapter.fromJson(encoded);
+    assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
   interface Message {
   }
 
