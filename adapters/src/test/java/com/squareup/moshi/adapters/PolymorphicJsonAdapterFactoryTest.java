@@ -297,4 +297,12 @@ public final class PolymorphicJsonAdapterFactoryTest {
       this.value = value;
     }
   }
+
+  static final class MessageWithoutType implements Message {
+    final String value;
+
+    MessageWithoutType(String value) {
+      this.value = value;
+    }
+  }
 }
