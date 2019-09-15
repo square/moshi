@@ -263,6 +263,23 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  // Subtype does have a type, polymorphic adapter writes the type label name and value, subtype's
+  // type should be ignored in serialization to avoid duplication.
+  // Regression test for https://github.com/square/moshi/issues/874
+  @Test public void missingTypeLabel_toJson() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithType.class, "success"))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    MessageWithType message = new MessageWithType("success", "Okay!");
+    String encoded = adapter.toJson(message);
+    assertThat(encoded).isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
+    MessageWithType decoded = (MessageWithType) adapter.fromJson(encoded);
+    assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
   interface Message {
   }
 
