@@ -291,6 +291,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       JsonAdapter<Object> adapter = jsonAdapters.get(labelIndex);
       writer.beginObject();
       writer.name(labelKey).value(labels.get(labelIndex));
+      writer.skipNextName(labelKey);
       int flattenToken = writer.beginFlatten();
       adapter.toJson(writer, value);
       writer.endFlatten(flattenToken);
