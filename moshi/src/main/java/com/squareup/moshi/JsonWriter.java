@@ -297,6 +297,15 @@ public abstract class JsonWriter implements Closeable, Flushable {
   public abstract JsonWriter endObject() throws IOException;
 
   /**
+   * Skips the next name with value equal to {@code nameToSkip}. This is useful in conditions where
+   * the name has already been written to the writer manually in a delegating adapter and it wants
+   * to prevent delegate adapters from possibly duplicating the written key and value.
+   *
+   * <p>Skipping the given name should also result in quietly skipping its subsequent value.
+   */
+  public abstract JsonWriter skipNextName(String nameToSkip);
+
+  /**
    * Encodes the property name.
    *
    * @param name the name of the forthcoming value. Must not be null.

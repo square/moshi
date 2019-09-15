@@ -64,6 +64,9 @@ final class JsonUtf8Writer extends JsonWriter {
 
   private String deferredName;
 
+  @Nullable private String skipNextName = null;
+  private boolean skipNextValue = false;
+
   JsonUtf8Writer(BufferedSink sink) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
@@ -151,12 +154,22 @@ final class JsonUtf8Writer extends JsonWriter {
     return this;
   }
 
+  @Override public JsonWriter skipNextName(String nameToSkip) {
+    skipNextName = nameToSkip;
+    return this;
+  }
+
   @Override public JsonWriter name(String name) throws IOException {
     if (name == null) {
       throw new NullPointerException("name == null");
     }
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
+    }
+    if (name.equals(skipNextName)) {
+      skipNextName = null;
+      skipNextValue = true;
+      return this;
     }
     int context = peekScope();
     if ((context != EMPTY_OBJECT && context != NONEMPTY_OBJECT) || deferredName != null) {
@@ -177,6 +190,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(String value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (value == null) {
       return nullValue();
     }
@@ -191,6 +208,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter nullValue() throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "null cannot be used as a map key in JSON at path " + getPath());
@@ -210,6 +231,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(boolean value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "Boolean cannot be used as a map key in JSON at path " + getPath());
@@ -222,6 +247,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(Boolean value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (value == null) {
       return nullValue();
     }
@@ -229,6 +258,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(double value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (!lenient && (Double.isNaN(value) || Double.isInfinite(value))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
@@ -243,6 +276,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(long value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       return name(Long.toString(value));
     }
@@ -254,6 +291,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(@Nullable Number value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (value == null) {
       return nullValue();
     }
@@ -274,6 +315,10 @@ final class JsonUtf8Writer extends JsonWriter {
   }
 
   @Override public JsonWriter value(BufferedSource source) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "BufferedSource cannot be used as a map key in JSON at path " + getPath());

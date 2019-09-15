@@ -34,6 +34,8 @@ import static java.lang.Double.POSITIVE_INFINITY;
 final class JsonValueWriter extends JsonWriter {
   Object[] stack = new Object[32];
   private @Nullable String deferredName;
+  @Nullable private String skipNextName = null;
+  private boolean skipNextValue = false;
 
   JsonValueWriter() {
     pushScope(EMPTY_DOCUMENT);
@@ -119,12 +121,22 @@ final class JsonValueWriter extends JsonWriter {
     return this;
   }
 
+  @Override public JsonWriter skipNextName(String nameToSkip) {
+    skipNextName = nameToSkip;
+    return this;
+  }
+
   @Override public JsonWriter name(String name) throws IOException {
     if (name == null) {
       throw new NullPointerException("name == null");
     }
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
+    }
+    if (name.equals(skipNextName)) {
+      skipNextName = null;
+      skipNextValue = true;
+      return this;
     }
     if (peekScope() != EMPTY_OBJECT || deferredName != null) {
       throw new IllegalStateException("Nesting problem.");
@@ -136,6 +148,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(@Nullable String value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       return name(value);
     }
@@ -145,6 +161,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter nullValue() throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "null cannot be used as a map key in JSON at path " + getPath());
@@ -155,6 +175,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(boolean value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "Boolean cannot be used as a map key in JSON at path " + getPath());
@@ -165,6 +189,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(@Nullable Boolean value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "Boolean cannot be used as a map key in JSON at path " + getPath());
@@ -175,6 +203,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(double value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (!lenient
         && (Double.isNaN(value) || value == NEGATIVE_INFINITY || value == POSITIVE_INFINITY)) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
@@ -188,6 +220,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(long value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       return name(Long.toString(value));
     }
@@ -197,6 +233,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(@Nullable Number value) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     // If it's trivially converted to a long, do that.
     if (value instanceof Byte
         || value instanceof Short
@@ -227,6 +267,10 @@ final class JsonValueWriter extends JsonWriter {
   }
 
   @Override public JsonWriter value(BufferedSource source) throws IOException {
+    if (skipNextValue) {
+      skipNextValue = false;
+      return this;
+    }
     if (promoteValueToName) {
       throw new IllegalStateException(
           "BufferedSource cannot be used as a map key in JSON at path " + getPath());
