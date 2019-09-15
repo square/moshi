@@ -245,6 +245,9 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         reader.skipValue();
         return defaultValue;
       }
+      if (reader.failOnUnknown()) {
+        reader.skipNextName(labelKey);
+      }
       return jsonAdapters.get(labelIndex).fromJson(reader);
     }
 
