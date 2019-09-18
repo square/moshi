@@ -17,7 +17,8 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.google.common.collect.LinkedHashMultimap
 import okio.Buffer
-import okio.Okio
+import okio.buffer
+import okio.sink
 import org.jetbrains.kotlin.cli.common.CLITool
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler
 import java.io.File
@@ -47,7 +48,7 @@ class KotlinCompilerCall(var scratchDir: File) {
   fun addKt(path: String, source: String) {
     val sourceFile = File(sourcesDir, path)
     sourceFile.parentFile.mkdirs()
-    Okio.buffer(Okio.sink(sourceFile)).use {
+    sourceFile.sink().buffer().use {
       it.writeUtf8(source)
     }
   }
@@ -138,7 +139,7 @@ class KotlinCompilerCall(var scratchDir: File) {
       for (entry in services.asMap()) {
         zipOutputStream.putNextEntry(
             ZipEntry("META-INF/services/${entry.key.qualifiedName}"))
-        val serviceFile = Okio.buffer(Okio.sink(zipOutputStream))
+        val serviceFile = zipOutputStream.sink().buffer()
         for (implementation in entry.value) {
           serviceFile.writeUtf8(implementation.qualifiedName!!)
           serviceFile.writeUtf8("\n")

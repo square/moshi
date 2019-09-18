@@ -97,6 +97,12 @@
       <version>1.2.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <version>2.1.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <properties>
