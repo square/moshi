@@ -15,7 +15,10 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.tschuchort.compiletesting.KotlinCompilation
+import com.tschuchort.compiletesting.SourceFile
 import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.junit.Ignore
 import org.junit.Rule
@@ -28,25 +31,21 @@ class JsonClassCodegenProcessorTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test fun privateConstructor() {
-    val call = KotlinCompilerCall(temporaryFolder.root)
-    call.inheritClasspath = true
-    call.addService(Processor::class, JsonClassCodegenProcessor::class)
-    call.addKt("source.kt", """
-        |import com.squareup.moshi.JsonClass
-        |
-        |@JsonClass(generateAdapter = true)
-        |class PrivateConstructor private constructor(var a: Int, var b: Int) {
-        |  fun a() = a
-        |  fun b() = b
-        |  companion object {
-        |    fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
-        |  }
-        |}
-        |""".trimMargin())
-
-    val result = call.execute()
-    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
-    assertThat(result.systemErr).contains("constructor is not internal or public")
+    val result = compileIndentedSource("source.kt",
+        """
+        import com.squareup.moshi.JsonClass
+        
+        @JsonClass(generateAdapter = true)
+        class PrivateConstructor private constructor(var a: Int, var b: Int) {
+          fun a() = a
+          fun b() = b
+          companion object {
+            fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
+          }
+        }
+        """)
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains("constructor is not internal or public")
   }
 
   @Test fun privateConstructorParameter() {
@@ -395,4 +394,25 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
     assertThat(result.systemErr).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
+
+  // Note: "indented" is here because if we make the consumer do it, then IDE syntax highlighting
+  // for the "contents" parameter isn't performed automatically.
+  private fun compileIndentedSource(
+      name: String,
+      @Language("kotlin") contents: String,
+      indented: Boolean = true
+  ): KotlinCompilation.Result {
+    val finalContents = if (indented) contents else contents.trimIndent()
+    return compileWithSources(SourceFile.new(name, finalContents))
+  }
+  private fun compileWithSources(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
+    return KotlinCompilation()
+        .apply {
+          annotationProcessors = listOf(JsonClassCodegenProcessor())
+          inheritClassPath = true
+          sources = sourceFiles.asList()
+        }
+        .compile()
+  }
+
 }
