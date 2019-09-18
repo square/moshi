@@ -405,6 +405,7 @@ class JsonClassCodegenProcessorTest {
     val finalContents = if (indented) contents else contents.trimIndent()
     return compileWithSources(SourceFile.new(name, finalContents))
   }
+
   private fun compileWithSources(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
     return KotlinCompilation()
         .apply {
