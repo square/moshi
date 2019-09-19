@@ -399,6 +399,7 @@ class JsonClassCodegenProcessorTest {
   private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
     return KotlinCompilation()
         .apply {
+          workingDir = temporaryFolder.root
           annotationProcessors = listOf(JsonClassCodegenProcessor())
           inheritClassPath = true
           sources = sourceFiles.asList()
