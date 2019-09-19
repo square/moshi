@@ -17,8 +17,8 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import org.assertj.core.api.Assertions.assertThat
-import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.cli.common.ExitCode
 import org.junit.Ignore
 import org.junit.Rule
@@ -31,7 +31,7 @@ class JsonClassCodegenProcessorTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test fun privateConstructor() {
-    val result = compileIndentedSource("source.kt",
+    val result = compile(kotlin("source.kt",
         """
         import com.squareup.moshi.JsonClass
         
@@ -43,7 +43,8 @@ class JsonClassCodegenProcessorTest {
             fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
           }
         }
-        """)
+        """
+    ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("constructor is not internal or public")
   }
@@ -395,23 +396,13 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.systemErr).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
 
-  // Note: "indented" is here because if we make the consumer do it, then IDE syntax highlighting
-  // for the "contents" parameter isn't performed automatically.
-  private fun compileIndentedSource(
-      name: String,
-      @Language("kotlin") contents: String,
-      indented: Boolean = true
-  ): KotlinCompilation.Result {
-    val finalContents = if (indented) contents else contents.trimIndent()
-    return compileWithSources(SourceFile.new(name, finalContents))
-  }
-
-  private fun compileWithSources(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
+  private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
     return KotlinCompilation()
         .apply {
           annotationProcessors = listOf(JsonClassCodegenProcessor())
           inheritClassPath = true
           sources = sourceFiles.asList()
+          verbose = false
         }
         .compile()
   }
