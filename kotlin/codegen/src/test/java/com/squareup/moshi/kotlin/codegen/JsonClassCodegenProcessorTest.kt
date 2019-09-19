@@ -90,6 +90,18 @@ class JsonClassCodegenProcessorTest {
         "error: @JsonClass can't be applied to Interface: must be a Kotlin class")
   }
 
+  @Test fun interfacesDoNotErrorWhenGeneratorNotSet() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true, generator="customGenerator")
+          interface Interface
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+  }
+
   @Test fun abstractClassesNotSupported() {
     val result = compile(kotlin("source.kt",
         """
