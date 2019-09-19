@@ -261,7 +261,6 @@ class JsonClassCodegenProcessorTest {
     ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
-    assertThat(result.messages).contains("property b is not visible")
     assertThat(result.messages).contains("property c is not visible")
   }
 
