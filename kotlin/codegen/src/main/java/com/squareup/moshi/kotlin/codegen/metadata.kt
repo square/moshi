@@ -21,7 +21,7 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.elementhandler.elements.ElementsElementHandler
+import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -29,7 +29,7 @@ import com.squareup.kotlinpoet.metadata.isEnum
 import com.squareup.kotlinpoet.metadata.isInner
 import com.squareup.kotlinpoet.metadata.isLocal
 import com.squareup.kotlinpoet.metadata.isSealed
-import com.squareup.kotlinpoet.metadata.specs.ElementHandler
+import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.squareup.moshi.Json
@@ -146,7 +146,7 @@ internal fun targetType(messager: Messager,
     }
   }
 
-  val elementHandler = ElementsElementHandler.create(elements, types)
+  val elementHandler = ElementsClassInspector.create(elements, types)
   val kotlinApi = kmClass.toTypeSpec(elementHandler)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
@@ -202,7 +202,7 @@ internal fun targetType(messager: Messager,
 private fun declaredProperties(
     typeElement: TypeElement,
     constructor: TargetConstructor,
-    elementHandler: ElementHandler,
+    elementHandler: ClassInspector,
     kotlinApi: TypeSpec = typeElement.toTypeSpec(elementHandler)
 ): Map<String, TargetProperty> {
 

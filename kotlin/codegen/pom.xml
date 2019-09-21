@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>com.squareup</groupId>
-      <artifactId>kotlinpoet-elementhandler-elements</artifactId>
+      <artifactId>kotlinpoet-classinspector-elements</artifactId>
       <version>${kotlinpoet.version}</version>
     </dependency>
     <dependency>
