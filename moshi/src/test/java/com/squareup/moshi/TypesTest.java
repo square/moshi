@@ -85,6 +85,22 @@ public final class TypesTest {
     assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
   }
 
+  @Test public void newParameterizedType_missingTypeVars() {
+    try {
+      Types.newParameterizedType(List.class);
+      fail("Should have errored due to missing type variable");
+    } catch (Exception e) {
+      assertThat(e).hasMessageContaining("Missing type arguments");
+    }
+
+    try {
+      Types.newParameterizedTypeWithOwner(TypesTest.class, A.class);
+      fail("Should have errored due to missing type variable");
+    } catch (Exception e) {
+      assertThat(e).hasMessageContaining("Missing type arguments");
+    }
+  }
+
   @Test public void parameterizedTypeWithRequiredOwnerMissing() throws Exception {
     try {
       Types.newParameterizedType(A.class, B.class);

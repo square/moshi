@@ -109,6 +109,9 @@ public final class Types {
    * method if {@code rawType} is not enclosed in another type.
    */
   public static ParameterizedType newParameterizedType(Type rawType, Type... typeArguments) {
+    if (typeArguments.length == 0) {
+      throw new IllegalArgumentException("Missing type arguments for " + rawType);
+    }
     return new ParameterizedTypeImpl(null, rawType, typeArguments);
   }
 
@@ -118,6 +121,9 @@ public final class Types {
    */
   public static ParameterizedType newParameterizedTypeWithOwner(
       Type ownerType, Type rawType, Type... typeArguments) {
+    if (typeArguments.length == 0) {
+      throw new IllegalArgumentException("Missing type arguments for " + rawType);
+    }
     return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
   }
 
