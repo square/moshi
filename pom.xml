@@ -29,20 +29,25 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
-    <kotlin.version>1.3.40</kotlin.version>
-    <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
-    <dokka.version>0.9.17</dokka.version>
-    <maven-assembly.version>3.1.0</maven-assembly.version>
-    <incap.version>0.2</incap.version>
-    <autoservice.version>1.0-rc5</autoservice.version>
 
     <!-- Dependencies -->
+    <auto-common.version>0.10</auto-common.version>
+    <auto-service.version>1.0-rc5</auto-service.version>
+    <dokka.version>0.9.17</dokka.version>
+    <incap.version>0.2</incap.version>
     <okio.version>1.16.0</okio.version>
+    <okio2.version>2.1.0</okio2.version>
+    <kotlin.version>1.3.40</kotlin.version>
+    <kotlinpoet.version>1.3.0</kotlinpoet.version>
+    <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
+    <maven-assembly.version>3.1.0</maven-assembly.version>
 
     <!-- Test Dependencies -->
+    <assertj.version>3.11.1</assertj.version>
     <compile-testing.version>0.15</compile-testing.version>
     <junit.version>4.12</junit.version>
-    <assertj.version>3.11.1</assertj.version>
+    <kotlin-compile-testing.version>1.2.2</kotlin-compile-testing.version>
+    <truth.version>1.0</truth.version>
   </properties>
 
   <scm>
