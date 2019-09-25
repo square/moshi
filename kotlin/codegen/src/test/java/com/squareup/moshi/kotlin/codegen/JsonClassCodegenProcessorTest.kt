@@ -117,19 +117,16 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test fun sealedClassesNotSupported() {
-    val call = KotlinCompilerCall(temporaryFolder.root)
-    call.inheritClasspath = true
-    call.addService(Processor::class, JsonClassCodegenProcessor::class)
-    call.addKt("source.kt", """
-        |import com.squareup.moshi.JsonClass
-        |
-        |@JsonClass(generateAdapter = true)
-        |sealed class SealedClass(val a: Int)
-        |""".trimMargin())
-
-    val result = call.execute()
-    assertThat(result.exitCode).isEqualTo(ExitCode.COMPILATION_ERROR)
-    assertThat(result.systemErr).contains(
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+  
+          @JsonClass(generateAdapter = true)
+          sealed class SealedClass(val a: Int)
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains(
         "error: @JsonClass can't be applied to SealedClass: must not be sealed")
   }
 
