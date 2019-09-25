@@ -642,14 +642,27 @@ class KotlinJsonAdapterTest {
     }
   }
 
-  @Test fun objectDeclarationsNotSupported() {
+  @Test fun objectDeclarationsSupported() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<ObjectDeclaration>()
+    assertThat(adapter.toJson(ObjectDeclaration)).isEqualTo("{}")
+    assertThat(adapter.fromJson("{}")).isSameAs(ObjectDeclaration)
+  }
+
+  @Test fun objectDeclarations_withJsonContent() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<ObjectDeclaration>()
+    assertThat(adapter.fromJson("""{"a":6}""")).isSameAs(ObjectDeclaration)
+  }
+
+  @Test fun objectDeclarations_withJsonContent_failsOnUnknown() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<ObjectDeclaration>().failOnUnknown()
     try {
-      moshi.adapter<ObjectDeclaration>()
-      fail()
-    } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage("Cannot serialize object declaration " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$ObjectDeclaration")
+      adapter.fromJson("""{"a":6}""")
+      fail("Should fail on unknown a name")
+    } catch (e: JsonDataException) {
+      assertThat(e).hasMessageContaining("Cannot skip unexpected NAME")
     }
   }
 

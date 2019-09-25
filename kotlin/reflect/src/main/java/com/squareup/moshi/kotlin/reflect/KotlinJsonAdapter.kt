@@ -22,6 +22,7 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.squareup.moshi.internal.ObjectJsonAdapter
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
@@ -206,11 +207,12 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     require(!rawTypeKotlin.isInner) {
       "Cannot serialize inner class ${rawType.name}"
     }
-    require(rawTypeKotlin.objectInstance == null) {
-      "Cannot serialize object declaration ${rawType.name}"
-    }
     require(!rawTypeKotlin.isSealed) {
       "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
+    }
+
+    rawTypeKotlin.objectInstance?.let {
+      return ObjectJsonAdapter(it)
     }
 
     val constructor = rawTypeKotlin.primaryConstructor ?: return null
