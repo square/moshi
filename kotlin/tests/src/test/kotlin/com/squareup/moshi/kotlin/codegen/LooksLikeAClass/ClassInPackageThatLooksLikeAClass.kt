@@ -1,4 +1,4 @@
-package com.squareup.moshi.kotlin.codgen.LooksLikeAClass
+package com.squareup.moshi.kotlin.codegen.LooksLikeAClass
 
 import com.squareup.moshi.JsonClass
 
