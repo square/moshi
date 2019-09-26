@@ -83,10 +83,6 @@
       obsolete version of Guava!
     -->
     <dependency>
-      <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
-      <artifactId>kotlin-metadata</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.github.tschuchortdev</groupId>
       <artifactId>kotlin-compile-testing</artifactId>
       <version>${kotlin-compile-testing.version}</version>
