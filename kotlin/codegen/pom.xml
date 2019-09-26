@@ -218,6 +218,10 @@
                   <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector</shadedPattern>
                 </relocation>
                 <relocation>
+                  <pattern>kotlinpoet.classinspector.elements.shaded</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector.elements.shaded</shadedPattern>
+                </relocation>
+                <relocation>
                   <pattern>kotlinx.metadata</pattern>
                   <shadedPattern>com.squareup.moshi.kotlinx.metadata</shadedPattern>
                 </relocation>
