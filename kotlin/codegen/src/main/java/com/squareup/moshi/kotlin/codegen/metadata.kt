@@ -15,26 +15,23 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.google.auto.common.AnnotationMirrors
-import com.google.auto.common.MoreTypes
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.KModifier.PUBLIC
-import com.squareup.kotlinpoet.KModifier.VARARG
-import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.STAR
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.asTypeVariableName
-import com.squareup.kotlinpoet.tag
+import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
+import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.kotlinpoet.metadata.isAbstract
+import com.squareup.kotlinpoet.metadata.isClass
+import com.squareup.kotlinpoet.metadata.isEnum
+import com.squareup.kotlinpoet.metadata.isInner
+import com.squareup.kotlinpoet.metadata.isLocal
+import com.squareup.kotlinpoet.metadata.isSealed
+import com.squareup.kotlinpoet.metadata.specs.ClassInspector
+import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
+import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
@@ -43,264 +40,125 @@ import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
 import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
-import com.squareup.moshi.kotlin.codegen.api.TypeResolver
-import me.eugeniomarletti.kotlin.metadata.KotlinClassMetadata
-import me.eugeniomarletti.kotlin.metadata.KotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.classKind
-import me.eugeniomarletti.kotlin.metadata.declaresDefaultValue
-import me.eugeniomarletti.kotlin.metadata.getPropertyOrNull
-import me.eugeniomarletti.kotlin.metadata.isDataClass
-import me.eugeniomarletti.kotlin.metadata.isInnerClass
-import me.eugeniomarletti.kotlin.metadata.isPrimary
-import me.eugeniomarletti.kotlin.metadata.jvm.getJvmConstructorSignature
-import me.eugeniomarletti.kotlin.metadata.kotlinMetadata
-import me.eugeniomarletti.kotlin.metadata.modality
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Class
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.ABSTRACT
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Modality.SEALED
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Type
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.TypeParameter.Variance
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.INTERNAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.LOCAL
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PRIVATE
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PRIVATE_TO_THIS
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.ProtoBuf.Visibility.PROTECTED
-import me.eugeniomarletti.kotlin.metadata.shadow.metadata.deserialization.NameResolver
-import me.eugeniomarletti.kotlin.metadata.shadow.util.capitalizeDecapitalize.decapitalizeAsciiOnly
-import me.eugeniomarletti.kotlin.metadata.visibility
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import javax.annotation.processing.Messager
-import javax.lang.model.element.AnnotationMirror
-import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.Modifier
-import javax.lang.model.element.Modifier.DEFAULT
-import javax.lang.model.element.Modifier.FINAL
-import javax.lang.model.element.Modifier.NATIVE
-import javax.lang.model.element.Modifier.STATIC
-import javax.lang.model.element.Modifier.SYNCHRONIZED
-import javax.lang.model.element.Modifier.TRANSIENT
-import javax.lang.model.element.Modifier.VOLATILE
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
-import javax.lang.model.type.TypeVariable
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
-import javax.tools.Diagnostic.Kind.ERROR
-import kotlin.reflect.KClass
 
-private fun TypeParameter.asTypeName(
-    nameResolver: NameResolver,
-    getTypeParameter: (index: Int) -> TypeParameter,
-    resolveAliases: Boolean = false
-): TypeVariableName {
-  val possibleBounds = upperBoundList.map {
-    it.asTypeName(nameResolver, getTypeParameter, resolveAliases)
-  }
-  return if (possibleBounds.isEmpty()) {
-    TypeVariableName(
-        name = nameResolver.getString(name),
-        variance = variance.asKModifier())
-  } else {
-    TypeVariableName(
-        name = nameResolver.getString(name),
-        bounds = *possibleBounds.toTypedArray(),
-        variance = variance.asKModifier())
-  }
+private val JSON_QUALIFIER = JsonQualifier::class.java
+private val JSON = Json::class.asClassName()
+private val OBJECT_CLASS = ClassName("java.lang", "Object")
+private val VISIBILITY_MODIFIERS = setOf(
+    KModifier.INTERNAL,
+    KModifier.PRIVATE,
+    KModifier.PROTECTED,
+    KModifier.PUBLIC
+)
+
+private fun Collection<KModifier>.visibility(): KModifier {
+  return find { it in VISIBILITY_MODIFIERS } ?: KModifier.PUBLIC
 }
 
-private fun TypeParameter.Variance.asKModifier(): KModifier? {
-  return when (this) {
-    Variance.IN -> KModifier.IN
-    Variance.OUT -> KModifier.OUT
-    Variance.INV -> null
-  }
-}
-
-private fun Visibility?.asKModifier(): KModifier {
-  return when (this) {
-    INTERNAL -> KModifier.INTERNAL
-    PRIVATE -> KModifier.PRIVATE
-    PROTECTED -> KModifier.PROTECTED
-    Visibility.PUBLIC -> KModifier.PUBLIC
-    PRIVATE_TO_THIS -> KModifier.PRIVATE
-    LOCAL -> KModifier.PRIVATE
-    else -> PUBLIC
-  }
-}
-
-/**
- * Returns the TypeName of this type as it would be seen in the source code, including nullability
- * and generic type parameters.
- *
- * @param [nameResolver] a [NameResolver] instance from the source proto
- * @param [getTypeParameter] a function that returns the type parameter for the given index. **Only
- *     called if [ProtoBuf.Type.hasTypeParameter] is true!**
- */
-private fun Type.asTypeName(
-    nameResolver: NameResolver,
-    getTypeParameter: (index: Int) -> TypeParameter,
-    useAbbreviatedType: Boolean = true
-): TypeName {
-
-  val argumentList = when {
-    useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.argumentList
-    else -> argumentList
-  }
-
-  if (hasFlexibleUpperBound()) {
-    return WildcardTypeName.producerOf(
-        flexibleUpperBound.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .copy(nullable = nullable)
-  } else if (hasOuterType()) {
-    return WildcardTypeName.consumerOf(
-        outerType.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType))
-        .copy(nullable = nullable)
-  }
-
-  val realType = when {
-    hasTypeParameter() -> return getTypeParameter(typeParameter)
-        .asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
-        .copy(nullable = nullable)
-    hasTypeParameterName() -> typeParameterName
-    useAbbreviatedType && hasAbbreviatedType() -> abbreviatedType.typeAliasName
-    else -> className
-  }
-
-  var typeName: TypeName =
-      ClassName.bestGuess(nameResolver.getString(realType)
-          .replace("/", "."))
-
-  if (argumentList.isNotEmpty()) {
-    val remappedArgs: Array<TypeName> = argumentList.map { argumentType ->
-      val nullableProjection = if (argumentType.hasProjection()) {
-        argumentType.projection
-      } else null
-      if (argumentType.hasType()) {
-        argumentType.type.asTypeName(nameResolver, getTypeParameter, useAbbreviatedType)
-            .let { argumentTypeName ->
-              nullableProjection?.let { projection ->
-                when (projection) {
-                  Type.Argument.Projection.IN -> WildcardTypeName.consumerOf(argumentTypeName)
-                  Type.Argument.Projection.OUT -> WildcardTypeName.producerOf(argumentTypeName)
-                  Type.Argument.Projection.STAR -> STAR
-                  Type.Argument.Projection.INV -> TODO("INV projection is unsupported")
-                }
-              } ?: argumentTypeName
-            }
-      } else {
-        STAR
-      }
-    }.toTypedArray()
-    typeName = (typeName as ClassName).parameterizedBy(*remappedArgs)
-  }
-
-  return typeName.copy(nullable = nullable)
-}
-
-internal fun primaryConstructor(metadata: KotlinClassMetadata,
-    elements: Elements): TargetConstructor {
-  val (nameResolver, classProto) = metadata.data
-
-  // TODO allow custom constructor
-  val proto = classProto.constructorList
-      .single { it.isPrimary }
-  val constructorJvmSignature = proto.getJvmConstructorSignature(
-      nameResolver, classProto.typeTable)
-  val element = classProto.fqName
-      .let(nameResolver::getString)
-      .replace('/', '.')
-      .let(elements::getTypeElement)
-      .enclosedElements
-      .mapNotNull {
-        it.takeIf { it.kind == ElementKind.CONSTRUCTOR }?.let { it as ExecutableElement }
-      }
-      .first()
-  // TODO Temporary until JVM method signature matching is better
-  //  .single { it.jvmMethodSignature == constructorJvmSignature }
+@KotlinPoetMetadataPreview
+internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): TargetConstructor? {
+  val primaryConstructor = kotlinApi.primaryConstructor ?: return null
 
   val parameters = mutableMapOf<String, TargetParameter>()
-  for (parameter in proto.valueParameterList) {
-    val name = nameResolver.getString(parameter.name)
-    val index = proto.valueParameterList.indexOf(parameter)
-    val paramElement = element.parameters[index]
+  for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
+    val name = parameter.name
     parameters[name] = TargetParameter(
         name = name,
         index = index,
-        hasDefault = parameter.declaresDefaultValue,
-        qualifiers = paramElement.qualifiers.mapTo(mutableSetOf(), AnnotationMirror::asAnnotationSpec),
-        jsonName = paramElement.jsonName ?: name,
-        tags = mapOf(VariableElement::class to paramElement)
+        hasDefault = parameter.defaultValue != null,
+        qualifiers = parameter.annotations.qualifiers(elements),
+        jsonName = parameter.annotations.jsonName() ?: name.escapeDollarSigns()
     )
   }
 
-  return TargetConstructor(parameters,
-      proto.visibility.asKModifier())
+  return TargetConstructor(parameters, primaryConstructor.modifiers.visibility())
 }
 
-private val OBJECT_CLASS = ClassName("java.lang", "Object")
-
 /** Returns a target type for `element`, or null if it cannot be used with code gen. */
+@KotlinPoetMetadataPreview
 internal fun targetType(messager: Messager,
     elements: Elements,
     types: Types,
-    element: Element): TargetType? {
-  val typeMetadata: KotlinMetadata? = element.kotlinMetadata
-  if (element !is TypeElement || typeMetadata !is KotlinClassMetadata) {
+    element: TypeElement): TargetType? {
+  val typeMetadata = element.getAnnotation(Metadata::class.java)
+  if (typeMetadata == null) {
     messager.printMessage(
-        ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+        Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
+        element)
     return null
   }
 
-  val proto = typeMetadata.data.classProto
+  val kmClass = try {
+    typeMetadata.toImmutableKmClass()
+  } catch (e: UnsupportedOperationException) {
+    messager.printMessage(
+        Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Class type",
+        element)
+    return null
+  }
+
   when {
-    proto.classKind == Class.Kind.ENUM_CLASS -> {
+    kmClass.isEnum -> {
       messager.printMessage(
-          ERROR,
+          Diagnostic.Kind.ERROR,
           "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary",
           element)
       return null
     }
-    proto.classKind != Class.Kind.CLASS -> {
+    !kmClass.isClass -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
+          element)
       return null
     }
-    proto.isInnerClass -> {
+    kmClass.isInner -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be an inner class", element)
+          Diagnostic.Kind.ERROR,
+          "@JsonClass can't be applied to $element: must not be an inner class", element)
       return null
     }
-    proto.modality == SEALED -> {
+    kmClass.isSealed -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be sealed", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed", element)
       return null
     }
-    proto.modality == ABSTRACT -> {
+    kmClass.isAbstract -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be abstract", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be abstract",
+          element)
       return null
     }
-    proto.visibility == LOCAL -> {
+    kmClass.isLocal -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be local", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be local",
+          element)
       return null
     }
   }
 
-  val typeVariables = genericTypeNames(proto, typeMetadata.data.nameResolver)
+  val elementHandler = ElementsClassInspector.create(elements, types)
+  val kotlinApi = kmClass.toTypeSpec(elementHandler)
+  val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
 
-  val constructor = primaryConstructor(typeMetadata, elements)
+  val constructor = primaryConstructor(kotlinApi, elements)
+  if (constructor == null) {
+    messager.printMessage(Diagnostic.Kind.ERROR, "No primary constructor found on $element",
+        element)
+    return null
+  }
   if (constructor.visibility != KModifier.INTERNAL && constructor.visibility != KModifier.PUBLIC) {
-    messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
+    messager.printMessage(Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: " +
         "primary constructor is not internal or public", element)
     return null
   }
@@ -313,14 +171,19 @@ internal fun targetType(messager: Messager,
     if (supertype.element.kind != ElementKind.CLASS) {
       continue // Don't load properties for interface types.
     }
-    if (supertype.element.kotlinMetadata == null) {
-      messager.printMessage(ERROR,
+    if (supertype.element.getAnnotation(Metadata::class.java) == null) {
+      messager.printMessage(Diagnostic.Kind.ERROR,
           "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
           element)
       return null
     }
-    val supertypeProperties = declaredProperties(
-        supertype.element, supertype.resolver, constructor)
+    val supertypeProperties = if (supertype.element == element) {
+      // We've already parsed this api above, reuse it
+      declaredProperties(supertype.element, constructor, elementHandler, kotlinApi)
+    } else {
+      declaredProperties(
+          supertype.element, constructor, elementHandler)
+    }
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
@@ -330,224 +193,37 @@ internal fun targetType(messager: Messager,
       constructor = constructor,
       properties = properties,
       typeVariables = typeVariables,
-      isDataClass = proto.isDataClass,
-      visibility = proto.visibility.asKModifier())
+      isDataClass = KModifier.DATA in kotlinApi.modifiers,
+      visibility = kotlinApi.modifiers.visibility())
 }
 
 /** Returns the properties declared by `typeElement`. */
+@KotlinPoetMetadataPreview
 private fun declaredProperties(
     typeElement: TypeElement,
-    typeResolver: TypeResolver,
-    constructor: TargetConstructor
+    constructor: TargetConstructor,
+    elementHandler: ClassInspector,
+    kotlinApi: TypeSpec = typeElement.toTypeSpec(elementHandler)
 ): Map<String, TargetProperty> {
-  val typeMetadata: KotlinClassMetadata = typeElement.kotlinMetadata as KotlinClassMetadata
-  val nameResolver = typeMetadata.data.nameResolver
-  val classProto = typeMetadata.data.classProto
-
-  val annotationHolders = mutableMapOf<String, ExecutableElement>()
-  val fields = mutableMapOf<String, VariableElement>()
-  val setters = mutableMapOf<String, ExecutableElement>()
-  val getters = mutableMapOf<String, ExecutableElement>()
-  for (element in typeElement.enclosedElements) {
-    if (element is VariableElement) {
-      fields[element.name] = element
-    } else if (element is ExecutableElement) {
-      when {
-        element.name.startsWith("get") -> {
-          val name = element.name.substring("get".length).decapitalizeAsciiOnly()
-          getters[name] = element
-        }
-        element.name.startsWith("is") -> {
-          val name = element.name.substring("is".length).decapitalizeAsciiOnly()
-          getters[name] = element
-        }
-        element.name.startsWith("set") -> {
-          val name = element.name.substring("set".length).decapitalizeAsciiOnly()
-          setters[name] = element
-        }
-      }
-
-      val propertyProto = typeMetadata.data.getPropertyOrNull(element)
-      if (propertyProto != null) {
-        val name = nameResolver.getString(propertyProto.name)
-        annotationHolders[name] = element
-      }
-    }
-  }
 
   val result = mutableMapOf<String, TargetProperty>()
-  for (property in classProto.propertyList) {
-    val name = nameResolver.getString(property.name)
-    val type = typeResolver.resolve(property.returnType.asTypeName(
-        nameResolver, classProto::getTypeParameter, false))
+  for (property in kotlinApi.propertySpecs) {
+    val name = property.name
     val parameter = constructor.parameters[name]
-    val fieldElement = fields[name]
-    val annotationHolder = annotationHolders[name]
-    // Used for setter/getter/is lookups. Guaranteed to be safe because kotlin doesn't allow you to
-    // have both "AAA" and "aAA".
-    val decapitalizedName = name.decapitalizeAsciiOnly()
-    result[name] = TargetProperty(name = name,
-        type = type,
+    result[name] = TargetProperty(
+        propertySpec = property,
         parameter = parameter,
-        annotationHolder = annotationHolder?.asFunSpec(),
-        field = fieldElement?.asPropertySpec(),
-        setter = setters[decapitalizedName]?.asFunSpec(),
-        getter = getters[decapitalizedName]?.asFunSpec(),
-        visibility = property.visibility.asKModifier(),
-        jsonName = jsonName(
-            fieldElement = fieldElement,
-            parameter = parameter,
-            annotationHolder = annotationHolder,
-            name = name
-        )
+        visibility = property.modifiers.visibility(),
+        jsonName = parameter?.jsonName ?: property.annotations.jsonName()
+        ?: name.escapeDollarSigns()
     )
   }
 
   return result
 }
 
-/** Returns the @Json name of this property, or this property's name if none is provided. */
-private fun jsonName(
-    fieldElement: Element?,
-    parameter: TargetParameter?,
-    annotationHolder: ExecutableElement?,
-    name: String): String {
-  val fieldJsonName = fieldElement.jsonName
-  val annotationHolderJsonName = annotationHolder.jsonName
-  val parameterJsonName = parameter?.jsonName
-
-  return when {
-    fieldJsonName != null -> fieldJsonName
-    annotationHolderJsonName != null -> annotationHolderJsonName
-    parameterJsonName != null -> parameterJsonName
-    else -> name
-  }
-}
-
-private val Element.name get() = simpleName.toString()
-
-private fun genericTypeNames(proto: Class, nameResolver: NameResolver): List<TypeVariableName> {
-  return proto.typeParameterList.map { typeParameter ->
-    val possibleBounds = typeParameter.upperBoundList
-        .map { it.asTypeName(nameResolver, proto::getTypeParameter, false) }
-    val typeVar = if (possibleBounds.isEmpty()) {
-      TypeVariableName(
-          name = nameResolver.getString(typeParameter.name),
-          variance = typeParameter.varianceModifier)
-    } else {
-      TypeVariableName(
-          name = nameResolver.getString(typeParameter.name),
-          bounds = *possibleBounds.toTypedArray(),
-          variance = typeParameter.varianceModifier)
-    }
-    return@map typeVar.copy(reified = typeParameter.reified)
-  }
-}
-
-private val TypeParameter.varianceModifier: KModifier?
-  get() {
-    return variance.asKModifier().let {
-      // We don't redeclare out variance here
-      if (it == KModifier.OUT) {
-        null
-      } else {
-        it
-      }
-    }
-  }
-
-/**
- * Returns a new [PropertySpec] representation of [this].
- *
- * This will copy its name, type, visibility modifiers, constant value, and annotations. Note that
- * Java modifiers that correspond to annotations in kotlin will be added as well (`volatile`,
- * `transient`, etc`.
- *
- * The original `field` ([this]) is stored in [PropertySpec.tag].
- */
-internal fun VariableElement.asPropertySpec(asJvmField: Boolean = false): PropertySpec {
-  require(kind == ElementKind.FIELD) {
-    "Must be a field!"
-  }
-  val modifiers: Set<Modifier> = modifiers
-  val fieldName = simpleName.toString()
-  val propertyBuilder = PropertySpec.builder(fieldName, asType().asTypeName())
-  propertyBuilder.addModifiers(*modifiers.mapNotNull { it.asKModifier() }.toTypedArray())
-  constantValue?.let {
-    if (it is String) {
-      propertyBuilder.initializer(CodeBlock.of("%S", it))
-    } else {
-      propertyBuilder.initializer(CodeBlock.of("%L", it))
-    }
-  }
-  propertyBuilder.addAnnotations(annotationMirrors.map(AnnotationMirror::asAnnotationSpec))
-  propertyBuilder.addAnnotations(modifiers.mapNotNull { it.asAnnotation() })
-  propertyBuilder.tag(this)
-  if (asJvmField && KModifier.PRIVATE !in propertyBuilder.modifiers) {
-    propertyBuilder.addAnnotation(JvmField::class)
-  }
-  return propertyBuilder.build()
-}
-
-/**
- * Returns a new [AnnotationSpec] representation of [this].
- *
- * Identical and delegates to [AnnotationSpec.get], but the original `mirror` is also stored
- * in [AnnotationSpec.tag].
- */
-internal fun AnnotationMirror.asAnnotationSpec(): AnnotationSpec {
-  return AnnotationSpec.get(this)
-      .toBuilder()
-      .tag(MoreTypes.asTypeElement(annotationType))
-      .build()
-}
-
-/**
- * Returns a new [FunSpec] representation of [this].
- *
- * This will copy its visibility modifiers, type parameters, return type, name, parameters, and
- * throws declarations.
- *
- * The original `method` ([this]) is stored in [FunSpec.tag].
- *
- * Nearly identical to [FunSpec.overriding], but no override modifier is added nor are checks around
- * overridability done
- */
-internal fun ExecutableElement.asFunSpec(): FunSpec {
-  var modifiers: Set<Modifier> = modifiers
-  val methodName = simpleName.toString()
-  val funBuilder = FunSpec.builder(methodName)
-
-  modifiers = modifiers.toMutableSet()
-  funBuilder.jvmModifiers(modifiers)
-
-  typeParameters
-      .map { it.asType() as TypeVariable }
-      .map { it.asTypeVariableName() }
-      .forEach { funBuilder.addTypeVariable(it) }
-
-  funBuilder.returns(returnType.asTypeName())
-  funBuilder.addParameters(ParameterSpec.parametersOf(this))
-  if (isVarArgs) {
-    funBuilder.parameters[funBuilder.parameters.lastIndex] = funBuilder.parameters.last()
-        .toBuilder()
-        .addModifiers(VARARG)
-        .build()
-  }
-
-  if (thrownTypes.isNotEmpty()) {
-    val throwsValueString = thrownTypes.joinToString { "%T::class" }
-    funBuilder.addAnnotation(AnnotationSpec.builder(Throws::class)
-        .addMember(throwsValueString, *thrownTypes.toTypedArray())
-        .build())
-  }
-
-  funBuilder.tag(this)
-  return funBuilder.build()
-}
-
-private val TargetProperty.isTransient get() = field != null && field.annotations.any { it.className == Transient::class.asClassName() }
-private val TargetProperty.isSettable get() = setter != null || parameter != null
+private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.className == Transient::class.asClassName() }
+private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
     return visibility == KModifier.INTERNAL
@@ -559,26 +235,24 @@ private val TargetProperty.isVisible: Boolean
  * Returns a generator for this property, or null if either there is an error and this property
  * cannot be used with code gen, or if no codegen is necessary for this property.
  */
-internal fun TargetProperty.generator(messager: Messager): PropertyGenerator? {
-  val element = field?.tag<VariableElement>() ?: setter?.tag<ExecutableElement>()
-  ?: getter!!.tag<ExecutableElement>()
+internal fun TargetProperty.generator(
+    messager: Messager,
+    sourceElement: TypeElement,
+    elements: Elements
+): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
-      element?.let {
-        messager.printMessage(
-            Diagnostic.Kind.ERROR, "No default value for transient property ${this}",
-            it)
-      }
+      messager.printMessage(
+          Diagnostic.Kind.ERROR, "No default value for transient property $name",
+          sourceElement)
       return null
     }
     return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
-    element?.let {
-      messager.printMessage(Diagnostic.Kind.ERROR, "property ${this} is not visible",
-          it)
-    }
+    messager.printMessage(Diagnostic.Kind.ERROR, "property $name is not visible",
+        sourceElement)
     return null
   }
 
@@ -586,10 +260,12 @@ internal fun TargetProperty.generator(messager: Messager): PropertyGenerator? {
     return null // This property is not settable. Ignore it.
   }
 
-  val jsonQualifierMirrors = jsonQualifiers(element)
-  for (jsonQualifier in jsonQualifierMirrors) {
+  // Merge parameter and property annotations
+  val qualifiers = parameter?.qualifiers.orEmpty() + propertySpec.annotations.qualifiers(elements)
+  for (jsonQualifier in qualifiers) {
     // Check Java types since that covers both Java and Kotlin annotations.
-    val annotationElement = jsonQualifier.tag<TypeElement>() ?: continue
+    val annotationElement = elements.getTypeElement(jsonQualifier.className.canonicalName)
+        ?: continue
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(Diagnostic.Kind.ERROR,
@@ -604,7 +280,7 @@ internal fun TargetProperty.generator(messager: Messager): PropertyGenerator? {
     }
   }
 
-  val jsonQualifierSpecs = jsonQualifierMirrors.map {
+  val jsonQualifierSpecs = qualifiers.map {
     it.toBuilder()
         .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
         .build()
@@ -614,57 +290,21 @@ internal fun TargetProperty.generator(messager: Messager): PropertyGenerator? {
       DelegateKey(type, jsonQualifierSpecs))
 }
 
-/** Returns the JsonQualifiers on the field and parameter of this property. */
-private fun TargetProperty.jsonQualifiers(element: Element?): Set<AnnotationSpec> {
-  val elementQualifiers = element.qualifiers
-  val annotationHolderQualifiers = annotationHolder?.tag<ExecutableElement>().qualifiers
-  val parameterQualifiers = parameter?.qualifiers.orEmpty()
-
-  // TODO(jwilson): union the qualifiers somehow?
-  return when {
-    elementQualifiers.isNotEmpty() -> elementQualifiers.mapTo(mutableSetOf(), AnnotationMirror::asAnnotationSpec)
-    annotationHolderQualifiers.isNotEmpty() -> annotationHolderQualifiers.mapTo(
-        mutableSetOf(), AnnotationMirror::asAnnotationSpec)
-    parameterQualifiers.isNotEmpty() -> parameterQualifiers
-    else -> setOf()
+private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
+  if (this == null) return setOf()
+  return filterTo(mutableSetOf()) {
+    elements.getTypeElement(it.className.toString()).getAnnotation(JSON_QUALIFIER) != null
   }
 }
 
-private fun Modifier.asKModifier(): KModifier? {
-  return when (this) {
-    Modifier.PUBLIC -> KModifier.PUBLIC
-    Modifier.PROTECTED -> KModifier.PROTECTED
-    Modifier.PRIVATE -> KModifier.PRIVATE
-    Modifier.ABSTRACT -> KModifier.ABSTRACT
-    FINAL -> KModifier.FINAL
-    else -> null
+/** Gross, but we can't extract values from AnnotationSpecs by member names alone. */
+private fun List<AnnotationSpec>?.jsonName(): String? {
+  if (this == null) return null
+  return find { it.className == JSON }?.let {
+    it.members[0].toString().removePrefix("name = \"").removeSuffix("\"")
   }
 }
 
-private fun Modifier.asAnnotation(): AnnotationSpec? {
-  return when (this) {
-    DEFAULT -> JvmDefault::class.asAnnotationSpec()
-    STATIC -> JvmStatic::class.asAnnotationSpec()
-    TRANSIENT -> Transient::class.asAnnotationSpec()
-    VOLATILE -> Volatile::class.asAnnotationSpec()
-    SYNCHRONIZED -> Synchronized::class.asAnnotationSpec()
-    NATIVE -> JvmDefault::class.asAnnotationSpec()
-    else -> null
-  }
+private fun String.escapeDollarSigns(): String {
+  return replace("\$", "\${\'\$\'}")
 }
-
-private fun <T : Annotation> KClass<T>.asAnnotationSpec(): AnnotationSpec {
-  return AnnotationSpec.builder(this).build()
-}
-
-private val Element?.qualifiers: Set<AnnotationMirror>
-  get() {
-    if (this == null) return setOf()
-    return AnnotationMirrors.getAnnotatedAnnotations(this, JsonQualifier::class.java)
-  }
-
-private val Element?.jsonName: String?
-  get() {
-    if (this == null) return null
-    return getAnnotation(Json::class.java)?.name
-  }

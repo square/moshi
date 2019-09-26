@@ -28,16 +28,31 @@
       <version>${kotlinpoet.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-metadata-jvm</artifactId>
+      <version>0.1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-metadata</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-metadata-specs</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup</groupId>
+      <artifactId>kotlinpoet-classinspector-elements</artifactId>
+      <version>${kotlinpoet.version}</version>
+    </dependency>
+    <dependency>
       <groupId>net.ltgt.gradle.incap</groupId>
       <artifactId>incap</artifactId>
       <version>${incap.version}</version>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.google.auto</groupId>
-      <artifactId>auto-common</artifactId>
-      <version>${auto-common.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.auto.service</groupId>
@@ -67,10 +82,6 @@
       The Kotlin compiler usage must be near the end of the list because its .jar file includes an
       obsolete version of Guava!
     -->
-    <dependency>
-      <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
-      <artifactId>kotlin-metadata</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.github.tschuchortdev</groupId>
       <artifactId>kotlin-compile-testing</artifactId>
@@ -135,6 +146,12 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <args>
+            <!-- So we can declare ourselves as users of KotlinPoetMetadataPreview -->
+            <arg>-Xuse-experimental=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview</arg>
+          </args>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

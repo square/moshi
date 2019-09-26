@@ -15,10 +15,6 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.asTypeName
-import com.squareup.moshi.kotlin.codegen.api.TypeResolver
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Types
@@ -29,7 +25,6 @@ import javax.lang.model.util.Types
  */
 internal class AppliedType private constructor(
   val element: TypeElement,
-  val resolver: TypeResolver,
   private val mirror: DeclaredType
 ) {
   /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
@@ -41,32 +36,17 @@ internal class AppliedType private constructor(
     for (supertype in types.directSupertypes(mirror)) {
       val supertypeDeclaredType = supertype as DeclaredType
       val supertypeElement = supertypeDeclaredType.asElement() as TypeElement
-      val appliedSupertype = AppliedType(supertypeElement,
-          resolver(supertypeElement, supertypeDeclaredType), supertypeDeclaredType)
+      val appliedSupertype = AppliedType(supertypeElement, supertypeDeclaredType)
       appliedSupertype.supertypes(types, result)
     }
     return result
-  }
-
-  /** Returns a resolver that uses `element` and `mirror` to resolve type parameters. */
-  private fun resolver(element: TypeElement, mirror: DeclaredType): TypeResolver {
-    return object : TypeResolver() {
-      override fun resolveTypeVariable(typeVariable: TypeVariableName): TypeName {
-        val index = element.typeParameters.indexOfFirst {
-          it.simpleName.toString() == typeVariable.name
-        }
-        check(index != -1) { "Unexpected type variable $typeVariable in $mirror" }
-        val argument = mirror.typeArguments[index]
-        return argument.asTypeName()
-      }
-    }
   }
 
   override fun toString() = mirror.toString()
 
   companion object {
     fun get(typeElement: TypeElement): AppliedType {
-      return AppliedType(typeElement, TypeResolver(), typeElement.asType() as DeclaredType)
+      return AppliedType(typeElement, typeElement.asType() as DeclaredType)
     }
   }
 }

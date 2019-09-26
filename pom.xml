@@ -31,15 +31,13 @@
     <java.version>1.7</java.version>
 
     <!-- Dependencies -->
-    <auto-common.version>0.10</auto-common.version>
     <auto-service.version>1.0-rc5</auto-service.version>
     <dokka.version>0.9.17</dokka.version>
     <incap.version>0.2</incap.version>
     <okio.version>1.16.0</okio.version>
     <okio2.version>2.1.0</okio2.version>
     <kotlin.version>1.3.40</kotlin.version>
-    <kotlinpoet.version>1.3.0</kotlinpoet.version>
-    <kotlin-metadata.version>1.4.0</kotlin-metadata.version>
+    <kotlinpoet.version>1.4.0</kotlinpoet.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
 
     <!-- Test Dependencies -->
@@ -117,11 +115,6 @@
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-annotation-processing-embeddable</artifactId>
         <version>${kotlin.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
-        <artifactId>kotlin-metadata</artifactId>
-        <version>${kotlin-metadata.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.testing.compile</groupId>

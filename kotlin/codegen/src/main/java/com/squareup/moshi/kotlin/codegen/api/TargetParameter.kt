@@ -16,7 +16,6 @@
 package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.AnnotationSpec
-import kotlin.reflect.KClass
 
 /** A parameter in user code that should be populated by generated code. */
 internal data class TargetParameter(
@@ -24,15 +23,5 @@ internal data class TargetParameter(
   val index: Int,
   val hasDefault: Boolean,
   val jsonName: String = name,
-  val qualifiers: Set<AnnotationSpec>? = null,
-  private val tags: Map<KClass<*>, Any>
-) {
-  /** Returns the tag attached with [type] as a key, or null if no tag is attached with that key. */
-  fun <T : Any> tag(type: KClass<out T>): T? {
-    @Suppress("UNCHECKED_CAST")
-    return tags[type] as T?
-  }
-
-  /** Returns the tag attached with [T] as a key, or null if no tag is attached with that key. */
-  inline fun <reified T : Any> tag(): T? = tag(T::class)
-}
+  val qualifiers: Set<AnnotationSpec>? = null
+)
