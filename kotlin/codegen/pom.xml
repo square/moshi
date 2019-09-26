@@ -30,7 +30,7 @@
     <dependency>
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-metadata-jvm</artifactId>
-      <version>0.1.0</version>
+      <version>${kotlinx-metadata.version}</version>
     </dependency>
     <dependency>
       <groupId>com.squareup</groupId>
@@ -184,6 +184,51 @@
           -->
           <useManifestOnlyJar>false</useManifestOnlyJar>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>com.squareup:kotlinpoet-metadata</include>
+                  <include>com.squareup:kotlinpoet-metadata-specs</include>
+                  <include>com.squareup:kotlinpoet-classinspector-elements</include>
+                  <include>org.jetbrains.kotlinx:kotlinx-metadata-jvm</include>
+                </includes>
+              </artifactSet>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+              </transformers>
+              <relocations>
+                <!-- Repackage KotlinPoet-metadata and kotlinx-metadata until their APIs are stable. -->
+                <relocation>
+                  <pattern>com.squareup.kotlinpoet.metadata</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinpoet.metadata</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>com.squareup.kotlinpoet.classinspector</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>kotlinpoet.classinspector.elements.shaded</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector.elements.shaded</shadedPattern>
+                </relocation>
+                <relocation>
+                  <pattern>kotlinx.metadata</pattern>
+                  <shadedPattern>com.squareup.moshi.kotlinx.metadata</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
