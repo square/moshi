@@ -27,7 +27,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.internal.NullSafeJsonAdapter
-import com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultiplePropertiesShareAdapterJsonAdapter
 import com.squareup.moshi.kotlin.reflect.adapter
 import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
