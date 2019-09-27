@@ -972,6 +972,20 @@ public final class JsonReaderTest {
     reader.endObject();
   }
 
+  @Test public void skipNameFailUnknown() throws IOException {
+    JsonReader reader = newReader("{\"a\":1,\"b\":2}");
+    reader.setFailOnUnknown(true);
+    reader.beginObject();
+    assertEquals("a", reader.nextName());
+    assertEquals(1, reader.nextInt());
+    try {
+      reader.skipName();
+      fail();
+    } catch (JsonDataException e) {
+      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.b");
+    }
+  }
+
   @Test public void skipNameOnValueFails() throws IOException {
     JsonReader reader = newReader("1");
     try {
