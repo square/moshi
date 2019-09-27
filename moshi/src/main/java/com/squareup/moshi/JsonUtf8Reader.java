@@ -52,7 +52,7 @@ final class JsonUtf8Reader extends JsonReader {
   private static final int PEEKED_DOUBLE_QUOTED_NAME = 13;
   private static final int PEEKED_UNQUOTED_NAME = 14;
   private static final int PEEKED_BUFFERED_NAME = 15;
-  /** When this is returned, the integer value is stored in peekedLong. */
+  /** When this is returned, the integer value is stored in peekedLong, and the utf8 representation is stored in peekedLongBytes terminated by 0 byte*/
   private static final int PEEKED_LONG = 16;
   private static final int PEEKED_NUMBER = 17;
   private static final int PEEKED_EOF = 18;
@@ -80,6 +80,7 @@ final class JsonUtf8Reader extends JsonReader {
    * leading dash. Positive values may not have a leading 0.
    */
   private long peekedLong;
+  private byte[] peekedLongBytes = new byte[25];//largest number by string size is -1.7976931348623157E+308, plus one for the byte following number
 
   /**
    * The number of characters in a peeked number literal.
@@ -433,6 +434,9 @@ final class JsonUtf8Reader extends JsonReader {
       }
 
       byte c = buffer.getByte(i);
+
+      peekedLongBytes[i] = c;
+
       switch (c) {
         case '-':
           if (last == NUMBER_CHAR_NONE) {
@@ -470,6 +474,7 @@ final class JsonUtf8Reader extends JsonReader {
         default:
           if (c < '0' || c > '9') {
             if (!isLiteral(c)) {
+              peekedLongBytes[i] = 0;
               break charactersOfNumber;
             }
             return PEEKED_NONE;
@@ -1042,6 +1047,20 @@ final class JsonUtf8Reader extends JsonReader {
         readQuotedValue(SINGLE_QUOTE_OR_SLASH, sink);
       } else if (p == PEEKED_NUMBER) {
         sink.write(buffer, peekedNumberLength);
+      } else if (p == PEEKED_LONG) {
+        for (byte c : peekedLongBytes) {
+          if (c == 0) {
+            break;
+          } else {
+            sink.writeByte(c);
+          }
+        }
+      } else if (p == PEEKED_TRUE) {
+        sink.writeUtf8("true");
+      } else if (p == PEEKED_FALSE) {
+        sink.writeUtf8("false");
+      } else if (p == PEEKED_NULL) {
+        sink.writeUtf8("null");
       }
       peeked = PEEKED_NONE;
     } while (count != 0);

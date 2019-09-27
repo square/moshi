@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -980,6 +982,25 @@ public final class JsonReaderTest {
     } catch (JsonDataException expected) {
     }
     assertThat(reader.nextInt()).isEqualTo(1);
+  }
+
+  @Test public void readJsonString() throws IOException {
+    String initialJson = "{\"a\":1,\"b\":-9223372036854775808,\"c\":3.14219487,\"d\":true,\"e\":null,\"f\":\"\\t\\nqweert\\\",\\n\",\"g\":false,\"h\":-2.2250738585072014e-308,\"i\":-1.7976931348623157e+308}";
+    String json = "{\"z\":" + initialJson + "}";
+    JsonReader reader = newReader(json);
+    reader.setLenient(true);
+
+    reader.beginObject();
+    reader.skipName();
+
+    String readJson = reader.readJsonString().utf8();
+
+    Object initialJsonValue = newReader(initialJson).readJsonValue();
+    Object readJsonValue = newReader(readJson).readJsonValue();
+
+    ((Map<String, Object>) readJsonValue).put("e", null);
+
+    assertEquals(initialJsonValue, readJsonValue);
   }
 
   @Test public void emptyDocumentHasNextReturnsFalse() throws IOException {
