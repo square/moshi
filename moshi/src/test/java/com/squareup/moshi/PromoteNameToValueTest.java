@@ -351,4 +351,21 @@ public final class PromoteNameToValueTest {
     writer.endObject();
     assertThat(factory.json()).isEqualTo("{\"a\":\"a value\"}");
   }
+
+  @Test public void writerValueSinkFails() throws Exception {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    try {
+      writer.valueSink();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage(
+          "BufferedSink cannot be used as a map key in JSON at path $.");
+    }
+    writer.value("a");
+    writer.value("a value");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":\"a value\"}");
+  }
 }
