@@ -167,7 +167,10 @@ final class JsonValueReader extends JsonReader {
 
   @Override public void skipName() throws IOException {
     if (failOnUnknown) {
-      throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
+      // Capture the peeked value before nextName() since it will reset its value.
+      Token peeked = peek();
+      nextName(); // Move the path forward onto the offending name.
+      throw new JsonDataException("Cannot skip unexpected " + peeked + " at " + getPath());
     }
 
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
