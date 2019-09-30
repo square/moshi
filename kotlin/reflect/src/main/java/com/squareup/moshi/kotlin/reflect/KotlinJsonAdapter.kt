@@ -134,7 +134,7 @@ internal class KotlinJsonAdapter<T>(
 
   override fun toString() = "KotlinJsonAdapter(${constructor.returnType})"
 
-  data class Binding<K, P> constructor(
+  data class Binding<K, P>(
       val name: String,
       val jsonName: String?,
       val adapter: JsonAdapter<P>,
