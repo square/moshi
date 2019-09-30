@@ -83,11 +83,11 @@ final class JsonUtf8Writer extends JsonWriter {
           "Array cannot be used as a map key in JSON at path " + getPath());
     }
     writeDeferredName();
-    return open(EMPTY_ARRAY, NONEMPTY_ARRAY, "[");
+    return open(EMPTY_ARRAY, NONEMPTY_ARRAY, '[');
   }
 
   @Override public JsonWriter endArray() throws IOException {
-    return close(EMPTY_ARRAY, NONEMPTY_ARRAY, "]");
+    return close(EMPTY_ARRAY, NONEMPTY_ARRAY, ']');
   }
 
   @Override public JsonWriter beginObject() throws IOException {
@@ -96,19 +96,19 @@ final class JsonUtf8Writer extends JsonWriter {
           "Object cannot be used as a map key in JSON at path " + getPath());
     }
     writeDeferredName();
-    return open(EMPTY_OBJECT, NONEMPTY_OBJECT, "{");
+    return open(EMPTY_OBJECT, NONEMPTY_OBJECT, '{');
   }
 
   @Override public JsonWriter endObject() throws IOException {
     promoteValueToName = false;
-    return close(EMPTY_OBJECT, NONEMPTY_OBJECT, "}");
+    return close(EMPTY_OBJECT, NONEMPTY_OBJECT, '}');
   }
 
   /**
    * Enters a new scope by appending any necessary whitespace and the given
    * bracket.
    */
-  private JsonWriter open(int empty, int nonempty, String openBracket) throws IOException {
+  private JsonWriter open(int empty, int nonempty, char openBracket) throws IOException {
     if (stackSize == flattenStackSize
         && (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)) {
       // Cancel this open. Invert the flatten stack size until this is closed.
@@ -119,7 +119,7 @@ final class JsonUtf8Writer extends JsonWriter {
     checkStack();
     pushScope(empty);
     pathIndices[stackSize - 1] = 0;
-    sink.writeUtf8(openBracket);
+    sink.writeByte(openBracket);
     return this;
   }
 
@@ -127,7 +127,7 @@ final class JsonUtf8Writer extends JsonWriter {
    * Closes the current scope by appending any necessary whitespace and the
    * given bracket.
    */
-  private JsonWriter close(int empty, int nonempty, String closeBracket) throws IOException {
+  private JsonWriter close(int empty, int nonempty, char closeBracket) throws IOException {
     int context = peekScope();
     if (context != nonempty && context != empty) {
       throw new IllegalStateException("Nesting problem.");
@@ -147,7 +147,7 @@ final class JsonUtf8Writer extends JsonWriter {
     if (context == nonempty) {
       newline();
     }
-    sink.writeUtf8(closeBracket);
+    sink.writeByte(closeBracket);
     return this;
   }
 
