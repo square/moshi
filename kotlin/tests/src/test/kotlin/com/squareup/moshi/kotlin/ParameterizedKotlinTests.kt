@@ -128,6 +128,42 @@ class ParameterizedKotlinTests(useReflection: Boolean) {
     var a: String = ""
   }
 
+  @Test fun nonNullPropertyWithJsonNameSetToNullFailsWithJsonDataException() {
+    val jsonAdapter = moshi.adapter<HasNonNullPropertyDifferentJsonName>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("{\"aPrime\":null}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+    }
+  }
+
+  @Test fun nonNullPropertyWithJsonNameSetToNullFromAdapterFailsWithJsonDataException() {
+    val jsonAdapter = moshi.newBuilder()
+        .add(object {
+          @Suppress("UNUSED_PARAMETER")
+          @FromJson
+          fun fromJson(string: String): String? = null
+        })
+        .build()
+        .adapter<HasNonNullPropertyDifferentJsonName>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("{\"aPrime\":\"hello\"}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  class HasNonNullPropertyDifferentJsonName {
+    @Json(name = "aPrime") var a: String = ""
+  }
+
   @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
     val jsonAdapter = moshi.adapter<HasNonNullConstructorParameter>()
 
