@@ -24,7 +24,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
  * Parameterized tests that test serialization with both [KotlinJsonAdapterFactory] and code gen.
  */
 @RunWith(Parameterized::class)
-class ParameterizedKotlinTests(useReflection: Boolean) {
+class DualKotlinTest(useReflection: Boolean) {
 
   companion object {
     @Parameters(name = "reflective={0}")
