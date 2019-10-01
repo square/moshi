@@ -45,7 +45,7 @@
     <assertj.version>3.11.1</assertj.version>
     <compile-testing.version>0.15</compile-testing.version>
     <junit.version>4.12</junit.version>
-    <kotlin-compile-testing.version>1.2.2</kotlin-compile-testing.version>
+    <kotlin-compile-testing.version>1.2.3</kotlin-compile-testing.version>
     <truth.version>1.0</truth.version>
   </properties>
 
