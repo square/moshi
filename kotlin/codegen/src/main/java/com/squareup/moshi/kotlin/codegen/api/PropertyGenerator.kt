@@ -26,7 +26,7 @@ internal class PropertyGenerator(
   val isTransient: Boolean = false
 ) {
   val name = target.name
-  val jsonName = target.jsonName
+  val jsonName = target.jsonName ?: target.name
   val hasDefault = target.hasDefault
 
   lateinit var localName: String
