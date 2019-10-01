@@ -579,7 +579,7 @@ class GeneratedAdaptersTest {
     assertThat(decoded.c).isEqualTo(6)
   }
 
-  @JsonClass(generateAdapter=true)
+  @JsonClass(generateAdapter = true)
   class TransientDelegateProperty {
 
     private fun <T>delegate(initial: T) = Delegates.observable(initial) { _, _, _-> }
