@@ -44,8 +44,6 @@ import static com.squareup.moshi.Types.subtypeOf;
 import static com.squareup.moshi.Types.supertypeOf;
 
 public final class Util {
-  private static final String REQUIRED_PROPERTY_TEMPLATE = "Required property '%s' missing at %s";
-  private static final String UNEXPECTED_NULL_TEMPLATE = "Non-null value '%s' was null at %s";
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
@@ -567,17 +565,35 @@ public final class Util {
     throw new IllegalStateException("No defaults constructor found for " + targetClass);
   }
 
-  public static JsonDataException missingProperty(String property, JsonReader reader) {
-    return jsonDataException(REQUIRED_PROPERTY_TEMPLATE, property, reader);
+  public static JsonDataException missingProperty(
+      String propertyName,
+      String jsonName,
+      JsonReader reader
+  ) {
+    String path = reader.getPath();
+    String message;
+    if (jsonName.equals(propertyName)) {
+      message = String.format("Required value '%s' missing at %s", propertyName, path);
+    } else {
+      message = String.format("Required value '%s' (JSON name '%s') missing at %s",
+          propertyName, jsonName, path);
+    }
+    return new JsonDataException(message);
   }
 
-  public static JsonDataException unexpectedNull(String property, JsonReader reader) {
-    return jsonDataException(UNEXPECTED_NULL_TEMPLATE, property, reader);
-  }
-
-  private static JsonDataException jsonDataException(
-      String template, String property, JsonReader reader) {
-    return new JsonDataException(
-        String.format(template, property, reader.getPath()));
+  public static JsonDataException unexpectedNull(
+      String propertyName,
+      String jsonName,
+      JsonReader reader
+  ) {
+    String path = reader.getPath();
+    String message;
+    if (jsonName.equals(propertyName)) {
+      message = String.format("Non-null value '%s' was null at %s", propertyName, path);
+    } else {
+      message = String.format("Non-null value '%s' (JSON name '%s') was null at %s",
+          propertyName, jsonName, path);
+    }
+    return new JsonDataException(message);
   }
 }

@@ -83,8 +83,11 @@ internal class KotlinJsonAdapter<T>(
       values[index] = binding.adapter.fromJson(reader)
 
       if (values[index] == null && !binding.property.returnType.isMarkedNullable) {
-        throw JsonDataException(
-            "Non-null value '${binding.property.name}' was null at ${reader.path}")
+        throw Util.unexpectedNull(
+            binding.property.name,
+            binding.jsonName,
+            reader
+        )
       }
     }
     reader.endObject()
@@ -93,8 +96,11 @@ internal class KotlinJsonAdapter<T>(
     for (i in 0 until constructorSize) {
       if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
         if (!constructor.parameters[i].type.isMarkedNullable) {
-          throw JsonDataException(
-              "Required value '${constructor.parameters[i].name}' missing at ${reader.path}")
+          throw Util.missingProperty(
+              constructor.parameters[i].name,
+              bindings[i]?.jsonName,
+              reader
+          )
         }
         values[i] = null // Replace absent with null.
       }
@@ -130,6 +136,7 @@ internal class KotlinJsonAdapter<T>(
 
   data class Binding<K, P>(
       val name: String,
+      val jsonName: String?,
       val adapter: JsonAdapter<P>,
       val property: KProperty1<K, P>,
       val parameter: KParameter?) {
@@ -245,8 +252,13 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
       @Suppress("UNCHECKED_CAST")
-      bindingsByName[property.name] = KotlinJsonAdapter.Binding(name, adapter,
-          property as KProperty1<Any, Any?>, parameter)
+      bindingsByName[property.name] = KotlinJsonAdapter.Binding(
+          name,
+          jsonAnnotation?.name ?: name,
+          adapter,
+          property as KProperty1<Any, Any?>,
+          parameter
+      )
     }
 
     val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
