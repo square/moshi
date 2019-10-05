@@ -35,6 +35,7 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 import java.util.Locale
+import kotlin.properties.Delegates
 import kotlin.reflect.full.memberProperties
 
 @ExperimentalStdlibApi
@@ -558,6 +559,38 @@ class GeneratedAdaptersTest {
 
     fun getB() = b
 
+    fun setB(b: Int) {
+      this.b = b
+    }
+  }
+
+  @Test fun transientDelegateProperty() {
+    val jsonAdapter = moshi.adapter<TransientDelegateProperty>()
+
+    val encoded = TransientDelegateProperty()
+    encoded.a = 3
+    encoded.setB(4)
+    encoded.c = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.getB()).isEqualTo(-1)
+    assertThat(decoded.c).isEqualTo(6)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class TransientDelegateProperty {
+
+    private fun <T>delegate(initial: T) = Delegates.observable(initial) { _, _, _-> }
+
+    @delegate:Transient var a: Int by delegate(-1)
+    @delegate:Transient private var b: Int by delegate(-1)
+    var c: Int by delegate(-1)
+
+    @JvmName("getBPublic")
+    fun getB() = b
+    @JvmName("setBPublic")
     fun setB(b: Int) {
       this.b = b
     }
