@@ -1114,6 +1114,27 @@ class GeneratedAdaptersTest {
       assertThat(e).hasMessageContaining("Failed to find the generated JsonAdapter class")
     }
   }
+
+  // https://github.com/square/moshi/issues/921
+  @Test fun internalPropertyWithoutBackingField() {
+    val adapter = moshi.adapter<InternalPropertyWithoutBackingField>()
+
+    val test = InternalPropertyWithoutBackingField()
+    assertThat(adapter.toJson(test)).isEqualTo("""{"bar":5}""")
+
+    assertThat(adapter.fromJson("""{"bar":6}""")!!.bar).isEqualTo(6)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class InternalPropertyWithoutBackingField  {
+
+    @Transient
+    private var foo: Int = 5
+
+    internal var bar
+      get() = foo
+      set(f) { foo = f}
+  }
 }
 
 // Has to be outside to avoid Types seeing an owning class
