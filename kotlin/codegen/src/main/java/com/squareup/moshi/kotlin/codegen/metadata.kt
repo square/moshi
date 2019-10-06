@@ -77,7 +77,7 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
         index = index,
         hasDefault = parameter.defaultValue != null,
         qualifiers = parameter.annotations.qualifiers(elements),
-        jsonName = parameter.annotations.jsonName() ?: name.escapeDollarSigns()
+        jsonName = parameter.annotations.jsonName()
     )
   }
 
