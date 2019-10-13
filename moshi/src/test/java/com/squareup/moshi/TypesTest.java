@@ -332,8 +332,9 @@ public final class TypesTest {
   }
 
   @Test public void recursiveTypeVariablesResolve() {
-    new Moshi.Builder().build().adapter(Types
+    JsonAdapter<RecursiveTypeVars<String>> adapter = new Moshi.Builder().build().adapter(Types
         .newParameterizedTypeWithOwner(TypesTest.class, RecursiveTypeVars.class, String.class));
+    assertThat(adapter).isNotNull();
   }
 
   @Test public void testRecursiveTypeVariablesResolve1() {
