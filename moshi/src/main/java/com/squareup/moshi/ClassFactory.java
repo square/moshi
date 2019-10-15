@@ -109,7 +109,8 @@ abstract class ClassFactory<T> {
         newInstance.setAccessible(true);
         return new ClassFactory<T>() {
           @SuppressWarnings("unchecked")
-          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+          @Override
+          public T newInstance() throws InvocationTargetException, IllegalAccessException {
             return (T) newInstance.invoke(null, rawType, constructorId);
           }
           @Override public String toString() {
@@ -138,7 +139,8 @@ abstract class ClassFactory<T> {
         newInstance.setAccessible(true);
         return new ClassFactory<T>() {
           @SuppressWarnings("unchecked")
-          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+          @Override
+          public T newInstance() throws InvocationTargetException, IllegalAccessException {
             return (T) newInstance.invoke(null, rawType, Object.class);
           }
           @Override public String toString() {
