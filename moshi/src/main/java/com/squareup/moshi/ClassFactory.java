@@ -126,25 +126,27 @@ abstract class ClassFactory<T> {
 
     }
 
-    // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
-    // public class ObjectInputStream {
-    //   private static native Object newInstance(
-    //     Class<?> instantiationClass, Class<?> constructorClass);
-    // }
-    try {
-      final Method newInstance = ObjectInputStream.class.getDeclaredMethod(
-          "newInstance", Class.class, Class.class);
-      newInstance.setAccessible(true);
-      return new ClassFactory<T>() {
-        @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
-          return (T) newInstance.invoke(null, rawType, Object.class);
-        }
-        @Override public String toString() {
-          return rawType.getName();
-        }
-      };
-    } catch (Exception ignored) {
+    if (!isAndroidSdkAtLeast(10)) {
+      // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
+      // public class ObjectInputStream {
+      //   private static native Object newInstance(
+      //     Class<?> instantiationClass, Class<?> constructorClass);
+      // }
+      try {
+        final Method newInstance = ObjectInputStream.class.getDeclaredMethod(
+            "newInstance", Class.class, Class.class);
+        newInstance.setAccessible(true);
+        return new ClassFactory<T>() {
+          @SuppressWarnings("unchecked")
+          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+            return (T) newInstance.invoke(null, rawType, Object.class);
+          }
+          @Override public String toString() {
+            return rawType.getName();
+          }
+        };
+      } catch (Exception ignored) {
+      }
     }
 
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
