@@ -90,34 +90,40 @@ abstract class ClassFactory<T> {
       }
     }
 
-    // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
-    // public class ObjectStreamClass {
-    //   private static native int getConstructorId(Class<?> c);
-    //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
-    // }
-    try {
-      Method getConstructorId = ObjectStreamClass.class.getDeclaredMethod(
-          "getConstructorId", Class.class);
-      getConstructorId.setAccessible(true);
-      final int constructorId = (Integer) getConstructorId.invoke(null, Object.class);
-      final Method newInstance = ObjectStreamClass.class.getDeclaredMethod("newInstance",
-          Class.class, int.class);
-      newInstance.setAccessible(true);
-      return new ClassFactory<T>() {
-        @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
-          return (T) newInstance.invoke(null, rawType, constructorId);
-        }
-        @Override public String toString() {
-          return rawType.getName();
-        }
-      };
-    } catch (IllegalAccessException e) {
-      throw new AssertionError();
-    } catch (InvocationTargetException e) {
-      throw Util.rethrowCause(e);
-    } catch (NoSuchMethodException ignored) {
-      // Not the expected version of Dalvik/libcore!
+    if (!isAndroidSdkAtLeast(28)) {
+      // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
+      // public class ObjectStreamClass {
+      //   private static native int getConstructorId(Class<?> c);
+      //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
+      // }
+      //
+      // This API cannot be accessed reflectively on Android 28+ as it's a hidden API.
+      //
+      try {
+        Method getConstructorId = ObjectStreamClass.class.getDeclaredMethod(
+            "getConstructorId", Class.class);
+        getConstructorId.setAccessible(true);
+        final int constructorId = (Integer) getConstructorId.invoke(null, Object.class);
+        final Method newInstance = ObjectStreamClass.class.getDeclaredMethod("newInstance",
+            Class.class, int.class);
+        newInstance.setAccessible(true);
+        return new ClassFactory<T>() {
+          @SuppressWarnings("unchecked")
+          @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+            return (T) newInstance.invoke(null, rawType, constructorId);
+          }
+          @Override public String toString() {
+            return rawType.getName();
+          }
+        };
+      } catch (IllegalAccessException e) {
+        throw new AssertionError();
+      } catch (InvocationTargetException e) {
+        throw Util.rethrowCause(e);
+      } catch (NoSuchMethodException ignored) {
+        // Not the expected version of Dalvik/libcore!
+      }
+
     }
 
     // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
