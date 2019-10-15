@@ -342,7 +342,7 @@ public final class TypesTest {
     assertThat(adapter).isNotNull();
   }
 
-  @Test public void recursiveTypeVariablesResolve12() {
+  @Test public void recursiveTypeVariablesResolve2() {
     JsonAdapter<TestType2> adapter = new Moshi.Builder().build().adapter(TestType2.class);
     assertThat(adapter).isNotNull();
   }
