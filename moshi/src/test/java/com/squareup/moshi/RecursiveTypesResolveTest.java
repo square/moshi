@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package com.squareup.moshi.internal;
+package com.squareup.moshi;
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
+import com.squareup.moshi.internal.Util;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
