@@ -34,8 +34,10 @@ abstract class ClassFactory<T> {
   abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
+  private static volatile boolean isAndroid = false;
   private static volatile boolean androidChecked = false;
   private static volatile boolean tryUnsafe = true;
+  private static volatile int androidSdkInt = -1;
 
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
     // Try to find a no-args constructor. May be any visibility including private.
@@ -57,18 +59,8 @@ abstract class ClassFactory<T> {
       // No no-args constructor. Fall back to something more magical...
     }
 
-    if (!androidChecked) {
-      try {
-        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
-        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
-        int sdk = (int) sdkIntField.get(null);
-        if (sdk >= 29) {
-          tryUnsafe = false;
-        }
-      } catch (Exception ignored) {
-      } finally {
-        androidChecked = true;
-      }
+    if (!androidChecked && isAndroid()) {
+      tryUnsafe = !isAndroidSdkAtLeast(29);
     }
     if (tryUnsafe) {
       // Try the JVM's Unsafe mechanism.
@@ -150,5 +142,29 @@ abstract class ClassFactory<T> {
     }
 
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
+  }
+
+  private static boolean isAndroid() {
+    if (!androidChecked) {
+      try {
+        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
+        isAndroid = true;
+        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
+        androidSdkInt = (int) sdkIntField.get(null);
+      } catch (Exception ignored) {
+      } finally {
+        androidChecked = true;
+      }
+    }
+    return isAndroid;
+  }
+
+  private static boolean isAndroidSdkAtLeast(int target) {
+    if (isAndroid()) {
+      int sdk = androidSdkInt;
+      return sdk != -1 && sdk >= target;
+    } else {
+      return true;
+    }
   }
 }
