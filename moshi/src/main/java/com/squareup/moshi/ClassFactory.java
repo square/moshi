@@ -60,7 +60,7 @@ abstract class ClassFactory<T> {
     }
 
     if (!androidChecked && isAndroid()) {
-      tryUnsafe = !isAndroidSdkAtLeast(29);
+      tryUnsafe = isBelowAndroidApi(29);
     }
     if (tryUnsafe) {
       // Try the JVM's Unsafe mechanism.
@@ -90,7 +90,7 @@ abstract class ClassFactory<T> {
       }
     }
 
-    if (!isAndroidSdkAtLeast(28)) {
+    if (isBelowAndroidApi(28)) {
       // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
       // public class ObjectStreamClass {
       //   private static native int getConstructorId(Class<?> c);
@@ -126,7 +126,7 @@ abstract class ClassFactory<T> {
 
     }
 
-    if (!isAndroidSdkAtLeast(10)) {
+    if (isBelowAndroidApi(10)) {
       // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
       // public class ObjectInputStream {
       //   private static native Object newInstance(
@@ -167,12 +167,12 @@ abstract class ClassFactory<T> {
     return isAndroid;
   }
 
-  private static boolean isAndroidSdkAtLeast(int target) {
+  private static boolean isBelowAndroidApi(int target) {
     if (isAndroid()) {
       int sdk = androidSdkInt;
-      return sdk != -1 && sdk >= target;
+      return sdk == -1 || sdk < target;
     } else {
-      return true;
+      return false;
     }
   }
 }
