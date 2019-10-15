@@ -46,7 +46,7 @@ public final class RecursiveTypesResolveTest {
   /**
    * Test simplest case of recursion.
    */
-  @Test public void testRecursiveResolveSimple() {
+  @Test public void recursiveResolveSimple() {
     JsonAdapter<Foo1> adapter = new Moshi.Builder().build().adapter(Foo1.class);
     assertNotNull(adapter);
   }
@@ -55,22 +55,22 @@ public final class RecursiveTypesResolveTest {
   // Tests belows check the behaviour of the methods changed for the fix
   //
 
-  @Test public void testDoubleSupertype() {
+  @Test public void doubleSupertype() {
     assertEquals(Types.supertypeOf(Number.class),
             Types.supertypeOf(Types.supertypeOf(Number.class)));
   }
 
-  @Test public void testDoubleSubtype() {
+  @Test public void doubleSubtype() {
     assertEquals(Types.subtypeOf(Number.class),
             Types.subtypeOf(Types.subtypeOf(Number.class)));
   }
 
-  @Test public void testSuperSubtype() {
+  @Test public void superSubtype() {
     assertEquals(Types.subtypeOf(Object.class),
             Types.supertypeOf(Types.subtypeOf(Number.class)));
   }
 
-  @Test public void testSubSupertype() {
+  @Test public void subSupertype() {
     assertEquals(Types.subtypeOf(Object.class),
             Types.subtypeOf(Types.supertypeOf(Number.class)));
   }
