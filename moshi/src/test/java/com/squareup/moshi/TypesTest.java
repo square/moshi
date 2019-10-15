@@ -321,6 +321,40 @@ public final class TypesTest {
     }
   }
 
+  //
+  // Regression tests for https://github.com/square/moshi/issues/338
+  //
+  // Adapted from https://github.com/google/gson/pull/1128
+  //
+
+  private static final class RecursiveTypeVars<T> {
+    RecursiveTypeVars<? super T> superType;
+  }
+
+  @Test public void recursiveTypeVariablesResolve() {
+    JsonAdapter<RecursiveTypeVars<String>> adapter = new Moshi.Builder().build().adapter(Types
+        .newParameterizedTypeWithOwner(TypesTest.class, RecursiveTypeVars.class, String.class));
+    assertThat(adapter).isNotNull();
+  }
+
+  @Test public void recursiveTypeVariablesResolve1() {
+    JsonAdapter<TestType> adapter = new Moshi.Builder().build().adapter(TestType.class);
+    assertThat(adapter).isNotNull();
+  }
+
+  @Test public void recursiveTypeVariablesResolve2() {
+    JsonAdapter<TestType2> adapter = new Moshi.Builder().build().adapter(TestType2.class);
+    assertThat(adapter).isNotNull();
+  }
+
+  private static class TestType<X> {
+    TestType<? super X> superType;
+  }
+
+  private static class TestType2<X, Y> {
+    TestType2<? super Y, ? super X> superReversedType;
+  }
+
   @JsonClass(generateAdapter = false)
   static class TestJsonClass {
 
