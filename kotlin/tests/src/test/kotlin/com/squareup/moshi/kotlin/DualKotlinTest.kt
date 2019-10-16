@@ -252,4 +252,21 @@ class DualKotlinTest(useReflection: Boolean) {
     assertThat(decoded.a).isEqualTo(null)
   }
 
+  @Test fun inlineClass() {
+    val adapter = moshi.adapter<InlineClass>()
+
+    val inline = InlineClass(5)
+
+    val expectedJson = """{"f":5}"""
+    assertThat(adapter.toJson(inline)).isEqualTo(expectedJson)
+
+    val testJson = """{"f":6}"""
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.f).isEqualTo(6)
+  }
+
 }
+
+// Has to be outside since inline classes are only allowed on top level
+@JsonClass(generateAdapter = true)
+inline class InlineClass(val f: Int)
