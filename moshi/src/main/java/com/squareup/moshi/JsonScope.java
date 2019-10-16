@@ -44,6 +44,9 @@ final class JsonScope {
   /** A document that's been closed and cannot be accessed. */
   static final int CLOSED = 8;
 
+  /** Sits above the actual state to indicate that a value is currently being streamed in. */
+  static final int STREAMING_VALUE = 9;
+
   /**
    * Renders the path in a JSON document to a string. The {@code pathNames} and {@code pathIndices}
    * parameters corresponds directly to stack: At indices where the stack contains an object
