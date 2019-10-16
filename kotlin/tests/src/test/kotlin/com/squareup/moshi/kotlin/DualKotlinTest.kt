@@ -257,16 +257,31 @@ class DualKotlinTest(useReflection: Boolean) {
 
     val inline = InlineClass(5)
 
-    val expectedJson = """{"f":5}"""
+    val expectedJson = """{"i":5}"""
     assertThat(adapter.toJson(inline)).isEqualTo(expectedJson)
 
-    val testJson = """{"f":6}"""
+    val testJson = """{"i":6}"""
     val result = adapter.fromJson(testJson)!!
-    assertThat(result.f).isEqualTo(6)
+    assertThat(result.i).isEqualTo(6)
   }
 
+  @JsonClass(generateAdapter = true)
+  data class InlineConsumer(val inline: InlineClass)
+
+  @Test fun inlineClassConsumer() {
+    val adapter = moshi.adapter<InlineConsumer>()
+
+    val consumer = InlineConsumer(InlineClass(23))
+
+    val expectedJson= """{"inline":{"i":23}}"""
+    assertThat(adapter.toJson(consumer)).isEqualTo(expectedJson)
+
+    val testJson = """{"inline":{"i":42}}"""
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.inline.i).isEqualTo(42)
+  }
 }
 
 // Has to be outside since inline classes are only allowed on top level
 @JsonClass(generateAdapter = true)
-inline class InlineClass(val f: Int)
+inline class InlineClass(val i: Int)
