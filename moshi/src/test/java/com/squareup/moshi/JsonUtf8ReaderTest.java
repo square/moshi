@@ -1264,7 +1264,7 @@ public final class JsonUtf8ReaderTest {
     //language=JSON
     JsonReader reader = newReader("{\"a\":\"this is a string\"}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -1275,7 +1275,7 @@ public final class JsonUtf8ReaderTest {
     //language=JSON
     JsonReader reader = newReader("{\"a\":-2}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -1286,7 +1286,7 @@ public final class JsonUtf8ReaderTest {
     //language=JSON
     JsonReader reader = newReader("{\"a\":{\"b\":2,\"c\":3}}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -1298,7 +1298,7 @@ public final class JsonUtf8ReaderTest {
     //language=JSON
     JsonReader reader = newReader("{\"a\":[2,2,3]}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -1310,7 +1310,7 @@ public final class JsonUtf8ReaderTest {
     //language=JSON
     JsonReader reader = newReader("{\n" + "  " + "\"a\": -2\n" + "}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -1326,7 +1326,7 @@ public final class JsonUtf8ReaderTest {
         + "  }\n"
         + "}");
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();

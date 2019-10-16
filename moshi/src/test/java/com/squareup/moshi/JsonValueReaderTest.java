@@ -481,7 +481,7 @@ public final class JsonValueReaderTest {
     map.put("a", "this is a string");
     JsonReader reader = new JsonValueReader(map);
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -493,7 +493,7 @@ public final class JsonValueReaderTest {
     map.put("a", -2);
     JsonReader reader = new JsonValueReader(map);
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -508,7 +508,7 @@ public final class JsonValueReaderTest {
     map.put("a", nested);
     JsonReader reader = new JsonValueReader(map);
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
@@ -521,7 +521,7 @@ public final class JsonValueReaderTest {
     map.put("a", Arrays.asList(2, 2, 3));
     JsonReader reader = new JsonValueReader(map);
     reader.beginObject();
-    reader.nextName();
+    String name = reader.nextName();
     BufferedSource valueSource = reader.valueSource();
     String readStringValue = valueSource.readUtf8();
     valueSource.close();
