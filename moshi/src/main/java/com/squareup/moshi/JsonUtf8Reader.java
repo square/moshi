@@ -959,6 +959,9 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   @Override public void close() throws IOException {
+    if (peekScope() == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSource() was not closed");
+    }
     peeked = PEEKED_NONE;
     scopes[0] = JsonScope.CLOSED;
     stackSize = 1;

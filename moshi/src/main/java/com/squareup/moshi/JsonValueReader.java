@@ -417,6 +417,9 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override public void close() throws IOException {
+    if (peekScope() == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSource() was not closed");
+    }
     Arrays.fill(stack, 0, stackSize, null);
     stack[0] = JSON_READER_CLOSED;
     scopes[0] = CLOSED;
