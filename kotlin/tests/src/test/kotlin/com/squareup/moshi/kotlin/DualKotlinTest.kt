@@ -12,6 +12,7 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.adapter
 import org.assertj.core.api.Assertions.assertThat
+import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -273,13 +274,34 @@ class DualKotlinTest(useReflection: Boolean) {
 
     val consumer = InlineConsumer(InlineClass(23))
 
-    val expectedJson= """{"inline":{"i":23}}"""
+    @Language("JSON")
+    val expectedJson = """{"inline":{"i":23}}"""
     assertThat(adapter.toJson(consumer)).isEqualTo(expectedJson)
 
+    @Language("JSON")
     val testJson = """{"inline":{"i":42}}"""
     val result = adapter.fromJson(testJson)!!
     assertThat(result.inline.i).isEqualTo(42)
   }
+
+  // Regression test for https://github.com/square/moshi/issues/955
+  @Test fun backwardReferencingTypeVars() {
+    val adapter = moshi.adapter<TextAssetMetaData>()
+
+    @Language("JSON")
+    val testJson = """{"text":"text"}"""
+
+    assertThat(adapter.toJson(TextAssetMetaData("text"))).isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.text).isEqualTo("text")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class TextAssetMetaData(val text: String) : AssetMetaData<TextAsset>()
+  class TextAsset : Asset<TextAsset>()
+  abstract class Asset<A : Asset<A>>
+  abstract class AssetMetaData<A : Asset<A>>
 }
 
 // Has to be outside since inline classes are only allowed on top level
