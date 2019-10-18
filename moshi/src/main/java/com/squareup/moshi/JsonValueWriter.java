@@ -21,12 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import okio.BufferedSource;
+import okio.Buffer;
+import okio.BufferedSink;
+import okio.ForwardingSink;
+import okio.Okio;
 
 import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
 import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
 import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
 import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
+import static com.squareup.moshi.JsonScope.STREAMING_VALUE;
 import static java.lang.Double.NEGATIVE_INFINITY;
 import static java.lang.Double.POSITIVE_INFINITY;
 
@@ -226,21 +230,35 @@ final class JsonValueWriter extends JsonWriter {
     return this;
   }
 
-  @Override public JsonWriter value(BufferedSource source) throws IOException {
+  @Override public BufferedSink valueSink() {
     if (promoteValueToName) {
       throw new IllegalStateException(
-          "BufferedSource cannot be used as a map key in JSON at path " + getPath());
+          "BufferedSink cannot be used as a map key in JSON at path " + getPath());
     }
-    Object value = JsonReader.of(source).readJsonValue();
-    boolean serializeNulls = this.serializeNulls;
-    this.serializeNulls = true;
-    try {
-      add(value);
-    } finally {
-      this.serializeNulls = serializeNulls;
+    if (peekScope() == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSink() was not closed");
     }
-    pathIndices[stackSize - 1]++;
-    return this;
+    pushScope(STREAMING_VALUE);
+
+    final Buffer buffer = new Buffer();
+    return Okio.buffer(new ForwardingSink(buffer) {
+      @Override public void close() throws IOException {
+        if (peekScope() != STREAMING_VALUE || stack[stackSize] != null) {
+          throw new AssertionError();
+        }
+        stackSize--; // Remove STREAMING_VALUE from the stack.
+
+        Object value = JsonReader.of(buffer).readJsonValue();
+        boolean serializeNulls = JsonValueWriter.this.serializeNulls;
+        JsonValueWriter.this.serializeNulls = true;
+        try {
+          add(value);
+        } finally {
+          JsonValueWriter.this.serializeNulls = serializeNulls;
+        }
+        pathIndices[stackSize - 1]++;
+      }
+    });
   }
 
   @Override public void close() throws IOException {
@@ -283,6 +301,9 @@ final class JsonValueWriter extends JsonWriter {
       @SuppressWarnings("unchecked") // Our lists always have object values.
       List<Object> list = (List<Object>) stack[stackSize - 1];
       list.add(newTop);
+
+    } else if (scope == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSink() was not closed");
 
     } else {
       throw new IllegalStateException("Nesting problem.");

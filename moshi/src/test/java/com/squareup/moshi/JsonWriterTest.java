@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import okio.BufferedSink;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -615,5 +616,130 @@ public final class JsonWriterTest {
     } catch (IllegalStateException expected) {
       assertThat(expected).hasMessage("Dangling name: a");
     }
+  }
+
+  @Test public void streamingValueInObject() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink value = writer.valueSink();
+    value.writeByte('"');
+    value.writeHexadecimalUnsignedLong(-1L);
+    value.writeUtf8("sup");
+    value.writeDecimalLong(-1L);
+    value.writeByte('"');
+    value.close();
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":\"ffffffffffffffffsup-1\"}");
+  }
+
+  @Test public void streamingValueInArray() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginArray();
+    writer.valueSink()
+        .writeByte('"')
+        .writeHexadecimalUnsignedLong(-1L)
+        .writeByte('"')
+        .close();
+    writer.valueSink()
+        .writeByte('"')
+        .writeUtf8("sup")
+        .writeByte('"')
+        .close();
+    writer.valueSink()
+        .writeUtf8("-1.0")
+        .close();
+    writer.endArray();
+    assertThat(factory.json()).isEqualTo("[\"ffffffffffffffff\",\"sup\",-1.0]");
+  }
+
+  @Test public void streamingValueTopLevel() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.valueSink()
+        .writeUtf8("-1.0")
+        .close();
+    assertThat(factory.json()).isEqualTo("-1.0");
+  }
+
+  @Test public void streamingValueTwiceBeforeCloseFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink sink = writer.valueSink();
+    try {
+      writer.valueSink();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Sink from valueSink() was not closed");
+    }
+  }
+
+  @Test public void streamingValueTwiceAfterCloseFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    writer.valueSink().writeByte('0').close();
+    try {
+      // TODO currently UTF-8 fails eagerly on valueSink() but value does not fail until close().
+      writer.valueSink().writeByte('0').close();
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Nesting problem.");
+    }
+  }
+
+  @Test public void streamingValueAndScalarValueFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink sink = writer.valueSink();
+    try {
+      writer.value("b");
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Sink from valueSink() was not closed");
+    }
+  }
+
+  @Test public void streamingValueAndNameFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink sink = writer.valueSink();
+    try {
+      writer.name("b");
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("Nesting problem.");
+    }
+  }
+
+  @Test public void streamingValueInteractionAfterCloseFails() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink sink = writer.valueSink();
+    sink.writeUtf8("1.0");
+    sink.close();
+    try {
+      sink.writeByte('1');
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessage("closed");
+    }
+  }
+
+  @Test public void streamingValueCloseIsIdempotent() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.name("a");
+    BufferedSink sink = writer.valueSink();
+    sink.writeUtf8("1.0");
+    sink.close();
+    sink.close();
+    writer.endObject();
+    sink.close();
+    assertThat(factory.json()).isEqualTo("{\"a\":1.0}");
+    sink.close();
   }
 }
