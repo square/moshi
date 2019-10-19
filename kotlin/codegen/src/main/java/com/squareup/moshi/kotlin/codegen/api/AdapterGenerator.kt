@@ -40,6 +40,8 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 
 private val MOSHI_UTIL = Util::class.asClassName()
+private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
+private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the closing paren
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
@@ -156,14 +158,17 @@ internal class AdapterGenerator(
   }
 
   private fun generateToStringFun(): FunSpec {
+    val name = originalTypeName.rawType().simpleNames.joinToString(".")
+    val size = TO_STRING_SIZE_BASE + name.length
     return FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
         .returns(String::class)
         .addStatement(
-            "return %M·{ append(%S).append(%S).append(%S) }",
+            "return %M(%L)·{ append(%S).append(%S).append('%L') }",
             MemberName("kotlin.text", "buildString"),
-            "GeneratedJsonAdapter(",
-            originalTypeName.rawType().simpleNames.joinToString("."),
+            size,
+            TO_STRING_PREFIX,
+            name,
             ")"
         )
         .build()
