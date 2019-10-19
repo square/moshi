@@ -21,6 +21,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -158,8 +159,13 @@ internal class AdapterGenerator(
     return FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
         .returns(String::class)
-        .addStatement("return %S",
-            "GeneratedJsonAdapter(${originalTypeName.rawType().simpleNames.joinToString(".")})")
+        .addStatement(
+            "return %M·{ append(%S).append(%S).append(%S) }",
+            MemberName("kotlin.text", "buildString"),
+            "GeneratedJsonAdapter(",
+            originalTypeName.rawType().simpleNames.joinToString("."),
+            ")"
+        )
         .build()
   }
 
