@@ -21,6 +21,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -39,6 +40,8 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 
 private val MOSHI_UTIL = Util::class.asClassName()
+private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
+private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the closing paren
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
@@ -155,11 +158,19 @@ internal class AdapterGenerator(
   }
 
   private fun generateToStringFun(): FunSpec {
+    val name = originalTypeName.rawType().simpleNames.joinToString(".")
+    val size = TO_STRING_SIZE_BASE + name.length
     return FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
         .returns(String::class)
-        .addStatement("return %S",
-            "GeneratedJsonAdapter(${originalTypeName.rawType().simpleNames.joinToString(".")})")
+        .addStatement(
+            "return %M(%L)·{ append(%S).append(%S).append('%L') }",
+            MemberName("kotlin.text", "buildString"),
+            size,
+            TO_STRING_PREFIX,
+            name,
+            ")"
+        )
         .build()
   }
 
