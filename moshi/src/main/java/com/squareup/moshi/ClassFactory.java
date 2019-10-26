@@ -34,10 +34,28 @@ abstract class ClassFactory<T> {
   abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
-  private static volatile boolean isAndroid = false;
-  private static volatile boolean androidChecked = false;
   private static volatile boolean tryUnsafe = true;
   private static volatile int androidSdkInt = -1;
+  private static volatile boolean isInitialized = false;
+  private static final Object INIT_LOCK = new Object();
+
+  private static void initMagicChecks() {
+    if (isInitialized) {
+      return;
+    }
+    synchronized (INIT_LOCK) {
+      try {
+        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
+        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
+        androidSdkInt = (int) sdkIntField.get(null);
+        tryUnsafe = androidSdkInt < 29;
+      } catch (Exception ignored) {
+        tryUnsafe = true;
+      } finally {
+        isInitialized = true;
+      }
+    }
+  }
 
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
     // Try to find a no-args constructor. May be any visibility including private.
@@ -59,9 +77,8 @@ abstract class ClassFactory<T> {
       // No no-args constructor. Fall back to something more magical...
     }
 
-    if (!androidChecked && isAndroid()) {
-      tryUnsafe = isBelowAndroidApi(29);
-    }
+    initMagicChecks();
+
     if (tryUnsafe) {
       // Try the JVM's Unsafe mechanism.
       // public class Unsafe {
@@ -154,27 +171,8 @@ abstract class ClassFactory<T> {
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
   }
 
-  private static boolean isAndroid() {
-    if (!androidChecked) {
-      try {
-        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
-        isAndroid = true;
-        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
-        androidSdkInt = (int) sdkIntField.get(null);
-      } catch (Exception ignored) {
-      } finally {
-        androidChecked = true;
-      }
-    }
-    return isAndroid;
-  }
-
   private static boolean isBelowAndroidApi(int target) {
-    if (isAndroid()) {
-      int sdk = androidSdkInt;
-      return sdk == -1 || sdk < target;
-    } else {
-      return false;
-    }
+    int sdk = androidSdkInt;
+    return sdk == -1 || sdk < target;
   }
 }
