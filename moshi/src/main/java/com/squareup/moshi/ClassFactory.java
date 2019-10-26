@@ -141,7 +141,6 @@ abstract class ClassFactory<T> {
       } catch (NoSuchMethodException ignored) {
         // Not the expected version of Dalvik/libcore!
       }
-
     }
 
     if (isRunningOnAndroidSdkVersionLowerThan(10)) {
@@ -168,7 +167,12 @@ abstract class ClassFactory<T> {
       }
     }
 
-    throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
+    String message = "Cannot construct instances of " + rawType.getName();
+    if (androidSdkInt >= 28) {
+      message = message + ". An empty constructor is required for reflective instantiation on Android API 28+. Detected version is " + androidSdkInt + ".";
+    }
+
+    throw new IllegalArgumentException(message);
   }
 
   private static boolean isRunningOnAndroidSdkVersionLowerThan(int target) {
