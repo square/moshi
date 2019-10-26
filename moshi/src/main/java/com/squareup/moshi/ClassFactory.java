@@ -107,7 +107,7 @@ abstract class ClassFactory<T> {
       }
     }
 
-    if (isBelowAndroidApi(28)) {
+    if (isRunningOnAndroidSdkVersionLowerThan(28)) {
       // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
       // public class ObjectStreamClass {
       //   private static native int getConstructorId(Class<?> c);
@@ -144,7 +144,7 @@ abstract class ClassFactory<T> {
 
     }
 
-    if (isBelowAndroidApi(10)) {
+    if (isRunningOnAndroidSdkVersionLowerThan(10)) {
       // Try (pre-Gingerbread) Dalvik/libcore's ObjectInputStream mechanism.
       // public class ObjectInputStream {
       //   private static native Object newInstance(
@@ -171,7 +171,7 @@ abstract class ClassFactory<T> {
     throw new IllegalArgumentException("cannot construct instances of " + rawType.getName());
   }
 
-  private static boolean isBelowAndroidApi(int target) {
+  private static boolean isRunningOnAndroidSdkVersionLowerThan(int target) {
     int sdk = androidSdkInt;
     return sdk == -1 || sdk < target;
   }
