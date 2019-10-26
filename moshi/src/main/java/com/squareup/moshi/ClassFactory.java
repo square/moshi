@@ -169,7 +169,8 @@ abstract class ClassFactory<T> {
 
     String message = "Cannot construct instances of " + rawType.getName();
     if (androidSdkInt >= 28) {
-      message = message + ". An empty constructor is required for reflective instantiation on Android API 28+. Detected version is " + androidSdkInt + ".";
+      message = message + ". An empty constructor is required for reflective instantiation on "
+          + "Android API 28+. Detected version is " + androidSdkInt + ".";
     }
 
     throw new IllegalArgumentException(message);
