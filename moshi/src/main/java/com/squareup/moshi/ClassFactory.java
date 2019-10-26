@@ -34,10 +34,10 @@ abstract class ClassFactory<T> {
   abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
-  private static volatile boolean tryUnsafe = true;
-  private static volatile int androidSdkInt = -1;
-  private static volatile boolean isInitialized = false;
   private static final Object INIT_LOCK = new Object();
+  private static volatile boolean isInitialized = false;
+  private static boolean tryUnsafe = true;
+  private static int androidSdkInt = -1;
 
   private static void initMagicChecks() {
     if (isInitialized) {
