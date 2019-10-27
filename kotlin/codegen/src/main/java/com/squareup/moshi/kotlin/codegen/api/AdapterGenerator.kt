@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -35,6 +36,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types.generatedJsonAdapterName
 import com.squareup.moshi.internal.Util
 import java.lang.reflect.Constructor
 import java.lang.reflect.Type
@@ -54,7 +56,8 @@ internal class AdapterGenerator(
   private val typeVariables = target.typeVariables
 
   private val nameAllocator = NameAllocator()
-  private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
+  private val adapterName
+      = ClassName.bestGuess(generatedJsonAdapterName(className.reflectionName())).simpleName
   private val originalTypeName = target.typeName
 
   private val moshiParam = ParameterSpec.builder(
