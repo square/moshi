@@ -34,9 +34,6 @@ abstract class ClassFactory<T> {
   abstract T newInstance() throws
       InvocationTargetException, IllegalAccessException, InstantiationException;
 
-  private static volatile boolean androidChecked = false;
-  private static volatile boolean tryUnsafe = true;
-
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
     // Try to find a no-args constructor. May be any visibility including private.
     try {
@@ -57,45 +54,29 @@ abstract class ClassFactory<T> {
       // No no-args constructor. Fall back to something more magical...
     }
 
-    if (!androidChecked) {
-      try {
-        Class<?> androidBuildClass = Class.forName("android.os.Build$VERSION");
-        Field sdkIntField = androidBuildClass.getDeclaredField("SDK_INT");
-        int sdk = (int) sdkIntField.get(null);
-        if (sdk >= 29) {
-          tryUnsafe = false;
+    // Try the JVM's Unsafe mechanism.
+    // public class Unsafe {
+    //   public Object allocateInstance(Class<?> type);
+    // }
+    try {
+      Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+      Field f = unsafeClass.getDeclaredField("theUnsafe");
+      f.setAccessible(true);
+      final Object unsafe = f.get(null);
+      final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
+      return new ClassFactory<T>() {
+        @SuppressWarnings("unchecked")
+        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+          return (T) allocateInstance.invoke(unsafe, rawType);
         }
-      } catch (Exception ignored) {
-      } finally {
-        androidChecked = true;
-      }
-    }
-    if (tryUnsafe) {
-      // Try the JVM's Unsafe mechanism.
-      // public class Unsafe {
-      //   public Object allocateInstance(Class<?> type);
-      // }
-      try {
-        Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
-        Field f = unsafeClass.getDeclaredField("theUnsafe");
-        f.setAccessible(true);
-        final Object unsafe = f.get(null);
-        final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
-        return new ClassFactory<T>() {
-          @SuppressWarnings("unchecked")
-          @Override
-          public T newInstance() throws InvocationTargetException, IllegalAccessException {
-            return (T) allocateInstance.invoke(unsafe, rawType);
-          }
-          @Override public String toString() {
-            return rawType.getName();
-          }
-        };
-      } catch (IllegalAccessException e) {
-        throw new AssertionError();
-      } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignored) {
-        // Not the expected version of the Oracle Java library!
-      }
+        @Override public String toString() {
+          return rawType.getName();
+        }
+      };
+    } catch (IllegalAccessException e) {
+      throw new AssertionError();
+    } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ignored) {
+      // Not the expected version of the Oracle Java library!
     }
 
     // Try (post-Gingerbread) Dalvik/libcore's ObjectStreamClass mechanism.
