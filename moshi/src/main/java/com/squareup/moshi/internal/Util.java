@@ -35,7 +35,6 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -49,15 +48,18 @@ public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
+  @Nullable private static final Class<? extends Annotation> METADATA;
 
   static {
-    Class<?> clazz;
+    Class<? extends Annotation> metadata = null;
+    Class<?> defaultConstructorMarker = null;
     try {
-      clazz = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
-    } catch (ClassNotFoundException e) {
-      clazz = null;
+      metadata = (Class<? extends Annotation>) Class.forName("kotlin.Metadata");
+      defaultConstructorMarker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
+    } catch (ClassNotFoundException ignored) {
     }
-    DEFAULT_CONSTRUCTOR_MARKER = clazz;
+    METADATA = metadata;
+    DEFAULT_CONSTRUCTOR_MARKER = defaultConstructorMarker;
   }
 
   private Util() {
@@ -171,7 +173,7 @@ public final class Util {
   }
 
   public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-    return resolve(context, contextRawType, toResolve, new HashSet<TypeVariable>());
+    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable>());
   }
 
   private static Type resolve(Type context, Class<?> contextRawType, Type toResolve,
@@ -551,6 +553,10 @@ public final class Util {
     } catch (InvocationTargetException e) {
       throw rethrowCause(e);
     }
+  }
+
+  public static boolean isKotlin(Class<?> targetClass) {
+    return METADATA != null && targetClass.isAnnotationPresent(METADATA);
   }
 
   /**
