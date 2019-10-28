@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.NonNullJsonAdapter;
+import com.squareup.moshi.internal.NullSafeJsonAdapter;
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -32,7 +34,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
+import kotlin.reflect.KType;
 
+import static com.squareup.moshi.internal.KotlinUtilKt.toType;
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static com.squareup.moshi.internal.Util.removeSubtypeWildcard;
 import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
@@ -70,6 +74,23 @@ public final class Moshi {
 
   @CheckReturnValue public <T> JsonAdapter<T> adapter(Class<T> type) {
     return adapter(type, Util.NO_ANNOTATIONS);
+  }
+
+  /**
+   * Returns a JSON adapter for {@code kType}, creating it if necessary. Note that while nullability
+   * of {@code kType} itself is handled, nested types (such as in generics) are not resolved.
+   */
+  @CheckReturnValue public <T> JsonAdapter<T> adapter(KType kType) {
+    JsonAdapter<T> adapter = adapter(toType(kType));
+    if (adapter instanceof NullSafeJsonAdapter || adapter instanceof NonNullJsonAdapter) {
+      // TODO CR - Assume that these know what they're doing? Or should we defensively avoid
+      //     wrapping for matching nullability?
+      return adapter;
+    } else if (kType.isMarkedNullable()) {
+      return adapter.nullSafe();
+    } else {
+      return adapter.nonNull();
+    }
   }
 
   @CheckReturnValue
@@ -200,6 +221,13 @@ public final class Moshi {
           return annotations.isEmpty() && Util.typesMatch(type, targetType) ? jsonAdapter : null;
         }
       });
+    }
+
+    public <T> Builder add(KType kType, JsonAdapter<T> jsonAdapter) {
+      if (kType == null) throw new IllegalArgumentException("kType == null");
+      if (jsonAdapter == null) throw new IllegalArgumentException("jsonAdapter == null");
+
+      return add(toType(kType), jsonAdapter);
     }
 
     public <T> Builder add(final Type type, final Class<? extends Annotation> annotation,

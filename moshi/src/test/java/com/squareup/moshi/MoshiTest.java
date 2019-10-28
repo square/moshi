@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
+import kotlin.reflect.KType;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -573,10 +574,16 @@ public final class MoshiTest {
       assertThat(expected).hasMessage("adapter == null");
     }
     try {
-      builder.add(null, null);
+      builder.add((Type) null, null);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("type == null");
+    }
+    try {
+      builder.add((KType) null, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("kType == null");
     }
     try {
       builder.add(type, null);
