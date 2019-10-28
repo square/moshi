@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
-import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Ignore
 import org.junit.Rule
@@ -348,6 +348,30 @@ class JsonClassCodegenProcessorTest {
     ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
+  }
+
+  @Ignore("Toe-hold test for when " +
+      "https://github.com/tschuchortdev/kotlin-compile-testing/issues/28 is resolved.")
+  @Test
+  fun `TypeAliases with the same backing type should share the same adapter`() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+          
+          typealias FirstName = String
+          typealias LastName = String
+
+          @JsonClass(generateAdapter = true)
+          data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    val adapterSource = result.generatedFiles.find { it.name == "PersonJsonAdapter.kt" }!!
+
+    //language=kotlin
+    assertThat(adapterSource.readText()).isEqualTo("""
+      // TODO implement this
+    """.trimIndent())
   }
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
