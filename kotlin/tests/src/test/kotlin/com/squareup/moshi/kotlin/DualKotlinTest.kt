@@ -302,6 +302,26 @@ class DualKotlinTest(useReflection: Boolean) {
   class TextAsset : Asset<TextAsset>()
   abstract class Asset<A : Asset<A>>
   abstract class AssetMetaData<A : Asset<A>>
+
+  // Regression test for https://github.com/square/moshi/issues/968
+  @Test fun abstractSuperProperties() {
+    val adapter = moshi.adapter<InternalAbstractProperty>()
+
+    @Language("JSON")
+    val testJson = """{"test":"text"}"""
+
+    assertThat(adapter.toJson(InternalAbstractProperty("text"))).isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.test).isEqualTo("text")
+  }
+
+  abstract class InternalAbstractPropertyBase {
+    internal abstract val test: String
+  }
+
+  @JsonClass(generateAdapter = true)
+  class InternalAbstractProperty(override val test: String) : InternalAbstractPropertyBase()
 }
 
 // Has to be outside since inline classes are only allowed on top level
