@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
@@ -30,8 +31,10 @@ import com.squareup.kotlinpoet.metadata.isInner
 import com.squareup.kotlinpoet.metadata.isLocal
 import com.squareup.kotlinpoet.metadata.isSealed
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
+import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
 import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
@@ -207,7 +210,8 @@ private fun declaredProperties(
 ): Map<String, TargetProperty> {
 
   val result = mutableMapOf<String, TargetProperty>()
-  for (property in kotlinApi.propertySpecs) {
+  for (initialProperty in kotlinApi.propertySpecs) {
+    val property = initialProperty.toBuilder(type = initialProperty.type.unwrapTypeAlias()).build()
     val name = property.name
     val parameter = constructor.parameters[name]
     result[name] = TargetProperty(
@@ -307,4 +311,8 @@ private fun List<AnnotationSpec>?.jsonName(): String? {
 
 private fun String.escapeDollarSigns(): String {
   return replace("\$", "\${\'\$\'}")
+}
+
+private fun TypeName.unwrapTypeAlias(): TypeName {
+  return tag<TypeNameAliasTag>()?.type ?: this
 }
