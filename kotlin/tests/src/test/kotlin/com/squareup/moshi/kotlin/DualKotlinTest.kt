@@ -322,6 +322,26 @@ class DualKotlinTest(useReflection: Boolean) {
 
   @JsonClass(generateAdapter = true)
   class InternalAbstractProperty(override val test: String) : InternalAbstractPropertyBase()
+
+  // Regression test for https://github.com/square/moshi/issues/975
+  @Test fun multipleConstructors() {
+    val adapter = moshi.adapter<MultipleConstructorsB>()
+
+    assertThat(adapter.toJson(MultipleConstructorsB(6))).isEqualTo("""{"f":{"f":6},"b":6}""")
+
+    @Language("JSON")
+    val testJson = """{"b":6}"""
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.b).isEqualTo(6)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class MultipleConstructorsA(val f: Int)
+
+  @JsonClass(generateAdapter = true)
+  class MultipleConstructorsB(val f: MultipleConstructorsA = MultipleConstructorsA(5), val b: Int) {
+    constructor(f: Int, b: Int = 6): this(MultipleConstructorsA(f), b)
+  }
 }
 
 // Has to be outside since inline classes are only allowed on top level
