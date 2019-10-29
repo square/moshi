@@ -1,6 +1,49 @@
 Change Log
 ==========
 
+## Version 1.9.0
+
+_2018-10-29_
+
+ * **This release requires kotlin-reflect or moshi-kotlin-codegen for all Kotlin classes.** 
+ 
+   Previously Moshi wouldn't differentiate between Kotlin classes and Java classes if Kotlin was
+   not configured. This caused bad runtime behavior such as putting null into non-nullable fields!
+   If you attempt to create an adapter for a Kotlin type, Moshi will throw an
+   `IllegalArgumentException`.
+   
+   Fix this with either the reflection adapter or the codegen annotation processor.  
+
+ * New: Change how Moshi's generated adapters call constructors. Previous generated code used a 
+   combination of the constructor and `copy()` method to set properties that have default values.
+   With this update we call the same synthetic constructor that Kotlin uses. This is less surprising 
+   though it requires us to generate some tricky code.
+ * New: Make `Rfc3339DateJsonAdapter` null-safe. Previously Moshi would refuse to decode null dates.
+   Restore that behavior by explicitly forbidding nulls with `Rfc3339DateJsonAdapter().nonNull()`.
+ * New: Require Kotlin 1.3.50 or newer.
+ * New: `JsonWriter.valueSink()` streams JSON-formatted data inline. Use this to do basic includes
+   of raw JSON within a streamed document.
+ * New: Support Gradle incremental processing in code gen.
+ * New: Improve error messages. This includes better errors when field names and JSON names
+   disagree, and when failing on an unknown field.
+ * New: Support default values in `PolymorphicJsonAdapterFactory`.
+ * New: Permit multiple labels for each subtype in `PolymorphicJsonAdapterFactory`. The first label
+   is used when writing an object to JSON.
+ * New: Forbid automatic encoding of platform classes in `kotlinx`. As with `java.*`, `android.*`,
+   and `kotlin.*` Moshi wants you to specify how to encode platform types.
+ * New: `@JsonClass(generator=...)` makes it possible for third-party libraries to provide generated
+   adapters when Moshi's default adapters are insufficient.
+ * Fix: Simplify wildcard types like `List<? extends Number>` to their base types `List<Number>`
+   when finding type adapters. This is especially useful with Kotlin where wildcards may be added
+   automatically.
+ * Fix: Use the correct name when the `@Json` annotation uses field targeting like `@field:Json`.
+ * Fix: Support multiple transient properties in `KotlinJsonAdapter`.
+ * Fix: Don't explode attempting to resolve self-referential type variables like in
+   `Comparable<T extends Comparable<T>>`.
+ * Fix: Don't infinite loop on `skipValue()` at the end an object or array. Also disallow calling
+   `skipValue()` at the end of a document.
+
+
 ## Version 1.8.0
 
 _2018-11-09_
