@@ -47,7 +47,7 @@ import static com.squareup.moshi.Types.supertypeOf;
 public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
-  @Nullable private static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
+  @Nullable public static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
   @Nullable private static final Class<? extends Annotation> METADATA;
 
   static {
