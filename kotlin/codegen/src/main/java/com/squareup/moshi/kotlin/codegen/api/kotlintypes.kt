@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE
 import com.squareup.kotlinpoet.CHAR
@@ -25,9 +27,11 @@ import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.NOTHING
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.SHORT
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.asTypeName
 
@@ -49,9 +53,40 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
       FLOAT -> CodeBlock.of("0f")
       LONG -> CodeBlock.of("0L")
       DOUBLE -> CodeBlock.of("0.0")
-      UNIT, Void::class.asTypeName() -> throw IllegalStateException("Parameter with void or Unit type is illegal")
+      UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
       else -> CodeBlock.of("null")
     }
+
+internal fun TypeName.asTypeBlock(): CodeBlock {
+  when (this) {
+    is ParameterizedTypeName -> {
+      return if (rawType == ARRAY) {
+        CodeBlock.of("%T::class.java", copy(nullable = false))
+      } else {
+        rawType.asTypeBlock()
+      }
+    }
+    is TypeVariableName -> {
+      val bound = bounds.firstOrNull() ?: ANY
+      return bound.asTypeBlock()
+    }
+    is ClassName -> {
+      return when (this) {
+        BOOLEAN, CHAR, BYTE, SHORT, INT, FLOAT, LONG, DOUBLE -> {
+          if (isNullable) {
+            // Remove nullable but keep the java object type
+            CodeBlock.of("%T::class.javaObjectType", copy(nullable = false))
+          } else {
+            CodeBlock.of("%T::class.javaPrimitiveType", this)
+          }
+        }
+        UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+        else -> CodeBlock.of("%T::class.java", copy(nullable = false))
+      }
+    }
+    else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
+  }
+}
 
 internal fun KModifier.checkIsVisibility() {
   require(ordinal <= ordinal) {
