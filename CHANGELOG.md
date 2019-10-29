@@ -3,7 +3,7 @@ Change Log
 
 ## Version 1.9.0
 
-_2018-10-29_
+_2019-10-29_
 
  * **This release requires kotlin-reflect or moshi-kotlin-codegen for all Kotlin classes.** 
  
@@ -12,7 +12,26 @@ _2018-10-29_
    If you attempt to create an adapter for a Kotlin type, Moshi will throw an
    `IllegalArgumentException`.
    
-   Fix this with either the reflection adapter or the codegen annotation processor.  
+   Fix this with either the reflection adapter:
+   
+   ```kotlin
+   val moshi = Moshi.Builder()
+       // ... add your own JsonAdapters and factories ...
+       .add(KotlinJsonAdapterFactory())
+       .build()
+   ```
+   
+   Or the codegen annotation processor:
+
+   ```kotlin
+   @JsonClass(generateAdapter = true)
+   data class BlackjackHand(
+           val hidden_card: Card,
+           val visible_cards: List<Card>
+   )
+   ```
+   
+   The [Kotlin documentation][moshi_kotlin_docs] explains the required build configuration changes.
 
  * New: Change how Moshi's generated adapters call constructors. Previous generated code used a 
    combination of the constructor and `copy()` method to set properties that have default values.
@@ -356,3 +375,4 @@ _2015-06-16_
  [gson]: https://github.com/google/gson
  [jackson]: http://wiki.fasterxml.com/JacksonHome
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
+ [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
