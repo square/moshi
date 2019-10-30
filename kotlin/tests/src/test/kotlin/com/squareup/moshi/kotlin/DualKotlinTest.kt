@@ -327,6 +327,7 @@ class DualKotlinTest(useReflection: Boolean) {
   @Test fun multipleConstructors() {
     val adapter = moshi.adapter<MultipleConstructorsB>()
 
+    //language=JSON
     assertThat(adapter.toJson(MultipleConstructorsB(6))).isEqualTo("""{"f":{"f":6},"b":6}""")
 
     @Language("JSON")
@@ -341,6 +342,59 @@ class DualKotlinTest(useReflection: Boolean) {
   @JsonClass(generateAdapter = true)
   class MultipleConstructorsB(val f: MultipleConstructorsA = MultipleConstructorsA(5), val b: Int) {
     constructor(f: Int, b: Int = 6): this(MultipleConstructorsA(f), b)
+  }
+
+  @Test fun `multiple non-property parameters`() {
+    val adapter = moshi.adapter<MultipleNonPropertyParameters>()
+
+    @Language("JSON")
+    val testJson = """{"prop":7}"""
+
+    assertThat(adapter.toJson(MultipleNonPropertyParameters(7))).isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.prop).isEqualTo(7)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class MultipleNonPropertyParameters(
+      val prop: Int,
+      param1: Int = 1,
+      param2: Int = 2
+  ) {
+    init {
+      // Ensure the params always uses their default value
+      require(param1 == 1)
+      require(param2 == 2)
+    }
+  }
+
+  // Tests the case of multiple parameters with no parameter properties.
+  @Test fun `only multiple non-property parameters`() {
+    val adapter = moshi.adapter<OnlyMultipleNonPropertyParameters>()
+
+    @Language("JSON")
+    val testJson = """{"prop":7}"""
+
+    assertThat(adapter.toJson(OnlyMultipleNonPropertyParameters().apply { prop = 7 }))
+        .isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.prop).isEqualTo(7)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class OnlyMultipleNonPropertyParameters(
+      param1: Int = 1,
+      param2: Int = 2
+  ) {
+    init {
+      // Ensure the params always uses their default value
+      require(param1 == 1)
+      require(param2 == 2)
+    }
+
+    var prop: Int = 0
   }
 }
 
