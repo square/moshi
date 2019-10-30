@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
@@ -31,6 +32,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
@@ -48,6 +50,14 @@ internal class AdapterGenerator(
     target: TargetType,
     private val propertyList: List<PropertyGenerator>
 ) {
+
+  companion object {
+    private val DEFAULT_CONSTRUCTOR_EXTRA_PARAMS = arrayOf(
+        CodeBlock.of("%T::class.javaPrimitiveType", INT),
+        CodeBlock.of("%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+    )
+  }
+
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.typeName.rawType()
   private val visibility = target.visibility
@@ -56,6 +66,7 @@ internal class AdapterGenerator(
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
   private val originalTypeName = target.typeName
+  private val originalRawTypeName = originalTypeName.rawType()
 
   private val moshiParam = ParameterSpec.builder(
       nameAllocator.newName("moshi"),
@@ -158,7 +169,7 @@ internal class AdapterGenerator(
   }
 
   private fun generateToStringFun(): FunSpec {
-    val name = originalTypeName.rawType().simpleNames.joinToString(".")
+    val name = originalRawTypeName.simpleNames.joinToString(".")
     val size = TO_STRING_SIZE_BASE + name.length
     return FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
@@ -201,10 +212,12 @@ internal class AdapterGenerator(
     // JsonReader.Options.
     var propertyIndex = 0
     var maskIndex = 0
+    val constructorPropertyTypes = mutableListOf<CodeBlock>()
     for (property in propertyList) {
       if (property.isTransient) {
         if (property.hasConstructorParameter) {
           maskIndex++
+          constructorPropertyTypes += property.target.type.asTypeBlock()
         }
         continue
       }
@@ -238,6 +251,9 @@ internal class AdapterGenerator(
               exception)
         }
       }
+      if (property.hasConstructorParameter) {
+        constructorPropertyTypes += property.target.type.asTypeBlock()
+      }
       propertyIndex++
       maskIndex++
     }
@@ -267,12 +283,13 @@ internal class AdapterGenerator(
     if (useDefaultsConstructor) {
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
-      val rawOriginalTypeName = originalTypeName.rawType()
       val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
+      val args = constructorPropertyTypes.plus(DEFAULT_CONSTRUCTOR_EXTRA_PARAMS)
+          .joinToCode(", ")
       val coreLookupBlock = CodeBlock.of(
-          "%T.lookupDefaultsConstructor(%T::class.java)",
-          MOSHI_UTIL,
-          rawOriginalTypeName
+          "%T::class.java.getDeclaredConstructor(%L)",
+          originalRawTypeName,
+          args
       )
       val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
         CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
@@ -280,7 +297,7 @@ internal class AdapterGenerator(
         coreLookupBlock
       }
       val initializerBlock = CodeBlock.of(
-          "this.%1N ?:·%2L.also·{ this.%1N·= it }",
+          "this.%1N·?: %2L.also·{ this.%1N·= it }",
           constructorProperty,
           lookupBlock
       )
@@ -310,7 +327,7 @@ internal class AdapterGenerator(
           // We have to use the default primitive for the available type in order for
           // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
           // the transient type may be a primitive type.
-          result.addCode(property.target.type.defaultPrimitiveValue())
+          result.addCode(property.target.type.rawType().defaultPrimitiveValue())
         } else {
           result.addCode("%N", property.localName)
         }

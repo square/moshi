@@ -15,7 +15,7 @@ class KotlinJsonAdapterTest {
     val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
-    val adapter = moshi.adapter<Data>()
+    val adapter = moshi.adapter(Data::class.java)
     assertThat(adapter.toString()).isEqualTo(
         "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
     )
