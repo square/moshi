@@ -40,7 +40,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import java.lang.reflect.Constructor
 import java.lang.reflect.Type
-import kotlin.math.ceil
 
 private val MOSHI_UTIL = Util::class.asClassName()
 private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
@@ -198,7 +197,7 @@ internal class AdapterGenerator(
     }
 
     // Calculate how many masks we'll need. Round up if it's not evenly divisible by 32
-    val maskCount = ceil(propertyList.count { it.hasConstructorParameter }.toFloat().div(32)).toInt()
+    val maskCount = (propertyList.count { it.hasConstructorParameter } + 31) / 32
     // Allocate mask names
     val maskNames = Array(maskCount) { index ->
       nameAllocator.newName("mask$index")
