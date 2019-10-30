@@ -52,10 +52,8 @@ internal class AdapterGenerator(
 ) {
 
   companion object {
-    private val DEFAULT_CONSTRUCTOR_EXTRA_PARAMS = arrayOf(
-        CodeBlock.of("%T::class.javaPrimitiveType", INT),
-        CodeBlock.of("%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
-    )
+    private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
+    private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of("%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
   }
 
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
@@ -198,10 +196,23 @@ internal class AdapterGenerator(
       }
     }
 
-    val maskName = nameAllocator.newName("mask")
+    // Calculate how many masks we'll need. Round up if it's not evenly divisible by 32
+    val propertyCount = propertyList.count { it.hasConstructorParameter }
+    val maskCount = if (propertyCount == 0) {
+      0
+    } else {
+      (propertyCount + 31) / 32
+    }
+    // Allocate mask names
+    val maskNames = Array(maskCount) { index ->
+      nameAllocator.newName("mask$index")
+    }
     val useConstructorDefaults = nonTransientProperties.any { it.hasConstructorDefault }
     if (useConstructorDefaults) {
-      result.addStatement("var %L = -1", maskName)
+      // Initialize all our masks, defaulting to fully unset (-1)
+      for (maskName in maskNames) {
+        result.addStatement("var %L = -1", maskName)
+      }
     }
     result.addStatement("%N.beginObject()", readerParam)
     result.beginControlFlow("while (%N.hasNext())", readerParam)
@@ -211,12 +222,31 @@ internal class AdapterGenerator(
     // constructor arguments, while property index is only based on the index passed into
     // JsonReader.Options.
     var propertyIndex = 0
-    var maskIndex = 0
     val constructorPropertyTypes = mutableListOf<CodeBlock>()
+
+    //
+    // Track important indices for masks. Masks generally increment with each parameter (including
+    // transient).
+    //
+    // Mask name index is an index into the maskNames array we initialized above.
+    //
+    // Once the maskIndex reaches 32, we've filled up that mask and have to move to the next mask
+    // name. Reset the maskIndex relative to here and continue incrementing.
+    //
+    var maskIndex = 0
+    var maskNameIndex = 0
+    val updateMaskIndexes = {
+      maskIndex++
+      if (maskIndex == 32) {
+        // Move to the next mask
+        maskIndex = 0
+        maskNameIndex++
+      }
+    }
     for (property in propertyList) {
       if (property.isTransient) {
         if (property.hasConstructorParameter) {
-          maskIndex++
+          updateMaskIndexes()
           constructorPropertyTypes += property.target.type.asTypeBlock()
         }
         continue
@@ -234,7 +264,7 @@ internal class AdapterGenerator(
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
-          result.addStatement("%1L = %1L and %2L", maskName, inverted)
+          result.addStatement("%1L = %1L and 0x%2L.toInt()", maskNames[maskNameIndex], Integer.toHexString(inverted))
         } else {
           // Presence tracker for a mutable property
           result.addStatement("%N = true", property.localIsPresentName)
@@ -255,7 +285,7 @@ internal class AdapterGenerator(
         constructorPropertyTypes += property.target.type.asTypeBlock()
       }
       propertyIndex++
-      maskIndex++
+      updateMaskIndexes()
     }
 
     result.beginControlFlow("-1 ->")
@@ -284,7 +314,9 @@ internal class AdapterGenerator(
       classBuilder.addProperty(constructorProperty)
       // Dynamic default constructor call
       val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
-      val args = constructorPropertyTypes.plus(DEFAULT_CONSTRUCTOR_EXTRA_PARAMS)
+      val args = constructorPropertyTypes
+          .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
+          .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
           .joinToCode(", ")
       val coreLookupBlock = CodeBlock.of(
           "%T::class.java.getDeclaredConstructor(%L)",
@@ -344,8 +376,8 @@ internal class AdapterGenerator(
     }
 
     if (useDefaultsConstructor) {
-      // Add the mask and a null instance for the trailing default marker instance
-      result.addCode(",\n%L,\nnull", maskName)
+      // Add the masks and a null instance for the trailing default marker instance
+      result.addCode(",\n%L,\nnull", maskNames.map { CodeBlock.of("%L", it) }.joinToCode(", "))
     }
 
     result.addCode("\n»)\n")
