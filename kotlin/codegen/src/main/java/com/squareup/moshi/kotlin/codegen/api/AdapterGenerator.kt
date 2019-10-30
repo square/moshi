@@ -260,7 +260,7 @@ internal class AdapterGenerator(
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
-          result.addStatement("%1L = %1L and %2L", maskNames[maskNameIndex], inverted)
+          result.addStatement("%1L = %1L and 0x%2L.toInt()", maskNames[maskNameIndex], Integer.toHexString(inverted))
         } else {
           // Presence tracker for a mutable property
           result.addStatement("%N = true", property.localIsPresentName)
