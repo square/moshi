@@ -40,6 +40,8 @@
     <kotlinpoet.version>1.4.2</kotlinpoet.version>
     <kotlinx-metadata.version>0.1.0</kotlinx-metadata.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
+    <spotless.version>1.25.1 </spotless.version>
+    <ktlint.version>0.35.0 </ktlint.version>
 
     <!-- Test Dependencies -->
     <assertj.version>3.11.1</assertj.version>
@@ -136,6 +138,27 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.version}</version>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <version>1.7</version>
+                <style>GOOGLE</style>
+              </googleJavaFormat>
+              <removeUnusedImports/>
+            </java>
+            <kotlin>
+              <endWithNewLine/>
+              <trimTrailingWhitespace/>
+              <ktlint>
+                <version>0.35.0</version>
+              </ktlint>
+            </kotlin>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
