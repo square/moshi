@@ -109,25 +109,6 @@ internal class AdapterGenerator(
       .initializer("null")
       .build()
 
-//  private val getOrFindConstructorRefFunction = FunSpec.builder(
-//      nameAllocator.newName("getOrFindConstructorRef"))
-//      .addModifiers(KModifier.PRIVATE, KModifier.INLINE)
-//      .returns(constructorProperty.type.copy(nullable = false))
-//      .apply {
-//        val args =
-////        addStatement("«return·%N·?:·%T::class.java.getDeclaredConstructor(", constructorProperty, originalRawTypeName)
-//        val initializerBlock = CodeBlock.of(
-//            "return this.%1N·?:·%2L.also·{ this.%1N·= it }",
-//            constructorProperty,
-//            lookupBlock
-//        )
-//      }
-//      .beginControlFlow("return %N ?:")
-//      .nextControlFlow("also")
-//      .addStatement("%N = it", constructorProperty)
-//      .endControlFlow()
-//      .build()
-
   fun generateFile(typeHook: (TypeSpec) -> TypeSpec = { it }): FileSpec {
     for (property in nonTransientProperties) {
       property.allocateNames(nameAllocator)
