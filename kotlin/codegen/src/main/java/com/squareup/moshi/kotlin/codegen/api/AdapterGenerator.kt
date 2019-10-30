@@ -197,7 +197,12 @@ internal class AdapterGenerator(
     }
 
     // Calculate how many masks we'll need. Round up if it's not evenly divisible by 32
-    val maskCount = (propertyList.count { it.hasConstructorParameter } + 31) / 32
+    val propertyCount = propertyList.count { it.hasConstructorParameter }
+    val maskCount = if (propertyCount == 0) {
+      0
+    } else {
+      (propertyCount + 31) / 32
+    }
     // Allocate mask names
     val maskNames = Array(maskCount) { index ->
       nameAllocator.newName("mask$index")
