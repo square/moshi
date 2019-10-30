@@ -78,6 +78,7 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
     parameters[name] = TargetParameter(
         name = name,
         index = index,
+        type = parameter.type,
         hasDefault = parameter.defaultValue != null,
         qualifiers = parameter.annotations.qualifiers(elements),
         jsonName = parameter.annotations.jsonName()
