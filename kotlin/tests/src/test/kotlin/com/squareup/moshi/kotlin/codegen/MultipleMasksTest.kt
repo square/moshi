@@ -38,13 +38,14 @@ class MultipleMasksTest {
 
     // Set some arbitrary values to make sure offsets are aligning correctly
     @Language("JSON")
-    val json = """{"arg50":500,"arg3":34,"arg65":67}"""
+    val json = """{"arg50":500,"arg3":34,"arg11":11,"arg65":67}"""
 
     val instance = Moshi.Builder().build().adapter(MultipleMasks::class.java)
         .fromJson(json)!!
 
     assertEquals(instance.arg2, 2)
     assertEquals(instance.arg3, 34)
+    assertEquals(instance.arg11, 11)
     assertEquals(instance.arg49, 49)
     assertEquals(instance.arg50, 500)
     assertEquals(instance.arg65, 67)
@@ -65,7 +66,7 @@ class MultipleMasks(
     val arg8: Long = 8,
     val arg9: Long = 9,
     val arg10: Long = 10,
-    val arg11: Long = 11,
+    val arg11: Long,
     val arg12: Long = 12,
     val arg13: Long = 13,
     val arg14: Long = 14,
