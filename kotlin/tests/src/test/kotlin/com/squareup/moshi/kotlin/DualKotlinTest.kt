@@ -433,7 +433,7 @@ class DualKotlinTest(useReflection: Boolean) {
       val parameterized: GenericClass<TypeAlias>,
       val wildcardIn: GenericClass<in TypeAlias>,
       val wildcardOut: GenericClass<out TypeAlias>,
-      val complex: GenericClass<GenericTypeAlias>
+      val complex: GenericClass<GenericTypeAlias>?
   )
 
   // Regression test for https://github.com/square/moshi/issues/991
@@ -481,11 +481,28 @@ class DualKotlinTest(useReflection: Boolean) {
       val double: Double,
       val nullableDouble: Double? = null
   )
+
+  // Regression test for https://github.com/square/moshi/issues/990
+  @Test fun nullableProperties() {
+    val adapter = moshi.adapter<NullableList>()
+
+    @Language("JSON")
+    val testJson = """{"nullableList":null}"""
+
+    assertThat(adapter.serializeNulls().toJson(NullableList(null)))
+        .isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result.nullableList).isNull()
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class NullableList(val nullableList: List<Any>?)
 }
 
 typealias TypeAlias = Int
 @Suppress("REDUNDANT_PROJECTION")
-typealias GenericTypeAlias = List<out GenericClass<in TypeAlias>>
+typealias GenericTypeAlias = List<out GenericClass<in TypeAlias>?>?
 
 @JsonClass(generateAdapter = true)
 data class GenericClass<T>(val value: T)
