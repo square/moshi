@@ -435,6 +435,35 @@ class DualKotlinTest(useReflection: Boolean) {
       val wildcardOut: GenericClass<out TypeAlias>,
       val complex: GenericClass<GenericTypeAlias>
   )
+
+  // Regression test for https://github.com/square/moshi/issues/991
+  @Test fun nullablePrimitiveProperties() {
+    val adapter = moshi.adapter<NullablePrimitives>()
+
+    @Language("JSON")
+    val testOutputJson = """{"oh_boy":"testing","that_is_a_test":3,"test_again":0}"""
+
+    assertThat(adapter.serializeNulls().toJson(NullablePrimitives("testing", 3)))
+        .isEqualTo(testOutputJson)
+
+    @Language("JSON")
+    val testInputJson = """{"oh_boy":"testing","that_is_a_test":3}"""
+    val result = adapter.fromJson(testInputJson)!!
+    assertThat(result.ohboy).isEqualTo("testing")
+    assertThat(result.thatIsATest).isEqualTo(3)
+    assertThat(result.testAgain).isEqualTo(0)
+  }
+
+  // public Testy(String var1, Integer var2, int var3, int var4, DefaultConstructorMarker var5)
+  @JsonClass(generateAdapter = true)
+  data class NullablePrimitives(
+      @Json(name = "oh_boy")
+      val ohboy: String,
+      @Json(name = "that_is_a_test")
+      val thatIsATest: Int?,
+      @Json(name = "test_again")
+      val testAgain: Int = 0
+  )
 }
 
 typealias TypeAlias = Int
