@@ -318,10 +318,17 @@ class DualKotlinTest(useReflection: Boolean) {
 
   abstract class InternalAbstractPropertyBase {
     internal abstract val test: String
+
+    // Regression for https://github.com/square/moshi/issues/974
+    abstract fun abstractFun(): String
   }
 
   @JsonClass(generateAdapter = true)
-  class InternalAbstractProperty(override val test: String) : InternalAbstractPropertyBase()
+  class InternalAbstractProperty(override val test: String) : InternalAbstractPropertyBase() {
+    override fun abstractFun(): String {
+      return test
+    }
+  }
 
   // Regression test for https://github.com/square/moshi/issues/975
   @Test fun multipleConstructors() {
