@@ -9,6 +9,7 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.adapter
 import org.assertj.core.api.Assertions.assertThat
@@ -342,8 +343,88 @@ class DualKotlinTest(useReflection: Boolean) {
   class MultipleConstructorsB(val f: MultipleConstructorsA = MultipleConstructorsA(5), val b: Int) {
     constructor(f: Int, b: Int = 6): this(MultipleConstructorsA(f), b)
   }
+
+  @Test fun testing() {
+    val moshi = Moshi.Builder()
+        // ... add your own JsonAdapters and factories ...
+        .add(
+            PolymorphicJsonAdapterFactory.of(Vehicle::class.java, "type")
+                .withSubtype(Car::class.java, "car")
+                .withSubtype(Truck::class.java, "truck")
+        )
+        .add(
+            PolymorphicJsonAdapterFactory.of(Tyre::class.java, "type")
+                .withSubtype(MRFTyre::class.java, "mrf")
+                .withSubtype(ApolloTyre::class.java, "apollo")
+        )
+        .add(SkipBadElementsListAdapter.Factory)
+        .build()
+
+    @Language("JSON")
+    val json = """
+      [
+        {
+          "model": "m1",
+          "type": "car",
+          "tyres": [
+            {
+              "type": "mrf"
+            },
+            {
+              "type": "apollo"
+            }
+          ]
+        },
+        {
+          "model": "m2",
+          "type": "truck",
+          "tyres": [
+            {
+              "type": "mrf"
+            },
+            {
+              "type": "apollo"
+            },
+            {
+              "type": "apollo"
+            }
+          ]
+        }
+      ]
+    """.trimIndent()
+
+    val result = moshi.adapter<List<Vehicle>>().fromJson(json)!!
+    assertThat(result).isNotNull()
+  }
 }
 
 // Has to be outside since inline classes are only allowed on top level
 @JsonClass(generateAdapter = true)
 inline class InlineClass(val i: Int)
+
+sealed class Vehicle {
+  abstract val model: String
+  abstract val type : String
+  abstract val tyres: List<Tyre>?
+}
+
+@JsonClass(generateAdapter = true)
+data class Car(override val model: String,
+    override val type: String,
+    override val tyres: List<Tyre>?): Vehicle()
+
+@JsonClass(generateAdapter = true)
+data class Truck(override val model: String,
+    override val type: String,
+    override val tyres: List<Tyre>?): Vehicle()
+
+
+sealed class Tyre {
+  abstract val type : String
+}
+
+@JsonClass(generateAdapter = true)
+data class MRFTyre(override val type : String): Tyre()
+
+@JsonClass(generateAdapter = true)
+data class ApolloTyre(override val type : String): Tyre()

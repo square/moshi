@@ -20,6 +20,11 @@
     </dependency>
     <dependency>
       <groupId>com.squareup.moshi</groupId>
+      <artifactId>moshi-adapters</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.moshi</groupId>
       <artifactId>moshi-kotlin</artifactId>
       <version>${project.version}</version>
     </dependency>
