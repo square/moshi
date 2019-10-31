@@ -28,6 +28,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
@@ -38,6 +39,9 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
+import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterOnly
+import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterProperty
+import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.PropertyOnly
 import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 
@@ -60,6 +64,8 @@ internal class AdapterGenerator(
   private val className = target.typeName.rawType()
   private val visibility = target.visibility
   private val typeVariables = target.typeVariables
+  private val targetConstructorParams = target.constructor.parameters
+      .mapKeys { (_, param) -> param.index }
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
@@ -196,8 +202,34 @@ internal class AdapterGenerator(
       }
     }
 
+    val propertiesByIndex = propertyList.asSequence()
+        .filter { it.hasConstructorParameter }
+        .associateBy { it.target.parameterIndex }
+    val components = mutableListOf<FromJsonComponent>()
+
+    // Add parameters (± properties) first, their index matters
+    for ((index, parameter) in targetConstructorParams) {
+      val property = propertiesByIndex[index]
+      if (property == null) {
+        components += ParameterOnly(parameter)
+      } else {
+        components += ParameterProperty(parameter, property)
+      }
+    }
+
+    // Now add the remaining properties that aren't parameters
+    for (property in propertyList) {
+      if (property.target.parameterIndex in targetConstructorParams) {
+        continue // Already handled
+      }
+      if (property.isTransient) {
+        continue // We don't care about these outside of constructor parameters
+      }
+      components += PropertyOnly(property)
+    }
+
     // Calculate how many masks we'll need. Round up if it's not evenly divisible by 32
-    val propertyCount = propertyList.count { it.hasConstructorParameter }
+    val propertyCount = targetConstructorParams.size
     val maskCount = if (propertyCount == 0) {
       0
     } else {
@@ -207,8 +239,9 @@ internal class AdapterGenerator(
     val maskNames = Array(maskCount) { index ->
       nameAllocator.newName("mask$index")
     }
-    val useConstructorDefaults = nonTransientProperties.any { it.hasConstructorDefault }
-    if (useConstructorDefaults) {
+    val useDefaultsConstructor = components.filterIsInstance<ParameterComponent>()
+        .any { it.parameter.hasDefault }
+    if (useDefaultsConstructor) {
       // Initialize all our masks, defaulting to fully unset (-1)
       for (maskName in maskNames) {
         result.addStatement("var %L = -1", maskName)
@@ -243,14 +276,21 @@ internal class AdapterGenerator(
         maskNameIndex++
       }
     }
-    for (property in propertyList) {
-      if (property.isTransient) {
-        if (property.hasConstructorParameter) {
-          updateMaskIndexes()
-          constructorPropertyTypes += property.target.type.asTypeBlock()
-        }
+
+    for (input in components) {
+      if (input is ParameterOnly ||
+          (input is ParameterProperty && input.property.isTransient)) {
+        updateMaskIndexes()
+        constructorPropertyTypes += input.type.asTypeBlock()
+        continue
+      } else if (input is PropertyOnly && input.property.isTransient) {
         continue
       }
+
+      // We've removed all parameter-only types by this point
+      val property = (input as PropertyComponent).property
+
+      // Proceed as usual
       if (property.hasLocalIsPresentName || property.hasConstructorDefault) {
         result.beginControlFlow("%L ->", propertyIndex)
         if (property.delegateKey.nullable) {
@@ -299,8 +339,6 @@ internal class AdapterGenerator(
     result.addStatement("%N.endObject()", readerParam)
 
     var separator = "\n"
-    val parameterProperties = propertyList.filter { it.hasConstructorParameter }
-    val useDefaultsConstructor = parameterProperties.any { it.hasDefault }
 
     val resultName = nameAllocator.newName("result")
     val hasNonConstructorProperties = nonTransientProperties.any { !it.hasConstructorParameter }
@@ -352,25 +390,29 @@ internal class AdapterGenerator(
       result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
     }
 
-    for (property in parameterProperties) {
+    for (input in components.filterIsInstance<ParameterComponent>()) {
       result.addCode(separator)
       if (useDefaultsConstructor) {
-        if (property.isTransient) {
+        if (input is ParameterOnly || (input is ParameterProperty && input.property.isTransient)) {
           // We have to use the default primitive for the available type in order for
           // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
           // the transient type may be a primitive type.
-          result.addCode(property.target.type.rawType().defaultPrimitiveValue())
+          result.addCode(input.type.rawType().defaultPrimitiveValue())
         } else {
-          result.addCode("%N", property.localName)
+          result.addCode("%N", (input as ParameterProperty).property.localName)
         }
-      } else {
+      } else if (input !is ParameterOnly) {
+        val property = (input as ParameterProperty).property
         result.addCode("%N = %N", property.name, property.localName)
       }
-      if (!property.isTransient && property.isRequired) {
-        val missingPropertyBlock =
-            CodeBlock.of("%T.missingProperty(%S, %S, %N)",
-                MOSHI_UTIL, property.localName, property.jsonName, readerParam)
-        result.addCode(" ?: throw·%L", missingPropertyBlock)
+      if (input is PropertyComponent) {
+        val property = input.property
+        if (!property.isTransient && property.isRequired) {
+          val missingPropertyBlock =
+              CodeBlock.of("%T.missingProperty(%S, %S, %N)",
+                  MOSHI_UTIL, property.localName, property.jsonName, readerParam)
+          result.addCode(" ?: throw·%L", missingPropertyBlock)
+        }
       }
       separator = ",\n"
     }
@@ -428,5 +470,42 @@ internal class AdapterGenerator(
     result.addStatement("%N.endObject()", writerParam)
 
     return result.build()
+  }
+}
+
+private interface PropertyComponent {
+  val property: PropertyGenerator
+  val type: TypeName
+}
+private interface ParameterComponent {
+  val parameter: TargetParameter
+  val type: TypeName
+}
+
+/**
+ * Type hierarchy for describing fromJson() components. Specifically - parameters, properties, and
+ * parameter properties. All three of these scenarios participate in fromJson() parsing.
+ */
+private sealed class FromJsonComponent {
+
+  abstract val type: TypeName
+
+  data class ParameterOnly(
+      override val parameter: TargetParameter
+  ) : FromJsonComponent(), ParameterComponent {
+    override val type: TypeName = parameter.type
+  }
+
+  data class PropertyOnly(
+      override val property: PropertyGenerator
+  ) : FromJsonComponent(), PropertyComponent {
+    override val type: TypeName = property.target.type
+  }
+
+  data class ParameterProperty(
+    override val parameter: TargetParameter,
+    override val property: PropertyGenerator
+  ) : FromJsonComponent(), ParameterComponent, PropertyComponent {
+    override val type: TypeName = parameter.type
   }
 }

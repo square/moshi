@@ -75,7 +75,7 @@ class MultipleMasks(
     val arg17: Long = 17,
     val arg18: Long = 18,
     val arg19: Long = 19,
-    val arg20: Long = 20,
+    @Suppress("UNUSED_PARAMETER") arg20: Long = 20,
     val arg21: Long = 21,
     val arg22: Long = 22,
     val arg23: Long = 23,

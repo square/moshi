@@ -72,12 +72,13 @@ private fun Collection<KModifier>.visibility(): KModifier {
 internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): TargetConstructor? {
   val primaryConstructor = kotlinApi.primaryConstructor ?: return null
 
-  val parameters = mutableMapOf<String, TargetParameter>()
+  val parameters = LinkedHashMap<String, TargetParameter>()
   for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
     val name = parameter.name
     parameters[name] = TargetParameter(
         name = name,
         index = index,
+        type = parameter.type,
         hasDefault = parameter.defaultValue != null,
         qualifiers = parameter.annotations.qualifiers(elements),
         jsonName = parameter.annotations.jsonName()
