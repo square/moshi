@@ -5,6 +5,7 @@ Change Log
 
 _2019-10-30_
 
+ * Fix: "abstract function ... cannot have code" code gen crash when parsing Kotlin metadata.
  * Fix: Generate code to support constructors with more than 32 parameters. The 1.9.0 release had
    a regression where classes with 33+ parameters would crash upon decoding.
  * Fix: Generate code to support more constructor cases, such as classes with non-property
