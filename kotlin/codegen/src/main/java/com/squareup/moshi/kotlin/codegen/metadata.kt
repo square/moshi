@@ -18,8 +18,13 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
@@ -315,5 +320,33 @@ private fun String.escapeDollarSigns(): String {
 }
 
 private fun TypeName.unwrapTypeAlias(): TypeName {
-  return tag<TypeNameAliasTag>()?.type ?: this
+  return when (this) {
+    is ClassName -> {
+      tag<TypeNameAliasTag>()?.type ?: this
+    }
+    is ParameterizedTypeName -> {
+      return (rawType.unwrapTypeAlias() as ClassName).parameterizedBy(typeArguments.map { it.unwrapTypeAlias() })
+    }
+    is TypeVariableName -> {
+      return copy(bounds = bounds.map { it.unwrapTypeAlias() })
+    }
+    is WildcardTypeName -> {
+      // TODO Would be nice if KotlinPoet modeled these easier.
+      // Producer type - empty inTypes, single element outTypes
+      // Consumer type - single element inTypes, single ANY element outType.
+      return when {
+        this == STAR -> this
+        outTypes.isNotEmpty() && inTypes.isEmpty() -> {
+          WildcardTypeName.producerOf(outTypes[0].unwrapTypeAlias())
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        inTypes.isNotEmpty() -> {
+          WildcardTypeName.consumerOf(inTypes[0].unwrapTypeAlias())
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        else -> throw UnsupportedOperationException("Not possible.")
+      }
+    }
+    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+  }
 }

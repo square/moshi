@@ -403,7 +403,45 @@ class DualKotlinTest(useReflection: Boolean) {
 
     var prop: Int = 0
   }
+
+  @Test fun typeAliasUnwrapping() {
+    val adapter = moshi
+        .newBuilder()
+        .add(Types.supertypeOf(Int::class.javaObjectType), moshi.adapter<Int>())
+        .build()
+        .adapter<TypeAliasUnwrapping>()
+
+    @Language("JSON")
+    val testJson = """{"simpleClass":6,"parameterized":{"value":6},"wildcardIn":{"value":6},"wildcardOut":{"value":6},"complex":{"value":[{"value":6}]}}"""
+
+    val testValue = TypeAliasUnwrapping(
+        simpleClass = 6,
+        parameterized = TypeAliasGeneric(6),
+        wildcardIn = TypeAliasGeneric(6),
+        wildcardOut = TypeAliasGeneric(6),
+        complex = TypeAliasGeneric(listOf(TypeAliasGeneric(6)))
+    )
+    assertThat(adapter.toJson(testValue)).isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result).isEqualTo(testValue)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class TypeAliasUnwrapping(
+      val simpleClass: TypeAlias,
+      val parameterized: TypeAliasGeneric<TypeAlias>,
+      val wildcardIn: TypeAliasGeneric<in TypeAlias>,
+      val wildcardOut: TypeAliasGeneric<out TypeAlias>,
+      @Suppress("REDUNDANT_PROJECTION")
+      val complex: TypeAliasGeneric<List<out TypeAliasGeneric<in TypeAlias>>>
+  )
 }
+
+typealias TypeAlias = Int
+
+@JsonClass(generateAdapter = true)
+data class TypeAliasGeneric<T>(val value: T)
 
 // Has to be outside since inline classes are only allowed on top level
 @JsonClass(generateAdapter = true)
