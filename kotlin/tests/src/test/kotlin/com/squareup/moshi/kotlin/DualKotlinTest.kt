@@ -416,10 +416,10 @@ class DualKotlinTest(useReflection: Boolean) {
 
     val testValue = TypeAliasUnwrapping(
         simpleClass = 6,
-        parameterized = TypeAliasGeneric(6),
-        wildcardIn = TypeAliasGeneric(6),
-        wildcardOut = TypeAliasGeneric(6),
-        complex = TypeAliasGeneric(listOf(TypeAliasGeneric(6)))
+        parameterized = GenericClass(6),
+        wildcardIn = GenericClass(6),
+        wildcardOut = GenericClass(6),
+        complex = GenericClass(listOf(GenericClass(6)))
     )
     assertThat(adapter.toJson(testValue)).isEqualTo(testJson)
 
@@ -430,18 +430,19 @@ class DualKotlinTest(useReflection: Boolean) {
   @JsonClass(generateAdapter = true)
   data class TypeAliasUnwrapping(
       val simpleClass: TypeAlias,
-      val parameterized: TypeAliasGeneric<TypeAlias>,
-      val wildcardIn: TypeAliasGeneric<in TypeAlias>,
-      val wildcardOut: TypeAliasGeneric<out TypeAlias>,
-      @Suppress("REDUNDANT_PROJECTION")
-      val complex: TypeAliasGeneric<List<out TypeAliasGeneric<in TypeAlias>>>
+      val parameterized: GenericClass<TypeAlias>,
+      val wildcardIn: GenericClass<in TypeAlias>,
+      val wildcardOut: GenericClass<out TypeAlias>,
+      val complex: GenericClass<GenericTypeAlias>
   )
 }
 
 typealias TypeAlias = Int
+@Suppress("REDUNDANT_PROJECTION")
+typealias GenericTypeAlias = List<out GenericClass<in TypeAlias>>
 
 @JsonClass(generateAdapter = true)
-data class TypeAliasGeneric<T>(val value: T)
+data class GenericClass<T>(val value: T)
 
 // Has to be outside since inline classes are only allowed on top level
 @JsonClass(generateAdapter = true)
