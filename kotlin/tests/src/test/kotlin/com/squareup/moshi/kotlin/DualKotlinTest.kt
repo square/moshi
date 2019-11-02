@@ -441,27 +441,45 @@ class DualKotlinTest(useReflection: Boolean) {
     val adapter = moshi.adapter<NullablePrimitives>()
 
     @Language("JSON")
-    val testOutputJson = """{"oh_boy":"testing","that_is_a_test":3,"test_again":0}"""
+    val testJson = """{"objectType":"value","boolean":true,"byte":3,"char":"a","short":3,"int":3,"long":3,"float":3.2,"double":3.2}"""
 
-    assertThat(adapter.serializeNulls().toJson(NullablePrimitives("testing", 3)))
-        .isEqualTo(testOutputJson)
+    val instance = NullablePrimitives(
+        objectType = "value",
+        boolean = true,
+        byte = 3,
+        char = 'a',
+        short = 3,
+        int = 3,
+        long = 3,
+        float = 3.2f,
+        double = 3.2
+    )
+    assertThat(adapter.toJson(instance))
+        .isEqualTo(testJson)
 
-    @Language("JSON")
-    val testInputJson = """{"oh_boy":"testing","that_is_a_test":3}"""
-    val result = adapter.fromJson(testInputJson)!!
-    assertThat(result.ohboy).isEqualTo("testing")
-    assertThat(result.thatIsATest).isEqualTo(3)
-    assertThat(result.testAgain).isEqualTo(0)
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result).isEqualTo(instance)
   }
 
   @JsonClass(generateAdapter = true)
   data class NullablePrimitives(
-      @Json(name = "oh_boy")
-      val ohboy: String,
-      @Json(name = "that_is_a_test")
-      val thatIsATest: Int?,
-      @Json(name = "test_again")
-      val testAgain: Int = 0
+      val objectType: String = "",
+      val boolean: Boolean,
+      val nullableBoolean: Boolean? = null,
+      val byte: Byte,
+      val nullableByte: Byte? = null,
+      val char: Char,
+      val nullableChar: Char? = null,
+      val short: Short,
+      val nullableShort: Short? = null,
+      val int: Int,
+      val nullableInt: Int? = null,
+      val long: Long,
+      val nullableLong: Long? = null,
+      val float: Float,
+      val nullableFloat: Float? = null,
+      val double: Double,
+      val nullableDouble: Double? = null
   )
 }
 
