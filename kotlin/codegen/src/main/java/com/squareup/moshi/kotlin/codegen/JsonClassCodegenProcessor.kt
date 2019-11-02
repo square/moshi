@@ -95,35 +95,40 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   }
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-    for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
-      if (type !is TypeElement) {
-        messager.printMessage(
-            Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $type: must be a Kotlin class",
-            type)
-        continue
-      }
-      val jsonClass = type.getAnnotation(annotation)
-      if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
-        val generator = adapterGenerator(type) ?: continue
-        generator
-            .generateFile {
-              it.toBuilder()
-                  .apply {
-                    generatedType?.asClassName()?.let { generatedClassName ->
-                      addAnnotation(
-                          AnnotationSpec.builder(generatedClassName)
-                              .addMember("value = [%S]",
-                                  JsonClassCodegenProcessor::class.java.canonicalName)
-                              .addMember("comments = %S", "https://github.com/square/moshi")
-                              .build()
-                      )
-                    }
+    try {
+      for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
+        if (type !is TypeElement) {
+          messager.printMessage(
+                  Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $type: must be a Kotlin class",
+                  type)
+          continue
+        }
+        val jsonClass = type.getAnnotation(annotation)
+        if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
+          val generator = adapterGenerator(type) ?: continue
+          generator
+                  .generateFile {
+                    it.toBuilder()
+                            .apply {
+                              generatedType?.asClassName()?.let { generatedClassName ->
+                                addAnnotation(
+                                        AnnotationSpec.builder(generatedClassName)
+                                                .addMember("value = [%S]",
+                                                        JsonClassCodegenProcessor::class.java.canonicalName)
+                                                .addMember("comments = %S", "https://github.com/square/moshi")
+                                                .build()
+                                )
+                              }
+                            }
+                            .addOriginatingElement(type)
+                            .build()
                   }
-                  .addOriginatingElement(type)
-                  .build()
-            }
-            .writeTo(filer)
+                  .writeTo(filer)
+        }
       }
+    }catch(e: Exception) {
+      messager.printMessage(Diagnostic.Kind.ERROR, "Codegen failed: $e")
+      throw e
     }
 
     return false
