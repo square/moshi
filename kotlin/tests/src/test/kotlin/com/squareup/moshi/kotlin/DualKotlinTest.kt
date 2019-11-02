@@ -454,7 +454,6 @@ class DualKotlinTest(useReflection: Boolean) {
     assertThat(result.testAgain).isEqualTo(0)
   }
 
-  // public Testy(String var1, Integer var2, int var3, int var4, DefaultConstructorMarker var5)
   @JsonClass(generateAdapter = true)
   data class NullablePrimitives(
       @Json(name = "oh_boy")
