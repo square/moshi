@@ -322,7 +322,7 @@ private fun String.escapeDollarSigns(): String {
 private fun TypeName.unwrapTypeAlias(): TypeName {
   return when (this) {
     is ClassName -> {
-      tag<TypeNameAliasTag>()?.type ?: this
+      tag<TypeNameAliasTag>()?.type?.unwrapTypeAlias() ?: this
     }
     is ParameterizedTypeName -> {
       return (rawType.unwrapTypeAlias() as ClassName).parameterizedBy(typeArguments.map { it.unwrapTypeAlias() })
