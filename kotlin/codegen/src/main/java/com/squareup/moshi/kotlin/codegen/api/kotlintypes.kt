@@ -71,7 +71,9 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
       return bound.asTypeBlock()
     }
     is ClassName -> {
-      return when (this) {
+      // Check against the non-nullable version for equality, but we'll keep the nullability in
+      // consideration when creating the CodeBlock if needed.
+      return when (copy(nullable = false)) {
         BOOLEAN, CHAR, BYTE, SHORT, INT, FLOAT, LONG, DOUBLE -> {
           if (isNullable) {
             // Remove nullable but keep the java object type

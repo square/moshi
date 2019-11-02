@@ -435,6 +435,52 @@ class DualKotlinTest(useReflection: Boolean) {
       val wildcardOut: GenericClass<out TypeAlias>,
       val complex: GenericClass<GenericTypeAlias>
   )
+
+  // Regression test for https://github.com/square/moshi/issues/991
+  @Test fun nullablePrimitiveProperties() {
+    val adapter = moshi.adapter<NullablePrimitives>()
+
+    @Language("JSON")
+    val testJson = """{"objectType":"value","boolean":true,"byte":3,"char":"a","short":3,"int":3,"long":3,"float":3.2,"double":3.2}"""
+
+    val instance = NullablePrimitives(
+        objectType = "value",
+        boolean = true,
+        byte = 3,
+        char = 'a',
+        short = 3,
+        int = 3,
+        long = 3,
+        float = 3.2f,
+        double = 3.2
+    )
+    assertThat(adapter.toJson(instance))
+        .isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result).isEqualTo(instance)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class NullablePrimitives(
+      val objectType: String = "",
+      val boolean: Boolean,
+      val nullableBoolean: Boolean? = null,
+      val byte: Byte,
+      val nullableByte: Byte? = null,
+      val char: Char,
+      val nullableChar: Char? = null,
+      val short: Short,
+      val nullableShort: Short? = null,
+      val int: Int,
+      val nullableInt: Int? = null,
+      val long: Long,
+      val nullableLong: Long? = null,
+      val float: Float,
+      val nullableFloat: Float? = null,
+      val double: Double,
+      val nullableDouble: Double? = null
+  )
 }
 
 typealias TypeAlias = Int
