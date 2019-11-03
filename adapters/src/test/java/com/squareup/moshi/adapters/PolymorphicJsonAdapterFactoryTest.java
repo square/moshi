@@ -105,6 +105,24 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(message).isNull();
   }
 
+  @Test public void toJsonDefaultValue() {
+    Error fallbackError = new Error(Collections.<String, Object>emptyMap());
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(fallbackError))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    try {
+      String json = adapter.toJson(fallbackError);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageContaining("Cannot serialize default value instance");
+    }
+  }
+
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
         .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
