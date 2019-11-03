@@ -52,6 +52,7 @@ import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
+import java.util.TreeSet
 import javax.annotation.processing.Messager
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
@@ -322,10 +323,22 @@ private fun String.escapeDollarSigns(): String {
 private fun TypeName.unwrapTypeAlias(): TypeName {
   return when (this) {
     is ClassName -> {
-      tag<TypeNameAliasTag>()?.type?.unwrapTypeAlias() ?: this
+      tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
+        // If any type is nullable, then the whole thing is nullable
+        var isAnyNullable = isNullable
+        // Keep track of all annotations across type levels. Sort them too for consistency.
+        val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
+          addAll(annotations)
+        }
+        val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
+        runningAnnotations.addAll(nestedUnwrappedType.annotations)
+        isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
+        nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
+      } ?: this
     }
     is ParameterizedTypeName -> {
       return (rawType.unwrapTypeAlias() as ClassName).parameterizedBy(typeArguments.map { it.unwrapTypeAlias() })
+          .copy(nullable = isNullable, annotations = annotations)
     }
     is TypeVariableName -> {
       return copy(bounds = bounds.map { it.unwrapTypeAlias() })
