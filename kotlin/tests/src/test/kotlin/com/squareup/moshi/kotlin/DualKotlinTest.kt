@@ -522,6 +522,24 @@ class DualKotlinTest(useReflection: Boolean) {
       val convolutedMultiNullableShouldBeNullable: NullableB?,
       val deepNestedNullableShouldBeNullable: E
   )
+
+  // Regression test for https://github.com/square/moshi/issues/1009
+  @Test fun outDeclaration() {
+    val adapter = moshi.adapter<OutDeclaration<Int>>()
+
+    @Language("JSON")
+    val testJson = """{"input":3}"""
+
+    val instance = OutDeclaration(3)
+    assertThat(adapter.serializeNulls().toJson(instance))
+        .isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result).isEqualTo(instance)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class OutDeclaration<out T>(val input: T)
 }
 
 typealias TypeAlias = Int
