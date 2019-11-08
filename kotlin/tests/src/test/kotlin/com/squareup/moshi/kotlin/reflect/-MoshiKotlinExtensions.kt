@@ -57,12 +57,16 @@ fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
 }
 
 @PublishedApi
-internal fun KType.toType(): Type {
+internal fun KType.toType(allowPrimitives: Boolean = true): Type {
   classifier?.let {
     when (it) {
       is KTypeParameter -> throw IllegalArgumentException("Type parameters are not supported")
       is KClass<*> -> {
-        val javaType = it.java
+        val javaType = if (allowPrimitives) {
+          it.java
+        } else {
+          it.javaObjectType
+        }
         if (javaType.isArray) {
           return Types.arrayOf(javaType.componentType)
         }
@@ -88,7 +92,7 @@ internal fun KType.toType(): Type {
 }
 
 internal fun KTypeProjection.toType(): Type {
-  val javaType = type?.toType() ?: return Any::class.java
+  val javaType = type?.toType(allowPrimitives = false) ?: return Any::class.java
   return when (variance) {
     null -> Any::class.java
     KVariance.INVARIANT -> javaType

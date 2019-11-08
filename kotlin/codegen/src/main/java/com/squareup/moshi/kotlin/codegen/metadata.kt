@@ -48,6 +48,7 @@ import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
 import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
+import com.squareup.moshi.kotlin.codegen.api.mapTypes
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -59,6 +60,7 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
+import kotlin.reflect.KClass
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
@@ -320,46 +322,19 @@ private fun String.escapeDollarSigns(): String {
   return replace("\$", "\${\'\$\'}")
 }
 
-private fun TypeName.unwrapTypeAlias(): TypeName {
-  return when (this) {
-    is ClassName -> {
-      tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
-        // If any type is nullable, then the whole thing is nullable
-        var isAnyNullable = isNullable
-        // Keep track of all annotations across type levels. Sort them too for consistency.
-        val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
-          addAll(annotations)
-        }
-        val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
-        runningAnnotations.addAll(nestedUnwrappedType.annotations)
-        isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
-        nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
-      } ?: this
-    }
-    is ParameterizedTypeName -> {
-      return (rawType.unwrapTypeAlias() as ClassName).parameterizedBy(typeArguments.map { it.unwrapTypeAlias() })
-          .copy(nullable = isNullable, annotations = annotations)
-    }
-    is TypeVariableName -> {
-      return copy(bounds = bounds.map { it.unwrapTypeAlias() })
-    }
-    is WildcardTypeName -> {
-      // TODO Would be nice if KotlinPoet modeled these easier.
-      // Producer type - empty inTypes, single element outTypes
-      // Consumer type - single element inTypes, single ANY element outType.
-      return when {
-        this == STAR -> this
-        outTypes.isNotEmpty() && inTypes.isEmpty() -> {
-          WildcardTypeName.producerOf(outTypes[0].unwrapTypeAlias())
-              .copy(nullable = isNullable, annotations = annotations)
-        }
-        inTypes.isNotEmpty() -> {
-          WildcardTypeName.consumerOf(inTypes[0].unwrapTypeAlias())
-              .copy(nullable = isNullable, annotations = annotations)
-        }
-        else -> throw UnsupportedOperationException("Not possible.")
+internal fun TypeName.unwrapTypeAlias(): TypeName {
+  return mapTypes<ClassName> {
+    tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
+      // If any type is nullable, then the whole thing is nullable
+      var isAnyNullable = isNullable
+      // Keep track of all annotations across type levels. Sort them too for consistency.
+      val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
+        addAll(annotations)
       }
+      val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
+      runningAnnotations.addAll(nestedUnwrappedType.annotations)
+      isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
+      nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
     }
-    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }

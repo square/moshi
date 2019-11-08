@@ -29,11 +29,15 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.NOTHING
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.SHORT
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asTypeName
+import kotlin.reflect.KClass
 
 internal fun TypeName.rawType(): ClassName {
   return when (this) {
@@ -93,5 +97,50 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
 internal fun KModifier.checkIsVisibility() {
   require(ordinal <= ordinal) {
     "Visibility must be one of ${(0..ordinal).joinToString { KModifier.values()[it].name }}. Is $name"
+  }
+}
+
+internal inline fun <reified T: TypeName> TypeName.mapTypes(noinline transform: T.() -> TypeName?): TypeName {
+  return mapTypes(T::class, transform)
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() -> TypeName?): TypeName {
+  if (target.java == javaClass) {
+    return (this as T).transform() ?: return this
+  }
+  return when (this) {
+    is ClassName -> this
+    is ParameterizedTypeName -> {
+      (rawType.mapTypes(target, transform) as ClassName).parameterizedBy(typeArguments.map { it.mapTypes(target, transform) })
+          .copy(nullable = isNullable, annotations = annotations)
+    }
+    is TypeVariableName -> {
+      copy(bounds = bounds.map { it.mapTypes(target, transform) })
+    }
+    is WildcardTypeName -> {
+      // TODO Would be nice if KotlinPoet modeled these easier.
+      // Producer type - empty inTypes, single element outTypes
+      // Consumer type - single element inTypes, single ANY element outType.
+      when {
+        this == STAR -> this
+        outTypes.isNotEmpty() && inTypes.isEmpty() -> {
+          WildcardTypeName.producerOf(outTypes[0].mapTypes(target, transform))
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        inTypes.isNotEmpty() -> {
+          WildcardTypeName.consumerOf(inTypes[0].mapTypes(target, transform))
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        else -> throw UnsupportedOperationException("Not possible.")
+      }
+    }
+    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+  }
+}
+
+internal fun TypeName.stripTypeVarVariance(): TypeName {
+  return mapTypes<TypeVariableName> {
+    TypeVariableName(name = name, bounds = bounds.map { it.mapTypes(TypeVariableName::stripTypeVarVariance) }, variance = null)
   }
 }
