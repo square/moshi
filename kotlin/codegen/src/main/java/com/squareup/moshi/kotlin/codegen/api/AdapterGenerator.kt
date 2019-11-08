@@ -69,7 +69,7 @@ internal class AdapterGenerator(
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
-  private val originalTypeName = target.typeName
+  private val originalTypeName = target.typeName.stripTypeVarVariance()
   private val originalRawTypeName = originalTypeName.rawType()
 
   private val moshiParam = ParameterSpec.builder(
@@ -130,7 +130,7 @@ internal class AdapterGenerator(
     result.superclass(jsonAdapterTypeName)
 
     if (typeVariables.isNotEmpty()) {
-      result.addTypeVariables(typeVariables)
+      result.addTypeVariables(typeVariables.map { it.stripTypeVarVariance() as TypeVariableName })
     }
 
     // TODO make this configurable. Right now it just matches the source model

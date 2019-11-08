@@ -138,3 +138,9 @@ internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() 
     else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }
+
+internal fun TypeName.stripTypeVarVariance(): TypeName {
+  return mapTypes<TypeVariableName> {
+    TypeVariableName(name = name, bounds = bounds.map { it.mapTypes(TypeVariableName::stripTypeVarVariance) }, variance = null)
+  }
+}
