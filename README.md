@@ -449,7 +449,7 @@ JSON contains a value for the field. Instead it will get a default value.
 
 ### Default Values & Constructors
 
-When reading JSON that is missing a field, Moshi relies on the the Java or Android runtime to assign
+When reading JSON that is missing a field, Moshi relies on the Java or Android runtime to assign
 the field’s value. Which value it uses depends on whether the class has a no-arguments constructor.
 
 If the class has a no-arguments constructor, Moshi will call that constructor and whatever value
