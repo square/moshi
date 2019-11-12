@@ -98,27 +98,7 @@ class GeneratedAdaptersTest {
     assertThat(instance.foo).isEqualTo("fooString")
     assertThat(instance.bar).isEqualTo("")
     assertThat(instance.nullableBar).isNull()
-    assertThat(instance.bazList).apply {
-      isNotNull()
-      isEmpty()
-    }
-
-    @Language("JSON") val expected = """{"foo":"fooString","bar":"","bazList":[]}"""
-    assertThat(adapter.toJson(
-        DefaultValues("fooString"))).isEqualTo(expected)
-
-    // Read/write with real values
-    @Language("JSON")
-    val json2 = """
-      {"foo":"fooString","bar":"barString","nullableBar":"bar","bazList":["baz"]}
-      """.trimIndent()
-
-    val instance2 = adapter.fromJson(json2)!!
-    assertThat(instance2.foo).isEqualTo("fooString")
-    assertThat(instance2.bar).isEqualTo("barString")
-    assertThat(instance2.nullableBar).isEqualTo("bar")
-    assertThat(instance2.bazList).containsExactly("baz")
-    assertThat(adapter.toJson(instance2)).isEqualTo(json2)
+    assertThat(instance.bazList).isNull()
   }
 
   @JsonClass(generateAdapter = true)
@@ -126,7 +106,7 @@ class GeneratedAdaptersTest {
     val foo: String,
     val bar: String = "",
     val nullableBar: String? = null,
-    val bazList: List<String> = emptyList())
+    val nullableList: List<String>? = null)
 
   @Test
   fun nullableArray() {
