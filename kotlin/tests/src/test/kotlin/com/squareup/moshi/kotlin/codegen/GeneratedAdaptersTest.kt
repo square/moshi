@@ -98,7 +98,7 @@ class GeneratedAdaptersTest {
     assertThat(instance.foo).isEqualTo("fooString")
     assertThat(instance.bar).isEqualTo("")
     assertThat(instance.nullableBar).isNull()
-    assertThat(instance.bazList).isNull()
+    assertThat(instance.nullableList).isNull()
   }
 
   @JsonClass(generateAdapter = true)
