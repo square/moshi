@@ -58,6 +58,14 @@ internal class AdapterGenerator(
   companion object {
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of("%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+
+    private val COMMON_SUPPRESS = AnnotationSpec.builder(Suppress::class)
+        .addMember("%S, %S, %S",
+            "DEPRECATION", // https://github.com/square/moshi/issues/1023
+            "unused", // Because we look it up reflectively
+            "ClassName" // Because we include underscores
+        )
+        .build()
   }
 
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
@@ -126,6 +134,7 @@ internal class AdapterGenerator(
 
   private fun generateType(): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+        .addAnnotation(COMMON_SUPPRESS)
 
     result.superclass(jsonAdapterTypeName)
 
