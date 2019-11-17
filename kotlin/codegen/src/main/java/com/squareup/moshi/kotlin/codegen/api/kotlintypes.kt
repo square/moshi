@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.ARRAY
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE
 import com.squareup.kotlinpoet.CHAR
@@ -36,6 +37,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import kotlin.reflect.KClass
 
@@ -143,4 +145,10 @@ internal fun TypeName.stripTypeVarVariance(): TypeName {
   return mapTypes<TypeVariableName> {
     TypeVariableName(name = name, bounds = bounds.map { it.mapTypes(TypeVariableName::stripTypeVarVariance) }, variance = null)
   }
+}
+
+private val CN_DEPRECATED_KT = Deprecated::class.asClassName()
+private val CN_DEPRECATED = java.lang.Deprecated::class.asClassName()
+internal fun Iterable<AnnotationSpec>.anyDeprecated(): Boolean {
+  return any { it.className == CN_DEPRECATED_KT || it.className == CN_DEPRECATED }
 }
