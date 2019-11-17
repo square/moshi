@@ -206,13 +206,26 @@ internal fun targetType(messager: Messager,
       properties.putIfAbsent(name, property)
     }
   }
+  val visibility = kotlinApi.modifiers.visibility()
+  // If any class in the enclosing cl
+  val resolvedVisibility = if (visibility == KModifier.INTERNAL) {
+    // If our nested type is already internal, no need
+    visibility
+  } else {
+    // Implicitly public.
+    val forceInternal = generateSequence<Element>(element) { it.enclosingElement }
+        .filterIsInstance<TypeElement>()
+        .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
+        .any { it.isInternal }
+    if (forceInternal) KModifier.INTERNAL else visibility
+  }
   return TargetType(
       typeName = element.asType().asTypeName(),
       constructor = constructor,
       properties = properties,
       typeVariables = typeVariables,
       isDataClass = KModifier.DATA in kotlinApi.modifiers,
-      visibility = kotlinApi.modifiers.visibility())
+      visibility = resolvedVisibility)
 }
 
 /** Returns the properties declared by `typeElement`. */
