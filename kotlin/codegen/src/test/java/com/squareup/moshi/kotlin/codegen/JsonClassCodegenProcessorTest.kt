@@ -182,6 +182,20 @@ class JsonClassCodegenProcessorTest {
         "error: @JsonClass can't be applied to LocalClass: must not be local")
   }
 
+  @Test fun privateClassesNotSupported() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+          
+          @JsonClass(generateAdapter = true)
+          private class PrivateClass(val a: Int)
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains(
+        "error: @JsonClass can't be applied to PrivateClass: must be internal or public")
+  }
+
   @Test fun objectDeclarationsNotSupported() {
     val result = compile(kotlin("source.kt",
         """

@@ -156,6 +156,12 @@ internal fun targetType(messager: Messager,
           element)
       return null
     }
+    !kmClass.isPublic && !kmClass.isInternal -> {
+      messager.printMessage(
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be internal or public",
+          element)
+      return null
+    }
   }
 
   val elementHandler = ElementsClassInspector.create(elements, types)
