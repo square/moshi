@@ -62,6 +62,14 @@ internal class AdapterGenerator(
 
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
   private val className = target.typeName.rawType()
+
+  /**
+   * If the class or any of its annotations are deprecated, suppress a deprecation warning on the
+   * generated class. This is useful for consumers that like to enable `warningsAsErrors` or
+   * `-Werror` in their compilation.
+   */
+  private val shouldSuppressDeprecation = className.annotations.anyDeprecated() ||
+      propertyList.any { it.target.propertySpec.annotations.anyDeprecated() }
   private val visibility = target.visibility
   private val typeVariables = target.typeVariables
   private val targetConstructorParams = target.constructor.parameters
@@ -126,6 +134,12 @@ internal class AdapterGenerator(
 
   private fun generateType(): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+
+    if (shouldSuppressDeprecation) {
+      result.addAnnotation(AnnotationSpec.builder(Suppress::class)
+          .addMember("%S", "DEPRECATION")
+          .build())
+    }
 
     result.superclass(jsonAdapterTypeName)
 
