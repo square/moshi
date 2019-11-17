@@ -65,16 +65,16 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
         "javax.annotation.processing.Generated",
         "javax.annotation.Generated"
     )
+    private val JSON_CLASS = JsonClass::class.java
   }
 
   private lateinit var types: Types
   private lateinit var elements: Elements
   private lateinit var filer: Filer
   private lateinit var messager: Messager
-  private val annotation = JsonClass::class.java
   private var generatedType: TypeElement? = null
 
-  override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
+  override fun getSupportedAnnotationTypes() = setOf(JSON_CLASS.canonicalName)
 
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
 
@@ -98,14 +98,14 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
     val classInspector = ElementsClassInspector.create(elements, types)
     val cachedClassInspector = MoshiCachedClassInspector(classInspector)
-    for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
+    for (type in roundEnv.getElementsAnnotatedWith(JSON_CLASS)) {
       if (type !is TypeElement) {
         messager.printMessage(
             Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $type: must be a Kotlin class",
             type)
         continue
       }
-      val jsonClass = type.getAnnotation(annotation)
+      val jsonClass = type.getAnnotation(JSON_CLASS)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         generator
