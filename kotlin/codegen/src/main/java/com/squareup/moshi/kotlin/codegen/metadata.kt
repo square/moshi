@@ -22,7 +22,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -32,10 +31,7 @@ import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isLocal
 import com.squareup.kotlinpoet.metadata.isPublic
 import com.squareup.kotlinpoet.metadata.isSealed
-import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
-import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
@@ -52,6 +48,7 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.util.TreeSet
 import javax.annotation.processing.Messager
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
@@ -97,7 +94,9 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
 internal fun targetType(messager: Messager,
     elements: Elements,
     types: Types,
-    element: TypeElement): TargetType? {
+    element: TypeElement,
+    cachedClassInspector: MoshiCachedClassInspector
+): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
     messager.printMessage(
@@ -107,7 +106,7 @@ internal fun targetType(messager: Messager,
   }
 
   val kmClass = try {
-    typeMetadata.toImmutableKmClass()
+    cachedClassInspector.toImmutableKmClass(typeMetadata)
   } catch (e: UnsupportedOperationException) {
     messager.printMessage(
         Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Class type",
@@ -137,7 +136,8 @@ internal fun targetType(messager: Messager,
     }
     kmClass.isSealed -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed",
+          element)
       return null
     }
     kmClass.isAbstract -> {
@@ -154,14 +154,14 @@ internal fun targetType(messager: Messager,
     }
     !kmClass.isPublic && !kmClass.isInternal -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be internal or public",
+          Diagnostic.Kind.ERROR,
+          "@JsonClass can't be applied to $element: must be internal or public",
           element)
       return null
     }
   }
 
-  val elementHandler = ElementsClassInspector.create(elements, types)
-  val kotlinApi = kmClass.toTypeSpec(elementHandler)
+  val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
 
@@ -197,11 +197,11 @@ internal fun targetType(messager: Messager,
           // We've already parsed this api above, reuse it
           kotlinApi
         } else {
-          supertype.element.toTypeSpec(elementHandler)
+          cachedClassInspector.toTypeSpec(supertype.element)
         }
       }
-  for ((supertype, api) in superTypes) {
-    val supertypeProperties = declaredProperties(supertype.element, constructor, elementHandler, api)
+  for (supertypeApi in superTypes.values) {
+    val supertypeProperties = declaredProperties(constructor, supertypeApi)
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
@@ -218,10 +218,8 @@ internal fun targetType(messager: Messager,
 /** Returns the properties declared by `typeElement`. */
 @KotlinPoetMetadataPreview
 private fun declaredProperties(
-    typeElement: TypeElement,
     constructor: TargetConstructor,
-    elementHandler: ClassInspector,
-    kotlinApi: TypeSpec = typeElement.toTypeSpec(elementHandler)
+    kotlinApi: TypeSpec
 ): Map<String, TargetProperty> {
 
   val result = mutableMapOf<String, TargetProperty>()
@@ -344,3 +342,9 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
     }
   }
 }
+
+internal val TypeElement.metadata: Metadata
+  get() {
+    return getAnnotation(Metadata::class.java)
+        ?: throw IllegalStateException("Not a kotlin type! $this")
+  }

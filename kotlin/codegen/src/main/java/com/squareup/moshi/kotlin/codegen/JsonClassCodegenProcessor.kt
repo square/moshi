@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
@@ -95,6 +96,8 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   }
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
+    val classInspector = ElementsClassInspector.create(elements, types)
+    val cachedClassInspector = MoshiCachedClassInspector(classInspector)
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       if (type !is TypeElement) {
         messager.printMessage(
@@ -104,7 +107,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
       }
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
-        val generator = adapterGenerator(type) ?: continue
+        val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         generator
             .generateFile {
               it.toBuilder()
@@ -129,8 +132,8 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     return false
   }
 
-  private fun adapterGenerator(element: TypeElement): AdapterGenerator? {
-    val type = targetType(messager, elements, types, element) ?: return null
+  private fun adapterGenerator(element: TypeElement, cachedClassInspector: MoshiCachedClassInspector): AdapterGenerator? {
+    val type = targetType(messager, elements, types, element, cachedClassInspector) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
