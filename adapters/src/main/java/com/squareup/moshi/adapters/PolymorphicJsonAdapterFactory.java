@@ -275,9 +275,6 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     }
 
     @Override public void toJson(JsonWriter writer, Object value) throws IOException {
-      if (defaultValueSet && value == defaultValue) {
-        throw new IllegalArgumentException("Cannot serialize default value instance: " + value);
-      }
       Class<?> type = value.getClass();
       int labelIndex = subtypes.indexOf(type);
       if (labelIndex == -1) {
