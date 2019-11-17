@@ -207,12 +207,13 @@ internal fun targetType(messager: Messager,
     }
   }
   val visibility = kotlinApi.modifiers.visibility()
-  // If any class in the enclosing cl
+  // If any class in the enclosing class hierarchy is internal, they must all have internal
+  // generated adapters.
   val resolvedVisibility = if (visibility == KModifier.INTERNAL) {
-    // If our nested type is already internal, no need
+    // Our nested type is already internal, no need to search
     visibility
   } else {
-    // Implicitly public.
+    // Implicitly public, so now look up the hierarchy
     val forceInternal = generateSequence<Element>(element) { it.enclosingElement }
         .filterIsInstance<TypeElement>()
         .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
