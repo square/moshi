@@ -18,13 +18,8 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
@@ -33,7 +28,9 @@ import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
 import com.squareup.kotlinpoet.metadata.isEnum
 import com.squareup.kotlinpoet.metadata.isInner
+import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isLocal
+import com.squareup.kotlinpoet.metadata.isPublic
 import com.squareup.kotlinpoet.metadata.isSealed
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
@@ -60,7 +57,6 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
-import kotlin.reflect.KClass
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
@@ -182,26 +178,30 @@ internal fun targetType(messager: Messager,
   }
 
   val properties = mutableMapOf<String, TargetProperty>()
-  for (supertype in appliedType.supertypes(types)) {
-    if (supertype.element.asClassName() == OBJECT_CLASS) {
-      continue // Don't load properties for java.lang.Object.
-    }
-    if (supertype.element.kind != ElementKind.CLASS) {
-      continue // Don't load properties for interface types.
-    }
-    if (supertype.element.getAnnotation(Metadata::class.java) == null) {
-      messager.printMessage(Diagnostic.Kind.ERROR,
-          "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
-          element)
-      return null
-    }
-    val supertypeProperties = if (supertype.element == element) {
-      // We've already parsed this api above, reuse it
-      declaredProperties(supertype.element, constructor, elementHandler, kotlinApi)
-    } else {
-      declaredProperties(
-          supertype.element, constructor, elementHandler)
-    }
+  val superTypes = appliedType.supertypes(types)
+      .filterNot { supertype ->
+        supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
+            supertype.element.kind != ElementKind.CLASS  // Don't load properties for interface types.
+      }
+      .onEach { supertype ->
+        if (supertype.element.getAnnotation(Metadata::class.java) == null) {
+          messager.printMessage(Diagnostic.Kind.ERROR,
+              "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+              element)
+          return null
+        }
+      }
+      .associateWithTo(LinkedHashMap()) { supertype ->
+        // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
+        if (supertype.element == element) {
+          // We've already parsed this api above, reuse it
+          kotlinApi
+        } else {
+          supertype.element.toTypeSpec(elementHandler)
+        }
+      }
+  for ((supertype, api) in superTypes) {
+    val supertypeProperties = declaredProperties(supertype.element, constructor, elementHandler, api)
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
