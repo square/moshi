@@ -513,6 +513,7 @@ class DualKotlinTest(useReflection: Boolean) {
     assertThat(result).isEqualTo(instance)
   }
 
+  @Suppress("REDUNDANT_NULLABLE")
   @JsonClass(generateAdapter = true)
   data class TypeAliasNullability(
       val aShouldBeNonNull: A,

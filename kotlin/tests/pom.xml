@@ -115,11 +115,7 @@
         </executions>
         <configuration>
           <args>
-          <!--
-          Disabled for now because we generate redundant `out` variance for some generics,
-          but there's no way for us to know when it's redundant.
-          -->
-<!--            <arg>-Werror</arg>-->
+            <arg>-Werror</arg>
             <arg>-Xuse-experimental=kotlin.ExperimentalStdlibApi</arg>
               <arg>-XXLanguage:+InlineClasses</arg>
           </args>

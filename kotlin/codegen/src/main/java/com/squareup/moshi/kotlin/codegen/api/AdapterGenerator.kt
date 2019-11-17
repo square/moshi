@@ -57,7 +57,22 @@ internal class AdapterGenerator(
 
   companion object {
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
-    private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of("%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+    private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
+        "%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+
+    private val COMMON_SUPPRESS = AnnotationSpec.builder(Suppress::class)
+        .addMember("%S, %S, %S, %S",
+            // https://github.com/square/moshi/issues/1023
+            "DEPRECATION",
+            // Because we look it up reflectively
+            "unused",
+            // Because we include underscores
+            "ClassName",
+            // Because we generate redundant `out` variance for some generics and there's no way
+            // for us to know when it's redundant.
+            "REDUNDANT_PROJECTION"
+        )
+        .build()
   }
 
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
@@ -126,6 +141,7 @@ internal class AdapterGenerator(
 
   private fun generateType(): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
+        .addAnnotation(COMMON_SUPPRESS)
 
     result.superclass(jsonAdapterTypeName)
 
@@ -304,7 +320,8 @@ internal class AdapterGenerator(
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
-          result.addStatement("%1L = %1L and 0x%2L.toInt()", maskNames[maskNameIndex], Integer.toHexString(inverted))
+          result.addStatement("%1L = %1L and 0x%2L.toInt()", maskNames[maskNameIndex],
+              Integer.toHexString(inverted))
         } else {
           // Presence tracker for a mutable property
           result.addStatement("%N = true", property.localIsPresentName)
@@ -477,6 +494,7 @@ private interface PropertyComponent {
   val property: PropertyGenerator
   val type: TypeName
 }
+
 private interface ParameterComponent {
   val parameter: TargetParameter
   val type: TypeName
@@ -503,8 +521,8 @@ private sealed class FromJsonComponent {
   }
 
   data class ParameterProperty(
-    override val parameter: TargetParameter,
-    override val property: PropertyGenerator
+      override val parameter: TargetParameter,
+      override val property: PropertyGenerator
   ) : FromJsonComponent(), ParameterComponent, PropertyComponent {
     override val type: TypeName = parameter.type
   }
