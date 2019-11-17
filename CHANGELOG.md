@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+## Version 1.9.2
+
+_2019-11-17_
+
+ * Fix: Generate correct adapters for several special cases including reified inline types, public
+   classes enclosed in internal classes, deprecated types with `-Werror`, primitives in type
+   parameters, nullables in type parameters, and type aliases in type parameters.
+
+
 ## Version 1.9.1
 
 _2019-10-30_
