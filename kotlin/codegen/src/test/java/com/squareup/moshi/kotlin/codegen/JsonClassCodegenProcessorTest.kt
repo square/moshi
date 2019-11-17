@@ -388,6 +388,49 @@ class JsonClassCodegenProcessorTest {
     """.trimIndent())
   }
 
+  @Ignore("Toe-hold test for when " +
+      "https://github.com/tschuchortdev/kotlin-compile-testing/issues/28 is resolved.")
+  @Test
+  fun `Generated classes should suppress deprecation warnings for deprecated classes`() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+          
+          @Deprecated("Deprecated for reasons")
+          @JsonClass(generateAdapter = true)
+          data class DeprecatedClass(val foo: String)
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    val adapterSource = result.generatedFiles.find { it.name == "DeprecatedClassAdapter.kt" }!!
+
+    //language=kotlin
+    assertThat(adapterSource.readText()).isEqualTo("""
+      // TODO implement this
+    """.trimIndent())
+  }
+
+  @Ignore("Toe-hold test for when " +
+      "https://github.com/tschuchortdev/kotlin-compile-testing/issues/28 is resolved.")
+  @Test
+  fun `Generated classes should suppress deprecation warnings for deprecated properties`() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class DeprecatedProperty(@Deprecated("Deprecated for reasons") val foo: String)
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    val adapterSource = result.generatedFiles.find { it.name == "DeprecatedPropertyAdapter.kt" }!!
+
+    //language=kotlin
+    assertThat(adapterSource.readText()).isEqualTo("""
+      // TODO implement this
+    """.trimIndent())
+  }
+
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()
         .apply {

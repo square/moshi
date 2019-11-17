@@ -1169,6 +1169,20 @@ class GeneratedAdaptersTest {
     val instance = adapter.fromJson("""{"_links": "link", "_ids": "id" }""")!!
     assertThat(instance).isEqualTo(ClassWithFieldJson("link").apply { ids = "id" })
   }
+
+  /*
+   * When we can re-enable `warningsAsErrors`/`-Werror` in tests, these are a smoke test for
+   * https://github.com/square/moshi/issues/1023 to ensure that we suppress deprecation warnings
+   * for using deprecated properties or classes.
+   */
+
+  @Deprecated("Deprecated for reasons")
+  @JsonClass(generateAdapter = true)
+  data class DeprecatedClass(val foo: String)
+
+  @JsonClass(generateAdapter = true)
+  data class DeprecatedProperty(@Deprecated("Deprecated for reasons") val foo: String)
+
 }
 
 // Regression test for https://github.com/square/moshi/issues/1022
