@@ -1171,6 +1171,20 @@ class GeneratedAdaptersTest {
   }
 }
 
+// Regression test for https://github.com/square/moshi/issues/1022
+// Compile-only test
+@JsonClass(generateAdapter = true)
+internal data class MismatchParentAndNestedClassVisibility(
+    val type: Int,
+    val name: String? = null
+) {
+
+  @JsonClass(generateAdapter = true)
+  data class NestedClass(
+      val nestedProperty: String
+  )
+}
+
 // Has to be outside to avoid Types seeing an owning class
 @JsonClass(generateAdapter = true)
 data class NullableTypeParams<T>(

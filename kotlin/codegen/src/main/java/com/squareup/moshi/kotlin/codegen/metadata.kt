@@ -18,27 +18,20 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
 import com.squareup.kotlinpoet.metadata.isEnum
 import com.squareup.kotlinpoet.metadata.isInner
+import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isLocal
+import com.squareup.kotlinpoet.metadata.isPublic
 import com.squareup.kotlinpoet.metadata.isSealed
-import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
-import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
@@ -55,12 +48,12 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.util.TreeSet
 import javax.annotation.processing.Messager
+import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
-import kotlin.reflect.KClass
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
@@ -101,7 +94,9 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
 internal fun targetType(messager: Messager,
     elements: Elements,
     types: Types,
-    element: TypeElement): TargetType? {
+    element: TypeElement,
+    cachedClassInspector: MoshiCachedClassInspector
+): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
     messager.printMessage(
@@ -111,7 +106,7 @@ internal fun targetType(messager: Messager,
   }
 
   val kmClass = try {
-    typeMetadata.toImmutableKmClass()
+    cachedClassInspector.toImmutableKmClass(typeMetadata)
   } catch (e: UnsupportedOperationException) {
     messager.printMessage(
         Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Class type",
@@ -141,7 +136,8 @@ internal fun targetType(messager: Messager,
     }
     kmClass.isSealed -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed", element)
+          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed",
+          element)
       return null
     }
     kmClass.isAbstract -> {
@@ -156,10 +152,16 @@ internal fun targetType(messager: Messager,
           element)
       return null
     }
+    !kmClass.isPublic && !kmClass.isInternal -> {
+      messager.printMessage(
+          Diagnostic.Kind.ERROR,
+          "@JsonClass can't be applied to $element: must be internal or public",
+          element)
+      return null
+    }
   }
 
-  val elementHandler = ElementsClassInspector.create(elements, types)
-  val kotlinApi = kmClass.toTypeSpec(elementHandler)
+  val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
 
@@ -176,29 +178,47 @@ internal fun targetType(messager: Messager,
   }
 
   val properties = mutableMapOf<String, TargetProperty>()
-  for (supertype in appliedType.supertypes(types)) {
-    if (supertype.element.asClassName() == OBJECT_CLASS) {
-      continue // Don't load properties for java.lang.Object.
-    }
-    if (supertype.element.kind != ElementKind.CLASS) {
-      continue // Don't load properties for interface types.
-    }
-    if (supertype.element.getAnnotation(Metadata::class.java) == null) {
-      messager.printMessage(Diagnostic.Kind.ERROR,
-          "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
-          element)
-      return null
-    }
-    val supertypeProperties = if (supertype.element == element) {
-      // We've already parsed this api above, reuse it
-      declaredProperties(supertype.element, constructor, elementHandler, kotlinApi)
-    } else {
-      declaredProperties(
-          supertype.element, constructor, elementHandler)
-    }
+  val superTypes = appliedType.supertypes(types)
+      .filterNot { supertype ->
+        supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
+            supertype.element.kind != ElementKind.CLASS  // Don't load properties for interface types.
+      }
+      .onEach { supertype ->
+        if (supertype.element.getAnnotation(Metadata::class.java) == null) {
+          messager.printMessage(Diagnostic.Kind.ERROR,
+              "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+              element)
+          return null
+        }
+      }
+      .associateWithTo(LinkedHashMap()) { supertype ->
+        // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
+        if (supertype.element == element) {
+          // We've already parsed this api above, reuse it
+          kotlinApi
+        } else {
+          cachedClassInspector.toTypeSpec(supertype.element)
+        }
+      }
+  for (supertypeApi in superTypes.values) {
+    val supertypeProperties = declaredProperties(constructor, supertypeApi)
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
+  }
+  val visibility = kotlinApi.modifiers.visibility()
+  // If any class in the enclosing class hierarchy is internal, they must all have internal
+  // generated adapters.
+  val resolvedVisibility = if (visibility == KModifier.INTERNAL) {
+    // Our nested type is already internal, no need to search
+    visibility
+  } else {
+    // Implicitly public, so now look up the hierarchy
+    val forceInternal = generateSequence<Element>(element) { it.enclosingElement }
+        .filterIsInstance<TypeElement>()
+        .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
+        .any { it.isInternal }
+    if (forceInternal) KModifier.INTERNAL else visibility
   }
   return TargetType(
       typeName = element.asType().asTypeName(),
@@ -206,16 +226,14 @@ internal fun targetType(messager: Messager,
       properties = properties,
       typeVariables = typeVariables,
       isDataClass = KModifier.DATA in kotlinApi.modifiers,
-      visibility = kotlinApi.modifiers.visibility())
+      visibility = resolvedVisibility)
 }
 
 /** Returns the properties declared by `typeElement`. */
 @KotlinPoetMetadataPreview
 private fun declaredProperties(
-    typeElement: TypeElement,
     constructor: TargetConstructor,
-    elementHandler: ClassInspector,
-    kotlinApi: TypeSpec = typeElement.toTypeSpec(elementHandler)
+    kotlinApi: TypeSpec
 ): Map<String, TargetProperty> {
 
   val result = mutableMapOf<String, TargetProperty>()
@@ -338,3 +356,9 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
     }
   }
 }
+
+internal val TypeElement.metadata: Metadata
+  get() {
+    return getAnnotation(Metadata::class.java)
+        ?: throw IllegalStateException("Not a kotlin type! $this")
+  }
