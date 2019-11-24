@@ -791,6 +791,43 @@ public final class MoshiTest {
     assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(Arrays.asList("a", "b"));
   }
 
+  @NullableItem
+  static List<String> nullableStrings;
+
+  @Test
+  public void parsingListNullabeJsonAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    Field nullableeStringsField = MoshiTest.class.getDeclaredField("nullableStrings");
+    JsonAdapter<List<String>> adapter =
+            moshi.adapter(nullableeStringsField.getGenericType(), Util.jsonAnnotations(nullableeStringsField));
+    assertThat(adapter.fromJson("[\"a\",\"b\", null]")).isEqualTo(Arrays.asList("a", "b", null));
+  }
+
+  @Test
+  public void parsingListWithoutAnnotationWithItemNullJsonAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    JsonAdapter<List<String>> adapter =
+            moshi.adapter(Types.newParameterizedType(List.class, String.class));
+    assertThat(adapter.fromJson("[\"a\",\"b\",null]")).isEqualTo(Arrays.asList("a", "b", null));
+  }
+
+  @NonNullItem
+  static List<String> nonNullStrings;
+
+  @Test
+  public void parsingAvoidListNonNullJsonAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().build();
+    Field nonNullStringsField = MoshiTest.class.getDeclaredField("nonNullStrings");
+    JsonAdapter<List<String>> adapter =
+            moshi.adapter(nonNullStringsField.getGenericType(), Util.jsonAnnotations(nonNullStringsField));
+    try {
+      assertThat(adapter.fromJson("[\"a\",\"b\", null]")).isEqualTo(Arrays.asList("a", "b", null));
+      fail();
+    } catch (JsonDataException ex) {
+      assertThat(ex).hasMessage("Unexpected null at $[2]");
+    }
+  }
+
   @Test public void setJsonAdapter() throws Exception {
     Set<String> set = new LinkedHashSet<>();
     set.add("a");
@@ -818,7 +855,7 @@ public final class MoshiTest {
   @Uppercase
   static List<String> uppercaseStrings;
 
-  @Test public void collectionsDoNotKeepAnnotations() throws Exception {
+  @Test public void collectionsDoNotKeepAnnotationsExceptNullableOrNonNullItem() throws Exception {
     Moshi moshi = new Moshi.Builder()
         .add(new UppercaseAdapterFactory())
         .build();

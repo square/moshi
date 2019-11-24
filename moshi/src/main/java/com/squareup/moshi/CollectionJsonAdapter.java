@@ -31,15 +31,36 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     @Override public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
-      if (!annotations.isEmpty()) return null;
+      if (annotations.size() > 1) return null;
+      Annotation nullable = null;
+      if (annotations.size() == 1) {
+          nullable = annotations.iterator().next();
+      }
+      boolean isNullableAnnotation = (nullable instanceof NullableItem);
+      boolean isNonNullAnnotation = (nullable instanceof NonNullItem);
+      if (nullable != null && (!isNullableAnnotation && !isNonNullAnnotation)) return null;
+      boolean isNullable = nullable == null || nullable instanceof NullableItem;
       if (rawType == List.class || rawType == Collection.class) {
-        return newArrayListAdapter(type, moshi).nullSafe();
+        return newArrayListAdapter(type, moshi, isNullable).nullSafe();
       } else if (rawType == Set.class) {
-        return newLinkedHashSetAdapter(type, moshi).nullSafe();
+        return newLinkedHashSetAdapter(type, moshi, isNullable).nullSafe();
       }
       return null;
     }
   };
+
+  private static <T> JsonAdapter<T> getProjectionElementAdapter(Type type,
+          Moshi moshi, boolean isNullable) {
+    Type elementType = Types.collectionElementType(type, Collection.class);
+    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
+    JsonAdapter<T> projectionElementAdapter;
+    if (isNullable) {
+      projectionElementAdapter = elementAdapter.nullSafe();
+    } else {
+      projectionElementAdapter = elementAdapter.nonNull();
+    }
+    return projectionElementAdapter;
+  }
 
   private final JsonAdapter<T> elementAdapter;
 
@@ -47,9 +68,9 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     this.elementAdapter = elementAdapter;
   }
 
-  static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type, Moshi moshi) {
-    Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
+  static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type,
+          Moshi moshi, boolean isNullable) {
+    JsonAdapter<T> elementAdapter = getProjectionElementAdapter(type, moshi, isNullable);
     return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
       @Override Collection<T> newCollection() {
         return new ArrayList<>();
@@ -57,9 +78,9 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     };
   }
 
-  static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type, Moshi moshi) {
-    Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
+  static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type,
+          Moshi moshi, boolean isNullable) {
+    JsonAdapter<T> elementAdapter = getProjectionElementAdapter(type, moshi, isNullable);
     return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {
       @Override Set<T> newCollection() {
         return new LinkedHashSet<>();
