@@ -52,13 +52,20 @@ public final class Util {
 
   static {
     Class<? extends Annotation> metadata = null;
-    Class<?> defaultConstructorMarker = null;
     try {
+      //noinspection unchecked
       metadata = (Class<? extends Annotation>) Class.forName("kotlin.Metadata");
-      defaultConstructorMarker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
     } catch (ClassNotFoundException ignored) {
     }
     METADATA = metadata;
+
+    // We look up the constructor marker separately because Metadata might be (justifiably)
+    // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
+    Class<?> defaultConstructorMarker = null;
+    try {
+      defaultConstructorMarker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
+    } catch (ClassNotFoundException ignored) {
+    }
     DEFAULT_CONSTRUCTOR_MARKER = defaultConstructorMarker;
   }
 
