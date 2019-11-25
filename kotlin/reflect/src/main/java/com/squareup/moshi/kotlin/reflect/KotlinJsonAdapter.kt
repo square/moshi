@@ -15,15 +15,8 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import com.squareup.moshi.*
 import com.squareup.moshi.internal.Util
-import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
@@ -184,17 +177,17 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
     if (Util.isPlatformType(rawType)) return null
-    try {
-      val generatedAdapter = generatedAdapter(moshi, type, rawType)
-      if (generatedAdapter != null) {
-        return generatedAdapter
-      }
-    } catch (e: RuntimeException) {
-      if (e.cause !is ClassNotFoundException) {
-        throw e
-      }
-      // Fall back to a reflective adapter when the generated adapter is not found.
-    }
+//    try {
+//      val generatedAdapter = generatedAdapter(moshi, type, rawType)
+//      if (generatedAdapter != null) {
+//        return generatedAdapter
+//      }
+//    } catch (e: RuntimeException) {
+//      if (e.cause !is ClassNotFoundException) {
+//        throw e
+//      }
+//      // Fall back to a reflective adapter when the generated adapter is not found.
+//    }
 
     require(!rawType.isLocalClass) {
       "Cannot serialize local class or object expression ${rawType.name}"
@@ -249,7 +242,10 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val name = jsonAnnotation?.name ?: property.name
       val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
       val adapter = moshi.adapter<Any>(
-          resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
+              resolvedPropertyType,
+              Util.jsonAnnotations(allAnnotations.toTypedArray()) + property.returnType.annotations(),
+              property.name
+      )
 
       @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(

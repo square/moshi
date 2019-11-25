@@ -1,14 +1,7 @@
 package com.squareup.moshi.kotlin
 
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.*
 import com.squareup.moshi.JsonAdapter.Factory
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.adapter
 import org.assertj.core.api.Assertions.assertThat
@@ -195,6 +188,51 @@ class DualKotlinTest(useReflection: Boolean) {
     }
   }
 
+  @Test fun avoidNullINonNullCollectionWithAnnotation() {
+    val jsonAdapter = moshi.adapter<List<HasNonNullConstructorParameter>>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("[{\"a\":\"test\"}, {\"a\":\"test1\"}, null]")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Unexpected null at \$[2]")
+    }
+  }
+
+  @Test fun addInNullableCollection() {
+    val jsonAdapter = moshi.adapter<List<HasNonNullConstructorParameter?>>()
+
+      //language=JSON
+    val list = jsonAdapter.fromJson("[{\"a\":\"test\"}, {\"a\":\"test1\"}, null]")
+    val excepted = arrayListOf<HasNonNullConstructorParameter?>(
+            HasNonNullConstructorParameter("test"),
+            HasNonNullConstructorParameter("test1"),
+            null
+            )
+    assertThat(list).isEqualTo(excepted)
+  }
+
+  @Test fun avoidNullItemInNonNullListInConstructor() {
+    val jsonAdapter = moshi.adapter<NonNullListConstructor>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("{\"list\":[null, \"test\", \"test1\"]}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessage("Unexpected null at \$.list[0]")
+    }
+  }
+
+  @Test fun addNullItemInNullableListInConstructor() {
+    val jsonAdapter = moshi.adapter<NullableListConstructor>()
+    //language=JSON
+    val list = jsonAdapter.fromJson("{\"list\":[null, \"test\", \"test1\"]}")
+    val excepted = NullableListConstructor(listOf(null, "test", "test1"))
+    assertThat(list).isEqualTo(excepted)
+  }
+
   @Retention(RUNTIME)
   annotation class Nullable
 
@@ -203,6 +241,12 @@ class DualKotlinTest(useReflection: Boolean) {
 
   @JsonClass(generateAdapter = true)
   data class HasNullableConstructorParameter(val a: String?)
+
+  @JsonClass(generateAdapter = true)
+  data class NonNullListConstructor(val list: List<String>)
+
+  @JsonClass(generateAdapter = true)
+  data class NullableListConstructor(val list: List<String?>)
 
   @Test fun delegatesToInstalledAdaptersBeforeNullChecking() {
     val localMoshi = moshi.newBuilder()
