@@ -61,7 +61,7 @@ internal class AdapterGenerator(
         "%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
 
     private val COMMON_SUPPRESS = AnnotationSpec.builder(Suppress::class)
-        .addMember("%S, %S, %S, %S",
+        .addMember("%S, %S, %S, %S, %S",
             // https://github.com/square/moshi/issues/1023
             "DEPRECATION",
             // Because we look it up reflectively
@@ -70,7 +70,10 @@ internal class AdapterGenerator(
             "ClassName",
             // Because we generate redundant `out` variance for some generics and there's no way
             // for us to know when it's redundant.
-            "REDUNDANT_PROJECTION"
+            "REDUNDANT_PROJECTION",
+            // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
+            // like for stylistic reasons.
+            "LocalVariableName"
         )
         .build()
   }
