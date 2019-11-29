@@ -15,31 +15,14 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
-import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
-import com.squareup.kotlinpoet.metadata.isAbstract
-import com.squareup.kotlinpoet.metadata.isClass
-import com.squareup.kotlinpoet.metadata.isEnum
-import com.squareup.kotlinpoet.metadata.isInner
-import com.squareup.kotlinpoet.metadata.isLocal
-import com.squareup.kotlinpoet.metadata.isSealed
+import com.squareup.kotlinpoet.metadata.*
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
-import com.squareup.moshi.kotlin.codegen.api.DelegateKey
-import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
-import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
-import com.squareup.moshi.kotlin.codegen.api.TargetParameter
-import com.squareup.moshi.kotlin.codegen.api.TargetProperty
-import com.squareup.moshi.kotlin.codegen.api.TargetType
+import com.squareup.moshi.kotlin.codegen.api.*
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -76,7 +59,7 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
         name = name,
         index = index,
         hasDefault = parameter.defaultValue != null,
-        qualifiers = parameter.annotations.qualifiers(elements),
+        qualifiers = parameter.annotations.qualifiers(elements) + parameter.type.typeAnnotations(),
         jsonName = parameter.annotations.jsonName()
     )
   }

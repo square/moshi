@@ -243,7 +243,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
       val adapter = moshi.adapter<Any>(
               resolvedPropertyType,
-              Util.jsonAnnotations(allAnnotations.toTypedArray()) + property.returnType.annotations(),
+              Util.jsonAnnotations(allAnnotations.toTypedArray()) + property.returnType.typeAnnotations(),
               property.name
       )
 

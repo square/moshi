@@ -2,7 +2,7 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.NonNullItem
+import com.squareup.moshi.NonNullValues
 import com.squareup.moshi.Types
 import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
@@ -29,7 +29,7 @@ inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(t
  *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
  */
 fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
-  val adapter = adapter<T>(ktype.toType(), ktype.annotations())
+  val adapter = adapter<T>(ktype.toType(), ktype.typeAnnotations())
   return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
     // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
     adapter
@@ -41,10 +41,10 @@ fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
 }
 
 @PublishedApi
-internal fun KType.annotations(): Set<Annotation> {
+internal fun KType.typeAnnotations(): Set<Annotation> {
   return if (jvmErasure.isSubclassOf(Iterable::class) &&
                   arguments[0].type?.isMarkedNullable == false) {
-    setOf(NonNullItem::class.createInstance())
+    setOf(NonNullValues::class.createInstance())
   } else {
     emptySet()
   }

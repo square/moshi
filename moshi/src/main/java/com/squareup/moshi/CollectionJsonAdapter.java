@@ -15,15 +15,11 @@
  */
 package com.squareup.moshi;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import java.util.*;
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
@@ -36,10 +32,10 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
       if (annotations.size() == 1) {
           nullable = annotations.iterator().next();
       }
-      boolean isNullableAnnotation = (nullable instanceof NullableItem);
-      boolean isNonNullAnnotation = (nullable instanceof NonNullItem);
+      boolean isNullableAnnotation = (nullable instanceof NullableValues);
+      boolean isNonNullAnnotation = (nullable instanceof NonNullValues);
       if (nullable != null && (!isNullableAnnotation && !isNonNullAnnotation)) return null;
-      boolean isNullable = nullable == null || nullable instanceof NullableItem;
+      boolean isNullable = nullable == null || nullable instanceof NullableValues;
       if (rawType == List.class || rawType == Collection.class) {
         return newArrayListAdapter(type, moshi, isNullable).nullSafe();
       } else if (rawType == Set.class) {

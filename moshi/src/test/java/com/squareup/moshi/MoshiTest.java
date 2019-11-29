@@ -17,27 +17,18 @@ package com.squareup.moshi;
 
 import android.util.Pair;
 import com.squareup.moshi.internal.Util;
+import okio.Buffer;
+import org.junit.Test;
+
+import javax.annotation.Nullable;
+import javax.crypto.KeyGenerator;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.Nullable;
-import javax.crypto.KeyGenerator;
-import okio.Buffer;
-import org.junit.Test;
+import java.util.*;
 
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
@@ -791,7 +782,7 @@ public final class MoshiTest {
     assertThat(adapter.fromJson("[\"a\",\"b\"]")).isEqualTo(Arrays.asList("a", "b"));
   }
 
-  @NullableItem
+  @NullableValues
   static List<String> nullableStrings;
 
   @Test
@@ -811,7 +802,7 @@ public final class MoshiTest {
     assertThat(adapter.fromJson("[\"a\",\"b\",null]")).isEqualTo(Arrays.asList("a", "b", null));
   }
 
-  @NonNullItem
+  @NonNullValues
   static List<String> nonNullStrings;
 
   @Test

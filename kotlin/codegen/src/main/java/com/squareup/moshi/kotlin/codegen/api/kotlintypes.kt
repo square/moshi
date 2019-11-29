@@ -15,21 +15,8 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
-import com.squareup.kotlinpoet.BOOLEAN
-import com.squareup.kotlinpoet.BYTE
-import com.squareup.kotlinpoet.CHAR
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.DOUBLE
-import com.squareup.kotlinpoet.FLOAT
-import com.squareup.kotlinpoet.INT
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LONG
-import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.SHORT
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.UNIT
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.*
+import com.squareup.moshi.NonNullValues
 
 internal fun TypeName.rawType(): ClassName {
   return when (this) {
@@ -37,6 +24,25 @@ internal fun TypeName.rawType(): ClassName {
     is ParameterizedTypeName -> rawType
     else -> throw IllegalArgumentException("Cannot get raw type from $this")
   }
+}
+
+internal fun ParameterizedTypeName.isCollection(): Boolean {
+    return when(rawType) {
+        ITERABLE, MUTABLE_ITERABLE, COLLECTION, MUTABLE_COLLECTION, LIST, MUTABLE_LIST, SET, MUTABLE_SET -> true
+        else -> runCatching { Class
+                .forName(rawType.reflectionName())
+                .isAssignableFrom(Iterable::class.java)
+        }.getOrDefault(false)
+    }
+}
+
+internal fun TypeName.typeAnnotations(): Set<AnnotationSpec> {
+    return if (this is ParameterizedTypeName && isCollection() && !typeArguments[0].isNullable) {
+        val annotation = AnnotationSpec.builder(NonNullValues::class).build()
+        setOf(annotation)
+    } else {
+        emptySet()
+    }
 }
 
 internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
