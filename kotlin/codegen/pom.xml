@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.squareup.moshi</groupId>
     <artifactId>moshi-parent</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -216,10 +216,6 @@
                 <relocation>
                   <pattern>com.squareup.kotlinpoet.classinspector</pattern>
                   <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>kotlinpoet.classinspector.elements.shaded</pattern>
-                  <shadedPattern>com.squareup.moshi.kotlinpoet.classinspector.elements.shaded</shadedPattern>
                 </relocation>
                 <relocation>
                   <pattern>kotlinx.metadata</pattern>

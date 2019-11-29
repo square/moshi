@@ -535,6 +535,22 @@ class GeneratedAdaptersTest {
   @JsonClass(generateAdapter = true)
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
+  @Test fun multipleTransientConstructorParameters() {
+    val moshi = Moshi.Builder().build()
+    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
+
+    val encoded = MultipleTransientConstructorParameters(3, 5, 7)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.c).isEqualTo(-1)
+  }
+
+  @JsonClass(generateAdapter = true)
+  class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
+
   @Test fun transientProperty() {
     val moshi = Moshi.Builder().build()
     val jsonAdapter = moshi.adapter<TransientProperty>()
@@ -1153,6 +1169,36 @@ class GeneratedAdaptersTest {
     val instance = adapter.fromJson("""{"_links": "link", "_ids": "id" }""")!!
     assertThat(instance).isEqualTo(ClassWithFieldJson("link").apply { ids = "id" })
   }
+
+  /*
+   * These are a smoke test for https://github.com/square/moshi/issues/1023 to ensure that we
+   * suppress deprecation warnings for using deprecated properties or classes.
+   *
+   * Ideally when stubs are fixed to actually included Deprecated annotations, we could then only
+   * generate a deprecation suppression as needed and on targeted usages.
+   * https://youtrack.jetbrains.com/issue/KT-34951
+   */
+
+  @Deprecated("Deprecated for reasons")
+  @JsonClass(generateAdapter = true)
+  data class DeprecatedClass(val foo: String)
+
+  @JsonClass(generateAdapter = true)
+  data class DeprecatedProperty(@Deprecated("Deprecated for reasons") val foo: String)
+}
+
+// Regression test for https://github.com/square/moshi/issues/1022
+// Compile-only test
+@JsonClass(generateAdapter = true)
+internal data class MismatchParentAndNestedClassVisibility(
+    val type: Int,
+    val name: String? = null
+) {
+
+  @JsonClass(generateAdapter = true)
+  data class NestedClass(
+      val nestedProperty: String
+  )
 }
 
 // Has to be outside to avoid Types seeing an owning class

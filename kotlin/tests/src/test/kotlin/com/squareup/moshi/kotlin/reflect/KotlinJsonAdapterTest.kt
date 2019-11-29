@@ -294,6 +294,21 @@ class KotlinJsonAdapterTest {
 
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
+  @Test fun multipleTransientConstructorParameters() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
+
+    val encoded = MultipleTransientConstructorParameters(3, 5, 7)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.c).isEqualTo(-1)
+  }
+
+  class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
+
   @Test fun requiredTransientConstructorParameterFails() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {

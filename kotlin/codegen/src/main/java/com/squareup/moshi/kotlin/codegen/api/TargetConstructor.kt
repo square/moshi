@@ -19,7 +19,7 @@ import com.squareup.kotlinpoet.KModifier
 
 /** A constructor in user code that should be called by generated code. */
 internal data class TargetConstructor(
-  val parameters: Map<String, TargetParameter>,
+  val parameters: LinkedHashMap<String, TargetParameter>,
   val visibility: KModifier
 ) {
   init {

@@ -100,7 +100,8 @@ import javax.annotation.Nullable;
  *
  * <p>If an unknown subtype is encountered when decoding, this will throw a {@link
  * JsonDataException}. If an unknown type is encountered when encoding, this will throw an {@link
- * IllegalArgumentException}.
+ * IllegalArgumentException}. If the same subtype has multiple labels the first one is used when
+ * encoding.
  *
  * <p>If you want to specify a custom unknown fallback for decoding, you can do so via
  * {@link #withDefaultValue(Object)}. This instance should be immutable, as it is shared.

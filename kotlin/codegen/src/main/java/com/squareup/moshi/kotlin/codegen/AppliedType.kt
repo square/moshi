@@ -30,8 +30,8 @@ internal class AppliedType private constructor(
   /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
   fun supertypes(
     types: Types,
-    result: MutableSet<AppliedType> = mutableSetOf()
-  ): Set<AppliedType> {
+    result: LinkedHashSet<AppliedType> = LinkedHashSet()
+  ): LinkedHashSet<AppliedType> {
     result.add(this)
     for (supertype in types.directSupertypes(mirror)) {
       val supertypeDeclaredType = supertype as DeclaredType

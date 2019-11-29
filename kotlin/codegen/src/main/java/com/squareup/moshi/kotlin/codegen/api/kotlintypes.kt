@@ -55,12 +55,90 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
       FLOAT -> CodeBlock.of("0f")
       LONG -> CodeBlock.of("0L")
       DOUBLE -> CodeBlock.of("0.0")
-      UNIT, Void::class.asTypeName() -> throw IllegalStateException("Parameter with void or Unit type is illegal")
+      UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
       else -> CodeBlock.of("null")
     }
+
+internal fun TypeName.asTypeBlock(): CodeBlock {
+  when (this) {
+    is ParameterizedTypeName -> {
+      return if (rawType == ARRAY) {
+        CodeBlock.of("%T::class.java", copy(nullable = false))
+      } else {
+        rawType.asTypeBlock()
+      }
+    }
+    is TypeVariableName -> {
+      val bound = bounds.firstOrNull() ?: ANY
+      return bound.asTypeBlock()
+    }
+    is ClassName -> {
+      // Check against the non-nullable version for equality, but we'll keep the nullability in
+      // consideration when creating the CodeBlock if needed.
+      return when (copy(nullable = false)) {
+        BOOLEAN, CHAR, BYTE, SHORT, INT, FLOAT, LONG, DOUBLE -> {
+          if (isNullable) {
+            // Remove nullable but keep the java object type
+            CodeBlock.of("%T::class.javaObjectType", copy(nullable = false))
+          } else {
+            CodeBlock.of("%T::class.javaPrimitiveType", this)
+          }
+        }
+        UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+        else -> CodeBlock.of("%T::class.java", copy(nullable = false))
+      }
+    }
+    else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
+  }
+}
 
 internal fun KModifier.checkIsVisibility() {
   require(ordinal <= ordinal) {
     "Visibility must be one of ${(0..ordinal).joinToString { KModifier.values()[it].name }}. Is $name"
+  }
+}
+
+internal inline fun <reified T: TypeName> TypeName.mapTypes(noinline transform: T.() -> TypeName?): TypeName {
+  return mapTypes(T::class, transform)
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() -> TypeName?): TypeName {
+  if (target.java == javaClass) {
+    return (this as T).transform() ?: return this
+  }
+  return when (this) {
+    is ClassName -> this
+    is ParameterizedTypeName -> {
+      (rawType.mapTypes(target, transform) as ClassName).parameterizedBy(typeArguments.map { it.mapTypes(target, transform) })
+          .copy(nullable = isNullable, annotations = annotations)
+    }
+    is TypeVariableName -> {
+      copy(bounds = bounds.map { it.mapTypes(target, transform) })
+    }
+    is WildcardTypeName -> {
+      // TODO Would be nice if KotlinPoet modeled these easier.
+      // Producer type - empty inTypes, single element outTypes
+      // Consumer type - single element inTypes, single ANY element outType.
+      when {
+        this == STAR -> this
+        outTypes.isNotEmpty() && inTypes.isEmpty() -> {
+          WildcardTypeName.producerOf(outTypes[0].mapTypes(target, transform))
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        inTypes.isNotEmpty() -> {
+          WildcardTypeName.consumerOf(inTypes[0].mapTypes(target, transform))
+              .copy(nullable = isNullable, annotations = annotations)
+        }
+        else -> throw UnsupportedOperationException("Not possible.")
+      }
+    }
+    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+  }
+}
+
+internal fun TypeName.stripTypeVarVariance(): TypeName {
+  return mapTypes<TypeVariableName> {
+    TypeVariableName(name = name, bounds = bounds.map { it.mapTypes(TypeVariableName::stripTypeVarVariance) }, variance = null)
   }
 }

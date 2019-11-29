@@ -40,13 +40,19 @@ import com.squareup.moshi.Types
 abstract class TypeRenderer {
   abstract fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock
 
-  fun render(typeName: TypeName): CodeBlock {
+  fun render(typeName: TypeName, forceBox: Boolean = false): CodeBlock {
     if (typeName.isNullable) {
       return renderObjectType(typeName.copy(nullable = false))
     }
 
     return when (typeName) {
-      is ClassName -> CodeBlock.of("%T::class.java", typeName)
+      is ClassName -> {
+        if (forceBox) {
+          renderObjectType(typeName)
+        } else {
+          CodeBlock.of("%T::class.java", typeName)
+        }
+      }
 
       is ParameterizedTypeName -> {
         // If it's an Array type, we shortcut this to return Types.arrayOf()
@@ -88,7 +94,7 @@ abstract class TypeRenderer {
           else -> throw IllegalArgumentException(
               "Unrepresentable wildcard type. Cannot have more than one bound: $typeName")
         }
-        CodeBlock.of("%T.%L(%T::class.java)", Types::class, method, target.copy(nullable = false))
+        CodeBlock.of("%T.%L(%L)", Types::class, method, render(target, forceBox = true))
       }
 
       is TypeVariableName -> renderTypeVariable(typeName)
