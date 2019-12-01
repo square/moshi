@@ -15,19 +15,39 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
-import com.squareup.kotlinpoet.metadata.*
-import com.squareup.kotlinpoet.metadata.specs.ClassInspector
-import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.kotlinpoet.metadata.isAbstract
+import com.squareup.kotlinpoet.metadata.isClass
+import com.squareup.kotlinpoet.metadata.isEnum
+import com.squareup.kotlinpoet.metadata.isInner
+import com.squareup.kotlinpoet.metadata.isInternal
+import com.squareup.kotlinpoet.metadata.isLocal
+import com.squareup.kotlinpoet.metadata.isPublic
+import com.squareup.kotlinpoet.metadata.isSealed
+import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
+import com.squareup.kotlinpoet.tag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
-import com.squareup.moshi.kotlin.codegen.api.*
+import com.squareup.moshi.kotlin.codegen.api.DelegateKey
+import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
+import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
+import com.squareup.moshi.kotlin.codegen.api.TargetParameter
+import com.squareup.moshi.kotlin.codegen.api.TargetProperty
+import com.squareup.moshi.kotlin.codegen.api.TargetType
+import com.squareup.moshi.kotlin.codegen.api.mapTypes
+import com.squareup.moshi.kotlin.codegen.api.typeAnnotations
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
-import java.util.TreeSet
+import java.util.*
 import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
@@ -35,6 +55,10 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
+import kotlin.collections.LinkedHashMap
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()

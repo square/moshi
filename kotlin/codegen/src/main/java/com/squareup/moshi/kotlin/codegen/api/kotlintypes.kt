@@ -15,8 +15,39 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.ARRAY
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.BYTE
+import com.squareup.kotlinpoet.CHAR
+import com.squareup.kotlinpoet.COLLECTION
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.FLOAT
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.ITERABLE
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.MUTABLE_COLLECTION
+import com.squareup.kotlinpoet.MUTABLE_ITERABLE
+import com.squareup.kotlinpoet.MUTABLE_LIST
+import com.squareup.kotlinpoet.MUTABLE_SET
+import com.squareup.kotlinpoet.NOTHING
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.SET
+import com.squareup.kotlinpoet.SHORT
+import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asTypeName
 import com.squareup.moshi.NonNullValues
+import kotlin.reflect.KClass
 
 internal fun TypeName.rawType(): ClassName {
   return when (this) {
@@ -29,10 +60,12 @@ internal fun TypeName.rawType(): ClassName {
 internal fun ParameterizedTypeName.isCollection(): Boolean {
     return when(rawType) {
         ITERABLE, MUTABLE_ITERABLE, COLLECTION, MUTABLE_COLLECTION, LIST, MUTABLE_LIST, SET, MUTABLE_SET -> true
-        else -> runCatching { Class
-                .forName(rawType.reflectionName())
-                .isAssignableFrom(Iterable::class.java)
-        }.getOrDefault(false)
+        else -> {
+            runCatching { Class
+                    .forName(rawType.reflectionName())
+                    .isAssignableFrom(Iterable::class.java)
+            }.getOrDefault(false)
+        }
     }
 }
 

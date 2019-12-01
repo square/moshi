@@ -15,8 +15,16 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
-import com.squareup.moshi.*
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.NonNullValues
+import com.squareup.moshi.Types
 import com.squareup.moshi.internal.Util
+import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
@@ -26,12 +34,16 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KType
+import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 /** Classes annotated with this are eligible for this adapter. */
 private val KOTLIN_METADATA = Metadata::class.java
@@ -180,17 +192,17 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
     if (Util.isPlatformType(rawType)) return null
-//    try {
-//      val generatedAdapter = generatedAdapter(moshi, type, rawType)
-//      if (generatedAdapter != null) {
-//        return generatedAdapter
-//      }
-//    } catch (e: RuntimeException) {
-//      if (e.cause !is ClassNotFoundException) {
-//        throw e
-//      }
-//      // Fall back to a reflective adapter when the generated adapter is not found.
-//    }
+    try {
+      val generatedAdapter = generatedAdapter(moshi, type, rawType)
+      if (generatedAdapter != null) {
+        return generatedAdapter
+      }
+    } catch (e: RuntimeException) {
+      if (e.cause !is ClassNotFoundException) {
+        throw e
+      }
+      // Fall back to a reflective adapter when the generated adapter is not found.
+    }
 
     require(!rawType.isLocalClass) {
       "Cannot serialize local class or object expression ${rawType.name}"
@@ -279,5 +291,15 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val nonTransientBindings = bindings.filterNotNull()
     val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
+  }
+
+
+  private fun KType.typeAnnotations(): Set<Annotation> {
+    return if (jvmErasure.isSubclassOf(Iterable::class) &&
+            arguments[0].type?.isMarkedNullable == false) {
+      setOf(NonNullValues::class.createInstance())
+    } else {
+      emptySet()
+    }
   }
 }

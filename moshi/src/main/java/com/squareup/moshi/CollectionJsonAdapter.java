@@ -15,17 +15,21 @@
  */
 package com.squareup.moshi;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
   public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
     @Override public @Nullable JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       Class<?> rawType = Types.getRawType(type);
       if (annotations.size() > 1) return null;
       Annotation nullable = null;
