@@ -62,6 +62,9 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
     }
 
 internal fun TypeName.asTypeBlock(): CodeBlock {
+  if (annotations.isNotEmpty()) {
+    return copy(annotations = emptyList()).asTypeBlock()
+  }
   when (this) {
     is ParameterizedTypeName -> {
       return if (rawType == ARRAY) {
