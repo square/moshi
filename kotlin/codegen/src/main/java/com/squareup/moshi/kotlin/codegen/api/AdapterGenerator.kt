@@ -411,8 +411,8 @@ internal class AdapterGenerator(
           localConstructorProperty
       )
     } else {
-      // Standard constructor call
-      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
+      // Standard constructor call. Can omit generics as they're inferred
+      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName.rawType())
     }
 
     for (input in components.filterIsInstance<ParameterComponent>()) {
