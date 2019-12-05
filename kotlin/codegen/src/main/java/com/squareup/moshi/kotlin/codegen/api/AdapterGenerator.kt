@@ -60,19 +60,27 @@ internal class AdapterGenerator(
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
         "%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
 
-    private val COMMON_SUPPRESS = AnnotationSpec.builder(Suppress::class)
-        .addMember("%S, %S, %S, %S",
-            // https://github.com/square/moshi/issues/1023
-            "DEPRECATION",
-            // Because we look it up reflectively
-            "unused",
-            // Because we include underscores
-            "ClassName",
-            // Because we generate redundant `out` variance for some generics and there's no way
-            // for us to know when it's redundant.
-            "REDUNDANT_PROJECTION"
-        )
-        .build()
+    private val COMMON_SUPPRESS = arrayOf(
+        // https://github.com/square/moshi/issues/1023
+        "DEPRECATION",
+        // Because we look it up reflectively
+        "unused",
+        // Because we include underscores
+        "ClassName",
+        // Because we generate redundant `out` variance for some generics and there's no way
+        // for us to know when it's redundant.
+        "REDUNDANT_PROJECTION",
+        // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
+        // like for stylistic reasons.
+        "LocalVariableName"
+    ).let { suppressions ->
+      AnnotationSpec.builder(Suppress::class)
+          .addMember(
+              suppressions.indices.joinToString { "%S" },
+              *suppressions
+          )
+          .build()
+    }
   }
 
   private val nonTransientProperties = propertyList.filterNot { it.isTransient }
