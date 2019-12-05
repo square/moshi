@@ -16,6 +16,8 @@
 package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
@@ -24,6 +26,14 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import kotlin.reflect.KClass
+import kotlin.reflect.KClassifier
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.KVariance
+import kotlin.reflect.KVariance.INVARIANT
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.declaredMemberProperties
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 @UseExperimental(KotlinPoetMetadataPreview::class)
@@ -364,8 +374,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
 
-  @Ignore("Toe-hold test for when " +
-      "https://github.com/tschuchortdev/kotlin-compile-testing/issues/28 is resolved.")
   @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(kotlin("source.kt",
@@ -380,12 +388,14 @@ class JsonClassCodegenProcessorTest {
           """
     ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-    val adapterSource = result.generatedFiles.find { it.name == "PersonJsonAdapter.kt" }!!
 
-    //language=kotlin
-    assertThat(adapterSource.readText()).isEqualTo("""
-      // TODO implement this
-    """.trimIndent())
+    // We're checking here that we only generate one `stringAdapter` that's used for both the
+    // regular string properties as well as the the aliased ones.
+    val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
+    assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
+        JsonReader.Options::class.createType(),
+        JsonAdapter::class.parameterizedBy(String::class)
+    )
   }
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
@@ -401,6 +411,20 @@ class JsonClassCodegenProcessorTest {
 
   private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
     return prepareCompilation(*sourceFiles).compile()
+  }
+
+  private fun KClassifier.parameterizedBy(vararg types: KClass<*>): KType {
+    return parameterizedBy(*types.map { it.createType() }.toTypedArray())
+  }
+
+  private fun KClassifier.parameterizedBy(vararg types: KType): KType {
+    return createType(
+        types.map { it.asProjection() }
+    )
+  }
+
+  private fun KType.asProjection(variance: KVariance? = INVARIANT): KTypeProjection {
+    return KTypeProjection(variance, this)
   }
 
 }
