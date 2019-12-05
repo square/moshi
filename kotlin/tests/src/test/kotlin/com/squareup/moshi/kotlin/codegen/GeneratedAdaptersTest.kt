@@ -35,6 +35,7 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 import java.util.Locale
+import kotlin.annotation.AnnotationTarget.TYPE
 import kotlin.properties.Delegates
 import kotlin.reflect.full.memberProperties
 
@@ -1185,6 +1186,20 @@ class GeneratedAdaptersTest {
 
   @JsonClass(generateAdapter = true)
   data class DeprecatedProperty(@Deprecated("Deprecated for reasons") val foo: String)
+
+
+  @Target(TYPE)
+  annotation class TypeAnnotation
+
+  /**
+   * Compilation-only test to ensure we don't render types with their annotations.
+   * Regression test for https://github.com/square/moshi/issues/1033
+   */
+  @JsonClass(generateAdapter = true)
+  data class TypeAnnotationClass(
+      val propertyWithAnnotatedType: @TypeAnnotation String = "",
+      val generic: List<@TypeAnnotation String>
+  )
 }
 
 // Regression test for https://github.com/square/moshi/issues/1022

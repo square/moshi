@@ -41,6 +41,9 @@ abstract class TypeRenderer {
   abstract fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock
 
   fun render(typeName: TypeName, forceBox: Boolean = false): CodeBlock {
+    if (typeName.annotations.isNotEmpty()) {
+      return render(typeName.copy(annotations = emptyList()), forceBox)
+    }
     if (typeName.isNullable) {
       return renderObjectType(typeName.copy(nullable = false))
     }
