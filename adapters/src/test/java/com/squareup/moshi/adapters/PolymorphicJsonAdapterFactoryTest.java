@@ -251,7 +251,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(blockingMessageType.value).isEqualTo("Okay!");
   }
 
-  @Test public void failsWhenNotPassBaseSubTypes() throws IOException {
+  @Test public void failsWhenBaseSubTypesIsNotProvided() throws IOException {
     Moshi moshi = new Moshi.Builder()
             .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
                     .withSubtype(MessageWithBlockingMessage.class, "subType")
