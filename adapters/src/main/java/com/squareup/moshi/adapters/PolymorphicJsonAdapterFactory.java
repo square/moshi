@@ -108,6 +108,7 @@ import javax.annotation.Nullable;
  */
 public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Factory {
   final Class<T> baseType;
+  final List<Class<? extends T>> baseSubTypes;
   final String labelKey;
   final List<String> labels;
   final List<Type> subtypes;
@@ -116,12 +117,14 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
   PolymorphicJsonAdapterFactory(
       Class<T> baseType,
+      List<Class<? extends T>> baseSubTypes,
       String labelKey,
       List<String> labels,
       List<Type> subtypes,
       @Nullable T defaultValue,
       boolean defaultValueSet) {
     this.baseType = baseType;
+    this.baseSubTypes = baseSubTypes;
     this.labelKey = labelKey;
     this.labels = labels;
     this.subtypes = subtypes;
@@ -140,6 +143,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     if (labelKey == null) throw new NullPointerException("labelKey == null");
     return new PolymorphicJsonAdapterFactory<>(
         baseType,
+        Collections.<Class<? extends T>>emptyList(),
         labelKey,
         Collections.<String>emptyList(),
         Collections.<Type>emptyList(),
@@ -163,6 +167,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     List<Type> newSubtypes = new ArrayList<>(subtypes);
     newSubtypes.add(subtype);
     return new PolymorphicJsonAdapterFactory<>(baseType,
+        baseSubTypes,
         labelKey,
         newLabels,
         newSubtypes,
@@ -171,11 +176,36 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
   }
 
   /**
+   * Returns a new factory that decodes sub types of {@code baseSubType}.
+   * Use this method to decode sub types of {@code baseType} and your {@code subtype}.
+   * inherits from {@code baseSubType}.
+   */
+  public PolymorphicJsonAdapterFactory<T> withBaseSubType(@Nullable Class<? extends T> baseSubType) {
+    if (baseSubType == null) throw new NullPointerException("baseSubTypes == null");
+    if (baseSubTypes.contains(baseSubType)) {
+      throw new IllegalArgumentException("BaseSubType must be unique.");
+    }
+    List<Class<? extends T>> newBaseSubTypes = new ArrayList<>(baseSubTypes);
+    newBaseSubTypes.add(baseSubType);
+
+    return new PolymorphicJsonAdapterFactory<>(
+            baseType,
+            newBaseSubTypes,
+            labelKey,
+            labels,
+            subtypes,
+            defaultValue,
+            defaultValueSet
+    );
+  }
+
+  /**
    * Returns a new factory that with default to {@code defaultValue} upon decoding of unrecognized
    * labels. The default value should be immutable.
    */
   public PolymorphicJsonAdapterFactory<T> withDefaultValue(@Nullable T defaultValue) {
     return new PolymorphicJsonAdapterFactory<>(baseType,
+        baseSubTypes,
         labelKey,
         labels,
         subtypes,
@@ -185,7 +215,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
   @Override
   public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-    if (Types.getRawType(type) != baseType || !annotations.isEmpty()) {
+    if (!isTypeEqualsToBaseTypeOrBaseSubTypes(type) || !annotations.isEmpty()) {
       return null;
     }
 
@@ -201,6 +231,20 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         defaultValue,
         defaultValueSet
     ).nullSafe();
+  }
+
+  private boolean isTypeEqualsToBaseTypeOrBaseSubTypes(Type type) {
+    if (Types.getRawType(type) == baseType) {
+      return true;
+    } else if (!baseSubTypes.isEmpty()) {
+      for (Class<? extends T> baseSubType : baseSubTypes) {
+        if (baseSubType == type) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {

@@ -25,6 +25,7 @@ import java.util.Map;
 import okio.Buffer;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
@@ -235,7 +236,41 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  @Test public void withBaseSubTypes() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+            .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(MessageWithBlockingMessage.class, "subType")
+                    .withSubtype(BlockingMessageType.class, "blockingMessage")
+                    .withBaseSubType(BlockingMessage.class))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    MessageWithBlockingMessage decoded = (MessageWithBlockingMessage) adapter.fromJson(
+            "{\"type\":\"subType\",\"blockingMessage\":{\"type\":\"blockingMessage\",\"value\":\"Okay!\"}}");
+    BlockingMessageType blockingMessageType = (BlockingMessageType) decoded.blockingMessage;
+    assertThat(blockingMessageType.value).isEqualTo("Okay!");
+  }
+
+  @Test public void failsWhenNotPassBaseSubTypes() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+            .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(MessageWithBlockingMessage.class, "subType")
+                    .withSubtype(BlockingMessageType.class, "blockingMessage"))
+            .build();
+
+    try {
+      final JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+    } catch (IllegalArgumentException ex) {
+      final String partialMessage = "No JsonAdapter for interface com.squareup.moshi.adapters" +
+              ".PolymorphicJsonAdapterFactoryTest$BlockingMessage";
+      assertTrue(ex.getMessage().contains(partialMessage));
+    }
+  }
+
   interface Message {
+  }
+
+  interface BlockingMessage extends Message {
   }
 
   static final class Success implements Message {
@@ -297,6 +332,21 @@ public final class PolymorphicJsonAdapterFactoryTest {
     MessageWithType(String type, String value) {
       this.type = type;
       this.value = value;
+    }
+  }
+  static final class BlockingMessageType implements BlockingMessage {
+    final String value;
+
+    BlockingMessageType(String value) {
+      this.value = value;
+    }
+  }
+
+  static final class MessageWithBlockingMessage implements Message {
+    final BlockingMessage blockingMessage;
+
+    MessageWithBlockingMessage(BlockingMessage blockingMessage) {
+      this.blockingMessage = blockingMessage;
     }
   }
 }
