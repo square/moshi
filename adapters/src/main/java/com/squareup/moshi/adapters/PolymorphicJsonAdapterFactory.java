@@ -180,7 +180,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
    * Use this method to decode sub types of {@code baseType} and your {@code subtype}.
    * inherits from {@code baseSubType}.
    */
-  public PolymorphicJsonAdapterFactory<T> withBaseSubType(@Nullable Class<? extends T> baseSubType) {
+  public PolymorphicJsonAdapterFactory<T> withBaseSubType(
+          @Nullable Class<? extends T> baseSubType) {
     if (baseSubType == null) throw new NullPointerException("baseSubTypes == null");
     if (baseSubTypes.contains(baseSubType)) {
       throw new IllegalArgumentException("BaseSubType must be unique.");
