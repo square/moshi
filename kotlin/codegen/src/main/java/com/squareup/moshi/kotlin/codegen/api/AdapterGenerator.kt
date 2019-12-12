@@ -126,7 +126,7 @@ internal class AdapterGenerator(
           JsonReader.Options::class.asTypeName(),
           nonTransientProperties
               .map {
-                // We manually put in quotes because we know the jsonName is already escaped
+                // We manually put in quotes because we know the jsonName is already escaped.
                 val whitespaceSafeName = it.jsonName.replace(" ", "·")
                 CodeBlock.of("\"$whitespaceSafeName\"")
               }
