@@ -121,10 +121,17 @@ internal class AdapterGenerator(
   private val optionsProperty = PropertySpec.builder(
       nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
       KModifier.PRIVATE)
-      .initializer("%T.of(${nonTransientProperties.joinToString(", ") {
-        // We manually put in quotes because we know the jsonName is already escaped
-        CodeBlock.of("\"%L\"", it.jsonName).toString()
-      }})", JsonReader.Options::class.asTypeName())
+      .initializer(
+          "%T.of(%L)",
+          JsonReader.Options::class.asTypeName(),
+          nonTransientProperties
+              .map {
+                // We manually put in quotes because we know the jsonName is already escaped.
+                val whitespaceSafeName = it.jsonName.replace(" ", "·")
+                CodeBlock.of("\"$whitespaceSafeName\"")
+              }
+              .joinToCode(", ")
+      )
       .build()
 
   private val constructorProperty = PropertySpec.builder(

@@ -1216,6 +1216,18 @@ internal data class MismatchParentAndNestedClassVisibility(
   )
 }
 
+// Regression test for https://github.com/square/moshi/issues/1052
+// Compile-only test
+@JsonClass(generateAdapter = true)
+data class KeysWithSpaces(
+    @Json(name = "1. Information") val information: String,
+    @Json(name = "2. Symbol") val symbol: String,
+    @Json(name = "3. Last Refreshed") val lastRefreshed: String,
+    @Json(name = "4. Interval") val interval: String,
+    @Json(name = "5. Output Size") val size: String,
+    @Json(name = "6. Time Zone") val timeZone: String
+)
+
 // Has to be outside to avoid Types seeing an owning class
 @JsonClass(generateAdapter = true)
 data class NullableTypeParams<T>(
