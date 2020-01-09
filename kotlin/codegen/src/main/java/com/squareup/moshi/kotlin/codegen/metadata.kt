@@ -329,7 +329,6 @@ private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<Annotation
   }
 }
 
-/** Gross, but we can't extract values from AnnotationSpecs by member names alone. */
 private fun List<AnnotationSpec>?.jsonName(): String? {
   if (this == null) return null
   return find { it.className == JSON }?.let { annotation ->
