@@ -42,22 +42,15 @@ class DualKotlinTest(useReflection: Boolean) {
   private val moshi = Moshi.Builder()
       .apply {
         if (useReflection) {
-          add(KotlinJsonAdapterFactory())
-          add(object : Factory {
-            override fun create(
-                type: Type,
-                annotations: MutableSet<out Annotation>,
-                moshi: Moshi
-            ): JsonAdapter<*>? {
-              // Prevent falling back to generated adapter lookup
-              val rawType = Types.getRawType(type)
-              val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
-              check(!rawType.isAnnotationPresent(metadataClass)) {
-                "Unhandled Kotlin type in reflective test! $rawType"
-              }
-              return moshi.nextAdapter<Any>(this, type, annotations)
+          add(KotlinJsonAdapterFactory(useGeneratedAdapterIfPresent = false))
+          add { type, _, _ ->
+            println("Verifying $type is not a kotlin type")
+            val rawType = Types.getRawType(type)
+            check(!rawType.isAnnotationPresent(Metadata::class.java)) {
+              "Unhandled Kotlin type in reflective test! $rawType"
             }
-          })
+            null
+          }
         }
       }
       .build()
