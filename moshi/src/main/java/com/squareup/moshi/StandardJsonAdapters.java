@@ -24,9 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
-
-import static com.squareup.moshi.internal.Util.generatedAdapter;
 
 final class StandardJsonAdapters {
   private StandardJsonAdapters() {
