@@ -177,7 +177,13 @@ internal class KotlinJsonAdapter<T>(
   }
 }
 
-class KotlinJsonAdapterFactory : JsonAdapter.Factory {
+/**
+ * @param useGeneratedAdapterIfPresent whether or not to allow using generated adapters if present.
+ *                                     The default is `true`.
+ */
+class KotlinJsonAdapterFactory @JvmOverloads constructor(
+    private val useGeneratedAdapterIfPresent: Boolean = true
+) : JsonAdapter.Factory {
   override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi)
       : JsonAdapter<*>? {
     if (annotations.isNotEmpty()) return null
@@ -187,16 +193,18 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
     if (Util.isPlatformType(rawType)) return null
-    try {
-      val generatedAdapter = generatedAdapter(moshi, type, rawType)
-      if (generatedAdapter != null) {
-        return generatedAdapter
+    if (useGeneratedAdapterIfPresent) {
+      try {
+        val generatedAdapter = generatedAdapter(moshi, type, rawType)
+        if (generatedAdapter != null) {
+          return generatedAdapter
+        }
+      } catch (e: RuntimeException) {
+        if (e.cause !is ClassNotFoundException) {
+          throw e
+        }
+        // Fall back to a reflective adapter when the generated adapter is not found.
       }
-    } catch (e: RuntimeException) {
-      if (e.cause !is ClassNotFoundException) {
-        throw e
-      }
-      // Fall back to a reflective adapter when the generated adapter is not found.
     }
 
     require(!rawType.isLocalClass) {
