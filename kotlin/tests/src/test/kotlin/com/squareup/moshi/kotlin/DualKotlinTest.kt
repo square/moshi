@@ -2,8 +2,6 @@ package com.squareup.moshi.kotlin
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonAdapter.Factory
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
@@ -18,7 +16,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
-import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 /**
