@@ -98,6 +98,7 @@
 
   <properties>
     <maven.javadoc.skip>true</maven.javadoc.skip><!-- We use Dokka instead. -->
+    <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
   </properties>
 
   <build>
@@ -150,6 +151,7 @@
           <args>
             <!-- So we can declare ourselves as users of KotlinPoetMetadataPreview -->
             <arg>-Xuse-experimental=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview</arg>
+            <arg>-Xuse-experimental=kotlin.Experimental</arg>
           </args>
         </configuration>
       </plugin>
