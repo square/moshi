@@ -125,11 +125,7 @@ internal class AdapterGenerator(
           "%T.of(%L)",
           JsonReader.Options::class.asTypeName(),
           nonTransientProperties
-              .map {
-                // We manually put in quotes because we know the jsonName is already escaped.
-                val whitespaceSafeName = it.jsonName.replace(" ", "·")
-                CodeBlock.of("\"$whitespaceSafeName\"")
-              }
+              .map { CodeBlock.of("%S", it.jsonName) }
               .joinToCode(", ")
       )
       .build()
@@ -495,7 +491,7 @@ internal class AdapterGenerator(
     result.addStatement("%N.beginObject()", writerParam)
     nonTransientProperties.forEach { property ->
       // We manually put in quotes because we know the jsonName is already escaped
-      result.addStatement("%N.name(\"%L\")", writerParam, property.jsonName)
+      result.addStatement("%N.name(%S)", writerParam, property.jsonName)
       result.addStatement("%N.toJson(%N, %N.%N)",
           nameAllocator[property.delegateKey], writerParam, valueParam, property.name)
     }

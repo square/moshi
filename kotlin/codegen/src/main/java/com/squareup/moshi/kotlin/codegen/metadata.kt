@@ -48,6 +48,7 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.util.TreeSet
 import javax.annotation.processing.Messager
+import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
@@ -328,11 +329,13 @@ private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<Annotation
   }
 }
 
-/** Gross, but we can't extract values from AnnotationSpecs by member names alone. */
 private fun List<AnnotationSpec>?.jsonName(): String? {
   if (this == null) return null
-  return find { it.className == JSON }?.let {
-    it.members[0].toString().removePrefix("name = \"").removeSuffix("\"")
+  return find { it.className == JSON }?.let { annotation ->
+    val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
+      "Could not get the annotation mirror from the annotation spec"
+    }
+    mirror.elementValues.entries.single { it.key.simpleName.contentEquals("name") }.value.value as String
   }
 }
 
