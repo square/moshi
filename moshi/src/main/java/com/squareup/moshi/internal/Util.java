@@ -552,10 +552,10 @@ public final class Util {
     } catch (NoSuchMethodException e) {
       if (!(type instanceof ParameterizedType) && adapterClass.getTypeParameters().length != 0) {
         throw new RuntimeException(
-            "Failed to find the generated JsonAdapter constructor for '" + type + "'. Suspiciously, "
-                + "the type was not parameterized but the target class '"
-                + adapterClass.getCanonicalName() + "' is generic. Consider using "
-                + "Types#newParameterizedType() to define these missing type variables.", e);
+            "Failed to find the generated JsonAdapter constructor for '" + type
+            + "'. Suspiciously, the type was not parameterized but the target class '"
+            + adapterClass.getCanonicalName() + "' is generic. Consider using "
+            + "Types#newParameterizedType() to define these missing type variables.", e);
       } else {
         throw new RuntimeException(
             "Failed to find the generated JsonAdapter constructor for " + type, e);
