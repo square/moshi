@@ -50,6 +50,13 @@ public final class Util {
   @Nullable public static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
   @Nullable private static final Class<? extends Annotation> METADATA;
 
+  public static final JsonAdapter.Factory GENERATED_ADAPTERS_FACTORY = new JsonAdapter.Factory() {
+    @Nullable @Override
+    public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      return generatedAdapter(moshi, type, Types.getRawType(type));
+    }
+  };
+
   static {
     Class<? extends Annotation> metadata = null;
     try {

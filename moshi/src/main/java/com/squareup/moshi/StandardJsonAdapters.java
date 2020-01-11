@@ -57,11 +57,6 @@ final class StandardJsonAdapters {
 
       Class<?> rawType = Types.getRawType(type);
 
-      @Nullable JsonAdapter<?> generatedAdapter = generatedAdapter(moshi, type, rawType);
-      if (generatedAdapter != null) {
-        return generatedAdapter;
-      }
-
       if (rawType.isEnum()) {
         //noinspection unchecked
         return new EnumJsonAdapter<>((Class<? extends Enum>) rawType).nullSafe();

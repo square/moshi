@@ -41,13 +41,14 @@ import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
  * Coordinates binding between JSON values and Java objects.
  */
 public final class Moshi {
-  static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(5);
+  static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(6);
 
   static {
     BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
     BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(Util.GENERATED_ADAPTERS_FACTORY);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
   }
 
