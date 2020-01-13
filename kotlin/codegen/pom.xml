@@ -48,6 +48,11 @@
       <version>${kotlinpoet.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>${asm.version}</version>
+    </dependency>
+    <dependency>
       <groupId>net.ltgt.gradle.incap</groupId>
       <artifactId>incap</artifactId>
       <version>${incap.version}</version>
