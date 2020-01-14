@@ -22,6 +22,7 @@ import javax.tools.StandardLocation
 internal data class ProguardConfig(
     val targetClass: ClassName,
     val adapterName: String,
+    val adapterConstructorParams: List<String>,
     val targetConstructorHasDefaults: Boolean,
     val targetConstructorParams: List<String>,
     val qualifierProperties: Set<QualifierAdapterProperty>
@@ -54,7 +55,7 @@ internal data class ProguardConfig(
     appendln("-if class $targetName")
     appendln("-keep class $adapterCanonicalName {")
     // Keep the constructor for Moshi's reflective lookup
-    val constructorArgs = targetConstructorParams.joinToString(",")
+    val constructorArgs = adapterConstructorParams.joinToString(",")
     appendln("    public <init>($constructorArgs)")
     // Keep any qualifier properties
     for (qualifierProperty in qualifierProperties) {

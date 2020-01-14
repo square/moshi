@@ -511,7 +511,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.Aliases
       -if class testPackage.Aliases
       -keep class testPackage.AliasesJsonAdapter {
-          public <init>(java.lang.String,java.lang.String,java.lang.String)
+          public <init>(com.squareup.moshi.Moshi)
       }
     """.trimIndent())
 
@@ -520,7 +520,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.Simple
       -if class testPackage.Simple
       -keep class testPackage.SimpleJsonAdapter {
-          public <init>(java.lang.String)
+          public <init>(com.squareup.moshi.Moshi)
       }
     """.trimIndent())
 
@@ -529,7 +529,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.Generic
       -if class testPackage.Generic
       -keep class testPackage.GenericJsonAdapter {
-          public <init>(java.lang.Object,java.lang.String)
+          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[])
       }
     """.trimIndent())
 
@@ -538,7 +538,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.UsingQualifiers
       -if class testPackage.UsingQualifiers
       -keep class testPackage.UsingQualifiersJsonAdapter {
-          public <init>(java.lang.String,java.lang.String)
+          public <init>(com.squareup.moshi.Moshi)
           private com.squareup.moshi.JsonAdapter stringAtMyQualifierAdapter
       }
       -if class testPackage.UsingQualifiers
@@ -550,7 +550,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.MixedTypes
       -if class testPackage.MixedTypes
       -keep class testPackage.MixedTypesJsonAdapter {
-          public <init>(java.lang.String,java.util.List)
+          public <init>(com.squareup.moshi.Moshi)
       }
     """.trimIndent())
 
@@ -559,7 +559,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.DefaultParams
       -if class testPackage.DefaultParams
       -keep class testPackage.DefaultParamsJsonAdapter {
-          public <init>(java.lang.String)
+          public <init>(com.squareup.moshi.Moshi)
       }
       -if class testPackage.DefaultParams
       -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
@@ -574,7 +574,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.Complex
       -if class testPackage.Complex
       -keep class testPackage.ComplexJsonAdapter {
-          public <init>(java.lang.String,java.util.List,java.lang.Object)
+          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[])
           private com.squareup.moshi.JsonAdapter mutableListOfStringAtMyQualifierAdapter
       }
       -if class testPackage.Complex
@@ -592,7 +592,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class testPackage.MultipleMasks
       -if class testPackage.MultipleMasks
       -keep class testPackage.MultipleMasksJsonAdapter {
-          public <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long)
+          public <init>(com.squareup.moshi.Moshi)
       }
       -if class testPackage.MultipleMasks
       -keepnames class kotlin.jvm.internal.DefaultConstructorMarker

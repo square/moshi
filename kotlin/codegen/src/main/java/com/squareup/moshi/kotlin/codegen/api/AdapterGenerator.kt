@@ -60,6 +60,8 @@ internal class AdapterGenerator(
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
         "%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+    private val CN_MOSHI = Moshi::class.asClassName()
+    private val CN_TYPE = Type::class.asClassName()
 
     private val COMMON_SUPPRESS = arrayOf(
         // https://github.com/square/moshi/issues/1023
@@ -98,10 +100,10 @@ internal class AdapterGenerator(
 
   private val moshiParam = ParameterSpec.builder(
       nameAllocator.newName("moshi"),
-      Moshi::class).build()
+      CN_MOSHI).build()
   private val typesParam = ParameterSpec.builder(
       nameAllocator.newName("types"),
-      ARRAY.parameterizedBy(Type::class.asTypeName()))
+      ARRAY.parameterizedBy(CN_TYPE))
       .build()
   private val readerParam = ParameterSpec.builder(
       nameAllocator.newName("reader"),
@@ -166,6 +168,13 @@ internal class AdapterGenerator(
           )
         }
 
+    val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
+      1 -> listOf(CN_MOSHI.canonicalName)
+      2 -> listOf(CN_MOSHI.canonicalName, "${CN_TYPE.canonicalName}[]")
+      // Should never happen
+      else -> error("Unexpected number of arguments on primary constructor: $primaryConstructor")
+    }
+
     var hasDefaultProperties = false
     var parameterTypes = emptyList<String>()
     target.constructor.signature?.let { constructorSignature ->
@@ -181,6 +190,7 @@ internal class AdapterGenerator(
     return ProguardConfig(
         targetClass = className,
         adapterName = adapterName,
+        adapterConstructorParams = adapterConstructorParams,
         targetConstructorHasDefaults = hasDefaultProperties,
         targetConstructorParams = parameterTypes,
         qualifierProperties = adapterProperties
