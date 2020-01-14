@@ -56,10 +56,10 @@ internal data class ProguardConfig(
     appendln("-keep class $adapterCanonicalName {")
     // Keep the constructor for Moshi's reflective lookup
     val constructorArgs = adapterConstructorParams.joinToString(",")
-    appendln("    public <init>($constructorArgs)")
+    appendln("    public <init>($constructorArgs);")
     // Keep any qualifier properties
     for (qualifierProperty in qualifierProperties) {
-      appendln("    private com.squareup.moshi.JsonAdapter ${qualifierProperty.name}")
+      appendln("    private com.squareup.moshi.JsonAdapter ${qualifierProperty.name};")
     }
     appendln("}")
 
@@ -91,7 +91,7 @@ internal data class ProguardConfig(
       }
       allParams += "kotlin.jvm.internal.DefaultConstructorMarker"
       val params = allParams.joinToString(",")
-      appendln("    public synthetic <init>($params)")
+      appendln("    public synthetic <init>($params);")
       appendln("}")
     }
   }
