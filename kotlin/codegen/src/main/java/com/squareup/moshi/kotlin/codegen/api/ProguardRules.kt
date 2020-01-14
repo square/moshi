@@ -47,7 +47,7 @@ internal data class ProguardConfig(
     // }
     //
     val targetName = targetClass.canonicalName
-    val adapterCanonicalName = ClassName(targetClass.packageName, adapterName)
+    val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
     // Keep the class name for Moshi's reflective lookup based on it
     appendln("-if class $targetName")
     appendln("-keepnames class $targetName")
