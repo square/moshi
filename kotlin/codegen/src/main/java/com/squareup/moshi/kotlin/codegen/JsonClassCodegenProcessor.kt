@@ -71,6 +71,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   private lateinit var elements: Elements
   private lateinit var filer: Filer
   private lateinit var messager: Messager
+  private lateinit var cachedClassInspector: MoshiCachedClassInspector
   private val annotation = JsonClass::class.java
   private var generatedType: TypeElement? = null
 
@@ -93,11 +94,15 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     this.elements = processingEnv.elementUtils
     this.filer = processingEnv.filer
     this.messager = processingEnv.messager
+    cachedClassInspector = MoshiCachedClassInspector(ElementsClassInspector.create(elements, types))
   }
 
   override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-    val classInspector = ElementsClassInspector.create(elements, types)
-    val cachedClassInspector = MoshiCachedClassInspector(classInspector)
+    if (roundEnv.errorRaised()) {
+      // An error was raised in the previous round. Don't try anything for now to avoid adding
+      // possible more noise.
+      return false
+    }
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       if (type !is TypeElement) {
         messager.printMessage(
