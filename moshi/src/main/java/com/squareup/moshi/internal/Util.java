@@ -517,9 +517,10 @@ public final class Util {
       return null;
     }
     String adapterClassName = Types.generatedJsonAdapterName(rawType.getName());
+    Class<? extends JsonAdapter<?>> adapterClass = null;
     try {
-      @SuppressWarnings("unchecked") // We generate types to match.
-          Class<? extends JsonAdapter<?>> adapterClass = (Class<? extends JsonAdapter<?>>)
+      //noinspection unchecked - We generate types to match.
+      adapterClass = (Class<? extends JsonAdapter<?>>)
           Class.forName(adapterClassName, true, rawType.getClassLoader());
       Constructor<? extends JsonAdapter<?>> constructor;
       Object[] args;
@@ -547,16 +548,24 @@ public final class Util {
       return constructor.newInstance(args).nullSafe();
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(
-          "Failed to find the generated JsonAdapter class for " + rawType, e);
+          "Failed to find the generated JsonAdapter class for " + type, e);
     } catch (NoSuchMethodException e) {
-      throw new RuntimeException(
-          "Failed to find the generated JsonAdapter constructor for " + rawType, e);
+      if (!(type instanceof ParameterizedType) && adapterClass.getTypeParameters().length != 0) {
+        throw new RuntimeException(
+            "Failed to find the generated JsonAdapter constructor for '" + type
+            + "'. Suspiciously, the type was not parameterized but the target class '"
+            + adapterClass.getCanonicalName() + "' is generic. Consider using "
+            + "Types#newParameterizedType() to define these missing type variables.", e);
+      } else {
+        throw new RuntimeException(
+            "Failed to find the generated JsonAdapter constructor for " + type, e);
+      }
     } catch (IllegalAccessException e) {
       throw new RuntimeException(
-          "Failed to access the generated JsonAdapter for " + rawType, e);
+          "Failed to access the generated JsonAdapter for " + type, e);
     } catch (InstantiationException e) {
       throw new RuntimeException(
-          "Failed to instantiate the generated JsonAdapter for " + rawType, e);
+          "Failed to instantiate the generated JsonAdapter for " + type, e);
     } catch (InvocationTargetException e) {
       throw rethrowCause(e);
     }

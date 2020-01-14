@@ -1220,6 +1220,30 @@ class GeneratedAdaptersTest {
       val propertyWithAnnotatedType: @TypeAnnotation String = "",
       val generic: List<@TypeAnnotation String>
   )
+
+  @Test fun typesSizeCheckMessages_noArgs() {
+    try {
+      moshi.adapter(MultipleGenerics::class.java)
+      fail("Should have failed to construct the adapter due to missing generics")
+    } catch (e: RuntimeException) {
+      assertThat(e).hasMessage("Failed to find the generated JsonAdapter constructor for 'class com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest\$MultipleGenerics'. Suspiciously, the type was not parameterized but the target class 'com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultipleGenericsJsonAdapter' is generic. Consider using Types#newParameterizedType() to define these missing type variables.")
+    }
+  }
+
+  @Test fun typesSizeCheckMessages_wrongNumberOfArgs() {
+    try {
+      GeneratedAdaptersTest_MultipleGenericsJsonAdapter<String, Any, Any, Any>(
+          moshi,
+          arrayOf(String::class.java)
+      )
+      fail("Should have failed to construct the adapter due to wrong number of generics")
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessage("TypeVariable mismatch: Expecting 4 types for generic type variables [A, B, C, D], but received 1")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class MultipleGenerics<A, B, C, D>(val prop: String)
 }
 
 // Regression test for https://github.com/square/moshi/issues/1022

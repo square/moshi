@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen.api
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.CodeBlock.Companion
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
@@ -158,6 +159,22 @@ internal class AdapterGenerator(
 
     if (typeVariables.isNotEmpty()) {
       result.addTypeVariables(typeVariables.map { it.stripTypeVarVariance() as TypeVariableName })
+      // require(types.size == 1) {
+      //   "TypeVariable mismatch: Expecting 1 type(s) for generic type variables [T], but received ${types.size} with values $types"
+      // }
+      result.addInitializerBlock(CodeBlock.builder()
+          .beginControlFlow("require(types.size == %L)", typeVariables.size)
+          .addStatement(
+              "buildString·{·append(%S).append(%L).append(%S).append(%S).append(%S).append(%L)·}",
+              "TypeVariable mismatch: Expecting ",
+              typeVariables.size,
+              " ${if (typeVariables.size == 1) "type" else "types"} for generic type variables [",
+              typeVariables.joinToString(", ") { it.name },
+              "], but received ",
+              "${typesParam.name}.size"
+          )
+          .endControlFlow()
+          .build())
     }
 
     // TODO make this configurable. Right now it just matches the source model
