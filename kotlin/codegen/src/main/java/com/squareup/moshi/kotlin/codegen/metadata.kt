@@ -22,6 +22,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -54,7 +55,7 @@ import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
-import javax.tools.Diagnostic
+import javax.tools.Diagnostic.Kind.ERROR
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
@@ -71,7 +72,12 @@ private fun Collection<KModifier>.visibility(): KModifier {
 }
 
 @KotlinPoetMetadataPreview
-internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): TargetConstructor? {
+internal fun primaryConstructor(
+    targetElement: TypeElement,
+    kotlinApi: TypeSpec,
+    elements: Elements,
+    messager: Messager
+): TargetConstructor? {
   val primaryConstructor = kotlinApi.primaryConstructor ?: return null
 
   val parameters = LinkedHashMap<String, TargetParameter>()
@@ -87,7 +93,14 @@ internal fun primaryConstructor(kotlinApi: TypeSpec, elements: Elements): Target
     )
   }
 
-  return TargetConstructor(parameters, primaryConstructor.modifiers.visibility())
+  val kmConstructorSignature = primaryConstructor.tag<ImmutableKmConstructor>()?.signature?.toString()
+      ?: run {
+        messager.printMessage(ERROR, "No KmConstructor found for primary constructor.",
+            targetElement)
+        null
+      }
+  return TargetConstructor(parameters, primaryConstructor.modifiers.visibility(),
+      kmConstructorSignature)
 }
 
 /** Returns a target type for `element`, or null if it cannot be used with code gen. */
@@ -101,7 +114,7 @@ internal fun targetType(messager: Messager,
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
     messager.printMessage(
-        Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
+        ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
         element)
     return null
   }
@@ -110,7 +123,7 @@ internal fun targetType(messager: Messager,
     cachedClassInspector.toImmutableKmClass(typeMetadata)
   } catch (e: UnsupportedOperationException) {
     messager.printMessage(
-        Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Class type",
+        ERROR, "@JsonClass can't be applied to $element: must be a Class type",
         element)
     return null
   }
@@ -118,44 +131,44 @@ internal fun targetType(messager: Messager,
   when {
     kmClass.isEnum -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR,
+          ERROR,
           "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary",
           element)
       return null
     }
     !kmClass.isClass -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
+          ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
           element)
       return null
     }
     kmClass.isInner -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR,
+          ERROR,
           "@JsonClass can't be applied to $element: must not be an inner class", element)
       return null
     }
     kmClass.isSealed -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be sealed",
+          ERROR, "@JsonClass can't be applied to $element: must not be sealed",
           element)
       return null
     }
     kmClass.isAbstract -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be abstract",
+          ERROR, "@JsonClass can't be applied to $element: must not be abstract",
           element)
       return null
     }
     kmClass.isLocal -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: must not be local",
+          ERROR, "@JsonClass can't be applied to $element: must not be local",
           element)
       return null
     }
     !kmClass.isPublic && !kmClass.isInternal -> {
       messager.printMessage(
-          Diagnostic.Kind.ERROR,
+          ERROR,
           "@JsonClass can't be applied to $element: must be internal or public",
           element)
       return null
@@ -166,14 +179,14 @@ internal fun targetType(messager: Messager,
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
 
-  val constructor = primaryConstructor(kotlinApi, elements)
+  val constructor = primaryConstructor(element, kotlinApi, elements, messager)
   if (constructor == null) {
-    messager.printMessage(Diagnostic.Kind.ERROR, "No primary constructor found on $element",
+    messager.printMessage(ERROR, "No primary constructor found on $element",
         element)
     return null
   }
   if (constructor.visibility != KModifier.INTERNAL && constructor.visibility != KModifier.PUBLIC) {
-    messager.printMessage(Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $element: " +
+    messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
         "primary constructor is not internal or public", element)
     return null
   }
@@ -186,7 +199,7 @@ internal fun targetType(messager: Messager,
       }
       .onEach { supertype ->
         if (supertype.element.getAnnotation(Metadata::class.java) == null) {
-          messager.printMessage(Diagnostic.Kind.ERROR,
+          messager.printMessage(ERROR,
               "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
               element)
           return null
@@ -275,7 +288,7 @@ internal fun TargetProperty.generator(
   if (isTransient) {
     if (!hasDefault) {
       messager.printMessage(
-          Diagnostic.Kind.ERROR, "No default value for transient property $name",
+          ERROR, "No default value for transient property $name",
           sourceElement)
       return null
     }
@@ -283,7 +296,7 @@ internal fun TargetProperty.generator(
   }
 
   if (!isVisible) {
-    messager.printMessage(Diagnostic.Kind.ERROR, "property $name is not visible",
+    messager.printMessage(ERROR, "property $name is not visible",
         sourceElement)
     return null
   }
@@ -300,13 +313,13 @@ internal fun TargetProperty.generator(
         ?: continue
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
-        messager.printMessage(Diagnostic.Kind.ERROR,
+        messager.printMessage(ERROR,
             "JsonQualifier @${jsonQualifier.className.simpleName} must have RUNTIME retention")
       }
     }
     annotationElement.getAnnotation(Target::class.java)?.let {
       if (ElementType.FIELD !in it.value) {
-        messager.printMessage(Diagnostic.Kind.ERROR,
+        messager.printMessage(ERROR,
             "JsonQualifier @${jsonQualifier.className.simpleName} must support FIELD target")
       }
     }
@@ -335,7 +348,9 @@ private fun List<AnnotationSpec>?.jsonName(): String? {
     val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
       "Could not get the annotation mirror from the annotation spec"
     }
-    mirror.elementValues.entries.single { it.key.simpleName.contentEquals("name") }.value.value as String
+    mirror.elementValues.entries.single {
+      it.key.simpleName.contentEquals("name")
+    }.value.value as String
   }
 }
 

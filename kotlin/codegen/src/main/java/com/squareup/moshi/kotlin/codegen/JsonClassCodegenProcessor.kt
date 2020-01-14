@@ -108,9 +108,9 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
-        generator
-            .generateFile {
-              it.toBuilder()
+        val preparedAdapter = generator
+            .prepare { spec ->
+              spec.toBuilder()
                   .apply {
                     generatedType?.asClassName()?.let { generatedClassName ->
                       addAnnotation(
@@ -125,14 +125,19 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
                   .addOriginatingElement(type)
                   .build()
             }
-            .writeTo(filer)
+
+        preparedAdapter.spec.writeTo(filer)
+        preparedAdapter.proguardConfig?.writeTo(filer, type)
       }
     }
 
     return false
   }
 
-  private fun adapterGenerator(element: TypeElement, cachedClassInspector: MoshiCachedClassInspector): AdapterGenerator? {
+  private fun adapterGenerator(
+      element: TypeElement,
+      cachedClassInspector: MoshiCachedClassInspector
+  ): AdapterGenerator? {
     val type = targetType(messager, elements, types, element, cachedClassInspector) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()

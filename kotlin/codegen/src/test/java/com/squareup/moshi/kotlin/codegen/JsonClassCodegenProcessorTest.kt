@@ -398,6 +398,211 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
+  @Test
+  fun `Processor should generate comprehensive proguard rules`() {
+    val result = compile(kotlin("source.kt",
+        """
+          package testPackage
+          import com.squareup.moshi.JsonClass
+          import com.squareup.moshi.JsonQualifier
+          
+          typealias FirstName = String
+          typealias LastName = String
+
+          @JsonClass(generateAdapter = true)
+          data class Aliases(val firstName: FirstName, val lastName: LastName, val hairColor: String)
+
+          @JsonClass(generateAdapter = true)
+          data class Simple(val firstName: String)
+
+          @JsonClass(generateAdapter = true)
+          data class Generic<T>(val firstName: T, val lastName: String)
+
+          @JsonQualifier
+          annotation class MyQualifier
+
+          @JsonClass(generateAdapter = true)
+          data class UsingQualifiers(val firstName: String, @MyQualifier val lastName: String)
+
+          @JsonClass(generateAdapter = true)
+          data class MixedTypes(val firstName: String, val otherNames: MutableList<String>)
+
+          @JsonClass(generateAdapter = true)
+          data class DefaultParams(val firstName: String = "")
+
+          @JsonClass(generateAdapter = true)
+          data class Complex<T>(val firstName: FirstName = "", @MyQualifier val names: MutableList<String>, val genericProp: T)
+
+          @JsonClass(generateAdapter = true)
+          class MultipleMasks(
+              val arg0: Long = 0,
+              val arg1: Long = 1,
+              val arg2: Long = 2,
+              val arg3: Long = 3,
+              val arg4: Long = 4,
+              val arg5: Long = 5,
+              val arg6: Long = 6,
+              val arg7: Long = 7,
+              val arg8: Long = 8,
+              val arg9: Long = 9,
+              val arg10: Long = 10,
+              val arg11: Long,
+              val arg12: Long = 12,
+              val arg13: Long = 13,
+              val arg14: Long = 14,
+              val arg15: Long = 15,
+              val arg16: Long = 16,
+              val arg17: Long = 17,
+              val arg18: Long = 18,
+              val arg19: Long = 19,
+              @Suppress("UNUSED_PARAMETER") arg20: Long = 20,
+              val arg21: Long = 21,
+              val arg22: Long = 22,
+              val arg23: Long = 23,
+              val arg24: Long = 24,
+              val arg25: Long = 25,
+              val arg26: Long = 26,
+              val arg27: Long = 27,
+              val arg28: Long = 28,
+              val arg29: Long = 29,
+              val arg30: Long = 30,
+              val arg31: Long = 31,
+              val arg32: Long = 32,
+              val arg33: Long = 33,
+              val arg34: Long = 34,
+              val arg35: Long = 35,
+              val arg36: Long = 36,
+              val arg37: Long = 37,
+              val arg38: Long = 38,
+              @Transient val arg39: Long = 39,
+              val arg40: Long = 40,
+              val arg41: Long = 41,
+              val arg42: Long = 42,
+              val arg43: Long = 43,
+              val arg44: Long = 44,
+              val arg45: Long = 45,
+              val arg46: Long = 46,
+              val arg47: Long = 47,
+              val arg48: Long = 48,
+              val arg49: Long = 49,
+              val arg50: Long = 50,
+              val arg51: Long = 51,
+              val arg52: Long = 52,
+              @Transient val arg53: Long = 53,
+              val arg54: Long = 54,
+              val arg55: Long = 55,
+              val arg56: Long = 56,
+              val arg57: Long = 57,
+              val arg58: Long = 58,
+              val arg59: Long = 59,
+              val arg60: Long = 60,
+              val arg61: Long = 61,
+              val arg62: Long = 62,
+              val arg63: Long = 63,
+              val arg64: Long = 64,
+              val arg65: Long = 65
+          )
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Aliases.pro" }).hasContent("""
+      -if class testPackage.Aliases
+      -keepnames class testPackage.Aliases
+      -if class testPackage.Aliases
+      -keep class testPackage.AliasesJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Simple.pro" }).hasContent("""
+      -if class testPackage.Simple
+      -keepnames class testPackage.Simple
+      -if class testPackage.Simple
+      -keep class testPackage.SimpleJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Generic.pro" }).hasContent("""
+      -if class testPackage.Generic
+      -keepnames class testPackage.Generic
+      -if class testPackage.Generic
+      -keep class testPackage.GenericJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[])
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.UsingQualifiers.pro" }).hasContent("""
+      -if class testPackage.UsingQualifiers
+      -keepnames class testPackage.UsingQualifiers
+      -if class testPackage.UsingQualifiers
+      -keep class testPackage.UsingQualifiersJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+          private com.squareup.moshi.JsonAdapter stringAtMyQualifierAdapter
+      }
+      -if class testPackage.UsingQualifiers
+      -keep @interface testPackage.MyQualifier
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.MixedTypes.pro" }).hasContent("""
+      -if class testPackage.MixedTypes
+      -keepnames class testPackage.MixedTypes
+      -if class testPackage.MixedTypes
+      -keep class testPackage.MixedTypesJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.DefaultParams.pro" }).hasContent("""
+      -if class testPackage.DefaultParams
+      -keepnames class testPackage.DefaultParams
+      -if class testPackage.DefaultParams
+      -keep class testPackage.DefaultParamsJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+      }
+      -if class testPackage.DefaultParams
+      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+      -if class testPackage.DefaultParams
+      -keepclassmembers class testPackage.DefaultParams {
+          public synthetic <init>(java.lang.String,int,int,kotlin.jvm.internal.DefaultConstructorMarker)
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Complex.pro" }).hasContent("""
+      -if class testPackage.Complex
+      -keepnames class testPackage.Complex
+      -if class testPackage.Complex
+      -keep class testPackage.ComplexJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[])
+          private com.squareup.moshi.JsonAdapter mutableListOfStringAtMyQualifierAdapter
+      }
+      -if class testPackage.Complex
+      -keep @interface testPackage.MyQualifier
+      -if class testPackage.Complex
+      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+      -if class testPackage.Complex
+      -keepclassmembers class testPackage.Complex {
+          public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker)
+      }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.MultipleMasks.pro" }).hasContent("""
+      -if class testPackage.MultipleMasks
+      -keepnames class testPackage.MultipleMasks
+      -if class testPackage.MultipleMasks
+      -keep class testPackage.MultipleMasksJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi)
+      }
+      -if class testPackage.MultipleMasks
+      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+      -if class testPackage.MultipleMasks
+      -keepclassmembers class testPackage.MultipleMasks {
+          public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker)
+      }
+    """.trimIndent())
+  }
+
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()
         .apply {
