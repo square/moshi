@@ -42,9 +42,9 @@ import com.squareup.moshi.internal.Util
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterOnly
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterProperty
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.PropertyOnly
-import org.objectweb.asm.Type as AsmType
 import java.lang.reflect.Constructor
 import java.lang.reflect.Type
+import org.objectweb.asm.Type as AsmType
 
 private val MOSHI_UTIL = Util::class.asClassName()
 private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
@@ -169,6 +169,11 @@ internal class AdapterGenerator(
     var hasDefaultProperties = false
     var parameterTypes = emptyList<String>()
     target.constructor.signature?.let { constructorSignature ->
+      if (constructorSignature.startsWith("constructor-impl")) {
+        // Inline class, we don't support this yet.
+        // This is a static method with signature like 'constructor-impl(I)I'
+        return@let
+      }
       hasDefaultProperties = propertyList.any { it.hasDefault }
       parameterTypes = AsmType.getArgumentTypes(constructorSignature.removePrefix("<init>"))
           .map { it.toCanonicalString() }
