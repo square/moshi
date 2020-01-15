@@ -230,9 +230,8 @@ For example, if you have an adapter that doesn't support nullable values, you ca
 String dateJson = "\"2018-11-26T11:04:19.342668Z\"";
 String nullDateJson = "null";
 
-// RFC 3339 date adapter, doesn't support null by default
-// See also: https://github.com/square/moshi/tree/master/adapters
-JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter();
+// Hypothetical IsoDateDapter, doesn't support null by default
+JsonAdapter<Date> adapter = new IsoDateDapter();
 
 Date date = adapter.fromJson(dateJson);
 System.out.println(date); // Mon Nov 26 12:04:19 CET 2018
