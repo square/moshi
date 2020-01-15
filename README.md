@@ -594,7 +594,7 @@ on types that are annotated `@JsonClass(generateAdapter = true)`.
 #### Getting the best developer experience using both reflection and code gen
 
 If you want to use code gen but also want to avoid the build time cost of annotation processing, 
-one pattern you can use is to use reflection for dev builds and code gen for production builds.
+one approach might be to use reflection for development builds and code gen for production builds.
 
 In an Android project, such a setup could look like so:
 
