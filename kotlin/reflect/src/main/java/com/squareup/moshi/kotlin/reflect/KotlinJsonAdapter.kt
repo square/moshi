@@ -386,8 +386,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     return when {
       this === other -> true
       this != null && other != null -> {
-        abbreviatedType == other.abbreviatedType
-            && arguments areEqualTo other.arguments
+        // Note we don't check abbreviatedType because typealiases and their backing types are equal
+        // for our purposes.
+        arguments areEqualTo other.arguments
             && classifier == other.classifier
             && flags == other.flags
             && flexibleTypeUpperBound isEqualTo other.flexibleTypeUpperBound
