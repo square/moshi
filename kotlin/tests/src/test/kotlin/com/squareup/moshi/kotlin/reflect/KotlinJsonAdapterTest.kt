@@ -315,9 +315,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<RequiredTransientConstructorParameter>()
       fail()
     } catch (expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage("No default value for transient constructor parameter #0 " +
-          "a of fun <init>(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter")
+      assertThat(expected).hasMessage("No default value for transient constructor parameter 'a' on type '${RequiredTransientConstructorParameter::class.qualifiedName}'")
     }
   }
 
@@ -586,8 +584,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch(expected: IllegalArgumentException) {
       assertThat(expected).hasMessage(
-          "No property for required constructor parameter #0 a of fun <init>(" +
-              "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}")
+          "No property for required constructor parameter 'a' on type '${NonPropertyConstructorParameter::class.qualifiedName}'")
     }
   }
 
