@@ -565,7 +565,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
       -if class testPackage.DefaultParams
       -keepclassmembers class testPackage.DefaultParams {
-          public synthetic <init>(java.lang.String,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
+          public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
       }
     """.trimIndent())
 
@@ -583,7 +583,7 @@ class JsonClassCodegenProcessorTest {
       -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
       -if class testPackage.Complex
       -keepclassmembers class testPackage.Complex {
-          public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
+          public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
       }
     """.trimIndent())
 
