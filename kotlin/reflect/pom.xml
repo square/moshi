@@ -125,7 +125,7 @@
                 <!-- Repackage kotlinx-metadata until their APIs are stable. -->
                 <relocation>
                   <pattern>kotlinx.metadata</pattern>
-                  <shadedPattern>com.squareup.moshi.kotlinx.metadata</shadedPattern>
+                  <shadedPattern>com.squareup.moshi.kotlin.kotlinx.metadata</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>
