@@ -591,6 +591,40 @@ for better performance and to avoid the `kotlin-reflect` dependency; prefer refl
 both private and protected properties. If you have configured both, generated adapters will be used
 on types that are annotated `@JsonClass(generateAdapter = true)`.
 
+#### Getting the best developer experience out of both reflection and code gen
+
+If you want to to use code gen but also want to avoid the build time cost of annotation processing, 
+one pattern you can use is to use reflection for dev builds and code gen for production builds.
+
+In an Android project, such a setup could look like so:
+
+```gradle
+dependencies {
+  debugImplementation "com.squareup.moshi:moshi-kotlin:{version}"
+  kaptRelease "com.squareup.moshi:moshi-kotlin-codegen:{version}"
+}
+```
+
+Then in a debug-only source set, contribute the reflective `KotlinJsonAdapter` to your app's Moshi
+instance creation.
+
+Another similar pattern in Android is to use reflect only for IDE builds, and reflect for command
+line and CI builds. Gradle configuration for this could look like so:
+
+```gradle
+dependencies {
+  if (properties.containsKey('android.injected.invoked.from.ide')) {
+    debugImplementation "com.squareup.moshi:moshi-kotlin:{version}"
+  } else {
+    kaptDebug "com.squareup.moshi:moshi-kotlin-codegen:{version}"
+  }
+  kaptRelease "com.squareup.moshi:moshi-kotlin-codegen:{version}"
+}
+```
+
+Note that these are just suggestions. You should do what's best for your project, and may have other
+considerations such as build caching or non-android contexts.
+
 Download
 --------
 
