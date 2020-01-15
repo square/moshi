@@ -107,7 +107,7 @@ internal class KotlinJsonAdapter<T>(
 
     // Confirm all parameters are present, optional, or nullable.
     for (i in 0 until constructorSize) {
-      if (values[i] === ABSENT_VALUE && !constructor.parameters[i].isOptional) {
+      if (values[i] === ABSENT_VALUE && !constructor.parameters[i].declaresDefaultValue) {
         if (!constructor.parameters[i].km.type!!.isNullable) {
           throw Util.missingProperty(
               constructor.parameters[i].name,
@@ -258,7 +258,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           ParameterData(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
         }
 
-    val anyOptional = parameters.any { it.isOptional }
+    val anyOptional = parameters.any { it.declaresDefaultValue }
     val actualConstructor = if (anyOptional) {
       val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
       val parameterCount = jvmConstructor.parameterTypes.size
@@ -310,7 +310,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         if (parameterData == null) {
           continue
         }
-        require(parameterData.isOptional) {
+        require(parameterData.declaresDefaultValue) {
           "No default value for transient constructor parameter '${parameterData.name}' on type '${rawType.canonicalName}'"
         }
         continue
@@ -366,7 +366,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     for (parameter in constructorData.parameters) {
       val binding = bindingsByName.remove(parameter.name)
-      require(binding != null || parameter.isOptional) {
+      require(binding != null || parameter.declaresDefaultValue) {
         "No property for required constructor parameter '${parameter.name}' on type '${rawType.canonicalName}'"
       }
       bindings += binding
@@ -560,7 +560,7 @@ internal data class ParameterData(
     val annotations: List<Annotation>
 ) {
   val name get() = km.name
-  val isOptional get() = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(km.flags)
+  val declaresDefaultValue get() = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(km.flags)
 }
 
 internal data class ConstructorData(
@@ -591,7 +591,7 @@ internal data class ConstructorData(
         args.containsKey(parameter) -> {
           arguments.add(args[parameter])
         }
-        parameter.isOptional -> {
+        parameter.declaresDefaultValue -> {
           arguments += defaultPrimitiveValue(parameter.rawType)
           mask = mask or (1 shl (index % Integer.SIZE))
         }
