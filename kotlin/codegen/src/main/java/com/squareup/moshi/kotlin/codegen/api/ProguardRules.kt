@@ -85,7 +85,11 @@ internal data class ProguardConfig(
       appendln("-if class $targetName")
       appendln("-keepclassmembers class ${targetClass.canonicalName} {")
       val allParams = targetConstructorParams.toMutableList()
-      val maskCount = (targetConstructorParams.size % 32) + 1
+      val maskCount = if (targetConstructorParams.isEmpty()) {
+        0
+      } else {
+        (targetConstructorParams.size + 31) / 32
+      }
       repeat(maskCount) {
         allParams += "int"
       }
