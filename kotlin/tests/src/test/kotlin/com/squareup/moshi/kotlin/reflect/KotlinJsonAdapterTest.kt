@@ -28,6 +28,7 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Assert.fail
+import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.lang.reflect.ParameterizedType
@@ -416,7 +417,9 @@ class KotlinJsonAdapterTest {
 
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
-  @Test fun extendsPlatformClassWithProtectedField() {
+  @Ignore("Pending review")
+  @Test
+  fun extendsPlatformClassWithProtectedField() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()
 
