@@ -449,28 +449,29 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 }
 
 private val KmType.isNullable: Boolean get() = Flag.Type.IS_NULLABLE(flags)
-private val KmType.canonicalName: String get() {
-  return buildString {
-    val classifierString = when (val cl = classifier) {
-      is KmClassifier.Class -> createClassName(cl.name)
-      is TypeAlias -> createClassName(cl.name)
-      is TypeParameter -> arguments[cl.id].type?.canonicalName ?: "TypeVar(${cl.id})"
-    }
-    append(classifierString)
+private val KmType.canonicalName: String
+  get() {
+    return buildString {
+      val classifierString = when (val cl = classifier) {
+        is KmClassifier.Class -> createClassName(cl.name)
+        is TypeAlias -> createClassName(cl.name)
+        is TypeParameter -> arguments[cl.id].type?.canonicalName ?: "TypeVar(${cl.id})"
+      }
+      append(classifierString)
 
-    val args = arguments.joinToString(", ") {
-      "${it.variance?.name} ${it.type?.canonicalName ?: "*" }".trim()
-    }
+      val args = arguments.joinToString(", ") {
+        "${it.variance?.name} ${it.type?.canonicalName ?: "*"}".trim()
+      }
 
-    if (args.isNotBlank()) {
-      append('<')
-      append(args)
-      append('>')
-    }
+      if (args.isNotBlank()) {
+        append('<')
+        append(args)
+        append('>')
+      }
 
-    // TODO not sure if we care about expressing the other type information here
+      // TODO not sure if we care about expressing the other type information here
+    }
   }
-}
 
 /**
  * Creates a canonical class name as represented in Metadata's [kotlinx.metadata.ClassName], where
