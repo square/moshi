@@ -26,6 +26,7 @@ import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
 import kotlinx.metadata.Flag
+import kotlinx.metadata.KmClass
 import kotlinx.metadata.KmClassifier
 import kotlinx.metadata.KmClassifier.TypeAlias
 import kotlinx.metadata.KmClassifier.TypeParameter
@@ -228,24 +229,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       "Cannot serialize local class or object expression ${rawType.name}"
     }
 
-    val header = with(rawType.getAnnotation(KOTLIN_METADATA)) {
-      KotlinClassHeader(
-          kind = kind,
-          metadataVersion = metadataVersion,
-          bytecodeVersion = bytecodeVersion,
-          data1 = data1,
-          data2 = data2,
-          extraString = extraString,
-          packageName = packageName,
-          extraInt = extraInt
-      )
-    }
-    val classMetadata = KotlinClassMetadata.read(header)
-    check(classMetadata is KotlinClassMetadata.Class) {
-      "Cannot serialize class with metadata $classMetadata"
-    }
-
-    val kmClass = classMetadata.toKmClass()
+    val kmClass = rawType.toKmClass(throwOnNotClass = true) ?: return null
 
     require(!Flag.IS_ABSTRACT(kmClass.flags)) {
       "Cannot serialize abstract class ${rawType.name}"
@@ -306,7 +290,15 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
-    for (property in kmClass.properties) {
+    // TODO this doesn't cover platform types
+    val allPropertiesSequence = kmClass.properties.asSequence() +
+        generateSequence(rawType) { it.superclass }
+            .mapNotNull { it.toKmClass(false) }
+            .flatMap { it.properties.asSequence() }
+            .filterNot { Flag.IS_PRIVATE(it.flags) }
+            .filter { Flag.Property.IS_VAR(it.flags) }
+
+    for (property in allPropertiesSequence.distinctBy { it.name }) {
       val propertyField = property.fieldSignature?.let { signature ->
         val signatureString = signature.asString()
         rawType.declaredFields.find { it.jvmFieldSignature == signatureString }
@@ -333,15 +325,15 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val getterMethod = property.getterSignature?.let { signature ->
         val signatureString = signature.asString()
-        rawType.declaredMethods.find { it.jvmMethodSignature == signatureString }
+        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
       }
       val setterMethod = property.setterSignature?.let { signature ->
         val signatureString = signature.asString()
-        rawType.declaredMethods.find { it.jvmMethodSignature == signatureString }
+        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
       }
       val annotationsMethod = property.syntheticMethodForAnnotations?.let { signature ->
         val signatureString = signature.asString()
-        rawType.declaredMethods.find { it.jvmMethodSignature == signatureString }
+        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
       }
 
       val propertyData = PropertyData(
@@ -532,6 +524,36 @@ private fun defaultPrimitiveValue(type: Type): Any? =
       }
     } else null
 
+private fun Class<*>.toKmClass(throwOnNotClass: Boolean): KmClass? {
+  val metadata = getAnnotation(KOTLIN_METADATA) ?: return null
+  val header = with(metadata) {
+    KotlinClassHeader(
+        kind = kind,
+        metadataVersion = metadataVersion,
+        bytecodeVersion = bytecodeVersion,
+        data1 = data1,
+        data2 = data2,
+        extraString = extraString,
+        packageName = packageName,
+        extraInt = extraInt
+    )
+  }
+  val classMetadata = KotlinClassMetadata.read(header)
+  if (classMetadata !is KotlinClassMetadata.Class) {
+    if (throwOnNotClass) {
+      throw IllegalStateException("Cannot serialize class with metadata $classMetadata")
+    } else {
+      return null
+    }
+  }
+
+  return classMetadata.toKmClass()
+}
+
+private fun Class<*>.allMethods(): Sequence<Method> {
+  return declaredMethods.asSequence() + methods.asSequence()
+}
+
 internal data class ParameterData(val km: KmValueParameter, val jvm: Parameter, val index: Int) {
   val name get() = km.name
   val isOptional get() = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(km.flags)
@@ -614,7 +636,7 @@ internal data class PropertyData(
       ?: jvmGetter?.genericReturnType
       ?: jvmSetter?.genericReturnType
       ?: parameter?.jvm?.parameterizedType
-      ?: error("No type information available for property ${km.returnType}.")
+      ?: error("No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'.")
 
   val annotations: Set<Annotation> by lazy {
     val set = LinkedHashSet<Annotation>()
