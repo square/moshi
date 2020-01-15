@@ -591,7 +591,7 @@ for better performance and to avoid the `kotlin-reflect` dependency; prefer refl
 both private and protected properties. If you have configured both, generated adapters will be used
 on types that are annotated `@JsonClass(generateAdapter = true)`.
 
-#### Getting the best developer experience out of both reflection and code gen
+#### Getting the best developer experience using both reflection and code gen
 
 If you want to to use code gen but also want to avoid the build time cost of annotation processing, 
 one pattern you can use is to use reflection for dev builds and code gen for production builds.
