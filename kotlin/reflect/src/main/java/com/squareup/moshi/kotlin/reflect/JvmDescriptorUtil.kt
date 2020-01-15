@@ -27,14 +27,7 @@ internal val Class<*>.descriptor: String
   }
 
 internal val Method.descriptor: String
-  get() {
-    return buildString {
-      append('(')
-      parameterTypes.joinTo(this, separator = "", transform = { it.descriptor })
-      append(')')
-      append(returnType.descriptor)
-    }
-  }
+  get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")${returnType.descriptor}") { it.descriptor }
 
 /**
  * Returns the JVM signature in the form "$Name$MethodDescriptor", for example: `equals(Ljava/lang/Object;)Z`.
@@ -46,14 +39,7 @@ internal val Method.descriptor: String
 internal val Method.jvmMethodSignature: String get() = "$name$descriptor"
 
 internal val Constructor<*>.descriptor: String
-  get() {
-    return buildString {
-      append('(')
-      parameterTypes.joinTo(this, separator = "", transform = { it.descriptor })
-      append(')')
-      append('V')
-    }
-  }
+  get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")V") { it.descriptor }
 
 /**
  * Returns the JVM signature in the form "<init>$MethodDescriptor", for example: `"<init>(Ljava/lang/Object;)V")`.
