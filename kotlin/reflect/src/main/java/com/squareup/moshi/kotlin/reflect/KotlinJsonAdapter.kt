@@ -296,7 +296,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         generateSequence(rawType) { it.superclass }
             .mapNotNull { it.toKmClass(false) }
             .flatMap { it.properties.asSequence() }
-            .filterNot { Flag.IS_PRIVATE(it.flags) }
+            .filterNot { Flag.IS_PRIVATE(it.flags) || Flag.IS_PRIVATE_TO_THIS(it.flags) }
             .filter { Flag.Property.IS_VAR(it.flags) }
 
     for (property in allPropertiesSequence.distinctBy { it.name }) {
