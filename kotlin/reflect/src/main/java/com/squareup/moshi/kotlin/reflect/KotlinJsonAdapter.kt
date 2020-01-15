@@ -48,7 +48,6 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.lang.reflect.Parameter
 import java.lang.reflect.Type
 
 /** Classes annotated with this are eligible for this adapter. */
@@ -252,19 +251,21 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val kmConstructorSignature = kmConstructor.signature?.asString() ?: return null
     val constructorsBySignature = rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
     val jvmConstructor = constructorsBySignature[kmConstructorSignature] ?: return null
+    val parameterAnnotations = jvmConstructor.parameterAnnotations
+    val parameterTypes = jvmConstructor.parameterTypes
     val parameters = kmConstructor.valueParameters.withIndex()
         .map { (index, kmParam) ->
-          val jvmParam = jvmConstructor.parameters[index]
-          ParameterData(kmParam, jvmParam, index)
+          ParameterData(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
         }
 
     val anyOptional = parameters.any { it.isOptional }
     val actualConstructor = if (anyOptional) {
       val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
-      val maskParamsToAdd = if (jvmConstructor.parameterCount == 0) {
+      val parameterCount = jvmConstructor.parameterTypes.size
+      val maskParamsToAdd = if (parameterCount == 0) {
         0
       } else {
-        (jvmConstructor.parameterCount + 31) / 32
+        (parameterCount + 31) / 32
       }
       val defaultConstructorSignature = buildString {
         append(prefix)
@@ -554,7 +555,12 @@ private fun Class<*>.allMethods(): Sequence<Method> {
   return declaredMethods.asSequence() + methods.asSequence()
 }
 
-internal data class ParameterData(val km: KmValueParameter, val jvm: Parameter, val index: Int) {
+internal data class ParameterData(
+    val km: KmValueParameter,
+    val index: Int,
+    val rawType: Class<*>,
+    val annotations: List<Annotation>
+) {
   val name get() = km.name
   val isOptional get() = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(km.flags)
 }
@@ -588,7 +594,7 @@ internal data class ConstructorData(
           arguments.add(args[parameter])
         }
         parameter.isOptional -> {
-          arguments += defaultPrimitiveValue(parameter.jvm.parameterizedType)
+          arguments += defaultPrimitiveValue(parameter.rawType)
           mask = mask or (1 shl (index % Integer.SIZE))
         }
         else -> {
@@ -635,7 +641,6 @@ internal data class PropertyData(
   val javaType = jvmField?.genericType
       ?: jvmGetter?.genericReturnType
       ?: jvmSetter?.genericReturnType
-      ?: parameter?.jvm?.parameterizedType
       ?: error("No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'.")
 
   val annotations: Set<Annotation> by lazy {
@@ -644,7 +649,7 @@ internal data class PropertyData(
     jvmGetter?.annotations?.let { set += it }
     jvmSetter?.annotations?.let { set += it }
     jvmAnnotationsMethod?.annotations?.let { set += it }
-    parameter?.jvm?.annotations?.let { set += it }
+    parameter?.annotations?.let { set += it }
     set
   }
 }
