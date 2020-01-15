@@ -394,7 +394,6 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
             && flexibleTypeUpperBound isEqualTo other.flexibleTypeUpperBound
             && outerType isEqualTo other.outerType
       }
-      this == null && other == null -> true
       else -> false
     }
   }
@@ -424,7 +423,6 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         variance == other.variance
             && type isEqualTo other.type
       }
-      this == null && other == null -> true
       else -> false
     }
   }
@@ -436,7 +434,6 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         typeFlexibilityId == other.typeFlexibilityId
             && type isEqualTo other.type
       }
-      this == null && other == null -> true
       else -> false
     }
   }
