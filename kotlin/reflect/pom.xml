@@ -33,8 +33,9 @@
       <artifactId>kotlin-stdlib</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-reflect</artifactId>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-metadata-jvm</artifactId>
+      <version>${kotlinx-metadata.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
