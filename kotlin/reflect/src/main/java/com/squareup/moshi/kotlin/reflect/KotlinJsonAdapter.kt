@@ -302,7 +302,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     for (property in allPropertiesSequence.distinctBy { it.name }) {
       val propertyField = property.fieldSignature?.let { signature ->
         val signatureString = signature.asString()
-        rawType.declaredFields.find { it.jvmFieldSignature == signatureString }
+        rawType.allFields().find { it.jvmFieldSignature == signatureString }
       }
       val parameterData = parametersByName[property.name]
 
@@ -551,6 +551,10 @@ private fun Class<*>.toKmClass(throwOnNotClass: Boolean): KmClass? {
 
 private fun Class<*>.allMethods(): Sequence<Method> {
   return declaredMethods.asSequence() + methods.asSequence()
+}
+
+private fun Class<*>.allFields(): Sequence<Field> {
+  return declaredFields.asSequence() + fields.asSequence()
 }
 
 internal data class ParameterData(
