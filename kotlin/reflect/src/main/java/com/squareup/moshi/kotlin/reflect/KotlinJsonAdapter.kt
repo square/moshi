@@ -37,6 +37,8 @@ import kotlinx.metadata.KmType
 import kotlinx.metadata.KmTypeProjection
 import kotlinx.metadata.KmValueParameter
 import kotlinx.metadata.isLocal
+import kotlinx.metadata.jvm.JvmFieldSignature
+import kotlinx.metadata.jvm.JvmMethodSignature
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.fieldSignature
@@ -49,6 +51,7 @@ import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import kotlin.LazyThreadSafetyMode.NONE
 
 /** Classes annotated with this are eligible for this adapter. */
 private val KOTLIN_METADATA = Metadata::class.java
@@ -299,11 +302,10 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
             .filterNot { Flag.IS_PRIVATE(it.flags) || Flag.IS_PRIVATE_TO_THIS(it.flags) }
             .filter { Flag.Property.IS_VAR(it.flags) }
 
+    val signatureSearcher = JvmSignatureSearcher(rawType)
+
     for (property in allPropertiesSequence.distinctBy { it.name }) {
-      val propertyField = property.fieldSignature?.let { signature ->
-        val signatureString = signature.asString()
-        rawType.allFields().find { it.jvmFieldSignature == signatureString }
-      }
+      val propertyField = property.fieldSignature?.let(signatureSearcher::findField)
       val parameterData = parametersByName[property.name]
 
       if (Modifier.isTransient(propertyField?.modifiers ?: 0)) {
@@ -324,18 +326,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       if (!Flag.Property.IS_VAR(property.flags) && parameterData == null) continue
 
-      val getterMethod = property.getterSignature?.let { signature ->
-        val signatureString = signature.asString()
-        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
-      }
-      val setterMethod = property.setterSignature?.let { signature ->
-        val signatureString = signature.asString()
-        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
-      }
-      val annotationsMethod = property.syntheticMethodForAnnotations?.let { signature ->
-        val signatureString = signature.asString()
-        rawType.allMethods().find { it.jvmMethodSignature == signatureString }
-      }
+      val getterMethod = property.getterSignature?.let(signatureSearcher::findMethod)
+      val setterMethod = property.setterSignature?.let(signatureSearcher::findMethod)
+      val annotationsMethod = property.syntheticMethodForAnnotations?.let(signatureSearcher::findMethod)
 
       val propertyData = PropertyData(
           km = property,
@@ -549,12 +542,54 @@ private fun Class<*>.toKmClass(throwOnNotClass: Boolean): KmClass? {
   return classMetadata.toKmClass()
 }
 
-private fun Class<*>.allMethods(): Sequence<Method> {
-  return declaredMethods.asSequence() + methods.asSequence()
-}
+private class JvmSignatureSearcher(clazz: Class<*>) {
 
-private fun Class<*>.allFields(): Sequence<Field> {
-  return declaredFields.asSequence() + fields.asSequence()
+  private val methodSignatureCache = mutableMapOf<String, Method>()
+  private val fieldSignatureCache = mutableMapOf<String, Field>()
+  private val methodIterator by lazy(NONE) { clazz.allMethods().iterator() }
+  private val fieldIterator by lazy(NONE) { clazz.allFields().iterator() }
+
+  fun findMethod(signature: JvmMethodSignature): Method? {
+    val signatureString = signature.asString()
+    val cached = methodSignatureCache[signatureString]
+    if (cached != null) return cached
+
+    while (methodIterator.hasNext()) {
+      val next = methodIterator.next()
+      val nextSignature = next.jvmMethodSignature
+      methodSignatureCache[nextSignature] = next
+      if (nextSignature == signatureString) {
+        return next
+      }
+    }
+
+    return null
+  }
+
+  fun findField(signature: JvmFieldSignature): Field? {
+    val signatureString = signature.asString()
+    val cached = fieldSignatureCache[signatureString]
+    if (cached != null) return cached
+
+    while (fieldIterator.hasNext()) {
+      val next = fieldIterator.next()
+      val nextSignature = next.jvmFieldSignature
+      fieldSignatureCache[nextSignature] = next
+      if (nextSignature == signatureString) {
+        return next
+      }
+    }
+
+    return null
+  }
+
+  private fun Class<*>.allMethods(): Sequence<Method> {
+    return declaredMethods.asSequence() + methods.asSequence()
+  }
+
+  private fun Class<*>.allFields(): Sequence<Field> {
+    return declaredFields.asSequence() + fields.asSequence()
+  }
 }
 
 internal data class ParameterData(
