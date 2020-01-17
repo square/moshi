@@ -546,13 +546,24 @@ private class JvmSignatureSearcher(clazz: Class<*>) {
 
   private val methodSignatureCache = mutableMapOf<String, Method>()
   private val fieldSignatureCache = mutableMapOf<String, Field>()
-  private val methodIterator by lazy(NONE) { clazz.allMethods().iterator() }
-  private val fieldIterator by lazy(NONE) { clazz.allFields().iterator() }
+  private val declaredMethodsIterator by lazy(NONE) { clazz.declaredMethods.iterator() }
+  private val declaredFieldsIterator by lazy(NONE) { clazz.declaredFields.iterator() }
+  private val methodIterator by lazy(NONE) { clazz.methods.iterator() }
+  private val fieldIterator by lazy(NONE) { clazz.fields.iterator() }
 
   fun findMethod(signature: JvmMethodSignature): Method? {
     val signatureString = signature.asString()
     val cached = methodSignatureCache[signatureString]
     if (cached != null) return cached
+
+    while (declaredMethodsIterator.hasNext()) {
+      val next = declaredMethodsIterator.next()
+      val nextSignature = next.jvmMethodSignature
+      methodSignatureCache[nextSignature] = next
+      if (nextSignature == signatureString) {
+        return next
+      }
+    }
 
     while (methodIterator.hasNext()) {
       val next = methodIterator.next()
@@ -571,6 +582,15 @@ private class JvmSignatureSearcher(clazz: Class<*>) {
     val cached = fieldSignatureCache[signatureString]
     if (cached != null) return cached
 
+    while (declaredFieldsIterator.hasNext()) {
+      val next = declaredFieldsIterator.next()
+      val nextSignature = next.jvmFieldSignature
+      fieldSignatureCache[nextSignature] = next
+      if (nextSignature == signatureString) {
+        return next
+      }
+    }
+
     while (fieldIterator.hasNext()) {
       val next = fieldIterator.next()
       val nextSignature = next.jvmFieldSignature
@@ -581,14 +601,6 @@ private class JvmSignatureSearcher(clazz: Class<*>) {
     }
 
     return null
-  }
-
-  private fun Class<*>.allMethods(): Sequence<Method> {
-    return declaredMethods.asSequence() + methods.asSequence()
-  }
-
-  private fun Class<*>.allFields(): Sequence<Field> {
-    return declaredFields.asSequence() + fields.asSequence()
   }
 }
 
