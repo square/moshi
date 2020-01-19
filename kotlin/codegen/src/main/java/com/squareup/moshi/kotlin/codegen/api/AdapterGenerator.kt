@@ -73,6 +73,9 @@ internal class AdapterGenerator(
         // Because we generate redundant `out` variance for some generics and there's no way
         // for us to know when it's redundant.
         "REDUNDANT_PROJECTION",
+        // Because we may generate redundant explicit types for local vars with default values.
+        // Example: 'var fooSet: Boolean = false'
+        "RedundantExplicitType",
         // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
         // like for stylistic reasons.
         "LocalVariableName"
