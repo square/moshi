@@ -126,7 +126,7 @@ abstract class Layer3<C, D> : Layer2<D>() {
 }
 
 @JsonClass(generateAdapter = true)
-data class Layer4<E, F>(
+data class Layer4<E : Personable, F>(
     val layer4E: E,
     val layer4F: F? = null
 ) : Layer3<List<Int>, String>(), LayerInterface<String>
