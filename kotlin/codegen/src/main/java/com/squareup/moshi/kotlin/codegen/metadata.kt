@@ -255,7 +255,7 @@ internal fun targetType(messager: Messager,
     val supertypeProperties = declaredProperties(
         constructor = constructor,
         kotlinApi = supertypeApi,
-        allowTypeVars = typeVariables.isNotEmpty(),
+        allowedTypeVars = typeVariables.toSet(),
         currentClass = appliedClassName,
         resolvedTypes = resolvedTypes
     )
@@ -296,7 +296,7 @@ private fun resolveTypeArgs(
     targetClass: ClassName,
     propertyType: TypeName,
     resolvedTypes: List<ResolvedTypeMapping>,
-    allowTypeVars: Boolean,
+    allowedTypeVars: Set<TypeVariableName>,
     entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass }
 ): TypeName {
   val unwrappedType = propertyType.unwrapTypeAlias()
@@ -321,13 +321,14 @@ private fun resolveTypeArgs(
     resolvedType !is TypeVariableName -> resolvedType
     entryStartIndex != 0 -> {
       // We need to go deeper
-      resolveTypeArgs(targetClass, resolvedType, resolvedTypes, allowTypeVars, entryStartIndex - 1)
+      resolveTypeArgs(targetClass, resolvedType, resolvedTypes, allowedTypeVars, entryStartIndex - 1)
     }
-    allowTypeVars -> {
-      // TODO this is ok but it would be nice to verify the typevar here is the one defined on our target class
+    resolvedType.copy(nullable = false) in allowedTypeVars -> {
+      // This is a generic type in the top-level declared class. This is fine to leave in because
+      // this will be handled by the `Type` array passed in at runtime.
       resolvedType
     }
-    else -> error("Could not find $resolvedType in $resolvedTypes")
+    else -> error("Could not find $resolvedType in $resolvedTypes. Also not present in allowable top-level type vars $allowedTypeVars")
   }
 }
 
@@ -336,7 +337,7 @@ private fun resolveTypeArgs(
 private fun declaredProperties(
     constructor: TargetConstructor,
     kotlinApi: TypeSpec,
-    allowTypeVars: Boolean,
+    allowedTypeVars: Set<TypeVariableName>,
     currentClass: ClassName,
     resolvedTypes: List<ResolvedTypeMapping>
 ): Map<String, TargetProperty> {
@@ -347,7 +348,7 @@ private fun declaredProperties(
         targetClass = currentClass,
         propertyType = initialProperty.type,
         resolvedTypes = resolvedTypes,
-        allowTypeVars = allowTypeVars
+        allowedTypeVars = allowedTypeVars
     )
     val property = initialProperty.toBuilder(type = resolvedType).build()
     val name = property.name
