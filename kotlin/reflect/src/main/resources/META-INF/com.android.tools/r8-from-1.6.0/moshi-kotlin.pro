@@ -8,16 +8,6 @@
 # Keep default constructor marker name for lookup in signatures.
 -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
 
-# Keep names of Kotlin classes but allow shrinking if unused
--keepnames @kotlin.Metadata class *
-
-# Keep fields, constructors, and methods in Kotlin classes.
--keepclassmembers @kotlin.Metadata class * {
-  <fields>;
-  <init>(...);
-  <methods>;
-}
-
 # Keep generic signatures and annotations at runtime.
 # R8 requires InnerClasses and EnclosingMethod if you keepattributes Signature.
 -keepattributes InnerClasses,Signature,RuntimeVisible*Annotations,EnclosingMethod
