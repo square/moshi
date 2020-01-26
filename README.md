@@ -614,11 +614,31 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 R8 / ProGuard
 --------
 
-If you are using R8 or ProGuard add the options from [this file](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro). If using Android, this requires Android Gradle Plugin 3.2.0+.
+If using Android, the Android Gradle Plugin should automatically extract embedded rules included in 
+Moshi's jar artifacts.
 
-The `moshi-kotlin` artifact additionally requires the options from [this file](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
+If you need to add them manually, you can add them from the following files:
+ 
+- [`moshi`](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro). 
+- [`moshi-kotlin`](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
+- You might also need rules for [Okio](https://github.com/square/okio), which is a dependency of this library.
 
-You might also need rules for Okio which is a dependency of this library.
+**Important note:** These rules only cover Moshi's core machinery. You will still need to add appropriate
+rules for your own code based on your usage of reflection. `moshi-kotlin` relies on introspection of Kotlin's
+`@Metadata` classes, so you must keep appropriate JVM members that they read. In practice, such a set of
+rules could look like this:
+
+```proguard
+# Keep names of Kotlin classes but allow shrinking if unused
+-keepnames @kotlin.Metadata class your.class.Here
+
+# Keep fields, constructors, and methods in Kotlin classes.
+-keepclassmembers @kotlin.Metadata class your.class.Here {
+  <fields>;
+  <init>(...);
+  <methods>;
+}
+```
 
 License
 --------
