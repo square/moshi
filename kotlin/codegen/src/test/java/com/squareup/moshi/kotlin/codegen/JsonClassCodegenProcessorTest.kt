@@ -432,6 +432,14 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Complex<T>(val firstName: FirstName = "", @MyQualifier val names: MutableList<String>, val genericProp: T)
+          
+          object NestedType {
+            @JsonQualifier
+            annotation class NestedQualifier
+
+            @JsonClass(generateAdapter = true)
+            data class NestedSimple(@NestedQualifier val firstName: String)
+          }
 
           @JsonClass(generateAdapter = true)
           class MultipleMasks(
@@ -600,6 +608,18 @@ class JsonClassCodegenProcessorTest {
       -keepclassmembers class testPackage.MultipleMasks {
           public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
       }
+    """.trimIndent())
+
+    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.NestedType.NestedSimple.pro" }).hasContent("""
+      -if class testPackage.NestedType${'$'}NestedSimple
+      -keepnames class testPackage.NestedType${'$'}NestedSimple
+      -if class testPackage.NestedType${'$'}NestedSimple
+      -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
+          public <init>(com.squareup.moshi.Moshi);
+          private com.squareup.moshi.JsonAdapter stringAtNestedQualifierAdapter;
+      }
+      -if class testPackage.NestedType${'$'}NestedSimple
+      -keep @interface testPackage.NestedType${'$'}NestedQualifier
     """.trimIndent())
   }
 
