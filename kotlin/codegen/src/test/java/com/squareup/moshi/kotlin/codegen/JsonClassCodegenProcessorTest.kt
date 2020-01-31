@@ -432,6 +432,14 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Complex<T>(val firstName: FirstName = "", @MyQualifier val names: MutableList<String>, val genericProp: T)
+          
+          object NestedType {
+            @JsonQualifier
+            annotation class NestedQualifier
+
+            @JsonClass(generateAdapter = true)
+            data class NestedSimple(@NestedQualifier val firstName: String)
+          }
 
           @JsonClass(generateAdapter = true)
           class MultipleMasks(
@@ -506,101 +514,110 @@ class JsonClassCodegenProcessorTest {
     ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Aliases.pro" }).hasContent("""
-      -if class testPackage.Aliases
-      -keepnames class testPackage.Aliases
-      -if class testPackage.Aliases
-      -keep class testPackage.AliasesJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
+    result.generatedFiles.filter { it.extension == "pro" }.forEach { generatedFile ->
+      when (generatedFile.nameWithoutExtension) {
+        "moshi-testPackage.Aliases" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.Aliases
+          -keepnames class testPackage.Aliases
+          -if class testPackage.Aliases
+          -keep class testPackage.AliasesJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+          }
+        """.trimIndent())
+        "moshi-testPackage.Simple" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.Simple
+          -keepnames class testPackage.Simple
+          -if class testPackage.Simple
+          -keep class testPackage.SimpleJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+          }
+        """.trimIndent())
+        "moshi-testPackage.Generic" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.Generic
+          -keepnames class testPackage.Generic
+          -if class testPackage.Generic
+          -keep class testPackage.GenericJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
+          }
+        """.trimIndent())
+        "moshi-testPackage.UsingQualifiers" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.UsingQualifiers
+          -keepnames class testPackage.UsingQualifiers
+          -if class testPackage.UsingQualifiers
+          -keep class testPackage.UsingQualifiersJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+              private com.squareup.moshi.JsonAdapter stringAtMyQualifierAdapter;
+          }
+          -if class testPackage.UsingQualifiers
+          -keep @interface testPackage.MyQualifier
+        """.trimIndent())
+        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.MixedTypes
+          -keepnames class testPackage.MixedTypes
+          -if class testPackage.MixedTypes
+          -keep class testPackage.MixedTypesJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+          }
+        """.trimIndent())
+        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.DefaultParams
+          -keepnames class testPackage.DefaultParams
+          -if class testPackage.DefaultParams
+          -keep class testPackage.DefaultParamsJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+          }
+          -if class testPackage.DefaultParams
+          -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+          -if class testPackage.DefaultParams
+          -keepclassmembers class testPackage.DefaultParams {
+              public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
+          }
+        """.trimIndent())
+        "moshi-testPackage.Complex" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.Complex
+          -keepnames class testPackage.Complex
+          -if class testPackage.Complex
+          -keep class testPackage.ComplexJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
+              private com.squareup.moshi.JsonAdapter mutableListOfStringAtMyQualifierAdapter;
+          }
+          -if class testPackage.Complex
+          -keep @interface testPackage.MyQualifier
+          -if class testPackage.Complex
+          -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+          -if class testPackage.Complex
+          -keepclassmembers class testPackage.Complex {
+              public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
+          }
+        """.trimIndent())
+        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.MultipleMasks
+          -keepnames class testPackage.MultipleMasks
+          -if class testPackage.MultipleMasks
+          -keep class testPackage.MultipleMasksJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+          }
+          -if class testPackage.MultipleMasks
+          -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+          -if class testPackage.MultipleMasks
+          -keepclassmembers class testPackage.MultipleMasks {
+              public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
+          }
+        """.trimIndent())
+        "moshi-testPackage.NestedType.NestedSimple" -> assertThat(generatedFile).hasContent("""
+          -if class testPackage.NestedType${'$'}NestedSimple
+          -keepnames class testPackage.NestedType${'$'}NestedSimple
+          -if class testPackage.NestedType${'$'}NestedSimple
+          -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
+              public <init>(com.squareup.moshi.Moshi);
+              private com.squareup.moshi.JsonAdapter stringAtNestedQualifierAdapter;
+          }
+          -if class testPackage.NestedType${'$'}NestedSimple
+          -keep @interface testPackage.NestedType${'$'}NestedQualifier
+        """.trimIndent())
+        else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Simple.pro" }).hasContent("""
-      -if class testPackage.Simple
-      -keepnames class testPackage.Simple
-      -if class testPackage.Simple
-      -keep class testPackage.SimpleJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
-      }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Generic.pro" }).hasContent("""
-      -if class testPackage.Generic
-      -keepnames class testPackage.Generic
-      -if class testPackage.Generic
-      -keep class testPackage.GenericJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-      }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.UsingQualifiers.pro" }).hasContent("""
-      -if class testPackage.UsingQualifiers
-      -keepnames class testPackage.UsingQualifiers
-      -if class testPackage.UsingQualifiers
-      -keep class testPackage.UsingQualifiersJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
-          private com.squareup.moshi.JsonAdapter stringAtMyQualifierAdapter;
-      }
-      -if class testPackage.UsingQualifiers
-      -keep @interface testPackage.MyQualifier
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.MixedTypes.pro" }).hasContent("""
-      -if class testPackage.MixedTypes
-      -keepnames class testPackage.MixedTypes
-      -if class testPackage.MixedTypes
-      -keep class testPackage.MixedTypesJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
-      }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.DefaultParams.pro" }).hasContent("""
-      -if class testPackage.DefaultParams
-      -keepnames class testPackage.DefaultParams
-      -if class testPackage.DefaultParams
-      -keep class testPackage.DefaultParamsJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
-      }
-      -if class testPackage.DefaultParams
-      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-      -if class testPackage.DefaultParams
-      -keepclassmembers class testPackage.DefaultParams {
-          public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
-      }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.Complex.pro" }).hasContent("""
-      -if class testPackage.Complex
-      -keepnames class testPackage.Complex
-      -if class testPackage.Complex
-      -keep class testPackage.ComplexJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-          private com.squareup.moshi.JsonAdapter mutableListOfStringAtMyQualifierAdapter;
-      }
-      -if class testPackage.Complex
-      -keep @interface testPackage.MyQualifier
-      -if class testPackage.Complex
-      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-      -if class testPackage.Complex
-      -keepclassmembers class testPackage.Complex {
-          public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
-      }
-    """.trimIndent())
-
-    assertThat(result.generatedFiles.find { it.name == "moshi-testPackage.MultipleMasks.pro" }).hasContent("""
-      -if class testPackage.MultipleMasks
-      -keepnames class testPackage.MultipleMasks
-      -if class testPackage.MultipleMasks
-      -keep class testPackage.MultipleMasksJsonAdapter {
-          public <init>(com.squareup.moshi.Moshi);
-      }
-      -if class testPackage.MultipleMasks
-      -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-      -if class testPackage.MultipleMasks
-      -keepclassmembers class testPackage.MultipleMasks {
-          public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
-      }
-    """.trimIndent())
+    }
   }
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {

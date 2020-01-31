@@ -46,7 +46,7 @@ internal data class ProguardConfig(
     //    private final {adapter fields}
     // }
     //
-    val targetName = targetClass.canonicalName
+    val targetName = targetClass.reflectionName()
     val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
     // Keep the class name for Moshi's reflective lookup based on it
     appendln("-if class $targetName")
@@ -65,7 +65,7 @@ internal data class ProguardConfig(
 
     qualifierProperties.asSequence()
         .flatMap { it.qualifiers.asSequence() }
-        .map(ClassName::canonicalName)
+        .map(ClassName::reflectionName)
         .sorted()
         .forEach { qualifier ->
           appendln("-if class $targetName")
@@ -83,7 +83,7 @@ internal data class ProguardConfig(
       appendln("-if class $targetName")
       appendln("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
       appendln("-if class $targetName")
-      appendln("-keepclassmembers class ${targetClass.canonicalName} {")
+      appendln("-keepclassmembers class $targetName {")
       val allParams = targetConstructorParams.toMutableList()
       val maskCount = if (targetConstructorParams.isEmpty()) {
         0
