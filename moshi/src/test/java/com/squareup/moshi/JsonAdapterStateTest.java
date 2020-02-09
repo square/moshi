@@ -114,7 +114,7 @@ public class JsonAdapterStateTest {
         assertEquals(generatedJson, "{}");
     }
 
-    @Test
+    @DynamicTest
     public void nullSerializableJsonAdapterTest() throws IOException {
         Person samplePerson = new Person(null, null, null);
 
@@ -134,6 +134,57 @@ public class JsonAdapterStateTest {
 
         assertEquals(adapter.toJson(samplePerson), sampleJson);
         assertEquals(adapter.serializeNulls().toJson(samplePerson), sampleJson);
+    }
+
+    @Test
+    public void failOnUnknownJsonAdapterTest() throws Exception {
+
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class);
+        boolean assertOccurred = false;
+
+        try{
+            Person generatedPerson = adapter.failOnUnknown().fromJson(sampleJson);
+        }
+        catch(JsonDataException e) {
+            assertOccurred = true;
+        }
+        assertTrue(assertOccurred);
+    }
+
+    @Test
+    public void failOnUnknownToFailOnUnknownJsonAdapterTest() throws Exeption {
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).failOnUnknown();
+
+        boolean assertOccurred = false;
+
+        try{
+            Person generatedPerson = adapter.failOnUnknown().fromJson(sampleJson);
+        }
+        catch(JsonDataException e) {
+            assertOccurred = true;
+        }
+        assertTrue(assertOccurred);
+    }
+
+    @Test
+    public void notFailOnUnknownTest() {
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class);
+
+        boolean assertOccurred = false;
+
+        try{
+            Person generatedPerson = adapter.fromJson(sampleJson);
+        }
+        catch(JsonDataException e) {
+            assertOccurred = true;
+        }
+        assertFalse(assertOccurred);
     }
 
     public static class Person {
