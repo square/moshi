@@ -18,12 +18,15 @@ package com.squareup.moshi.adapters;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import okio.Buffer;
 import org.junit.Test;
+
+import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -105,6 +108,35 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(message).isNull();
   }
 
+  @Test public void specifiedFallbackJsonAdapter() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withFallbackJsonAdapter(new JsonAdapter<Object>() {
+              @Override
+              public Object fromJson(JsonReader reader) throws IOException {
+                reader.skipValue();
+                return new EmptyMessage();
+              }
+
+              @Override
+              public void toJson(JsonWriter writer, @Nullable Object value) {
+                throw new RuntimeException("Not implemented as not needed for the test");
+              }
+            })
+        )
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    JsonReader reader =
+        JsonReader.of(new Buffer().writeUtf8("{\"type\":\"data\",\"value\":\"Okay!\"}"));
+
+    Message message = adapter.fromJson(reader);
+    assertThat(message).isInstanceOf(EmptyMessage.class);
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   @Test public void unregisteredSubtype() {
     Moshi moshi = new Moshi.Builder()
         .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
@@ -123,6 +155,52 @@ public final class PolymorphicJsonAdapterFactoryTest {
           + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
           + " this subtype.");
     }
+  }
+
+  @Test public void unregisteredSubtypeWithDefaultValue() {
+    Error fallbackError = new Error(Collections.<String, Object>emptyMap());
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withDefaultValue(fallbackError))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    try {
+      adapter.toJson(new EmptyMessage());
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Expected one of [class"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
+          + " EmptyMessage, a class"
+          + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
+          + " this subtype.");
+    }
+  }
+
+  @Test public void unregisteredSubtypeWithFallbackJsonAdapter() {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withFallbackJsonAdapter(new JsonAdapter<Object>() {
+              @Nullable
+              @Override
+              public Object fromJson(JsonReader reader) {
+                throw new RuntimeException("Not implemented as not needed for the test");
+              }
+
+              @Override
+              public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
+                writer.name("type").value("injected by fallbackJsonAdapter");
+              }
+            }))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    String json = adapter.toJson(new EmptyMessage());
+    assertThat(json).isEqualTo("{\"type\":\"injected by fallbackJsonAdapter\"}");
   }
 
   @Test public void nonStringLabelValue() throws IOException {
