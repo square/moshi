@@ -104,31 +104,36 @@ public class JsonAdapterStateTest {
         assertThat(exceptionThrown);
     }
 
+    @Test
     public void notNullSerializableJsonAdapterTest() throws IOException {
-        String json = "{\"name\": \"Rafael\", \"age\": null, \"money\": null}";
         JsonAdapter<Person> adapter = moshi.adapter(Person.class);
+        Person samplePerson = new Person(null, null, null);
 
-        boolean exceptionThrown = false;
-        try {
-            adapter.fromJson(json);
-        } catch (JsonDataException exception) {
-            exceptionThrown = true;
-        }
+        String generatedJson = adapter.toJson(samplePerson);
 
-        assertTrue(exceptionThrown);
+        assertEquals(generatedJson, "{}");
     }
 
     @Test
     public void nullSerializableJsonAdapterTest() throws IOException {
-        Person samplePerson = new Person("Rafael", null, null);
+        Person samplePerson = new Person(null, null, null);
 
-        String json = "{\"name\": \"Rafael\", \"age\": null, \"money\": null}";
+        String sampleJson = "{\"age\":null,\"money\":null,\"name\":null}";
         JsonAdapter<Person> adapter = moshi.adapter(Person.class).serializeNulls();
-        Person generatedPerson = adapter.fromJson(json);
+        String generatedJson = adapter.toJson(samplePerson);
 
-        assertEquals(generatedPerson.name, samplePerson.name);
-        assertEquals(generatedPerson.age, samplePerson.age);
-        assertEquals(generatedPerson.money, samplePerson.money);
+        assertEquals(generatedJson, sampleJson);
+    }
+
+    @Test
+    public void nullSerializableToNullSerializableJsonAdapterTest() throws IOException {
+        Person samplePerson = new Person(null, null, null);
+
+        String sampleJson = "{\"age\":null,\"money\":null,\"name\":null}";
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).serializeNulls();
+
+        assertEquals(adapter.toJson(samplePerson), sampleJson);
+        assertEquals(adapter.serializeNulls().toJson(samplePerson), sampleJson);
     }
 
     public static class Person {
