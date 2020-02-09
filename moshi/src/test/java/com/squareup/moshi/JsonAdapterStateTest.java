@@ -104,6 +104,32 @@ public class JsonAdapterStateTest {
         assertThat(exceptionThrown);
     }
 
+    public void notNullSerializableJsonAdapterTest() throws IOException {
+        String json = "{\"name\": \"Rafael\", \"age\": null, \"money\": null}";
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class);
+
+        boolean exceptionThrown = false;
+        try {
+            adapter.fromJson(json);
+        } catch (JsonDataException exception) {
+            exceptionThrown = true;
+        }
+
+        assertTrue(exceptionThrown);
+    }
+
+    @Test
+    public void nullSerializableJsonAdapterTest() throws IOException {
+        Person samplePerson = new Person("Rafael", null, null);
+
+        String json = "{\"name\": \"Rafael\", \"age\": null, \"money\": null}";
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).serializeNulls();
+        Person generatedPerson = adapter.fromJson(json);
+
+        assertEquals(generatedPerson.name, samplePerson.name);
+        assertEquals(generatedPerson.age, samplePerson.age);
+        assertEquals(generatedPerson.money, samplePerson.money);
+    }
 
     public static class Person {
         String name;
