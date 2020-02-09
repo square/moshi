@@ -107,6 +107,14 @@ import javax.annotation.Nullable;
  * {@link #withDefaultValue(Object)}. This instance should be immutable, as it is shared.
  */
 public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Factory {
+  /**
+   * Thin wrapper around {@link JsonAdapter} to allow {@link PolymorphicJsonAdapter} to
+   * distinguish between {@code JsonAdapter} added due to a {@code defaultValue} or added
+   * by users of {@link PolymorphicJsonAdapterFactory}
+   */
+  private static abstract class DefaultJsonAdapter<T> extends JsonAdapter<T> {
+  }
+
   final Class<T> baseType;
   final String labelKey;
   final List<String> labels;
@@ -183,6 +191,24 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         true);
   }
 
+  private JsonAdapter<Object> buildFallbackJsonAdapter(final T defaultValue) {
+    return new DefaultJsonAdapter<Object>() {
+      @Nullable
+      @Override
+      public T fromJson(JsonReader reader) throws IOException {
+        reader.skipValue();
+        return defaultValue;
+      }
+
+      @Override
+      public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
+        throw new IOException("This method should never be called. "
+            + "If you find this on your stacktraces please report it "
+            + "to the https://github.com/square/moshi project");
+      }
+    };
+  }
+
   @Override
   public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
     if (Types.getRawType(type) != baseType || !annotations.isEmpty()) {
@@ -198,8 +224,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         labels,
         subtypes,
         jsonAdapters,
-        defaultValue,
-        defaultValueSet
+        defaultValueSet ? buildFallbackJsonAdapter(defaultValue) : null
     ).nullSafe();
   }
 
@@ -208,8 +233,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     final List<String> labels;
     final List<Type> subtypes;
     final List<JsonAdapter<Object>> jsonAdapters;
-    @Nullable final Object defaultValue;
-    final boolean defaultValueSet;
+    @Nullable final JsonAdapter<Object> fallbackJsonAdapter;
 
     /** Single-element options containing the label's key only. */
     final JsonReader.Options labelKeyOptions;
@@ -220,14 +244,12 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         List<String> labels,
         List<Type> subtypes,
         List<JsonAdapter<Object>> jsonAdapters,
-        @Nullable Object defaultValue,
-        boolean defaultValueSet) {
+        @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
       this.labelKey = labelKey;
       this.labels = labels;
       this.subtypes = subtypes;
       this.jsonAdapters = jsonAdapters;
-      this.defaultValue = defaultValue;
-      this.defaultValueSet = defaultValueSet;
+      this.fallbackJsonAdapter = fallbackJsonAdapter;
 
       this.labelKeyOptions = JsonReader.Options.of(labelKey);
       this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
@@ -243,10 +265,10 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         peeked.close();
       }
       if (labelIndex == -1) {
-        reader.skipValue();
-        return defaultValue;
+        return this.fallbackJsonAdapter.fromJson(reader);
+      } else {
+        return jsonAdapters.get(labelIndex).fromJson(reader);
       }
-      return jsonAdapters.get(labelIndex).fromJson(reader);
     }
 
     private int labelIndex(JsonReader reader) throws IOException {
@@ -259,7 +281,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
         }
 
         int labelIndex = reader.selectString(labelOptions);
-        if (labelIndex == -1 && !defaultValueSet) {
+        if (labelIndex == -1 && this.fallbackJsonAdapter == null) {
           throw new JsonDataException("Expected one of "
               + labels
               + " for key '"
