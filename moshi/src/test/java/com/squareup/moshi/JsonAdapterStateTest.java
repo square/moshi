@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 public class JsonAdapterStateTest {
@@ -68,13 +69,52 @@ public class JsonAdapterStateTest {
         assertTrue(exceptionThrown);
     }
 
+    @Test
+    public void lenientIsTrueTest() throws IOException {
+        String json = "{\"name\": \"Rafael\", \"age\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).lenient();
+
+        Person testPerson = adapter.fromJson(json);
+        assertThat(testPerson.money).isEqualTo(Double.POSITIVE_INFINITY);
+    }
+
+    @Test
+    public void lenientToLenientIsTrueTest() throws IOException {
+        String json = "{\"name\": \"Rafael\", \"age\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).lenient();
+
+        Person testPerson = adapter.lenient().fromJson(json);
+        assertThat(testPerson.money).isEqualTo(Double.POSITIVE_INFINITY);
+    }
+
+    @Test
+    public void notLenientTest() throws IOException {
+        String json = "{\"name\": \"Rafael\", \"age\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class);
+        boolean exceptionThrown = false;
+
+        try {
+            adapter.fromJson(json);
+        }  catch (JsonEncodingException expected) {
+            exceptionThrown = true;
+        }
+        assertThat(exceptionThrown);
+    }
+
+
     public static class Person {
         String name;
         Integer age;
+        Double money;
 
-        public Person(String name, Integer age) {
+        public Person(String name, Integer age, Double money) {
             this.name = name;
             this.age = age;
+            this.money = money;
         }
     }
+
 }
