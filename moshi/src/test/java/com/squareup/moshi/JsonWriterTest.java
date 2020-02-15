@@ -18,7 +18,11 @@ package com.squareup.moshi;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import okio.BufferedSink;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -741,5 +745,73 @@ public final class JsonWriterTest {
     sink.close();
     assertThat(factory.json()).isEqualTo("{\"a\":1.0}");
     sink.close();
+  }
+
+  @Test public void jsonValueTypes() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.setSerializeNulls(true);
+
+    writer.beginArray();
+    writer.jsonValue(null);
+    writer.jsonValue(1.1d);
+    writer.jsonValue(1L);
+    writer.jsonValue(1);
+    writer.jsonValue(true);
+    writer.jsonValue("one");
+    writer.jsonValue(Collections.emptyList());
+    writer.jsonValue(Arrays.asList(1, 2, null, 3));
+    writer.jsonValue(Collections.emptyMap());
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("one", "uno");
+    map.put("two", null);
+    writer.jsonValue(map);
+    writer.endArray();
+
+    assertThat(factory.json()).isEqualTo("["
+        + "null,"
+        + "1.1,"
+        + "1,"
+        + "1,"
+        + "true,"
+        + "\"one\","
+        + "[],"
+        + "[1,2,null,3],"
+        + "{},"
+        + "{\"one\":\"uno\",\"two\":null}"
+        + "]");
+  }
+
+  @Test public void jsonValueIllegalTypes() throws IOException {
+    try {
+      factory.newWriter().jsonValue(new Object());
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Unsupported type: java.lang.Object");
+    }
+
+    try {
+      factory.newWriter().jsonValue('1');
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Unsupported type: java.lang.Character");
+    }
+
+    Map<Integer, String> mapWrongKey = new LinkedHashMap<>();
+    mapWrongKey.put(1, "one");
+    try {
+      factory.newWriter().jsonValue(mapWrongKey);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Map keys must be of type String: java.lang.Integer");
+    }
+
+    Map<String, String> mapNullKey = new LinkedHashMap<>();
+    mapNullKey.put(null, "one");
+    try {
+      factory.newWriter().jsonValue(mapNullKey);
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("Map keys must be non-null");
+    }
   }
 }
