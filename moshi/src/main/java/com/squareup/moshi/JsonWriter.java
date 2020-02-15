@@ -19,6 +19,8 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.BufferedSink;
@@ -385,6 +387,58 @@ public abstract class JsonWriter implements Closeable, Flushable {
    */
   @CheckReturnValue
   public abstract BufferedSink valueSink() throws IOException;
+
+  /**
+   * Encodes the value which may be a string, number, boolean, null, map, or list.
+   *
+   * @return this writer.
+   * @see JsonReader#readJsonValue()
+   */
+  public final JsonWriter jsonValue(@Nullable Object value) throws IOException {
+    if (value instanceof Map<?, ?>) {
+      beginObject();
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+        Object key = entry.getKey();
+        if (!(key instanceof String)) {
+          throw new IllegalArgumentException(key == null
+              ? "Map keys must be non-null"
+              : "Map keys must be of type String: " + key.getClass().getName());
+        }
+        name(((String) key));
+        jsonValue(entry.getValue());
+      }
+      endObject();
+
+    } else if (value instanceof List<?>) {
+      beginArray();
+      for (Object element : ((List<?>) value)) {
+        jsonValue(element);
+      }
+      endArray();
+
+    } else if (value instanceof String) {
+      value(((String) value));
+
+    } else if (value instanceof Boolean) {
+      value(((Boolean) value).booleanValue());
+
+    } else if (value instanceof Double) {
+      value(((Double) value).doubleValue());
+
+    } else if (value instanceof Long) {
+      value(((Long) value).longValue());
+
+    } else if (value instanceof Number) {
+      value(((Number) value));
+
+    } else if (value == null) {
+      nullValue();
+
+    } else {
+      throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
+    }
+    return this;
+  }
 
   /**
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so

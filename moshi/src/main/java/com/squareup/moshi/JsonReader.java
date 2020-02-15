@@ -429,6 +429,7 @@ public abstract class JsonReader implements Closeable {
    *
    * @throws JsonDataException if the next token is not a literal value, if a JSON object has a
    * duplicate key.
+   * @see JsonWriter#jsonValue(Object)
    */
   public final @Nullable Object readJsonValue() throws IOException {
     switch (peek()) {
