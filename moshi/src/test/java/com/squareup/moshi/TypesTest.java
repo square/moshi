@@ -33,6 +33,7 @@ import static com.squareup.moshi.internal.Util.canonicalize;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class TypesTest {
@@ -345,6 +346,18 @@ public final class TypesTest {
   @Test public void recursiveTypeVariablesResolve2() {
     JsonAdapter<TestType2> adapter = new Moshi.Builder().build().adapter(TestType2.class);
     assertThat(adapter).isNotNull();
+  }
+
+  @Test public void getRawTypeThrowsException() {
+    Type type = null;
+    Boolean exceptionThrown = false;
+    try {
+      Types.getRawType(type);
+    } catch (IllegalArgumentException exception) {
+      exceptionThrown = true;
+    }
+
+    assertTrue(exceptionThrown);
   }
 
   private static class TestType<X> {

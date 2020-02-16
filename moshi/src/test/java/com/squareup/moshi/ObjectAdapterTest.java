@@ -41,6 +41,7 @@ import org.junit.Test;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 public final class ObjectAdapterTest {
   @Test public void toJsonUsesRuntimeType() {
@@ -278,6 +279,16 @@ public final class ObjectAdapterTest {
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     List<?> listOfMap = (List<?>) objectAdapter.fromJson("[{\"b\":\"c\"}]");
     assertThat(listOfMap).isEqualTo(singletonList(singletonMap("x", "y")));
+  }
+
+
+  @Test public void objectJsonAdapterReadsNull() throws IOException {
+    Moshi moshi = new Moshi.Builder().build();
+    StandardJsonAdapters.ObjectJsonAdapter adapter = new StandardJsonAdapters.ObjectJsonAdapter(moshi);
+
+    JsonReader jsonReader = TestUtil.newReader("null");
+
+    assertEquals(adapter.fromJson(jsonReader), null);
   }
 
   static class Delivery {
