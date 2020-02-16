@@ -24,7 +24,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public final class LinkedHashTreeMapTest {
   @Test public void iterationOrder() {
@@ -222,6 +222,51 @@ public final class LinkedHashTreeMapTest {
         assertConsistent(node);
       }
     }
+  }
+
+  @Test public void removeNode() {
+    //Create all nodes in my map
+    LinkedHashTreeMap<Integer, String> map = new LinkedHashTreeMap<>();
+    map.put(1, "1");
+    map.put(2, "2");
+    map.put(3, "3");
+    map.put(4, "4");
+    map.put(5, "5");
+    map.put(6, "6");
+    map.put(7, "7");
+
+    //Create a subtree for node defined by key 3 using other nodes in the map
+    Node<Integer, String> parentNode = map.findByObject(3);
+    Node<Integer, String> leftNode = map.findByObject(2);
+    Node<Integer, String> rightNode = map.findByObject(4);
+
+    parentNode.left = leftNode;
+    leftNode.parent = parentNode;
+
+    parentNode.right = rightNode;
+    rightNode.parent = parentNode;
+
+    //Remove parent node
+    map.remove(3);
+
+    assertFalse(map.containsKey(3));
+    assertEquals(map.size(), 6);
+    assertEquals(map.findByObject(4).left, map.findByObject(2));
+  }
+
+  @Test public void first() {
+    LinkedHashTreeMap<Integer, String> map = new LinkedHashTreeMap<>();
+    map.put(1, "1");
+    map.put(2, "2");
+    map.put(3, "3");
+    map.put(4, "4");
+    map.put(5, "5");
+    map.put(6, "6");
+    map.put(7, "7");
+
+    Node<Integer, String> node = map.findByObject(3);
+
+    assertEquals(node.first(), map.findByObject(3));
   }
 
   private static final Node<String, String> head = new Node<>();
