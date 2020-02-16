@@ -265,9 +265,30 @@ public final class LinkedHashTreeMapTest {
     map.put(7, "7");
 
     Node<Integer, String> node = map.findByObject(3);
+    Node<Integer, String> leftNode = map.findByObject(2);
+    node.left = leftNode;
 
-    assertEquals(node.first(), map.findByObject(3));
+    assertEquals(node.first(), leftNode);
   }
+
+  @Test public void last() {
+    LinkedHashTreeMap<Integer, String> map = new LinkedHashTreeMap<>();
+    map.put(1, "1");
+    map.put(2, "2");
+    map.put(3, "3");
+    map.put(4, "4");
+    map.put(5, "5");
+    map.put(6, "6");
+    map.put(7, "7");
+    map.put(8, "8");
+
+    Node<Integer, String> node = map.findByObject(7);
+    Node<Integer, String> rightNode = map.findByObject(8);
+    node.right = rightNode;
+
+    assertEquals(node.last(),rightNode);
+  }
+
 
   private static final Node<String, String> head = new Node<>();
 
