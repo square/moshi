@@ -105,6 +105,18 @@ public class JsonAdapterStateTest {
     }
 
     @Test
+    public void LenientToNotLenientTest() throws IOException {
+        String json = "{\"name\": \"Rafael\", \"age\": 24, \"money\": Infinity}";
+
+        JsonAdapter<Person> adapter = moshi.adapter(Person.class).lenient();
+
+        Person testPerson = adapter.fromJson(json);
+
+
+
+        assertThat(testPerson.money).isEqualTo(Double.POSITIVE_INFINITY);
+    }
+
     public void notNullSerializableJsonAdapterTest() throws IOException {
         JsonAdapter<Person> adapter = moshi.adapter(Person.class);
         Person samplePerson = new Person(null, null, null);

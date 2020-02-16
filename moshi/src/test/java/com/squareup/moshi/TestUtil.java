@@ -16,10 +16,12 @@
 package com.squareup.moshi;
 
 import java.util.Arrays;
+
 import okio.Buffer;
 
 final class TestUtil {
   static final int MAX_DEPTH = 255;
+  private static final Object DEFAULT_CONSTRUCTOR_MARKER = null;
 
   static JsonReader newReader(String json) {
     Buffer buffer = new Buffer().writeUtf8(json);
