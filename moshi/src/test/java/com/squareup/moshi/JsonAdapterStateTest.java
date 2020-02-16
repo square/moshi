@@ -114,7 +114,7 @@ public class JsonAdapterStateTest {
         assertEquals(generatedJson, "{}");
     }
 
-    @DynamicTest
+    @Test
     public void nullSerializableJsonAdapterTest() throws IOException {
         Person samplePerson = new Person(null, null, null);
 
@@ -139,7 +139,7 @@ public class JsonAdapterStateTest {
     @Test
     public void failOnUnknownJsonAdapterTest() throws Exception {
 
-        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": 3.8}";
 
         JsonAdapter<Person> adapter = moshi.adapter(Person.class);
         boolean assertOccurred = false;
@@ -154,8 +154,8 @@ public class JsonAdapterStateTest {
     }
 
     @Test
-    public void failOnUnknownToFailOnUnknownJsonAdapterTest() throws Exeption {
-        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+    public void failOnUnknownToFailOnUnknownJsonAdapterTest() throws Exception {
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": 3.8}";
 
         JsonAdapter<Person> adapter = moshi.adapter(Person.class).failOnUnknown();
 
@@ -171,8 +171,8 @@ public class JsonAdapterStateTest {
     }
 
     @Test
-    public void notFailOnUnknownTest() {
-        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": Infinity}";
+    public void notFailOnUnknownTest() throws IOException {
+        String sampleJson = "{\"name\": \"Rafael\", \"ag\": 24, \"money\": 3.8}";
 
         JsonAdapter<Person> adapter = moshi.adapter(Person.class);
 
@@ -180,8 +180,7 @@ public class JsonAdapterStateTest {
 
         try{
             Person generatedPerson = adapter.fromJson(sampleJson);
-        }
-        catch(JsonDataException e) {
+        } catch(JsonDataException e) {
             assertOccurred = true;
         }
         assertFalse(assertOccurred);
