@@ -98,6 +98,18 @@ public abstract class JsonAdapter<T> {
   }
 
   /**
+   * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
+   * strings, numbers, booleans and nulls.
+   */
+  @CheckReturnValue public final @Nullable T fromJsonValue(@Nullable JsonValueReader reader) {
+    try {
+      return fromJson(reader);
+    } catch (IOException e) {
+      throw new AssertionError(e); // No I/O reading from an object.
+    }
+  }
+
+  /**
    * Returns a JSON adapter equal to this JSON adapter, but that serializes nulls when encoding
    * JSON.
    */
