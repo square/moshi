@@ -40,7 +40,7 @@ import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 /**
  * Coordinates binding between JSON values and Java objects.
  *
- * Moshi instances are thread-safe, meaning multiple threads can safely use a single instance concurrently.
+ * <p>Moshi instances are thread-safe, meaning multiple threads can safely use a single instance concurrently.
  */
 public final class Moshi {
   static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(5);
@@ -192,7 +192,7 @@ public final class Moshi {
   /**
    * Builder class for preparing instances of Moshi.
    *
-   * Builder instances are thread-safe, meaning multiple threads can safely use a single instance concurrently.
+   * <p>Builder instances are thread-safe, meaning multiple threads can safely use a single instance concurrently.
    */
   public static final class Builder {
     final List<JsonAdapter.Factory> factories = Collections.synchronizedList(new ArrayList<JsonAdapter.Factory>());

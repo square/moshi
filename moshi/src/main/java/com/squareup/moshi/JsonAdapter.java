@@ -31,10 +31,10 @@ import okio.BufferedSource;
 /**
  * Converts Java values to JSON, and JSON values to Java.
  *
- * JsonAdapter instances provided by Moshi are thread-safe, meaning multiple threads can safely use a single instance
+ * <p>JsonAdapter instances provided by Moshi are thread-safe, meaning multiple threads can safely use a single instance
  * concurrently.
  *
- * Custom JsonAdapter implementations should be designed to be thread-safe.
+ * <p>Custom JsonAdapter implementations should be designed to be thread-safe.
  */
 public abstract class JsonAdapter<T> {
   @CheckReturnValue public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
