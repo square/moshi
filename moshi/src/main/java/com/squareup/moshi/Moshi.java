@@ -190,15 +190,8 @@ public final class Moshi {
     return Arrays.asList(type, annotations);
   }
 
-  /**
-   * Builder class for preparing instances of Moshi.
-   *
-   * <p>Builder instances are thread-safe, meaning multiple threads can safely use a single
-   * instance concurrently.
-   */
   public static final class Builder {
-    final List<JsonAdapter.Factory> factories =
-        Collections.synchronizedList(new ArrayList<JsonAdapter.Factory>());
+    final List<JsonAdapter.Factory> factories = new ArrayList<>();
 
     public <T> Builder add(final Type type, final JsonAdapter<T> jsonAdapter) {
       if (type == null) throw new IllegalArgumentException("type == null");
