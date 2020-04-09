@@ -188,7 +188,7 @@ public final class Moshi {
   }
 
   public static final class Builder {
-    final List<JsonAdapter.Factory> factories = new ArrayList<>();
+    final List<JsonAdapter.Factory> factories = Collections.synchronizedList(new ArrayList<JsonAdapter.Factory>());
 
     public <T> Builder add(final Type type, final JsonAdapter<T> jsonAdapter) {
       if (type == null) throw new IllegalArgumentException("type == null");
