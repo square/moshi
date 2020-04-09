@@ -23,6 +23,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -58,6 +60,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
       if (rawType.isInterface() || rawType.isEnum()) return null;
       if (!annotations.isEmpty()) return null;
       if (Util.isPlatformType(rawType)) {
+        throwIfIsCollectionClass(type, List.class);
+        throwIfIsCollectionClass(type, Set.class);
+        throwIfIsCollectionClass(type, Map.class);
+        throwIfIsCollectionClass(type, Collection.class);
+
         String messagePrefix = "Platform " + rawType;
         if (type instanceof ParameterizedType) {
           messagePrefix += " in " + type;
@@ -92,6 +99,21 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
         createFieldBindings(moshi, t, fields);
       }
       return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
+    }
+
+    /**
+     * Throw clear error messages for the common beginner mistake of using the concrete
+     * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
+     */
+    private void throwIfIsCollectionClass(Type type, Class<?> collectionInterface) {
+      Class<?> rawClass = Types.getRawType(type);
+      if (collectionInterface.isAssignableFrom(rawClass)) {
+        throw new IllegalArgumentException(
+            "No JsonAdapter for " + type + ", you should probably use "
+                + collectionInterface.getSimpleName() + " instead of " + rawClass.getSimpleName()
+                + " (Moshi only supports the collection interfaces by default)"
+                + " or else register a custom JsonAdapter.");
+      }
     }
 
     /** Creates a field binding for each of declared field of {@code type}. */
