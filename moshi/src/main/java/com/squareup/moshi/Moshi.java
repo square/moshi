@@ -39,6 +39,9 @@ import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 /**
  * Coordinates binding between JSON values and Java objects.
+ *
+ * <p>Moshi instances are thread-safe, meaning multiple threads can safely use a single instance
+ * concurrently.
  */
 public final class Moshi {
   static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(5);
