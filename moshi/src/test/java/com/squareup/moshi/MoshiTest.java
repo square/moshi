@@ -28,12 +28,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
 import okio.Buffer;
@@ -45,7 +47,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
-@SuppressWarnings("CheckReturnValue")
+@SuppressWarnings({"CheckReturnValue", "ResultOfMethodCallIgnored"})
 public final class MoshiTest {
   @Test public void booleanAdapter() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
@@ -954,8 +956,48 @@ public final class MoshiTest {
     }
   }
 
+  @Test public void collectionClassesHaveClearErrorMessage() {
+    Moshi moshi = new Moshi.Builder().build();
+    try {
+      moshi.adapter(Types.newParameterizedType(ArrayList.class, String.class));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No JsonAdapter for "
+          + "java.util.ArrayList<java.lang.String>, "
+          + "you should probably use List instead of ArrayList "
+          + "(Moshi only supports the collection interfaces by default) "
+          + "or else register a custom JsonAdapter.");
+    }
+
+    try {
+      moshi.adapter(Types.newParameterizedType(HashMap.class, String.class, String.class));
+      fail();
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessage("No JsonAdapter for "
+          + "java.util.HashMap<java.lang.String, java.lang.String>, "
+          + "you should probably use Map instead of HashMap "
+          + "(Moshi only supports the collection interfaces by default) "
+          + "or else register a custom JsonAdapter.");
+    }
+  }
+
+  @Test public void noCollectionErrorIfAdapterExplicitlyProvided() {
+    Moshi moshi = new Moshi.Builder()
+        .add(new JsonAdapter.Factory() {
+          @Override public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations,
+              Moshi moshi) {
+            return new MapJsonAdapter<String, String>(moshi, String.class, String.class);
+          }
+        })
+        .build();
+
+    JsonAdapter<HashMap<String, String>> adapter = moshi.adapter(
+            Types.newParameterizedType(HashMap.class, String.class, String.class));
+    assertThat(adapter).isInstanceOf(MapJsonAdapter.class);
+  }
+
   static final class HasPlatformType {
-    ArrayList<String> strings;
+    UUID uuid;
 
     static final class Wrapper {
       HasPlatformType hasPlatformType;
@@ -973,14 +1015,14 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.UUID requires explicit "
               + "JsonAdapter to be registered"
-              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class java.util.UUID uuid"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
               + "\nfor java.util.Map<java.lang.String, "
               + "com.squareup.moshi.MoshiTest$HasPlatformType>");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.UUID "
           + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -992,13 +1034,13 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.UUID requires explicit "
               + "JsonAdapter to be registered"
-              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class java.util.UUID uuid"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType hasPlatformType"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.UUID "
           + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -1010,14 +1052,14 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage(
-          "Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> requires explicit "
+          "Platform class java.util.UUID requires explicit "
               + "JsonAdapter to be registered"
-              + "\nfor java.util.ArrayList<java.lang.String> strings"
+              + "\nfor class java.util.UUID uuid"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
               + "\nfor java.util.List<com.squareup.moshi.MoshiTest$HasPlatformType> platformTypes"
               + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
       assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause()).hasMessage("Platform class java.util.ArrayList in java.util.ArrayList<java.lang.String> "
+      assertThat(e.getCause()).hasMessage("Platform class java.util.UUID "
           + "requires explicit JsonAdapter to be registered");
     }
   }
