@@ -54,7 +54,9 @@ private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
     private val target: TargetType,
-    private val propertyList: List<PropertyGenerator>
+    private val propertyList: List<PropertyGenerator>,
+    private val readOnly: Boolean,
+    private val writeOnly: Boolean
 ) {
 
   companion object {
@@ -239,15 +241,17 @@ internal class AdapterGenerator(
       }
     }
 
-    result.addProperty(optionsProperty)
+    if (!writeOnly) {
+      result.addProperty(optionsProperty)
+    }
     for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(uniqueAdapter.delegateKey.generateProperty(
           nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
     }
 
     result.addFunction(generateToStringFun())
-    result.addFunction(generateFromJsonFun(result))
-    result.addFunction(generateToJsonFun())
+    result.addFunction(generateFromJsonFun(result, writeOnly))
+    result.addFunction(generateToJsonFun(readOnly))
 
     return result.build()
   }
@@ -280,11 +284,24 @@ internal class AdapterGenerator(
         .build()
   }
 
-  private fun generateFromJsonFun(classBuilder: TypeSpec.Builder): FunSpec {
+  private fun generateFromJsonFun(classBuilder: TypeSpec.Builder, writeOnly: Boolean): FunSpec {
     val result = FunSpec.builder("fromJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(readerParam)
         .returns(originalTypeName)
+
+    if (writeOnly) {
+      val name = originalRawTypeName.simpleNames.joinToString(".")
+      result.addStatement("throw·%T(%M(%L)·{ append(%S).append(%S).append('%L').append(%S) })",
+          UnsupportedOperationException::class,
+          MemberName("kotlin.text", "buildString"),
+          TO_STRING_SIZE_BASE + name.length + 53,
+          TO_STRING_PREFIX,
+          name,
+          ")",
+          " is write only. @JsonClass is set with writeOnly=true")
+      return result.build()
+    }
 
     for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
@@ -541,12 +558,23 @@ internal class AdapterGenerator(
         MOSHI_UTIL, property.localName, property.jsonName, reader)
   }
 
-  private fun generateToJsonFun(): FunSpec {
+  private fun generateToJsonFun(readOnly: Boolean): FunSpec {
     val result = FunSpec.builder("toJson")
         .addModifiers(KModifier.OVERRIDE)
         .addParameter(writerParam)
         .addParameter(valueParam)
-
+    if (readOnly) {
+      val name = originalRawTypeName.simpleNames.joinToString(".")
+      result.addStatement("throw·%T(%M(%L)·{ append(%S).append(%S).append('%L').append(%S) })",
+          UnsupportedOperationException::class,
+          MemberName("kotlin.text", "buildString"),
+          TO_STRING_SIZE_BASE + name.length + 51,
+          TO_STRING_PREFIX,
+          name,
+          ")",
+          " is read only. @JsonClass is set with readOnly=true")
+      return result.build()
+    }
     result.beginControlFlow("if (%N == null)", valueParam)
     result.addStatement("throw·%T(%S)", NullPointerException::class,
         "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.")

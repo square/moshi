@@ -22,6 +22,7 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.contentOf
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -396,6 +397,70 @@ class JsonClassCodegenProcessorTest {
         JsonReader.Options::class.createType(),
         JsonAdapter::class.parameterizedBy(String::class)
     )
+  }
+
+  @Test
+  fun `ReadOnly adapter should throw on read`() {
+    val result = compile(kotlin("source.kt",
+                """
+      import com.squareup.moshi.JsonClass
+      
+      typealias FirstName = String
+      typealias LastName = String
+
+      @JsonClass(generateAdapter = true, readOnly = true)
+      data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
+      """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    result.generatedFiles.filter { it.name == "PersonJsonAdapter.kt" }.forEach { generatedFile ->
+      assertThat(contentOf(generatedFile)).contains("""
+    throw UnsupportedOperationException(buildString(79) {
+        append("GeneratedJsonAdapter(").append("Person").append(')').append(" is read only. @JsonClass is set with readOnly=true")
+        })
+  }""")
+    }
+  }
+
+  @Test
+  fun `WriteOnly adapter should throw on write`() {
+    val result = compile(kotlin("source.kt",
+                """
+      import com.squareup.moshi.JsonClass
+      
+      typealias FirstName = String
+      typealias LastName = String
+
+      @JsonClass(generateAdapter = true, writeOnly = true)
+      data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
+      """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    result.generatedFiles.filter { it.name == "PersonJsonAdapter.kt" }.forEach { generatedFile ->
+      assertThat(contentOf(generatedFile)).contains("""
+    throw UnsupportedOperationException(buildString(81) {
+        append("GeneratedJsonAdapter(").append("Person").append(')').append(" is write only. @JsonClass is set with writeOnly=true")
+        })
+  }""")
+    }
+  }
+
+  @Test
+  fun `Adapter can't be readOnly and writeOnly`() {
+    val result = compile(kotlin("source.kt",
+                """
+      import com.squareup.moshi.JsonClass
+      
+      typealias FirstName = String
+      typealias LastName = String
+
+      @JsonClass(generateAdapter = true, writeOnly = true, readOnly = true)
+      data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
+      """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains("@JsonClass can't be both readOnly and writeOnly")
   }
 
   @Test

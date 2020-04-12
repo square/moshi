@@ -46,6 +46,22 @@ public @interface JsonClass {
   boolean generateAdapter();
 
   /**
+   * An optional parameter that replace generated toJson() code of the adapter to simply throw a
+   * {@link JsonDataException}.
+   *
+   * <p>Reduce generated code size when data is never serialized to JSON.
+   */
+  boolean readOnly() default false;
+
+  /**
+   * An optional parameter that replace generated fromJson() code of the adapter to simply throw a
+   * {@link JsonDataException}.
+   *
+   * <p>Reduce generated code size when data is never deserialized from JSON.
+   */
+  boolean writeOnly() default false;
+
+  /**
    * An optional custom generator tag used to indicate which generator should be used. If empty,
    * Moshi's annotation processor will generate an adapter for the annotated type. If not empty,
    * Moshi's processor will skip it and defer to a custom generator. This can be used to allow
