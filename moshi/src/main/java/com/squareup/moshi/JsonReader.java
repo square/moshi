@@ -191,6 +191,8 @@ public abstract class JsonReader implements Closeable {
   /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
   boolean failOnUnknown;
 
+  private final DataMappingMismatchLog dataMappingMismatchLog;
+
   /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
   @CheckReturnValue public static JsonReader of(BufferedSource source) {
     return new JsonUtf8Reader(source);
@@ -201,6 +203,7 @@ public abstract class JsonReader implements Closeable {
     scopes = new int[32];
     pathNames = new String[32];
     pathIndices = new int[32];
+    dataMappingMismatchLog = new DataMappingMismatchLog();
   }
 
   // Package-private to control subclasses.
@@ -211,6 +214,7 @@ public abstract class JsonReader implements Closeable {
     this.pathIndices = copyFrom.pathIndices.clone();
     this.lenient = copyFrom.lenient;
     this.failOnUnknown = copyFrom.failOnUnknown;
+    this.dataMappingMismatchLog = new DataMappingMismatchLog(copyFrom.dataMappingMismatchLog);
   }
 
   final void pushScope(int newTop) {
@@ -507,6 +511,10 @@ public abstract class JsonReader implements Closeable {
    */
   @CheckReturnValue public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
+
+  public DataMappingMismatchLog getDataMappingMismatchLog() {
+    return dataMappingMismatchLog;
   }
 
   /**
