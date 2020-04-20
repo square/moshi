@@ -22,8 +22,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;

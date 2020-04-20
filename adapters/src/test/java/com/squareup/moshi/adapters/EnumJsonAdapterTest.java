@@ -15,7 +15,11 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.*;
+import com.squareup.moshi.AuditJsonReader;
+import com.squareup.moshi.DataMappingAuditor;
+import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonDataException;
+import com.squareup.moshi.JsonReader;
 import okio.Buffer;
 import org.junit.Test;
 

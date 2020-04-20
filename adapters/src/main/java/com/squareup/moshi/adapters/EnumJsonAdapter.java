@@ -15,8 +15,12 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.*;
-
+import com.squareup.moshi.DataMappingAuditor;
+import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonDataException;
+import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import javax.annotation.Nullable;
