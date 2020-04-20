@@ -8,22 +8,22 @@ import java.util.List;
  * and delegates to the underlying {@link JsonReader}.
  */
 public class AuditJsonReader extends DelegatingJsonReader implements DataMappingAuditor {
-    private List<UnknownEnum> unknownEnums;
+  private List<UnknownEnum> unknownEnums;
 
-    public AuditJsonReader(JsonReader delegate) {
-        super(delegate);
-    }
+  public AuditJsonReader(JsonReader delegate) {
+    super(delegate);
+  }
 
-    @Override
-    public void addUnknownEnum(UnknownEnum unknownEnum) {
-        if (unknownEnums == null) {
-            unknownEnums = new ArrayList<>();
-        }
-        unknownEnums.add(unknownEnum);
+  @Override
+  public void addUnknownEnum(UnknownEnum unknownEnum) {
+    if (unknownEnums == null) {
+      unknownEnums = new ArrayList<>();
     }
+    unknownEnums.add(unknownEnum);
+  }
 
-    @Override
-    public List<UnknownEnum> getUnknownEnums() {
-        return unknownEnums;
-    }
+  @Override
+  public List<UnknownEnum> getUnknownEnums() {
+    return unknownEnums;
+  }
 }

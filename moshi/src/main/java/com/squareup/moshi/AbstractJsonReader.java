@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.ByteString;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
