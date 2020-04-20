@@ -46,7 +46,7 @@ import static com.squareup.moshi.JsonScope.CLOSED;
  *       #endObject} will pop it.
  * </ul>
  */
-final class JsonValueReader extends JsonReader {
+final class JsonValueReader extends AbstractJsonReader {
   /** Sentinel object pushed on {@link #stack} when the reader is closed. */
   private static final Object JSON_READER_CLOSED = new Object();
 
@@ -330,7 +330,7 @@ final class JsonValueReader extends JsonReader {
     return new JsonValueReader(this);
   }
 
-  @Override void promoteNameToValue() throws IOException {
+  @Override public void promoteNameToValue() throws IOException {
     if (hasNext()) {
       String name = nextName();
       push(name);

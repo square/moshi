@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+
 import org.junit.Test;
 
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
@@ -58,7 +60,7 @@ public final class JsonValueReaderTest {
 
     assertThat(reader.hasNext()).isTrue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NULL);
-    assertThat(reader.nextNull()).isNull();
+    assertThat((Object) reader.nextNull()).isNull();
 
     assertThat(reader.hasNext()).isFalse();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_ARRAY);
@@ -101,7 +103,7 @@ public final class JsonValueReaderTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NAME);
     assertThat(reader.nextName()).isEqualTo("d");
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NULL);
-    assertThat(reader.nextNull()).isNull();
+    assertThat((Object) reader.nextNull()).isNull();
 
     assertThat(reader.hasNext()).isFalse();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_OBJECT);

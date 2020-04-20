@@ -23,7 +23,7 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
 
-final class JsonUtf8Reader extends JsonReader {
+final class JsonUtf8Reader extends AbstractJsonReader {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
 
   private static final ByteString SINGLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("'\\");
@@ -1158,7 +1158,7 @@ final class JsonUtf8Reader extends JsonReader {
     }
   }
 
-  @Override void promoteNameToValue() throws IOException {
+  @Override public void promoteNameToValue() throws IOException {
     if (hasNext()) {
       peekedString = nextName();
       peeked = PEEKED_BUFFERED;
