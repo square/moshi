@@ -15,9 +15,7 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.*;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -57,6 +55,19 @@ public final class EnumJsonAdapterTest {
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
     assertThat(adapter.fromJson(reader)).isEqualTo(Roshambo.ROCK);
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test public void withFallbackValueAndAuditJsonReader() throws Exception {
+    EnumJsonAdapter<Roshambo> adapter = EnumJsonAdapter.create(Roshambo.class)
+        .withUnknownFallback(Roshambo.ROCK);
+    AuditJsonReader reader = new AuditJsonReader(JsonReader.of(new Buffer().writeUtf8("\"SPOCK\"")));
+    assertThat(adapter.fromJson(reader)).isEqualTo(Roshambo.ROCK);
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    assertThat(reader.getUnknownEnums().size()).isEqualTo(1);
+    DataMappingAuditor.UnknownEnum unknownEnumValue = reader.getUnknownEnums().get(0);
+    assertThat(unknownEnumValue.name).isEqualTo("SPOCK");
+    assertThat(unknownEnumValue.path).isEqualTo("$");
   }
 
   @Test public void withNullFallbackValue() throws Exception {

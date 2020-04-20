@@ -15,11 +15,8 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.*;
+
 import java.io.IOException;
 import java.util.Arrays;
 import javax.annotation.Nullable;
@@ -92,7 +89,13 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
       throw new JsonDataException(
           "Expected a string but was " + reader.peek() + " at path " + path);
     }
-    reader.skipValue();
+
+    if (reader instanceof DataMappingAuditor) {
+      ((DataMappingAuditor) reader).addUnknownEnum(
+          new DataMappingAuditor.UnknownEnum(path, reader.nextString()));
+    } else {
+      reader.skipValue();
+    }
     return fallbackValue;
   }
 
