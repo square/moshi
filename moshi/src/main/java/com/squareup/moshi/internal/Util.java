@@ -54,7 +54,7 @@ public final class Util {
     Class<? extends Annotation> metadata = null;
     try {
       //noinspection unchecked
-      metadata = (Class<? extends Annotation>) Class.forName("kotlin.Metadata");
+      metadata = (Class<? extends Annotation>) Class.forName(getKotlinMetadataClassName());
     } catch (ClassNotFoundException ignored) {
     }
     METADATA = metadata;
@@ -67,6 +67,11 @@ public final class Util {
     } catch (ClassNotFoundException ignored) {
     }
     DEFAULT_CONSTRUCTOR_MARKER = defaultConstructorMarker;
+  }
+
+  // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metada
+  private static String getKotlinMetadataClassName() {
+    return "kotlin.Metadata";
   }
 
   private Util() {
