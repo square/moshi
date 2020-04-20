@@ -57,7 +57,7 @@ final class FallbackEnum {
           return null;
         }
         Class<Enum> enumType = (Class<Enum>) rawType;
-        Enum<?> fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
+        Enum fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
         return new FallbackEnumJsonAdapter<>(enumType, fallback);
       }
     };
