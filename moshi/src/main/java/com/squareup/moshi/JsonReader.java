@@ -174,6 +174,11 @@ import java.io.IOException;
  * of this class are not thread safe.
  */
 public interface JsonReader extends Closeable {
+  /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
+  @CheckReturnValue static JsonReader of(BufferedSource source) {
+    return new JsonUtf8Reader(source);
+  }
+
   /**
    * Configure this parser to be liberal in what it accepts. By default
    * this parser is strict and only accepts JSON as specified by <a
@@ -359,11 +364,6 @@ public interface JsonReader extends Closeable {
    * that arbitrary type adapters can use {@link #nextString} to read a name value.
    */
   void promoteNameToValue() throws IOException;
-
-  /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
-  @CheckReturnValue static JsonReader of(BufferedSource source) {
-    return new JsonUtf8Reader(source);
-  }
 
   /**
    * Returns the value of the next token, consuming it. The result may be a string, number, boolean,
