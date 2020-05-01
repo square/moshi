@@ -349,6 +349,29 @@ public final class Util {
     }
   }
 
+  public static final class NonNullType implements Type {
+      private final Type rawType;
+
+      public NonNullType(Type rawType) {
+          this.rawType = canonicalize(rawType);
+      }
+
+      public Type getRawType() {
+          return rawType;
+      }
+
+      @Override
+      public boolean equals(Object other) {
+          return other instanceof NonNullType
+                  && Types.equals(this, (NonNullType) other);
+      }
+
+      @Override
+      public int hashCode() {
+          return rawType.hashCode();
+      }
+  }
+
   public static final class ParameterizedTypeImpl implements ParameterizedType {
     private final @Nullable Type ownerType;
     private final Type rawType;

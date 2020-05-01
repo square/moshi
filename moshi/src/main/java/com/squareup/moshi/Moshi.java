@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.NonNullJsonAdapter;
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -52,6 +53,7 @@ public final class Moshi {
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(NonNullJsonAdapter.FACTORY);
   }
 
   private final List<JsonAdapter.Factory> factories;

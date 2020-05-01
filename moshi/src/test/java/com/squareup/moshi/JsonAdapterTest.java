@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -294,5 +295,29 @@ public final class JsonAdapterTest {
   @Test public void nonNullDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
     assertThat(adapter.nonNull()).isSameAs(adapter);
+  }
+
+  @Test public void NonNullType() throws Exception {
+    String json = "null";
+    Type nonNull = Types.ofNonNull(Integer.class);
+    JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(nonNull);
+    try {
+      adapter.fromJson(json);
+      fail();
+    } catch (JsonDataException ex) {
+      assertThat(ex).hasMessage("Unexpected null at $");
+    }
+  }
+
+  @Test public void NonNullListItems() throws Exception {
+    String json = "[1,2,3,null,4]";
+    Type list = Types.newParameterizedType(List.class, Types.ofNonNull(Integer.class));
+    JsonAdapter<List<Integer>> adapter = new Moshi.Builder().build().adapter(list);
+    try {
+      adapter.fromJson(json);
+      fail();
+    } catch (JsonDataException ex) {
+      assertThat(ex).hasMessage("Unexpected null at $[3]");
+    }
   }
 }
