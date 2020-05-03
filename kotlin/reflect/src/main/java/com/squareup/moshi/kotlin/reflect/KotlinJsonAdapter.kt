@@ -282,38 +282,50 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   private fun resolveKotlin(context: Type, rawType: Class<*>, returnType: KType): Type {
     val resolved = resolve(context, rawType, returnType.javaType)
     return if (resolved is Class<*> && resolved.isArray) {
-        val arrayType = returnType.arguments.first().type
-        val optionalType = if (arrayType?.isMarkedNullable == false) {
-            Types.ofNonNull(resolved.componentType)
-        } else {
-            Types.ofNullable(resolved.componentType)
-        }
-        Types.arrayOf(optionalType)
-    } else if (resolved is GenericArrayType) {
-        val arrayType = returnType.arguments.first().type
-        val optionalType = if (arrayType?.isMarkedNullable == false) {
-            Types.ofNonNull(resolved.genericComponentType)
-        } else {
-            Types.ofNullable(resolved.genericComponentType)
-        }
-        Types.arrayOf(optionalType)
-    } else if (resolved is ParameterizedType) {
-        val typeArguments = resolved.actualTypeArguments.map { javaType ->
-            val kotlinType = Types.getRawType(javaType).kotlin
-            val argument = returnType.arguments.find { it.type?.jvmErasure?.isSubclassOf(kotlinType) == true }
-            if (argument != null) {
-                if (argument.type?.isMarkedNullable == false) {
-                    Types.ofNonNull(javaType)
-                } else {
-                    Types.ofNullable(javaType)
-                }
-            } else {
-                javaType
-            }
-        }
-        Types.newParameterizedTypeWithOwner(resolved.ownerType, resolved.rawType, *typeArguments.toTypedArray())
-    } else {
+      val arrayType = returnType.arguments.findSubTypeOf(resolved.componentType)
+      if (arrayType == null) {
         resolved
+      } else {
+        val optionalType = if (arrayType.type?.isMarkedNullable == false) {
+          Types.ofNonNull(resolved.componentType)
+        } else {
+          Types.ofNullable(resolved.componentType)
+        }
+        Types.arrayOf(optionalType)
+      }
+    } else if (resolved is GenericArrayType) {
+      val arrayType = returnType.arguments.findSubTypeOf(resolved.genericComponentType)
+      if (arrayType == null) {
+        resolved
+      } else {
+        val optionalType = if (arrayType.type?.isMarkedNullable == false) {
+          Types.ofNonNull(resolved.genericComponentType)
+        } else {
+          Types.ofNullable(resolved.genericComponentType)
+        }
+        Types.arrayOf(optionalType)
+      }
+    } else if (resolved is ParameterizedType) {
+      val typeArguments = resolved.actualTypeArguments.map { javaType ->
+        val argument = returnType.arguments.findSubTypeOf(javaType)
+        if (argument != null) {
+          if (argument.type?.isMarkedNullable == false) {
+            Types.ofNonNull(javaType)
+          } else {
+            Types.ofNullable(javaType)
+          }
+        } else {
+          javaType
+        }
+      }
+      Types.newParameterizedTypeWithOwner(resolved.ownerType, resolved.rawType, *typeArguments.toTypedArray())
+    } else {
+      resolved
     }
+  }
+
+  private fun List<KTypeProjection>.findSubTypeOf(type: Type): KTypeProjection? {
+    val kotlinType = Types.getRawType(type).kotlin
+    return find { it.type?.jvmErasure?.isSubclassOf(kotlinType) == true }
   }
 }

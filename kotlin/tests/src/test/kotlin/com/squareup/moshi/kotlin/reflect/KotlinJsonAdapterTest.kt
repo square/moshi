@@ -897,6 +897,23 @@ class KotlinJsonAdapterTest {
     }
 
     @Test
+    fun assertNonNullReflectModelWithTypedArray() {
+        val moshi = Moshi.Builder()
+                .add(KotlinJsonAdapterFactory())
+                .build()
+        val adapter = moshi.adapter<ArrayOrderProject>()
+        val json = """{"supplies": {"items": [null], "price": 10}, 
+            |"dueDate": 20, 
+            |"snacks": {"items": [{"type": 2}, null], "price": 20}}""".trimMargin()
+        try {
+            adapter.fromJson(json)
+            fail()
+        } catch (ex: JsonDataException) {
+            assertThat(ex).hasMessage("Unexpected null at \$.snacks.items[1]");
+        }
+    }
+
+    @Test
     fun assertNonNullReflectModelWithTypedMap() {
         val moshi = Moshi.Builder()
                 .add(KotlinJsonAdapterFactory())
@@ -925,6 +942,12 @@ class KotlinJsonAdapterTest {
             dueDate: Long
     ) : Project<MappedOrder<String, Snack?>, MappedOrder<String?, Snack>>(supplies, snacks, dueDate)
 
+    class ArrayOrderProject(
+            supplies: ArrayOrder<Snack?>,
+            snacks: ArrayOrder<Snack>,
+            dueDate: Long
+    ): Project<ArrayOrder<Snack?>, ArrayOrder<Snack>>(supplies, snacks, dueDate)
+
     open class Project<First, Second>(
             val supplies: First,
             val snacks: Second,
@@ -936,6 +959,8 @@ class KotlinJsonAdapterTest {
     data class Order<T>(val items: List<T>, val price: Long)
 
     data class MappedOrder<Key, Value>(val items: Map<Key, Value>, val price: Long)
+
+    data class ArrayOrder<T>(val items: Array<T>, val price: Long)
 
     @JsonClass(generateAdapter = true)
     class UsesGeneratedAdapter(var a: Int, var b: Int)
