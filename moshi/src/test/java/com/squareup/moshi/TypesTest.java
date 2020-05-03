@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import org.junit.Test;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -27,12 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import org.junit.Test;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 public final class TypesTest {
@@ -319,6 +321,30 @@ public final class TypesTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessageContaining("Class does not have a JsonClass annotation");
     }
+  }
+
+  @Test public void ofNullDoesntDuplicate() {
+    Type optionalType = Types.ofNonNull(Boolean.class);
+    Type nonNull = Types.ofNonNull(optionalType);
+    assertSame(optionalType, nonNull);
+  }
+
+  @Test public void ofNullableDoesntDuplicate() {
+    Type optionalType = Types.ofNullable(Boolean.class);
+    Type nullable = Types.ofNullable(optionalType);
+    assertSame(optionalType, nullable);
+  }
+
+  @Test public void changeNullableDoesntDuplicateRawType() {
+    OptionalType optionalType = (OptionalType) Types.ofNonNull(Boolean.class);
+    OptionalType nullable = (OptionalType) Types.ofNullable(optionalType);
+    assertSame(optionalType.getRawType(), nullable.getRawType());
+  }
+
+  @Test public void changeNonNullDoesntDuplicateRawType() {
+    OptionalType optionalType = (OptionalType) Types.ofNullable(Boolean.class);
+    OptionalType nonNull = (OptionalType) Types.ofNonNull(optionalType);
+    assertSame(optionalType.getRawType(), nonNull.getRawType());
   }
 
   //
