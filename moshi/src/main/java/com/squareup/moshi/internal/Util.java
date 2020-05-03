@@ -21,6 +21,7 @@ import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.OptionalType;
 import com.squareup.moshi.Types;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -159,6 +160,10 @@ public final class Util {
       WildcardType w = (WildcardType) type;
       return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
 
+    } else if (type instanceof OptionalType) {
+      if (type instanceof OptionalTypeImpl) return type;
+      OptionalType optional = (OptionalType) type;
+      return new OptionalTypeImpl(optional.isOptional(), optional.getRawType());
     } else {
       return type; // This type is unsupported!
     }
@@ -259,6 +264,16 @@ public final class Util {
         }
         return original;
 
+      } else if (toResolve instanceof OptionalType) {
+        OptionalType original = (OptionalType) toResolve;
+        Type rawType = original.getRawType();
+        Type resolved = resolve(context, contextRawType, rawType,
+                visitedTypeVariables);
+        if (resolved == rawType) {
+          return original;
+        } else {
+          return new OptionalTypeImpl(original.isOptional(), resolved);
+        }
       } else {
         return toResolve;
       }
@@ -349,21 +364,29 @@ public final class Util {
     }
   }
 
-  public static final class NonNullType implements Type {
+  public static final class OptionalTypeImpl implements OptionalType {
       private final Type rawType;
+      private final boolean isOptional;
 
-      public NonNullType(Type rawType) {
+      public OptionalTypeImpl(boolean isOptional, Type rawType) {
+          this.isOptional = isOptional;
           this.rawType = canonicalize(rawType);
       }
 
+      @Override
       public Type getRawType() {
           return rawType;
       }
 
       @Override
+      public boolean isOptional() {
+          return isOptional;
+      }
+
+      @Override
       public boolean equals(Object other) {
-          return other instanceof NonNullType
-                  && Types.equals(this, (NonNullType) other);
+          return other instanceof OptionalTypeImpl
+                  && Types.equals(this, (OptionalType) other);
       }
 
       @Override

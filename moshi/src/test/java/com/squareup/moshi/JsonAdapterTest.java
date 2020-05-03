@@ -30,6 +30,8 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -319,5 +321,21 @@ public final class JsonAdapterTest {
     } catch (JsonDataException ex) {
       assertThat(ex).hasMessage("Unexpected null at $[3]");
     }
+  }
+
+  @Test public void NullableType() throws Exception {
+    String json = "null";
+    Type nonNull = Types.ofNullable(Integer.class);
+    JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(nonNull);
+    Integer result = adapter.fromJson(json);
+    assertNull(result);
+  }
+
+  @Test public void NullableListItems() throws Exception {
+    String json = "[1,2,3,null,4]";
+    Type list = Types.newParameterizedType(List.class, Types.ofNullable(Integer.class));
+    JsonAdapter<List<Integer>> adapter = new Moshi.Builder().build().adapter(list);
+    List<Integer> result = adapter.fromJson(json);
+    assertNull(result.get(3));
   }
 }

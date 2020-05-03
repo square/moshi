@@ -15,8 +15,10 @@
  */
 package com.squareup.moshi;
 
-import com.squareup.moshi.internal.NonNullJsonAdapter;
 import com.squareup.moshi.internal.Util;
+
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -31,8 +33,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static com.squareup.moshi.internal.Util.removeSubtypeWildcard;
@@ -53,7 +53,6 @@ public final class Moshi {
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
-    BUILT_IN_FACTORIES.add(NonNullJsonAdapter.FACTORY);
   }
 
   private final List<JsonAdapter.Factory> factories;
@@ -62,7 +61,8 @@ public final class Moshi {
 
   Moshi(Builder builder) {
     List<JsonAdapter.Factory> factories = new ArrayList<>(
-        builder.factories.size() + BUILT_IN_FACTORIES.size());
+        builder.factories.size() + BUILT_IN_FACTORIES.size() + 1);
+    factories.add(OptionalTypeAdapter.FACTORY);
     factories.addAll(builder.factories);
     factories.addAll(BUILT_IN_FACTORIES);
     this.factories = Collections.unmodifiableList(factories);

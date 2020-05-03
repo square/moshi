@@ -15,30 +15,25 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import com.squareup.moshi.*
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Modifier
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.AbstractMap.SimpleEntry
 import kotlin.collections.Map.Entry
-import kotlin.reflect.KFunction
-import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KParameter
-import kotlin.reflect.KProperty1
+import kotlin.reflect.*
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 /** Classes annotated with this are eligible for this adapter. */
 private val KOTLIN_METADATA = Metadata::class.java
@@ -250,7 +245,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
+      val resolvedPropertyType = resolveKotlin(type, rawType, property.returnType)
       val adapter = moshi.adapter<Any>(
           resolvedPropertyType, Util.jsonAnnotations(allAnnotations.toTypedArray()), property.name)
 
@@ -283,5 +278,42 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val nonTransientBindings = bindings.filterNotNull()
     val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
+  }
+  private fun resolveKotlin(context: Type, rawType: Class<*>, returnType: KType): Type {
+    val resolved = resolve(context, rawType, returnType.javaType)
+    return if (resolved is Class<*> && resolved.isArray) {
+        val arrayType = returnType.arguments.first().type
+        val optionalType = if (arrayType?.isMarkedNullable == false) {
+            Types.ofNonNull(resolved.componentType)
+        } else {
+            Types.ofNullable(resolved.componentType)
+        }
+        Types.arrayOf(optionalType)
+    } else if (resolved is GenericArrayType) {
+        val arrayType = returnType.arguments.first().type
+        val optionalType = if (arrayType?.isMarkedNullable == false) {
+            Types.ofNonNull(resolved.genericComponentType)
+        } else {
+            Types.ofNullable(resolved.genericComponentType)
+        }
+        Types.arrayOf(optionalType)
+    } else if (resolved is ParameterizedType) {
+        val typeArguments = resolved.actualTypeArguments.map { javaType ->
+            val kotlinType = Types.getRawType(javaType).kotlin
+            val argument = returnType.arguments.find { it.type?.jvmErasure?.isSubclassOf(kotlinType) == true }
+            if (argument != null) {
+                if (argument.type?.isMarkedNullable == false) {
+                    Types.ofNonNull(javaType)
+                } else {
+                    Types.ofNullable(javaType)
+                }
+            } else {
+                javaType
+            }
+        }
+        Types.newParameterizedTypeWithOwner(resolved.ownerType, resolved.rawType, *typeArguments.toTypedArray())
+    } else {
+        resolved
+    }
   }
 }

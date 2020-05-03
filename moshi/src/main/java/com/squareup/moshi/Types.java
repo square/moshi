@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import com.squareup.moshi.internal.Util;
 import com.squareup.moshi.internal.Util.GenericArrayTypeImpl;
 import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
 import com.squareup.moshi.internal.Util.WildcardTypeImpl;
@@ -162,6 +163,38 @@ public final class Types {
     return new WildcardTypeImpl(new Type[] { Object.class }, lowerBounds);
   }
 
+  public static Type ofNonNull(Type type) {
+    if (!(type instanceof OptionalType)) {
+      return new Util.OptionalTypeImpl(false, type);
+    }
+    OptionalType optionalType = (OptionalType) type;
+    if (!optionalType.isOptional()) {
+      return optionalType;
+    } else {
+      return new Util.OptionalTypeImpl(false, optionalType.getRawType());
+    }
+  }
+
+  public static Type ofNonNull(Class<?> type) {
+    return new Util.OptionalTypeImpl(false, type);
+  }
+
+  public static Type ofNullable(Type type) {
+    if (!(type instanceof OptionalType)) {
+      return new Util.OptionalTypeImpl(true, type);
+    }
+    OptionalType optionalType = (OptionalType) type;
+    if (optionalType.isOptional()) {
+      return optionalType;
+    } else {
+      return new Util.OptionalTypeImpl(true, optionalType.getRawType());
+    }
+  }
+
+  public static Type ofNullable(Class<?> type) {
+    return new Util.OptionalTypeImpl(true, type);
+  }
+
   public static Class<?> getRawType(Type type) {
     if (type instanceof Class<?>) {
       // type is a normal class.
@@ -186,7 +219,9 @@ public final class Types {
 
     } else if (type instanceof WildcardType) {
       return getRawType(((WildcardType) type).getUpperBounds()[0]);
-
+    } else if (type instanceof OptionalType) {
+      OptionalType nonNullType = (OptionalType) type;
+      return Types.getRawType(nonNullType.getRawType());
     } else {
       String className = type == null ? "null" : type.getClass().getName();
       throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
@@ -260,6 +295,12 @@ public final class Types {
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
           && va.getName().equals(vb.getName());
 
+    } else if (a instanceof OptionalType) {
+      if (!(b instanceof OptionalType)) return false;
+      OptionalType oa = (OptionalType) a;
+      OptionalType ob = (OptionalType) b;
+      return oa.isOptional() == ob.isOptional()
+              && equals(oa.getRawType(), ob.getRawType());
     } else {
       // This isn't a supported type.
       return false;

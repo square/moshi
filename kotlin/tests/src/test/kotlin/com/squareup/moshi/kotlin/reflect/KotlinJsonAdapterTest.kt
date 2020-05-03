@@ -880,28 +880,62 @@ class KotlinJsonAdapterTest {
     }
 
     @Test
-    fun assertNonNullReflectCollection() {
+    fun assertNonNullReflectModelWithTypedList() {
         val moshi = Moshi.Builder()
                 .add(KotlinJsonAdapterFactory())
                 .build()
-        val adapter = moshi.adapter<Project>()
-        val json = """{"list":[1,null,3,4]}"""
+        val adapter = moshi.adapter<OrderProject>()
+        val json = """{"supplies": {"items": [null], "price": 10}, 
+            |"dueDate": 20, 
+            |"snacks": {"items": [{"type": 2}, null], "price": 20}}""".trimMargin()
         try {
             adapter.fromJson(json)
             fail()
         } catch (ex: JsonDataException) {
+            assertThat(ex).hasMessage("Unexpected null at \$.snacks.items[1]");
         }
     }
 
-    class Project(
-            val supplies: Order<Snack?>,
-            val snacks: Order<Snack>,
+    @Test
+    fun assertNonNullReflectModelWithTypedMap() {
+        val moshi = Moshi.Builder()
+                .add(KotlinJsonAdapterFactory())
+                .build()
+        val adapter = moshi.adapter<MappedOrderProject>()
+        val json = """{"supplies": {"items": {"name": null}, "price": 10}, 
+            |"dueDate": 20, 
+            |"snacks": {"items": {"name":null}, "price": 20}}""".trimMargin()
+        try {
+            adapter.fromJson(json)
+            fail()
+        } catch (ex: JsonDataException) {
+            assertThat(ex).hasMessage("Unexpected null at \$.snacks.items.name");
+        }
+    }
+
+    class OrderProject(
+            supplies: Order<Snack?>,
+            snacks: Order<Snack>,
+            dueDate: Long
+    ) : Project<Order<Snack?>, Order<Snack>>(supplies, snacks, dueDate)
+
+    class MappedOrderProject(
+            supplies: MappedOrder<String, Snack?>,
+            snacks: MappedOrder<String?, Snack>,
+            dueDate: Long
+    ) : Project<MappedOrder<String, Snack?>, MappedOrder<String?, Snack>>(supplies, snacks, dueDate)
+
+    open class Project<First, Second>(
+            val supplies: First,
+            val snacks: Second,
             val dueDate: Long
     )
 
     data class Snack(val type: Int)
 
     data class Order<T>(val items: List<T>, val price: Long)
+
+    data class MappedOrder<Key, Value>(val items: Map<Key, Value>, val price: Long)
 
     @JsonClass(generateAdapter = true)
     class UsesGeneratedAdapter(var a: Int, var b: Int)

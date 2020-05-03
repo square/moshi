@@ -19,29 +19,11 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
 
-import java.io.IOException;
 import javax.annotation.Nullable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Set;
+import java.io.IOException;
 
 public final class NonNullJsonAdapter<T> extends JsonAdapter<T> {
-
-    public static final Factory FACTORY = new Factory() {
-        @Override
-        public @Nullable
-        JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-            if (!(type instanceof Util.NonNullType)) {
-                return null;
-            }
-            Util.NonNullType nonNullType = (Util.NonNullType) type;
-            Type rawType = Types.getRawType(nonNullType.getRawType());
-            return moshi.adapter(rawType).nonNull();
-        }
-    };
 
   private final JsonAdapter<T> delegate;
 
