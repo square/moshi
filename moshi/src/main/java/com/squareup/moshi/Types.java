@@ -163,36 +163,20 @@ public final class Types {
     return new WildcardTypeImpl(new Type[] { Object.class }, lowerBounds);
   }
 
-  public static Type ofNonNull(Type type) {
+  public static Type isOptional(boolean isOptional, Type type) {
     if (!(type instanceof OptionalType)) {
-      return new Util.OptionalTypeImpl(false, type);
+      return new Util.OptionalTypeImpl(isOptional, type);
     }
     OptionalType optionalType = (OptionalType) type;
-    if (!optionalType.isOptional()) {
+    if (optionalType.isOptional() == isOptional) {
       return optionalType;
     } else {
-      return new Util.OptionalTypeImpl(false, optionalType.getRawType());
+      return new Util.OptionalTypeImpl(isOptional, optionalType.getRawType());
     }
   }
 
-  public static Type ofNonNull(Class<?> type) {
-    return new Util.OptionalTypeImpl(false, type);
-  }
-
-  public static Type ofNullable(Type type) {
-    if (!(type instanceof OptionalType)) {
-      return new Util.OptionalTypeImpl(true, type);
-    }
-    OptionalType optionalType = (OptionalType) type;
-    if (optionalType.isOptional()) {
-      return optionalType;
-    } else {
-      return new Util.OptionalTypeImpl(true, optionalType.getRawType());
-    }
-  }
-
-  public static Type ofNullable(Class<?> type) {
-    return new Util.OptionalTypeImpl(true, type);
+  public static Type isOptional(boolean isOptional, Class<?> type) {
+    return new Util.OptionalTypeImpl(isOptional, type);
   }
 
   public static Class<?> getRawType(Type type) {

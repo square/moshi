@@ -301,7 +301,7 @@ public final class JsonAdapterTest {
 
   @Test public void NonNullType() throws Exception {
     String json = "null";
-    Type nonNull = Types.ofNonNull(Integer.class);
+    Type nonNull = Types.isOptional(false, Integer.class);
     JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(nonNull);
     try {
       adapter.fromJson(json);
@@ -313,7 +313,7 @@ public final class JsonAdapterTest {
 
   @Test public void NonNullListItems() throws Exception {
     String json = "[1,2,3,null,4]";
-    Type list = Types.newParameterizedType(List.class, Types.ofNonNull(Integer.class));
+    Type list = Types.newParameterizedType(List.class, Types.isOptional(false, Integer.class));
     JsonAdapter<List<Integer>> adapter = new Moshi.Builder().build().adapter(list);
     try {
       adapter.fromJson(json);
@@ -325,7 +325,7 @@ public final class JsonAdapterTest {
 
   @Test public void NullableType() throws Exception {
     String json = "null";
-    Type nonNull = Types.ofNullable(Integer.class);
+    Type nonNull = Types.isOptional(true, Integer.class);
     JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(nonNull);
     Integer result = adapter.fromJson(json);
     assertNull(result);
@@ -333,7 +333,7 @@ public final class JsonAdapterTest {
 
   @Test public void NullableListItems() throws Exception {
     String json = "[1,2,3,null,4]";
-    Type list = Types.newParameterizedType(List.class, Types.ofNullable(Integer.class));
+    Type list = Types.newParameterizedType(List.class, Types.isOptional(true, Integer.class));
     JsonAdapter<List<Integer>> adapter = new Moshi.Builder().build().adapter(list);
     List<Integer> result = adapter.fromJson(json);
     assertNull(result.get(3));

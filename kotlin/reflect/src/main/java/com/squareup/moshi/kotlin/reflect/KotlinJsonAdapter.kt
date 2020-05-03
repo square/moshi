@@ -286,34 +286,23 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       if (arrayType == null) {
         resolved
       } else {
-        val optionalType = if (arrayType.type?.isMarkedNullable == false) {
-          Types.ofNonNull(resolved.componentType)
-        } else {
-          Types.ofNullable(resolved.componentType)
-        }
-        Types.arrayOf(optionalType)
+        val isRequired = arrayType.type?.isMarkedNullable == false
+        Types.arrayOf(Types.isOptional(isRequired.not(), resolved.componentType))
       }
     } else if (resolved is GenericArrayType) {
       val arrayType = returnType.arguments.findSubTypeOf(resolved.genericComponentType)
       if (arrayType == null) {
         resolved
       } else {
-        val optionalType = if (arrayType.type?.isMarkedNullable == false) {
-          Types.ofNonNull(resolved.genericComponentType)
-        } else {
-          Types.ofNullable(resolved.genericComponentType)
-        }
-        Types.arrayOf(optionalType)
+        val isRequired = arrayType.type?.isMarkedNullable == false
+        Types.arrayOf(Types.isOptional(isRequired.not(), resolved.genericComponentType))
       }
     } else if (resolved is ParameterizedType) {
       val typeArguments = resolved.actualTypeArguments.map { javaType ->
         val argument = returnType.arguments.findSubTypeOf(javaType)
         if (argument != null) {
-          if (argument.type?.isMarkedNullable == false) {
-            Types.ofNonNull(javaType)
-          } else {
-            Types.ofNullable(javaType)
-          }
+          val isRequired = argument.type?.isMarkedNullable == false
+          Types.isOptional(isRequired.not(), javaType)
         } else {
           javaType
         }

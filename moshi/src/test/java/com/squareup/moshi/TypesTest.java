@@ -324,27 +324,15 @@ public final class TypesTest {
   }
 
   @Test public void ofNullDoesntDuplicate() {
-    Type optionalType = Types.ofNonNull(Boolean.class);
-    Type nonNull = Types.ofNonNull(optionalType);
+    Type optionalType = Types.isOptional(false, Boolean.class);
+    Type nonNull = Types.isOptional(false, optionalType);
     assertSame(optionalType, nonNull);
   }
 
-  @Test public void ofNullableDoesntDuplicate() {
-    Type optionalType = Types.ofNullable(Boolean.class);
-    Type nullable = Types.ofNullable(optionalType);
-    assertSame(optionalType, nullable);
-  }
-
   @Test public void changeNullableDoesntDuplicateRawType() {
-    OptionalType optionalType = (OptionalType) Types.ofNonNull(Boolean.class);
-    OptionalType nullable = (OptionalType) Types.ofNullable(optionalType);
+    OptionalType optionalType = (OptionalType) Types.isOptional(false, Boolean.class);
+    OptionalType nullable = (OptionalType) Types.isOptional(true, optionalType);
     assertSame(optionalType.getRawType(), nullable.getRawType());
-  }
-
-  @Test public void changeNonNullDoesntDuplicateRawType() {
-    OptionalType optionalType = (OptionalType) Types.ofNullable(Boolean.class);
-    OptionalType nonNull = (OptionalType) Types.ofNonNull(optionalType);
-    assertSame(optionalType.getRawType(), nonNull.getRawType());
   }
 
   //

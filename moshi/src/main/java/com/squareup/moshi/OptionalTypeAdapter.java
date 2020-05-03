@@ -15,7 +15,7 @@ public class OptionalTypeAdapter<T> extends JsonAdapter<T> {
                 return null;
             }
             OptionalType optionalType = (OptionalType) type;
-            Type rawType = Types.getRawType(optionalType.getRawType());
+            Type rawType = optionalType.getRawType();
             JsonAdapter<?> delegate = moshi.adapter(rawType);
             return new OptionalTypeAdapter<>(((OptionalType) type).isOptional(), delegate);
         }
