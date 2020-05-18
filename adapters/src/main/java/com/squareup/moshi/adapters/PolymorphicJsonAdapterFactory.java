@@ -43,12 +43,12 @@ import javax.annotation.Nullable;
  *   interface HandOfCards {
  *   }
  *
- *   class BlackjackHand extends HandOfCards {
+ *   class BlackjackHand implements HandOfCards {
  *     Card hidden_card;
  *     List<Card> visible_cards;
  *   }
  *
- *   class HoldemHand extends HandOfCards {
+ *   class HoldemHand implements HandOfCards {
  *     Set<Card> hidden_cards;
  *   }
  *
