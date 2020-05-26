@@ -18,7 +18,6 @@ package com.squareup.moshi.kotlin.codegen.api
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.CodeBlock.Companion
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
@@ -74,6 +73,9 @@ internal class AdapterGenerator(
         // Because we generate redundant `out` variance for some generics and there's no way
         // for us to know when it's redundant.
         "REDUNDANT_PROJECTION",
+        // Because we may generate redundant explicit types for local vars with default values.
+        // Example: 'var fooSet: Boolean = false'
+        "RedundantExplicitType",
         // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
         // like for stylistic reasons.
         "LocalVariableName"
@@ -478,8 +480,10 @@ internal class AdapterGenerator(
           localConstructorProperty
       )
     } else {
-      // Standard constructor call. Can omit generics as they're inferred
-      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName.rawType())
+      // Standard constructor call. Don't omit generics for parameterized types even if they can be
+      // inferred, as calculating the right condition for inference exceeds the value gained from
+      // being less pedantic.
+      result.addCode("«%L%T(", returnOrResultAssignment, originalTypeName)
     }
 
     for (input in components.filterIsInstance<ParameterComponent>()) {

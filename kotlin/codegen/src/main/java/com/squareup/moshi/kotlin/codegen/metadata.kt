@@ -18,8 +18,10 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
@@ -53,6 +55,7 @@ import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
+import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
@@ -192,6 +195,8 @@ internal fun targetType(messager: Messager,
   }
 
   val properties = mutableMapOf<String, TargetProperty>()
+
+  val resolvedTypes = mutableListOf<ResolvedTypeMapping>()
   val superTypes = appliedType.supertypes(types)
       .filterNot { supertype ->
         supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
@@ -207,15 +212,53 @@ internal fun targetType(messager: Messager,
       }
       .associateWithTo(LinkedHashMap()) { supertype ->
         // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
-        if (supertype.element == element) {
+        val api = if (supertype.element == element) {
           // We've already parsed this api above, reuse it
           kotlinApi
         } else {
           cachedClassInspector.toTypeSpec(supertype.element)
         }
+
+        val apiSuperClass = api.superclass
+        if (apiSuperClass is ParameterizedTypeName) {
+          //
+          // This extends a typed generic superclass. We want to construct a mapping of the
+          // superclass typevar names to their materialized types here.
+          //
+          // class Foo extends Bar<String>
+          // class Bar<T>
+          //
+          // We will store {Foo : {T : [String]}}.
+          //
+          // Then when we look at Bar<T> later, we'll look up to the descendent Foo and extract its
+          // materialized type from there.
+          //
+          val superSuperClass = supertype.element.superclass as DeclaredType
+
+          // Convert to an element and back to wipe the typed generics off of this
+          val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
+          resolvedTypes += ResolvedTypeMapping(
+              target = untyped.rawType,
+              args = untyped.typeArguments.asSequence()
+                  .cast<TypeVariableName>()
+                  .map(TypeVariableName::name)
+                  .zip(apiSuperClass.typeArguments.asSequence())
+                  .associate { it }
+          )
+        }
+
+        return@associateWithTo api
       }
-  for (supertypeApi in superTypes.values) {
-    val supertypeProperties = declaredProperties(constructor, supertypeApi)
+
+  for ((localAppliedType, supertypeApi) in superTypes.entries) {
+    val appliedClassName = localAppliedType.element.asClassName()
+    val supertypeProperties = declaredProperties(
+        constructor = constructor,
+        kotlinApi = supertypeApi,
+        allowedTypeVars = typeVariables.toSet(),
+        currentClass = appliedClassName,
+        resolvedTypes = resolvedTypes
+    )
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
@@ -243,16 +286,71 @@ internal fun targetType(messager: Messager,
       visibility = resolvedVisibility)
 }
 
+/**
+ * Represents a resolved raw class to type arguments where [args] are a map of the parent type var
+ * name to its resolved [TypeName].
+ */
+private data class ResolvedTypeMapping(val target: ClassName, val args: Map<String, TypeName>)
+
+private fun resolveTypeArgs(
+    targetClass: ClassName,
+    propertyType: TypeName,
+    resolvedTypes: List<ResolvedTypeMapping>,
+    allowedTypeVars: Set<TypeVariableName>,
+    entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass }
+): TypeName {
+  val unwrappedType = propertyType.unwrapTypeAlias()
+
+  if (unwrappedType !is TypeVariableName) {
+    return unwrappedType
+  } else if (entryStartIndex == -1) {
+    return unwrappedType
+  }
+
+  val targetMappingIndex = resolvedTypes[entryStartIndex]
+  val targetMappings = targetMappingIndex.args
+
+  // Try to resolve the real type of this property based on mapped generics in the subclass.
+  // We need to us a non-nullable version for mapping since we're just mapping based on raw java
+  // type vars, but then can re-copy nullability back if it is found.
+  val resolvedType = targetMappings[unwrappedType.name]
+      ?.copy(nullable = unwrappedType.isNullable)
+      ?: unwrappedType
+
+  return when {
+    resolvedType !is TypeVariableName -> resolvedType
+    entryStartIndex != 0 -> {
+      // We need to go deeper
+      resolveTypeArgs(targetClass, resolvedType, resolvedTypes, allowedTypeVars, entryStartIndex - 1)
+    }
+    resolvedType.copy(nullable = false) in allowedTypeVars -> {
+      // This is a generic type in the top-level declared class. This is fine to leave in because
+      // this will be handled by the `Type` array passed in at runtime.
+      resolvedType
+    }
+    else -> error("Could not find $resolvedType in $resolvedTypes. Also not present in allowable top-level type vars $allowedTypeVars")
+  }
+}
+
 /** Returns the properties declared by `typeElement`. */
 @KotlinPoetMetadataPreview
 private fun declaredProperties(
     constructor: TargetConstructor,
-    kotlinApi: TypeSpec
+    kotlinApi: TypeSpec,
+    allowedTypeVars: Set<TypeVariableName>,
+    currentClass: ClassName,
+    resolvedTypes: List<ResolvedTypeMapping>
 ): Map<String, TargetProperty> {
 
   val result = mutableMapOf<String, TargetProperty>()
   for (initialProperty in kotlinApi.propertySpecs) {
-    val property = initialProperty.toBuilder(type = initialProperty.type.unwrapTypeAlias()).build()
+    val resolvedType = resolveTypeArgs(
+        targetClass = currentClass,
+        propertyType = initialProperty.type,
+        resolvedTypes = resolvedTypes,
+        allowedTypeVars = allowedTypeVars
+    )
+    val property = initialProperty.toBuilder(type = resolvedType).build()
     val name = property.name
     val parameter = constructor.parameters[name]
     result[name] = TargetProperty(
@@ -380,3 +478,10 @@ internal val TypeElement.metadata: Metadata
     return getAnnotation(Metadata::class.java)
         ?: throw IllegalStateException("Not a kotlin type! $this")
   }
+
+private fun <E> Sequence<*>.cast(): Sequence<E> {
+  return map {
+    @Suppress("UNCHECKED_CAST")
+    it as E
+  }
+}
