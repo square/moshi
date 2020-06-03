@@ -399,6 +399,35 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test
+  fun `Properties without a backing field should be ignored`() {
+    val result = compile(kotlin("source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+          
+          class FullName(val first: String, val last: String)
+          
+          @JsonClass(generateAdapter = true)
+          data class Person(var firstName: String, var lastName: String) {
+            var fullName: FullName
+              get() = FullName(firstName, lastName)
+              set(value) {
+                firstName = value.first
+                lastName = value.last
+              }
+          }
+          """
+    ))
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+
+    // We're checking here that we only generate one `stringAdapter` that's used for both the
+    // regular string properties as well as the the aliased ones.
+    val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
+    assertThat(adapterClass.declaredMemberProperties.map { it.name }).doesNotContain(
+        "fullNameAdapter"
+    )
+  }
+
+  @Test
   fun `Processor should generate comprehensive proguard rules`() {
     val result = compile(kotlin("source.kt",
         """
