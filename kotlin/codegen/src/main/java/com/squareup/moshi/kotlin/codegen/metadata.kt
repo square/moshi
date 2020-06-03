@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
+import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -401,6 +402,11 @@ internal fun TargetProperty.generator(
 
   if (!isSettable) {
     return null // This property is not settable. Ignore it.
+  }
+
+  val propertyInfo = propertySpec.tag<ImmutableKmProperty>()
+  if (propertyInfo != null && propertyInfo.fieldSignature == null) {
+    return null // This property does not have a backing field. Ignore it.
   }
 
   // Merge parameter and property annotations
