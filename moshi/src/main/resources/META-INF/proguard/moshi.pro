@@ -24,7 +24,7 @@
 # We can't _just_ keep the defaults constructor because Proguard/R8's spec doesn't allow wildcard
 # matching preceding parameters.
 -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
--keepclassmembers @com.squareup.moshi.JsonClass @kotlin.Metadata class * {
+-keepclassmembers @kotlin.Metadata @com.squareup.moshi.JsonClass class * {
     synthetic <init>(...);
 }
 
