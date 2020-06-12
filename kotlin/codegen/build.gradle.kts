@@ -61,6 +61,10 @@ dependencies {
   implementation("net.ltgt.gradle.incap:incap:0.3")
   kapt("net.ltgt.gradle.incap:incap-processor:0.3")
 
+  // Copy these again as they're not automatically included since they're shaded
+  testImplementation("com.squareup:kotlinpoet-metadata:1.6.0")
+  testImplementation("com.squareup:kotlinpoet-metadata-specs:1.6.0")
+  testImplementation("com.squareup:kotlinpoet-classinspector-elements:1.6.0")
   testImplementation("junit:junit:4.12")
   testImplementation("org.assertj:assertj-core:3.11.1")
   testImplementation("com.google.truth:truth:1.0")
