@@ -30,7 +30,7 @@ object Dependencies {
   object Incap {
     private const val version = "0.3"
     const val annotations = "net.ltgt.gradle.incap:incap:$version"
-    const val processor = "incap:incap-processor:$version"
+    const val processor = "net.ltgt.gradle.incap:incap-processor:$version"
   }
 
   object Kotlin {
