@@ -39,13 +39,21 @@ tasks.withType<KotlinCompile>().configureEach {
 val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
-  api(project(":moshi"))
-  api(kotlin("reflect"))
-  shade("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0")
+  implementation(project(":moshi"))
+  implementation(kotlin("reflect"))
+  shade("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+  }
   implementation("com.squareup:kotlinpoet:1.6.0")
-  shade("com.squareup:kotlinpoet-metadata:1.6.0")
-  shade("com.squareup:kotlinpoet-metadata-specs:1.6.0")
-  shade("com.squareup:kotlinpoet-classinspector-elements:1.6.0")
+  shade("com.squareup:kotlinpoet-metadata:1.6.0") {
+    exclude(group = "org.jetbrains.kotlin")
+  }
+  shade("com.squareup:kotlinpoet-metadata-specs:1.6.0") {
+    exclude(group = "org.jetbrains.kotlin")
+  }
+  shade("com.squareup:kotlinpoet-classinspector-elements:1.6.0") {
+    exclude(group = "org.jetbrains.kotlin")
+  }
   implementation("org.ow2.asm:asm:7.1")
 
   implementation("com.google.auto.service:auto-service-annotations:1.0-rc7")
@@ -67,7 +75,6 @@ val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShado
 val shadowJar = tasks.shadowJar.apply {
   configure {
     dependsOn(relocateShadowJar)
-    minimize()
     archiveClassifier.set("")
     configurations = listOf(shade)
     relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
