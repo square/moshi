@@ -35,8 +35,8 @@ dependencies {
   testImplementation(project(":moshi"))
   testImplementation(project(":kotlin:reflect"))
   testImplementation(kotlin("reflect"))
-  testImplementation("junit:junit:4.12")
-  testImplementation("org.assertj:assertj-core:3.11.1")
-  testImplementation("com.google.truth:truth:1.0")
-  testImplementation("com.squareup.okio:okio:2.1.0")
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.assertj)
+  testImplementation(Dependencies.Testing.truth)
+  testImplementation(Dependencies.okio2)
 }

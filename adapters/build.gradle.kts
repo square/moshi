@@ -20,10 +20,10 @@ plugins {
 }
 
 dependencies {
-  compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  compileOnly(Dependencies.jsr305)
   api(project(":moshi"))
 
-  testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
-  testImplementation("junit:junit:4.12")
-  testImplementation("org.assertj:assertj-core:3.11.1")
+  testCompileOnly(Dependencies.jsr305)
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.assertj)
 }

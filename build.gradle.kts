@@ -18,7 +18,7 @@ import org.gradle.jvm.tasks.Jar
 
 buildscript {
   dependencies {
-    classpath(kotlin("gradle-plugin", version = "1.3.72"))
+    classpath(kotlin("gradle-plugin", version = Dependencies.Kotlin.version))
   }
 }
 

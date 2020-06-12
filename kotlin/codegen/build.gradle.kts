@@ -41,35 +41,35 @@ configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
   implementation(project(":moshi"))
   implementation(kotlin("reflect"))
-  shade("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0") {
+  shade(Dependencies.Kotlin.metadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
-  implementation("com.squareup:kotlinpoet:1.6.0")
-  shade("com.squareup:kotlinpoet-metadata:1.6.0") {
+  implementation(Dependencies.KotlinPoet.kotlinPoet)
+  shade(Dependencies.KotlinPoet.metadata) {
     exclude(group = "org.jetbrains.kotlin")
   }
-  shade("com.squareup:kotlinpoet-metadata-specs:1.6.0") {
+  shade(Dependencies.KotlinPoet.metadataSpecs) {
     exclude(group = "org.jetbrains.kotlin")
   }
-  shade("com.squareup:kotlinpoet-classinspector-elements:1.6.0") {
+  shade(Dependencies.KotlinPoet.elementsClassInspector) {
     exclude(group = "org.jetbrains.kotlin")
   }
-  implementation("org.ow2.asm:asm:7.1")
+  implementation(Dependencies.asm)
 
-  implementation("com.google.auto.service:auto-service-annotations:1.0-rc7")
-  kapt("com.google.auto.service:auto-service:1.0-rc7")
-  implementation("net.ltgt.gradle.incap:incap:0.3")
-  kapt("net.ltgt.gradle.incap:incap-processor:0.3")
+  implementation(Dependencies.AutoService.annotations)
+  kapt(Dependencies.AutoService.processor)
+  implementation(Dependencies.Incap.annotations)
+  kapt(Dependencies.Incap.processor)
 
   // Copy these again as they're not automatically included since they're shaded
-  testImplementation("com.squareup:kotlinpoet-metadata:1.6.0")
-  testImplementation("com.squareup:kotlinpoet-metadata-specs:1.6.0")
-  testImplementation("com.squareup:kotlinpoet-classinspector-elements:1.6.0")
-  testImplementation("junit:junit:4.12")
-  testImplementation("org.assertj:assertj-core:3.11.1")
-  testImplementation("com.google.truth:truth:1.0")
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.2.8")
-  testImplementation("com.squareup.okio:okio:2.1.0")
+  testImplementation(Dependencies.KotlinPoet.metadata)
+  testImplementation(Dependencies.KotlinPoet.metadataSpecs)
+  testImplementation(Dependencies.KotlinPoet.elementsClassInspector)
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.assertj)
+  testImplementation(Dependencies.Testing.truth)
+  testImplementation(Dependencies.Testing.compileTesting)
+  testImplementation(Dependencies.okio2)
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {

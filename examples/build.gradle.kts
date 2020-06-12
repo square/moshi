@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  compileOnly(Dependencies.jsr305)
   implementation(project(":moshi"))
   implementation(project(":adapters"))
 }

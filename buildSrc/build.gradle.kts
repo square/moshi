@@ -15,21 +15,9 @@
  */
 
 plugins {
-  `java-library`
-  id("com.vanniktech.maven.publish")
+  `kotlin-dsl`
 }
 
-tasks.named<Jar>("jar") {
-  manifest {
-    attributes("Automatic-Module-Name" to "com.squareup.kotlinpoet")
-  }
-}
-
-dependencies {
-  compileOnly(Dependencies.jsr305)
-  api(Dependencies.okio)
-
-  testCompileOnly(Dependencies.jsr305)
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
+repositories {
+  mavenCentral()
 }

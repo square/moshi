@@ -21,9 +21,9 @@ plugins {
 
 dependencies {
   api(project(":moshi"))
-  implementation(kotlin("reflect"))
+  api(kotlin("reflect"))
 
   testImplementation(kotlin("test"))
-  testImplementation("junit:junit:4.12")
-  testImplementation("org.assertj:assertj-core:3.11.1")
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.assertj)
 }
