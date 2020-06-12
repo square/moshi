@@ -29,9 +29,7 @@ tasks.withType<KotlinCompile>().configureEach {
     jvmTarget = "1.8"
     freeCompilerArgs = listOf(
         "-progressive",
-        // So we can declare ourselves as users of KotlinPoetMetadataPreview
-        "-Xuse-experimental=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-        "-Xuse-experimental=kotlin.Experimental"
+        "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
     )
   }
 }

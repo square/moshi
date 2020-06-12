@@ -24,7 +24,7 @@ tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     freeCompilerArgs = listOf(
         "-Werror",
-        "-Xuse-experimental=kotlin.ExperimentalStdlibApi",
+        "-Xopt-in=kotlin.ExperimentalStdlibApi",
         "-Xinline-classes"
     )
   }

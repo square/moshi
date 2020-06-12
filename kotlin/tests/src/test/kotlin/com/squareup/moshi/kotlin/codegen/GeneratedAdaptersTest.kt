@@ -39,7 +39,6 @@ import kotlin.annotation.AnnotationTarget.TYPE
 import kotlin.properties.Delegates
 import kotlin.reflect.full.memberProperties
 
-@ExperimentalStdlibApi
 @Suppress("UNUSED", "UNUSED_PARAMETER")
 class GeneratedAdaptersTest {
 
