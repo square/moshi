@@ -45,6 +45,7 @@ import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.mapTypes
+import com.squareup.moshi.kotlin.codegen.api.rawType
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -365,7 +366,7 @@ private fun declaredProperties(
   return result
 }
 
-private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.className == Transient::class.asClassName() }
+private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.typeName == Transient::class.asClassName() }
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
@@ -406,19 +407,20 @@ internal fun TargetProperty.generator(
   // Merge parameter and property annotations
   val qualifiers = parameter?.qualifiers.orEmpty() + propertySpec.annotations.qualifiers(elements)
   for (jsonQualifier in qualifiers) {
+    val qualifierRawType = jsonQualifier.typeName.rawType()
     // Check Java types since that covers both Java and Kotlin annotations.
-    val annotationElement = elements.getTypeElement(jsonQualifier.className.canonicalName)
+    val annotationElement = elements.getTypeElement(qualifierRawType.canonicalName)
         ?: continue
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(ERROR,
-            "JsonQualifier @${jsonQualifier.className.simpleName} must have RUNTIME retention")
+            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention")
       }
     }
     annotationElement.getAnnotation(Target::class.java)?.let {
       if (ElementType.FIELD !in it.value) {
         messager.printMessage(ERROR,
-            "JsonQualifier @${jsonQualifier.className.simpleName} must support FIELD target")
+            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target")
       }
     }
   }
@@ -436,13 +438,13 @@ internal fun TargetProperty.generator(
 private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return filterTo(mutableSetOf()) {
-    elements.getTypeElement(it.className.toString()).getAnnotation(JSON_QUALIFIER) != null
+    elements.getTypeElement(it.typeName.toString()).getAnnotation(JSON_QUALIFIER) != null
   }
 }
 
 private fun List<AnnotationSpec>?.jsonName(): String? {
   if (this == null) return null
-  return find { it.className == JSON }?.let { annotation ->
+  return find { it.typeName == JSON }?.let { annotation ->
     val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
       "Could not get the annotation mirror from the annotation spec"
     }
