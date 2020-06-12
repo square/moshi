@@ -31,14 +31,14 @@ subprojects {
     mavenCentral()
   }
 
-  apply(plugin = "checkstyle")
-  configure<CheckstyleExtension> {
-    toolVersion = "8.28"
-    configFile = rootProject.file("checkstyle.xml")
-  }
-  tasks.withType<Checkstyle>().configureEach {
-    exclude("**/Iso8601Utils.java")
-  }
+//  apply(plugin = "checkstyle")
+//  configure<CheckstyleExtension> {
+//    toolVersion = "8.28"
+//    configFile = rootProject.file("checkstyle.xml")
+//  }
+//  tasks.withType<Checkstyle>().configureEach {
+//    exclude("**/Iso8601Utils.java")
+//  }
 
   pluginManager.withPlugin("java-library") {
     configure<JavaPluginExtension> {
