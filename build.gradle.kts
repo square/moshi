@@ -24,11 +24,24 @@ buildscript {
 
 plugins {
   id("com.vanniktech.maven.publish") version "0.11.1" apply false
+  id("org.jetbrains.dokka") version "0.10.1" apply false
 }
 
 subprojects {
   repositories {
     mavenCentral()
+    @Suppress("UnstableApiUsage")
+    exclusiveContent {
+      forRepository {
+        maven {
+          name = "JCenter"
+          setUrl("https://jcenter.bintray.com/")
+        }
+      }
+      filter {
+        includeModule("org.jetbrains.dokka", "dokka-fatjar")
+      }
+    }
   }
 
 //  apply(plugin = "checkstyle")
