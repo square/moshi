@@ -57,6 +57,7 @@ subprojects {
     }
 
     // Configure automatic-module-name, but only for published modules
+    @Suppress("UnstableApiUsage")
     val automaticModuleName = providers.gradleProperty("AUTOMATIC_MODULE_NAME")
         .forUseAtConfigurationTime()
     if (automaticModuleName.isPresent) {
