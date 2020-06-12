@@ -27,6 +27,10 @@ plugins {
 }
 
 subprojects {
+  repositories {
+    mavenCentral()
+  }
+
   // Configure publishing
   pluginManager.withPlugin("com.vanniktech.maven.publish") {
     configure<MavenPublishPluginExtension> {
