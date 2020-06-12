@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    jcenter()
-  }
+plugins {
+  `java-library`
+  id("com.vanniktech.maven.publish")
 }
 
-rootProject.name = "moshi-root"
-include(":moshi")
-include(":adapters")
+dependencies {
+  compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  api(project(":moshi"))
+
+  testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  testImplementation("junit:junit:4.12")
+  testImplementation("org.assertj:assertj-core:3.11.1")
+}
