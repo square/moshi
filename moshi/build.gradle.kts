@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    jcenter()
+plugins {
+  `java-library`
+  id("com.vanniktech.maven.publish")
+}
+
+tasks.named<Jar>("jar") {
+  manifest {
+    attributes("Automatic-Module-Name" to "com.squareup.kotlinpoet")
   }
 }
 
-rootProject.name = "moshi-root"
-include(":moshi")
+dependencies {
+  compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  api("com.squareup.okio:okio:1.16.0")
+
+  testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  testImplementation("junit:junit:4.12")
+  testImplementation("org.assertj:assertj-core:3.11.1")
+}
