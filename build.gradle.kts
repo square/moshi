@@ -69,4 +69,8 @@ subprojects {
       }
     }
   }
+
+  pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+    dependencies.add("api", Dependencies.Kotlin.stdlib)
+  }
 }
