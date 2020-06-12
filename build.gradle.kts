@@ -31,6 +31,13 @@ subprojects {
     mavenCentral()
   }
 
+  pluginManager.withPlugin("java-library") {
+    configure<JavaPluginExtension> {
+      sourceCompatibility = JavaVersion.VERSION_1_7
+      targetCompatibility = JavaVersion.VERSION_1_7
+    }
+  }
+
   // Configure publishing
   pluginManager.withPlugin("com.vanniktech.maven.publish") {
     configure<MavenPublishPluginExtension> {
