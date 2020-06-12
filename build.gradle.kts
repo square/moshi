@@ -33,12 +33,11 @@ subprojects {
 
   apply(plugin = "checkstyle")
   configure<CheckstyleExtension> {
+    toolVersion = "8.28"
     configFile = rootProject.file("checkstyle.xml")
   }
-  dependencies {
-    add("checkstyleConfig", "com.puppycrawl.tools:checkstyle:8.28") {
-      isTransitive = false
-    }
+  tasks.withType<Checkstyle>().configureEach {
+    exclude("**/Iso8601Utils.java")
   }
 
   pluginManager.withPlugin("java-library") {
