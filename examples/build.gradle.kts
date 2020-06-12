@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    jcenter()
-  }
+plugins {
+  `java-library`
 }
 
-rootProject.name = "moshi-root"
-include(":moshi")
-include(":adapters")
-include(":examples")
+dependencies {
+  compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+  implementation(project(":moshi"))
+  implementation(project(":adapters"))
+}
