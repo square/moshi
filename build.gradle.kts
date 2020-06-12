@@ -31,6 +31,16 @@ subprojects {
     mavenCentral()
   }
 
+  apply(plugin = "checkstyle")
+  configure<CheckstyleExtension> {
+    configFile = rootProject.file("checkstyle.xml")
+  }
+  dependencies {
+    add("checkstyleConfig", "com.puppycrawl.tools:checkstyle:8.28") {
+      isTransitive = false
+    }
+  }
+
   pluginManager.withPlugin("java-library") {
     configure<JavaPluginExtension> {
       sourceCompatibility = JavaVersion.VERSION_1_7
