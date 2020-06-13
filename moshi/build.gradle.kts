@@ -19,12 +19,6 @@ plugins {
   id("com.vanniktech.maven.publish")
 }
 
-tasks.named<Jar>("jar") {
-  manifest {
-    attributes("Automatic-Module-Name" to "com.squareup.kotlinpoet")
-  }
-}
-
 dependencies {
   compileOnly(Dependencies.jsr305)
   api(Dependencies.okio)
