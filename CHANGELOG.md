@@ -7,7 +7,7 @@ _2020-06-11_
 
  * Fix: Tweak a shrinker rule to mitigate an R8 bug which was causing classes unrelated to the Kotlin adpater code generation to be retained.
  * Fix: Ensure that the Kotlin adapter code generation does not line wrap in the middle of a string if your JSON keys contain spaces.
- * Fix: Strip type anotations before emitting type references like `Foo::class` in the Kotlin adapter code generation.
+ * Fix: Strip type annotations before emitting type references like `Foo::class` in the Kotlin adapter code generation.
  * Fix: Separate the runtime check for Kotlin's `DefaultConstructorMarker` from the check for `Metadata`. A shrinker may have removed `Metadata` and we should still check for `DefaultConstructorMarker`.
 
 
