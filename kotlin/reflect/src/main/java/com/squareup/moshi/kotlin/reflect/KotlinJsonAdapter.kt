@@ -154,16 +154,18 @@ internal class KotlinJsonAdapter<T>(
 
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
   class IndexedParameterMap(
-    private val parameterKeys: List<KParameter>,
-    private val parameterValues: Array<Any?>
-  ) : AbstractMap<KParameter, Any?>() {
+          private val parameterKeys: List<KParameter>,
+          private val parameterValues: Array<Any?>
+  ) : AbstractMutableMap<KParameter, Any?>() {
 
-    override val entries: Set<Entry<KParameter, Any?>>
+    override fun put(key: KParameter, value: Any?): Any? = null
+
+    override val entries: MutableSet<MutableMap.MutableEntry<KParameter, Any?>>
       get() {
         val allPossibleEntries = parameterKeys.mapIndexed { index, value ->
           SimpleEntry<KParameter, Any?>(value, parameterValues[index])
         }
-        return allPossibleEntries.filterTo(LinkedHashSet<Entry<KParameter, Any?>>()) {
+        return allPossibleEntries.filterTo(mutableSetOf()) {
           it.value !== ABSENT_VALUE
         }
       }
