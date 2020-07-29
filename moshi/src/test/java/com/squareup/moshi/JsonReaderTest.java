@@ -1162,6 +1162,9 @@ public final class JsonReaderTest {
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
     List<String> strings = abc.getStrings();
     assertThat(options).containsExactlyElementsOf(strings);
+    // Add a value to ensure it doesn't mutate the underlying array if we read it again
+    strings.add("d");
+    assertThat(abc.getStrings()).containsOnly(options);
   }
 
   /** Peek a value, then read it, recursively. */
