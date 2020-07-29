@@ -19,13 +19,17 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
+
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
@@ -529,8 +533,8 @@ public abstract class JsonReader implements Closeable {
     }
 
     /** Returns a copy of this {@link Options Option's} strings. */
-    public List<String> getStrings() {
-      return Arrays.asList(strings.clone());
+    public Set<String> getStrings() {
+      return unmodifiableSet(new LinkedHashSet<>(Arrays.asList(strings.clone())));
     }
 
     @CheckReturnValue public static Options of(String... strings) {

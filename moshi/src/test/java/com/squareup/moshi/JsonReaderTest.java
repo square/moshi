@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -1160,11 +1161,15 @@ public final class JsonReaderTest {
   @Test public void optionsGetStrings() {
     String[] options = new String[] { "a", "b", "c" };
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
-    List<String> strings = abc.getStrings();
+    Set<String> strings = abc.getStrings();
     assertThat(options).containsExactlyElementsOf(strings);
-    // Add a value to ensure it doesn't mutate the underlying array if we read it again
-    strings.add("d");
-    assertThat(abc.getStrings()).containsOnly(options);
+    try {
+      // Confirm it's unmodifiable and we can't mutate the original underlying array
+      strings.add("d");
+      fail();
+    } catch (UnsupportedOperationException expected) {
+
+    }
   }
 
   /** Peek a value, then read it, recursively. */
