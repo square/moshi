@@ -530,7 +530,7 @@ public abstract class JsonReader implements Closeable {
 
     /** Returns a copy of this {@link Options Option's} strings. */
     public List<String> getStrings() {
-      return Arrays.asList(strings);
+      return Arrays.asList(strings.clone());
     }
 
     @CheckReturnValue public static Options of(String... strings) {
