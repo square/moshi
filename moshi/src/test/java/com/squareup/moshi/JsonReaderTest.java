@@ -1157,6 +1157,13 @@ public final class JsonReaderTest {
     reader.endObject();
   }
 
+  @Test public void optionsGetStrings() {
+    String[] options = new String[] { "a", "b", "c" };
+    JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
+    List<String> strings = abc.getStrings();
+    assertThat(options).containsExactlyElementsOf(strings);
+  }
+
   /** Peek a value, then read it, recursively. */
   private void readValue(JsonReader reader, boolean peekJsonFirst) throws IOException {
     JsonReader.Token token = reader.peek();
