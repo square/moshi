@@ -1161,7 +1161,7 @@ public final class JsonReaderTest {
   @Test public void optionsGetStrings() {
     String[] options = new String[] { "a", "b", "c" };
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
-    Set<String> strings = abc.getStrings();
+    List<String> strings = abc.getStrings();
     assertThat(options).containsExactlyElementsOf(strings);
     try {
       // Confirm it's unmodifiable and we can't mutate the original underlying array
