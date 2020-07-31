@@ -19,10 +19,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
@@ -534,7 +532,7 @@ public abstract class JsonReader implements Closeable {
 
     /** Returns a copy of this {@link Options Option's} strings. */
     public List<String> strings() {
-      return unmodifiableList(Arrays.asList(strings.clone()));
+      return unmodifiableList(Arrays.asList(strings));
     }
 
     @CheckReturnValue public static Options of(String... strings) {
