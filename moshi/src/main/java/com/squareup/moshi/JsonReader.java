@@ -27,6 +27,8 @@ import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
 
+import static java.util.Collections.unmodifiableList;
+
 /**
  * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>)
  * encoded value as a stream of tokens. This stream includes both literal
@@ -526,6 +528,11 @@ public abstract class JsonReader implements Closeable {
     private Options(String[] strings, okio.Options doubleQuoteSuffix) {
       this.strings = strings;
       this.doubleQuoteSuffix = doubleQuoteSuffix;
+    }
+
+    /** Returns a copy of this {@link Options Option's} strings. */
+    public List<String> strings() {
+      return unmodifiableList(Arrays.asList(strings));
     }
 
     @CheckReturnValue public static Options of(String... strings) {
