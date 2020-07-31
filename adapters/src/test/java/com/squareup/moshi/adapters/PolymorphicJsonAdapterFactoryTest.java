@@ -23,10 +23,9 @@ import com.squareup.moshi.Moshi;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 import okio.Buffer;
 import org.junit.Test;
-
-import javax.annotation.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -114,15 +113,18 @@ public final class PolymorphicJsonAdapterFactoryTest {
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error")
             .withFallbackJsonAdapter(new JsonAdapter<Object>() {
-              @Override
-              public Object fromJson(JsonReader reader) throws IOException {
-                reader.skipValue();
+              @Override public Object fromJson(JsonReader reader) throws IOException {
+                reader.beginObject();
+                assertThat(reader.nextName()).isEqualTo("type");
+                assertThat(reader.nextString()).isEqualTo("data");
+                assertThat(reader.nextName()).isEqualTo("value");
+                assertThat(reader.nextString()).isEqualTo("Okay!");
+                reader.endObject();
                 return new EmptyMessage();
               }
 
-              @Override
-              public void toJson(JsonWriter writer, @Nullable Object value) {
-                throw new RuntimeException("Not implemented as not needed for the test");
+              @Override public void toJson(JsonWriter writer, @Nullable Object value) {
+                throw new AssertionError();
               }
             })
         )
@@ -185,14 +187,11 @@ public final class PolymorphicJsonAdapterFactoryTest {
             .withSubtype(Success.class, "success")
             .withSubtype(Error.class, "error")
             .withFallbackJsonAdapter(new JsonAdapter<Object>() {
-              @Nullable
-              @Override
-              public Object fromJson(JsonReader reader) {
+              @Override public Object fromJson(JsonReader reader) {
                 throw new RuntimeException("Not implemented as not needed for the test");
               }
 
-              @Override
-              public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
+              @Override public void toJson(JsonWriter writer, Object value) throws IOException {
                 writer.name("type").value("injected by fallbackJsonAdapter");
               }
             }))
