@@ -330,7 +330,7 @@ final class JsonValueReader extends JsonReader {
     return new JsonValueReader(this);
   }
 
-  @Override void promoteNameToValue() throws IOException {
+  @Override public void promoteNameToValue() throws IOException {
     if (hasNext()) {
       String name = nextName();
       push(name);

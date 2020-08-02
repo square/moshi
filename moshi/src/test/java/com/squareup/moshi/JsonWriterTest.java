@@ -609,7 +609,7 @@ public final class JsonWriterTest {
       assertThat(expected).hasMessage("Nesting problem.");
     }
   }
-  
+
   @Test public void danglingNameFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
@@ -813,5 +813,89 @@ public final class JsonWriterTest {
     } catch (IllegalArgumentException e) {
       assertThat(e).hasMessage("Map keys must be non-null");
     }
+  }
+
+  @Test public void promoteStringNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    writer.value("a");
+    writer.value("b");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"a\":\"b\"}");
+  }
+
+  @Test public void promoteDoubleNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    writer.value(5.0);
+    writer.value("b");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"5.0\":\"b\"}");
+  }
+
+  @Test public void promoteLongNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    writer.value(5L);
+    writer.value("b");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"5\":\"b\"}");
+  }
+
+  @Test public void promoteNumberNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    writer.value(BigInteger.ONE);
+    writer.value("b");
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{\"1\":\"b\"}");
+  }
+
+  @Test public void promoteNullNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    try {
+      writer.nullValue();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("null cannot be used as a map key in JSON at path $.");
+    }
+  }
+
+  @Test public void promoteBooleanNameToValue() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    try {
+      writer.value(true);
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
+    }
+  }
+
+  @Test public void promoteNameToValueCannotBeWrittenAsName() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    try {
+      writer.name("a");
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("Nesting problem.");
+    }
+  }
+
+  @Test public void promoteNameToValueAtEndOfObject() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    writer.beginObject();
+    writer.promoteValueToName();
+    writer.endObject();
+    assertThat(factory.json()).isEqualTo("{}");
   }
 }

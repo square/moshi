@@ -443,8 +443,20 @@ public abstract class JsonWriter implements Closeable, Flushable {
   /**
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so
    * that arbitrary type adapters can use {@link #value} to write a name value.
+   *
+   * <p>In this example, calling this method allows two sequential calls to {@link #value(String)}
+   * to produce the object, {@code {"a": "b"}}.
+   * <pre> {@code
+   *
+   *     JsonWriter writer = JsonWriter.of(...);
+   *     writer.beginObject();
+   *     writer.promoteValueToName();
+   *     writer.value("a");
+   *     writer.value("b");
+   *     writer.endObject();
+   * }</pre>
    */
-  final void promoteValueToName() throws IOException {
+  public final void promoteValueToName() throws IOException {
     int context = peekScope();
     if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
       throw new IllegalStateException("Nesting problem.");

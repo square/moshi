@@ -1158,7 +1158,7 @@ final class JsonUtf8Reader extends JsonReader {
     }
   }
 
-  @Override void promoteNameToValue() throws IOException {
+  @Override public void promoteNameToValue() throws IOException {
     if (hasNext()) {
       peekedString = nextName();
       peeked = PEEKED_BUFFERED;
