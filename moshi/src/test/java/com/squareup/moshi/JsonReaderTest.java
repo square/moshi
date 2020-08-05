@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -1155,6 +1154,85 @@ public final class JsonReaderTest {
     assertEquals("a", reader.nextString());
     assertEquals("b", reader.peekJson().nextString());
     assertEquals("b", reader.nextString());
+    reader.endObject();
+  }
+
+  @Test public void promoteStringNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"a\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertEquals("a", reader.nextString());
+    assertEquals("b", reader.nextString());
+    reader.endObject();
+  }
+
+  @Test public void promoteDoubleNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"5\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertEquals(5.0, reader.nextDouble(), 0.0);
+    assertEquals("b", reader.nextString());
+    reader.endObject();
+  }
+
+  @Test public void promoteLongNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"5\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertEquals(5L, reader.nextLong());
+    assertEquals("b", reader.nextString());
+    reader.endObject();
+  }
+
+  @Test public void promoteNullNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"null\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    try {
+      reader.nextNull();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertEquals("null", reader.nextString());
+  }
+
+  @Test public void promoteBooleanNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"true\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    try {
+      reader.nextBoolean();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertEquals("true", reader.nextString());
+  }
+
+  @Test public void promoteBooleanNameToValueCannotBeReadAsName() throws IOException {
+    JsonReader reader = newReader("{\"true\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    try {
+      reader.nextName();
+      fail();
+    } catch (JsonDataException expected) {
+    }
+    assertEquals("true", reader.nextString());
+  }
+
+  @Test public void promoteSkippedNameToValue() throws IOException {
+    JsonReader reader = newReader("{\"true\":\"b\"}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    reader.skipValue();
+    assertEquals("b", reader.nextString());
+  }
+
+  @Test public void promoteNameToValueAtEndOfObject() throws IOException {
+    JsonReader reader = newReader("{}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    assertThat(reader.hasNext()).isFalse();
     reader.endObject();
   }
 

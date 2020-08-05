@@ -130,17 +130,17 @@ final class JsonValueWriter extends JsonWriter {
     if (stackSize == 0) {
       throw new IllegalStateException("JsonWriter is closed.");
     }
-    if (peekScope() != EMPTY_OBJECT || deferredName != null) {
+    if (peekScope() != EMPTY_OBJECT || deferredName != null || promoteValueToName) {
       throw new IllegalStateException("Nesting problem.");
     }
     deferredName = name;
     pathNames[stackSize - 1] = name;
-    promoteValueToName = false;
     return this;
   }
 
   @Override public JsonWriter value(@Nullable String value) throws IOException {
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(value);
     }
     add(value);
@@ -184,6 +184,7 @@ final class JsonValueWriter extends JsonWriter {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(Double.toString(value));
     }
     add(value);
@@ -193,6 +194,7 @@ final class JsonValueWriter extends JsonWriter {
 
   @Override public JsonWriter value(long value) throws IOException {
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(Long.toString(value));
     }
     add(value);
@@ -223,6 +225,7 @@ final class JsonValueWriter extends JsonWriter {
         ? ((BigDecimal) value)
         : new BigDecimal(value.toString());
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(bigDecimalValue.toString());
     }
     add(bigDecimalValue);

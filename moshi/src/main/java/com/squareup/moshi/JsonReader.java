@@ -514,8 +514,19 @@ public abstract class JsonReader implements Closeable {
   /**
    * Changes the reader to treat the next name as a string value. This is useful for map adapters so
    * that arbitrary type adapters can use {@link #nextString} to read a name value.
+   *
+   * <p>In this example, calling this method allows two sequential calls to {@link #nextString()}:
+   * <pre> {@code
+   *
+   *     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"a\":\"b\"}"));
+   *     reader.beginObject();
+   *     reader.promoteNameToValue();
+   *     assertEquals("a", reader.nextString());
+   *     assertEquals("b", reader.nextString());
+   *     reader.endObject();
+   * }</pre>
    */
-  abstract void promoteNameToValue() throws IOException;
+  public abstract void promoteNameToValue() throws IOException;
 
   /**
    * A set of strings to be chosen with {@link #selectName} or {@link #selectString}. This prepares

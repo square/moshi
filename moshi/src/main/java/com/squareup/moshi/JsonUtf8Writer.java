@@ -162,12 +162,13 @@ final class JsonUtf8Writer extends JsonWriter {
       throw new IllegalStateException("JsonWriter is closed.");
     }
     int context = peekScope();
-    if ((context != EMPTY_OBJECT && context != NONEMPTY_OBJECT) || deferredName != null) {
+    if ((context != EMPTY_OBJECT && context != NONEMPTY_OBJECT)
+        || deferredName != null
+        || promoteValueToName) {
       throw new IllegalStateException("Nesting problem.");
     }
     deferredName = name;
     pathNames[stackSize - 1] = name;
-    promoteValueToName = false;
     return this;
   }
 
@@ -184,6 +185,7 @@ final class JsonUtf8Writer extends JsonWriter {
       return nullValue();
     }
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(value);
     }
     writeDeferredName();
@@ -236,6 +238,7 @@ final class JsonUtf8Writer extends JsonWriter {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(Double.toString(value));
     }
     writeDeferredName();
@@ -247,6 +250,7 @@ final class JsonUtf8Writer extends JsonWriter {
 
   @Override public JsonWriter value(long value) throws IOException {
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(Long.toString(value));
     }
     writeDeferredName();
@@ -267,6 +271,7 @@ final class JsonUtf8Writer extends JsonWriter {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     if (promoteValueToName) {
+      promoteValueToName = false;
       return name(string);
     }
     writeDeferredName();
