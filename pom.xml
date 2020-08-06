@@ -24,6 +24,7 @@
     <module>kotlin/codegen</module>
     <module>kotlin/reflect</module>
     <module>kotlin/tests</module>
+    <module>benchmarks</module>
   </modules>
 
   <properties>
@@ -41,6 +42,7 @@
     <asm.version>7.1</asm.version>
     <kotlinx-metadata.version>0.1.0</kotlinx-metadata.version>
     <maven-assembly.version>3.1.0</maven-assembly.version>
+    <jmh.version>1.21</jmh.version>
 
     <!-- Test Dependencies -->
     <assertj.version>3.11.1</assertj.version>
@@ -123,6 +125,17 @@
         <artifactId>compile-testing</artifactId>
         <version>${compile-testing.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-core</artifactId>
+        <version>${jmh.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-generator-annprocess</artifactId>
+        <version>${jmh.version}</version>
+        <scope>provided</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -184,7 +197,7 @@
           <failsOnError>true</failsOnError>
           <configLocation>checkstyle.xml</configLocation>
           <consoleOutput>true</consoleOutput>
-          <excludes>**/Iso8601Utils.java</excludes>
+          <excludes>**/Iso8601Utils.java,**/generated/**/*</excludes>
         </configuration>
         <executions>
           <execution>
