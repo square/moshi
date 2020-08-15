@@ -629,7 +629,7 @@ rules could look like this:
 
 ```proguard
 # Keep names of Kotlin classes but allow shrinking if unused
--keepnames @kotlin.Metadata class your.class.Here
+-keepnames @kotlin.Metadata class com.example.YourClassHere
 
 # Keep fields, constructors, and methods in Kotlin classes.
 -keepclassmembers @kotlin.Metadata class your.class.Here {
