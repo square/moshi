@@ -36,7 +36,7 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-@UseExperimental(KotlinPoetMetadataPreview::class)
+@OptIn(KotlinPoetMetadataPreview::class)
 class JsonClassCodegenProcessorTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
