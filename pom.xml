@@ -36,7 +36,7 @@
     <incap.version>0.2</incap.version>
     <okio.version>1.16.0</okio.version>
     <okio2.version>2.1.0</okio2.version>
-    <kotlin.version>1.3.60</kotlin.version>
+    <kotlin.version>1.4.0</kotlin.version>
     <kotlinpoet.version>1.5.0</kotlinpoet.version>
     <asm.version>7.1</asm.version>
     <kotlinx-metadata.version>0.1.0</kotlinx-metadata.version>
