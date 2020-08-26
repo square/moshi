@@ -116,7 +116,7 @@
         <configuration>
           <args>
             <arg>-Werror</arg>
-            <arg>-Xuse-experimental=kotlin.ExperimentalStdlibApi</arg>
+            <arg>-Xopt-in=kotlin.ExperimentalStdlibApi</arg>
               <arg>-XXLanguage:+InlineClasses</arg>
           </args>
         </configuration>
