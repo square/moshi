@@ -260,7 +260,7 @@ class JsonClassCodegenProcessorTest {
     ))
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to expression\$annotations(): must be a Kotlin class")
+        "error: @JsonClass can't be applied to getExpression\$annotations(): must be a Kotlin class")
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
