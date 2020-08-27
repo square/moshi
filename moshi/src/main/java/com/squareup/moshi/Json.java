@@ -39,5 +39,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Documented
 public @interface Json {
-  String name();
+  String name() default "";
+  boolean isTransient() default false;
 }

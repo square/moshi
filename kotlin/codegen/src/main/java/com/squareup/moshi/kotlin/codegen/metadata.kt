@@ -25,6 +25,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
+import com.squareup.kotlinpoet.metadata.ImmutableKmProperty
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -365,13 +366,32 @@ private fun declaredProperties(
   return result
 }
 
-private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.className == Transient::class.asClassName() }
+private val TargetProperty.isTransient: Boolean get() = propertySpec.annotations.any { it.isTransient }
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
     return visibility == KModifier.INTERNAL
         || visibility == KModifier.PROTECTED
         || visibility == KModifier.PUBLIC
+  }
+
+private val AnnotationSpec.isTransient: Boolean
+  get() {
+    if (className == Transient::class.asClassName()) {
+      return true
+    }
+
+    if (className == JSON) {
+      val mirror = requireNotNull(tag<AnnotationMirror>()) {
+        "Could not get the annotation mirror from the annotation spec"
+      }
+      val isTransient = mirror.elementValues.entries.singleOrNull {
+        it.key.simpleName.contentEquals("isTransient")
+      } ?: return false
+      return isTransient.value.value as Boolean
+    }
+
+    return false
   }
 
 /**
@@ -446,9 +466,10 @@ private fun List<AnnotationSpec>?.jsonName(): String? {
     val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
       "Could not get the annotation mirror from the annotation spec"
     }
-    mirror.elementValues.entries.single {
+    val nameValue = mirror.elementValues.entries.singleOrNull {
       it.key.simpleName.contentEquals("name")
-    }.value.value as String
+    }?.value?.value as? String
+    nameValue?.takeIf { it.isNotEmpty() }
   }
 }
 
