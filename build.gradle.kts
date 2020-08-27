@@ -25,6 +25,35 @@ buildscript {
 plugins {
   id("com.vanniktech.maven.publish") version "0.11.1" apply false
   id("org.jetbrains.dokka") version "0.10.1" apply false
+  id("com.diffplug.spotless") version "5.2.0"
+}
+
+spotless {
+  format("misc") {
+    target("*.md", ".gitignore")
+    trimTrailingWhitespace()
+    indentWithSpaces(2)
+    endWithNewline()
+  }
+  java {
+    googleJavaFormat("1.7")
+    target("**/*.java")
+//    licenseHeaderFile("spotless/spotless.java")
+  }
+  kotlin {
+    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    target("**/*.kt")
+    trimTrailingWhitespace()
+    endWithNewline()
+//    licenseHeaderFile("spotless/spotless.kt")
+  }
+  kotlinGradle {
+    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    target("**/*.gradle.kts")
+    trimTrailingWhitespace()
+    endWithNewline()
+//    licenseHeaderFile("spotless/spotless.kts")
+  }
 }
 
 subprojects {
@@ -43,15 +72,6 @@ subprojects {
       }
     }
   }
-
-//  apply(plugin = "checkstyle")
-//  configure<CheckstyleExtension> {
-//    toolVersion = "8.28"
-//    configFile = rootProject.file("checkstyle.xml")
-//  }
-//  tasks.withType<Checkstyle>().configureEach {
-//    exclude("**/Iso8601Utils.java")
-//  }
 
   pluginManager.withPlugin("java-library") {
     configure<JavaPluginExtension> {
