@@ -399,15 +399,17 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test
-  fun `Properties without a backing field should be ignored`() {
+  fun `Properties with @Json(isTransient = true) should be ignored`() {
     val result = compile(kotlin("source.kt",
         """
           import com.squareup.moshi.JsonClass
+          import com.squareup.moshi.Json
           
           class FullName(val first: String, val last: String)
           
           @JsonClass(generateAdapter = true)
           data class Person(var firstName: String, var lastName: String) {
+            @Json(isTransient = true)
             var fullName: FullName
               get() = FullName(firstName, lastName)
               set(value) {
