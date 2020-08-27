@@ -10,7 +10,12 @@ _2020-08-26_
  * New: `Options.strings()`.
  * New: `PolymorphicJsonAdapterFactory.withFallbackJsonAdapter()` makes it possible to handle
    unrecognized types when encoding and decoding.
-
+ * New: Add `JsonWriter.jsonValue` API
+ * New: Code gen now generates precise proguard rules on-the-fly.
+ * New: Improve error when incorrectly trying to use a collection class like `ArrayList` instead of `List`
+ * Fix: Prevent R8 from keeping all `@Metadata` annotations
+ * Fix: Avoid VerifyErrors on Android 4.4 devices when using R8
+ * Fix: Fix resolution of types in superclass settable properties
 
 ## Version 1.9.3
 
