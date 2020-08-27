@@ -385,9 +385,10 @@ private val AnnotationSpec.isTransient: Boolean
       val mirror = requireNotNull(tag<AnnotationMirror>()) {
         "Could not get the annotation mirror from the annotation spec"
       }
-      return mirror.elementValues.entries.single {
+      val isTransient = mirror.elementValues.entries.singleOrNull {
         it.key.simpleName.contentEquals("isTransient")
-      }.value.value as Boolean
+      } ?: return false
+      return isTransient.value.value as Boolean
     }
 
     return false
