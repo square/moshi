@@ -404,11 +404,6 @@ internal fun TargetProperty.generator(
     return null // This property is not settable. Ignore it.
   }
 
-  val propertyInfo = propertySpec.tag<ImmutableKmProperty>()
-  if (propertyInfo != null && propertyInfo.fieldSignature == null) {
-    return null // This property does not have a backing field. Ignore it.
-  }
-
   // Merge parameter and property annotations
   val qualifiers = parameter?.qualifiers.orEmpty() + propertySpec.annotations.qualifiers(elements)
   for (jsonQualifier in qualifiers) {
