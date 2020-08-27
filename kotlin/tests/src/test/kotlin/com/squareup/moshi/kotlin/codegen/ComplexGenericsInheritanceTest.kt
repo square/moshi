@@ -9,7 +9,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Test
 
-@ExperimentalStdlibApi
 class ComplexGenericsInheritanceTest {
 
   private val moshi = Moshi.Builder().build()

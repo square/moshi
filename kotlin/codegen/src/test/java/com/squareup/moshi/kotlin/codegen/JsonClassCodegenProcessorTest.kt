@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -36,7 +35,6 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-@OptIn(KotlinPoetMetadataPreview::class)
 class JsonClassCodegenProcessorTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 

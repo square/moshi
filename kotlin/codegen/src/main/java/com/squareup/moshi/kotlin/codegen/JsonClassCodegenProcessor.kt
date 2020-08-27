@@ -19,7 +19,6 @@ import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
-import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
@@ -45,7 +44,6 @@ import javax.tools.Diagnostic
  * The generated class will match the visibility of the given data class (i.e. if it's internal, the
  * adapter will also be internal).
  */
-@KotlinPoetMetadataPreview
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(ISOLATING)
 class JsonClassCodegenProcessor : AbstractProcessor() {

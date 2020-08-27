@@ -63,7 +63,7 @@ public @interface JsonClass {
    *   </li>
    *   <li>The first parameter must be a {@link Moshi} instance.</li>
    *   <li>
-   *     If generic, a second {@link Type[]} parameter should be declared to accept type arguments.
+   *     If generic, a second {@link Type Type[]} parameter should be declared to accept type arguments.
    *   </li>
    * </ul>
    *
