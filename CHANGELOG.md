@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+## Version 1.10.0
+
+_2020-08-26_
+
+ * New: Upgrade to Kotlin 1.4.0.
+ * New: `JsonReader.promoteNameToValue()` makes it easier to build custom `Map` adapters.
+ * New: `Options.strings()`.
+ * New: `PolymorphicJsonAdapterFactory.withFallbackJsonAdapter()` makes it possible to handle
+   unrecognized types when encoding and decoding.
+
+
 ## Version 1.9.3
 
 _2020-06-11_
