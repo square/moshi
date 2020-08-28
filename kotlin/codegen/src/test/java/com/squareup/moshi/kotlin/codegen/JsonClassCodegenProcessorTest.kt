@@ -38,7 +38,6 @@ import kotlin.reflect.full.declaredMemberProperties
 class JsonClassCodegenProcessorTest {
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateConstructor() {
     val result = compile(
@@ -62,7 +61,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("constructor is not internal or public")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateConstructorParameter() {
     val result = compile(
@@ -80,7 +78,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("property a is not visible")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateProperties() {
     val result = compile(
@@ -101,7 +98,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("property a is not visible")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun interfacesNotSupported() {
     val result = compile(
@@ -121,7 +117,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun interfacesDoNotErrorWhenGeneratorNotSet() {
     val result = compile(
@@ -138,7 +133,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun abstractClassesNotSupported() {
     val result = compile(
@@ -158,7 +152,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun sealedClassesNotSupported() {
     val result = compile(
@@ -178,7 +171,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun innerClassesNotSupported() {
     val result = compile(
@@ -200,7 +192,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun enumClassesNotSupported() {
     val result = compile(
@@ -245,7 +236,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateClassesNotSupported() {
     val result = compile(
@@ -265,7 +255,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun objectDeclarationsNotSupported() {
     val result = compile(
@@ -287,7 +276,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun objectExpressionsNotSupported() {
     val result = compile(
@@ -309,7 +297,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun requiredTransientConstructorParameterFails() {
     val result = compile(
@@ -329,7 +316,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonPropertyConstructorParameter() {
     val result = compile(
@@ -350,7 +336,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun badGeneratedAnnotation() {
     val result = prepareCompilation(
@@ -371,7 +356,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun multipleErrors() {
     val result = compile(
@@ -393,7 +377,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("property c is not visible")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun extendPlatformType() {
     val result = compile(
@@ -411,7 +394,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun extendJavaType() {
     val result = compile(
@@ -431,7 +413,6 @@ class JsonClassCodegenProcessorTest {
       .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonFieldApplicableQualifier() {
     val result = compile(
@@ -459,7 +440,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("JsonQualifier @UpperCase must support FIELD target")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonRuntimeQualifier() {
     val result = compile(
@@ -488,7 +468,6 @@ class JsonClassCodegenProcessorTest {
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
@@ -516,7 +495,6 @@ class JsonClassCodegenProcessorTest {
     )
   }
 
-  @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun `Processor should generate comprehensive proguard rules`() {
     val result = compile(

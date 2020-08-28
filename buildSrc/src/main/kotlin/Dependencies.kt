@@ -49,7 +49,7 @@ object Dependencies {
 
   object Testing {
     const val assertj = "org.assertj:assertj-core:3.11.1"
-    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.2.8"
+    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.2.10"
     const val junit = "junit:junit:4.12"
     const val truth = "com.google.truth:truth:1.0"
   }
