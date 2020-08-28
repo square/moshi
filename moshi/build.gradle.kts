@@ -15,12 +15,13 @@
  */
 
 plugins {
-  `java-library`
+  kotlin("jvm")
   id("com.vanniktech.maven.publish")
 }
 
 dependencies {
   compileOnly(Dependencies.jsr305)
+  compileOnly(Dependencies.Kotlin.stdlib)
   api(Dependencies.okio)
 
   testCompileOnly(Dependencies.jsr305)
