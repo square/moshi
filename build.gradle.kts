@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import com.vanniktech.maven.publish.MavenPublishPluginExtension
 import org.gradle.jvm.tasks.Jar
 
 buildscript {
@@ -24,7 +23,7 @@ buildscript {
 }
 
 plugins {
-  id("com.vanniktech.maven.publish") version "0.11.1" apply false
+  id("com.vanniktech.maven.publish") version "0.12.0" apply false
   id("org.jetbrains.dokka") version "0.10.1" apply false
   id("com.diffplug.spotless") version "5.2.0"
 }
@@ -88,13 +87,6 @@ subprojects {
 
   // Configure publishing
   pluginManager.withPlugin("com.vanniktech.maven.publish") {
-    configure<MavenPublishPluginExtension> {
-      useLegacyMode = false
-      nexus {
-        groupId = "com.squareup"
-      }
-    }
-
     // Configure automatic-module-name, but only for published modules
     @Suppress("UnstableApiUsage")
     val automaticModuleName = providers.gradleProperty("AUTOMATIC_MODULE_NAME")
