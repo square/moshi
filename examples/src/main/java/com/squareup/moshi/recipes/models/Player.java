@@ -26,7 +26,8 @@ public final class Player {
     this.luckyNumber = luckyNumber;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return username + " gets lucky with " + luckyNumber;
   }
 }

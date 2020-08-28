@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.vanniktech.maven.publish.MavenPublishPluginExtension
 import org.gradle.jvm.tasks.Jar
 
@@ -25,6 +26,40 @@ buildscript {
 plugins {
   id("com.vanniktech.maven.publish") version "0.11.1" apply false
   id("org.jetbrains.dokka") version "0.10.1" apply false
+  id("com.diffplug.spotless") version "5.2.0"
+}
+
+spotless {
+  format("misc") {
+    target("*.md", ".gitignore")
+    trimTrailingWhitespace()
+    indentWithSpaces(2)
+    endWithNewline()
+  }
+  java {
+    googleJavaFormat("1.7")
+    target("**/*.java")
+    targetExclude("**/spotless.java")
+    // https://github.com/diffplug/spotless/issues/677
+//    licenseHeaderFile("spotless/spotless.java")
+  }
+  kotlin {
+    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    target("**/*.kt")
+    trimTrailingWhitespace()
+    endWithNewline()
+    // https://github.com/diffplug/spotless/issues/677
+//    licenseHeaderFile("spotless/spotless.kt")
+//      .updateYearWithLatest(false)
+//    targetExclude("**/Dependencies.kt", "**/spotless.kt")
+  }
+  kotlinGradle {
+    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    target("**/*.gradle.kts")
+    trimTrailingWhitespace()
+    endWithNewline()
+    licenseHeaderFile("spotless/spotless.kts", "(import|plugins|buildscript|dependencies|pluginManagement)")
+  }
 }
 
 subprojects {
@@ -43,15 +78,6 @@ subprojects {
       }
     }
   }
-
-//  apply(plugin = "checkstyle")
-//  configure<CheckstyleExtension> {
-//    toolVersion = "8.28"
-//    configFile = rootProject.file("checkstyle.xml")
-//  }
-//  tasks.withType<Checkstyle>().configureEach {
-//    exclude("**/Iso8601Utils.java")
-//  }
 
   pluginManager.withPlugin("java-library") {
     configure<JavaPluginExtension> {
@@ -72,7 +98,7 @@ subprojects {
     // Configure automatic-module-name, but only for published modules
     @Suppress("UnstableApiUsage")
     val automaticModuleName = providers.gradleProperty("AUTOMATIC_MODULE_NAME")
-        .forUseAtConfigurationTime()
+      .forUseAtConfigurationTime()
     if (automaticModuleName.isPresent) {
       val name = automaticModuleName.get()
       tasks.withType<Jar>().configureEach {

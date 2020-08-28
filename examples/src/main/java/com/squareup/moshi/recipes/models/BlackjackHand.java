@@ -27,7 +27,8 @@ public final class BlackjackHand {
     this.visible_cards = visibleCards;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "hidden=" + hidden_card + ",visible=" + visible_cards;
   }
 }

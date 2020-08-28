@@ -52,22 +52,22 @@ _2019-10-30_
 
 _2019-10-29_
 
- * **This release requires kotlin-reflect or moshi-kotlin-codegen for all Kotlin classes.** 
- 
+ * **This release requires kotlin-reflect or moshi-kotlin-codegen for all Kotlin classes.**
+
    Previously Moshi wouldn't differentiate between Kotlin classes and Java classes if Kotlin was
    not configured. This caused bad runtime behavior such as putting null into non-nullable fields!
    If you attempt to create an adapter for a Kotlin type, Moshi will throw an
    `IllegalArgumentException`.
-   
+
    Fix this with either the reflection adapter:
-   
+
    ```kotlin
    val moshi = Moshi.Builder()
        // ... add your own JsonAdapters and factories ...
        .add(KotlinJsonAdapterFactory())
        .build()
    ```
-   
+
    Or the codegen annotation processor:
 
    ```kotlin
@@ -77,12 +77,12 @@ _2019-10-29_
            val visible_cards: List<Card>
    )
    ```
-   
+
    The [Kotlin documentation][moshi_kotlin_docs] explains the required build configuration changes.
 
- * New: Change how Moshi's generated adapters call constructors. Previous generated code used a 
+ * New: Change how Moshi's generated adapters call constructors. Previous generated code used a
    combination of the constructor and `copy()` method to set properties that have default values.
-   With this update we call the same synthetic constructor that Kotlin uses. This is less surprising 
+   With this update we call the same synthetic constructor that Kotlin uses. This is less surprising
    though it requires us to generate some tricky code.
  * New: Make `Rfc3339DateJsonAdapter` null-safe. Previously Moshi would refuse to decode null dates.
    Restore that behavior by explicitly forbidding nulls with `Rfc3339DateJsonAdapter().nonNull()`.

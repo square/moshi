@@ -26,11 +26,12 @@ import java.util.TimeZone;
  * Jackson’s date formatter, pruned to Moshi's needs. Forked from this file:
  * https://github.com/FasterXML/jackson-databind/blob/67ebf7305f492285a8f9f4de31545f5f16fc7c3a/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
  *
- * Utilities methods for manipulating dates in iso8601 format. This is much much faster and GC
+ * <p>Utilities methods for manipulating dates in iso8601 format. This is much much faster and GC
  * friendly than using SimpleDateFormat so highly suitable if you (un)serialize lots of date
  * objects.
  *
- * Supported parse format: [yyyy-MM-dd|yyyyMMdd][T(hh:mm[:ss[.sss]]|hhmm[ss[.sss]])]?[Z|[+-]hh[:]mm]]
+ * <p>Supported parse format:
+ * [yyyy-MM-dd|yyyyMMdd][T(hh:mm[:ss[.sss]]|hhmm[ss[.sss]])]?[Z|[+-]hh[:]mm]]
  *
  * @see <a href="http://www.w3.org/TR/NOTE-datetime">this specification</a>
  */
@@ -167,8 +168,11 @@ final class Iso8601Utils {
              */
             String cleaned = act.replace(":", "");
             if (!cleaned.equals(timezoneId)) {
-              throw new IndexOutOfBoundsException("Mismatching time zone indicator: "
-                  + timezoneId + " given, resolves to " + timezone.getID());
+              throw new IndexOutOfBoundsException(
+                  "Mismatching time zone indicator: "
+                      + timezoneId
+                      + " given, resolves to "
+                      + timezone.getID());
             }
           }
         }
@@ -259,8 +263,7 @@ final class Iso8601Utils {
   }
 
   /**
-   * Returns the index of the first character in the string that is not a digit, starting at
-   * offset.
+   * Returns the index of the first character in the string that is not a digit, starting at offset.
    */
   private static int indexOfNonDigit(String string, int offset) {
     for (int i = offset; i < string.length(); i++) {

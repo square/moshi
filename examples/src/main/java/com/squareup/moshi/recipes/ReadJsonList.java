@@ -24,21 +24,22 @@ import java.util.List;
 
 public final class ReadJsonList {
   public void run() throws Exception {
-    String json = ""
-        + "[\n"
-        + "  {\n"
-        + "    \"rank\": \"4\",\n"
-        + "    \"suit\": \"CLUBS\"\n"
-        + "  },\n"
-        + "  {\n"
-        + "    \"rank\": \"A\",\n"
-        + "    \"suit\": \"HEARTS\"\n"
-        + "  },\n"
-        + "  {\n"
-        + "    \"rank\": \"J\",\n"
-        + "    \"suit\": \"SPADES\"\n"
-        + "  }\n"
-        + "]";
+    String json =
+        ""
+            + "[\n"
+            + "  {\n"
+            + "    \"rank\": \"4\",\n"
+            + "    \"suit\": \"CLUBS\"\n"
+            + "  },\n"
+            + "  {\n"
+            + "    \"rank\": \"A\",\n"
+            + "    \"suit\": \"HEARTS\"\n"
+            + "  },\n"
+            + "  {\n"
+            + "    \"rank\": \"J\",\n"
+            + "    \"suit\": \"SPADES\"\n"
+            + "  }\n"
+            + "]";
 
     Moshi moshi = new Moshi.Builder().build();
 

@@ -25,21 +25,23 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Converts arrays to JSON arrays containing their converted contents. This
- * supports both primitive and object arrays.
+ * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
+ * and object arrays.
  */
 final class ArrayJsonAdapter extends JsonAdapter<Object> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public @Nullable JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      Type elementType = Types.arrayComponentType(type);
-      if (elementType == null) return null;
-      if (!annotations.isEmpty()) return null;
-      Class<?> elementClass = Types.getRawType(elementType);
-      JsonAdapter<Object> elementAdapter = moshi.adapter(elementType);
-      return new ArrayJsonAdapter(elementClass, elementAdapter).nullSafe();
-    }
-  };
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public @Nullable JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          Type elementType = Types.arrayComponentType(type);
+          if (elementType == null) return null;
+          if (!annotations.isEmpty()) return null;
+          Class<?> elementClass = Types.getRawType(elementType);
+          JsonAdapter<Object> elementAdapter = moshi.adapter(elementType);
+          return new ArrayJsonAdapter(elementClass, elementAdapter).nullSafe();
+        }
+      };
 
   private final Class<?> elementClass;
   private final JsonAdapter<Object> elementAdapter;
@@ -49,7 +51,8 @@ final class ArrayJsonAdapter extends JsonAdapter<Object> {
     this.elementAdapter = elementAdapter;
   }
 
-  @Override public Object fromJson(JsonReader reader) throws IOException {
+  @Override
+  public Object fromJson(JsonReader reader) throws IOException {
     List<Object> list = new ArrayList<>();
     reader.beginArray();
     while (reader.hasNext()) {
@@ -63,7 +66,8 @@ final class ArrayJsonAdapter extends JsonAdapter<Object> {
     return array;
   }
 
-  @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, Object value) throws IOException {
     writer.beginArray();
     for (int i = 0, size = Array.getLength(value); i < size; i++) {
       elementAdapter.toJson(writer, Array.get(value, i));
@@ -71,7 +75,8 @@ final class ArrayJsonAdapter extends JsonAdapter<Object> {
     writer.endArray();
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return elementAdapter + ".array()";
   }
 }

@@ -15,6 +15,9 @@
  */
 package com.squareup.moshi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assume.assumeTrue;
+
 import java.io.IOException;
 import java.util.List;
 import org.junit.Test;
@@ -22,9 +25,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 @RunWith(Parameterized.class)
 public final class JsonReaderPathTest {
@@ -36,7 +36,8 @@ public final class JsonReaderPathTest {
   }
 
   @SuppressWarnings("CheckReturnValue")
-  @Test public void path() throws IOException {
+  @Test
+  public void path() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":[2,true,false,null,\"b\",{\"c\":\"d\"},[3]]}");
     assertThat(reader.getPath()).isEqualTo("$");
     reader.beginObject();
@@ -75,7 +76,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
-  @Test public void arrayOfObjects() throws IOException {
+  @Test
+  public void arrayOfObjects() throws IOException {
     JsonReader reader = factory.newReader("[{},{},{}]");
     reader.beginArray();
     assertThat(reader.getPath()).isEqualTo("$[0]");
@@ -95,7 +97,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
-  @Test public void arrayOfArrays() throws IOException {
+  @Test
+  public void arrayOfArrays() throws IOException {
     JsonReader reader = factory.newReader("[[],[],[]]");
     reader.beginArray();
     assertThat(reader.getPath()).isEqualTo("$[0]");
@@ -116,7 +119,8 @@ public final class JsonReaderPathTest {
   }
 
   @SuppressWarnings("CheckReturnValue")
-  @Test public void objectPath() throws IOException {
+  @Test
+  public void objectPath() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":1,\"b\":2}");
     assertThat(reader.getPath()).isEqualTo("$");
 
@@ -157,7 +161,8 @@ public final class JsonReaderPathTest {
   }
 
   @SuppressWarnings("CheckReturnValue")
-  @Test public void arrayPath() throws IOException {
+  @Test
+  public void arrayPath() throws IOException {
     JsonReader reader = factory.newReader("[1,2]");
     assertThat(reader.getPath()).isEqualTo("$");
 
@@ -187,7 +192,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
-  @Test public void multipleTopLevelValuesInOneDocument() throws IOException {
+  @Test
+  public void multipleTopLevelValuesInOneDocument() throws IOException {
     assumeTrue(factory.encodesToBytes());
 
     JsonReader reader = factory.newReader("[][]");
@@ -200,7 +206,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$");
   }
 
-  @Test public void skipArrayElements() throws IOException {
+  @Test
+  public void skipArrayElements() throws IOException {
     JsonReader reader = factory.newReader("[1,2,3]");
     reader.beginArray();
     reader.skipValue();
@@ -208,7 +215,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$[2]");
   }
 
-  @Test public void skipObjectNames() throws IOException {
+  @Test
+  public void skipObjectNames() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":1}");
     reader.beginObject();
     reader.skipValue();
@@ -216,7 +224,8 @@ public final class JsonReaderPathTest {
   }
 
   @SuppressWarnings("CheckReturnValue")
-  @Test public void skipObjectValues() throws IOException {
+  @Test
+  public void skipObjectValues() throws IOException {
     JsonReader reader = factory.newReader("{\"a\":1,\"b\":2}");
     reader.beginObject();
     reader.nextName();
@@ -226,7 +235,8 @@ public final class JsonReaderPathTest {
     assertThat(reader.getPath()).isEqualTo("$.b");
   }
 
-  @Test public void skipNestedStructures() throws IOException {
+  @Test
+  public void skipNestedStructures() throws IOException {
     JsonReader reader = factory.newReader("[[1,2,3],4]");
     reader.beginArray();
     reader.skipValue();

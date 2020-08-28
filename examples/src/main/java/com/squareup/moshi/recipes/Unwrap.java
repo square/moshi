@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi.recipes;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
@@ -30,20 +32,18 @@ import java.lang.reflect.Type;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 final class Unwrap {
-  private Unwrap() {
-  }
+  private Unwrap() {}
 
   public static void main(String[] args) throws Exception {
-    String json = ""
-        + "{\"data\":"
-        + "  {\n"
-        + "    \"rank\": \"4\",\n"
-        + "    \"suit\": \"CLUBS\"\n"
-        + "  }"
-        + "}";
+    String json =
+        ""
+            + "{\"data\":"
+            + "  {\n"
+            + "    \"rank\": \"4\",\n"
+            + "    \"suit\": \"CLUBS\"\n"
+            + "  }"
+            + "}";
     Moshi moshi = new Moshi.Builder().add(EnvelopeJsonAdapter.FACTORY).build();
     JsonAdapter<Card> adapter = moshi.adapter(Card.class, Enveloped.class);
     Card out = adapter.fromJson(json);
@@ -51,23 +51,28 @@ final class Unwrap {
   }
 
   public static final class EnvelopeJsonAdapter extends JsonAdapter<Object> {
-    public static final JsonAdapter.Factory FACTORY = new Factory() {
-      @Override public @Nullable JsonAdapter<?> create(
-          Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-        Set<? extends Annotation> delegateAnnotations =
-            Types.nextAnnotations(annotations, Enveloped.class);
-        if (delegateAnnotations == null) {
-          return null;
-        }
-        Type envelope =
-            Types.newParameterizedTypeWithOwner(EnvelopeJsonAdapter.class, Envelope.class, type);
-        JsonAdapter<Envelope<?>> delegate = moshi.nextAdapter(this, envelope, delegateAnnotations);
-        return new EnvelopeJsonAdapter(delegate);
-      }
-    };
+    public static final JsonAdapter.Factory FACTORY =
+        new Factory() {
+          @Override
+          public @Nullable JsonAdapter<?> create(
+              Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+            Set<? extends Annotation> delegateAnnotations =
+                Types.nextAnnotations(annotations, Enveloped.class);
+            if (delegateAnnotations == null) {
+              return null;
+            }
+            Type envelope =
+                Types.newParameterizedTypeWithOwner(
+                    EnvelopeJsonAdapter.class, Envelope.class, type);
+            JsonAdapter<Envelope<?>> delegate =
+                moshi.nextAdapter(this, envelope, delegateAnnotations);
+            return new EnvelopeJsonAdapter(delegate);
+          }
+        };
 
-    @Retention(RUNTIME) @JsonQualifier public @interface Enveloped {
-    }
+    @Retention(RUNTIME)
+    @JsonQualifier
+    public @interface Enveloped {}
 
     private static final class Envelope<T> {
       final T data;
@@ -83,11 +88,13 @@ final class Unwrap {
       this.delegate = delegate;
     }
 
-    @Override public Object fromJson(JsonReader reader) throws IOException {
+    @Override
+    public Object fromJson(JsonReader reader) throws IOException {
       return delegate.fromJson(reader).data;
     }
 
-    @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+    @Override
+    public void toJson(JsonWriter writer, Object value) throws IOException {
       delegate.toJson(writer, new Envelope<>(value));
     }
   }

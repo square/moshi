@@ -33,7 +33,8 @@ public final class NullSafeJsonAdapter<T> extends JsonAdapter<T> {
     return delegate;
   }
 
-  @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+  @Override
+  public @Nullable T fromJson(JsonReader reader) throws IOException {
     if (reader.peek() == JsonReader.Token.NULL) {
       return reader.nextNull();
     } else {
@@ -41,7 +42,8 @@ public final class NullSafeJsonAdapter<T> extends JsonAdapter<T> {
     }
   }
 
-  @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
     if (value == null) {
       writer.nullValue();
     } else {
@@ -49,7 +51,8 @@ public final class NullSafeJsonAdapter<T> extends JsonAdapter<T> {
     }
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return delegate + ".nullSafe()";
   }
 }

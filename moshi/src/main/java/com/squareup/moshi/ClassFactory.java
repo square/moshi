@@ -31,8 +31,8 @@ import java.lang.reflect.Method;
  * @author Jesse Wilson
  */
 abstract class ClassFactory<T> {
-  abstract T newInstance() throws
-      InvocationTargetException, IllegalAccessException, InstantiationException;
+  abstract T newInstance()
+      throws InvocationTargetException, IllegalAccessException, InstantiationException;
 
   public static <T> ClassFactory<T> get(final Class<?> rawType) {
     // Try to find a no-args constructor. May be any visibility including private.
@@ -41,12 +41,15 @@ abstract class ClassFactory<T> {
       constructor.setAccessible(true);
       return new ClassFactory<T>() {
         @SuppressWarnings("unchecked") // T is the same raw type as is requested
-        @Override public T newInstance() throws IllegalAccessException, InvocationTargetException,
-            InstantiationException {
+        @Override
+        public T newInstance()
+            throws IllegalAccessException, InvocationTargetException, InstantiationException {
           Object[] args = null;
           return (T) constructor.newInstance(args);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
           return rawType.getName();
         }
       };
@@ -66,10 +69,13 @@ abstract class ClassFactory<T> {
       final Method allocateInstance = unsafeClass.getMethod("allocateInstance", Class.class);
       return new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override
+        public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) allocateInstance.invoke(unsafe, rawType);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
           return rawType.getName();
         }
       };
@@ -85,19 +91,22 @@ abstract class ClassFactory<T> {
     //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
     // }
     try {
-      Method getConstructorId = ObjectStreamClass.class.getDeclaredMethod(
-          "getConstructorId", Class.class);
+      Method getConstructorId =
+          ObjectStreamClass.class.getDeclaredMethod("getConstructorId", Class.class);
       getConstructorId.setAccessible(true);
       final int constructorId = (Integer) getConstructorId.invoke(null, Object.class);
-      final Method newInstance = ObjectStreamClass.class.getDeclaredMethod("newInstance",
-          Class.class, int.class);
+      final Method newInstance =
+          ObjectStreamClass.class.getDeclaredMethod("newInstance", Class.class, int.class);
       newInstance.setAccessible(true);
       return new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override
+        public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) newInstance.invoke(null, rawType, constructorId);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
           return rawType.getName();
         }
       };
@@ -115,15 +124,18 @@ abstract class ClassFactory<T> {
     //     Class<?> instantiationClass, Class<?> constructorClass);
     // }
     try {
-      final Method newInstance = ObjectInputStream.class.getDeclaredMethod(
-          "newInstance", Class.class, Class.class);
+      final Method newInstance =
+          ObjectInputStream.class.getDeclaredMethod("newInstance", Class.class, Class.class);
       newInstance.setAccessible(true);
       return new ClassFactory<T>() {
         @SuppressWarnings("unchecked")
-        @Override public T newInstance() throws InvocationTargetException, IllegalAccessException {
+        @Override
+        public T newInstance() throws InvocationTargetException, IllegalAccessException {
           return (T) newInstance.invoke(null, rawType, Object.class);
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
           return rawType.getName();
         }
       };

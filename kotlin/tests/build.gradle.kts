@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -23,9 +24,9 @@ plugins {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     freeCompilerArgs = listOf(
-        "-Werror",
-        "-Xopt-in=kotlin.ExperimentalStdlibApi",
-        "-Xinline-classes"
+      "-Werror",
+      "-Xopt-in=kotlin.ExperimentalStdlibApi",
+      "-Xinline-classes"
     )
   }
 }

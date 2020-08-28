@@ -280,7 +280,7 @@ reflection, Moshi is designed to help you out when things go wrong.
 JsonDataException: Expected one of [CLUBS, DIAMONDS, HEARTS, SPADES] but was ANCHOR at path $.visible_cards[2].suit
   at com.squareup.moshi.JsonAdapters$11.fromJson(JsonAdapters.java:188)
   at com.squareup.moshi.JsonAdapters$11.fromJson(JsonAdapters.java:180)
-	...
+  ...
 ```
 
 Moshi always throws a standard `java.io.IOException` if there is an error reading the JSON document,

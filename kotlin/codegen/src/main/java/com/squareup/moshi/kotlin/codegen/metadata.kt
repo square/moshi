@@ -65,10 +65,10 @@ private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
 private val OBJECT_CLASS = ClassName("java.lang", "Object")
 private val VISIBILITY_MODIFIERS = setOf(
-    KModifier.INTERNAL,
-    KModifier.PRIVATE,
-    KModifier.PROTECTED,
-    KModifier.PUBLIC
+  KModifier.INTERNAL,
+  KModifier.PRIVATE,
+  KModifier.PROTECTED,
+  KModifier.PUBLIC
 )
 
 private fun Collection<KModifier>.visibility(): KModifier {
@@ -77,10 +77,10 @@ private fun Collection<KModifier>.visibility(): KModifier {
 
 @KotlinPoetMetadataPreview
 internal fun primaryConstructor(
-    targetElement: TypeElement,
-    kotlinApi: TypeSpec,
-    elements: Elements,
-    messager: Messager
+  targetElement: TypeElement,
+  kotlinApi: TypeSpec,
+  elements: Elements,
+  messager: Messager
 ): TargetConstructor? {
   val primaryConstructor = kotlinApi.primaryConstructor ?: return null
 
@@ -88,38 +88,47 @@ internal fun primaryConstructor(
   for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
     val name = parameter.name
     parameters[name] = TargetParameter(
-        name = name,
-        index = index,
-        type = parameter.type,
-        hasDefault = parameter.defaultValue != null,
-        qualifiers = parameter.annotations.qualifiers(elements),
-        jsonName = parameter.annotations.jsonName()
+      name = name,
+      index = index,
+      type = parameter.type,
+      hasDefault = parameter.defaultValue != null,
+      qualifiers = parameter.annotations.qualifiers(elements),
+      jsonName = parameter.annotations.jsonName()
     )
   }
 
   val kmConstructorSignature = primaryConstructor.tag<ImmutableKmConstructor>()?.signature?.toString()
-      ?: run {
-        messager.printMessage(ERROR, "No KmConstructor found for primary constructor.",
-            targetElement)
-        null
-      }
-  return TargetConstructor(parameters, primaryConstructor.modifiers.visibility(),
-      kmConstructorSignature)
+    ?: run {
+      messager.printMessage(
+        ERROR,
+        "No KmConstructor found for primary constructor.",
+        targetElement
+      )
+      null
+    }
+  return TargetConstructor(
+    parameters,
+    primaryConstructor.modifiers.visibility(),
+    kmConstructorSignature
+  )
 }
 
 /** Returns a target type for `element`, or null if it cannot be used with code gen. */
 @KotlinPoetMetadataPreview
-internal fun targetType(messager: Messager,
-    elements: Elements,
-    types: Types,
-    element: TypeElement,
-    cachedClassInspector: MoshiCachedClassInspector
+internal fun targetType(
+  messager: Messager,
+  elements: Elements,
+  types: Types,
+  element: TypeElement,
+  cachedClassInspector: MoshiCachedClassInspector
 ): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
     messager.printMessage(
-        ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
-        element)
+      ERROR,
+      "@JsonClass can't be applied to $element: must be a Kotlin class",
+      element
+    )
     return null
   }
 
@@ -127,54 +136,68 @@ internal fun targetType(messager: Messager,
     cachedClassInspector.toImmutableKmClass(typeMetadata)
   } catch (e: UnsupportedOperationException) {
     messager.printMessage(
-        ERROR, "@JsonClass can't be applied to $element: must be a Class type",
-        element)
+      ERROR,
+      "@JsonClass can't be applied to $element: must be a Class type",
+      element
+    )
     return null
   }
 
   when {
     kmClass.isEnum -> {
       messager.printMessage(
-          ERROR,
-          "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary",
-          element)
+        ERROR,
+        "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary",
+        element
+      )
       return null
     }
     !kmClass.isClass -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must be a Kotlin class",
-          element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must be a Kotlin class",
+        element
+      )
       return null
     }
     kmClass.isInner -> {
       messager.printMessage(
-          ERROR,
-          "@JsonClass can't be applied to $element: must not be an inner class", element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must not be an inner class",
+        element
+      )
       return null
     }
     kmClass.isSealed -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be sealed",
-          element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must not be sealed",
+        element
+      )
       return null
     }
     kmClass.isAbstract -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be abstract",
-          element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must not be abstract",
+        element
+      )
       return null
     }
     kmClass.isLocal -> {
       messager.printMessage(
-          ERROR, "@JsonClass can't be applied to $element: must not be local",
-          element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must not be local",
+        element
+      )
       return null
     }
     !kmClass.isPublic && !kmClass.isInternal -> {
       messager.printMessage(
-          ERROR,
-          "@JsonClass can't be applied to $element: must be internal or public",
-          element)
+        ERROR,
+        "@JsonClass can't be applied to $element: must be internal or public",
+        element
+      )
       return null
     }
   }
@@ -185,13 +208,20 @@ internal fun targetType(messager: Messager,
 
   val constructor = primaryConstructor(element, kotlinApi, elements, messager)
   if (constructor == null) {
-    messager.printMessage(ERROR, "No primary constructor found on $element",
-        element)
+    messager.printMessage(
+      ERROR,
+      "No primary constructor found on $element",
+      element
+    )
     return null
   }
   if (constructor.visibility != KModifier.INTERNAL && constructor.visibility != KModifier.PUBLIC) {
-    messager.printMessage(ERROR, "@JsonClass can't be applied to $element: " +
-        "primary constructor is not internal or public", element)
+    messager.printMessage(
+      ERROR,
+      "@JsonClass can't be applied to $element: " +
+        "primary constructor is not internal or public",
+      element
+    )
     return null
   }
 
@@ -199,66 +229,68 @@ internal fun targetType(messager: Messager,
 
   val resolvedTypes = mutableListOf<ResolvedTypeMapping>()
   val superTypes = appliedType.supertypes(types)
-      .filterNot { supertype ->
-        supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
-            supertype.element.kind != ElementKind.CLASS  // Don't load properties for interface types.
+    .filterNot { supertype ->
+      supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
+        supertype.element.kind != ElementKind.CLASS // Don't load properties for interface types.
+    }
+    .onEach { supertype ->
+      if (supertype.element.getAnnotation(Metadata::class.java) == null) {
+        messager.printMessage(
+          ERROR,
+          "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+          element
+        )
+        return null
       }
-      .onEach { supertype ->
-        if (supertype.element.getAnnotation(Metadata::class.java) == null) {
-          messager.printMessage(ERROR,
-              "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
-              element)
-          return null
-        }
+    }
+    .associateWithTo(LinkedHashMap()) { supertype ->
+      // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
+      val api = if (supertype.element == element) {
+        // We've already parsed this api above, reuse it
+        kotlinApi
+      } else {
+        cachedClassInspector.toTypeSpec(supertype.element)
       }
-      .associateWithTo(LinkedHashMap()) { supertype ->
-        // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
-        val api = if (supertype.element == element) {
-          // We've already parsed this api above, reuse it
-          kotlinApi
-        } else {
-          cachedClassInspector.toTypeSpec(supertype.element)
-        }
 
-        val apiSuperClass = api.superclass
-        if (apiSuperClass is ParameterizedTypeName) {
-          //
-          // This extends a typed generic superclass. We want to construct a mapping of the
-          // superclass typevar names to their materialized types here.
-          //
-          // class Foo extends Bar<String>
-          // class Bar<T>
-          //
-          // We will store {Foo : {T : [String]}}.
-          //
-          // Then when we look at Bar<T> later, we'll look up to the descendent Foo and extract its
-          // materialized type from there.
-          //
-          val superSuperClass = supertype.element.superclass as DeclaredType
+      val apiSuperClass = api.superclass
+      if (apiSuperClass is ParameterizedTypeName) {
+        //
+        // This extends a typed generic superclass. We want to construct a mapping of the
+        // superclass typevar names to their materialized types here.
+        //
+        // class Foo extends Bar<String>
+        // class Bar<T>
+        //
+        // We will store {Foo : {T : [String]}}.
+        //
+        // Then when we look at Bar<T> later, we'll look up to the descendent Foo and extract its
+        // materialized type from there.
+        //
+        val superSuperClass = supertype.element.superclass as DeclaredType
 
-          // Convert to an element and back to wipe the typed generics off of this
-          val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
-          resolvedTypes += ResolvedTypeMapping(
-              target = untyped.rawType,
-              args = untyped.typeArguments.asSequence()
-                  .cast<TypeVariableName>()
-                  .map(TypeVariableName::name)
-                  .zip(apiSuperClass.typeArguments.asSequence())
-                  .associate { it }
-          )
-        }
-
-        return@associateWithTo api
+        // Convert to an element and back to wipe the typed generics off of this
+        val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
+        resolvedTypes += ResolvedTypeMapping(
+          target = untyped.rawType,
+          args = untyped.typeArguments.asSequence()
+            .cast<TypeVariableName>()
+            .map(TypeVariableName::name)
+            .zip(apiSuperClass.typeArguments.asSequence())
+            .associate { it }
+        )
       }
+
+      return@associateWithTo api
+    }
 
   for ((localAppliedType, supertypeApi) in superTypes.entries) {
     val appliedClassName = localAppliedType.element.asClassName()
     val supertypeProperties = declaredProperties(
-        constructor = constructor,
-        kotlinApi = supertypeApi,
-        allowedTypeVars = typeVariables.toSet(),
-        currentClass = appliedClassName,
-        resolvedTypes = resolvedTypes
+      constructor = constructor,
+      kotlinApi = supertypeApi,
+      allowedTypeVars = typeVariables.toSet(),
+      currentClass = appliedClassName,
+      resolvedTypes = resolvedTypes
     )
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
@@ -273,18 +305,19 @@ internal fun targetType(messager: Messager,
   } else {
     // Implicitly public, so now look up the hierarchy
     val forceInternal = generateSequence<Element>(element) { it.enclosingElement }
-        .filterIsInstance<TypeElement>()
-        .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
-        .any { it.isInternal }
+      .filterIsInstance<TypeElement>()
+      .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
+      .any { it.isInternal }
     if (forceInternal) KModifier.INTERNAL else visibility
   }
   return TargetType(
-      typeName = element.asType().asTypeName(),
-      constructor = constructor,
-      properties = properties,
-      typeVariables = typeVariables,
-      isDataClass = KModifier.DATA in kotlinApi.modifiers,
-      visibility = resolvedVisibility)
+    typeName = element.asType().asTypeName(),
+    constructor = constructor,
+    properties = properties,
+    typeVariables = typeVariables,
+    isDataClass = KModifier.DATA in kotlinApi.modifiers,
+    visibility = resolvedVisibility
+  )
 }
 
 /**
@@ -294,11 +327,11 @@ internal fun targetType(messager: Messager,
 private data class ResolvedTypeMapping(val target: ClassName, val args: Map<String, TypeName>)
 
 private fun resolveTypeArgs(
-    targetClass: ClassName,
-    propertyType: TypeName,
-    resolvedTypes: List<ResolvedTypeMapping>,
-    allowedTypeVars: Set<TypeVariableName>,
-    entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass }
+  targetClass: ClassName,
+  propertyType: TypeName,
+  resolvedTypes: List<ResolvedTypeMapping>,
+  allowedTypeVars: Set<TypeVariableName>,
+  entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass }
 ): TypeName {
   val unwrappedType = propertyType.unwrapTypeAlias()
 
@@ -315,8 +348,8 @@ private fun resolveTypeArgs(
   // We need to us a non-nullable version for mapping since we're just mapping based on raw java
   // type vars, but then can re-copy nullability back if it is found.
   val resolvedType = targetMappings[unwrappedType.name]
-      ?.copy(nullable = unwrappedType.isNullable)
-      ?: unwrappedType
+    ?.copy(nullable = unwrappedType.isNullable)
+    ?: unwrappedType
 
   return when {
     resolvedType !is TypeVariableName -> resolvedType
@@ -336,29 +369,29 @@ private fun resolveTypeArgs(
 /** Returns the properties declared by `typeElement`. */
 @KotlinPoetMetadataPreview
 private fun declaredProperties(
-    constructor: TargetConstructor,
-    kotlinApi: TypeSpec,
-    allowedTypeVars: Set<TypeVariableName>,
-    currentClass: ClassName,
-    resolvedTypes: List<ResolvedTypeMapping>
+  constructor: TargetConstructor,
+  kotlinApi: TypeSpec,
+  allowedTypeVars: Set<TypeVariableName>,
+  currentClass: ClassName,
+  resolvedTypes: List<ResolvedTypeMapping>
 ): Map<String, TargetProperty> {
 
   val result = mutableMapOf<String, TargetProperty>()
   for (initialProperty in kotlinApi.propertySpecs) {
     val resolvedType = resolveTypeArgs(
-        targetClass = currentClass,
-        propertyType = initialProperty.type,
-        resolvedTypes = resolvedTypes,
-        allowedTypeVars = allowedTypeVars
+      targetClass = currentClass,
+      propertyType = initialProperty.type,
+      resolvedTypes = resolvedTypes,
+      allowedTypeVars = allowedTypeVars
     )
     val property = initialProperty.toBuilder(type = resolvedType).build()
     val name = property.name
     val parameter = constructor.parameters[name]
     result[name] = TargetProperty(
-        propertySpec = property,
-        parameter = parameter,
-        visibility = property.modifiers.visibility(),
-        jsonName = parameter?.jsonName ?: property.annotations.jsonName()
+      propertySpec = property,
+      parameter = parameter,
+      visibility = property.modifiers.visibility(),
+      jsonName = parameter?.jsonName ?: property.annotations.jsonName()
         ?: name.escapeDollarSigns()
     )
   }
@@ -370,9 +403,9 @@ private val TargetProperty.isTransient get() = propertySpec.annotations.any { it
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
-    return visibility == KModifier.INTERNAL
-        || visibility == KModifier.PROTECTED
-        || visibility == KModifier.PUBLIC
+    return visibility == KModifier.INTERNAL ||
+      visibility == KModifier.PROTECTED ||
+      visibility == KModifier.PUBLIC
   }
 
 /**
@@ -380,23 +413,28 @@ private val TargetProperty.isVisible: Boolean
  * cannot be used with code gen, or if no codegen is necessary for this property.
  */
 internal fun TargetProperty.generator(
-    messager: Messager,
-    sourceElement: TypeElement,
-    elements: Elements
+  messager: Messager,
+  sourceElement: TypeElement,
+  elements: Elements
 ): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
       messager.printMessage(
-          ERROR, "No default value for transient property $name",
-          sourceElement)
+        ERROR,
+        "No default value for transient property $name",
+        sourceElement
+      )
       return null
     }
     return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
-    messager.printMessage(ERROR, "property $name is not visible",
-        sourceElement)
+    messager.printMessage(
+      ERROR,
+      "property $name is not visible",
+      sourceElement
+    )
     return null
   }
 
@@ -410,29 +448,35 @@ internal fun TargetProperty.generator(
     val qualifierRawType = jsonQualifier.typeName.rawType()
     // Check Java types since that covers both Java and Kotlin annotations.
     val annotationElement = elements.getTypeElement(qualifierRawType.canonicalName)
-        ?: continue
+      ?: continue
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
-        messager.printMessage(ERROR,
-            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention")
+        messager.printMessage(
+          ERROR,
+          "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
+        )
       }
     }
     annotationElement.getAnnotation(Target::class.java)?.let {
       if (ElementType.FIELD !in it.value) {
-        messager.printMessage(ERROR,
-            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target")
+        messager.printMessage(
+          ERROR,
+          "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+        )
       }
     }
   }
 
   val jsonQualifierSpecs = qualifiers.map {
     it.toBuilder()
-        .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
-        .build()
+      .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
+      .build()
   }
 
-  return PropertyGenerator(this,
-      DelegateKey(type, jsonQualifierSpecs))
+  return PropertyGenerator(
+    this,
+    DelegateKey(type, jsonQualifierSpecs)
+  )
 }
 
 private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
@@ -478,7 +522,7 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
 internal val TypeElement.metadata: Metadata
   get() {
     return getAnnotation(Metadata::class.java)
-        ?: throw IllegalStateException("Not a kotlin type! $this")
+      ?: throw IllegalStateException("Not a kotlin type! $this")
   }
 
 private fun <E> Sequence<*>.cast(): Sequence<E> {

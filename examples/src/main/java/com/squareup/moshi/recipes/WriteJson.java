@@ -15,21 +15,21 @@
  */
 package com.squareup.moshi.recipes;
 
+import static com.squareup.moshi.recipes.models.Suit.CLUBS;
+import static com.squareup.moshi.recipes.models.Suit.HEARTS;
+import static com.squareup.moshi.recipes.models.Suit.SPADES;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.recipes.models.BlackjackHand;
 import com.squareup.moshi.recipes.models.Card;
 import java.util.Arrays;
 
-import static com.squareup.moshi.recipes.models.Suit.CLUBS;
-import static com.squareup.moshi.recipes.models.Suit.HEARTS;
-import static com.squareup.moshi.recipes.models.Suit.SPADES;
-
 public final class WriteJson {
   public void run() throws Exception {
-    BlackjackHand blackjackHand = new BlackjackHand(
-        new Card('6', SPADES),
-        Arrays.asList(new Card('4', CLUBS), new Card('A', HEARTS)));
+    BlackjackHand blackjackHand =
+        new BlackjackHand(
+            new Card('6', SPADES), Arrays.asList(new Card('4', CLUBS), new Card('A', HEARTS)));
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<BlackjackHand> jsonAdapter = moshi.adapter(BlackjackHand.class);

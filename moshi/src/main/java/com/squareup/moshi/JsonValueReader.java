@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.JsonScope.CLOSED;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -22,8 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-
-import static com.squareup.moshi.JsonScope.CLOSED;
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -70,11 +70,12 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
-  @Override public void beginArray() throws IOException {
+  @Override
+  public void beginArray() throws IOException {
     List<?> peeked = require(List.class, Token.BEGIN_ARRAY);
 
-    JsonIterator iterator = new JsonIterator(
-        Token.END_ARRAY, peeked.toArray(new Object[peeked.size()]), 0);
+    JsonIterator iterator =
+        new JsonIterator(Token.END_ARRAY, peeked.toArray(new Object[peeked.size()]), 0);
     stack[stackSize - 1] = iterator;
     scopes[stackSize - 1] = JsonScope.EMPTY_ARRAY;
     pathIndices[stackSize - 1] = 0;
@@ -85,7 +86,8 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
-  @Override public void endArray() throws IOException {
+  @Override
+  public void endArray() throws IOException {
     JsonIterator peeked = require(JsonIterator.class, Token.END_ARRAY);
     if (peeked.endToken != Token.END_ARRAY || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_ARRAY);
@@ -93,11 +95,12 @@ final class JsonValueReader extends JsonReader {
     remove();
   }
 
-  @Override public void beginObject() throws IOException {
+  @Override
+  public void beginObject() throws IOException {
     Map<?, ?> peeked = require(Map.class, Token.BEGIN_OBJECT);
 
-    JsonIterator iterator = new JsonIterator(
-        Token.END_OBJECT, peeked.entrySet().toArray(new Object[peeked.size()]), 0);
+    JsonIterator iterator =
+        new JsonIterator(Token.END_OBJECT, peeked.entrySet().toArray(new Object[peeked.size()]), 0);
     stack[stackSize - 1] = iterator;
     scopes[stackSize - 1] = JsonScope.EMPTY_OBJECT;
 
@@ -107,7 +110,8 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
-  @Override public void endObject() throws IOException {
+  @Override
+  public void endObject() throws IOException {
     JsonIterator peeked = require(JsonIterator.class, Token.END_OBJECT);
     if (peeked.endToken != Token.END_OBJECT || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_OBJECT);
@@ -116,14 +120,16 @@ final class JsonValueReader extends JsonReader {
     remove();
   }
 
-  @Override public boolean hasNext() throws IOException {
+  @Override
+  public boolean hasNext() throws IOException {
     if (stackSize == 0) return false;
 
     Object peeked = stack[stackSize - 1];
     return !(peeked instanceof Iterator) || ((Iterator) peeked).hasNext();
   }
 
-  @Override public Token peek() throws IOException {
+  @Override
+  public Token peek() throws IOException {
     if (stackSize == 0) return Token.END_DOCUMENT;
 
     // If the top of the stack is an iterator, take its first element and push it on the stack.
@@ -141,7 +147,8 @@ final class JsonValueReader extends JsonReader {
     throw typeMismatch(peeked, "a JSON value");
   }
 
-  @Override public String nextName() throws IOException {
+  @Override
+  public String nextName() throws IOException {
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
 
     // Swap the Map.Entry for its value on the stack and return its key.
@@ -151,7 +158,8 @@ final class JsonValueReader extends JsonReader {
     return result;
   }
 
-  @Override public int selectName(Options options) throws IOException {
+  @Override
+  public int selectName(Options options) throws IOException {
     Map.Entry<?, ?> peeked = require(Map.Entry.class, Token.NAME);
     String name = stringKey(peeked);
     for (int i = 0, length = options.strings.length; i < length; i++) {
@@ -165,7 +173,8 @@ final class JsonValueReader extends JsonReader {
     return -1;
   }
 
-  @Override public void skipName() throws IOException {
+  @Override
+  public void skipName() throws IOException {
     if (failOnUnknown) {
       // Capture the peeked value before nextName() since it will reset its value.
       Token peeked = peek();
@@ -180,7 +189,8 @@ final class JsonValueReader extends JsonReader {
     pathNames[stackSize - 2] = "null";
   }
 
-  @Override public String nextString() throws IOException {
+  @Override
+  public String nextString() throws IOException {
     Object peeked = (stackSize != 0 ? stack[stackSize - 1] : null);
     if (peeked instanceof String) {
       remove();
@@ -196,7 +206,8 @@ final class JsonValueReader extends JsonReader {
     throw typeMismatch(peeked, Token.STRING);
   }
 
-  @Override public int selectString(Options options) throws IOException {
+  @Override
+  public int selectString(Options options) throws IOException {
     Object peeked = (stackSize != 0 ? stack[stackSize - 1] : null);
 
     if (!(peeked instanceof String)) {
@@ -216,19 +227,22 @@ final class JsonValueReader extends JsonReader {
     return -1;
   }
 
-  @Override public boolean nextBoolean() throws IOException {
+  @Override
+  public boolean nextBoolean() throws IOException {
     Boolean peeked = require(Boolean.class, Token.BOOLEAN);
     remove();
     return peeked;
   }
 
-  @Override public @Nullable <T> T nextNull() throws IOException {
+  @Override
+  public @Nullable <T> T nextNull() throws IOException {
     require(Void.class, Token.NULL);
     remove();
     return null;
   }
 
-  @Override public double nextDouble() throws IOException {
+  @Override
+  public double nextDouble() throws IOException {
     Object peeked = require(Object.class, Token.NUMBER);
 
     double result;
@@ -244,14 +258,15 @@ final class JsonValueReader extends JsonReader {
       throw typeMismatch(peeked, Token.NUMBER);
     }
     if (!lenient && (Double.isNaN(result) || Double.isInfinite(result))) {
-      throw new JsonEncodingException("JSON forbids NaN and infinities: " + result
-          + " at path " + getPath());
+      throw new JsonEncodingException(
+          "JSON forbids NaN and infinities: " + result + " at path " + getPath());
     }
     remove();
     return result;
   }
 
-  @Override public long nextLong() throws IOException {
+  @Override
+  public long nextLong() throws IOException {
     Object peeked = require(Object.class, Token.NUMBER);
 
     long result;
@@ -275,7 +290,8 @@ final class JsonValueReader extends JsonReader {
     return result;
   }
 
-  @Override public int nextInt() throws IOException {
+  @Override
+  public int nextInt() throws IOException {
     Object peeked = require(Object.class, Token.NUMBER);
 
     int result;
@@ -299,7 +315,8 @@ final class JsonValueReader extends JsonReader {
     return result;
   }
 
-  @Override public void skipValue() throws IOException {
+  @Override
+  public void skipValue() throws IOException {
     if (failOnUnknown) {
       throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
     }
@@ -326,18 +343,21 @@ final class JsonValueReader extends JsonReader {
     }
   }
 
-  @Override public JsonReader peekJson() {
+  @Override
+  public JsonReader peekJson() {
     return new JsonValueReader(this);
   }
 
-  @Override public void promoteNameToValue() throws IOException {
+  @Override
+  public void promoteNameToValue() throws IOException {
     if (hasNext()) {
       String name = nextName();
       push(name);
     }
   }
 
-  @Override public void close() throws IOException {
+  @Override
+  public void close() throws IOException {
     Arrays.fill(stack, 0, stackSize, null);
     stack[0] = JSON_READER_CLOSED;
     scopes[0] = CLOSED;
@@ -413,19 +433,23 @@ final class JsonValueReader extends JsonReader {
       this.next = next;
     }
 
-    @Override public boolean hasNext() {
+    @Override
+    public boolean hasNext() {
       return next < array.length;
     }
 
-    @Override public Object next() {
+    @Override
+    public Object next() {
       return array[next++];
     }
 
-    @Override public void remove() {
+    @Override
+    public void remove() {
       throw new UnsupportedOperationException();
     }
 
-    @Override protected JsonIterator clone() {
+    @Override
+    protected JsonIterator clone() {
       // No need to copy the array; it's read-only.
       return new JsonIterator(endToken, array, next);
     }

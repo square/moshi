@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -27,8 +29,6 @@ import java.util.concurrent.Future;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class DeferredAdapterTest {
   /**
    * When a type's JsonAdapter is circularly-dependent, Moshi creates a 'deferred adapter' to make
@@ -36,41 +36,43 @@ public final class DeferredAdapterTest {
    * leak out until it's ready.
    *
    * <p>This test sets up a circular dependency [BlueNode -> GreenNode -> BlueNode] and then tries
-   * to use a GreenNode JSON adapter before the BlueNode JSON adapter is built. It creates a
-   * similar cycle [BlueNode -> RedNode -> BlueNode] so the order adapters are retrieved is
-   * insignificant.
+   * to use a GreenNode JSON adapter before the BlueNode JSON adapter is built. It creates a similar
+   * cycle [BlueNode -> RedNode -> BlueNode] so the order adapters are retrieved is insignificant.
    *
    * <p>This used to trigger a crash because we'd incorrectly put the GreenNode JSON adapter in the
    * cache even though it depended upon an incomplete BlueNode JSON adapter.
    */
-  @Test public void concurrentSafe() {
+  @Test
+  public void concurrentSafe() {
     final List<Throwable> failures = new ArrayList<>();
 
-    JsonAdapter.Factory factory = new JsonAdapter.Factory() {
-      int redAndGreenCount = 0;
+    JsonAdapter.Factory factory =
+        new JsonAdapter.Factory() {
+          int redAndGreenCount = 0;
 
-      @Override public @Nullable JsonAdapter<?> create(
-          Type type, Set<? extends Annotation> annotations, final Moshi moshi) {
-        if ((type == RedNode.class || type == GreenNode.class) && redAndGreenCount++ == 1) {
-          doInAnotherThread(new Runnable() {
-            @Override public void run() {
-              GreenNode greenBlue = new GreenNode(new BlueNode(null, null));
-              assertThat(moshi.adapter(GreenNode.class).toJson(greenBlue))
-                  .isEqualTo("{\"blue\":{}}");
+          @Override
+          public @Nullable JsonAdapter<?> create(
+              Type type, Set<? extends Annotation> annotations, final Moshi moshi) {
+            if ((type == RedNode.class || type == GreenNode.class) && redAndGreenCount++ == 1) {
+              doInAnotherThread(
+                  new Runnable() {
+                    @Override
+                    public void run() {
+                      GreenNode greenBlue = new GreenNode(new BlueNode(null, null));
+                      assertThat(moshi.adapter(GreenNode.class).toJson(greenBlue))
+                          .isEqualTo("{\"blue\":{}}");
 
-              RedNode redBlue = new RedNode(new BlueNode(null, null));
-              assertThat(moshi.adapter(RedNode.class).toJson(redBlue))
-                  .isEqualTo("{\"blue\":{}}");
+                      RedNode redBlue = new RedNode(new BlueNode(null, null));
+                      assertThat(moshi.adapter(RedNode.class).toJson(redBlue))
+                          .isEqualTo("{\"blue\":{}}");
+                    }
+                  });
             }
-          });
-        }
-        return null;
-      }
-    };
+            return null;
+          }
+        };
 
-    Moshi moshi = new Moshi.Builder()
-        .add(factory)
-        .build();
+    Moshi moshi = new Moshi.Builder().add(factory).build();
 
     JsonAdapter<BlueNode> jsonAdapter = moshi.adapter(BlueNode.class);
     assertThat(jsonAdapter.toJson(new BlueNode(new GreenNode(new BlueNode(null, null)), null)))

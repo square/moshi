@@ -27,19 +27,21 @@ import javax.annotation.Nullable;
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
-  public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public @Nullable JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      Class<?> rawType = Types.getRawType(type);
-      if (!annotations.isEmpty()) return null;
-      if (rawType == List.class || rawType == Collection.class) {
-        return newArrayListAdapter(type, moshi).nullSafe();
-      } else if (rawType == Set.class) {
-        return newLinkedHashSetAdapter(type, moshi).nullSafe();
-      }
-      return null;
-    }
-  };
+  public static final JsonAdapter.Factory FACTORY =
+      new JsonAdapter.Factory() {
+        @Override
+        public @Nullable JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          Class<?> rawType = Types.getRawType(type);
+          if (!annotations.isEmpty()) return null;
+          if (rawType == List.class || rawType == Collection.class) {
+            return newArrayListAdapter(type, moshi).nullSafe();
+          } else if (rawType == Set.class) {
+            return newLinkedHashSetAdapter(type, moshi).nullSafe();
+          }
+          return null;
+        }
+      };
 
   private final JsonAdapter<T> elementAdapter;
 
@@ -51,7 +53,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     Type elementType = Types.collectionElementType(type, Collection.class);
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
-      @Override Collection<T> newCollection() {
+      @Override
+      Collection<T> newCollection() {
         return new ArrayList<>();
       }
     };
@@ -61,7 +64,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     Type elementType = Types.collectionElementType(type, Collection.class);
     JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
     return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {
-      @Override Set<T> newCollection() {
+      @Override
+      Set<T> newCollection() {
         return new LinkedHashSet<>();
       }
     };
@@ -69,7 +73,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
 
   abstract C newCollection();
 
-  @Override public C fromJson(JsonReader reader) throws IOException {
+  @Override
+  public C fromJson(JsonReader reader) throws IOException {
     C result = newCollection();
     reader.beginArray();
     while (reader.hasNext()) {
@@ -79,7 +84,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     return result;
   }
 
-  @Override public void toJson(JsonWriter writer, C value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, C value) throws IOException {
     writer.beginArray();
     for (T element : value) {
       elementAdapter.toJson(writer, element);
@@ -87,7 +93,8 @@ abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAda
     writer.endArray();
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return elementAdapter + ".collection()";
   }
 }

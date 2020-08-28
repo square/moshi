@@ -15,6 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,13 +31,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import okio.Buffer;
 import org.junit.Test;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class JsonValueWriterTest {
   @SuppressWarnings("unchecked")
-  @Test public void array() throws Exception {
+  @Test
+  public void array() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
 
     writer.beginArray();
@@ -46,7 +47,8 @@ public final class JsonValueWriterTest {
     assertThat((List<Object>) writer.root()).containsExactly("s", 1.5d, true, null);
   }
 
-  @Test public void object() throws Exception {
+  @Test
+  public void object() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.setSerializeNulls(true);
 
@@ -57,14 +59,16 @@ public final class JsonValueWriterTest {
     writer.name("d").nullValue();
     writer.endObject();
 
-    assertThat((Map<String, Object>) writer.root()).containsExactly(
-        new SimpleEntry<String, Object>("a", "s"),
-        new SimpleEntry<String, Object>("b", 1.5d),
-        new SimpleEntry<String, Object>("c", true),
-        new SimpleEntry<String, Object>("d", null));
+    assertThat((Map<String, Object>) writer.root())
+        .containsExactly(
+            new SimpleEntry<String, Object>("a", "s"),
+            new SimpleEntry<String, Object>("b", 1.5d),
+            new SimpleEntry<String, Object>("c", true),
+            new SimpleEntry<String, Object>("d", null));
   }
 
-  @Test public void repeatedNameThrows() throws IOException {
+  @Test
+  public void repeatedNameThrows() throws IOException {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginObject();
     writer.name("a").value(1L);
@@ -72,12 +76,12 @@ public final class JsonValueWriterTest {
       writer.name("a").value(2L);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
-          "Map key 'a' has multiple values at path $.a: 1 and 2");
+      assertThat(expected).hasMessage("Map key 'a' has multiple values at path $.a: 1 and 2");
     }
   }
 
-  @Test public void valueLongEmitsLong() throws Exception {
+  @Test
+  public void valueLongEmitsLong() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(Long.MIN_VALUE);
@@ -87,16 +91,12 @@ public final class JsonValueWriterTest {
     writer.value(Long.MAX_VALUE);
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        Long.MIN_VALUE,
-        -1L,
-        0L,
-        1L,
-        Long.MAX_VALUE);
+    List<Number> numbers = Arrays.<Number>asList(Long.MIN_VALUE, -1L, 0L, 1L, Long.MAX_VALUE);
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void valueDoubleEmitsDouble() throws Exception {
+  @Test
+  public void valueDoubleEmitsDouble() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.setLenient(true);
     writer.beginArray();
@@ -124,33 +124,35 @@ public final class JsonValueWriterTest {
     writer.value(Double.NaN);
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        -2147483649.0d,
-        -2147483648.0d,
-        -1.0d,
-        0.0d,
-        1.0d,
-        2147483647.0d,
-        2147483648.0d,
-        9007199254740991.0d,
-        9007199254740992.0d,
-        9007199254740994.0d,
-        9223372036854775807.0d,
-        -0.5d,
-        -0.0d,
-        0.5d,
-        9.22337203685478e18,
-        Double.NEGATIVE_INFINITY,
-        Double.MIN_VALUE,
-        Double.MIN_NORMAL,
-        -Double.MIN_NORMAL,
-        Double.MAX_VALUE,
-        Double.POSITIVE_INFINITY,
-        Double.NaN);
+    List<Number> numbers =
+        Arrays.<Number>asList(
+            -2147483649.0d,
+            -2147483648.0d,
+            -1.0d,
+            0.0d,
+            1.0d,
+            2147483647.0d,
+            2147483648.0d,
+            9007199254740991.0d,
+            9007199254740992.0d,
+            9007199254740994.0d,
+            9223372036854775807.0d,
+            -0.5d,
+            -0.0d,
+            0.5d,
+            9.22337203685478e18,
+            Double.NEGATIVE_INFINITY,
+            Double.MIN_VALUE,
+            Double.MIN_NORMAL,
+            -Double.MIN_NORMAL,
+            Double.MAX_VALUE,
+            Double.POSITIVE_INFINITY,
+            Double.NaN);
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void primitiveIntegerTypesEmitLong() throws Exception {
+  @Test
+  public void primitiveIntegerTypesEmitLong() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new Byte(Byte.MIN_VALUE));
@@ -159,28 +161,25 @@ public final class JsonValueWriterTest {
     writer.value(new Long(Long.MIN_VALUE));
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        -128L,
-        -32768L,
-        -2147483648L,
-        -9223372036854775808L);
+    List<Number> numbers =
+        Arrays.<Number>asList(-128L, -32768L, -2147483648L, -9223372036854775808L);
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void primitiveFloatingPointTypesEmitDouble() throws Exception {
+  @Test
+  public void primitiveFloatingPointTypesEmitDouble() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new Float(0.5f));
     writer.value(new Double(0.5d));
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        0.5d,
-        0.5d);
+    List<Number> numbers = Arrays.<Number>asList(0.5d, 0.5d);
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void otherNumberTypesEmitBigDecimal() throws Exception {
+  @Test
+  public void otherNumberTypesEmitBigDecimal() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(new AtomicInteger(-2147483648));
@@ -204,30 +203,32 @@ public final class JsonValueWriterTest {
     writer.value(new BigDecimal("0.0000100e-10"));
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        new BigDecimal("-2147483648"),
-        new BigDecimal("-9223372036854775808"),
-        new BigDecimal("-9223372036854775808"),
-        new BigDecimal("-1"),
-        new BigDecimal("0"),
-        new BigDecimal("1"),
-        new BigDecimal("9223372036854775807"),
-        new BigDecimal("-9223372036854775808"),
-        new BigDecimal("-1"),
-        new BigDecimal("0"),
-        new BigDecimal("1"),
-        new BigDecimal("9223372036854775807"),
-        new BigDecimal("-9223372036854775809"),
-        new BigDecimal("9223372036854775808"),
-        new BigDecimal("-9223372036854775809"),
-        new BigDecimal("9223372036854775808"),
-        new BigDecimal("0.5"),
-        new BigDecimal("100000e15"),
-        new BigDecimal("0.0000100e-10"));
+    List<Number> numbers =
+        Arrays.<Number>asList(
+            new BigDecimal("-2147483648"),
+            new BigDecimal("-9223372036854775808"),
+            new BigDecimal("-9223372036854775808"),
+            new BigDecimal("-1"),
+            new BigDecimal("0"),
+            new BigDecimal("1"),
+            new BigDecimal("9223372036854775807"),
+            new BigDecimal("-9223372036854775808"),
+            new BigDecimal("-1"),
+            new BigDecimal("0"),
+            new BigDecimal("1"),
+            new BigDecimal("9223372036854775807"),
+            new BigDecimal("-9223372036854775809"),
+            new BigDecimal("9223372036854775808"),
+            new BigDecimal("-9223372036854775809"),
+            new BigDecimal("9223372036854775808"),
+            new BigDecimal("0.5"),
+            new BigDecimal("100000e15"),
+            new BigDecimal("0.0000100e-10"));
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void valueCustomNumberTypeEmitsLongOrBigDecimal() throws Exception {
+  @Test
+  public void valueCustomNumberTypeEmitsLongOrBigDecimal() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(stringNumber("-9223372036854775809"));
@@ -236,15 +237,17 @@ public final class JsonValueWriterTest {
     writer.value(stringNumber("1.0"));
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(
-        new BigDecimal("-9223372036854775809"),
-        new BigDecimal("-9223372036854775808"),
-        new BigDecimal("0.5"),
-        new BigDecimal("1.0"));
+    List<Number> numbers =
+        Arrays.<Number>asList(
+            new BigDecimal("-9223372036854775809"),
+            new BigDecimal("-9223372036854775808"),
+            new BigDecimal("0.5"),
+            new BigDecimal("1.0"));
     assertThat((List<?>) writer.root()).isEqualTo(numbers);
   }
 
-  @Test public void valueFromSource() throws IOException {
+  @Test
+  public void valueFromSource() throws IOException {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginObject();
     writer.name("a");
@@ -256,11 +259,12 @@ public final class JsonValueWriterTest {
     writer.name("d");
     writer.value(new Buffer().writeUtf8("null"));
     writer.endObject();
-    assertThat((Map<String, Object>) writer.root()).containsExactly(
-        new SimpleEntry<String, Object>("a", singletonList("value")),
-        new SimpleEntry<String, Object>("b", 2.0d),
-        new SimpleEntry<String, Object>("c", 3L),
-        new SimpleEntry<String, Object>("d", null));
+    assertThat((Map<String, Object>) writer.root())
+        .containsExactly(
+            new SimpleEntry<String, Object>("a", singletonList("value")),
+            new SimpleEntry<String, Object>("b", 2.0d),
+            new SimpleEntry<String, Object>("c", 3L),
+            new SimpleEntry<String, Object>("d", null));
   }
 
   /**
@@ -270,23 +274,28 @@ public final class JsonValueWriterTest {
    */
   private Number stringNumber(final String s) {
     return new Number() {
-      @Override public int intValue() {
+      @Override
+      public int intValue() {
         throw new AssertionError();
       }
 
-      @Override public long longValue() {
+      @Override
+      public long longValue() {
         throw new AssertionError();
       }
 
-      @Override public float floatValue() {
+      @Override
+      public float floatValue() {
         throw new AssertionError();
       }
 
-      @Override public double doubleValue() {
+      @Override
+      public double doubleValue() {
         throw new AssertionError();
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return s;
       }
     };

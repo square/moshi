@@ -25,109 +25,126 @@ abstract class JsonCodecFactory {
   private static final JsonAdapter<Object> OBJECT_ADAPTER = MOSHI.adapter(Object.class);
 
   static List<Object[]> factories() {
-    final JsonCodecFactory utf8 = new JsonCodecFactory() {
-      Buffer buffer;
+    final JsonCodecFactory utf8 =
+        new JsonCodecFactory() {
+          Buffer buffer;
 
-      @Override public JsonReader newReader(String json) {
-        Buffer buffer = new Buffer().writeUtf8(json);
-        return JsonReader.of(buffer);
-      }
+          @Override
+          public JsonReader newReader(String json) {
+            Buffer buffer = new Buffer().writeUtf8(json);
+            return JsonReader.of(buffer);
+          }
 
-      @Override JsonWriter newWriter() {
-        buffer = new Buffer();
-        return new JsonUtf8Writer(buffer);
-      }
+          @Override
+          JsonWriter newWriter() {
+            buffer = new Buffer();
+            return new JsonUtf8Writer(buffer);
+          }
 
-      @Override String json() {
-        String result = buffer.readUtf8();
-        buffer = null;
-        return result;
-      }
+          @Override
+          String json() {
+            String result = buffer.readUtf8();
+            buffer = null;
+            return result;
+          }
 
-      @Override boolean encodesToBytes() {
-        return true;
-      }
+          @Override
+          boolean encodesToBytes() {
+            return true;
+          }
 
-      @Override public String toString() {
-        return "Utf8";
-      }
-    };
+          @Override
+          public String toString() {
+            return "Utf8";
+          }
+        };
 
-    final JsonCodecFactory value = new JsonCodecFactory() {
-      JsonValueWriter writer;
+    final JsonCodecFactory value =
+        new JsonCodecFactory() {
+          JsonValueWriter writer;
 
-      @Override public JsonReader newReader(String json) throws IOException {
-        Moshi moshi = new Moshi.Builder().build();
-        Object object = moshi.adapter(Object.class).lenient().fromJson(json);
-        return new JsonValueReader(object);
-      }
+          @Override
+          public JsonReader newReader(String json) throws IOException {
+            Moshi moshi = new Moshi.Builder().build();
+            Object object = moshi.adapter(Object.class).lenient().fromJson(json);
+            return new JsonValueReader(object);
+          }
 
-      // TODO(jwilson): fix precision checks and delete his method.
-      @Override boolean implementsStrictPrecision() {
-        return false;
-      }
+          // TODO(jwilson): fix precision checks and delete his method.
+          @Override
+          boolean implementsStrictPrecision() {
+            return false;
+          }
 
-      @Override JsonWriter newWriter() {
-        writer = new JsonValueWriter();
-        return writer;
-      }
+          @Override
+          JsonWriter newWriter() {
+            writer = new JsonValueWriter();
+            return writer;
+          }
 
-      @Override String json() {
-        // This writer writes a DOM. Use other Moshi features to serialize it as a string.
-        try {
-          Buffer buffer = new Buffer();
-          JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
-          bufferedSinkWriter.setSerializeNulls(true);
-          bufferedSinkWriter.setLenient(true);
-          OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
-          return buffer.readUtf8();
-        } catch (IOException e) {
-          throw new AssertionError();
-        }
-      }
+          @Override
+          String json() {
+            // This writer writes a DOM. Use other Moshi features to serialize it as a string.
+            try {
+              Buffer buffer = new Buffer();
+              JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
+              bufferedSinkWriter.setSerializeNulls(true);
+              bufferedSinkWriter.setLenient(true);
+              OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
+              return buffer.readUtf8();
+            } catch (IOException e) {
+              throw new AssertionError();
+            }
+          }
 
-      // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
-      @Override boolean supportsBigNumbers() {
-        return false;
-      }
+          // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
+          @Override
+          boolean supportsBigNumbers() {
+            return false;
+          }
 
-      @Override public String toString() {
-        return "Value";
-      }
-    };
+          @Override
+          public String toString() {
+            return "Value";
+          }
+        };
 
-    final JsonCodecFactory valuePeek = new JsonCodecFactory() {
-      @Override public JsonReader newReader(String json) throws IOException {
-        return value.newReader(json).peekJson();
-      }
+    final JsonCodecFactory valuePeek =
+        new JsonCodecFactory() {
+          @Override
+          public JsonReader newReader(String json) throws IOException {
+            return value.newReader(json).peekJson();
+          }
 
-      // TODO(jwilson): fix precision checks and delete his method.
-      @Override boolean implementsStrictPrecision() {
-        return false;
-      }
+          // TODO(jwilson): fix precision checks and delete his method.
+          @Override
+          boolean implementsStrictPrecision() {
+            return false;
+          }
 
-      @Override JsonWriter newWriter() {
-        return value.newWriter();
-      }
+          @Override
+          JsonWriter newWriter() {
+            return value.newWriter();
+          }
 
-      @Override String json() {
-        return value.json();
-      }
+          @Override
+          String json() {
+            return value.json();
+          }
 
-      // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
-      @Override boolean supportsBigNumbers() {
-        return false;
-      }
+          // TODO(jwilson): support BigDecimal and BigInteger and delete his method.
+          @Override
+          boolean supportsBigNumbers() {
+            return false;
+          }
 
-      @Override public String toString() {
-        return "ValuePeek";
-      }
-    };
+          @Override
+          public String toString() {
+            return "ValuePeek";
+          }
+        };
 
-    return Arrays.asList(
-        new Object[] { utf8 },
-        new Object[] { value },
-        new Object[] { valuePeek });
+    return Arrays.asList(new Object[] {utf8}, new Object[] {value}, new Object[] {valuePeek});
   }
 
   abstract JsonReader newReader(String json) throws IOException;
