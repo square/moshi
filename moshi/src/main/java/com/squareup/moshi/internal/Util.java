@@ -182,14 +182,14 @@ public final class Util {
   }
 
   public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable>());
+    return resolve(context, contextRawType, toResolve, new LinkedHashSet<>());
   }
 
   private static Type resolve(
       Type context,
       Class<?> contextRawType,
       Type toResolve,
-      Collection<TypeVariable> visitedTypeVariables) {
+      Collection<TypeVariable<?>> visitedTypeVariables) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
