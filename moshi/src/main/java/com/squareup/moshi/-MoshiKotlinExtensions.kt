@@ -35,7 +35,7 @@ inline fun <reified T> Moshi.adapter(): JsonAdapter<T> {
 }
 
 @ExperimentalStdlibApi
-inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(typeOf<T>().toType(), adapter)
+inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().toType(), adapter)
 
 @ExperimentalStdlibApi
 inline fun <reified T> Moshi.nextAdapter(skipPast: JsonAdapter.Factory, annotations: Set<Annotation>): JsonAdapter<T> = nextAdapter(skipPast, typeOf<T>().toType(), annotations)
