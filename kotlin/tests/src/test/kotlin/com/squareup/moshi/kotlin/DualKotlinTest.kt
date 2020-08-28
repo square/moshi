@@ -27,6 +27,7 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.adapter
+import com.squareup.moshi.nextAdapter
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -62,7 +63,7 @@ class DualKotlinTest(useReflection: Boolean) {
           object : Factory {
             override fun create(
               type: Type,
-              annotations: MutableSet<out Annotation>,
+              annotations: Set<Annotation>,
               moshi: Moshi
             ): JsonAdapter<*>? {
               // Prevent falling back to generated adapter lookup
@@ -71,7 +72,7 @@ class DualKotlinTest(useReflection: Boolean) {
               check(!rawType.isAnnotationPresent(metadataClass)) {
                 "Unhandled Kotlin type in reflective test! $rawType"
               }
-              return moshi.nextAdapter<Any>(this, type, annotations)
+              return moshi.nextAdapter<Any>(this, annotations)
             }
           }
         )
