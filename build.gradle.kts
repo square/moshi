@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import com.vanniktech.maven.publish.MavenPublishPluginExtension
 import org.gradle.jvm.tasks.Jar
 
@@ -52,7 +53,7 @@ spotless {
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
-//    licenseHeaderFile("spotless/spotless.kts")
+    licenseHeaderFile("spotless/spotless.kts", "(import|plugins|buildscript|dependencies|pluginManagement)")
   }
 }
 
