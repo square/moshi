@@ -26,7 +26,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.squareup.moshi.kotlin.reflect.adapter
+import com.squareup.moshi.adapter
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test

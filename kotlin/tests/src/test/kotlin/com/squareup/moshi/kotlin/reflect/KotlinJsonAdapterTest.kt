@@ -28,6 +28,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import org.assertj.core.api.Assertions
+import com.squareup.moshi.adapter
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayOutputStream
