@@ -39,6 +39,8 @@ spotless {
   java {
     googleJavaFormat("1.7")
     target("**/*.java")
+    targetExclude("**/spotless.java")
+    // https://github.com/diffplug/spotless/issues/677
 //    licenseHeaderFile("spotless/spotless.java")
   }
   kotlin {
@@ -46,7 +48,10 @@ spotless {
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
+    // https://github.com/diffplug/spotless/issues/677
 //    licenseHeaderFile("spotless/spotless.kt")
+//      .updateYearWithLatest(false)
+//    targetExclude("**/Dependencies.kt", "**/spotless.kt")
   }
   kotlinGradle {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
