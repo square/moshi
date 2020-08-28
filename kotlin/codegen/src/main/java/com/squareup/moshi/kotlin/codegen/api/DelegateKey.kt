@@ -50,24 +50,28 @@ internal data class DelegateKey(
       "At${it.className.simpleName}"
     }
     val adapterName = nameAllocator.newName(
-        "${type.toVariableName().decapitalize()}${qualifierNames}Adapter", this)
+      "${type.toVariableName().decapitalize()}${qualifierNames}Adapter",
+      this
+    )
 
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
-    val standardArgs = arrayOf(moshiParameter,
-        typeRenderer.render(type))
+    val standardArgs = arrayOf(
+      moshiParameter,
+      typeRenderer.render(type)
+    )
     val (initializerString, args) = when {
       jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
       else -> {
         ", %T.getFieldJsonQualifierAnnotations(javaClass, " +
-            "%S)" to arrayOf(Types::class.asTypeName(), adapterName)
+          "%S)" to arrayOf(Types::class.asTypeName(), adapterName)
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-        .addAnnotations(jsonQualifiers)
-        .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
-        .build()
+      .addAnnotations(jsonQualifiers)
+      .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
+      .build()
   }
 }
 

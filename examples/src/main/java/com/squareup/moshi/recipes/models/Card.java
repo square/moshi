@@ -24,7 +24,8 @@ public final class Card {
     this.suit = suit;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return String.format("%s%s", rank, suit);
   }
 }

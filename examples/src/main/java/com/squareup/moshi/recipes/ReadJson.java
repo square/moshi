@@ -21,23 +21,24 @@ import com.squareup.moshi.recipes.models.BlackjackHand;
 
 public final class ReadJson {
   public void run() throws Exception {
-    String json = ""
-        + "{\n"
-        + "  \"hidden_card\": {\n"
-        + "    \"rank\": \"6\",\n"
-        + "    \"suit\": \"SPADES\"\n"
-        + "  },\n"
-        + "  \"visible_cards\": [\n"
-        + "    {\n"
-        + "      \"rank\": \"4\",\n"
-        + "      \"suit\": \"CLUBS\"\n"
-        + "    },\n"
-        + "    {\n"
-        + "      \"rank\": \"A\",\n"
-        + "      \"suit\": \"HEARTS\"\n"
-        + "    }\n"
-        + "  ]\n"
-        + "}\n";
+    String json =
+        ""
+            + "{\n"
+            + "  \"hidden_card\": {\n"
+            + "    \"rank\": \"6\",\n"
+            + "    \"suit\": \"SPADES\"\n"
+            + "  },\n"
+            + "  \"visible_cards\": [\n"
+            + "    {\n"
+            + "      \"rank\": \"4\",\n"
+            + "      \"suit\": \"CLUBS\"\n"
+            + "    },\n"
+            + "    {\n"
+            + "      \"rank\": \"A\",\n"
+            + "      \"suit\": \"HEARTS\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<BlackjackHand> jsonAdapter = moshi.adapter(BlackjackHand.class);

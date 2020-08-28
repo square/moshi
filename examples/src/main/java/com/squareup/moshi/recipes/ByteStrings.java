@@ -26,9 +26,7 @@ public final class ByteStrings {
   public void run() throws Exception {
     String json = "\"TW9zaGksIE9saXZlLCBXaGl0ZSBDaGluPw\"";
 
-    Moshi moshi = new Moshi.Builder()
-        .add(ByteString.class, new Base64ByteStringAdapter())
-        .build();
+    Moshi moshi = new Moshi.Builder().add(ByteString.class, new Base64ByteStringAdapter()).build();
     JsonAdapter<ByteString> jsonAdapter = moshi.adapter(ByteString.class);
 
     ByteString byteString = jsonAdapter.fromJson(json);
@@ -40,12 +38,14 @@ public final class ByteStrings {
    * breaks or whitespace is included in the encoded form.
    */
   public final class Base64ByteStringAdapter extends JsonAdapter<ByteString> {
-    @Override public ByteString fromJson(JsonReader reader) throws IOException {
+    @Override
+    public ByteString fromJson(JsonReader reader) throws IOException {
       String base64 = reader.nextString();
       return ByteString.decodeBase64(base64);
     }
 
-    @Override public void toJson(JsonWriter writer, ByteString value) throws IOException {
+    @Override
+    public void toJson(JsonWriter writer, ByteString value) throws IOException {
       String string = value.base64();
       writer.value(string);
     }

@@ -15,6 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.internal.Util.EMPTY_TYPE_ARRAY;
+import static com.squareup.moshi.internal.Util.getGenericSupertype;
+import static com.squareup.moshi.internal.Util.resolve;
+
 import com.squareup.moshi.internal.Util.GenericArrayTypeImpl;
 import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
 import com.squareup.moshi.internal.Util.WildcardTypeImpl;
@@ -39,25 +43,20 @@ import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
-import static com.squareup.moshi.internal.Util.EMPTY_TYPE_ARRAY;
-import static com.squareup.moshi.internal.Util.getGenericSupertype;
-import static com.squareup.moshi.internal.Util.resolve;
-
 /** Factory methods for types. */
 @CheckReturnValue
 public final class Types {
-  private Types() {
-  }
+  private Types() {}
 
   /**
-   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given
-   * {@link JsonClass JsonClass-annotated} {@code clazz}. This is the same lookup logic used by
-   * both the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can
-   * be useful if generating your own JsonAdapters without using Moshi's first party code gen.
+   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given {@link
+   * JsonClass JsonClass-annotated} {@code clazz}. This is the same lookup logic used by both the
+   * Moshi code generation as well as lookup for any JsonClass-annotated classes. This can be useful
+   * if generating your own JsonAdapters without using Moshi's first party code gen.
    *
    * @param clazz the class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
-   *         Note that this name will always be a top-level class name and not a nested class.
+   *     Note that this name will always be a top-level class name and not a nested class.
    */
   public static String generatedJsonAdapterName(Class<?> clazz) {
     if (clazz.getAnnotation(JsonClass.class) == null) {
@@ -67,27 +66,26 @@ public final class Types {
   }
 
   /**
-   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given
-   * {@link JsonClass JsonClass-annotated} {@code className}. This is the same lookup logic used by
-   * both the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can
-   * be useful if generating your own JsonAdapters without using Moshi's first party code gen.
+   * Resolves the generated {@link JsonAdapter} fully qualified class name for a given {@link
+   * JsonClass JsonClass-annotated} {@code className}. This is the same lookup logic used by both
+   * the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can be
+   * useful if generating your own JsonAdapters without using Moshi's first party code gen.
    *
    * @param className the fully qualified class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
-   *         Note that this name will always be a top-level class name and not a nested class.
+   *     Note that this name will always be a top-level class name and not a nested class.
    */
   public static String generatedJsonAdapterName(String className) {
     return className.replace("$", "_") + "JsonAdapter";
   }
 
   /**
-   * Checks if {@code annotations} contains {@code jsonQualifier}.
-   * Returns the subset of {@code annotations} without {@code jsonQualifier}, or null if {@code
-   * annotations} does not contain {@code jsonQualifier}.
+   * Checks if {@code annotations} contains {@code jsonQualifier}. Returns the subset of {@code
+   * annotations} without {@code jsonQualifier}, or null if {@code annotations} does not contain
+   * {@code jsonQualifier}.
    */
   public static @Nullable Set<? extends Annotation> nextAnnotations(
-      Set<? extends Annotation> annotations,
-      Class<? extends Annotation> jsonQualifier) {
+      Set<? extends Annotation> annotations, Class<? extends Annotation> jsonQualifier) {
     if (!jsonQualifier.isAnnotationPresent(JsonQualifier.class)) {
       throw new IllegalArgumentException(jsonQualifier + " is not a JsonQualifier.");
     }
@@ -135,15 +133,15 @@ public final class Types {
   /**
    * Returns a type that represents an unknown type that extends {@code bound}. For example, if
    * {@code bound} is {@code CharSequence.class}, this returns {@code ? extends CharSequence}. If
-   * {@code bound} is {@code Object.class}, this returns {@code ?}, which is shorthand for {@code
-   * ? extends Object}.
+   * {@code bound} is {@code Object.class}, this returns {@code ?}, which is shorthand for {@code ?
+   * extends Object}.
    */
   public static WildcardType subtypeOf(Type bound) {
     Type[] upperBounds;
     if (bound instanceof WildcardType) {
       upperBounds = ((WildcardType) bound).getUpperBounds();
     } else {
-      upperBounds = new Type[] { bound };
+      upperBounds = new Type[] {bound};
     }
     return new WildcardTypeImpl(upperBounds, EMPTY_TYPE_ARRAY);
   }
@@ -157,9 +155,9 @@ public final class Types {
     if (bound instanceof WildcardType) {
       lowerBounds = ((WildcardType) bound).getLowerBounds();
     } else {
-      lowerBounds = new Type[] { bound };
+      lowerBounds = new Type[] {bound};
     }
-    return new WildcardTypeImpl(new Type[] { Object.class }, lowerBounds);
+    return new WildcardTypeImpl(new Type[] {Object.class}, lowerBounds);
   }
 
   public static Class<?> getRawType(Type type) {
@@ -189,13 +187,18 @@ public final class Types {
 
     } else {
       String className = type == null ? "null" : type.getClass().getName();
-      throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
-          + "GenericArrayType, but <" + type + "> is of type " + className);
+      throw new IllegalArgumentException(
+          "Expected a Class, ParameterizedType, or "
+              + "GenericArrayType, but <"
+              + type
+              + "> is of type "
+              + className);
     }
   }
 
   /**
    * Returns the element type of this collection type.
+   *
    * @throws IllegalArgumentException if this type is not a collection.
    */
   public static Type collectionElementType(Type context, Class<?> contextRawType) {
@@ -217,8 +220,8 @@ public final class Types {
 
     } else if (a instanceof Class) {
       if (b instanceof GenericArrayType) {
-        return equals(((Class) a).getComponentType(),
-            ((GenericArrayType) b).getGenericComponentType());
+        return equals(
+            ((Class) a).getComponentType(), ((GenericArrayType) b).getGenericComponentType());
       }
       return a.equals(b); // Class already specifies equals().
 
@@ -226,20 +229,22 @@ public final class Types {
       if (!(b instanceof ParameterizedType)) return false;
       ParameterizedType pa = (ParameterizedType) a;
       ParameterizedType pb = (ParameterizedType) b;
-      Type[] aTypeArguments = pa instanceof ParameterizedTypeImpl
-          ? ((ParameterizedTypeImpl) pa).typeArguments
-          : pa.getActualTypeArguments();
-      Type[] bTypeArguments = pb instanceof ParameterizedTypeImpl
-          ? ((ParameterizedTypeImpl) pb).typeArguments
-          : pb.getActualTypeArguments();
+      Type[] aTypeArguments =
+          pa instanceof ParameterizedTypeImpl
+              ? ((ParameterizedTypeImpl) pa).typeArguments
+              : pa.getActualTypeArguments();
+      Type[] bTypeArguments =
+          pb instanceof ParameterizedTypeImpl
+              ? ((ParameterizedTypeImpl) pb).typeArguments
+              : pb.getActualTypeArguments();
       return equals(pa.getOwnerType(), pb.getOwnerType())
           && pa.getRawType().equals(pb.getRawType())
           && Arrays.equals(aTypeArguments, bTypeArguments);
 
     } else if (a instanceof GenericArrayType) {
       if (b instanceof Class) {
-        return equals(((Class) b).getComponentType(),
-            ((GenericArrayType) a).getGenericComponentType());
+        return equals(
+            ((Class) b).getComponentType(), ((GenericArrayType) a).getGenericComponentType());
       }
       if (!(b instanceof GenericArrayType)) return false;
       GenericArrayType ga = (GenericArrayType) a;
@@ -270,10 +275,10 @@ public final class Types {
    * @param clazz the target class to read the {@code fieldName} field annotations from.
    * @param fieldName the target field name on {@code clazz}.
    * @return a set of {@link JsonQualifier}-annotated {@link Annotation} instances retrieved from
-   *         the targeted field. Can be empty if none are found.
+   *     the targeted field. Can be empty if none are found.
    */
-  public static Set<? extends Annotation> getFieldJsonQualifierAnnotations(Class<?> clazz,
-      String fieldName) {
+  public static Set<? extends Annotation> getFieldJsonQualifierAnnotations(
+      Class<?> clazz, String fieldName) {
     try {
       Field field = clazz.getDeclaredField(fieldName);
       field.setAccessible(true);
@@ -286,11 +291,8 @@ public final class Types {
       }
       return Collections.unmodifiableSet(annotations);
     } catch (NoSuchFieldException e) {
-      throw new IllegalArgumentException("Could not access field "
-          + fieldName
-          + " on class "
-          + clazz.getCanonicalName(),
-          e);
+      throw new IllegalArgumentException(
+          "Could not access field " + fieldName + " on class " + clazz.getCanonicalName(), e);
     }
   }
 
@@ -305,26 +307,29 @@ public final class Types {
     if (annotationType.getDeclaredMethods().length != 0) {
       throw new IllegalArgumentException(annotationType + " must not declare methods.");
     }
-    return (T) Proxy.newProxyInstance(annotationType.getClassLoader(),
-        new Class<?>[] { annotationType }, new InvocationHandler() {
-          @Override public Object invoke(Object proxy, Method method, Object[] args)
-              throws Throwable {
-            String methodName = method.getName();
-            switch (methodName) {
-              case "annotationType":
-                return annotationType;
-              case "equals":
-                Object o = args[0];
-                return annotationType.isInstance(o);
-              case "hashCode":
-                return 0;
-              case "toString":
-                return "@" + annotationType.getName() + "()";
-              default:
-                return method.invoke(proxy, args);
-            }
-          }
-        });
+    return (T)
+        Proxy.newProxyInstance(
+            annotationType.getClassLoader(),
+            new Class<?>[] {annotationType},
+            new InvocationHandler() {
+              @Override
+              public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                String methodName = method.getName();
+                switch (methodName) {
+                  case "annotationType":
+                    return annotationType;
+                  case "equals":
+                    Object o = args[0];
+                    return annotationType.isInstance(o);
+                  case "hashCode":
+                    return 0;
+                  case "toString":
+                    return "@" + annotationType.getName() + "()";
+                  default:
+                    return method.invoke(proxy, args);
+                }
+              }
+            });
   }
 
   /**
@@ -334,14 +339,14 @@ public final class Types {
   static Type[] mapKeyAndValueTypes(Type context, Class<?> contextRawType) {
     // Work around a problem with the declaration of java.util.Properties. That class should extend
     // Hashtable<String, String>, but it's declared to extend Hashtable<Object, Object>.
-    if (context == Properties.class) return new Type[] { String.class, String.class };
+    if (context == Properties.class) return new Type[] {String.class, String.class};
 
     Type mapType = getSupertype(context, contextRawType, Map.class);
     if (mapType instanceof ParameterizedType) {
       ParameterizedType mapParameterizedType = (ParameterizedType) mapType;
       return mapParameterizedType.getActualTypeArguments();
     }
-    return new Type[] { Object.class, Object.class };
+    return new Type[] {Object.class, Object.class};
   }
 
   /**
@@ -353,8 +358,8 @@ public final class Types {
    */
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
-    return resolve(context, contextRawType,
-        getGenericSupertype(context, contextRawType, supertype));
+    return resolve(
+        context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
   }
 
   static Type getGenericSuperclass(Type type) {
@@ -363,8 +368,8 @@ public final class Types {
   }
 
   /**
-   * Returns the element type of {@code type} if it is an array type, or null if it is not an
-   * array type.
+   * Returns the element type of {@code type} if it is an array type, or null if it is not an array
+   * type.
    */
   static Type arrayComponentType(Type type) {
     if (type instanceof GenericArrayType) {

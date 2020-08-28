@@ -31,11 +31,9 @@ import javax.annotation.Nullable;
 
 public final class CustomAdapterFactory {
   public void run() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new SortedSetAdapterFactory())
-        .build();
-    JsonAdapter<SortedSet<String>> jsonAdapter = moshi.adapter(
-        Types.newParameterizedType(SortedSet.class, String.class));
+    Moshi moshi = new Moshi.Builder().add(new SortedSetAdapterFactory()).build();
+    JsonAdapter<SortedSet<String>> jsonAdapter =
+        moshi.adapter(Types.newParameterizedType(SortedSet.class, String.class));
 
     TreeSet<String> model = new TreeSet<>();
     model.add("a");
@@ -48,9 +46,9 @@ public final class CustomAdapterFactory {
 
   /**
    * This class composes an adapter for any element type into an adapter for a sorted set of those
-   * elements. For example, given a {@code JsonAdapter<MovieTicket>}, use this to get a
-   * {@code JsonAdapter<SortedSet<MovieTicket>>}. It works by looping over the input elements when
-   * both reading and writing.
+   * elements. For example, given a {@code JsonAdapter<MovieTicket>}, use this to get a {@code
+   * JsonAdapter<SortedSet<MovieTicket>>}. It works by looping over the input elements when both
+   * reading and writing.
    */
   static final class SortedSetAdapter<T> extends JsonAdapter<SortedSet<T>> {
     private final JsonAdapter<T> elementAdapter;
@@ -59,7 +57,8 @@ public final class CustomAdapterFactory {
       this.elementAdapter = elementAdapter;
     }
 
-    @Override public SortedSet<T> fromJson(JsonReader reader) throws IOException {
+    @Override
+    public SortedSet<T> fromJson(JsonReader reader) throws IOException {
       TreeSet<T> result = new TreeSet<>();
       reader.beginArray();
       while (reader.hasNext()) {
@@ -69,7 +68,8 @@ public final class CustomAdapterFactory {
       return result;
     }
 
-    @Override public void toJson(JsonWriter writer, SortedSet<T> set) throws IOException {
+    @Override
+    public void toJson(JsonWriter writer, SortedSet<T> set) throws IOException {
       writer.beginArray();
       for (T element : set) {
         elementAdapter.toJson(writer, element);
@@ -85,7 +85,8 @@ public final class CustomAdapterFactory {
    * uses that to create an adapter for the set.
    */
   static class SortedSetAdapterFactory implements JsonAdapter.Factory {
-    @Override public @Nullable JsonAdapter<?> create(
+    @Override
+    public @Nullable JsonAdapter<?> create(
         Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (!annotations.isEmpty()) {
         return null; // Annotations? This factory doesn't apply.

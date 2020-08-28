@@ -48,18 +48,18 @@ internal fun TypeName.rawType(): ClassName {
 }
 
 internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
-    when (this) {
-      BOOLEAN -> CodeBlock.of("false")
-      CHAR -> CodeBlock.of("0.toChar()")
-      BYTE -> CodeBlock.of("0.toByte()")
-      SHORT -> CodeBlock.of("0.toShort()")
-      INT -> CodeBlock.of("0")
-      FLOAT -> CodeBlock.of("0f")
-      LONG -> CodeBlock.of("0L")
-      DOUBLE -> CodeBlock.of("0.0")
-      UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
-      else -> CodeBlock.of("null")
-    }
+  when (this) {
+    BOOLEAN -> CodeBlock.of("false")
+    CHAR -> CodeBlock.of("0.toChar()")
+    BYTE -> CodeBlock.of("0.toByte()")
+    SHORT -> CodeBlock.of("0.toShort()")
+    INT -> CodeBlock.of("0")
+    FLOAT -> CodeBlock.of("0f")
+    LONG -> CodeBlock.of("0L")
+    DOUBLE -> CodeBlock.of("0.0")
+    UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+    else -> CodeBlock.of("null")
+  }
 
 internal fun TypeName.asTypeBlock(): CodeBlock {
   if (annotations.isNotEmpty()) {
@@ -103,12 +103,12 @@ internal fun KModifier.checkIsVisibility() {
   }
 }
 
-internal inline fun <reified T: TypeName> TypeName.mapTypes(noinline transform: T.() -> TypeName?): TypeName {
+internal inline fun <reified T : TypeName> TypeName.mapTypes(noinline transform: T.() -> TypeName?): TypeName {
   return mapTypes(T::class, transform)
 }
 
 @Suppress("UNCHECKED_CAST")
-internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() -> TypeName?): TypeName {
+internal fun <T : TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() -> TypeName?): TypeName {
   if (target.java == javaClass) {
     return (this as T).transform() ?: return this
   }
@@ -116,7 +116,7 @@ internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() 
     is ClassName -> this
     is ParameterizedTypeName -> {
       (rawType.mapTypes(target, transform) as ClassName).parameterizedBy(typeArguments.map { it.mapTypes(target, transform) })
-          .copy(nullable = isNullable, annotations = annotations)
+        .copy(nullable = isNullable, annotations = annotations)
     }
     is TypeVariableName -> {
       copy(bounds = bounds.map { it.mapTypes(target, transform) })
@@ -129,11 +129,11 @@ internal fun <T: TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() 
         this == STAR -> this
         outTypes.isNotEmpty() && inTypes.isEmpty() -> {
           WildcardTypeName.producerOf(outTypes[0].mapTypes(target, transform))
-              .copy(nullable = isNullable, annotations = annotations)
+            .copy(nullable = isNullable, annotations = annotations)
         }
         inTypes.isNotEmpty() -> {
           WildcardTypeName.consumerOf(inTypes[0].mapTypes(target, transform))
-              .copy(nullable = isNullable, annotations = annotations)
+            .copy(nullable = isNullable, annotations = annotations)
         }
         else -> throw UnsupportedOperationException("Not possible.")
       }

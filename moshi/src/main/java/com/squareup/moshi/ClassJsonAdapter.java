@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.internal.Util.resolve;
+
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -30,14 +32,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
 
-import static com.squareup.moshi.internal.Util.resolve;
-
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
  *
  * <h3>Platform Types</h3>
- * Fields from platform classes are omitted from both serialization and deserialization unless
- * they are either public or protected. This includes the following packages and their subpackages:
+ *
+ * Fields from platform classes are omitted from both serialization and deserialization unless they
+ * are either public or protected. This includes the following packages and their subpackages:
  *
  * <ul>
  *   <li>android.*
@@ -50,108 +51,122 @@ import static com.squareup.moshi.internal.Util.resolve;
  * </ul>
  */
 final class ClassJsonAdapter<T> extends JsonAdapter<T> {
-  public static final JsonAdapter.Factory FACTORY = new JsonAdapter.Factory() {
-    @Override public @Nullable JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      if (!(type instanceof Class) && !(type instanceof ParameterizedType)) {
-        return null;
-      }
-      Class<?> rawType = Types.getRawType(type);
-      if (rawType.isInterface() || rawType.isEnum()) return null;
-      if (!annotations.isEmpty()) return null;
-      if (Util.isPlatformType(rawType)) {
-        throwIfIsCollectionClass(type, List.class);
-        throwIfIsCollectionClass(type, Set.class);
-        throwIfIsCollectionClass(type, Map.class);
-        throwIfIsCollectionClass(type, Collection.class);
+  public static final JsonAdapter.Factory FACTORY =
+      new JsonAdapter.Factory() {
+        @Override
+        public @Nullable JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          if (!(type instanceof Class) && !(type instanceof ParameterizedType)) {
+            return null;
+          }
+          Class<?> rawType = Types.getRawType(type);
+          if (rawType.isInterface() || rawType.isEnum()) return null;
+          if (!annotations.isEmpty()) return null;
+          if (Util.isPlatformType(rawType)) {
+            throwIfIsCollectionClass(type, List.class);
+            throwIfIsCollectionClass(type, Set.class);
+            throwIfIsCollectionClass(type, Map.class);
+            throwIfIsCollectionClass(type, Collection.class);
 
-        String messagePrefix = "Platform " + rawType;
-        if (type instanceof ParameterizedType) {
-          messagePrefix += " in " + type;
+            String messagePrefix = "Platform " + rawType;
+            if (type instanceof ParameterizedType) {
+              messagePrefix += " in " + type;
+            }
+            throw new IllegalArgumentException(
+                messagePrefix + " requires explicit JsonAdapter to be registered");
+          }
+
+          if (rawType.isAnonymousClass()) {
+            throw new IllegalArgumentException(
+                "Cannot serialize anonymous class " + rawType.getName());
+          }
+          if (rawType.isLocalClass()) {
+            throw new IllegalArgumentException("Cannot serialize local class " + rawType.getName());
+          }
+          if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
+            throw new IllegalArgumentException(
+                "Cannot serialize non-static nested class " + rawType.getName());
+          }
+          if (Modifier.isAbstract(rawType.getModifiers())) {
+            throw new IllegalArgumentException(
+                "Cannot serialize abstract class " + rawType.getName());
+          }
+          if (Util.isKotlin(rawType)) {
+            throw new IllegalArgumentException(
+                "Cannot serialize Kotlin type "
+                    + rawType.getName()
+                    + ". Reflective serialization of Kotlin classes without using kotlin-reflect has "
+                    + "undefined and unexpected behavior. Please use KotlinJsonAdapter from the "
+                    + "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact.");
+          }
+
+          ClassFactory<Object> classFactory = ClassFactory.get(rawType);
+          Map<String, FieldBinding<?>> fields = new TreeMap<>();
+          for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
+            createFieldBindings(moshi, t, fields);
+          }
+          return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
         }
-        throw new IllegalArgumentException(
-            messagePrefix + " requires explicit JsonAdapter to be registered");
-      }
 
-      if (rawType.isAnonymousClass()) {
-        throw new IllegalArgumentException("Cannot serialize anonymous class " + rawType.getName());
-      }
-      if (rawType.isLocalClass()) {
-        throw new IllegalArgumentException("Cannot serialize local class " + rawType.getName());
-      }
-      if (rawType.getEnclosingClass() != null && !Modifier.isStatic(rawType.getModifiers())) {
-        throw new IllegalArgumentException(
-            "Cannot serialize non-static nested class " + rawType.getName());
-      }
-      if (Modifier.isAbstract(rawType.getModifiers())) {
-        throw new IllegalArgumentException("Cannot serialize abstract class " + rawType.getName());
-      }
-      if (Util.isKotlin(rawType)) {
-        throw new IllegalArgumentException("Cannot serialize Kotlin type " + rawType.getName()
-            + ". Reflective serialization of Kotlin classes without using kotlin-reflect has "
-            + "undefined and unexpected behavior. Please use KotlinJsonAdapter from the "
-            + "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact.");
-      }
-
-      ClassFactory<Object> classFactory = ClassFactory.get(rawType);
-      Map<String, FieldBinding<?>> fields = new TreeMap<>();
-      for (Type t = type; t != Object.class; t = Types.getGenericSuperclass(t)) {
-        createFieldBindings(moshi, t, fields);
-      }
-      return new ClassJsonAdapter<>(classFactory, fields).nullSafe();
-    }
-
-    /**
-     * Throw clear error messages for the common beginner mistake of using the concrete
-     * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
-     */
-    private void throwIfIsCollectionClass(Type type, Class<?> collectionInterface) {
-      Class<?> rawClass = Types.getRawType(type);
-      if (collectionInterface.isAssignableFrom(rawClass)) {
-        throw new IllegalArgumentException(
-            "No JsonAdapter for " + type + ", you should probably use "
-                + collectionInterface.getSimpleName() + " instead of " + rawClass.getSimpleName()
-                + " (Moshi only supports the collection interfaces by default)"
-                + " or else register a custom JsonAdapter.");
-      }
-    }
-
-    /** Creates a field binding for each of declared field of {@code type}. */
-    private void createFieldBindings(
-        Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
-      Class<?> rawType = Types.getRawType(type);
-      boolean platformType = Util.isPlatformType(rawType);
-      for (Field field : rawType.getDeclaredFields()) {
-        if (!includeField(platformType, field.getModifiers())) continue;
-
-        // Look up a type adapter for this type.
-        Type fieldType = resolve(type, rawType, field.getGenericType());
-        Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
-        String fieldName = field.getName();
-        JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations, fieldName);
-
-        // Create the binding between field and JSON.
-        field.setAccessible(true);
-
-        // Store it using the field's name. If there was already a field with this name, fail!
-        Json jsonAnnotation = field.getAnnotation(Json.class);
-        String name = jsonAnnotation != null ? jsonAnnotation.name() : fieldName;
-        FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
-        FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
-        if (replaced != null) {
-          throw new IllegalArgumentException("Conflicting fields:\n"
-              + "    " + replaced.field + "\n"
-              + "    " + fieldBinding.field);
+        /**
+         * Throw clear error messages for the common beginner mistake of using the concrete
+         * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
+         */
+        private void throwIfIsCollectionClass(Type type, Class<?> collectionInterface) {
+          Class<?> rawClass = Types.getRawType(type);
+          if (collectionInterface.isAssignableFrom(rawClass)) {
+            throw new IllegalArgumentException(
+                "No JsonAdapter for "
+                    + type
+                    + ", you should probably use "
+                    + collectionInterface.getSimpleName()
+                    + " instead of "
+                    + rawClass.getSimpleName()
+                    + " (Moshi only supports the collection interfaces by default)"
+                    + " or else register a custom JsonAdapter.");
+          }
         }
-      }
-    }
 
-    /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
-    private boolean includeField(boolean platformType, int modifiers) {
-      if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
-      return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
-    }
-  };
+        /** Creates a field binding for each of declared field of {@code type}. */
+        private void createFieldBindings(
+            Moshi moshi, Type type, Map<String, FieldBinding<?>> fieldBindings) {
+          Class<?> rawType = Types.getRawType(type);
+          boolean platformType = Util.isPlatformType(rawType);
+          for (Field field : rawType.getDeclaredFields()) {
+            if (!includeField(platformType, field.getModifiers())) continue;
+
+            // Look up a type adapter for this type.
+            Type fieldType = resolve(type, rawType, field.getGenericType());
+            Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
+            String fieldName = field.getName();
+            JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations, fieldName);
+
+            // Create the binding between field and JSON.
+            field.setAccessible(true);
+
+            // Store it using the field's name. If there was already a field with this name, fail!
+            Json jsonAnnotation = field.getAnnotation(Json.class);
+            String name = jsonAnnotation != null ? jsonAnnotation.name() : fieldName;
+            FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
+            FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
+            if (replaced != null) {
+              throw new IllegalArgumentException(
+                  "Conflicting fields:\n"
+                      + "    "
+                      + replaced.field
+                      + "\n"
+                      + "    "
+                      + fieldBinding.field);
+            }
+          }
+        }
+
+        /** Returns true if fields with {@code modifiers} are included in the emitted JSON. */
+        private boolean includeField(boolean platformType, int modifiers) {
+          if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false;
+          return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType;
+        }
+      };
 
   private final ClassFactory<T> classFactory;
   private final FieldBinding<?>[] fieldsArray;
@@ -160,11 +175,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
   ClassJsonAdapter(ClassFactory<T> classFactory, Map<String, FieldBinding<?>> fieldsMap) {
     this.classFactory = classFactory;
     this.fieldsArray = fieldsMap.values().toArray(new FieldBinding[fieldsMap.size()]);
-    this.options = JsonReader.Options.of(
-        fieldsMap.keySet().toArray(new String[fieldsMap.size()]));
+    this.options = JsonReader.Options.of(fieldsMap.keySet().toArray(new String[fieldsMap.size()]));
   }
 
-  @Override public T fromJson(JsonReader reader) throws IOException {
+  @Override
+  public T fromJson(JsonReader reader) throws IOException {
     T result;
     try {
       result = classFactory.newInstance();
@@ -194,7 +209,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     }
   }
 
-  @Override public void toJson(JsonWriter writer, T value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, T value) throws IOException {
     try {
       writer.beginObject();
       for (FieldBinding<?> fieldBinding : fieldsArray) {
@@ -207,7 +223,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     }
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "JsonAdapter(" + classFactory + ")";
   }
 

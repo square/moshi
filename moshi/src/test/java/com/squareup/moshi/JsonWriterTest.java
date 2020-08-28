@@ -15,6 +15,12 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.TestUtil.MAX_DEPTH;
+import static com.squareup.moshi.TestUtil.repeat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -30,12 +36,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import static com.squareup.moshi.TestUtil.MAX_DEPTH;
-import static com.squareup.moshi.TestUtil.repeat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-
 @RunWith(Parameterized.class)
 public final class JsonWriterTest {
   @Parameter public JsonCodecFactory factory;
@@ -45,7 +45,8 @@ public final class JsonWriterTest {
     return JsonCodecFactory.factories();
   }
 
-  @Test public void nullsValuesNotSerializedByDefault() throws IOException {
+  @Test
+  public void nullsValuesNotSerializedByDefault() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -55,7 +56,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{}");
   }
 
-  @Test public void nullsValuesSerializedWhenConfigured() throws IOException {
+  @Test
+  public void nullsValuesSerializedWhenConfigured() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.setSerializeNulls(true);
     writer.beginObject();
@@ -66,42 +68,48 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"a\":null}");
   }
 
-  @Test public void topLevelBoolean() throws IOException {
+  @Test
+  public void topLevelBoolean() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.value(true);
     writer.close();
     assertThat(factory.json()).isEqualTo("true");
   }
 
-  @Test public void topLevelNull() throws IOException {
+  @Test
+  public void topLevelNull() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.nullValue();
     writer.close();
     assertThat(factory.json()).isEqualTo("null");
   }
 
-  @Test public void topLevelInt() throws IOException {
+  @Test
+  public void topLevelInt() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.value(123);
     writer.close();
     assertThat(factory.json()).isEqualTo("123");
   }
 
-  @Test public void topLevelDouble() throws IOException {
+  @Test
+  public void topLevelDouble() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.value(123.4);
     writer.close();
     assertThat(factory.json()).isEqualTo("123.4");
   }
 
-  @Test public void topLevelString() throws IOException {
+  @Test
+  public void topLevelString() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.value("a");
     writer.close();
     assertThat(factory.json()).isEqualTo("\"a\"");
   }
 
-  @Test public void invalidTopLevelTypes() throws IOException {
+  @Test
+  public void invalidTopLevelTypes() throws IOException {
     JsonWriter writer = factory.newWriter();
     try {
       writer.name("hello").value("world");
@@ -110,7 +118,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void twoNames() throws IOException {
+  @Test
+  public void twoNames() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -121,7 +130,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void nameWithoutValue() throws IOException {
+  @Test
+  public void nameWithoutValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -132,7 +142,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void valueWithoutName() throws IOException {
+  @Test
+  public void valueWithoutName() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     try {
@@ -142,7 +153,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void multipleTopLevelValues() throws IOException {
+  @Test
+  public void multipleTopLevelValues() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray().endArray();
     try {
@@ -152,7 +164,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void badNestingObject() throws IOException {
+  @Test
+  public void badNestingObject() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.beginObject();
@@ -163,7 +176,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void badNestingArray() throws IOException {
+  @Test
+  public void badNestingArray() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.beginArray();
@@ -174,7 +188,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void nullName() throws IOException {
+  @Test
+  public void nullName() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     try {
@@ -184,7 +199,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void nullStringValue() throws IOException {
+  @Test
+  public void nullStringValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.setSerializeNulls(true);
     writer.beginObject();
@@ -194,7 +210,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"a\":null}");
   }
 
-  @Test public void nonFiniteDoubles() throws IOException {
+  @Test
+  public void nonFiniteDoubles() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     try {
@@ -214,7 +231,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void nonFiniteBoxedDoubles() throws IOException {
+  @Test
+  public void nonFiniteBoxedDoubles() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     try {
@@ -234,7 +252,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void doubles() throws IOException {
+  @Test
+  public void doubles() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value(-0.0);
@@ -248,18 +267,21 @@ public final class JsonWriterTest {
     writer.value(Math.E);
     writer.endArray();
     writer.close();
-    assertThat(factory.json()).isEqualTo("[-0.0,"
-        + "1.0,"
-        + "1.7976931348623157E308,"
-        + "4.9E-324,"
-        + "0.0,"
-        + "-0.5,"
-        + "2.2250738585072014E-308,"
-        + "3.141592653589793,"
-        + "2.718281828459045]");
+    assertThat(factory.json())
+        .isEqualTo(
+            "[-0.0,"
+                + "1.0,"
+                + "1.7976931348623157E308,"
+                + "4.9E-324,"
+                + "0.0,"
+                + "-0.5,"
+                + "2.2250738585072014E-308,"
+                + "3.141592653589793,"
+                + "2.718281828459045]");
   }
 
-  @Test public void longs() throws IOException {
+  @Test
+  public void longs() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value(0);
@@ -269,14 +291,12 @@ public final class JsonWriterTest {
     writer.value(Long.MAX_VALUE);
     writer.endArray();
     writer.close();
-    assertThat(factory.json()).isEqualTo("[0,"
-        + "1,"
-        + "-1,"
-        + "-9223372036854775808,"
-        + "9223372036854775807]");
+    assertThat(factory.json())
+        .isEqualTo("[0," + "1," + "-1," + "-9223372036854775808," + "9223372036854775807]");
   }
 
-  @Test public void numbers() throws IOException {
+  @Test
+  public void numbers() throws IOException {
     assumeTrue(factory.supportsBigNumbers());
 
     JsonWriter writer = factory.newWriter();
@@ -287,13 +307,16 @@ public final class JsonWriterTest {
     writer.value(new BigDecimal("3.141592653589793238462643383"));
     writer.endArray();
     writer.close();
-    assertThat(factory.json()).isEqualTo("[0,"
-        + "9223372036854775808,"
-        + "-9223372036854775809,"
-        + "3.141592653589793238462643383]");
+    assertThat(factory.json())
+        .isEqualTo(
+            "[0,"
+                + "9223372036854775808,"
+                + "-9223372036854775809,"
+                + "3.141592653589793238462643383]");
   }
 
-  @Test public void nullNumbers() throws IOException {
+  @Test
+  public void nullNumbers() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value((Number) null);
@@ -302,7 +325,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[null]");
   }
 
-  @Test public void booleans() throws IOException {
+  @Test
+  public void booleans() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value(true);
@@ -311,7 +335,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[true,false]");
   }
 
-  @Test public void boxedBooleans() throws IOException {
+  @Test
+  public void boxedBooleans() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value((Boolean) true);
@@ -321,7 +346,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[true,false,null]");
   }
 
-  @Test public void nulls() throws IOException {
+  @Test
+  public void nulls() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.nullValue();
@@ -329,7 +355,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[null]");
   }
 
-  @Test public void strings() throws IOException {
+  @Test
+  public void strings() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value("a");
@@ -351,27 +378,30 @@ public final class JsonWriterTest {
     writer.value("\0");
     writer.value("\u0019");
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\","
-        + "\"a\\\"\","
-        + "\"\\\"\","
-        + "\":\","
-        + "\",\","
-        + "\"\\b\","
-        + "\"\\f\","
-        + "\"\\n\","
-        + "\"\\r\","
-        + "\"\\t\","
-        + "\" \","
-        + "\"\\\\\","
-        + "\"{\","
-        + "\"}\","
-        + "\"[\","
-        + "\"]\","
-        + "\"\\u0000\","
-        + "\"\\u0019\"]");
+    assertThat(factory.json())
+        .isEqualTo(
+            "[\"a\","
+                + "\"a\\\"\","
+                + "\"\\\"\","
+                + "\":\","
+                + "\",\","
+                + "\"\\b\","
+                + "\"\\f\","
+                + "\"\\n\","
+                + "\"\\r\","
+                + "\"\\t\","
+                + "\" \","
+                + "\"\\\\\","
+                + "\"{\","
+                + "\"}\","
+                + "\"[\","
+                + "\"]\","
+                + "\"\\u0000\","
+                + "\"\\u0019\"]");
   }
 
-  @Test public void unicodeLineBreaksEscaped() throws IOException {
+  @Test
+  public void unicodeLineBreaksEscaped() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.value("\u2028 \u2029");
@@ -379,21 +409,24 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[\"\\u2028 \\u2029\"]");
   }
 
-  @Test public void emptyArray() throws IOException {
+  @Test
+  public void emptyArray() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
     assertThat(factory.json()).isEqualTo("[]");
   }
 
-  @Test public void emptyObject() throws IOException {
+  @Test
+  public void emptyObject() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.endObject();
     assertThat(factory.json()).isEqualTo("{}");
   }
 
-  @Test public void objectsInArrays() throws IOException {
+  @Test
+  public void objectsInArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.beginObject();
@@ -405,11 +438,11 @@ public final class JsonWriterTest {
     writer.name("d").value(true);
     writer.endObject();
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[{\"a\":5,\"b\":false},"
-        + "{\"c\":6,\"d\":true}]");
+    assertThat(factory.json()).isEqualTo("[{\"a\":5,\"b\":false}," + "{\"c\":6,\"d\":true}]");
   }
 
-  @Test public void arraysInObjects() throws IOException {
+  @Test
+  public void arraysInObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -423,11 +456,11 @@ public final class JsonWriterTest {
     writer.value(true);
     writer.endArray();
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":[5,false],"
-        + "\"b\":[6,true]}");
+    assertThat(factory.json()).isEqualTo("{\"a\":[5,false]," + "\"b\":[6,true]}");
   }
 
-  @Test public void deepNestingArrays() throws IOException {
+  @Test
+  public void deepNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginArray();
@@ -435,11 +468,11 @@ public final class JsonWriterTest {
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endArray();
     }
-    assertThat(factory.json())
-        .isEqualTo(repeat("[", MAX_DEPTH) + repeat("]", MAX_DEPTH));
+    assertThat(factory.json()).isEqualTo(repeat("[", MAX_DEPTH) + repeat("]", MAX_DEPTH));
   }
 
-  @Test public void tooDeeplyNestingArrays() throws IOException {
+  @Test
+  public void tooDeeplyNestingArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginArray();
@@ -448,12 +481,13 @@ public final class JsonWriterTest {
       writer.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $"
-          + repeat("[0]", MAX_DEPTH) + ": circular reference?");
+      assertThat(expected)
+          .hasMessage("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
     }
   }
 
-  @Test public void deepNestingObjects() throws IOException {
+  @Test
+  public void deepNestingObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginObject();
@@ -463,11 +497,12 @@ public final class JsonWriterTest {
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endObject();
     }
-    assertThat(factory.json()).isEqualTo(
-        repeat("{\"a\":", MAX_DEPTH) + "true" + repeat("}", MAX_DEPTH));
+    assertThat(factory.json())
+        .isEqualTo(repeat("{\"a\":", MAX_DEPTH) + "true" + repeat("}", MAX_DEPTH));
   }
 
-  @Test public void tooDeeplyNestingObjects() throws IOException {
+  @Test
+  public void tooDeeplyNestingObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.beginObject();
@@ -477,12 +512,13 @@ public final class JsonWriterTest {
       writer.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $"
-          + repeat(".a", MAX_DEPTH) + ": circular reference?");
+      assertThat(expected)
+          .hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
     }
   }
 
-  @Test public void lenientWriterPermitsMultipleTopLevelValues() throws IOException {
+  @Test
+  public void lenientWriterPermitsMultipleTopLevelValues() throws IOException {
     assumeTrue(factory.encodesToBytes());
 
     JsonWriter writer = factory.newWriter();
@@ -495,7 +531,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("[][]");
   }
 
-  @Test public void strictWriterDoesNotPermitMultipleTopLevelValues() throws IOException {
+  @Test
+  public void strictWriterDoesNotPermitMultipleTopLevelValues() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -506,7 +543,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void closedWriterThrowsOnStructure() throws IOException {
+  @Test
+  public void closedWriterThrowsOnStructure() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -533,7 +571,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void closedWriterThrowsOnName() throws IOException {
+  @Test
+  public void closedWriterThrowsOnName() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -545,7 +584,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void closedWriterThrowsOnValue() throws IOException {
+  @Test
+  public void closedWriterThrowsOnValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -557,7 +597,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void closedWriterThrowsOnFlush() throws IOException {
+  @Test
+  public void closedWriterThrowsOnFlush() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -569,7 +610,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void writerCloseIsIdempotent() throws IOException {
+  @Test
+  public void writerCloseIsIdempotent() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
@@ -577,7 +619,8 @@ public final class JsonWriterTest {
     writer.close();
   }
 
-  @Test public void nameNotInObjectFails() throws IOException {
+  @Test
+  public void nameNotInObjectFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     try {
       writer.name("a");
@@ -587,7 +630,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void missingValueInObjectIsANestingProblem() throws IOException {
+  @Test
+  public void missingValueInObjectIsANestingProblem() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -599,7 +643,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void nameInArrayIsANestingProblem() throws IOException {
+  @Test
+  public void nameInArrayIsANestingProblem() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     try {
@@ -610,7 +655,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void danglingNameFails() throws IOException {
+  @Test
+  public void danglingNameFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -622,7 +668,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueInObject() throws IOException {
+  @Test
+  public void streamingValueInObject() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -637,35 +684,26 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"a\":\"ffffffffffffffffsup-1\"}");
   }
 
-  @Test public void streamingValueInArray() throws IOException {
+  @Test
+  public void streamingValueInArray() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
-    writer.valueSink()
-        .writeByte('"')
-        .writeHexadecimalUnsignedLong(-1L)
-        .writeByte('"')
-        .close();
-    writer.valueSink()
-        .writeByte('"')
-        .writeUtf8("sup")
-        .writeByte('"')
-        .close();
-    writer.valueSink()
-        .writeUtf8("-1.0")
-        .close();
+    writer.valueSink().writeByte('"').writeHexadecimalUnsignedLong(-1L).writeByte('"').close();
+    writer.valueSink().writeByte('"').writeUtf8("sup").writeByte('"').close();
+    writer.valueSink().writeUtf8("-1.0").close();
     writer.endArray();
     assertThat(factory.json()).isEqualTo("[\"ffffffffffffffff\",\"sup\",-1.0]");
   }
 
-  @Test public void streamingValueTopLevel() throws IOException {
+  @Test
+  public void streamingValueTopLevel() throws IOException {
     JsonWriter writer = factory.newWriter();
-    writer.valueSink()
-        .writeUtf8("-1.0")
-        .close();
+    writer.valueSink().writeUtf8("-1.0").close();
     assertThat(factory.json()).isEqualTo("-1.0");
   }
 
-  @Test public void streamingValueTwiceBeforeCloseFails() throws IOException {
+  @Test
+  public void streamingValueTwiceBeforeCloseFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -678,7 +716,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueTwiceAfterCloseFails() throws IOException {
+  @Test
+  public void streamingValueTwiceAfterCloseFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -692,7 +731,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueAndScalarValueFails() throws IOException {
+  @Test
+  public void streamingValueAndScalarValueFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -705,7 +745,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueAndNameFails() throws IOException {
+  @Test
+  public void streamingValueAndNameFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -718,7 +759,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueInteractionAfterCloseFails() throws IOException {
+  @Test
+  public void streamingValueInteractionAfterCloseFails() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -733,7 +775,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void streamingValueCloseIsIdempotent() throws IOException {
+  @Test
+  public void streamingValueCloseIsIdempotent() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.name("a");
@@ -747,7 +790,8 @@ public final class JsonWriterTest {
     sink.close();
   }
 
-  @Test public void jsonValueTypes() throws IOException {
+  @Test
+  public void jsonValueTypes() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.setSerializeNulls(true);
 
@@ -767,21 +811,24 @@ public final class JsonWriterTest {
     writer.jsonValue(map);
     writer.endArray();
 
-    assertThat(factory.json()).isEqualTo("["
-        + "null,"
-        + "1.1,"
-        + "1,"
-        + "1,"
-        + "true,"
-        + "\"one\","
-        + "[],"
-        + "[1,2,null,3],"
-        + "{},"
-        + "{\"one\":\"uno\",\"two\":null}"
-        + "]");
+    assertThat(factory.json())
+        .isEqualTo(
+            "["
+                + "null,"
+                + "1.1,"
+                + "1,"
+                + "1,"
+                + "true,"
+                + "\"one\","
+                + "[],"
+                + "[1,2,null,3],"
+                + "{},"
+                + "{\"one\":\"uno\",\"two\":null}"
+                + "]");
   }
 
-  @Test public void jsonValueIllegalTypes() throws IOException {
+  @Test
+  public void jsonValueIllegalTypes() throws IOException {
     try {
       factory.newWriter().jsonValue(new Object());
       fail();
@@ -815,7 +862,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void promoteStringNameToValue() throws IOException {
+  @Test
+  public void promoteStringNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -825,7 +873,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"a\":\"b\"}");
   }
 
-  @Test public void promoteDoubleNameToValue() throws IOException {
+  @Test
+  public void promoteDoubleNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -835,7 +884,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"5.0\":\"b\"}");
   }
 
-  @Test public void promoteLongNameToValue() throws IOException {
+  @Test
+  public void promoteLongNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -845,7 +895,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"5\":\"b\"}");
   }
 
-  @Test public void promoteNumberNameToValue() throws IOException {
+  @Test
+  public void promoteNumberNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -855,7 +906,8 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{\"1\":\"b\"}");
   }
 
-  @Test public void promoteNullNameToValue() throws IOException {
+  @Test
+  public void promoteNullNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -867,7 +919,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void promoteBooleanNameToValue() throws IOException {
+  @Test
+  public void promoteBooleanNameToValue() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -879,7 +932,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void promoteNameToValueCannotBeWrittenAsName() throws IOException {
+  @Test
+  public void promoteNameToValueCannotBeWrittenAsName() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();
@@ -891,7 +945,8 @@ public final class JsonWriterTest {
     }
   }
 
-  @Test public void promoteNameToValueAtEndOfObject() throws IOException {
+  @Test
+  public void promoteNameToValueAtEndOfObject() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.promoteValueToName();

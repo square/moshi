@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi.recipes;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonQualifier;
@@ -29,38 +31,38 @@ import java.lang.reflect.Type;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 final class FallbackEnum {
   @Retention(RUNTIME)
   @JsonQualifier
   public @interface Fallback {
-    /**
-     * The enum name.
-     */
+    /** The enum name. */
     String value();
   }
 
   public static final class FallbackEnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
-    public static final Factory FACTORY = new Factory() {
-      @Nullable @Override @SuppressWarnings("unchecked")
-      public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-        Class<?> rawType = Types.getRawType(type);
-        if (!rawType.isEnum()) {
-          return null;
-        }
-        if (annotations.size() != 1) {
-          return null;
-        }
-        Annotation annotation = annotations.iterator().next();
-        if (!(annotation instanceof Fallback)) {
-          return null;
-        }
-        Class<Enum> enumType = (Class<Enum>) rawType;
-        Enum<?> fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
-        return new FallbackEnumJsonAdapter<>(enumType, fallback);
-      }
-    };
+    public static final Factory FACTORY =
+        new Factory() {
+          @Nullable
+          @Override
+          @SuppressWarnings("unchecked")
+          public JsonAdapter<?> create(
+              Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+            Class<?> rawType = Types.getRawType(type);
+            if (!rawType.isEnum()) {
+              return null;
+            }
+            if (annotations.size() != 1) {
+              return null;
+            }
+            Annotation annotation = annotations.iterator().next();
+            if (!(annotation instanceof Fallback)) {
+              return null;
+            }
+            Class<Enum> enumType = (Class<Enum>) rawType;
+            Enum<?> fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
+            return new FallbackEnumJsonAdapter<>(enumType, fallback);
+          }
+        };
 
     final Class<T> enumType;
     final String[] nameStrings;
@@ -86,46 +88,51 @@ final class FallbackEnum {
       }
     }
 
-    @Override public T fromJson(JsonReader reader) throws IOException {
+    @Override
+    public T fromJson(JsonReader reader) throws IOException {
       int index = reader.selectString(options);
       if (index != -1) return constants[index];
       reader.nextString();
       return defaultValue;
     }
 
-    @Override public void toJson(JsonWriter writer, T value) throws IOException {
+    @Override
+    public void toJson(JsonWriter writer, T value) throws IOException {
       writer.value(nameStrings[value.ordinal()]);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return "JsonAdapter(" + enumType.getName() + ").defaultValue( " + defaultValue + ")";
     }
   }
 
   static final class Example {
     enum Transportation {
-      WALKING, BIKING, TRAINS, PLANES
+      WALKING,
+      BIKING,
+      TRAINS,
+      PLANES
     }
 
-    @Fallback("WALKING") final Transportation transportation;
+    @Fallback("WALKING")
+    final Transportation transportation;
 
     Example(Transportation transportation) {
       this.transportation = transportation;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return transportation.toString();
     }
   }
 
   public static void main(String[] args) throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(FallbackEnumJsonAdapter.FACTORY)
-        .build();
+    Moshi moshi = new Moshi.Builder().add(FallbackEnumJsonAdapter.FACTORY).build();
     JsonAdapter<Example> adapter = moshi.adapter(Example.class);
     System.out.println(adapter.fromJson("{\"transportation\":\"CARS\"}"));
   }
 
-  private FallbackEnum() {
-  }
+  private FallbackEnum() {}
 }

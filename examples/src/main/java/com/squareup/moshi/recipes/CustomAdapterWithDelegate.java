@@ -15,15 +15,13 @@
  */
 package com.squareup.moshi.recipes;
 
-
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
 import com.squareup.moshi.JsonReader;
-
-import javax.annotation.Nullable;
+import com.squareup.moshi.Moshi;
 import java.io.IOException;
+import javax.annotation.Nullable;
 
 public final class CustomAdapterWithDelegate {
   public void run() throws Exception {
@@ -42,10 +40,14 @@ public final class CustomAdapterWithDelegate {
   }
 
   private enum Stage {
-    @Json(name = "not-started") NOT_STARTED,
-    @Json(name = "in-progress") IN_PROGRESS,
-    @Json(name = "rejected") REJECTED,
-    @Json(name = "completed") COMPLETED
+    @Json(name = "not-started")
+    NOT_STARTED,
+    @Json(name = "in-progress")
+    IN_PROGRESS,
+    @Json(name = "rejected")
+    REJECTED,
+    @Json(name = "completed")
+    COMPLETED
   }
 
   private static final class StageAdapter {

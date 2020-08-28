@@ -15,14 +15,15 @@
  */
 package com.squareup.moshi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import okio.Buffer;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class JsonUtf8WriterTest {
-  @Test public void prettyPrintObject() throws IOException {
+  @Test
+  public void prettyPrintObject() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);
     writer.setSerializeNulls(true);
@@ -43,24 +44,26 @@ public final class JsonUtf8WriterTest {
     writer.endObject();
     writer.endObject();
 
-    String expected = "{\n"
-        + "   \"a\": true,\n"
-        + "   \"b\": false,\n"
-        + "   \"c\": 5.0,\n"
-        + "   \"e\": null,\n"
-        + "   \"f\": [\n"
-        + "      6.0,\n"
-        + "      7.0\n"
-        + "   ],\n"
-        + "   \"g\": {\n"
-        + "      \"h\": 8.0,\n"
-        + "      \"i\": 9.0\n"
-        + "   }\n"
-        + "}";
+    String expected =
+        "{\n"
+            + "   \"a\": true,\n"
+            + "   \"b\": false,\n"
+            + "   \"c\": 5.0,\n"
+            + "   \"e\": null,\n"
+            + "   \"f\": [\n"
+            + "      6.0,\n"
+            + "      7.0\n"
+            + "   ],\n"
+            + "   \"g\": {\n"
+            + "      \"h\": 8.0,\n"
+            + "      \"i\": 9.0\n"
+            + "   }\n"
+            + "}";
     assertThat(buffer.readUtf8()).isEqualTo(expected);
   }
 
-  @Test public void prettyPrintArray() throws IOException {
+  @Test
+  public void prettyPrintArray() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);
     writer.setIndent("   ");
@@ -80,24 +83,26 @@ public final class JsonUtf8WriterTest {
     writer.endArray();
     writer.endArray();
 
-    String expected = "[\n"
-        + "   true,\n"
-        + "   false,\n"
-        + "   5.0,\n"
-        + "   null,\n"
-        + "   {\n"
-        + "      \"a\": 6.0,\n"
-        + "      \"b\": 7.0\n"
-        + "   },\n"
-        + "   [\n"
-        + "      8.0,\n"
-        + "      9.0\n"
-        + "   ]\n"
-        + "]";
+    String expected =
+        "[\n"
+            + "   true,\n"
+            + "   false,\n"
+            + "   5.0,\n"
+            + "   null,\n"
+            + "   {\n"
+            + "      \"a\": 6.0,\n"
+            + "      \"b\": 7.0\n"
+            + "   },\n"
+            + "   [\n"
+            + "      8.0,\n"
+            + "      9.0\n"
+            + "   ]\n"
+            + "]";
     assertThat(buffer.readUtf8()).isEqualTo(expected);
   }
 
-  @Test public void repeatedNameIgnored() throws IOException {
+  @Test
+  public void repeatedNameIgnored() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
@@ -108,7 +113,8 @@ public final class JsonUtf8WriterTest {
     assertThat(buffer.readUtf8()).isEqualTo("{\"a\":1,\"a\":2}");
   }
 
-  @Test public void valueFromSource() throws IOException {
+  @Test
+  public void valueFromSource() throws IOException {
     Buffer buffer = new Buffer();
     JsonWriter writer = JsonUtf8Writer.of(buffer);
     writer.beginObject();

@@ -15,6 +15,9 @@
  */
 package com.squareup.moshi;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -22,9 +25,6 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Type;
 import java.util.Set;
 import org.junit.Test;
-
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public final class CircularAdaptersTest {
   static class Team {
@@ -47,17 +47,22 @@ public final class CircularAdaptersTest {
     }
   }
 
-  @Test public void circularAdapters() throws Exception {
+  @Test
+  public void circularAdapters() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Team> teamAdapter = moshi.adapter(Team.class);
 
-    Team team = new Team("Alice", new Project("King", new Team("Charlie",
-        new Project("Delivery", null))));
-    assertThat(teamAdapter.toJson(team)).isEqualTo("{\"lead\":\"Alice\",\"projects\":[{\"name\":"
-        + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
+    Team team =
+        new Team("Alice", new Project("King", new Team("Charlie", new Project("Delivery", null))));
+    assertThat(teamAdapter.toJson(team))
+        .isEqualTo(
+            "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
+                + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
 
-    Team fromJson = teamAdapter.fromJson("{\"lead\":\"Alice\",\"projects\":[{\"name\":"
-        + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
+    Team fromJson =
+        teamAdapter.fromJson(
+            "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
+                + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
     assertThat(fromJson.lead).isEqualTo("Alice");
     assertThat(fromJson.projects[0].name).isEqualTo("King");
     assertThat(fromJson.projects[0].teams[0].lead).isEqualTo("Charlie");
@@ -66,13 +71,11 @@ public final class CircularAdaptersTest {
 
   @Retention(RUNTIME)
   @JsonQualifier
-  public @interface Left {
-  }
+  public @interface Left {}
 
   @Retention(RUNTIME)
   @JsonQualifier
-  public @interface Right {
-  }
+  public @interface Right {}
 
   static class Node {
     final String name;
@@ -101,8 +104,8 @@ public final class CircularAdaptersTest {
    * work.
    */
   static class PrefixingNodeFactory implements JsonAdapter.Factory {
-    @Override public JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+    @Override
+    public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (type != Node.class) return null;
 
       final String prefix;
@@ -117,11 +120,13 @@ public final class CircularAdaptersTest {
       final JsonAdapter<Node> delegate = moshi.nextAdapter(this, Node.class, Util.NO_ANNOTATIONS);
 
       return new JsonAdapter<Node>() {
-        @Override public void toJson(JsonWriter writer, Node value) throws IOException {
+        @Override
+        public void toJson(JsonWriter writer, Node value) throws IOException {
           delegate.toJson(writer, value.plusPrefix(prefix));
         }
 
-        @Override public Node fromJson(JsonReader reader) throws IOException {
+        @Override
+        public Node fromJson(JsonReader reader) throws IOException {
           Node result = delegate.fromJson(reader);
           return result.minusPrefix(prefix);
         }
@@ -129,26 +134,31 @@ public final class CircularAdaptersTest {
     }
   }
 
-  @Test public void circularAdaptersAndAnnotations() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new PrefixingNodeFactory())
-        .build();
+  @Test
+  public void circularAdaptersAndAnnotations() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new PrefixingNodeFactory()).build();
     JsonAdapter<Node> nodeAdapter = moshi.adapter(Node.class);
 
-    Node tree = new Node("C",
-        new Node("A", null, new Node("B", null, null)),
-        new Node("D", null, new Node("E", null, null)));
-    assertThat(nodeAdapter.toJson(tree)).isEqualTo("{"
-        + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
-        + "\"name\":\"C\","
-        + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
-        + "}");
+    Node tree =
+        new Node(
+            "C",
+            new Node("A", null, new Node("B", null, null)),
+            new Node("D", null, new Node("E", null, null)));
+    assertThat(nodeAdapter.toJson(tree))
+        .isEqualTo(
+            "{"
+                + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
+                + "\"name\":\"C\","
+                + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
+                + "}");
 
-    Node fromJson = nodeAdapter.fromJson("{"
-        + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
-        + "\"name\":\"C\","
-        + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
-        + "}");
+    Node fromJson =
+        nodeAdapter.fromJson(
+            "{"
+                + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
+                + "\"name\":\"C\","
+                + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
+                + "}");
     assertThat(fromJson.name).isEqualTo("C");
     assertThat(fromJson.left.name).isEqualTo("A");
     assertThat(fromJson.left.right.name).isEqualTo("B");

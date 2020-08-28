@@ -52,40 +52,42 @@ private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the 
 
 /** Generates a JSON adapter for a target type. */
 internal class AdapterGenerator(
-    private val target: TargetType,
-    private val propertyList: List<PropertyGenerator>
+  private val target: TargetType,
+  private val propertyList: List<PropertyGenerator>
 ) {
 
   companion object {
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
-        "%T.DEFAULT_CONSTRUCTOR_MARKER", Util::class)
+      "%T.DEFAULT_CONSTRUCTOR_MARKER",
+      Util::class
+    )
     private val CN_MOSHI = Moshi::class.asClassName()
     private val CN_TYPE = Type::class.asClassName()
 
     private val COMMON_SUPPRESS = arrayOf(
-        // https://github.com/square/moshi/issues/1023
-        "DEPRECATION",
-        // Because we look it up reflectively
-        "unused",
-        // Because we include underscores
-        "ClassName",
-        // Because we generate redundant `out` variance for some generics and there's no way
-        // for us to know when it's redundant.
-        "REDUNDANT_PROJECTION",
-        // Because we may generate redundant explicit types for local vars with default values.
-        // Example: 'var fooSet: Boolean = false'
-        "RedundantExplicitType",
-        // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
-        // like for stylistic reasons.
-        "LocalVariableName"
+      // https://github.com/square/moshi/issues/1023
+      "DEPRECATION",
+      // Because we look it up reflectively
+      "unused",
+      // Because we include underscores
+      "ClassName",
+      // Because we generate redundant `out` variance for some generics and there's no way
+      // for us to know when it's redundant.
+      "REDUNDANT_PROJECTION",
+      // Because we may generate redundant explicit types for local vars with default values.
+      // Example: 'var fooSet: Boolean = false'
+      "RedundantExplicitType",
+      // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
+      // like for stylistic reasons.
+      "LocalVariableName"
     ).let { suppressions ->
       AnnotationSpec.builder(Suppress::class)
-          .addMember(
-              suppressions.indices.joinToString { "%S" },
-              *suppressions
-          )
-          .build()
+        .addMember(
+          suppressions.indices.joinToString { "%S" },
+          *suppressions
+        )
+        .build()
     }
   }
 
@@ -94,7 +96,7 @@ internal class AdapterGenerator(
   private val visibility = target.visibility
   private val typeVariables = target.typeVariables
   private val targetConstructorParams = target.constructor.parameters
-      .mapKeys { (_, param) -> param.index }
+    .mapKeys { (_, param) -> param.index }
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
@@ -102,48 +104,57 @@ internal class AdapterGenerator(
   private val originalRawTypeName = originalTypeName.rawType()
 
   private val moshiParam = ParameterSpec.builder(
-      nameAllocator.newName("moshi"),
-      CN_MOSHI).build()
+    nameAllocator.newName("moshi"),
+    CN_MOSHI
+  ).build()
   private val typesParam = ParameterSpec.builder(
-      nameAllocator.newName("types"),
-      ARRAY.parameterizedBy(CN_TYPE))
-      .build()
+    nameAllocator.newName("types"),
+    ARRAY.parameterizedBy(CN_TYPE)
+  )
+    .build()
   private val readerParam = ParameterSpec.builder(
-      nameAllocator.newName("reader"),
-      JsonReader::class)
-      .build()
+    nameAllocator.newName("reader"),
+    JsonReader::class
+  )
+    .build()
   private val writerParam = ParameterSpec.builder(
-      nameAllocator.newName("writer"),
-      JsonWriter::class)
-      .build()
+    nameAllocator.newName("writer"),
+    JsonWriter::class
+  )
+    .build()
   private val valueParam = ParameterSpec.builder(
-      nameAllocator.newName("value"),
-      originalTypeName.copy(nullable = true))
-      .build()
+    nameAllocator.newName("value"),
+    originalTypeName.copy(nullable = true)
+  )
+    .build()
   private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(
-      originalTypeName)
+    originalTypeName
+  )
 
   // selectName() API setup
   private val optionsProperty = PropertySpec.builder(
-      nameAllocator.newName("options"), JsonReader.Options::class.asTypeName(),
-      KModifier.PRIVATE)
-      .initializer(
-          "%T.of(%L)",
-          JsonReader.Options::class.asTypeName(),
-          nonTransientProperties
-              .map { CodeBlock.of("%S", it.jsonName) }
-              .joinToCode(", ")
-      )
-      .build()
+    nameAllocator.newName("options"),
+    JsonReader.Options::class.asTypeName(),
+    KModifier.PRIVATE
+  )
+    .initializer(
+      "%T.of(%L)",
+      JsonReader.Options::class.asTypeName(),
+      nonTransientProperties
+        .map { CodeBlock.of("%S", it.jsonName) }
+        .joinToCode(", ")
+    )
+    .build()
 
   private val constructorProperty = PropertySpec.builder(
-      nameAllocator.newName("constructorRef"),
-      Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true),
-      KModifier.PRIVATE)
-      .addAnnotation(Volatile::class)
-      .mutable(true)
-      .initializer("null")
-      .build()
+    nameAllocator.newName("constructorRef"),
+    Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true),
+    KModifier.PRIVATE
+  )
+    .addAnnotation(Volatile::class)
+    .mutable(true)
+    .initializer("null")
+    .build()
 
   fun prepare(typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
     for (property in nonTransientProperties) {
@@ -159,17 +170,17 @@ internal class AdapterGenerator(
 
   private fun TypeSpec.createProguardRule(): ProguardConfig {
     val adapterProperties = propertySpecs
-        .asSequence()
-        .filter { prop ->
-          prop.type.rawType() == JsonAdapter::class.asClassName()
-        }
-        .filter { prop -> prop.annotations.isNotEmpty() }
-        .mapTo(mutableSetOf()) { prop ->
-          QualifierAdapterProperty(
-              name = prop.name,
-              qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.className }
-          )
-        }
+      .asSequence()
+      .filter { prop ->
+        prop.type.rawType() == JsonAdapter::class.asClassName()
+      }
+      .filter { prop -> prop.annotations.isNotEmpty() }
+      .mapTo(mutableSetOf()) { prop ->
+        QualifierAdapterProperty(
+          name = prop.name,
+          qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.className }
+        )
+      }
 
     val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
       1 -> listOf(CN_MOSHI.reflectionName())
@@ -188,21 +199,21 @@ internal class AdapterGenerator(
       }
       hasDefaultProperties = propertyList.any { it.hasDefault }
       parameterTypes = AsmType.getArgumentTypes(constructorSignature.removePrefix("<init>"))
-          .map { it.toReflectionString() }
+        .map { it.toReflectionString() }
     }
     return ProguardConfig(
-        targetClass = className,
-        adapterName = adapterName,
-        adapterConstructorParams = adapterConstructorParams,
-        targetConstructorHasDefaults = hasDefaultProperties,
-        targetConstructorParams = parameterTypes,
-        qualifierProperties = adapterProperties
+      targetClass = className,
+      adapterName = adapterName,
+      adapterConstructorParams = adapterConstructorParams,
+      targetConstructorHasDefaults = hasDefaultProperties,
+      targetConstructorParams = parameterTypes,
+      qualifierProperties = adapterProperties
     )
   }
 
   private fun generateType(): TypeSpec {
     val result = TypeSpec.classBuilder(adapterName)
-        .addAnnotation(COMMON_SUPPRESS)
+      .addAnnotation(COMMON_SUPPRESS)
 
     result.superclass(jsonAdapterTypeName)
 
@@ -211,19 +222,21 @@ internal class AdapterGenerator(
       // require(types.size == 1) {
       //   "TypeVariable mismatch: Expecting 1 type(s) for generic type variables [T], but received ${types.size} with values $types"
       // }
-      result.addInitializerBlock(CodeBlock.builder()
+      result.addInitializerBlock(
+        CodeBlock.builder()
           .beginControlFlow("require(types.size == %L)", typeVariables.size)
           .addStatement(
-              "buildString·{·append(%S).append(%L).append(%S).append(%S).append(%S).append(%L)·}",
-              "TypeVariable mismatch: Expecting ",
-              typeVariables.size,
-              " ${if (typeVariables.size == 1) "type" else "types"} for generic type variables [",
-              typeVariables.joinToString(", ") { it.name },
-              "], but received ",
-              "${typesParam.name}.size"
+            "buildString·{·append(%S).append(%L).append(%S).append(%S).append(%S).append(%L)·}",
+            "TypeVariable mismatch: Expecting ",
+            typeVariables.size,
+            " ${if (typeVariables.size == 1) "type" else "types"} for generic type variables [",
+            typeVariables.joinToString(", ") { it.name },
+            "], but received ",
+            "${typesParam.name}.size"
           )
           .endControlFlow()
-          .build())
+          .build()
+      )
     }
 
     // TODO make this configurable. Right now it just matches the source model
@@ -243,8 +256,14 @@ internal class AdapterGenerator(
 
     result.addProperty(optionsProperty)
     for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
-      result.addProperty(uniqueAdapter.delegateKey.generateProperty(
-          nameAllocator, typeRenderer, moshiParam, uniqueAdapter.name))
+      result.addProperty(
+        uniqueAdapter.delegateKey.generateProperty(
+          nameAllocator,
+          typeRenderer,
+          moshiParam,
+          uniqueAdapter.name
+        )
+      )
     }
 
     result.addFunction(generateToStringFun())
@@ -269,24 +288,24 @@ internal class AdapterGenerator(
     val name = originalRawTypeName.simpleNames.joinToString(".")
     val size = TO_STRING_SIZE_BASE + name.length
     return FunSpec.builder("toString")
-        .addModifiers(KModifier.OVERRIDE)
-        .returns(String::class)
-        .addStatement(
-            "return %M(%L)·{ append(%S).append(%S).append('%L') }",
-            MemberName("kotlin.text", "buildString"),
-            size,
-            TO_STRING_PREFIX,
-            name,
-            ")"
-        )
-        .build()
+      .addModifiers(KModifier.OVERRIDE)
+      .returns(String::class)
+      .addStatement(
+        "return %M(%L)·{ append(%S).append(%S).append('%L') }",
+        MemberName("kotlin.text", "buildString"),
+        size,
+        TO_STRING_PREFIX,
+        name,
+        ")"
+      )
+      .build()
   }
 
   private fun generateFromJsonFun(classBuilder: TypeSpec.Builder): FunSpec {
     val result = FunSpec.builder("fromJson")
-        .addModifiers(KModifier.OVERRIDE)
-        .addParameter(readerParam)
-        .returns(originalTypeName)
+      .addModifiers(KModifier.OVERRIDE)
+      .addParameter(readerParam)
+      .returns(originalTypeName)
 
     for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
@@ -296,8 +315,8 @@ internal class AdapterGenerator(
     }
 
     val propertiesByIndex = propertyList.asSequence()
-        .filter { it.hasConstructorParameter }
-        .associateBy { it.target.parameterIndex }
+      .filter { it.hasConstructorParameter }
+      .associateBy { it.target.parameterIndex }
     val components = mutableListOf<FromJsonComponent>()
 
     // Add parameters (± properties) first, their index matters
@@ -333,7 +352,7 @@ internal class AdapterGenerator(
       nameAllocator.newName("mask$index")
     }
     val useDefaultsConstructor = components.filterIsInstance<ParameterComponent>()
-        .any { it.parameter.hasDefault }
+      .any { it.parameter.hasDefault }
     if (useDefaultsConstructor) {
       // Initialize all our masks, defaulting to fully unset (-1)
       for (maskName in maskNames) {
@@ -372,7 +391,8 @@ internal class AdapterGenerator(
 
     for (input in components) {
       if (input is ParameterOnly ||
-          (input is ParameterProperty && input.property.isTransient)) {
+        (input is ParameterProperty && input.property.isTransient)
+      ) {
         updateMaskIndexes()
         constructorPropertyTypes += input.type.asTypeBlock()
         continue
@@ -387,18 +407,30 @@ internal class AdapterGenerator(
       if (property.hasLocalIsPresentName || property.hasConstructorDefault) {
         result.beginControlFlow("%L ->", propertyIndex)
         if (property.delegateKey.nullable) {
-          result.addStatement("%N = %N.fromJson(%N)",
-              property.localName, nameAllocator[property.delegateKey], readerParam)
+          result.addStatement(
+            "%N = %N.fromJson(%N)",
+            property.localName,
+            nameAllocator[property.delegateKey],
+            readerParam
+          )
         } else {
           val exception = unexpectedNull(property, readerParam)
-          result.addStatement("%N = %N.fromJson(%N) ?: throw·%L",
-              property.localName, nameAllocator[property.delegateKey], readerParam, exception)
+          result.addStatement(
+            "%N = %N.fromJson(%N) ?: throw·%L",
+            property.localName,
+            nameAllocator[property.delegateKey],
+            readerParam,
+            exception
+          )
         }
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
-          result.addStatement("%1L = %1L and 0x%2L.toInt()", maskNames[maskNameIndex],
-              Integer.toHexString(inverted))
+          result.addStatement(
+            "%1L = %1L and 0x%2L.toInt()",
+            maskNames[maskNameIndex],
+            Integer.toHexString(inverted)
+          )
         } else {
           // Presence tracker for a mutable property
           result.addStatement("%N = true", property.localIsPresentName)
@@ -406,13 +438,23 @@ internal class AdapterGenerator(
         result.endControlFlow()
       } else {
         if (property.delegateKey.nullable) {
-          result.addStatement("%L -> %N = %N.fromJson(%N)",
-              propertyIndex, property.localName, nameAllocator[property.delegateKey], readerParam)
+          result.addStatement(
+            "%L -> %N = %N.fromJson(%N)",
+            propertyIndex,
+            property.localName,
+            nameAllocator[property.delegateKey],
+            readerParam
+          )
         } else {
           val exception = unexpectedNull(property, readerParam)
-          result.addStatement("%L -> %N = %N.fromJson(%N) ?: throw·%L",
-              propertyIndex, property.localName, nameAllocator[property.delegateKey], readerParam,
-              exception)
+          result.addStatement(
+            "%L -> %N = %N.fromJson(%N) ?: throw·%L",
+            propertyIndex,
+            property.localName,
+            nameAllocator[property.delegateKey],
+            readerParam,
+            exception
+          )
         }
       }
       if (property.hasConstructorParameter) {
@@ -447,13 +489,13 @@ internal class AdapterGenerator(
       // Dynamic default constructor call
       val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
       val args = constructorPropertyTypes
-          .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
-          .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
-          .joinToCode(", ")
+        .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
+        .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
+        .joinToCode(", ")
       val coreLookupBlock = CodeBlock.of(
-          "%T::class.java.getDeclaredConstructor(%L)",
-          originalRawTypeName,
-          args
+        "%T::class.java.getDeclaredConstructor(%L)",
+        originalRawTypeName,
+        args
       )
       val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
         CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
@@ -461,23 +503,26 @@ internal class AdapterGenerator(
         coreLookupBlock
       }
       val initializerBlock = CodeBlock.of(
-          "this.%1N·?: %2L.also·{ this.%1N·= it }",
-          constructorProperty,
-          lookupBlock
+        "this.%1N·?: %2L.also·{ this.%1N·= it }",
+        constructorProperty,
+        lookupBlock
       )
       val localConstructorProperty = PropertySpec.builder(
-          nameAllocator.newName("localConstructor"),
-          nonNullConstructorType)
-          .addAnnotation(AnnotationSpec.builder(Suppress::class)
-              .addMember("%S", "UNCHECKED_CAST")
-              .build())
-          .initializer(initializerBlock)
-          .build()
+        nameAllocator.newName("localConstructor"),
+        nonNullConstructorType
+      )
+        .addAnnotation(
+          AnnotationSpec.builder(Suppress::class)
+            .addMember("%S", "UNCHECKED_CAST")
+            .build()
+        )
+        .initializer(initializerBlock)
+        .build()
       result.addCode("%L", localConstructorProperty)
       result.addCode(
-          "«%L%N.newInstance(",
-          returnOrResultAssignment,
-          localConstructorProperty
+        "«%L%N.newInstance(",
+        returnOrResultAssignment,
+        localConstructorProperty
       )
     } else {
       // Standard constructor call. Don't omit generics for parameterized types even if they can be
@@ -505,8 +550,13 @@ internal class AdapterGenerator(
         val property = input.property
         if (!property.isTransient && property.isRequired) {
           val missingPropertyBlock =
-              CodeBlock.of("%T.missingProperty(%S, %S, %N)",
-                  MOSHI_UTIL, property.localName, property.jsonName, readerParam)
+            CodeBlock.of(
+              "%T.missingProperty(%S, %S, %N)",
+              MOSHI_UTIL,
+              property.localName,
+              property.jsonName,
+              readerParam
+            )
           result.addCode(" ?: throw·%L", missingPropertyBlock)
         }
       }
@@ -526,11 +576,20 @@ internal class AdapterGenerator(
         continue // Property already handled.
       }
       if (property.hasLocalIsPresentName) {
-        result.addStatement("%1N.%2N = if (%3N) %4N else %1N.%2N",
-            resultName, property.name, property.localIsPresentName, property.localName)
+        result.addStatement(
+          "%1N.%2N = if (%3N) %4N else %1N.%2N",
+          resultName,
+          property.name,
+          property.localIsPresentName,
+          property.localName
+        )
       } else {
-        result.addStatement("%1N.%2N = %3N ?: %1N.%2N",
-            resultName, property.name, property.localName)
+        result.addStatement(
+          "%1N.%2N = %3N ?: %1N.%2N",
+          resultName,
+          property.name,
+          property.localName
+        )
       }
     }
 
@@ -541,27 +600,40 @@ internal class AdapterGenerator(
   }
 
   private fun unexpectedNull(property: PropertyGenerator, reader: ParameterSpec): CodeBlock {
-    return CodeBlock.of("%T.unexpectedNull(%S, %S, %N)",
-        MOSHI_UTIL, property.localName, property.jsonName, reader)
+    return CodeBlock.of(
+      "%T.unexpectedNull(%S, %S, %N)",
+      MOSHI_UTIL,
+      property.localName,
+      property.jsonName,
+      reader
+    )
   }
 
   private fun generateToJsonFun(): FunSpec {
     val result = FunSpec.builder("toJson")
-        .addModifiers(KModifier.OVERRIDE)
-        .addParameter(writerParam)
-        .addParameter(valueParam)
+      .addModifiers(KModifier.OVERRIDE)
+      .addParameter(writerParam)
+      .addParameter(valueParam)
 
     result.beginControlFlow("if (%N == null)", valueParam)
-    result.addStatement("throw·%T(%S)", NullPointerException::class,
-        "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.")
+    result.addStatement(
+      "throw·%T(%S)",
+      NullPointerException::class,
+      "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values."
+    )
     result.endControlFlow()
 
     result.addStatement("%N.beginObject()", writerParam)
     nonTransientProperties.forEach { property ->
       // We manually put in quotes because we know the jsonName is already escaped
       result.addStatement("%N.name(%S)", writerParam, property.jsonName)
-      result.addStatement("%N.toJson(%N, %N.%N)",
-          nameAllocator[property.delegateKey], writerParam, valueParam, property.name)
+      result.addStatement(
+        "%N.toJson(%N, %N.%N)",
+        nameAllocator[property.delegateKey],
+        writerParam,
+        valueParam,
+        property.name
+      )
     }
     result.addStatement("%N.endObject()", writerParam)
 
@@ -610,20 +682,20 @@ private sealed class FromJsonComponent {
   abstract val type: TypeName
 
   data class ParameterOnly(
-      override val parameter: TargetParameter
+    override val parameter: TargetParameter
   ) : FromJsonComponent(), ParameterComponent {
     override val type: TypeName = parameter.type
   }
 
   data class PropertyOnly(
-      override val property: PropertyGenerator
+    override val property: PropertyGenerator
   ) : FromJsonComponent(), PropertyComponent {
     override val type: TypeName = property.target.type
   }
 
   data class ParameterProperty(
-      override val parameter: TargetParameter,
-      override val property: PropertyGenerator
+    override val parameter: TargetParameter,
+    override val property: PropertyGenerator
   ) : FromJsonComponent(), ParameterComponent, PropertyComponent {
     override val type: TypeName = parameter.type
   }

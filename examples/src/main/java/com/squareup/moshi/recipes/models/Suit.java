@@ -16,9 +16,13 @@
 package com.squareup.moshi.recipes.models;
 
 public enum Suit {
-  CLUBS, DIAMONDS, HEARTS, SPADES;
+  CLUBS,
+  DIAMONDS,
+  HEARTS,
+  SPADES;
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return name().substring(0, 1);
   }
 }

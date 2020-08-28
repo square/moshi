@@ -12,11 +12,11 @@ class KotlinJsonAdapterTest {
   @Test
   fun fallsBackToReflectiveAdapterWithoutCodegen() {
     val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
+      .add(KotlinJsonAdapterFactory())
+      .build()
     val adapter = moshi.adapter(Data::class.java)
     assertThat(adapter.toString()).isEqualTo(
-        "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
+      "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
     )
   }
 }

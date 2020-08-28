@@ -25,11 +25,12 @@ public final class RecoverFromTypeMismatch {
   public void run() throws Exception {
     String json = "[\"DIAMONDS\", \"STARS\", \"HEARTS\"]";
 
-    Moshi moshi = new Moshi.Builder()
-        .add(DefaultOnDataMismatchAdapter.newFactory(Suit.class, Suit.CLUBS))
-        .build();
-    JsonAdapter<List<Suit>> jsonAdapter = moshi.adapter(
-        Types.newParameterizedType(List.class, Suit.class));
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(DefaultOnDataMismatchAdapter.newFactory(Suit.class, Suit.CLUBS))
+            .build();
+    JsonAdapter<List<Suit>> jsonAdapter =
+        moshi.adapter(Types.newParameterizedType(List.class, Suit.class));
 
     List<Suit> suits = jsonAdapter.fromJson(json);
     System.out.println(suits);

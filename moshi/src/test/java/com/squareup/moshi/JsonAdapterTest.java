@@ -15,6 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,10 +32,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-
 @RunWith(Parameterized.class)
 public final class JsonAdapterTest {
   @Parameter public JsonCodecFactory factory;
@@ -41,16 +41,20 @@ public final class JsonAdapterTest {
     return JsonCodecFactory.factories();
   }
 
-  @Test public void lenient() throws Exception {
-    JsonAdapter<Double> lenient = new JsonAdapter<Double>() {
-      @Override public Double fromJson(JsonReader reader) throws IOException {
-        return reader.nextDouble();
-      }
+  @Test
+  public void lenient() throws Exception {
+    JsonAdapter<Double> lenient =
+        new JsonAdapter<Double>() {
+          @Override
+          public Double fromJson(JsonReader reader) throws IOException {
+            return reader.nextDouble();
+          }
 
-      @Override public void toJson(JsonWriter writer, Double value) throws IOException {
-        writer.value(value);
-      }
-    }.lenient();
+          @Override
+          public void toJson(JsonWriter writer, Double value) throws IOException {
+            writer.value(value);
+          }
+        }.lenient();
 
     JsonReader reader = factory.newReader("[-Infinity, NaN, Infinity]");
     reader.beginArray();
@@ -68,16 +72,20 @@ public final class JsonAdapterTest {
     assertThat(factory.json()).isEqualTo("[-Infinity,NaN,Infinity]");
   }
 
-  @Test public void nullSafe() throws Exception {
-    JsonAdapter<String> toUpperCase = new JsonAdapter<String>() {
-      @Override public String fromJson(JsonReader reader) throws IOException {
-        return reader.nextString().toUpperCase(Locale.US);
-      }
+  @Test
+  public void nullSafe() throws Exception {
+    JsonAdapter<String> toUpperCase =
+        new JsonAdapter<String>() {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
+            return reader.nextString().toUpperCase(Locale.US);
+          }
 
-      @Override public void toJson(JsonWriter writer, String value) throws IOException {
-        writer.value(value.toUpperCase(Locale.US));
-      }
-    }.nullSafe();
+          @Override
+          public void toJson(JsonWriter writer, String value) throws IOException {
+            writer.value(value.toUpperCase(Locale.US));
+          }
+        }.nullSafe();
 
     JsonReader reader = factory.newReader("[\"a\", null, \"c\"]");
     reader.beginArray();
@@ -95,16 +103,20 @@ public final class JsonAdapterTest {
     assertThat(factory.json()).isEqualTo("[\"A\",null,\"C\"]");
   }
 
-  @Test public void nonNull() throws Exception {
-    JsonAdapter<String> toUpperCase = new JsonAdapter<String>() {
-      @Override public String fromJson(JsonReader reader) throws IOException {
-        return reader.nextString().toUpperCase(Locale.US);
-      }
+  @Test
+  public void nonNull() throws Exception {
+    JsonAdapter<String> toUpperCase =
+        new JsonAdapter<String>() {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
+            return reader.nextString().toUpperCase(Locale.US);
+          }
 
-      @Override public void toJson(JsonWriter writer, String value) throws IOException {
-        writer.value(value.toUpperCase(Locale.US));
-      }
-    }.nonNull();
+          @Override
+          public void toJson(JsonWriter writer, String value) throws IOException {
+            writer.value(value.toUpperCase(Locale.US));
+          }
+        }.nonNull();
 
     JsonReader reader = factory.newReader("[\"a\", null, \"c\"]");
     reader.beginArray();
@@ -134,17 +146,21 @@ public final class JsonAdapterTest {
     assertThat(factory.json()).isEqualTo("[\"A\",null,\"C\"]");
   }
 
-  @Test public void failOnUnknown() throws Exception {
-    JsonAdapter<String> alwaysSkip = new JsonAdapter<String>() {
-      @Override public String fromJson(JsonReader reader) throws IOException {
-        reader.skipValue();
-        throw new AssertionError();
-      }
+  @Test
+  public void failOnUnknown() throws Exception {
+    JsonAdapter<String> alwaysSkip =
+        new JsonAdapter<String>() {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
+            reader.skipValue();
+            throw new AssertionError();
+          }
 
-      @Override public void toJson(JsonWriter writer, String value) throws IOException {
-        throw new AssertionError();
-      }
-    }.failOnUnknown();
+          @Override
+          public void toJson(JsonWriter writer, String value) throws IOException {
+            throw new AssertionError();
+          }
+        }.failOnUnknown();
 
     JsonReader reader = factory.newReader("[\"a\"]");
     reader.beginArray();
@@ -158,43 +174,47 @@ public final class JsonAdapterTest {
     reader.endArray();
   }
 
-  @Test public void indent() throws Exception {
+  @Test
+  public void indent() throws Exception {
     assumeTrue(factory.encodesToBytes());
 
-    JsonAdapter<List<String>> indent = new JsonAdapter<List<String>>() {
-      @Override public List<String> fromJson(JsonReader reader) throws IOException {
-        throw new AssertionError();
-      }
+    JsonAdapter<List<String>> indent =
+        new JsonAdapter<List<String>>() {
+          @Override
+          public List<String> fromJson(JsonReader reader) throws IOException {
+            throw new AssertionError();
+          }
 
-      @Override public void toJson(JsonWriter writer, List<String> value) throws IOException {
-        writer.beginArray();
-        for (String s : value) {
-          writer.value(s);
-        }
-        writer.endArray();
-      }
-    }.indent("\t\t\t");
+          @Override
+          public void toJson(JsonWriter writer, List<String> value) throws IOException {
+            writer.beginArray();
+            for (String s : value) {
+              writer.value(s);
+            }
+            writer.endArray();
+          }
+        }.indent("\t\t\t");
 
     JsonWriter writer = factory.newWriter();
     indent.toJson(writer, Arrays.asList("a", "b", "c"));
-    assertThat(factory.json()).isEqualTo(""
-        + "[\n"
-        + "\t\t\t\"a\",\n"
-        + "\t\t\t\"b\",\n"
-        + "\t\t\t\"c\"\n"
-        + "]");
+    assertThat(factory.json())
+        .isEqualTo("" + "[\n" + "\t\t\t\"a\",\n" + "\t\t\t\"b\",\n" + "\t\t\t\"c\"\n" + "]");
   }
 
-  @Test public void indentDisallowsNull() throws Exception {
-    JsonAdapter<Object> adapter = new JsonAdapter<Object>() {
-      @Override public Object fromJson(JsonReader reader) {
-        throw new AssertionError();
-      }
+  @Test
+  public void indentDisallowsNull() throws Exception {
+    JsonAdapter<Object> adapter =
+        new JsonAdapter<Object>() {
+          @Override
+          public Object fromJson(JsonReader reader) {
+            throw new AssertionError();
+          }
 
-      @Override public void toJson(JsonWriter writer, Object value) {
-        throw new AssertionError();
-      }
-    };
+          @Override
+          public void toJson(JsonWriter writer, Object value) {
+            throw new AssertionError();
+          }
+        };
     try {
       adapter.indent(null);
       fail();
@@ -203,36 +223,44 @@ public final class JsonAdapterTest {
     }
   }
 
-  @Test public void serializeNulls() throws Exception {
-    JsonAdapter<Map<String, String>> serializeNulls = new JsonAdapter<Map<String, String>>() {
-      @Override public Map<String, String> fromJson(JsonReader reader) throws IOException {
-        throw new AssertionError();
-      }
+  @Test
+  public void serializeNulls() throws Exception {
+    JsonAdapter<Map<String, String>> serializeNulls =
+        new JsonAdapter<Map<String, String>>() {
+          @Override
+          public Map<String, String> fromJson(JsonReader reader) throws IOException {
+            throw new AssertionError();
+          }
 
-      @Override public void toJson(JsonWriter writer, Map<String, String> map) throws IOException {
-        writer.beginObject();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-          writer.name(entry.getKey()).value(entry.getValue());
-        }
-        writer.endObject();
-      }
-    }.serializeNulls();
+          @Override
+          public void toJson(JsonWriter writer, Map<String, String> map) throws IOException {
+            writer.beginObject();
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+              writer.name(entry.getKey()).value(entry.getValue());
+            }
+            writer.endObject();
+          }
+        }.serializeNulls();
 
     JsonWriter writer = factory.newWriter();
     serializeNulls.toJson(writer, Collections.<String, String>singletonMap("a", null));
     assertThat(factory.json()).isEqualTo("{\"a\":null}");
   }
 
-  @Test public void stringDocumentMustBeFullyConsumed() throws IOException {
-    JsonAdapter<String> brokenAdapter = new JsonAdapter<String>() {
-      @Override public String fromJson(JsonReader reader) throws IOException {
-        return "Forgot to call reader.nextString().";
-      }
+  @Test
+  public void stringDocumentMustBeFullyConsumed() throws IOException {
+    JsonAdapter<String> brokenAdapter =
+        new JsonAdapter<String>() {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
+            return "Forgot to call reader.nextString().";
+          }
 
-      @Override public void toJson(JsonWriter writer, @Nullable String value) throws IOException {
-        throw new AssertionError();
-      }
-    };
+          @Override
+          public void toJson(JsonWriter writer, @Nullable String value) throws IOException {
+            throw new AssertionError();
+          }
+        };
     try {
       brokenAdapter.fromJson("\"value\"");
       fail();
@@ -241,57 +269,71 @@ public final class JsonAdapterTest {
     }
   }
 
-  @Test public void adapterFromJsonStringPeeksAtEnd() throws IOException {
-    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
-      @Override public Boolean fromJson(JsonReader reader) throws IOException {
-        return reader.nextBoolean();
-      }
+  @Test
+  public void adapterFromJsonStringPeeksAtEnd() throws IOException {
+    JsonAdapter<Boolean> adapter =
+        new JsonAdapter<Boolean>() {
+          @Override
+          public Boolean fromJson(JsonReader reader) throws IOException {
+            return reader.nextBoolean();
+          }
 
-      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
-        throw new AssertionError();
-      }
-    };
+          @Override
+          public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+            throw new AssertionError();
+          }
+        };
     try {
       adapter.fromJson("true true");
       fail();
     } catch (JsonEncodingException e) {
-      assertThat(e).hasMessage(
-          "Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+      assertThat(e)
+          .hasMessage("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
     }
   }
 
-  @Test public void lenientAdapterFromJsonStringDoesNotPeekAtEnd() throws IOException {
-    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
-      @Override public Boolean fromJson(JsonReader reader) throws IOException {
-        return reader.nextBoolean();
-      }
+  @Test
+  public void lenientAdapterFromJsonStringDoesNotPeekAtEnd() throws IOException {
+    JsonAdapter<Boolean> adapter =
+        new JsonAdapter<Boolean>() {
+          @Override
+          public Boolean fromJson(JsonReader reader) throws IOException {
+            return reader.nextBoolean();
+          }
 
-      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
-        throw new AssertionError();
-      }
-    }.lenient();
+          @Override
+          public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+            throw new AssertionError();
+          }
+        }.lenient();
     assertThat(adapter.fromJson("true true")).isEqualTo(true);
   }
 
-  @Test public void adaptersDelegateLeniency() throws IOException {
-    JsonAdapter<Boolean> adapter = new JsonAdapter<Boolean>() {
-      @Override public Boolean fromJson(JsonReader reader) throws IOException {
-        return reader.nextBoolean();
-      }
+  @Test
+  public void adaptersDelegateLeniency() throws IOException {
+    JsonAdapter<Boolean> adapter =
+        new JsonAdapter<Boolean>() {
+          @Override
+          public Boolean fromJson(JsonReader reader) throws IOException {
+            return reader.nextBoolean();
+          }
 
-      @Override public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
-        throw new AssertionError();
-      }
-    }.lenient().serializeNulls();
+          @Override
+          public void toJson(JsonWriter writer, @Nullable Boolean value) throws IOException {
+            throw new AssertionError();
+          }
+        }.lenient().serializeNulls();
     assertThat(adapter.fromJson("true true")).isEqualTo(true);
   }
 
-  @Test public void nullSafeDoesntDuplicate() {
+  @Test
+  public void nullSafeDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nullSafe();
     assertThat(adapter.nullSafe()).isSameAs(adapter);
   }
 
-  @Test public void nonNullDoesntDuplicate() {
+  @Test
+  public void nonNullDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
     assertThat(adapter.nonNull()).isSameAs(adapter);
   }

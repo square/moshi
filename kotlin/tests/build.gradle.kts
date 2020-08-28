@@ -23,9 +23,9 @@ plugins {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     freeCompilerArgs = listOf(
-        "-Werror",
-        "-Xopt-in=kotlin.ExperimentalStdlibApi",
-        "-Xinline-classes"
+      "-Werror",
+      "-Xopt-in=kotlin.ExperimentalStdlibApi",
+      "-Xinline-classes"
     )
   }
 }

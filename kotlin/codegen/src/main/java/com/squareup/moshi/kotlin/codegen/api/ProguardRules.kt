@@ -20,20 +20,20 @@ import javax.tools.StandardLocation
  * class with a deterministic name (see [outputFile]) with an appropriate originating element.
  */
 internal data class ProguardConfig(
-    val targetClass: ClassName,
-    val adapterName: String,
-    val adapterConstructorParams: List<String>,
-    val targetConstructorHasDefaults: Boolean,
-    val targetConstructorParams: List<String>,
-    val qualifierProperties: Set<QualifierAdapterProperty>
+  val targetClass: ClassName,
+  val adapterName: String,
+  val adapterConstructorParams: List<String>,
+  val targetConstructorHasDefaults: Boolean,
+  val targetConstructorParams: List<String>,
+  val qualifierProperties: Set<QualifierAdapterProperty>
 ) {
   private val outputFile = "META-INF/proguard/moshi-${targetClass.canonicalName}.pro"
 
   /** Writes this to `filer`. */
   fun writeTo(filer: Filer, vararg originatingElements: Element) {
     filer.createResource(StandardLocation.CLASS_OUTPUT, "", outputFile, *originatingElements)
-        .openWriter()
-        .use(::writeTo)
+      .openWriter()
+      .use(::writeTo)
   }
 
   private fun writeTo(out: Appendable): Unit = out.run {
@@ -64,13 +64,13 @@ internal data class ProguardConfig(
     appendln("}")
 
     qualifierProperties.asSequence()
-        .flatMap { it.qualifiers.asSequence() }
-        .map(ClassName::reflectionName)
-        .sorted()
-        .forEach { qualifier ->
-          appendln("-if class $targetName")
-          appendln("-keep @interface $qualifier")
-        }
+      .flatMap { it.qualifiers.asSequence() }
+      .map(ClassName::reflectionName)
+      .sorted()
+      .forEach { qualifier ->
+        appendln("-if class $targetName")
+        appendln("-keep @interface $qualifier")
+      }
 
     if (targetConstructorHasDefaults) {
       // If the target class has default parameter values, keep its synthetic constructor

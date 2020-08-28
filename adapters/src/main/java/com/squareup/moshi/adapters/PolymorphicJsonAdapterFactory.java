@@ -38,50 +38,47 @@ import javax.annotation.Nullable;
  *
  * <p>Suppose we have an interface, its implementations, and a class that uses them:
  *
- * <pre> {@code
+ * <pre>{@code
+ * interface HandOfCards {
+ * }
  *
- *   interface HandOfCards {
- *   }
+ * class BlackjackHand implements HandOfCards {
+ *   Card hidden_card;
+ *   List<Card> visible_cards;
+ * }
  *
- *   class BlackjackHand implements HandOfCards {
- *     Card hidden_card;
- *     List<Card> visible_cards;
- *   }
+ * class HoldemHand implements HandOfCards {
+ *   Set<Card> hidden_cards;
+ * }
  *
- *   class HoldemHand implements HandOfCards {
- *     Set<Card> hidden_cards;
- *   }
- *
- *   class Player {
- *     String name;
- *     HandOfCards hand;
- *   }
+ * class Player {
+ *   String name;
+ *   HandOfCards hand;
+ * }
  * }</pre>
  *
  * <p>We want to decode the following JSON into the player model above:
  *
- * <pre> {@code
- *
- *   {
- *     "name": "Jesse",
- *     "hand": {
- *       "hand_type": "blackjack",
- *       "hidden_card": "9D",
- *       "visible_cards": ["8H", "4C"]
- *     }
+ * <pre>{@code
+ * {
+ *   "name": "Jesse",
+ *   "hand": {
+ *     "hand_type": "blackjack",
+ *     "hidden_card": "9D",
+ *     "visible_cards": ["8H", "4C"]
  *   }
+ * }
  * }</pre>
  *
  * <p>Left unconfigured, Moshi would incorrectly attempt to decode the hand object to the abstract
  * {@code HandOfCards} interface. We configure it to use the appropriate subtype instead:
  *
- * <pre> {@code
- *
- *   Moshi moshi = new Moshi.Builder()
- *       .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
- *           .withSubtype(BlackjackHand.class, "blackjack")
- *           .withSubtype(HoldemHand.class, "holdem"))
- *       .build();
+ * <pre>{@code
+ * Moshi moshi = new Moshi.Builder()
+ *     .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
+ *         .withSubtype(BlackjackHand.class, "blackjack")
+ *         .withSubtype(HoldemHand.class, "holdem"))
+ *     .build();
  * }</pre>
  *
  * <p>This class imposes strict requirements on its use:
@@ -95,23 +92,25 @@ import javax.annotation.Nullable;
  *   <li>Each type identifier must be unique.
  * </ul>
  *
- * <p>For best performance type information should be the first field in the object. Otherwise
- * Moshi must reprocess the JSON stream once it knows the object's type.
+ * <p>For best performance type information should be the first field in the object. Otherwise Moshi
+ * must reprocess the JSON stream once it knows the object's type.
  *
  * <p>If an unknown subtype is encountered when decoding:
- *  <ul>
- *    <li>If {@link #withDefaultValue(Object)} is used, then {@code defaultValue} will be returned.
- *    <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the
- *        {@code fallbackJsonAdapter.fromJson(reader)} result will be returned.
- *    <li>Otherwise a {@link JsonDataException} will be thrown.
- *  </ul>
+ *
+ * <ul>
+ *   <li>If {@link #withDefaultValue(Object)} is used, then {@code defaultValue} will be returned.
+ *   <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the {@code
+ *       fallbackJsonAdapter.fromJson(reader)} result will be returned.
+ *   <li>Otherwise a {@link JsonDataException} will be thrown.
+ * </ul>
  *
  * <p>If an unknown type is encountered when encoding:
- *  <ul>
- *    <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the
- *        {@code fallbackJsonAdapter.toJson(writer, value)} result will be returned.
- *    <li>Otherwise a {@link IllegalArgumentException} will be thrown.
- *  </ul>
+ *
+ * <ul>
+ *   <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the {@code
+ *       fallbackJsonAdapter.toJson(writer, value)} result will be returned.
+ *   <li>Otherwise a {@link IllegalArgumentException} will be thrown.
+ * </ul>
  *
  * <p>If the same subtype has multiple labels the first one is used when encoding.
  */
@@ -145,16 +144,10 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     if (baseType == null) throw new NullPointerException("baseType == null");
     if (labelKey == null) throw new NullPointerException("labelKey == null");
     return new PolymorphicJsonAdapterFactory<>(
-        baseType,
-        labelKey,
-        Collections.<String>emptyList(),
-        Collections.<Type>emptyList(),
-        null);
+        baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList(), null);
   }
 
-  /**
-   * Returns a new factory that decodes instances of {@code subtype}.
-   */
+  /** Returns a new factory that decodes instances of {@code subtype}. */
   public PolymorphicJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
     if (subtype == null) throw new NullPointerException("subtype == null");
     if (label == null) throw new NullPointerException("label == null");
@@ -165,27 +158,21 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     newLabels.add(label);
     List<Type> newSubtypes = new ArrayList<>(subtypes);
     newSubtypes.add(subtype);
-    return new PolymorphicJsonAdapterFactory<>(baseType,
-        labelKey,
-        newLabels,
-        newSubtypes,
-        fallbackJsonAdapter);
+    return new PolymorphicJsonAdapterFactory<>(
+        baseType, labelKey, newLabels, newSubtypes, fallbackJsonAdapter);
   }
 
   /**
-   * Returns a new factory that with default to {@code fallbackJsonAdapter.fromJson(reader)}
-   * upon decoding of unrecognized labels.
+   * Returns a new factory that with default to {@code fallbackJsonAdapter.fromJson(reader)} upon
+   * decoding of unrecognized labels.
    *
    * <p>The {@link JsonReader} instance will not be automatically consumed, so sure to consume it
    * within your implementation of {@link JsonAdapter#fromJson(JsonReader)}
    */
   public PolymorphicJsonAdapterFactory<T> withFallbackJsonAdapter(
       @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
-    return new PolymorphicJsonAdapterFactory<>(baseType,
-        labelKey,
-        labels,
-        subtypes,
-        fallbackJsonAdapter);
+    return new PolymorphicJsonAdapterFactory<>(
+        baseType, labelKey, labels, subtypes, fallbackJsonAdapter);
   }
 
   /**
@@ -198,14 +185,22 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
   private JsonAdapter<Object> buildFallbackJsonAdapter(final T defaultValue) {
     return new JsonAdapter<Object>() {
-      @Override public @Nullable Object fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable Object fromJson(JsonReader reader) throws IOException {
         reader.skipValue();
         return defaultValue;
       }
 
-      @Override public void toJson(JsonWriter writer, Object value) throws IOException {
-        throw new IllegalArgumentException("Expected one of " + subtypes + " but found " + value
-            + ", a " + value.getClass() + ". Register this subtype.");
+      @Override
+      public void toJson(JsonWriter writer, Object value) throws IOException {
+        throw new IllegalArgumentException(
+            "Expected one of "
+                + subtypes
+                + " but found "
+                + value
+                + ", a "
+                + value.getClass()
+                + ". Register this subtype.");
       }
     };
   }
@@ -221,12 +216,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }
 
-    return new PolymorphicJsonAdapter(labelKey,
-        labels,
-        subtypes,
-        jsonAdapters,
-        fallbackJsonAdapter
-    ).nullSafe();
+    return new PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+        .nullSafe();
   }
 
   static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {
@@ -241,7 +232,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     /** Corresponds to subtypes. */
     final JsonReader.Options labelOptions;
 
-    PolymorphicJsonAdapter(String labelKey,
+    PolymorphicJsonAdapter(
+        String labelKey,
         List<String> labels,
         List<Type> subtypes,
         List<JsonAdapter<Object>> jsonAdapters,
@@ -256,7 +248,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
     }
 
-    @Override public Object fromJson(JsonReader reader) throws IOException {
+    @Override
+    public Object fromJson(JsonReader reader) throws IOException {
       JsonReader peeked = reader.peekJson();
       peeked.setFailOnUnknown(false);
       int labelIndex;
@@ -283,8 +276,14 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
         int labelIndex = reader.selectString(labelOptions);
         if (labelIndex == -1 && this.fallbackJsonAdapter == null) {
-          throw new JsonDataException("Expected one of " + labels + " for key '" + labelKey
-              + "' but found '" + reader.nextString() + "'. Register a subtype for this label.");
+          throw new JsonDataException(
+              "Expected one of "
+                  + labels
+                  + " for key '"
+                  + labelKey
+                  + "' but found '"
+                  + reader.nextString()
+                  + "'. Register a subtype for this label.");
         }
         return labelIndex;
       }
@@ -292,14 +291,21 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       throw new JsonDataException("Missing label for " + labelKey);
     }
 
-    @Override public void toJson(JsonWriter writer, Object value) throws IOException {
+    @Override
+    public void toJson(JsonWriter writer, Object value) throws IOException {
       Class<?> type = value.getClass();
       int labelIndex = subtypes.indexOf(type);
       final JsonAdapter<Object> adapter;
       if (labelIndex == -1) {
         if (fallbackJsonAdapter == null) {
-          throw new IllegalArgumentException("Expected one of " + subtypes + " but found " + value
-              + ", a " + value.getClass() + ". Register this subtype.");
+          throw new IllegalArgumentException(
+              "Expected one of "
+                  + subtypes
+                  + " but found "
+                  + value
+                  + ", a "
+                  + value.getClass()
+                  + ". Register this subtype.");
         }
         adapter = fallbackJsonAdapter;
       } else {
@@ -316,7 +322,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
       writer.endObject();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
       return "PolymorphicJsonAdapter(" + labelKey + ")";
     }
   }

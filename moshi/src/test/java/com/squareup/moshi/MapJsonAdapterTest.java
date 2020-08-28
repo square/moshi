@@ -15,6 +15,11 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.TestUtil.newReader;
+import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.AbstractMap.SimpleEntry;
@@ -25,15 +30,11 @@ import java.util.Map;
 import okio.Buffer;
 import org.junit.Test;
 
-import static com.squareup.moshi.TestUtil.newReader;
-import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class MapJsonAdapterTest {
   private final Moshi moshi = new Moshi.Builder().build();
 
-  @Test public void map() throws Exception {
+  @Test
+  public void map() throws Exception {
     Map<String, Boolean> map = new LinkedHashMap<>();
     map.put("a", true);
     map.put("b", false);
@@ -42,15 +43,17 @@ public final class MapJsonAdapterTest {
     String toJson = toJson(String.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{\"a\":true,\"b\":false,\"c\":null}");
 
-    Map<String, Boolean> fromJson = fromJson(
-        String.class, Boolean.class, "{\"a\":true,\"b\":false,\"c\":null}");
-    assertThat(fromJson).containsExactly(
-        new SimpleEntry<String, Boolean>("a", true),
-        new SimpleEntry<String, Boolean>("b", false),
-        new SimpleEntry<String, Boolean>("c", null));
+    Map<String, Boolean> fromJson =
+        fromJson(String.class, Boolean.class, "{\"a\":true,\"b\":false,\"c\":null}");
+    assertThat(fromJson)
+        .containsExactly(
+            new SimpleEntry<String, Boolean>("a", true),
+            new SimpleEntry<String, Boolean>("b", false),
+            new SimpleEntry<String, Boolean>("c", null));
   }
 
-  @Test public void mapWithNullKeyFailsToEmit() throws Exception {
+  @Test
+  public void mapWithNullKeyFailsToEmit() throws Exception {
     Map<String, Boolean> map = new LinkedHashMap<>();
     map.put(null, true);
 
@@ -62,7 +65,8 @@ public final class MapJsonAdapterTest {
     }
   }
 
-  @Test public void emptyMap() throws Exception {
+  @Test
+  public void emptyMap() throws Exception {
     Map<String, Boolean> map = new LinkedHashMap<>();
 
     String toJson = toJson(String.class, Boolean.class, map);
@@ -72,7 +76,8 @@ public final class MapJsonAdapterTest {
     assertThat(fromJson).isEmpty();
   }
 
-  @Test public void nullMap() throws Exception {
+  @Test
+  public void nullMap() throws Exception {
     JsonAdapter<?> jsonAdapter = mapAdapter(String.class, Boolean.class);
 
     Buffer buffer = new Buffer();
@@ -86,7 +91,8 @@ public final class MapJsonAdapterTest {
     assertThat(jsonAdapter.fromJson(jsonReader)).isEqualTo(null);
   }
 
-  @Test public void covariantValue() throws Exception {
+  @Test
+  public void covariantValue() throws Exception {
     // Important for Kotlin maps, which are all Map<K, ? extends T>.
     JsonAdapter<Map<String, Object>> jsonAdapter =
         mapAdapter(String.class, Types.subtypeOf(Object.class));
@@ -107,7 +113,8 @@ public final class MapJsonAdapterTest {
     assertThat(jsonAdapter.fromJson(jsonReader)).isEqualTo(map);
   }
 
-  @Test public void orderIsRetained() throws Exception {
+  @Test
+  public void orderIsRetained() throws Exception {
     Map<String, Integer> map = new LinkedHashMap<>();
     map.put("c", 1);
     map.put("a", 2);
@@ -117,13 +124,14 @@ public final class MapJsonAdapterTest {
     String toJson = toJson(String.class, Integer.class, map);
     assertThat(toJson).isEqualTo("{\"c\":1,\"a\":2,\"d\":3,\"b\":4}");
 
-    Map<String, Integer> fromJson = fromJson(
-        String.class, Integer.class, "{\"c\":1,\"a\":2,\"d\":3,\"b\":4}");
+    Map<String, Integer> fromJson =
+        fromJson(String.class, Integer.class, "{\"c\":1,\"a\":2,\"d\":3,\"b\":4}");
     assertThat(new ArrayList<Object>(fromJson.keySet()))
         .isEqualTo(Arrays.asList("c", "a", "d", "b"));
   }
 
-  @Test public void duplicatesAreForbidden() throws Exception {
+  @Test
+  public void duplicatesAreForbidden() throws Exception {
     try {
       fromJson(String.class, Integer.class, "{\"c\":1,\"c\":2}");
       fail();
@@ -133,7 +141,8 @@ public final class MapJsonAdapterTest {
   }
 
   /** This leans on {@code promoteNameToValue} to do the heavy lifting. */
-  @Test public void mapWithNonStringKeys() throws Exception {
+  @Test
+  public void mapWithNonStringKeys() throws Exception {
     Map<Integer, Boolean> map = new LinkedHashMap<>();
     map.put(5, true);
     map.put(6, false);
@@ -142,15 +151,17 @@ public final class MapJsonAdapterTest {
     String toJson = toJson(Integer.class, Boolean.class, map);
     assertThat(toJson).isEqualTo("{\"5\":true,\"6\":false,\"7\":null}");
 
-    Map<Integer, Boolean> fromJson = fromJson(
-        Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
-    assertThat(fromJson).containsExactly(
-        new SimpleEntry<Integer, Boolean>(5, true),
-        new SimpleEntry<Integer, Boolean>(6, false),
-        new SimpleEntry<Integer, Boolean>(7, null));
+    Map<Integer, Boolean> fromJson =
+        fromJson(Integer.class, Boolean.class, "{\"5\":true,\"6\":false,\"7\":null}");
+    assertThat(fromJson)
+        .containsExactly(
+            new SimpleEntry<Integer, Boolean>(5, true),
+            new SimpleEntry<Integer, Boolean>(6, false),
+            new SimpleEntry<Integer, Boolean>(7, null));
   }
 
-  @Test public void mapWithNonStringKeysToJsonObject() {
+  @Test
+  public void mapWithNonStringKeysToJsonObject() {
     Map<Integer, Boolean> map = new LinkedHashMap<>();
     map.put(5, true);
     map.put(6, false);
@@ -166,7 +177,8 @@ public final class MapJsonAdapterTest {
     assertThat(jsonAdapter.fromJsonValue(jsonObject)).isEqualTo(map);
   }
 
-  @Test public void booleanKeyTypeHasCoherentErrorMessage() {
+  @Test
+  public void booleanKeyTypeHasCoherentErrorMessage() {
     Map<Boolean, String> map = new LinkedHashMap<>();
     map.put(true, "");
     JsonAdapter<Map<Boolean, String>> adapter = mapAdapter(Boolean.class, String.class);
@@ -184,10 +196,10 @@ public final class MapJsonAdapterTest {
     }
   }
 
-  static final class Key {
-  }
+  static final class Key {}
 
-  @Test public void objectKeyTypeHasCoherentErrorMessage() {
+  @Test
+  public void objectKeyTypeHasCoherentErrorMessage() {
     Map<Key, String> map = new LinkedHashMap<>();
     map.put(new Key(), "");
     JsonAdapter<Map<Key, String>> adapter = mapAdapter(Key.class, String.class);
@@ -201,12 +213,12 @@ public final class MapJsonAdapterTest {
       adapter.toJsonValue(map);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Object cannot be "
-          + "used as a map key in JSON at path $.");
+      assertThat(expected).hasMessage("Object cannot be " + "used as a map key in JSON at path $.");
     }
   }
 
-  @Test public void arrayKeyTypeHasCoherentErrorMessage() {
+  @Test
+  public void arrayKeyTypeHasCoherentErrorMessage() {
     Map<String[], String> map = new LinkedHashMap<>();
     map.put(new String[0], "");
     JsonAdapter<Map<String[], String>> adapter =
@@ -236,8 +248,9 @@ public final class MapJsonAdapterTest {
 
   @SuppressWarnings("unchecked") // It's the caller's responsibility to make sure K and V match.
   private <K, V> JsonAdapter<Map<K, V>> mapAdapter(Type keyType, Type valueType) {
-    return (JsonAdapter<Map<K, V>>) MapJsonAdapter.FACTORY.create(
-        Types.newParameterizedType(Map.class, keyType, valueType), NO_ANNOTATIONS, moshi);
+    return (JsonAdapter<Map<K, V>>)
+        MapJsonAdapter.FACTORY.create(
+            Types.newParameterizedType(Map.class, keyType, valueType), NO_ANNOTATIONS, moshi);
   }
 
   private <K, V> Map<K, V> fromJson(Type keyType, Type valueType, String json) throws IOException {

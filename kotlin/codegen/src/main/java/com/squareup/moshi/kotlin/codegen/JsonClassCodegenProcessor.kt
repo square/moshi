@@ -60,8 +60,8 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
      */
     const val OPTION_GENERATED = "moshi.generated"
     private val POSSIBLE_GENERATED_NAMES = setOf(
-        "javax.annotation.processing.Generated",
-        "javax.annotation.Generated"
+      "javax.annotation.processing.Generated",
+      "javax.annotation.Generated"
     )
   }
 
@@ -84,7 +84,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
       require(it in POSSIBLE_GENERATED_NAMES) {
         "Invalid option value for $OPTION_GENERATED. Found $it, " +
-            "allowable values are $POSSIBLE_GENERATED_NAMES."
+          "allowable values are $POSSIBLE_GENERATED_NAMES."
       }
       processingEnv.elementUtils.getTypeElement(it)
     }
@@ -104,30 +104,34 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     for (type in roundEnv.getElementsAnnotatedWith(annotation)) {
       if (type !is TypeElement) {
         messager.printMessage(
-            Diagnostic.Kind.ERROR, "@JsonClass can't be applied to $type: must be a Kotlin class",
-            type)
+          Diagnostic.Kind.ERROR,
+          "@JsonClass can't be applied to $type: must be a Kotlin class",
+          type
+        )
         continue
       }
       val jsonClass = type.getAnnotation(annotation)
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         val preparedAdapter = generator
-            .prepare { spec ->
-              spec.toBuilder()
-                  .apply {
-                    generatedType?.asClassName()?.let { generatedClassName ->
-                      addAnnotation(
-                          AnnotationSpec.builder(generatedClassName)
-                              .addMember("value = [%S]",
-                                  JsonClassCodegenProcessor::class.java.canonicalName)
-                              .addMember("comments = %S", "https://github.com/square/moshi")
-                              .build()
+          .prepare { spec ->
+            spec.toBuilder()
+              .apply {
+                generatedType?.asClassName()?.let { generatedClassName ->
+                  addAnnotation(
+                    AnnotationSpec.builder(generatedClassName)
+                      .addMember(
+                        "value = [%S]",
+                        JsonClassCodegenProcessor::class.java.canonicalName
                       )
-                    }
-                  }
-                  .addOriginatingElement(type)
-                  .build()
-            }
+                      .addMember("comments = %S", "https://github.com/square/moshi")
+                      .build()
+                  )
+                }
+              }
+              .addOriginatingElement(type)
+              .build()
+          }
 
         preparedAdapter.spec.writeTo(filer)
         preparedAdapter.proguardConfig?.writeTo(filer, type)
@@ -138,8 +142,8 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   }
 
   private fun adapterGenerator(
-      element: TypeElement,
-      cachedClassInspector: MoshiCachedClassInspector
+    element: TypeElement,
+    cachedClassInspector: MoshiCachedClassInspector
   ): AdapterGenerator? {
     val type = targetType(messager, elements, types, element, cachedClassInspector) ?: return null
 
@@ -154,9 +158,10 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
     for ((name, parameter) in type.constructor.parameters) {
       if (type.properties[parameter.name] == null && !parameter.hasDefault) {
         messager.printMessage(
-            Diagnostic.Kind.ERROR,
-            "No property for required constructor parameter $name",
-            element)
+          Diagnostic.Kind.ERROR,
+          "No property for required constructor parameter $name",
+          element
+        )
         return null
       }
     }

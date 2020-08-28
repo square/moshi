@@ -28,8 +28,8 @@ tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = "1.8"
     freeCompilerArgs = listOf(
-        "-progressive",
-        "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
+      "-progressive",
+      "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
     )
   }
 }
@@ -80,8 +80,10 @@ val shadowJar = tasks.shadowJar.apply {
     archiveClassifier.set("")
     configurations = listOf(shade)
     relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
-    relocate("com.squareup.kotlinpoet.classinspector",
-        "com.squareup.moshi.kotlinpoet.classinspector")
+    relocate(
+      "com.squareup.kotlinpoet.classinspector",
+      "com.squareup.moshi.kotlinpoet.classinspector"
+    )
     relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
     transformers.add(ServiceFileTransformer())
   }

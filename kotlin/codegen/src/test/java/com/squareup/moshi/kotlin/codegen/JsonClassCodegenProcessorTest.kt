@@ -41,10 +41,12 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateConstructor() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           class PrivateConstructor private constructor(var a: Int, var b: Int) {
             fun a() = a
@@ -54,7 +56,8 @@ class JsonClassCodegenProcessorTest {
             }
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("constructor is not internal or public")
   }
@@ -62,14 +65,17 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateConstructorParameter() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           class PrivateConstructorParameter(private var a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
   }
@@ -77,7 +83,9 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateProperties() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
 
@@ -87,7 +95,8 @@ class JsonClassCodegenProcessorTest {
             private var b: Int = -1
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
   }
@@ -95,226 +104,279 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun interfacesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           interface Interface
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to Interface: must be a Kotlin class")
+      "error: @JsonClass can't be applied to Interface: must be a Kotlin class"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun interfacesDoNotErrorWhenGeneratorNotSet() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true, generator="customGenerator")
           interface Interface
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun abstractClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           abstract class AbstractClass(val a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to AbstractClass: must not be abstract")
+      "error: @JsonClass can't be applied to AbstractClass: must not be abstract"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun sealedClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-  
+
           @JsonClass(generateAdapter = true)
           sealed class SealedClass(val a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to SealedClass: must not be sealed")
+      "error: @JsonClass can't be applied to SealedClass: must not be sealed"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun innerClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           class Outer {
             @JsonClass(generateAdapter = true)
             inner class InnerClass(val a: Int)
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to Outer.InnerClass: must not be an inner class")
+      "error: @JsonClass can't be applied to Outer.InnerClass: must not be an inner class"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun enumClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           enum class KotlinEnum {
             A, B
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass with 'generateAdapter = \"true\"' can't be applied to KotlinEnum: code gen for enums is not supported or necessary")
+      "error: @JsonClass with 'generateAdapter = \"true\"' can't be applied to KotlinEnum: code gen for enums is not supported or necessary"
+    )
   }
 
   // Annotation processors don't get called for local classes, so we don't have the opportunity to
   @Ignore
   @Test
   fun localClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           fun outer() {
             @JsonClass(generateAdapter = true)
             class LocalClass(val a: Int)
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to LocalClass: must not be local")
+      "error: @JsonClass can't be applied to LocalClass: must not be local"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun privateClassesNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           private class PrivateClass(val a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to PrivateClass: must be internal or public")
+      "error: @JsonClass can't be applied to PrivateClass: must be internal or public"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun objectDeclarationsNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           object ObjectDeclaration {
             var a = 5
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to ObjectDeclaration: must be a Kotlin class")
+      "error: @JsonClass can't be applied to ObjectDeclaration: must be a Kotlin class"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun objectExpressionsNotSupported() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           val expression = object : Any() {
             var a = 5
           }
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: @JsonClass can't be applied to getExpression\$annotations(): must be a Kotlin class")
+      "error: @JsonClass can't be applied to getExpression\$annotations(): must be a Kotlin class"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun requiredTransientConstructorParameterFails() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Transient var a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: No default value for transient property a")
+      "error: No default value for transient property a"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonPropertyConstructorParameter() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           import com.squareup.moshi.JsonClass
           @JsonClass(generateAdapter = true)
           class NonPropertyConstructorParameter(a: Int, val b: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-        "error: No property for required constructor parameter a")
+      "error: No property for required constructor parameter a"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun badGeneratedAnnotation() {
-    val result = prepareCompilation(kotlin("source.kt",
+    val result = prepareCompilation(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
           """
-    )).apply {
+      )
+    ).apply {
       kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
     assertThat(result.messages).contains(
-        "Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}")
+      "Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}"
+    )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun multipleErrors() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
 
@@ -324,7 +386,8 @@ class JsonClassCodegenProcessorTest {
           @JsonClass(generateAdapter = true)
           class Class2(private var c: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
     assertThat(result.messages).contains("property c is not visible")
@@ -333,7 +396,9 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun extendPlatformType() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
           import java.util.Date
@@ -341,31 +406,37 @@ class JsonClassCodegenProcessorTest {
           @JsonClass(generateAdapter = true)
           class ExtendsPlatformClass(var a: Int) : Date()
           """
-    ))
+      )
+    )
     assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun extendJavaType() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.kotlin.codegen.JavaSuperclass
-          
+
           @JsonClass(generateAdapter = true)
           class ExtendsJavaType(var b: Int) : JavaSuperclass()
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
-        .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
+      .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonFieldApplicableQualifier() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
@@ -382,7 +453,8 @@ class JsonClassCodegenProcessorTest {
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must support FIELD target")
   }
@@ -390,7 +462,9 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun nonRuntimeQualifier() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
@@ -408,7 +482,8 @@ class JsonClassCodegenProcessorTest {
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
@@ -416,37 +491,42 @@ class JsonClassCodegenProcessorTest {
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           import com.squareup.moshi.JsonClass
-          
+
           typealias FirstName = String
           typealias LastName = String
 
           @JsonClass(generateAdapter = true)
           data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
     // We're checking here that we only generate one `stringAdapter` that's used for both the
     // regular string properties as well as the the aliased ones.
     val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
     assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
-        JsonReader.Options::class.createType(),
-        JsonAdapter::class.parameterizedBy(String::class)
+      JsonReader.Options::class.createType(),
+      JsonAdapter::class.parameterizedBy(String::class)
     )
   }
 
   @Ignore("Temporarily ignored pending a new KCT release https://github.com/tschuchortdev/kotlin-compile-testing/issues/51")
   @Test
   fun `Processor should generate comprehensive proguard rules`() {
-    val result = compile(kotlin("source.kt",
+    val result = compile(
+      kotlin(
+        "source.kt",
         """
           package testPackage
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
-          
+
           typealias FirstName = String
           typealias LastName = String
 
@@ -473,7 +553,7 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Complex<T>(val firstName: FirstName = "", @MyQualifier val names: MutableList<String>, val genericProp: T)
-          
+
           object NestedType {
             @JsonQualifier
             annotation class NestedQualifier
@@ -552,36 +632,44 @@ class JsonClassCodegenProcessorTest {
               val arg65: Long = 65
           )
           """
-    ))
+      )
+    )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
     result.generatedFiles.filter { it.extension == "pro" }.forEach { generatedFile ->
       when (generatedFile.nameWithoutExtension) {
-        "moshi-testPackage.Aliases" -> assertThat(generatedFile).hasContent("""
+        "moshi-testPackage.Aliases" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.Aliases
           -keepnames class testPackage.Aliases
           -if class testPackage.Aliases
           -keep class testPackage.AliasesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-        """.trimIndent())
-        "moshi-testPackage.Simple" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.Simple" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.Simple
           -keepnames class testPackage.Simple
           -if class testPackage.Simple
           -keep class testPackage.SimpleJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-        """.trimIndent())
-        "moshi-testPackage.Generic" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.Generic" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.Generic
           -keepnames class testPackage.Generic
           -if class testPackage.Generic
           -keep class testPackage.GenericJsonAdapter {
               public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
           }
-        """.trimIndent())
-        "moshi-testPackage.UsingQualifiers" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.UsingQualifiers" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.UsingQualifiers
           -keepnames class testPackage.UsingQualifiers
           -if class testPackage.UsingQualifiers
@@ -591,16 +679,20 @@ class JsonClassCodegenProcessorTest {
           }
           -if class testPackage.UsingQualifiers
           -keep @interface testPackage.MyQualifier
-        """.trimIndent())
-        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.MixedTypes
           -keepnames class testPackage.MixedTypes
           -if class testPackage.MixedTypes
           -keep class testPackage.MixedTypesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-        """.trimIndent())
-        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.DefaultParams
           -keepnames class testPackage.DefaultParams
           -if class testPackage.DefaultParams
@@ -613,8 +705,10 @@ class JsonClassCodegenProcessorTest {
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-        """.trimIndent())
-        "moshi-testPackage.Complex" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.Complex" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.Complex
           -keepnames class testPackage.Complex
           -if class testPackage.Complex
@@ -630,8 +724,10 @@ class JsonClassCodegenProcessorTest {
           -keepclassmembers class testPackage.Complex {
               public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-        """.trimIndent())
-        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.MultipleMasks
           -keepnames class testPackage.MultipleMasks
           -if class testPackage.MultipleMasks
@@ -644,8 +740,10 @@ class JsonClassCodegenProcessorTest {
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-        """.trimIndent())
-        "moshi-testPackage.NestedType.NestedSimple" -> assertThat(generatedFile).hasContent("""
+          """.trimIndent()
+        )
+        "moshi-testPackage.NestedType.NestedSimple" -> assertThat(generatedFile).hasContent(
+          """
           -if class testPackage.NestedType${'$'}NestedSimple
           -keepnames class testPackage.NestedType${'$'}NestedSimple
           -if class testPackage.NestedType${'$'}NestedSimple
@@ -655,7 +753,8 @@ class JsonClassCodegenProcessorTest {
           }
           -if class testPackage.NestedType${'$'}NestedSimple
           -keep @interface testPackage.NestedType${'$'}NestedQualifier
-        """.trimIndent())
+          """.trimIndent()
+        )
         else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
     }
@@ -663,13 +762,13 @@ class JsonClassCodegenProcessorTest {
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
     return KotlinCompilation()
-        .apply {
-          workingDir = temporaryFolder.root
-          annotationProcessors = listOf(JsonClassCodegenProcessor())
-          inheritClassPath = true
-          sources = sourceFiles.asList()
-          verbose = false
-        }
+      .apply {
+        workingDir = temporaryFolder.root
+        annotationProcessors = listOf(JsonClassCodegenProcessor())
+        inheritClassPath = true
+        sources = sourceFiles.asList()
+        verbose = false
+      }
   }
 
   private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
@@ -682,12 +781,11 @@ class JsonClassCodegenProcessorTest {
 
   private fun KClassifier.parameterizedBy(vararg types: KType): KType {
     return createType(
-        types.map { it.asProjection() }
+      types.map { it.asProjection() }
     )
   }
 
   private fun KType.asProjection(variance: KVariance? = INVARIANT): KTypeProjection {
     return KTypeProjection(variance, this)
   }
-
 }
