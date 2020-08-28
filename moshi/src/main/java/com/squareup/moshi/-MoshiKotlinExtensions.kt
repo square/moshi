@@ -30,9 +30,7 @@ import kotlin.reflect.typeOf
  *         itself is handled, nested types (such as in generics) are not resolved.
  */
 @ExperimentalStdlibApi
-inline fun <reified T> Moshi.adapter(): JsonAdapter<T> {
-  return adapter(typeOf<T>())
-}
+inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
 @ExperimentalStdlibApi
 inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().toType(), adapter)
