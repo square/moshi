@@ -858,13 +858,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun genericTypes() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val stringBoxAdapter = moshi.adapter<Box<String>>(
-      Types.newParameterizedTypeWithOwner(
-        KotlinJsonAdapterTest::class.java,
-        Box::class.java,
-        String::class.java
-      )
-    )
+    val stringBoxAdapter = moshi.adapter<Box<String>>()
     assertThat(stringBoxAdapter.fromJson("""{"data":"hello"}""")).isEqualTo(Box("hello"))
     assertThat(stringBoxAdapter.toJson(Box("hello"))).isEqualTo("""{"data":"hello"}""")
   }
@@ -873,18 +867,7 @@ class KotlinJsonAdapterTest {
 
   @Test fun nestedGenericTypes() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val type = Types.newParameterizedTypeWithOwner(
-      KotlinJsonAdapterTest::class.java,
-      NestedGenerics::class.java,
-      String::class.java,
-      Int::class.javaObjectType,
-      Types.newParameterizedTypeWithOwner(
-        KotlinJsonAdapterTest::class.java,
-        Box::class.java,
-        String::class.java
-      )
-    )
-    val adapter = moshi.adapter<NestedGenerics<String, Int, Box<String>>>(type).indent("  ")
+    val adapter = moshi.adapter<NestedGenerics<String, Int, Box<String>>>().indent("  ")
     val json =
       """
       |{

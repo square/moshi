@@ -26,7 +26,6 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.adapter
 import org.assertj.core.api.Assertions.assertThat
@@ -300,13 +299,7 @@ class GeneratedAdaptersTest {
 
   @Test
   fun nullableTypeParams() {
-    val adapter = moshi.adapter<NullableTypeParams<Int>>(
-      Types.newParameterizedTypeWithOwner(
-        GeneratedAdaptersTest::class.java,
-        NullableTypeParams::class.java,
-        Int::class.javaObjectType
-      )
-    )
+    val adapter = moshi.adapter<NullableTypeParams<Int>>()
     val nullSerializing = adapter.serializeNulls()
 
     val nullableTypeParams = NullableTypeParams(
