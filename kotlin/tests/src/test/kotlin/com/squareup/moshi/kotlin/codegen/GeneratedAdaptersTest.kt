@@ -591,7 +591,7 @@ class GeneratedAdaptersTest {
 
   @Test fun multipleTransientConstructorParameters() {
     val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
+    val jsonAdapter = moshi.adapter<MultipleTransientConstructorParameters>()
 
     val encoded = MultipleTransientConstructorParameters(3, 5, 7)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
@@ -1340,6 +1340,7 @@ class GeneratedAdaptersTest {
 
   @Test fun typesSizeCheckMessages_noArgs() {
     try {
+      // Note: This is impossible to do if you use the reified adapter extension!
       moshi.adapter(MultipleGenerics::class.java)
       fail("Should have failed to construct the adapter due to missing generics")
     } catch (e: RuntimeException) {

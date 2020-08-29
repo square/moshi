@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapter
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -41,7 +42,7 @@ class MultipleMasksTest {
     val json =
       """{"arg50":500,"arg3":34,"arg11":11,"arg65":67}"""
 
-    val instance = Moshi.Builder().build().adapter(MultipleMasks::class.java)
+    val instance = Moshi.Builder().build().adapter<MultipleMasks>()
       .fromJson(json)!!
 
     assertEquals(instance.arg2, 2)

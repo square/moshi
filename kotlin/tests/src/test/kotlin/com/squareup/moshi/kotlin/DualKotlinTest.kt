@@ -26,7 +26,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.squareup.moshi.nextAdapter
 import com.squareup.moshi.rawType
 import com.squareup.moshi.supertypeOf
 import org.intellij.lang.annotations.Language
