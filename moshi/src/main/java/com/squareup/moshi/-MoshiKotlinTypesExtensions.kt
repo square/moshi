@@ -19,6 +19,8 @@ import com.squareup.moshi.internal.Util
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
+import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
@@ -58,11 +60,15 @@ inline fun <reified T> supertypeOf(): WildcardType {
   return Types.supertypeOf(type)
 }
 
-/** Returns the element type of this [Collection]. */
-inline fun <reified C : Collection<*>> Type.elementTypeWithRawTypeOf(): Type = Types.collectionElementType(this, C::class.java)
-
 /** Returns true if [this] and [other] are equal. */
 fun Type?.isEqualTo(other: Type?): Boolean = Types.equals(this, other)
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
-fun Type.asArray(): GenericArrayType = Types.arrayOf(this)
+@ExperimentalStdlibApi
+fun KType.asArrayType(): GenericArrayType = javaType.asArrayType()
+
+/** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
+fun KClass<*>.asArrayType(): GenericArrayType = java.asArrayType()
+
+/** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
+fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)
