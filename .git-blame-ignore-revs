@@ -1,0 +1,5 @@
+# Ignored revisions for git blame. Configure with
+# git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Migrate to Spotless and format code
+538890e8c0a8178913030d80af306707ce67cb67
