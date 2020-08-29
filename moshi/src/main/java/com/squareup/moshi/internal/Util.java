@@ -201,7 +201,7 @@ public final class Util {
   }
 
   public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-    return resolve(context, contextRawType, toResolve, new LinkedHashSet<>());
+    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable<?>>());
   }
 
   private static Type resolve(
