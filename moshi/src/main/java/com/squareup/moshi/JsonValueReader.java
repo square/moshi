@@ -19,10 +19,7 @@ import static com.squareup.moshi.JsonScope.CLOSED;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.annotation.Nullable;
 
 /**
@@ -52,10 +49,17 @@ final class JsonValueReader extends JsonReader {
 
   private Object[] stack;
 
+  private final List<JsonEventListener> eventListeners;
+
   JsonValueReader(Object root) {
+    this(root, Collections.<JsonEventListener>emptyList());
+  }
+
+  JsonValueReader(Object root, List<JsonEventListener> eventListeners) {
     scopes[stackSize] = JsonScope.NONEMPTY_DOCUMENT;
     stack = new Object[32];
     stack[stackSize++] = root;
+    this.eventListeners = Collections.unmodifiableList(eventListeners);
   }
 
   /** Copy-constructor makes a deep copy for peeking. */
@@ -68,6 +72,12 @@ final class JsonValueReader extends JsonReader {
         stack[i] = ((JsonIterator) stack[i]).clone();
       }
     }
+
+    List<JsonEventListener> copiedEventListeners = new ArrayList<>(copyFrom.eventListeners.size());
+    for (JsonEventListener listener : copyFrom.eventListeners) {
+      copiedEventListeners.add(listener.copy());
+    }
+    eventListeners = Collections.unmodifiableList(copiedEventListeners);
   }
 
   @Override
@@ -346,6 +356,11 @@ final class JsonValueReader extends JsonReader {
   @Override
   public JsonReader peekJson() {
     return new JsonValueReader(this);
+  }
+
+  @Override
+  public List<JsonEventListener> getEventListeners() {
+    return eventListeners;
   }
 
   @Override

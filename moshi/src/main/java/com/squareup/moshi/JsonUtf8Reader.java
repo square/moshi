@@ -18,6 +18,9 @@ package com.squareup.moshi;
 import java.io.EOFException;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -89,12 +92,15 @@ final class JsonUtf8Reader extends JsonReader {
    */
   private @Nullable String peekedString;
 
-  JsonUtf8Reader(BufferedSource source) {
+  private final List<JsonEventListener> eventListeners;
+
+  JsonUtf8Reader(BufferedSource source, List<JsonEventListener> eventListeners) {
     if (source == null) {
       throw new NullPointerException("source == null");
     }
     this.source = source;
     this.buffer = source.getBuffer();
+    this.eventListeners = Collections.unmodifiableList(eventListeners);
     pushScope(JsonScope.EMPTY_DOCUMENT);
   }
 
@@ -117,6 +123,12 @@ final class JsonUtf8Reader extends JsonReader {
     } catch (IOException e) {
       throw new AssertionError();
     }
+
+    List<JsonEventListener> copiedEventListeners = new ArrayList<>(copyFrom.eventListeners.size());
+    for (JsonEventListener listener : copyFrom.eventListeners) {
+      copiedEventListeners.add(listener.copy());
+    }
+    eventListeners = Collections.unmodifiableList(copiedEventListeners);
   }
 
   @Override
@@ -1106,6 +1118,11 @@ final class JsonUtf8Reader extends JsonReader {
   @Override
   public JsonReader peekJson() {
     return new JsonUtf8Reader(this);
+  }
+
+  @Override
+  public List<JsonEventListener> getEventListeners() {
+    return eventListeners;
   }
 
   @Override

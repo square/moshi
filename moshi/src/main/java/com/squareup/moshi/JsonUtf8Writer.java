@@ -25,6 +25,8 @@ import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
 import static com.squareup.moshi.JsonScope.STREAMING_VALUE;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSink;
@@ -68,11 +70,18 @@ final class JsonUtf8Writer extends JsonWriter {
 
   private String deferredName;
 
+  private final List<JsonEventListener> eventListeners;
+
   JsonUtf8Writer(BufferedSink sink) {
+    this(sink, Collections.<JsonEventListener>emptyList());
+  }
+
+  JsonUtf8Writer(BufferedSink sink, List<JsonEventListener> eventListeners) {
     if (sink == null) {
       throw new NullPointerException("sink == null");
     }
     this.sink = sink;
+    this.eventListeners = Collections.unmodifiableList(eventListeners);
     pushScope(EMPTY_DOCUMENT);
   }
 
@@ -324,6 +333,11 @@ final class JsonUtf8Writer extends JsonWriter {
             return Timeout.NONE;
           }
         });
+  }
+
+  @Override
+  public List<JsonEventListener> getEventListeners() {
+    return eventListeners;
   }
 
   /**

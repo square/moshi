@@ -15,13 +15,10 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.*;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -97,7 +94,18 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
       throw new JsonDataException(
           "Expected a string but was " + reader.peek() + " at path " + path);
     }
-    reader.skipValue();
+
+    List<JsonEventListener> eventListeners = reader.getEventListeners();
+    if (eventListeners.size() > 0) {
+      UnknownEnumValueEvent unknownValueEvent =
+          new UnknownEnumValueEvent(path, reader.nextString());
+      for (JsonEventListener listener : eventListeners) {
+        listener.onReadEvent(unknownValueEvent);
+      }
+    } else {
+      reader.skipValue();
+    }
+
     return fallbackValue;
   }
 
@@ -113,5 +121,24 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
   @Override
   public String toString() {
     return "EnumJsonAdapter(" + enumType.getName() + ")";
+  }
+
+  public static class UnknownEnumValueEvent implements JsonEventListener.JsonReadEvent {
+    private final String path;
+    private final String unknownValue;
+
+    UnknownEnumValueEvent(String path, String unknownValue) {
+      this.path = path;
+      this.unknownValue = unknownValue;
+    }
+
+    @Override
+    public String getPath() {
+      return path;
+    }
+
+    public String getUnknownValue() {
+      return unknownValue;
+    }
   }
 }

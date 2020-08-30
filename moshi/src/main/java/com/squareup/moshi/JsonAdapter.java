@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -42,14 +44,27 @@ public abstract class JsonAdapter<T> {
 
   @CheckReturnValue
   public final @Nullable T fromJson(BufferedSource source) throws IOException {
-    return fromJson(JsonReader.of(source));
+    return fromJson(source, Collections.<JsonEventListener>emptyList());
+  }
+
+  @CheckReturnValue
+  public final @Nullable T fromJson(BufferedSource source, List<JsonEventListener> eventListeners)
+      throws IOException {
+    return fromJson(JsonReader.of(source, eventListeners));
   }
 
   @CheckReturnValue
   public final @Nullable T fromJson(String string) throws IOException {
-    JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
+    return fromJson(string, Collections.<JsonEventListener>emptyList());
+  }
+
+  @CheckReturnValue
+  public final @Nullable T fromJson(String string, List<JsonEventListener> eventListeners)
+      throws IOException {
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string), eventListeners);
     T result = fromJson(reader);
     if (!isLenient() && reader.peek() != JsonReader.Token.END_DOCUMENT) {
+      // Could possibly log an event if lenient mode is enabled.
       throw new JsonDataException("JSON document was not fully consumed.");
     }
     return result;
@@ -58,15 +73,26 @@ public abstract class JsonAdapter<T> {
   public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
 
   public final void toJson(BufferedSink sink, @Nullable T value) throws IOException {
-    JsonWriter writer = JsonWriter.of(sink);
+    toJson(sink, value, Collections.<JsonEventListener>emptyList());
+  }
+
+  public final void toJson(
+      BufferedSink sink, @Nullable T value, List<JsonEventListener> eventListeners)
+      throws IOException {
+    JsonWriter writer = JsonWriter.of(sink, eventListeners);
     toJson(writer, value);
   }
 
   @CheckReturnValue
   public final String toJson(@Nullable T value) {
+    return toJson(value, Collections.<JsonEventListener>emptyList());
+  }
+
+  @CheckReturnValue
+  public final String toJson(@Nullable T value, List<JsonEventListener> eventListeners) {
     Buffer buffer = new Buffer();
     try {
-      toJson(buffer, value);
+      toJson(buffer, value, eventListeners);
     } catch (IOException e) {
       throw new AssertionError(e); // No I/O writing to a Buffer.
     }
@@ -85,7 +111,23 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public final @Nullable Object toJsonValue(@Nullable T value) {
-    JsonValueWriter writer = new JsonValueWriter();
+    return toJsonValue(value, Collections.<JsonEventListener>emptyList());
+  }
+
+  /**
+   * Encodes {@code value} as a Java value object comprised of maps, lists, strings, numbers,
+   * booleans, and nulls.
+   *
+   * <p>Values encoded using {@code value(double)} or {@code value(long)} are modeled with the
+   * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a {@link
+   * Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link Long}),
+   * as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}), and as a
+   * {@link BigDecimal} for all other types.
+   */
+  @CheckReturnValue
+  public final @Nullable Object toJsonValue(
+      @Nullable T value, List<JsonEventListener> eventListeners) {
+    JsonValueWriter writer = new JsonValueWriter(eventListeners);
     try {
       toJson(writer, value);
       return writer.root();
@@ -100,7 +142,17 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public final @Nullable T fromJsonValue(@Nullable Object value) {
-    JsonValueReader reader = new JsonValueReader(value);
+    return fromJsonValue(value, Collections.<JsonEventListener>emptyList());
+  }
+
+  /**
+   * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
+   * strings, numbers, booleans and nulls.
+   */
+  @CheckReturnValue
+  public final @Nullable T fromJsonValue(
+      @Nullable Object value, List<JsonEventListener> eventListeners) {
+    JsonValueReader reader = new JsonValueReader(value, eventListeners);
     try {
       return fromJson(reader);
     } catch (IOException e) {

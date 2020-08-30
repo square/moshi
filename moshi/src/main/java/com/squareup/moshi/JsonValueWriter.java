@@ -26,6 +26,7 @@ import static java.lang.Double.POSITIVE_INFINITY;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -39,7 +40,14 @@ final class JsonValueWriter extends JsonWriter {
   Object[] stack = new Object[32];
   private @Nullable String deferredName;
 
+  private final List<JsonEventListener> eventListeners;
+
   JsonValueWriter() {
+    this(Collections.<JsonEventListener>emptyList());
+  }
+
+  JsonValueWriter(List<JsonEventListener> eventListeners) {
+    this.eventListeners = Collections.unmodifiableList(eventListeners);
     pushScope(EMPTY_DOCUMENT);
   }
 
@@ -265,7 +273,7 @@ final class JsonValueWriter extends JsonWriter {
             }
             stackSize--; // Remove STREAMING_VALUE from the stack.
 
-            Object value = JsonReader.of(buffer).readJsonValue();
+            Object value = JsonReader.of(buffer, eventListeners).readJsonValue();
             boolean serializeNulls = JsonValueWriter.this.serializeNulls;
             JsonValueWriter.this.serializeNulls = true;
             try {
@@ -276,6 +284,11 @@ final class JsonValueWriter extends JsonWriter {
             pathIndices[stackSize - 1]++;
           }
         });
+  }
+
+  @Override
+  public List<JsonEventListener> getEventListeners() {
+    return eventListeners;
   }
 
   @Override

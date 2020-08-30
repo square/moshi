@@ -24,6 +24,7 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
@@ -174,7 +175,13 @@ public abstract class JsonWriter implements Closeable, Flushable {
   /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
   @CheckReturnValue
   public static JsonWriter of(BufferedSink sink) {
-    return new JsonUtf8Writer(sink);
+    return of(sink, Collections.<JsonEventListener>emptyList());
+  }
+
+  /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
+  @CheckReturnValue
+  public static JsonWriter of(BufferedSink sink, List<JsonEventListener> eventListeners) {
+    return new JsonUtf8Writer(sink, eventListeners);
   }
 
   JsonWriter() {
@@ -561,4 +568,11 @@ public abstract class JsonWriter implements Closeable, Flushable {
   public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
   }
+
+  /**
+   * Returns a read-only collection of event listeners that notify when something noteworthy occurs
+   * during read/write.
+   */
+  @CheckReturnValue
+  public abstract List<JsonEventListener> getEventListeners();
 }

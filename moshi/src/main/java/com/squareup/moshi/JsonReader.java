@@ -19,10 +19,7 @@ import static java.util.Collections.unmodifiableList;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
@@ -200,7 +197,13 @@ public abstract class JsonReader implements Closeable {
   /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
   @CheckReturnValue
   public static JsonReader of(BufferedSource source) {
-    return new JsonUtf8Reader(source);
+    return of(source, Collections.<JsonEventListener>emptyList());
+  }
+
+  /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
+  @CheckReturnValue
+  public static JsonReader of(BufferedSource source, List<JsonEventListener> eventListeners) {
+    return new JsonUtf8Reader(source, eventListeners);
   }
 
   // Package-private to control subclasses.
@@ -525,6 +528,13 @@ public abstract class JsonReader implements Closeable {
   public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
   }
+
+  /**
+   * Returns a read-only collection of event listeners that notify when something noteworthy occurs
+   * during read/write.
+   */
+  @CheckReturnValue
+  public abstract List<JsonEventListener> getEventListeners();
 
   /**
    * Changes the reader to treat the next name as a string value. This is useful for map adapters so
