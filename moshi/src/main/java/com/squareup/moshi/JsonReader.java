@@ -19,7 +19,11 @@ import static java.util.Collections.unmodifiableList;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 import okio.Buffer;
