@@ -1,16 +1,6 @@
 name: CI
 
-on:
-  # Only run push on master
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '*.md'
-  # Always run on PRs
-  pull_request:
-    paths-ignore:
-      - '*.md'
+on: [push, pull_request]
 
 jobs:
   build:
