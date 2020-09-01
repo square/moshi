@@ -53,7 +53,9 @@ public final class CircularAdaptersTest {
     JsonAdapter<Team> teamAdapter = moshi.adapter(Team.class);
 
     Team team =
-        new Team("Alice", new Project("King", new Team("Charlie", new Project("Delivery", null))));
+        new Team(
+            "Alice",
+            new Project("King", new Team("Charlie", new Project("Delivery", (Team[]) null))));
     assertThat(teamAdapter.toJson(team))
         .isEqualTo(
             "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
