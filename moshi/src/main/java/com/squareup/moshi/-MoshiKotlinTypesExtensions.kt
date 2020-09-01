@@ -42,7 +42,7 @@ inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annot
 inline fun <reified T> subtypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
-    type = Util.wrap(type)
+    type = Util.boxIfPrimitive(type)
   }
   return Types.subtypeOf(type)
 }
@@ -55,7 +55,7 @@ inline fun <reified T> subtypeOf(): WildcardType {
 inline fun <reified T> supertypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
-    type = Util.wrap(type)
+    type = Util.boxIfPrimitive(type)
   }
   return Types.supertypeOf(type)
 }
