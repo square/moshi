@@ -2,7 +2,6 @@ package com.squareup.moshi
 
 import org.junit.Test
 import kotlin.annotation.AnnotationRetention.RUNTIME
-import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 @JsonQualifier
@@ -35,7 +34,7 @@ class KotlinExtensionsTest {
     val stringArray = String::class.asArrayType()
     check(stringArray.genericComponentType == String::class.java)
 
-    val stringListType = obtainType<List<String>>()
+    val stringListType = typeOf<List<String>>()
     val stringListArray = stringListType.asArrayType()
     val expected = Types.arrayOf(Types.newParameterizedType(List::class.java, String::class.java))
     check(stringListArray.isEqualTo(expected))
@@ -59,9 +58,5 @@ class KotlinExtensionsTest {
       .build()
 
     check(moshi.adapter<Int>().fromJson("5") == -1)
-  }
-
-  private inline fun <reified T> obtainType(): KType {
-    return typeOf<T>()
   }
 }
