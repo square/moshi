@@ -10,7 +10,6 @@ jobs:
       fail-fast: false
       matrix:
         java-version:
-          - 1.7
           - 1.8
           - 9
           - 10
