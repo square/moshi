@@ -1,5 +1,7 @@
 package com.squareup.moshi
 
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.typeOf
@@ -22,11 +24,11 @@ class KotlinExtensionsTest {
       .filterTo(mutableSetOf()) {
         it.annotationClass.java.isAnnotationPresent(JsonQualifier::class.java)
       }
-    check(annotations.size == 2)
+    assertEquals(2, annotations.size)
     val next = annotations.nextAnnotations<TestAnnotation2>()
     checkNotNull(next)
-    check(next.size == 1)
-    check(next.first() is TestAnnotation1)
+    assertEquals(1, next.size)
+    assertTrue(next.first() is TestAnnotation1)
   }
 
   @Test
@@ -37,7 +39,7 @@ class KotlinExtensionsTest {
     val stringListType = typeOf<List<String>>()
     val stringListArray = stringListType.asArrayType()
     val expected = Types.arrayOf(Types.newParameterizedType(List::class.java, String::class.java))
-    check(stringListArray.isEqualTo(expected))
+    assertEquals(stringListArray, expected)
   }
 
   @Test
@@ -57,6 +59,6 @@ class KotlinExtensionsTest {
       .addAdapter(customIntdapter)
       .build()
 
-    check(moshi.adapter<Int>().fromJson("5") == -1)
+    assertEquals(-1, moshi.adapter<Int>().fromJson("5"))
   }
 }
