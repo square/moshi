@@ -688,7 +688,7 @@ class KotlinJsonAdapterTest {
     var a = 5
   }
 
-  @Test fun objectExpressionsNotSupported() {
+  @Test fun anonymousClassesNotSupported() {
     val expression = object : Any() {
       var a = 5
     }
@@ -697,9 +697,16 @@ class KotlinJsonAdapterTest {
       moshi.adapter(expression.javaClass)
       fail()
     } catch (e: IllegalArgumentException) {
+      // anonymous/local classes are slightly different in bytecode across JVM versions
+      val javaVersion = System.getProperty("java.version")
+      val type = if (javaVersion.startsWith("1.8")) {
+        "local class or object expression"
+      } else {
+        "anonymous class"
+      }
       assertThat(e).hasMessage(
-        "Cannot serialize local class or object expression " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$objectExpressionsNotSupported" +
+        "Cannot serialize $type " +
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$anonymousClassesNotSupported" +
           "\$expression$1"
       )
     }
