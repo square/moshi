@@ -45,7 +45,7 @@ jobs:
         run: ./gradlew build check
 
       - name: Publish (default branch only)
-        if: github.ref == 'refs/heads/master' && matrix.java-version == '1.7'
+        if: github.ref == 'refs/heads/master' && matrix.java-version == '1.8'
         run: ./gradlew uploadArchives
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
