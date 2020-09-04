@@ -38,12 +38,13 @@ tasks.withType<KotlinCompile>().configureEach {
 val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
-  implementation(project(":moshi"))
-  implementation(kotlin("reflect"))
+  // Use `api` because kapt will not resolve `runtime` dependencies without it, only `compile`
+  api(project(":moshi"))
+  api(kotlin("reflect"))
   shade(Dependencies.Kotlin.metadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
-  implementation(Dependencies.KotlinPoet.kotlinPoet)
+  api(Dependencies.KotlinPoet.kotlinPoet)
   shade(Dependencies.KotlinPoet.metadata) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
@@ -56,11 +57,11 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
   }
-  implementation(Dependencies.asm)
+  api(Dependencies.asm)
 
-  implementation(Dependencies.AutoService.annotations)
+  api(Dependencies.AutoService.annotations)
   kapt(Dependencies.AutoService.processor)
-  implementation(Dependencies.Incap.annotations)
+  api(Dependencies.Incap.annotations)
   kapt(Dependencies.Incap.processor)
 
   // Copy these again as they're not automatically included since they're shaded
@@ -98,12 +99,6 @@ artifacts {
   archives(shadowJar)
 }
 
-fun String.findAllIndicesOf(substring: String): List<Int> {
-  return indices.filter { index ->
-    substring.regionMatches(0, this, index, substring.length)
-  }
-}
-
 // Shadow plugin doesn't natively support gradle metadata, so we have to tell the maven plugin where
 // to get a jar now.
 afterEvaluate {
@@ -113,20 +108,6 @@ afterEvaluate {
         // This is to properly wire the shadow jar's gradle metadata and pom information
         setArtifacts(artifacts.matching { it.classifier != "" })
         artifact(shadowJar)
-      }
-
-      pom.withXml {
-        // Fix runtime scopes being put here by the shadow plugin
-        // https://github.com/johnrengelman/shadow/issues/321
-        val xmlSb = asString()
-        val runtime = ">runtime<"
-        val replacement = ">compile<"
-        xmlSb.toString()
-          .findAllIndicesOf(">runtime<")
-          .reversed()
-          .forEach { index ->
-            xmlSb.replace(index, index + runtime.length, replacement)
-          }
       }
     }
   }
