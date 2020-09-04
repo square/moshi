@@ -39,6 +39,7 @@ val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
   // Use `api` because kapt will not resolve `runtime` dependencies without it, only `compile`
+  // https://youtrack.jetbrains.com/issue/KT-41702
   api(project(":moshi"))
   api(kotlin("reflect"))
   shade(Dependencies.Kotlin.metadata) {
