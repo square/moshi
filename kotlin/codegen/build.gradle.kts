@@ -98,6 +98,12 @@ artifacts {
   archives(shadowJar)
 }
 
+fun String.findAllIndicesOf(substring: String): List<Int> {
+  return indices.filter { index ->
+    substring.regionMatches(0, this, index, substring.length)
+  }
+}
+
 // Shadow plugin doesn't natively support gradle metadata, so we have to tell the maven plugin where
 // to get a jar now.
 afterEvaluate {
@@ -108,6 +114,20 @@ afterEvaluate {
         setArtifacts(artifacts.matching { it.classifier != "" })
         // Ugly but artifact() doesn't support TaskProviders
         artifact(shadowJar.get())
+      }
+
+      pom.withXml {
+        // Fix runtime scopes being put here by the shadow plugin
+        // https://github.com/johnrengelman/shadow/issues/321
+        val xmlSb = asString()
+        val runtime = ">runtime<"
+        val replacement = ">compile<"
+        xmlSb.toString()
+          .findAllIndicesOf(">runtime<")
+          .reversed()
+          .forEach { index ->
+            xmlSb.replace(index, index + runtime.length, replacement)
+          }
       }
     }
   }
