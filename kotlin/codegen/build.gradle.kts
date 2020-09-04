@@ -46,12 +46,15 @@ dependencies {
   implementation(Dependencies.KotlinPoet.kotlinPoet)
   shade(Dependencies.KotlinPoet.metadata) {
     exclude(group = "org.jetbrains.kotlin")
+    exclude(group = "com.squareup", module = "kotlinpoet")
   }
   shade(Dependencies.KotlinPoet.metadataSpecs) {
     exclude(group = "org.jetbrains.kotlin")
+    exclude(group = "com.squareup", module = "kotlinpoet")
   }
   shade(Dependencies.KotlinPoet.elementsClassInspector) {
     exclude(group = "org.jetbrains.kotlin")
+    exclude(group = "com.squareup", module = "kotlinpoet")
   }
   implementation(Dependencies.asm)
 
