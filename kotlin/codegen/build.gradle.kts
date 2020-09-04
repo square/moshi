@@ -112,8 +112,7 @@ afterEvaluate {
       if (name == "pluginMaven") {
         // This is to properly wire the shadow jar's gradle metadata and pom information
         setArtifacts(artifacts.matching { it.classifier != "" })
-        // Ugly but artifact() doesn't support TaskProviders
-        artifact(shadowJar.get())
+        artifact(shadowJar)
       }
 
       pom.withXml {
