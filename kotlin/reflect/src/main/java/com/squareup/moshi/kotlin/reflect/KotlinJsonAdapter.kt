@@ -316,14 +316,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           require(parameterData.declaresDefaultValue) {
             "No default value for transient constructor parameter '${parameterData.name}' on type '${rawType.canonicalName}'"
           }
-
-          if (parameterData != null) {
-            require(parameterData.km.type isEqualTo property.returnType) {
-              "'${property.name}' has a constructor parameter of type ${parameterData.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
-            }
+          require(parameterData.km.type isEqualTo property.returnType) {
+            "'${property.name}' has a constructor parameter of type ${parameterData.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
           }
-
-          if (!Flag.Property.IS_VAR(property.flags) && parameterData == null) continue
 
           val getterMethod = property.getterSignature?.let(signatureSearcher::findMethod)
           val setterMethod = property.setterSignature?.let(signatureSearcher::findMethod)
