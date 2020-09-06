@@ -15,20 +15,19 @@
  */
 package com.squareup.moshi;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.util.Date;
 import org.junit.Test;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-
 public final class JsonQualifiersTest {
-  @Test public void builtInTypes() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new BuiltInTypesJsonAdapter())
-        .build();
+  @Test
+  public void builtInTypes() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new BuiltInTypesJsonAdapter()).build();
     JsonAdapter<StringAndFooString> adapter = moshi.adapter(StringAndFooString.class);
 
     StringAndFooString v1 = new StringAndFooString();
@@ -42,20 +41,22 @@ public final class JsonQualifiersTest {
   }
 
   static class BuiltInTypesJsonAdapter {
-    @ToJson String fooPrefixStringToString(@FooPrefix String s) {
+    @ToJson
+    String fooPrefixStringToString(@FooPrefix String s) {
       return "foo" + s;
     }
 
-    @FromJson @FooPrefix String fooPrefixStringFromString(String s) throws Exception {
+    @FromJson
+    @FooPrefix
+    String fooPrefixStringFromString(String s) throws Exception {
       if (!s.startsWith("foo")) throw new JsonDataException();
       return s.substring(3);
     }
   }
 
-  @Test public void readerWriterJsonAdapter() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new ReaderWriterJsonAdapter())
-        .build();
+  @Test
+  public void readerWriterJsonAdapter() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new ReaderWriterJsonAdapter()).build();
     JsonAdapter<StringAndFooString> adapter = moshi.adapter(StringAndFooString.class);
 
     StringAndFooString v1 = new StringAndFooString();
@@ -69,12 +70,14 @@ public final class JsonQualifiersTest {
   }
 
   static class ReaderWriterJsonAdapter {
-    @ToJson void fooPrefixStringToString(JsonWriter jsonWriter, @FooPrefix String s)
-        throws IOException {
+    @ToJson
+    void fooPrefixStringToString(JsonWriter jsonWriter, @FooPrefix String s) throws IOException {
       jsonWriter.value("foo" + s);
     }
 
-    @FromJson @FooPrefix String fooPrefixStringFromString(JsonReader reader) throws Exception {
+    @FromJson
+    @FooPrefix
+    String fooPrefixStringFromString(JsonReader reader) throws Exception {
       String s = reader.nextString();
       if (!s.startsWith("foo")) throw new JsonDataException();
       return s.substring(3);
@@ -84,14 +87,12 @@ public final class JsonQualifiersTest {
   /** Fields with this annotation get "foo" as a prefix in the JSON. */
   @Retention(RUNTIME)
   @JsonQualifier
-  public @interface FooPrefix {
-  }
+  public @interface FooPrefix {}
 
   /** Fields with this annotation get "baz" as a suffix in the JSON. */
   @Retention(RUNTIME)
   @JsonQualifier
-  public @interface BazSuffix {
-  }
+  public @interface BazSuffix {}
 
   static class StringAndFooString {
     String a;
@@ -103,10 +104,10 @@ public final class JsonQualifiersTest {
     @FooPrefix @BazSuffix String b;
   }
 
-  @Test public void builtInTypesWithMultipleAnnotations() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new BuiltInTypesWithMultipleAnnotationsJsonAdapter())
-        .build();
+  @Test
+  public void builtInTypesWithMultipleAnnotations() throws Exception {
+    Moshi moshi =
+        new Moshi.Builder().add(new BuiltInTypesWithMultipleAnnotationsJsonAdapter()).build();
     JsonAdapter<StringAndFooBazString> adapter = moshi.adapter(StringAndFooBazString.class);
 
     StringAndFooBazString v1 = new StringAndFooBazString();
@@ -120,22 +121,25 @@ public final class JsonQualifiersTest {
   }
 
   static class BuiltInTypesWithMultipleAnnotationsJsonAdapter {
-    @ToJson String fooPrefixAndBazSuffixStringToString(@FooPrefix @BazSuffix String s) {
+    @ToJson
+    String fooPrefixAndBazSuffixStringToString(@FooPrefix @BazSuffix String s) {
       return "foo" + s + "baz";
     }
 
-    @FromJson @FooPrefix @BazSuffix String fooPrefixAndBazSuffixStringFromString(
-        String s) throws Exception {
+    @FromJson
+    @FooPrefix
+    @BazSuffix
+    String fooPrefixAndBazSuffixStringFromString(String s) throws Exception {
       if (!s.startsWith("foo")) throw new JsonDataException();
       if (!s.endsWith("baz")) throw new JsonDataException();
       return s.substring(3, s.length() - 3);
     }
   }
 
-  @Test public void readerWriterWithMultipleAnnotations() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new ReaderWriterWithMultipleAnnotationsJsonAdapter())
-        .build();
+  @Test
+  public void readerWriterWithMultipleAnnotations() throws Exception {
+    Moshi moshi =
+        new Moshi.Builder().add(new ReaderWriterWithMultipleAnnotationsJsonAdapter()).build();
     JsonAdapter<StringAndFooBazString> adapter = moshi.adapter(StringAndFooBazString.class);
 
     StringAndFooBazString v1 = new StringAndFooBazString();
@@ -149,13 +153,16 @@ public final class JsonQualifiersTest {
   }
 
   static class ReaderWriterWithMultipleAnnotationsJsonAdapter {
-    @ToJson void fooPrefixAndBazSuffixStringToString(
-        JsonWriter jsonWriter, @FooPrefix @BazSuffix String s) throws IOException {
+    @ToJson
+    void fooPrefixAndBazSuffixStringToString(JsonWriter jsonWriter, @FooPrefix @BazSuffix String s)
+        throws IOException {
       jsonWriter.value("foo" + s + "baz");
     }
 
-    @FromJson @FooPrefix @BazSuffix String fooPrefixAndBazSuffixStringFromString(
-        JsonReader reader) throws Exception {
+    @FromJson
+    @FooPrefix
+    @BazSuffix
+    String fooPrefixAndBazSuffixStringFromString(JsonReader reader) throws Exception {
       String s = reader.nextString();
       if (!s.startsWith("foo")) throw new JsonDataException();
       if (!s.endsWith("baz")) throw new JsonDataException();
@@ -163,11 +170,13 @@ public final class JsonQualifiersTest {
     }
   }
 
-  @Test public void basicTypesAnnotationDelegating() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new BuiltInTypesDelegatingJsonAdapter())
-        .add(new BuiltInTypesJsonAdapter())
-        .build();
+  @Test
+  public void basicTypesAnnotationDelegating() throws Exception {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(new BuiltInTypesDelegatingJsonAdapter())
+            .add(new BuiltInTypesJsonAdapter())
+            .build();
     JsonAdapter<StringAndFooBazString> adapter = moshi.adapter(StringAndFooBazString.class);
 
     StringAndFooBazString v1 = new StringAndFooBazString();
@@ -181,22 +190,28 @@ public final class JsonQualifiersTest {
   }
 
   static class BuiltInTypesDelegatingJsonAdapter {
-    @ToJson @FooPrefix String fooPrefixAndBazSuffixStringToString(@FooPrefix @BazSuffix String s) {
+    @ToJson
+    @FooPrefix
+    String fooPrefixAndBazSuffixStringToString(@FooPrefix @BazSuffix String s) {
       return s + "baz";
     }
 
-    @FromJson @FooPrefix @BazSuffix String fooPrefixAndBazSuffixStringFromString(
-        @FooPrefix String s) throws Exception {
+    @FromJson
+    @FooPrefix
+    @BazSuffix
+    String fooPrefixAndBazSuffixStringFromString(@FooPrefix String s) throws Exception {
       if (!s.endsWith("baz")) throw new JsonDataException();
       return s.substring(0, s.length() - 3);
     }
   }
 
-  @Test public void readerWriterAnnotationDelegating() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new BuiltInTypesDelegatingJsonAdapter())
-        .add(new ReaderWriterJsonAdapter())
-        .build();
+  @Test
+  public void readerWriterAnnotationDelegating() throws Exception {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(new BuiltInTypesDelegatingJsonAdapter())
+            .add(new ReaderWriterJsonAdapter())
+            .build();
     JsonAdapter<StringAndFooBazString> adapter = moshi.adapter(StringAndFooBazString.class);
 
     StringAndFooBazString v1 = new StringAndFooBazString();
@@ -209,22 +224,24 @@ public final class JsonQualifiersTest {
     assertThat(v2.b).isEqualTo("bar");
   }
 
-  @Test public void manualJsonAdapter() throws Exception {
-    JsonAdapter<String> fooPrefixAdapter = new JsonAdapter<String>() {
-      @Override public String fromJson(JsonReader reader) throws IOException {
-        String s = reader.nextString();
-        if (!s.startsWith("foo")) throw new JsonDataException();
-        return s.substring(3);
-      }
+  @Test
+  public void manualJsonAdapter() throws Exception {
+    JsonAdapter<String> fooPrefixAdapter =
+        new JsonAdapter<String>() {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
+            String s = reader.nextString();
+            if (!s.startsWith("foo")) throw new JsonDataException();
+            return s.substring(3);
+          }
 
-      @Override public void toJson(JsonWriter writer, String value) throws IOException {
-        writer.value("foo" + value);
-      }
-    };
+          @Override
+          public void toJson(JsonWriter writer, String value) throws IOException {
+            writer.value("foo" + value);
+          }
+        };
 
-    Moshi moshi = new Moshi.Builder()
-        .add(String.class, FooPrefix.class, fooPrefixAdapter)
-        .build();
+    Moshi moshi = new Moshi.Builder().add(String.class, FooPrefix.class, fooPrefixAdapter).build();
     JsonAdapter<StringAndFooString> adapter = moshi.adapter(StringAndFooString.class);
 
     StringAndFooString v1 = new StringAndFooString();
@@ -237,7 +254,8 @@ public final class JsonQualifiersTest {
     assertThat(v2.b).isEqualTo("bar");
   }
 
-  @Test public void noJsonAdapterForAnnotatedType() throws Exception {
+  @Test
+  public void noJsonAdapterForAnnotatedType() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     try {
       moshi.adapter(StringAndFooString.class);
@@ -246,10 +264,9 @@ public final class JsonQualifiersTest {
     }
   }
 
-  @Test public void annotationWithoutJsonQualifierIsIgnoredByAdapterMethods() throws Exception {
-    Moshi moshi = new Moshi.Builder()
-        .add(new MissingJsonQualifierJsonAdapter())
-        .build();
+  @Test
+  public void annotationWithoutJsonQualifierIsIgnoredByAdapterMethods() throws Exception {
+    Moshi moshi = new Moshi.Builder().add(new MissingJsonQualifierJsonAdapter()).build();
     JsonAdapter<DateAndMillisDate> adapter = moshi.adapter(DateAndMillisDate.class);
 
     DateAndMillisDate v1 = new DateAndMillisDate();
@@ -264,46 +281,55 @@ public final class JsonQualifiersTest {
 
   /** Despite the fact that these methods are annotated, they match all dates. */
   static class MissingJsonQualifierJsonAdapter {
-    @ToJson long dateToJson(@Millis Date d) {
+    @ToJson
+    long dateToJson(@Millis Date d) {
       return d.getTime();
     }
 
-    @FromJson @Millis Date jsonToDate(long value) throws Exception {
+    @FromJson
+    @Millis
+    Date jsonToDate(long value) throws Exception {
       return new Date(value);
     }
   }
 
   /** This annotation does nothing. */
   @Retention(RUNTIME)
-  public @interface Millis {
-  }
+  public @interface Millis {}
 
   static class DateAndMillisDate {
     Date a;
     @Millis Date b;
   }
 
-  @Test public void annotationWithoutJsonQualifierIsRejectedOnRegistration() throws Exception {
-    JsonAdapter<Date> jsonAdapter = new JsonAdapter<Date>() {
-      @Override public Date fromJson(JsonReader reader) throws IOException {
-        throw new AssertionError();
-      }
+  @Test
+  public void annotationWithoutJsonQualifierIsRejectedOnRegistration() throws Exception {
+    JsonAdapter<Date> jsonAdapter =
+        new JsonAdapter<Date>() {
+          @Override
+          public Date fromJson(JsonReader reader) throws IOException {
+            throw new AssertionError();
+          }
 
-      @Override public void toJson(JsonWriter writer, Date value) throws IOException {
-        throw new AssertionError();
-      }
-    };
+          @Override
+          public void toJson(JsonWriter writer, Date value) throws IOException {
+            throw new AssertionError();
+          }
+        };
 
     try {
       new Moshi.Builder().add(Date.class, Millis.class, jsonAdapter);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("interface com.squareup.moshi.JsonQualifiersTest$Millis "
-          + "does not have @JsonQualifier");
+      assertThat(expected)
+          .hasMessage(
+              "interface com.squareup.moshi.JsonQualifiersTest$Millis "
+                  + "does not have @JsonQualifier");
     }
   }
 
-  @Test public void annotationsConflict() throws Exception {
+  @Test
+  public void annotationsConflict() throws Exception {
     try {
       new Moshi.Builder().add(new AnnotationsConflictJsonAdapter());
       fail();
@@ -313,69 +339,84 @@ public final class JsonQualifiersTest {
   }
 
   static class AnnotationsConflictJsonAdapter {
-    @ToJson String fooPrefixStringToString(@FooPrefix String s) {
+    @ToJson
+    String fooPrefixStringToString(@FooPrefix String s) {
       return "foo" + s;
     }
 
-    @ToJson String fooPrefixStringToString2(@FooPrefix String s) {
+    @ToJson
+    String fooPrefixStringToString2(@FooPrefix String s) {
       return "foo" + s;
     }
   }
 
-  @Test public void toButNoFromJson() throws Exception {
+  @Test
+  public void toButNoFromJson() throws Exception {
     // Building it is okay.
-    Moshi moshi = new Moshi.Builder()
-        .add(new ToButNoFromJsonAdapter())
-        .build();
+    Moshi moshi = new Moshi.Builder().add(new ToButNoFromJsonAdapter()).build();
 
     try {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("No @FromJson adapter for class java.lang.String annotated "
-          + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-          + "\nfor class java.lang.String b"
-          + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
+      assertThat(expected)
+          .hasMessage(
+              "No @FromJson adapter for class java.lang.String annotated "
+                  + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+                  + "\nfor class java.lang.String b"
+                  + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause()).hasMessage("No @FromJson adapter for class java.lang.String "
-          + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected.getCause())
+          .hasMessage(
+              "No @FromJson adapter for class java.lang.String "
+                  + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
       assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause().getCause()).hasMessage("No next JsonAdapter for class "
-          + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected.getCause().getCause())
+          .hasMessage(
+              "No next JsonAdapter for class "
+                  + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
 
   static class ToButNoFromJsonAdapter {
-    @ToJson String fooPrefixStringToString(@FooPrefix String s) {
+    @ToJson
+    String fooPrefixStringToString(@FooPrefix String s) {
       return "foo" + s;
     }
   }
 
-  @Test public void fromButNoToJson() throws Exception {
+  @Test
+  public void fromButNoToJson() throws Exception {
     // Building it is okay.
-    Moshi moshi = new Moshi.Builder()
-        .add(new FromButNoToJsonAdapter())
-        .build();
+    Moshi moshi = new Moshi.Builder().add(new FromButNoToJsonAdapter()).build();
 
     try {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("No @ToJson adapter for class java.lang.String annotated "
-          + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-          + "\nfor class java.lang.String b"
-          + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
+      assertThat(expected)
+          .hasMessage(
+              "No @ToJson adapter for class java.lang.String annotated "
+                  + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+                  + "\nfor class java.lang.String b"
+                  + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
       assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause()).hasMessage("No @ToJson adapter for class java.lang.String "
-          + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected.getCause())
+          .hasMessage(
+              "No @ToJson adapter for class java.lang.String "
+                  + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
       assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause().getCause()).hasMessage("No next JsonAdapter for class "
-          + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertThat(expected.getCause().getCause())
+          .hasMessage(
+              "No next JsonAdapter for class "
+                  + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
 
   static class FromButNoToJsonAdapter {
-    @FromJson @FooPrefix String fooPrefixStringFromString(String s) throws Exception {
+    @FromJson
+    @FooPrefix
+    String fooPrefixStringFromString(String s) throws Exception {
       if (!s.startsWith("foo")) throw new JsonDataException();
       return s.substring(3);
     }

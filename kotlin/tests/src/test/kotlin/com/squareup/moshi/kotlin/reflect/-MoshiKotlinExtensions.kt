@@ -32,12 +32,10 @@ import kotlin.reflect.typeOf
  * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
  *         itself is handled, nested types (such as in generics) are not resolved.
  */
-@ExperimentalStdlibApi
 inline fun <reified T> Moshi.adapter(): JsonAdapter<T> {
   return adapter(typeOf<T>())
 }
 
-@ExperimentalStdlibApi
 inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>) = add(typeOf<T>().toType(), adapter)
 
 /**

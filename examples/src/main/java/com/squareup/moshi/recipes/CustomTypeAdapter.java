@@ -21,18 +21,17 @@ import com.squareup.moshi.recipes.models.BlackjackHand;
 
 public final class CustomTypeAdapter {
   public void run() throws Exception {
-    String json = ""
-        + "{\n"
-        + "  \"hidden_card\": \"6S\",\n"
-        + "  \"visible_cards\": [\n"
-        + "    \"4C\",\n"
-        + "    \"AH\"\n"
-        + "  ]\n"
-        + "}\n";
+    String json =
+        ""
+            + "{\n"
+            + "  \"hidden_card\": \"6S\",\n"
+            + "  \"visible_cards\": [\n"
+            + "    \"4C\",\n"
+            + "    \"AH\"\n"
+            + "  ]\n"
+            + "}\n";
 
-    Moshi moshi = new Moshi.Builder()
-        .add(new CardAdapter())
-        .build();
+    Moshi moshi = new Moshi.Builder().add(new CardAdapter()).build();
     JsonAdapter<BlackjackHand> jsonAdapter = moshi.adapter(BlackjackHand.class);
 
     BlackjackHand blackjackHand = jsonAdapter.fromJson(json);

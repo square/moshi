@@ -56,24 +56,24 @@ internal class PropertyGenerator(
 
   fun generateLocalProperty(): PropertySpec {
     return PropertySpec.builder(localName, target.type.copy(nullable = true))
-        .mutable(true)
-        .apply {
-          if (hasConstructorDefault) {
-            // We default to the primitive default type, as reflectively invoking the constructor
-            // without this (even though it's a throwaway) will fail argument type resolution in
-            // the reflective invocation.
-            initializer(target.type.defaultPrimitiveValue())
-          } else {
-            initializer("null")
-          }
+      .mutable(true)
+      .apply {
+        if (hasConstructorDefault) {
+          // We default to the primitive default type, as reflectively invoking the constructor
+          // without this (even though it's a throwaway) will fail argument type resolution in
+          // the reflective invocation.
+          initializer(target.type.defaultPrimitiveValue())
+        } else {
+          initializer("null")
         }
-        .build()
+      }
+      .build()
   }
 
   fun generateLocalIsPresentProperty(): PropertySpec {
     return PropertySpec.builder(localIsPresentName, BOOLEAN)
-        .mutable(true)
-        .initializer("false")
-        .build()
+      .mutable(true)
+      .initializer("false")
+      .build()
   }
 }

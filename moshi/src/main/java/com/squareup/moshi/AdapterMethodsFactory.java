@@ -15,6 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.internal.Util.canonicalize;
+import static com.squareup.moshi.internal.Util.jsonAnnotations;
+import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
+
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -27,10 +31,6 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-import static com.squareup.moshi.internal.Util.canonicalize;
-import static com.squareup.moshi.internal.Util.jsonAnnotations;
-import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
-
 final class AdapterMethodsFactory implements JsonAdapter.Factory {
   private final List<AdapterMethod> toAdapters;
   private final List<AdapterMethod> fromAdapters;
@@ -40,7 +40,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     this.fromAdapters = fromAdapters;
   }
 
-  @Override public @Nullable JsonAdapter<?> create(
+  @Override
+  public @Nullable JsonAdapter<?> create(
       final Type type, final Set<? extends Annotation> annotations, final Moshi moshi) {
     final AdapterMethod toAdapter = get(toAdapters, type, annotations);
     final AdapterMethod fromAdapter = get(fromAdapters, type, annotations);
@@ -52,8 +53,12 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         delegate = moshi.nextAdapter(this, type, annotations);
       } catch (IllegalArgumentException e) {
         String missingAnnotation = toAdapter == null ? "@ToJson" : "@FromJson";
-        throw new IllegalArgumentException("No " + missingAnnotation + " adapter for "
-            + typeAnnotatedWithAnnotations(type, annotations), e);
+        throw new IllegalArgumentException(
+            "No "
+                + missingAnnotation
+                + " adapter for "
+                + typeAnnotatedWithAnnotations(type, annotations),
+            e);
       }
     } else {
       delegate = null;
@@ -63,7 +68,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     if (fromAdapter != null) fromAdapter.bind(moshi, this);
 
     return new JsonAdapter<Object>() {
-      @Override public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
+      @Override
+      public void toJson(JsonWriter writer, @Nullable Object value) throws IOException {
         if (toAdapter == null) {
           delegate.toJson(writer, value);
         } else if (!toAdapter.nullable && value == null) {
@@ -79,7 +85,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         }
       }
 
-      @Override public @Nullable Object fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable Object fromJson(JsonReader reader) throws IOException {
         if (fromAdapter == null) {
           return delegate.fromJson(reader);
         } else if (!fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL) {
@@ -96,7 +103,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         }
       }
 
-      @Override public String toString() {
+      @Override
+      public String toString() {
         return "JsonAdapter" + annotations + "(" + type + ")";
       }
     };
@@ -112,9 +120,13 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           AdapterMethod toAdapter = toAdapter(adapter, m);
           AdapterMethod conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations);
           if (conflicting != null) {
-            throw new IllegalArgumentException("Conflicting @ToJson methods:\n"
-                + "    " + conflicting.method + "\n"
-                + "    " + toAdapter.method);
+            throw new IllegalArgumentException(
+                "Conflicting @ToJson methods:\n"
+                    + "    "
+                    + conflicting.method
+                    + "\n"
+                    + "    "
+                    + toAdapter.method);
           }
           toAdapters.add(toAdapter);
         }
@@ -123,9 +135,13 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
           AdapterMethod fromAdapter = fromAdapter(adapter, m);
           AdapterMethod conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations);
           if (conflicting != null) {
-            throw new IllegalArgumentException("Conflicting @FromJson methods:\n"
-                + "    " + conflicting.method + "\n"
-                + "    " + fromAdapter.method);
+            throw new IllegalArgumentException(
+                "Conflicting @FromJson methods:\n"
+                    + "    "
+                    + conflicting.method
+                    + "\n"
+                    + "    "
+                    + fromAdapter.method);
           }
           fromAdapters.add(fromAdapter);
         }
@@ -133,8 +149,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     }
 
     if (toAdapters.isEmpty() && fromAdapters.isEmpty()) {
-      throw new IllegalArgumentException("Expected at least one @ToJson or @FromJson method on "
-          + adapter.getClass().getName());
+      throw new IllegalArgumentException(
+          "Expected at least one @ToJson or @FromJson method on " + adapter.getClass().getName());
     }
 
     return new AdapterMethodsFactory(toAdapters, fromAdapters);
@@ -157,9 +173,16 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       // void pointToJson(JsonWriter jsonWriter, Point point) {
       // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
       Set<? extends Annotation> qualifierAnnotations = jsonAnnotations(parameterAnnotations[1]);
-      return new AdapterMethod(parameterTypes[1], qualifierAnnotations, adapter, method,
-          parameterTypes.length, 2, true) {
-        @Override public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
+      return new AdapterMethod(
+          parameterTypes[1],
+          qualifierAnnotations,
+          adapter,
+          method,
+          parameterTypes.length,
+          2,
+          true) {
+        @Override
+        public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
             throws IOException, InvocationTargetException {
           invoke(writer, value);
         }
@@ -171,19 +194,28 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       final Set<? extends Annotation> qualifierAnnotations =
           jsonAnnotations(parameterAnnotations[0]);
       boolean nullable = Util.hasNullable(parameterAnnotations[0]);
-      return new AdapterMethod(parameterTypes[0], qualifierAnnotations, adapter, method,
-          parameterTypes.length, 1, nullable) {
+      return new AdapterMethod(
+          parameterTypes[0],
+          qualifierAnnotations,
+          adapter,
+          method,
+          parameterTypes.length,
+          1,
+          nullable) {
         private JsonAdapter<Object> delegate;
 
-        @Override public void bind(Moshi moshi, JsonAdapter.Factory factory) {
+        @Override
+        public void bind(Moshi moshi, JsonAdapter.Factory factory) {
           super.bind(moshi, factory);
-          delegate = Types.equals(parameterTypes[0], returnType)
-              && qualifierAnnotations.equals(returnTypeAnnotations)
-              ? moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
-              : moshi.adapter(returnType, returnTypeAnnotations);
+          delegate =
+              Types.equals(parameterTypes[0], returnType)
+                      && qualifierAnnotations.equals(returnTypeAnnotations)
+                  ? moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
+                  : moshi.adapter(returnType, returnTypeAnnotations);
         }
 
-        @Override public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
+        @Override
+        public void toJson(Moshi moshi, JsonWriter writer, @Nullable Object value)
             throws IOException, InvocationTargetException {
           Object intermediate = invoke(value);
           delegate.toJson(writer, intermediate);
@@ -191,12 +223,15 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       };
 
     } else {
-      throw new IllegalArgumentException("Unexpected signature for " + method + ".\n"
-          + "@ToJson method signatures may have one of the following structures:\n"
-          + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
-          + "    <any access modifier> void toJson(JsonWriter writer, T value,"
-          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
-          + "    <any access modifier> R toJson(T value) throws <any>;\n");
+      throw new IllegalArgumentException(
+          "Unexpected signature for "
+              + method
+              + ".\n"
+              + "@ToJson method signatures may have one of the following structures:\n"
+              + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
+              + "    <any access modifier> void toJson(JsonWriter writer, T value,"
+              + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+              + "    <any access modifier> R toJson(T value) throws <any>;\n");
     }
   }
 
@@ -226,9 +261,10 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         && parametersAreJsonAdapters(1, parameterTypes)) {
       // Point pointFromJson(JsonReader jsonReader) {
       // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
-      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method,
-          parameterTypes.length, 1, true) {
-        @Override public Object fromJson(Moshi moshi, JsonReader reader)
+      return new AdapterMethod(
+          returnType, returnTypeAnnotations, adapter, method, parameterTypes.length, 1, true) {
+        @Override
+        public Object fromJson(Moshi moshi, JsonReader reader)
             throws IOException, InvocationTargetException {
           return invoke(reader);
         }
@@ -236,22 +272,25 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
 
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // Point pointFromJson(List<Integer> o) {
-      final Set<? extends Annotation> qualifierAnnotations
-          = jsonAnnotations(parameterAnnotations[0]);
+      final Set<? extends Annotation> qualifierAnnotations =
+          jsonAnnotations(parameterAnnotations[0]);
       boolean nullable = Util.hasNullable(parameterAnnotations[0]);
-      return new AdapterMethod(returnType, returnTypeAnnotations, adapter, method,
-          parameterTypes.length, 1, nullable) {
+      return new AdapterMethod(
+          returnType, returnTypeAnnotations, adapter, method, parameterTypes.length, 1, nullable) {
         JsonAdapter<Object> delegate;
 
-        @Override public void bind(Moshi moshi, JsonAdapter.Factory factory) {
+        @Override
+        public void bind(Moshi moshi, JsonAdapter.Factory factory) {
           super.bind(moshi, factory);
-          delegate = Types.equals(parameterTypes[0], returnType)
-              && qualifierAnnotations.equals(returnTypeAnnotations)
-              ? moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
-              : moshi.adapter(parameterTypes[0], qualifierAnnotations);
+          delegate =
+              Types.equals(parameterTypes[0], returnType)
+                      && qualifierAnnotations.equals(returnTypeAnnotations)
+                  ? moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
+                  : moshi.adapter(parameterTypes[0], qualifierAnnotations);
         }
 
-        @Override public Object fromJson(Moshi moshi, JsonReader reader)
+        @Override
+        public Object fromJson(Moshi moshi, JsonReader reader)
             throws IOException, InvocationTargetException {
           Object intermediate = delegate.fromJson(reader);
           return invoke(intermediate);
@@ -259,12 +298,15 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
       };
 
     } else {
-      throw new IllegalArgumentException("Unexpected signature for " + method + ".\n"
-          + "@FromJson method signatures may have one of the following structures:\n"
-          + "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n"
-          + "    <any access modifier> R fromJson(JsonReader jsonReader,"
-          + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
-          + "    <any access modifier> R fromJson(T value) throws <any>;\n");
+      throw new IllegalArgumentException(
+          "Unexpected signature for "
+              + method
+              + ".\n"
+              + "@FromJson method signatures may have one of the following structures:\n"
+              + "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n"
+              + "    <any access modifier> R fromJson(JsonReader jsonReader,"
+              + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+              + "    <any access modifier> R fromJson(T value) throws <any>;\n");
     }
   }
 
@@ -289,8 +331,14 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     final JsonAdapter<?>[] jsonAdapters;
     final boolean nullable;
 
-    AdapterMethod(Type type, Set<? extends Annotation> annotations, Object adapter,
-        Method method, int parameterCount, int adaptersOffset, boolean nullable) {
+    AdapterMethod(
+        Type type,
+        Set<? extends Annotation> annotations,
+        Object adapter,
+        Method method,
+        int parameterCount,
+        int adaptersOffset,
+        boolean nullable) {
       this.type = canonicalize(type);
       this.annotations = annotations;
       this.adapter = adapter;

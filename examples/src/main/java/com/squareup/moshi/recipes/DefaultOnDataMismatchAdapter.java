@@ -35,7 +35,8 @@ public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
     this.defaultValue = defaultValue;
   }
 
-  @Override public T fromJson(JsonReader reader) throws IOException {
+  @Override
+  public T fromJson(JsonReader reader) throws IOException {
     // Use a peeked reader to leave the reader in a known state even if there's an exception.
     JsonReader peeked = reader.peekJson();
     T result;
@@ -52,13 +53,15 @@ public final class DefaultOnDataMismatchAdapter<T> extends JsonAdapter<T> {
     return result;
   }
 
-  @Override public void toJson(JsonWriter writer, T value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, T value) throws IOException {
     delegate.toJson(writer, value);
   }
 
   public static <T> Factory newFactory(final Class<T> type, final T defaultValue) {
     return new Factory() {
-      @Override public @Nullable JsonAdapter<?> create(
+      @Override
+      public @Nullable JsonAdapter<?> create(
           Type requestedType, Set<? extends Annotation> annotations, Moshi moshi) {
         if (type != requestedType) return null;
         JsonAdapter<T> delegate = moshi.nextAdapter(this, type, annotations);

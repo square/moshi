@@ -20,20 +20,20 @@ import javax.tools.StandardLocation
  * class with a deterministic name (see [outputFile]) with an appropriate originating element.
  */
 internal data class ProguardConfig(
-    val targetClass: ClassName,
-    val adapterName: String,
-    val adapterConstructorParams: List<String>,
-    val targetConstructorHasDefaults: Boolean,
-    val targetConstructorParams: List<String>,
-    val qualifierProperties: Set<QualifierAdapterProperty>
+  val targetClass: ClassName,
+  val adapterName: String,
+  val adapterConstructorParams: List<String>,
+  val targetConstructorHasDefaults: Boolean,
+  val targetConstructorParams: List<String>,
+  val qualifierProperties: Set<QualifierAdapterProperty>
 ) {
   private val outputFile = "META-INF/proguard/moshi-${targetClass.canonicalName}.pro"
 
   /** Writes this to `filer`. */
   fun writeTo(filer: Filer, vararg originatingElements: Element) {
     filer.createResource(StandardLocation.CLASS_OUTPUT, "", outputFile, *originatingElements)
-        .openWriter()
-        .use(::writeTo)
+      .openWriter()
+      .use(::writeTo)
   }
 
   private fun writeTo(out: Appendable): Unit = out.run {
@@ -49,28 +49,28 @@ internal data class ProguardConfig(
     val targetName = targetClass.reflectionName()
     val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
     // Keep the class name for Moshi's reflective lookup based on it
-    appendln("-if class $targetName")
-    appendln("-keepnames class $targetName")
+    appendLine("-if class $targetName")
+    appendLine("-keepnames class $targetName")
 
-    appendln("-if class $targetName")
-    appendln("-keep class $adapterCanonicalName {")
+    appendLine("-if class $targetName")
+    appendLine("-keep class $adapterCanonicalName {")
     // Keep the constructor for Moshi's reflective lookup
     val constructorArgs = adapterConstructorParams.joinToString(",")
-    appendln("    public <init>($constructorArgs);")
+    appendLine("    public <init>($constructorArgs);")
     // Keep any qualifier properties
     for (qualifierProperty in qualifierProperties) {
-      appendln("    private com.squareup.moshi.JsonAdapter ${qualifierProperty.name};")
+      appendLine("    private com.squareup.moshi.JsonAdapter ${qualifierProperty.name};")
     }
-    appendln("}")
+    appendLine("}")
 
     qualifierProperties.asSequence()
-        .flatMap { it.qualifiers.asSequence() }
-        .map(ClassName::reflectionName)
-        .sorted()
-        .forEach { qualifier ->
-          appendln("-if class $targetName")
-          appendln("-keep @interface $qualifier")
-        }
+      .flatMap { it.qualifiers.asSequence() }
+      .map(ClassName::reflectionName)
+      .sorted()
+      .forEach { qualifier ->
+        appendLine("-if class $targetName")
+        appendLine("-keep @interface $qualifier")
+      }
 
     if (targetConstructorHasDefaults) {
       // If the target class has default parameter values, keep its synthetic constructor
@@ -80,10 +80,10 @@ internal data class ProguardConfig(
       //     synthetic <init>(...);
       // }
       //
-      appendln("-if class $targetName")
-      appendln("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
-      appendln("-if class $targetName")
-      appendln("-keepclassmembers class $targetName {")
+      appendLine("-if class $targetName")
+      appendLine("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
+      appendLine("-if class $targetName")
+      appendLine("-keepclassmembers class $targetName {")
       val allParams = targetConstructorParams.toMutableList()
       val maskCount = if (targetConstructorParams.isEmpty()) {
         0
@@ -95,8 +95,8 @@ internal data class ProguardConfig(
       }
       allParams += "kotlin.jvm.internal.DefaultConstructorMarker"
       val params = allParams.joinToString(",")
-      appendln("    public synthetic <init>($params);")
-      appendln("}")
+      appendLine("    public synthetic <init>($params);")
+      appendLine("}")
     }
   }
 }

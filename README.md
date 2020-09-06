@@ -280,7 +280,7 @@ reflection, Moshi is designed to help you out when things go wrong.
 JsonDataException: Expected one of [CLUBS, DIAMONDS, HEARTS, SPADES] but was ANCHOR at path $.visible_cards[2].suit
   at com.squareup.moshi.JsonAdapters$11.fromJson(JsonAdapters.java:188)
   at com.squareup.moshi.JsonAdapters$11.fromJson(JsonAdapters.java:180)
-	...
+  ...
 ```
 
 Moshi always throws a standard `java.io.IOException` if there is an error reading the JSON document,
@@ -613,12 +613,12 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 R8 / ProGuard
 --------
 
-If using Android, the Android Gradle Plugin should automatically extract embedded rules included in 
+If using Android, the Android Gradle Plugin should automatically extract embedded rules included in
 Moshi's jar artifacts.
 
 If you need to add them manually, you can add them from the following files:
- 
-- [`moshi`](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro). 
+
+- [`moshi`](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro).
 - [`moshi-kotlin`](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
 - You might also need rules for [Okio](https://github.com/square/okio), which is a dependency of this library.
 

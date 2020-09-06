@@ -25,19 +25,21 @@ import javax.annotation.Nullable;
 /**
  * Converts maps with string keys to JSON objects.
  *
- * TODO: support maps with other key types and convert to/from strings.
+ * <p>TODO: support maps with other key types and convert to/from strings.
  */
 final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
-  public static final Factory FACTORY = new Factory() {
-    @Override public @Nullable JsonAdapter<?> create(
-        Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      if (!annotations.isEmpty()) return null;
-      Class<?> rawType = Types.getRawType(type);
-      if (rawType != Map.class) return null;
-      Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
-      return new MapJsonAdapter<>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe();
-    }
-  };
+  public static final Factory FACTORY =
+      new Factory() {
+        @Override
+        public @Nullable JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          if (!annotations.isEmpty()) return null;
+          Class<?> rawType = Types.getRawType(type);
+          if (rawType != Map.class) return null;
+          Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
+          return new MapJsonAdapter<>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe();
+        }
+      };
 
   private final JsonAdapter<K> keyAdapter;
   private final JsonAdapter<V> valueAdapter;
@@ -47,7 +49,8 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
     this.valueAdapter = moshi.adapter(valueType);
   }
 
-  @Override public void toJson(JsonWriter writer, Map<K, V> map) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, Map<K, V> map) throws IOException {
     writer.beginObject();
     for (Map.Entry<K, V> entry : map.entrySet()) {
       if (entry.getKey() == null) {
@@ -60,7 +63,8 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
     writer.endObject();
   }
 
-  @Override public Map<K, V> fromJson(JsonReader reader) throws IOException {
+  @Override
+  public Map<K, V> fromJson(JsonReader reader) throws IOException {
     LinkedHashTreeMap<K, V> result = new LinkedHashTreeMap<>();
     reader.beginObject();
     while (reader.hasNext()) {
@@ -69,15 +73,23 @@ final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
       V value = valueAdapter.fromJson(reader);
       V replaced = result.put(name, value);
       if (replaced != null) {
-        throw new JsonDataException("Map key '" + name + "' has multiple values at path "
-            + reader.getPath() + ": " + replaced + " and " + value);
+        throw new JsonDataException(
+            "Map key '"
+                + name
+                + "' has multiple values at path "
+                + reader.getPath()
+                + ": "
+                + replaced
+                + " and "
+                + value);
       }
     }
     reader.endObject();
     return result;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "JsonAdapter(" + keyAdapter + "=" + valueAdapter + ")";
   }
 }

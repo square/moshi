@@ -28,7 +28,8 @@ public final class Tournament {
     this.start = start;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return name + " at " + location + " on " + start;
   }
 }

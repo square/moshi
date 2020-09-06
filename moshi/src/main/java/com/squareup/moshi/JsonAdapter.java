@@ -37,13 +37,16 @@ import okio.BufferedSource;
  * <p>Custom JsonAdapter implementations should be designed to be thread-safe.
  */
 public abstract class JsonAdapter<T> {
-  @CheckReturnValue public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
+  @CheckReturnValue
+  public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
 
-  @CheckReturnValue public final @Nullable T fromJson(BufferedSource source) throws IOException {
+  @CheckReturnValue
+  public final @Nullable T fromJson(BufferedSource source) throws IOException {
     return fromJson(JsonReader.of(source));
   }
 
-  @CheckReturnValue public final @Nullable T fromJson(String string) throws IOException {
+  @CheckReturnValue
+  public final @Nullable T fromJson(String string) throws IOException {
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
     T result = fromJson(reader);
     if (!isLenient() && reader.peek() != JsonReader.Token.END_DOCUMENT) {
@@ -59,7 +62,8 @@ public abstract class JsonAdapter<T> {
     toJson(writer, value);
   }
 
-  @CheckReturnValue public final String toJson(@Nullable T value) {
+  @CheckReturnValue
+  public final String toJson(@Nullable T value) {
     Buffer buffer = new Buffer();
     try {
       toJson(buffer, value);
@@ -74,12 +78,13 @@ public abstract class JsonAdapter<T> {
    * booleans, and nulls.
    *
    * <p>Values encoded using {@code value(double)} or {@code value(long)} are modeled with the
-   * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a
-   * {@link Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link
-   * Long}), as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}),
-   * and as a {@link BigDecimal} for all other types.
+   * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a {@link
+   * Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link Long}),
+   * as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}), and as a
+   * {@link BigDecimal} for all other types.
    */
-  @CheckReturnValue public final @Nullable Object toJsonValue(@Nullable T value) {
+  @CheckReturnValue
+  public final @Nullable Object toJsonValue(@Nullable T value) {
     JsonValueWriter writer = new JsonValueWriter();
     try {
       toJson(writer, value);
@@ -93,7 +98,8 @@ public abstract class JsonAdapter<T> {
    * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
    * strings, numbers, booleans and nulls.
    */
-  @CheckReturnValue public final @Nullable T fromJsonValue(@Nullable Object value) {
+  @CheckReturnValue
+  public final @Nullable T fromJsonValue(@Nullable Object value) {
     JsonValueReader reader = new JsonValueReader(value);
     try {
       return fromJson(reader);
@@ -106,13 +112,17 @@ public abstract class JsonAdapter<T> {
    * Returns a JSON adapter equal to this JSON adapter, but that serializes nulls when encoding
    * JSON.
    */
-  @CheckReturnValue public final JsonAdapter<T> serializeNulls() {
+  @CheckReturnValue
+  public final JsonAdapter<T> serializeNulls() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
-      @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);
       }
-      @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+
+      @Override
+      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
         boolean serializeNulls = writer.getSerializeNulls();
         writer.setSerializeNulls(true);
         try {
@@ -121,10 +131,14 @@ public abstract class JsonAdapter<T> {
           writer.setSerializeNulls(serializeNulls);
         }
       }
-      @Override boolean isLenient() {
+
+      @Override
+      boolean isLenient() {
         return delegate.isLenient();
       }
-      @Override public String toString() {
+
+      @Override
+      public String toString() {
         return delegate + ".serializeNulls()";
       }
     };
@@ -134,7 +148,8 @@ public abstract class JsonAdapter<T> {
    * Returns a JSON adapter equal to this JSON adapter, but with support for reading and writing
    * nulls.
    */
-  @CheckReturnValue public final JsonAdapter<T> nullSafe() {
+  @CheckReturnValue
+  public final JsonAdapter<T> nullSafe() {
     if (this instanceof NullSafeJsonAdapter) {
       return this;
     }
@@ -148,7 +163,8 @@ public abstract class JsonAdapter<T> {
    * <p>Note that this adapter will not usually be invoked for absent values and so those must be
    * handled elsewhere. This should only be used to fail on explicit nulls.
    */
-  @CheckReturnValue public final JsonAdapter<T> nonNull() {
+  @CheckReturnValue
+  public final JsonAdapter<T> nonNull() {
     if (this instanceof NonNullJsonAdapter) {
       return this;
     }
@@ -156,10 +172,12 @@ public abstract class JsonAdapter<T> {
   }
 
   /** Returns a JSON adapter equal to this, but is lenient when reading and writing. */
-  @CheckReturnValue public final JsonAdapter<T> lenient() {
+  @CheckReturnValue
+  public final JsonAdapter<T> lenient() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
-      @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean lenient = reader.isLenient();
         reader.setLenient(true);
         try {
@@ -168,7 +186,9 @@ public abstract class JsonAdapter<T> {
           reader.setLenient(lenient);
         }
       }
-      @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+
+      @Override
+      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
         boolean lenient = writer.isLenient();
         writer.setLenient(true);
         try {
@@ -177,10 +197,14 @@ public abstract class JsonAdapter<T> {
           writer.setLenient(lenient);
         }
       }
-      @Override boolean isLenient() {
+
+      @Override
+      boolean isLenient() {
         return true;
       }
-      @Override public String toString() {
+
+      @Override
+      public String toString() {
         return delegate + ".lenient()";
       }
     };
@@ -192,10 +216,12 @@ public abstract class JsonAdapter<T> {
    * This constraint applies to both the top-level message handled by this type adapter as well as
    * to nested messages.
    */
-  @CheckReturnValue public final JsonAdapter<T> failOnUnknown() {
+  @CheckReturnValue
+  public final JsonAdapter<T> failOnUnknown() {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
-      @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean skipForbidden = reader.failOnUnknown();
         reader.setFailOnUnknown(true);
         try {
@@ -204,13 +230,19 @@ public abstract class JsonAdapter<T> {
           reader.setFailOnUnknown(skipForbidden);
         }
       }
-      @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+
+      @Override
+      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
         delegate.toJson(writer, value);
       }
-      @Override boolean isLenient() {
+
+      @Override
+      boolean isLenient() {
         return delegate.isLenient();
       }
-      @Override public String toString() {
+
+      @Override
+      public String toString() {
         return delegate + ".failOnUnknown()";
       }
     };
@@ -224,16 +256,20 @@ public abstract class JsonAdapter<T> {
    *
    * @param indent a string containing only whitespace.
    */
-  @CheckReturnValue public JsonAdapter<T> indent(final String indent) {
+  @CheckReturnValue
+  public JsonAdapter<T> indent(final String indent) {
     if (indent == null) {
       throw new NullPointerException("indent == null");
     }
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
-      @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+      @Override
+      public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);
       }
-      @Override public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+
+      @Override
+      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
         String originalIndent = writer.getIndent();
         writer.setIndent(indent);
         try {
@@ -242,10 +278,14 @@ public abstract class JsonAdapter<T> {
           writer.setIndent(originalIndent);
         }
       }
-      @Override boolean isLenient() {
+
+      @Override
+      boolean isLenient() {
         return delegate.isLenient();
       }
-      @Override public String toString() {
+
+      @Override
+      public String toString() {
         return delegate + ".indent(\"" + indent + "\")";
       }
     };
@@ -265,6 +305,7 @@ public abstract class JsonAdapter<T> {
      * {@link Moshi#nextAdapter} to delegate to the underlying adapter of the same type.
      */
     @CheckReturnValue
-    @Nullable JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi);
+    @Nullable
+    JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi);
   }
 }

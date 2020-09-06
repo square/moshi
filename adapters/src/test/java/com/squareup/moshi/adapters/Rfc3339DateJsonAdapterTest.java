@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi.adapters;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.squareup.moshi.JsonAdapter;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,17 +25,17 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public final class Rfc3339DateJsonAdapterTest {
   private final JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter().lenient();
 
-  @Test public void fromJsonWithTwoDigitMillis() throws Exception {
+  @Test
+  public void fromJsonWithTwoDigitMillis() throws Exception {
     assertThat(adapter.fromJson("\"1985-04-12T23:20:50.52Z\""))
         .isEqualTo(newDate(1985, 4, 12, 23, 20, 50, 520, 0));
   }
 
-  @Test public void fromJson() throws Exception {
+  @Test
+  public void fromJson() throws Exception {
     assertThat(adapter.fromJson("\"1970-01-01T00:00:00.000Z\""))
         .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
     assertThat(adapter.fromJson("\"1985-04-12T23:20:50.520Z\""))
@@ -48,7 +50,8 @@ public final class Rfc3339DateJsonAdapterTest {
         .isEqualTo(newDate(1937, 1, 1, 12, 0, 27, 870, 20));
   }
 
-  @Test public void toJson() throws Exception {
+  @Test
+  public void toJson() throws Exception {
     assertThat(adapter.toJson(newDate(1970, 1, 1, 0, 0, 0, 0, 0)))
         .isEqualTo("\"1970-01-01T00:00:00.000Z\"");
     assertThat(adapter.toJson(newDate(1985, 4, 12, 23, 20, 50, 520, 0)))
@@ -63,7 +66,8 @@ public final class Rfc3339DateJsonAdapterTest {
         .isEqualTo("\"1937-01-01T11:40:27.870Z\"");
   }
 
-  @Test public void nullSafety() throws Exception {
+  @Test
+  public void nullSafety() throws Exception {
     assertThat(adapter.toJson(null)).isEqualTo("null");
     assertThat(adapter.fromJson("null")).isNull();
   }

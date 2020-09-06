@@ -29,12 +29,11 @@ import javax.annotation.Nullable;
  * not match any enum value. To use, add this as an adapter for your enum type on your {@link
  * com.squareup.moshi.Moshi.Builder Moshi.Builder}:
  *
- * <pre> {@code
- *
- *   Moshi moshi = new Moshi.Builder()
- *       .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
- *           .withUnknownFallback(CurrencyCode.USD))
- *       .build();
+ * <pre>{@code
+ * Moshi moshi = new Moshi.Builder()
+ *     .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
+ *         .withUnknownFallback(CurrencyCode.USD))
+ *     .build();
  * }</pre>
  */
 public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
@@ -78,15 +77,21 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     }
   }
 
-  @Override public @Nullable T fromJson(JsonReader reader) throws IOException {
+  @Override
+  public @Nullable T fromJson(JsonReader reader) throws IOException {
     int index = reader.selectString(options);
     if (index != -1) return constants[index];
 
     String path = reader.getPath();
     if (!useFallbackValue) {
       String name = reader.nextString();
-      throw new JsonDataException("Expected one of "
-          + Arrays.asList(nameStrings) + " but was " + name + " at path " + path);
+      throw new JsonDataException(
+          "Expected one of "
+              + Arrays.asList(nameStrings)
+              + " but was "
+              + name
+              + " at path "
+              + path);
     }
     if (reader.peek() != JsonReader.Token.STRING) {
       throw new JsonDataException(
@@ -96,7 +101,8 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     return fallbackValue;
   }
 
-  @Override public void toJson(JsonWriter writer, T value) throws IOException {
+  @Override
+  public void toJson(JsonWriter writer, T value) throws IOException {
     if (value == null) {
       throw new NullPointerException(
           "value was null! Wrap in .nullSafe() to write nullable values.");
@@ -104,7 +110,8 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
     writer.value(nameStrings[value.ordinal()]);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "EnumJsonAdapter(" + enumType.getName() + ")";
   }
 }
