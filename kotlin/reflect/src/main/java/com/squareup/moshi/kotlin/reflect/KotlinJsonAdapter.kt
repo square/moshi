@@ -109,8 +109,9 @@ internal class KotlinJsonAdapter<T>(
 
     // Confirm all parameters are present, optional, or nullable.
     for (i in 0 until constructorSize) {
-      if (values[i] === ABSENT_VALUE && !constructor.parameters[i].declaresDefaultValue) {
-        if (!constructor.parameters[i].km.type!!.isNullable) {
+      val param = constructor.parameters[i]
+      if (values[i] === ABSENT_VALUE && !param.declaresDefaultValue) {
+        if (!param.isNullable) {
           throw Util.missingProperty(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,
@@ -310,49 +311,54 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         val parameterData = parametersByName[property.name]
 
         if (Modifier.isTransient(propertyField?.modifiers ?: 0)) {
-          if (parameterData == null) {
-            continue
+          parameterData?.run {
+            require(declaresDefaultValue) {
+              "No default value for transient constructor parameter '$name' on type '${rawType.canonicalName}'"
+            }
           }
-          require(parameterData.declaresDefaultValue) {
-            "No default value for transient constructor parameter '${parameterData.name}' on type '${rawType.canonicalName}'"
-          }
+          continue
+        }
+
+        if (parameterData != null) {
           require(parameterData.km.type isEqualTo property.returnType) {
             "'${property.name}' has a constructor parameter of type ${parameterData.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
           }
-
-          val getterMethod = property.getterSignature?.let(signatureSearcher::findMethod)
-          val setterMethod = property.setterSignature?.let(signatureSearcher::findMethod)
-          val annotationsMethod = property.syntheticMethodForAnnotations?.let(
-            signatureSearcher::findMethod
-          )
-
-          val propertyData = PropertyData(
-            km = property,
-            jvmField = propertyField,
-            jvmGetter = getterMethod,
-            jvmSetter = setterMethod,
-            jvmAnnotationsMethod = annotationsMethod,
-            parameter = parameterData
-          )
-          val allAnnotations = propertyData.annotations.toMutableList()
-          val jsonAnnotation = allAnnotations.filterIsInstance<Json>().firstOrNull()
-
-          val name = jsonAnnotation?.name ?: property.name
-          val resolvedPropertyType = resolve(type, rawType, propertyData.javaType)
-          val adapter = moshi.adapter<Any>(
-            resolvedPropertyType,
-            Util.jsonAnnotations(allAnnotations.toTypedArray()),
-            property.name
-          )
-
-          @Suppress("UNCHECKED_CAST")
-          bindingsByName[property.name] = KotlinJsonAdapter.Binding(
-            name,
-            jsonAnnotation?.name ?: name,
-            adapter,
-            propertyData
-          )
         }
+
+        if (!Flag.Property.IS_VAR(property.flags) && parameterData == null) continue
+
+        val getterMethod = property.getterSignature?.let(signatureSearcher::findMethod)
+        val setterMethod = property.setterSignature?.let(signatureSearcher::findMethod)
+        val annotationsMethod = property.syntheticMethodForAnnotations?.let(
+          signatureSearcher::findMethod
+        )
+
+        val propertyData = PropertyData(
+          km = property,
+          jvmField = propertyField,
+          jvmGetter = getterMethod,
+          jvmSetter = setterMethod,
+          jvmAnnotationsMethod = annotationsMethod,
+          parameter = parameterData
+        )
+        val allAnnotations = propertyData.annotations.toMutableList()
+        val jsonAnnotation = allAnnotations.filterIsInstance<Json>().firstOrNull()
+
+        val name = jsonAnnotation?.name ?: property.name
+        val resolvedPropertyType = resolve(type, rawType, propertyData.javaType)
+        val adapter = moshi.adapter<Any>(
+          resolvedPropertyType,
+          Util.jsonAnnotations(allAnnotations.toTypedArray()),
+          property.name
+        )
+
+        @Suppress("UNCHECKED_CAST")
+        bindingsByName[property.name] = KotlinJsonAdapter.Binding(
+          name,
+          jsonAnnotation?.name ?: name,
+          adapter,
+          propertyData
+        )
       }
 
       val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
@@ -362,6 +368,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         require(binding != null || parameter.declaresDefaultValue) {
           "No property for required constructor parameter '${parameter.name}' on type '${rawType.canonicalName}'"
         }
+        bindings += binding
       }
 
       var index = bindings.size
@@ -612,6 +619,7 @@ internal data class ParameterData(
 ) {
   val name get() = km.name
   val declaresDefaultValue get() = Flag.ValueParameter.DECLARES_DEFAULT_VALUE(km.flags)
+  val isNullable get() = km.type!!.isNullable
 }
 
 internal data class ConstructorData(
