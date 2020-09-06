@@ -327,8 +327,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
         if (!Flag.Property.IS_VAR(property.flags) && parameterData == null) continue
 
-        val getterMethod = property.getterSignature?.let(signatureSearcher::findMethod)
-        val setterMethod = property.setterSignature?.let(signatureSearcher::findMethod)
+        val getterMethod = signatureSearcher.getter(property)
+        val setterMethod = signatureSearcher.setter(property)
         val annotationsMethod = property.syntheticMethodForAnnotations?.let(
           signatureSearcher::findMethod
         )
@@ -557,6 +557,10 @@ private class JvmSignatureSearcher(clazz: Class<*>) {
   private val declaredFieldsIterator by lazy(NONE) { clazz.declaredFields.iterator() }
   private val methodIterator by lazy(NONE) { clazz.methods.iterator() }
   private val fieldIterator by lazy(NONE) { clazz.fields.iterator() }
+
+  fun getter(kmProperty: KmProperty): Method? = kmProperty.getterSignature?.let(::findMethod)
+
+  fun setter(kmProperty: KmProperty): Method? = kmProperty.setterSignature?.let(::findMethod)
 
   fun findMethod(signature: JvmMethodSignature): Method? {
     val signatureString = signature.asString()
