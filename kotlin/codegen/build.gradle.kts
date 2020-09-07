@@ -99,17 +99,3 @@ artifacts {
   runtime(shadowJar)
   archives(shadowJar)
 }
-
-// Shadow plugin doesn't natively support gradle metadata, so we have to tell the maven plugin where
-// to get a jar now.
-afterEvaluate {
-  configure<PublishingExtension> {
-    publications.withType<MavenPublication>().configureEach {
-      if (name == "pluginMaven") {
-        // This is to properly wire the shadow jar's gradle metadata and pom information
-        setArtifacts(artifacts.matching { it.classifier != "" })
-        artifact(shadowJar)
-      }
-    }
-  }
-}
