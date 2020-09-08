@@ -45,7 +45,6 @@ public final class FromJsonWithoutStrings {
     new FromJsonWithoutStrings().run();
   }
 
-  @SuppressWarnings("checkstyle:membername")
   private static final class EventJson {
     String title;
     String begin_date;

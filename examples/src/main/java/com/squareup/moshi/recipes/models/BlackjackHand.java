@@ -17,7 +17,6 @@ package com.squareup.moshi.recipes.models;
 
 import java.util.List;
 
-@SuppressWarnings("checkstyle:membername")
 public final class BlackjackHand {
   public final Card hidden_card;
   public final List<Card> visible_cards;

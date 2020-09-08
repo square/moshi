@@ -6,9 +6,8 @@ forking the repository and sending a pull request.
 
 When submitting code, please make every effort to follow existing conventions
 and style in order to keep the code as readable as possible. Please also make
-sure your code compiles by running `./gradlew check`. Checkstyle failures
-during compilation indicate errors in your style and can be viewed in the
-failing project's `build/reports/checkstyle` directory.
+sure your code compiles by running `./gradlew build`. For any formatting errors,
+run `./gradlew spotlessApply` to fix them.
 
 Before your code can be accepted into the project you must also sign the
 [Individual Contributor License Agreement (CLA)][1].
