@@ -557,6 +557,16 @@ data class BlackjackHand(
 )
 ```
 
+or for the enum classes:
+
+```kotlin
+@JsonClass(generateAdapter = false)
+enum class Suit {
+  CLUBS, DIAMONDS, HEARTS, SPADES;
+}
+```
+
+
 The codegen adapter requires that your Kotlin types and their properties be either `internal` or
 `public` (this is Kotlin’s default visibility).
 
