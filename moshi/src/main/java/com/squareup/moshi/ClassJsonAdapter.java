@@ -96,7 +96,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
                 "Cannot serialize Kotlin type "
                     + rawType.getName()
                     + ". Reflective serialization of Kotlin classes without using kotlin-reflect has "
-                    + "undefined and unexpected behavior. Please use KotlinJsonAdapter from the "
+                    + "undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the "
                     + "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact.");
           }
 
