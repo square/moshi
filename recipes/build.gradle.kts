@@ -13,31 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    @Suppress("UnstableApiUsage")
-    exclusiveContent {
-      forRepository {
-        maven {
-          name = "JCenter"
-          setUrl("https://jcenter.bintray.com/")
-        }
-      }
-      filter {
-        includeModule("org.jetbrains.dokka", "dokka-fatjar")
-      }
-    }
+plugins {
+  kotlin("jvm")
+  kotlin("kapt")
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    freeCompilerArgs = listOf("-progressive")
   }
 }
 
-rootProject.name = "moshi-root"
-include(":moshi")
-include(":adapters")
-include(":examples")
-include(":kotlin:reflect")
-include(":kotlin:codegen")
-include(":kotlin:tests")
-include(":recipes")
+dependencies {
+  kapt(project(":kotlin:codegen"))
+  implementation(project(":moshi"))
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.truth)
+}
