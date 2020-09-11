@@ -441,6 +441,14 @@ public abstract class JsonReader implements Closeable {
   public abstract void skipValue() throws IOException;
 
   /**
+   * Reads the next value recursively into a {@link BufferedSource}. If it is an object or array,
+   * all nested elements are read into the source as well. This method is intended for use when the
+   * JSON token stream contains custom data that the caller wants to read bytes directly off of the
+   * underlying buffer.
+   */
+  public abstract BufferedSource valueSource() throws IOException;
+
+  /**
    * Returns the value of the next token, consuming it. The result may be a string, number, boolean,
    * null, map, or list, according to the JSON structure.
    *
