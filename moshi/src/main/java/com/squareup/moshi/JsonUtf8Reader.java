@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.JsonScope.STREAMING_VALUE;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -22,9 +24,14 @@ import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
+import okio.Okio;
+import okio.Sink;
+import okio.Source;
+import okio.Timeout;
 
 final class JsonUtf8Reader extends JsonReader {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
+  private static final Sink BLACKHOLE = Okio.blackhole();
 
   private static final ByteString SINGLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("'\\");
   private static final ByteString DOUBLE_QUOTE_OR_SLASH = ByteString.encodeUtf8("\"\\");
@@ -233,13 +240,22 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private int doPeek() throws IOException {
-    int peekStack = scopes[stackSize - 1];
+    return doPeek(BLACKHOLE, false);
+  }
+
+  private int doPeek(Sink sink, boolean writeIntermediates) throws IOException {
+    int scopeStackOffset = 1;
+    if (peekScope() == STREAMING_VALUE) {
+      scopeStackOffset++; // We're streaming, so the "real" peek stack is one index further back
+    }
+    int peekStack = scopes[stackSize - scopeStackOffset];
+    Sink intermediatesSink = writeIntermediates ? sink : BLACKHOLE;
     if (peekStack == JsonScope.EMPTY_ARRAY) {
-      scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
+      scopes[stackSize - scopeStackOffset] = JsonScope.NONEMPTY_ARRAY;
     } else if (peekStack == JsonScope.NONEMPTY_ARRAY) {
       // Look for a comma before the next element.
-      int c = nextNonWhitespace(true);
-      buffer.readByte(); // consume ']' or ','.
+      int c = nextNonWhitespace(true, intermediatesSink);
+      sink.write(buffer, 1); // consume ']' or ','.
       switch (c) {
         case ']':
           return peeked = PEEKED_END_ARRAY;
@@ -251,11 +267,11 @@ final class JsonUtf8Reader extends JsonReader {
           throw syntaxError("Unterminated array");
       }
     } else if (peekStack == JsonScope.EMPTY_OBJECT || peekStack == JsonScope.NONEMPTY_OBJECT) {
-      scopes[stackSize - 1] = JsonScope.DANGLING_NAME;
+      scopes[stackSize - scopeStackOffset] = JsonScope.DANGLING_NAME;
       // Look for a comma before the next element.
       if (peekStack == JsonScope.NONEMPTY_OBJECT) {
-        int c = nextNonWhitespace(true);
-        buffer.readByte(); // Consume '}' or ','.
+        int c = nextNonWhitespace(true, intermediatesSink);
+        sink.write(buffer, 1); // Consume '}' or ','.
         switch (c) {
           case '}':
             return peeked = PEEKED_END_OBJECT;
@@ -267,18 +283,18 @@ final class JsonUtf8Reader extends JsonReader {
             throw syntaxError("Unterminated object");
         }
       }
-      int c = nextNonWhitespace(true);
+      int c = nextNonWhitespace(true, intermediatesSink);
       switch (c) {
         case '"':
-          buffer.readByte(); // consume the '\"'.
+          sink.write(buffer, 1); // consume the '\"'.
           return peeked = PEEKED_DOUBLE_QUOTED_NAME;
         case '\'':
-          buffer.readByte(); // consume the '\''.
+          sink.write(buffer, 1); // consume the '\''.
           checkLenient();
           return peeked = PEEKED_SINGLE_QUOTED_NAME;
         case '}':
           if (peekStack != JsonScope.NONEMPTY_OBJECT) {
-            buffer.readByte(); // consume the '}'.
+            sink.write(buffer, 1); // consume the '}'.
             return peeked = PEEKED_END_OBJECT;
           } else {
             throw syntaxError("Expected name");
@@ -292,26 +308,26 @@ final class JsonUtf8Reader extends JsonReader {
           }
       }
     } else if (peekStack == JsonScope.DANGLING_NAME) {
-      scopes[stackSize - 1] = JsonScope.NONEMPTY_OBJECT;
+      scopes[stackSize - scopeStackOffset] = JsonScope.NONEMPTY_OBJECT;
       // Look for a colon before the value.
-      int c = nextNonWhitespace(true);
-      buffer.readByte(); // Consume ':'.
+      int c = nextNonWhitespace(true, intermediatesSink);
+      intermediatesSink.write(buffer, 1); // Consume ':'.
       switch (c) {
         case ':':
           break;
         case '=':
           checkLenient();
           if (source.request(1) && buffer.getByte(0) == '>') {
-            buffer.readByte(); // Consume '>'.
+            intermediatesSink.write(buffer, 1); // Consume '>'.
           }
           break;
         default:
           throw syntaxError("Expected ':'");
       }
     } else if (peekStack == JsonScope.EMPTY_DOCUMENT) {
-      scopes[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT;
+      scopes[stackSize - scopeStackOffset] = JsonScope.NONEMPTY_DOCUMENT;
     } else if (peekStack == JsonScope.NONEMPTY_DOCUMENT) {
-      int c = nextNonWhitespace(false);
+      int c = nextNonWhitespace(false, intermediatesSink);
       if (c == -1) {
         return peeked = PEEKED_EOF;
       } else {
@@ -321,11 +337,11 @@ final class JsonUtf8Reader extends JsonReader {
       throw new IllegalStateException("JsonReader is closed");
     }
 
-    int c = nextNonWhitespace(true);
+    int c = nextNonWhitespace(true, intermediatesSink);
     switch (c) {
       case ']':
         if (peekStack == JsonScope.EMPTY_ARRAY) {
-          buffer.readByte(); // Consume ']'.
+          sink.write(buffer, 1); // Consume ']'.
           return peeked = PEEKED_END_ARRAY;
         }
         // fall-through to handle ",]"
@@ -340,26 +356,26 @@ final class JsonUtf8Reader extends JsonReader {
         }
       case '\'':
         checkLenient();
-        buffer.readByte(); // Consume '\''.
+        sink.write(buffer, 1); // consume the '\''.
         return peeked = PEEKED_SINGLE_QUOTED;
       case '"':
-        buffer.readByte(); // Consume '\"'.
+        sink.write(buffer, 1); // Consume '\"'.
         return peeked = PEEKED_DOUBLE_QUOTED;
       case '[':
-        buffer.readByte(); // Consume '['.
+        sink.write(buffer, 1); // Consume '['.
         return peeked = PEEKED_BEGIN_ARRAY;
       case '{':
-        buffer.readByte(); // Consume '{'.
+        sink.write(buffer, 1); // Consume '{'.
         return peeked = PEEKED_BEGIN_OBJECT;
       default:
     }
 
-    int result = peekKeyword();
+    int result = peekKeyword(sink);
     if (result != PEEKED_NONE) {
       return result;
     }
 
-    result = peekNumber();
+    result = peekNumber(sink);
     if (result != PEEKED_NONE) {
       return result;
     }
@@ -372,7 +388,7 @@ final class JsonUtf8Reader extends JsonReader {
     return peeked = PEEKED_UNQUOTED;
   }
 
-  private int peekKeyword() throws IOException {
+  private int peekKeyword(Sink sink) throws IOException {
     // Figure out which keyword we're matching against by its first character.
     byte c = buffer.getByte(0);
     String keyword;
@@ -411,11 +427,11 @@ final class JsonUtf8Reader extends JsonReader {
     }
 
     // We've found the keyword followed either by EOF or by a non-literal character.
-    buffer.skip(length);
+    sink.write(buffer, length);
     return peeked = peeking;
   }
 
-  private int peekNumber() throws IOException {
+  private int peekNumber(Sink sink) throws IOException {
     long value = 0; // Negative to accommodate Long.MIN_VALUE more easily.
     boolean negative = false;
     boolean fitsInLong = true;
@@ -497,7 +513,7 @@ final class JsonUtf8Reader extends JsonReader {
         && (value != Long.MIN_VALUE || negative)
         && (value != 0 || !negative)) {
       peekedLong = negative ? value : -value;
-      buffer.skip(i);
+      sink.write(buffer, i);
       return peeked = PEEKED_LONG;
     } else if (last == NUMBER_CHAR_DIGIT
         || last == NUMBER_CHAR_FRACTION_DIGIT
@@ -878,23 +894,31 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private void skipQuotedValue(ByteString runTerminator) throws IOException {
+    skipQuotedValue(runTerminator, BLACKHOLE);
+  }
+
+  private void skipQuotedValue(ByteString runTerminator, Sink sink) throws IOException {
     while (true) {
       long index = source.indexOfElement(runTerminator);
       if (index == -1L) throw syntaxError("Unterminated string");
 
       if (buffer.getByte(index) == '\\') {
-        buffer.skip(index + 1);
+        sink.write(buffer, index + 1);
         readEscapeCharacter();
       } else {
-        buffer.skip(index + 1);
+        sink.write(buffer, index + 1);
         return;
       }
     }
   }
 
   private void skipUnquotedValue() throws IOException {
+    skipUnquotedValue(BLACKHOLE);
+  }
+
+  private void skipUnquotedValue(Sink sink) throws IOException {
     long i = source.indexOfElement(UNQUOTED_STRING_TERMINALS);
-    buffer.skip(i != -1L ? i : buffer.size());
+    sink.write(buffer, i != -1L ? i : buffer.size());
   }
 
   @Override
@@ -956,6 +980,9 @@ final class JsonUtf8Reader extends JsonReader {
 
   @Override
   public void close() throws IOException {
+    if (peekScope() == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSource() was not closed");
+    }
     peeked = PEEKED_NONE;
     scopes[0] = JsonScope.CLOSED;
     stackSize = 1;
@@ -964,15 +991,50 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   @Override
+  public BufferedSource valueSource() throws IOException {
+    pushScope(STREAMING_VALUE);
+    final Buffer valueBuffer = new Buffer();
+    readValue(valueBuffer);
+    return Okio.buffer(
+        new Source() {
+          @Override
+          public long read(Buffer buffer, long l) {
+            return valueBuffer.read(buffer, l);
+          }
+
+          @Override
+          public Timeout timeout() {
+            return Timeout.NONE;
+          }
+
+          @Override
+          public void close() {
+            if (peekScope() != STREAMING_VALUE) {
+              throw new AssertionError();
+            }
+            stackSize--; // Remove STREAMING_VALUE from the stack.
+            pathIndices[stackSize - 1]++;
+            pathNames[stackSize - 1] = null;
+          }
+        });
+  }
+
+  @Override
   public void skipValue() throws IOException {
     if (failOnUnknown) {
       throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
     }
+    readValue(BLACKHOLE);
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = "null";
+  }
+
+  private void readValue(Sink sink) throws IOException {
     int count = 0;
     do {
       int p = peeked;
       if (p == PEEKED_NONE) {
-        p = doPeek();
+        p = doPeek(sink, count != 0);
       }
 
       if (p == PEEKED_BEGIN_ARRAY) {
@@ -996,28 +1058,25 @@ final class JsonUtf8Reader extends JsonReader {
         }
         stackSize--;
       } else if (p == PEEKED_UNQUOTED_NAME || p == PEEKED_UNQUOTED) {
-        skipUnquotedValue();
+        skipUnquotedValue(sink);
       } else if (p == PEEKED_DOUBLE_QUOTED || p == PEEKED_DOUBLE_QUOTED_NAME) {
-        skipQuotedValue(DOUBLE_QUOTE_OR_SLASH);
+        skipQuotedValue(DOUBLE_QUOTE_OR_SLASH, sink);
       } else if (p == PEEKED_SINGLE_QUOTED || p == PEEKED_SINGLE_QUOTED_NAME) {
-        skipQuotedValue(SINGLE_QUOTE_OR_SLASH);
+        skipQuotedValue(SINGLE_QUOTE_OR_SLASH, sink);
       } else if (p == PEEKED_NUMBER) {
-        buffer.skip(peekedNumberLength);
+        sink.write(buffer, peekedNumberLength);
       } else if (p == PEEKED_EOF) {
         throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
       }
       peeked = PEEKED_NONE;
     } while (count != 0);
-
-    pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = "null";
   }
 
   /**
    * Returns the next character in the stream that is neither whitespace nor a part of a comment.
    * When this returns, the returned character is always at {@code buffer.getByte(0)}.
    */
-  private int nextNonWhitespace(boolean throwOnEof) throws IOException {
+  private int nextNonWhitespace(boolean throwOnEof, Sink sink) throws IOException {
     /*
      * This code uses ugly local variables 'p' and 'l' representing the 'pos'
      * and 'limit' fields respectively. Using locals rather than fields saves
@@ -1033,7 +1092,7 @@ final class JsonUtf8Reader extends JsonReader {
         continue;
       }
 
-      buffer.skip(p - 1);
+      sink.write(buffer, p - 1);
       if (c == '/') {
         if (!source.request(2)) {
           return c;
@@ -1044,9 +1103,9 @@ final class JsonUtf8Reader extends JsonReader {
         switch (peek) {
           case '*':
             // skip a /* c-style comment */
-            buffer.readByte(); // '/'
-            buffer.readByte(); // '*'
-            if (!skipToEndOfBlockComment()) {
+            sink.write(buffer, 1); // '/'
+            sink.write(buffer, 1); // '*'
+            if (!skipToEndOfBlockComment(sink)) {
               throw syntaxError("Unterminated comment");
             }
             p = 0;
@@ -1054,9 +1113,9 @@ final class JsonUtf8Reader extends JsonReader {
 
           case '/':
             // skip a // end-of-line comment
-            buffer.readByte(); // '/'
-            buffer.readByte(); // '/'
-            skipToEndOfLine();
+            sink.write(buffer, 1); // '/'
+            sink.write(buffer, 1); // '/'
+            skipToEndOfLine(sink);
             p = 0;
             continue;
 
@@ -1067,7 +1126,7 @@ final class JsonUtf8Reader extends JsonReader {
         // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but it's
         // required to parse existing documents.
         checkLenient();
-        skipToEndOfLine();
+        skipToEndOfLine(sink);
         p = 0;
       } else {
         return c;
@@ -1090,16 +1149,16 @@ final class JsonUtf8Reader extends JsonReader {
    * Advances the position until after the next newline character. If the line is terminated by
    * "\r\n", the '\n' must be consumed as whitespace by the caller.
    */
-  private void skipToEndOfLine() throws IOException {
+  private void skipToEndOfLine(Sink sink) throws IOException {
     long index = source.indexOfElement(LINEFEED_OR_CARRIAGE_RETURN);
-    buffer.skip(index != -1 ? index + 1 : buffer.size());
+    sink.write(buffer, index != -1 ? index + 1 : buffer.size());
   }
 
   /** Skips through the next closing block comment. */
-  private boolean skipToEndOfBlockComment() throws IOException {
+  private boolean skipToEndOfBlockComment(Sink sink) throws IOException {
     long index = source.indexOf(CLOSING_BLOCK_COMMENT);
     boolean found = index != -1;
-    buffer.skip(found ? index + CLOSING_BLOCK_COMMENT.size() : buffer.size());
+    sink.write(buffer, found ? index + CLOSING_BLOCK_COMMENT.size() : buffer.size());
     return found;
   }
 
