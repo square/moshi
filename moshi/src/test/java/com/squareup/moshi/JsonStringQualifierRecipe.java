@@ -1,5 +1,7 @@
 package com.squareup.moshi;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -10,21 +12,18 @@ import okio.BufferedSink;
 import okio.BufferedSource;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 public final class JsonStringQualifierRecipe {
 
-  @Test public void testJsonString() throws IOException {
-    //language=JSON
+  @Test
+  public void testJsonString() throws IOException {
+    // language=JSON
     String json = "{\"type\":1,\"rawJson\":{\"a\":2,\"b\":3,\"c\":[1,2,3]}}";
 
-    Moshi moshi = new Moshi.Builder()
-        .add(new JsonStringJsonAdapterFactory())
-        .build();
+    Moshi moshi = new Moshi.Builder().add(new JsonStringJsonAdapterFactory()).build();
 
     ExampleClass example = moshi.adapter(ExampleClass.class).fromJson(json);
     assertEquals(1, example.type);
-    //language=JSON
+    // language=JSON
     assertEquals("{\"a\":2,\"b\":3,\"c\":[1,2,3]}", example.rawJson);
   }
 
@@ -41,10 +40,12 @@ public final class JsonStringQualifierRecipe {
     @Override
     public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
       if (type != String.class) return null;
-      Set<? extends Annotation> nextAnnotations = Types.nextAnnotations(annotations, JsonString.class);
+      Set<? extends Annotation> nextAnnotations =
+          Types.nextAnnotations(annotations, JsonString.class);
       if (nextAnnotations != null) {
         return new JsonAdapter<String>() {
-          @Override public String fromJson(JsonReader reader) throws IOException {
+          @Override
+          public String fromJson(JsonReader reader) throws IOException {
             try (BufferedSource source = reader.valueSource()) {
               return source.readUtf8();
             }

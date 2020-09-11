@@ -1,5 +1,7 @@
 package com.squareup.moshi;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import okio.Buffer;
@@ -8,40 +10,48 @@ import okio.Okio;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 public final class ValueSourceEscapesTest {
-  @Test public void escapedDoubleQuote() throws IOException {
+  @Test
+  public void escapedDoubleQuote() throws IOException {
     testSpecialCharacter("\\\"escaped\\\"");
   }
 
-  @Ignore @Test public void escapedSingleQuote() throws IOException {
+  @Ignore
+  @Test
+  public void escapedSingleQuote() throws IOException {
     testSpecialCharacter("\\'escaped\\'");
   }
 
-  @Test public void newLine1() throws IOException {
+  @Test
+  public void newLine1() throws IOException {
     testSpecialCharacter("\\n");
   }
 
-  @Test public void newLine2() throws IOException {
+  @Test
+  public void newLine2() throws IOException {
     testSpecialCharacter("\\r\\n");
   }
 
-  @Test public void stringTerminals() throws IOException {
+  @Test
+  public void stringTerminals() throws IOException {
     testSpecialCharacter("{}[]:, \\n\\t\\r\\f/\\\\;#=");
   }
 
-  @Ignore @Test public void backlash1() throws IOException {
+  @Ignore
+  @Test
+  public void backlash1() throws IOException {
     testSpecialCharacter("\\/");
   }
 
-  @Test public void backlash2() throws IOException {
+  @Test
+  public void backlash2() throws IOException {
     testSpecialCharacter("\\\\");
   }
 
   private void testSpecialCharacter(String value) throws IOException {
     String input = "{\"a\":\"" + value + "\"}";
-    JsonReader reader = JsonReader.of(Okio.buffer(Okio.source(new ByteArrayInputStream(input.getBytes()))));
+    JsonReader reader =
+        JsonReader.of(Okio.buffer(Okio.source(new ByteArrayInputStream(input.getBytes()))));
     Buffer out = new Buffer();
     JsonWriter writer = JsonWriter.of(out);
 
