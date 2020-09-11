@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import static com.squareup.moshi.JsonScope.CLOSED;
+import static com.squareup.moshi.JsonScope.STREAMING_VALUE;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -24,6 +25,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.Okio;
+import okio.Source;
+import okio.Timeout;
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -316,6 +322,84 @@ final class JsonValueReader extends JsonReader {
   }
 
   @Override
+  public BufferedSource valueSource() {
+    Object peeked = stackSize != 0 ? stack[stackSize - 1] : null;
+    pushScope(STREAMING_VALUE);
+    final Buffer buffer = new Buffer();
+    writeValueToBuffer(peeked, buffer);
+    return Okio.buffer(
+        new Source() {
+          @Override
+          public long read(Buffer sink, long byteCount) {
+            return buffer.read(sink, byteCount);
+          }
+
+          @Override
+          public Timeout timeout() {
+            return Timeout.NONE;
+          }
+
+          @Override
+          public void close() {
+            if (peekScope() != STREAMING_VALUE) {
+              throw new AssertionError();
+            }
+            remove();
+          }
+        });
+  }
+
+  private void writeValueToBuffer(@Nullable Object value, Buffer buffer) {
+    if (value == null) {
+      buffer.writeUtf8("null");
+    } else if (value instanceof Boolean) {
+      buffer.writeUtf8(Boolean.toString((Boolean) value));
+    } else if (value instanceof Number) {
+      // These are always written as doubles when parsing JSON value objects.
+      if (value instanceof Integer) {
+        buffer.writeUtf8(Integer.toString((Integer) value));
+      } else if (value instanceof Long) {
+        buffer.writeUtf8(Long.toString((Long) value));
+      } else if (value instanceof Double) {
+        buffer.writeUtf8(Double.toString((Double) value));
+      } else {
+        buffer.writeUtf8(value.toString());
+      }
+    } else if (value instanceof String) {
+      buffer.writeByte('\"');
+      buffer.writeUtf8((String) value);
+      buffer.writeByte('\"');
+    } else if (value instanceof List) {
+      buffer.writeUtf8("[");
+      boolean first = true;
+      for (Object element : ((List) value)) {
+        if (first) {
+          first = false;
+        } else {
+          buffer.writeUtf8(",");
+        }
+        writeValueToBuffer(element, buffer);
+      }
+      buffer.writeUtf8("]");
+    } else if (value instanceof Map) {
+      buffer.writeUtf8("{");
+      boolean first = true;
+      //noinspection unchecked
+      for (Map.Entry<String, ?> entry : ((Map<String, ?>) value).entrySet()) {
+        if (first) {
+          first = false;
+        } else {
+          buffer.writeUtf8(",");
+        }
+        writeValueToBuffer(entry.getKey(), buffer);
+        buffer.writeUtf8(":");
+        writeValueToBuffer(entry.getValue(), buffer);
+      }
+      buffer.writeUtf8("}");
+    }
+  }
+
+  @Override
   public void skipValue() throws IOException {
     if (failOnUnknown) {
       throw new JsonDataException("Cannot skip unexpected " + peek() + " at " + getPath());
@@ -358,6 +442,9 @@ final class JsonValueReader extends JsonReader {
 
   @Override
   public void close() throws IOException {
+    if (peekScope() == STREAMING_VALUE) {
+      throw new IllegalStateException("Sink from valueSource() was not closed");
+    }
     Arrays.fill(stack, 0, stackSize, null);
     stack[0] = JSON_READER_CLOSED;
     scopes[0] = CLOSED;
@@ -406,7 +493,7 @@ final class JsonValueReader extends JsonReader {
    * Removes a value and prepares for the next. If we're iterating a map or list this advances the
    * iterator.
    */
-  private void remove() {
+  void remove() {
     stackSize--;
     stack[stackSize] = null;
     scopes[stackSize] = 0;
