@@ -20,6 +20,7 @@ import static com.squareup.moshi.TestUtil.repeat;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import okio.BufferedSource;
 import org.junit.Test;
 
 public final class JsonValueReaderTest {
@@ -496,5 +498,62 @@ public final class JsonValueReaderTest {
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ".");
     }
+  }
+
+  @Test
+  public void valueSourceString() throws IOException {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("a", "this is a string");
+    JsonReader reader = new JsonValueReader(map);
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    assertEquals("\"this is a string\"", readStringValue);
+  }
+
+  @Test
+  public void valueSourceLong() throws IOException {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("a", -2);
+    JsonReader reader = new JsonValueReader(map);
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    assertEquals(-2, Integer.parseInt(readStringValue));
+  }
+
+  @Test
+  public void valueSourceObject() throws IOException {
+    Map<String, Object> nested = new LinkedHashMap<>();
+    nested.put("b", 2);
+    nested.put("c", 3);
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("a", nested);
+    JsonReader reader = new JsonValueReader(map);
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    // language=JSON
+    assertEquals("{\"b\":2,\"c\":3}", readStringValue);
+  }
+
+  @Test
+  public void valueSourceArray() throws IOException {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("a", Arrays.asList(2, 2, 3));
+    JsonReader reader = new JsonValueReader(map);
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    // language=JSON
+    assertEquals("[2,2,3]", readStringValue);
   }
 }

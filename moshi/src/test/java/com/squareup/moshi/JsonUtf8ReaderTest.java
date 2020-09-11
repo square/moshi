@@ -35,6 +35,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import okio.Buffer;
+import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import org.junit.Ignore;
@@ -1348,6 +1349,82 @@ public final class JsonUtf8ReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertThat(reader.nextString()).isEqualTo("string");
+  }
+
+  @Test
+  public void valueSourceString() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"this is a string\"}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    assertEquals("\"this is a string\"", readStringValue);
+  }
+
+  @Test
+  public void valueSourceLong() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":-2}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    assertEquals(-2, Integer.parseInt(readStringValue));
+  }
+
+  @Test
+  public void valueSourceObject() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":{\"b\":2,\"c\":3}}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    // language=JSON
+    assertEquals("{\"b\":2,\"c\":3}", readStringValue);
+  }
+
+  @Test
+  public void valueSourceArray() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":[2,2,3]}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    // language=JSON
+    assertEquals("[2,2,3]", readStringValue);
+  }
+
+  @Test
+  public void valueSourceLong_WithWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n" + "  " + "\"a\": -2\n" + "}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    assertEquals(-2, Integer.parseInt(readStringValue));
+  }
+
+  @Test
+  public void valueSourceObject_withWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader =
+        newReader("{\n" + "  \"a\": {\n" + "    \"b\": 2,\n" + "    \"c\": 3\n" + "  }\n" + "}");
+    reader.beginObject();
+    String name = reader.nextName();
+    BufferedSource valueSource = reader.valueSource();
+    String readStringValue = valueSource.readUtf8();
+    valueSource.close();
+    // language=JSON
+    assertEquals("{\n" + "    \"b\": 2,\n" + "    \"c\": 3\n" + "  }", readStringValue);
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {
