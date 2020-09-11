@@ -495,10 +495,6 @@ final class JsonValueReader extends JsonReader {
    */
   void remove() {
     stackSize--;
-    if (stackSize == 0) {
-      System.out.println("0!");
-      new Throwable().printStackTrace();
-    }
     stack[stackSize] = null;
     scopes[stackSize] = 0;
 
