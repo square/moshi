@@ -256,6 +256,14 @@ public abstract class JsonReader implements Closeable {
     }
   }
 
+  /** Returns the scope on the top of the stack. */
+  final int peekScope() {
+    if (stackSize == 0) {
+      throw new IllegalStateException("JsonReader is closed.");
+    }
+    return scopes[stackSize - 1];
+  }
+
   /**
    * Configure this parser to be liberal in what it accepts. By default this parser is strict and
    * only accepts JSON as specified by <a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>.
