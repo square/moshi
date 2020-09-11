@@ -444,7 +444,8 @@ public abstract class JsonReader implements Closeable {
    * Reads the next value recursively into a {@link BufferedSource}. If it is an object or array,
    * all nested elements are read into the source as well. This method is intended for use when the
    * JSON token stream contains custom data that the caller wants to read bytes directly off of the
-   * underlying buffer.
+   * underlying buffer. You <b>must</b> call {@link BufferedSource#close()} before interacting with
+   * this {@code JsonReader} instance again.
    */
   public abstract BufferedSource valueSource() throws IOException;
 
