@@ -442,7 +442,7 @@ final class JsonValueReader extends JsonReader {
 
   @Override
   public void close() throws IOException {
-    if (peekScope() == STREAMING_VALUE) {
+    if (stackSize != 0 && peekScope() == STREAMING_VALUE) {
       throw new IllegalStateException("Sink from valueSource() was not closed");
     }
     Arrays.fill(stack, 0, stackSize, null);
@@ -495,6 +495,10 @@ final class JsonValueReader extends JsonReader {
    */
   void remove() {
     stackSize--;
+    if (stackSize == 0) {
+      System.out.println("0!");
+      new Throwable().printStackTrace();
+    }
     stack[stackSize] = null;
     scopes[stackSize] = 0;
 
