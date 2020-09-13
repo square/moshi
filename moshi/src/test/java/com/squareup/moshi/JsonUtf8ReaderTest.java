@@ -35,6 +35,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import okio.Buffer;
+import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import org.junit.Ignore;
@@ -1348,6 +1349,117 @@ public final class JsonUtf8ReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertThat(reader.nextString()).isEqualTo("string");
+  }
+
+  @Test
+  public void valueSourceString() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"this is a string\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"this is a string\"");
+    }
+  }
+
+  @Test
+  public void valueSourceLong() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":-2}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("-2");
+    }
+  }
+
+  @Test
+  public void valueSourceNull() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":null}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("null");
+    }
+  }
+
+  @Test
+  public void valueSourceBoolean() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":false}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("false");
+    }
+  }
+
+  @Test
+  public void valueSourceObject() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":{\"b\":2,\"c\":3}}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("{\"b\":2,\"c\":3}");
+    }
+  }
+
+  @Test
+  public void valueSourceArray() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":[2,2,3]}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("[2,2,3]");
+    }
+  }
+
+  @Test
+  public void valueSourceLong_WithWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": -2\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("-2");
+    }
+  }
+
+  @Test
+  public void valueSourceObject_withWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": {\n    \"b\": 2,\n    \"c\": 3\n  }\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("{\n    \"b\": 2,\n    \"c\": 3\n  }");
+    }
+  }
+
+  @Test
+  public void valueSourceStringBuffered() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"b\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.selectString(JsonReader.Options.of("x'"))).isEqualTo(-1);
+    try (BufferedSource valueSource = reader.valueSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"b\"");
+    }
+  }
+
+  @Test
+  public void valueSourceNotConsumed() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"b\",\"c\":\"d\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    reader.valueSource(); // Not closed.
+    assertThat(reader.nextName()).isEqualTo("c");
+    assertThat(reader.nextString()).isEqualTo("d");
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {
