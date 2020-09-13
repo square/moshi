@@ -18,6 +18,7 @@ package com.squareup.moshi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
@@ -280,7 +281,7 @@ public final class FlattenTest {
   }
 
   @Test
-  public void flattenTopLevel() {
+  public void flattenTopLevel() throws IOException {
     JsonWriter writer = factory.newWriter();
     try {
       writer.beginFlatten();

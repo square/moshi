@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import okio.Buffer;
+import okio.BufferedSource;
 
 abstract class JsonCodecFactory {
   private static final Moshi MOSHI = new Moshi.Builder().build();
@@ -123,12 +124,12 @@ abstract class JsonCodecFactory {
           }
 
           @Override
-          JsonWriter newWriter() {
+          JsonWriter newWriter() throws IOException {
             return value.newWriter();
           }
 
           @Override
-          String json() {
+          String json() throws IOException {
             return value.json();
           }
 
@@ -144,18 +145,55 @@ abstract class JsonCodecFactory {
           }
         };
 
-    return Arrays.asList(new Object[] {utf8}, new Object[] {value}, new Object[] {valuePeek});
+    /** Wrap the enclosing JsonReader or JsonWriter in another stream. */
+    final JsonCodecFactory valueSource =
+        new JsonCodecFactory() {
+          private JsonWriter writer;
+
+          @Override
+          public JsonReader newReader(String json) throws IOException {
+            JsonReader wrapped = utf8.newReader(json);
+            wrapped.setLenient(true);
+            BufferedSource valueSource = wrapped.nextSource();
+            return JsonReader.of(valueSource);
+          }
+
+          @Override
+          JsonWriter newWriter() throws IOException {
+            JsonWriter wrapped = utf8.newWriter();
+            wrapped.setLenient(true);
+            writer = JsonWriter.of(wrapped.valueSink());
+            return writer;
+          }
+
+          @Override
+          String json() throws IOException {
+            writer.close();
+            return utf8.json();
+          }
+
+          @Override
+          public String toString() {
+            return "ValueSource";
+          }
+        };
+
+    return Arrays.asList(
+        new Object[] {utf8},
+        new Object[] {value},
+        new Object[] {valuePeek},
+        new Object[] {valueSource});
   }
 
   abstract JsonReader newReader(String json) throws IOException;
 
-  abstract JsonWriter newWriter();
+  abstract JsonWriter newWriter() throws IOException;
 
   boolean implementsStrictPrecision() {
     return true;
   }
 
-  abstract String json();
+  abstract String json() throws IOException;
 
   boolean encodesToBytes() {
     return false;

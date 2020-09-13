@@ -35,6 +35,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import okio.Buffer;
+import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import org.junit.Ignore;
@@ -1383,6 +1384,28 @@ public final class JsonUtf8ReaderTest {
       } else {
         throw new AssertionError();
       }
+    }
+  }
+
+  @Test
+  public void nextSourceObject_withWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": {\n    \"b\": 2,\n    \"c\": 3\n  }\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("{\n    \"b\": 2,\n    \"c\": 3\n  }");
+    }
+  }
+
+  @Test
+  public void nextSourceLong_WithWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": -2\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("-2");
     }
   }
 }
