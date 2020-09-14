@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import okio.Buffer;
+import okio.BufferedSource;
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -341,6 +343,16 @@ final class JsonValueReader extends JsonReader {
     } else {
       throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
     }
+  }
+
+  @Override
+  public BufferedSource nextSource() throws IOException {
+    Object value = readJsonValue();
+    Buffer result = new Buffer();
+    try (JsonWriter jsonWriter = JsonWriter.of(result)) {
+      jsonWriter.jsonValue(value);
+    }
+    return result;
   }
 
   @Override

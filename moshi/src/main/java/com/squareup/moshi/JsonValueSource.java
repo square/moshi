@@ -32,37 +32,47 @@ import okio.Timeout;
  * unspecified.
  */
 final class JsonValueSource implements Source {
-  private static final ByteString STATE_JSON = ByteString.encodeUtf8("[]{}\"'/#");
-  private static final ByteString STATE_SINGLE_QUOTED = ByteString.encodeUtf8("'\\");
-  private static final ByteString STATE_DOUBLE_QUOTED = ByteString.encodeUtf8("\"\\");
-  private static final ByteString STATE_END_OF_LINE_COMMENT = ByteString.encodeUtf8("\r\n");
-  private static final ByteString STATE_C_STYLE_COMMENT = ByteString.encodeUtf8("*");
-  private static final ByteString STATE_END_OF_JSON = ByteString.EMPTY;
+  static final ByteString STATE_JSON = ByteString.encodeUtf8("[]{}\"'/#");
+  static final ByteString STATE_SINGLE_QUOTED = ByteString.encodeUtf8("'\\");
+  static final ByteString STATE_DOUBLE_QUOTED = ByteString.encodeUtf8("\"\\");
+  static final ByteString STATE_END_OF_LINE_COMMENT = ByteString.encodeUtf8("\r\n");
+  static final ByteString STATE_C_STYLE_COMMENT = ByteString.encodeUtf8("*");
+  static final ByteString STATE_END_OF_JSON = ByteString.EMPTY;
 
   private final BufferedSource source;
   private final Buffer buffer;
+
+  /** If non-empty, data from this should be returned before data from {@link #source}. */
+  private final Buffer prefix;
 
   /**
    * The state indicates what kind of data is readable at {@link #limit}. This also serves
    * double-duty as the type of bytes we're interested in while in this state.
    */
-  private ByteString state = STATE_JSON;
+  private ByteString state;
 
   /**
    * The level of nesting of arrays and objects. When the end of string, array, or object is
    * reached, this should be compared against 0. If it is zero, then we've read a complete value and
    * this source is exhausted.
    */
-  private int stackSize = 0;
+  private int stackSize;
 
   /** The number of bytes immediately returnable to the caller. */
   private long limit = 0;
 
   private boolean closed = false;
 
-  public JsonValueSource(BufferedSource source) {
+  JsonValueSource(BufferedSource source) {
+    this(source, new Buffer(), STATE_JSON, 0);
+  }
+
+  JsonValueSource(BufferedSource source, Buffer prefix, ByteString state, int stackSize) {
     this.source = source;
     this.buffer = source.getBuffer();
+    this.prefix = prefix;
+    this.state = state;
+    this.stackSize = stackSize;
   }
 
   /**
@@ -181,6 +191,14 @@ final class JsonValueSource implements Source {
   public long read(Buffer sink, long byteCount) throws IOException {
     if (closed) throw new IllegalStateException("closed");
     if (byteCount == 0) return 0L;
+
+    // If this stream has a prefix, consume that first.
+    if (!prefix.exhausted()) {
+      long prefixResult = prefix.read(sink, byteCount);
+      byteCount -= prefixResult;
+      long suffixResult = read(sink, byteCount);
+      return suffixResult != -1L ? suffixResult + prefixResult : prefixResult;
+    }
 
     advanceLimit(byteCount);
 

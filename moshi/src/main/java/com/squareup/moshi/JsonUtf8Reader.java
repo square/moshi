@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.ByteString;
+import okio.Okio;
 
 final class JsonUtf8Reader extends JsonReader {
   private static final long MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10;
@@ -88,6 +89,13 @@ final class JsonUtf8Reader extends JsonReader {
    * before a numeric value is parsed and used if that parsing fails.
    */
   private @Nullable String peekedString;
+
+  /**
+   * If non-null, the most recent value read was {@link #readJsonValue()}. The caller may be
+   * mid-stream so it is necessary to call {@link JsonValueSource#discard} to get to the end of the
+   * current JSON value before proceeding.
+   */
+  private @Nullable JsonValueSource valueSource;
 
   JsonUtf8Reader(BufferedSource source) {
     if (source == null) {
@@ -233,6 +241,10 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private int doPeek() throws IOException {
+    if (valueSource != null) {
+      valueSource.discard();
+      valueSource = null;
+    }
     int peekStack = scopes[stackSize - 1];
     if (peekStack == JsonScope.EMPTY_ARRAY) {
       scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
@@ -1011,6 +1023,55 @@ final class JsonUtf8Reader extends JsonReader {
 
     pathIndices[stackSize - 1]++;
     pathNames[stackSize - 1] = "null";
+  }
+
+  @Override
+  public BufferedSource nextSource() throws IOException {
+    int p = peeked;
+    if (p == PEEKED_NONE) {
+      p = doPeek();
+    }
+
+    int valueSourceStackSize = 0;
+    Buffer prefix = new Buffer();
+    ByteString state = JsonValueSource.STATE_END_OF_JSON;
+    if (p == PEEKED_BEGIN_ARRAY) {
+      prefix.writeUtf8("[");
+      state = JsonValueSource.STATE_JSON;
+      valueSourceStackSize++;
+    } else if (p == PEEKED_BEGIN_OBJECT) {
+      prefix.writeUtf8("{");
+      state = JsonValueSource.STATE_JSON;
+      valueSourceStackSize++;
+    } else if (p == PEEKED_DOUBLE_QUOTED) {
+      prefix.writeUtf8("\"");
+      state = JsonValueSource.STATE_DOUBLE_QUOTED;
+    } else if (p == PEEKED_SINGLE_QUOTED) {
+      prefix.writeUtf8("'");
+      state = JsonValueSource.STATE_SINGLE_QUOTED;
+    } else if (p == PEEKED_NUMBER || p == PEEKED_LONG || p == PEEKED_UNQUOTED) {
+      prefix.writeUtf8(nextString());
+    } else if (p == PEEKED_TRUE) {
+      prefix.writeUtf8("true");
+    } else if (p == PEEKED_FALSE) {
+      prefix.writeUtf8("false");
+    } else if (p == PEEKED_NULL) {
+      prefix.writeUtf8("null");
+    } else if (p == PEEKED_BUFFERED) {
+      String string = nextString();
+      try (JsonWriter jsonWriter = JsonWriter.of(prefix)) {
+        jsonWriter.value(string);
+      }
+    } else {
+      throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
+    }
+
+    valueSource = new JsonValueSource(source, prefix, state, valueSourceStackSize);
+    peeked = PEEKED_NONE;
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = "null";
+
+    return Okio.buffer(valueSource);
   }
 
   /**
