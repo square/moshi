@@ -76,7 +76,14 @@ final class JsonValueSource implements Source {
   }
 
   /**
-   * Advance {@link #limit} until it is at least {@code byteCount} or the JSON object is complete.
+   * Advance {@link #limit} until any of these conditions are met:
+   *
+   * <ul>
+   *   <li>Limit is at least {@code byteCount}. We can satisfy the caller's request!
+   *   <li>The JSON value is complete. This stream is exhausted.
+   *   <li>We have some data to return and returning more would require reloading the buffer. We
+   *       prefer to return some data immediately when more data requires blocking.
+   * </ul>
    *
    * @throws EOFException if the stream is exhausted before the JSON object completes.
    */
@@ -87,9 +94,10 @@ final class JsonValueSource implements Source {
         return;
       }
 
-      // If advancing requires more data in the buffer, grow it.
+      // If we can't return any bytes without more data in the buffer, grow the buffer.
       if (limit == buffer.size()) {
-        source.require(limit + 1L);
+        if (limit > 0L) return;
+        source.require(1L);
       }
 
       // Find the next interesting character for the current state. If the buffer doesn't have one,
@@ -196,6 +204,7 @@ final class JsonValueSource implements Source {
     if (!prefix.exhausted()) {
       long prefixResult = prefix.read(sink, byteCount);
       byteCount -= prefixResult;
+      if (buffer.exhausted()) return prefixResult; // Defer a blocking call.
       long suffixResult = read(sink, byteCount);
       return suffixResult != -1L ? suffixResult + prefixResult : prefixResult;
     }
