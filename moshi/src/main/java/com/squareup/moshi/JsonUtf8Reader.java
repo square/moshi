@@ -241,10 +241,6 @@ final class JsonUtf8Reader extends JsonReader {
   }
 
   private int doPeek() throws IOException {
-    if (valueSource != null) {
-      valueSource.discard();
-      valueSource = null;
-    }
     int peekStack = scopes[stackSize - 1];
     if (peekStack == JsonScope.EMPTY_ARRAY) {
       scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY;
@@ -329,6 +325,13 @@ final class JsonUtf8Reader extends JsonReader {
       } else {
         checkLenient();
       }
+    } else if (peekStack == JsonScope.STREAMING_VALUE) {
+      valueSource.discard();
+      valueSource = null;
+      stackSize--;
+      pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = "null";
+      return doPeek();
     } else if (peekStack == JsonScope.CLOSED) {
       throw new IllegalStateException("JsonReader is closed");
     }
@@ -1067,9 +1070,8 @@ final class JsonUtf8Reader extends JsonReader {
     }
 
     valueSource = new JsonValueSource(source, prefix, state, valueSourceStackSize);
+    pushScope(JsonScope.STREAMING_VALUE);
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = "null";
 
     return Okio.buffer(valueSource);
   }
