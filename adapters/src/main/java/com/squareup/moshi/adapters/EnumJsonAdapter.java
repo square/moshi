@@ -21,7 +21,9 @@ import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -97,7 +99,14 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
       throw new JsonDataException(
           "Expected a string but was " + reader.peek() + " at path " + path);
     }
-    reader.skipValue();
+
+    EnumJsonTagData tagData = reader.tag(EnumJsonTagData.class);
+    if (tagData == null) {
+      tagData = new EnumJsonTagData();
+      reader.setTag(EnumJsonTagData.class, tagData);
+    }
+    tagData.addUnknownEnumValue(new UnknownEnumValue(path, reader.nextString()));
+
     return fallbackValue;
   }
 
@@ -113,5 +122,56 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
   @Override
   public String toString() {
     return "EnumJsonAdapter(" + enumType.getName() + ")";
+  }
+
+  public static class EnumJsonTagData {
+    private final List<UnknownEnumValue> unknownEnumValues = new ArrayList<>();
+
+    public void addUnknownEnumValue(UnknownEnumValue value) {
+      unknownEnumValues.add(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      EnumJsonTagData that = (EnumJsonTagData) o;
+
+      return unknownEnumValues.equals(that.unknownEnumValues);
+    }
+
+    @Override
+    public int hashCode() {
+      return unknownEnumValues.hashCode();
+    }
+  }
+
+  public static class UnknownEnumValue {
+    private final String path;
+    private final String unknownValue;
+
+    UnknownEnumValue(String path, String unknownValue) {
+      this.path = path;
+      this.unknownValue = unknownValue;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      UnknownEnumValue that = (UnknownEnumValue) o;
+
+      if (!path.equals(that.path)) return false;
+      return unknownValue.equals(that.unknownValue);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = path.hashCode();
+      result = 31 * result + unknownValue.hashCode();
+      return result;
+    }
   }
 }

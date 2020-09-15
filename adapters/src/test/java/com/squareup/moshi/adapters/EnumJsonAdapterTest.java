@@ -51,6 +51,7 @@ public final class EnumJsonAdapterTest {
       assertThat(expected).hasMessage("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertThat(reader.tag(EnumJsonAdapter.EnumJsonTagData.class)).isNull();
   }
 
   @Test
@@ -60,6 +61,10 @@ public final class EnumJsonAdapterTest {
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
     assertThat(adapter.fromJson(reader)).isEqualTo(Roshambo.ROCK);
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+
+    EnumJsonAdapter.EnumJsonTagData expectedTagData = new EnumJsonAdapter.EnumJsonTagData();
+    expectedTagData.addUnknownEnumValue(new EnumJsonAdapter.UnknownEnumValue("$", "SPOCK"));
+    assertThat(reader.tag(EnumJsonAdapter.EnumJsonTagData.class)).isEqualTo(expectedTagData);
   }
 
   @Test
