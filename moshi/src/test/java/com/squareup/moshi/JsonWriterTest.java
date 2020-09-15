@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -952,5 +953,23 @@ public final class JsonWriterTest {
     writer.promoteValueToName();
     writer.endObject();
     assertThat(factory.json()).isEqualTo("{}");
+  }
+
+  @Test
+  public void tags() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    assertThat(writer.getTag(String.class)).isNull();
+    assertThat(writer.getTag(Integer.class)).isNull();
+    assertThat(writer.getTags()).isEmpty();
+
+    writer.setTag(String.class, "Foo");
+    writer.setTag(Integer.class, "Bar");
+
+    assertThat(writer.getTag(String.class)).isEqualTo("Foo");
+    assertThat(writer.getTag(Integer.class)).isEqualTo("Bar");
+    assertThat(writer.getTags())
+        .containsOnly(
+            new SimpleEntry<Class<?>, Object>(String.class, "Foo"),
+            new SimpleEntry<Class<?>, Object>(Integer.class, "Bar"));
   }
 }

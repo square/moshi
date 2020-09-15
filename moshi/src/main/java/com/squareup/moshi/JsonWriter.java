@@ -24,6 +24,8 @@ import java.io.Closeable;
 import java.io.Flushable;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
@@ -170,6 +172,8 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * with {@link #endFlatten}.
    */
   int flattenStackSize = -1;
+
+  private Map<Class<?>, Object> tags;
 
   /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
   @CheckReturnValue
@@ -560,5 +564,31 @@ public abstract class JsonWriter implements Closeable, Flushable {
   @CheckReturnValue
   public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
+
+  /** Returns the tag value for the given class key. */
+  @CheckReturnValue
+  public final @Nullable Object getTag(Class<?> clazz) {
+    if (tags == null) {
+      return null;
+    }
+    return tags.get(clazz);
+  }
+
+  /** Returns all tag values as an unmodifiable list. */
+  @CheckReturnValue
+  public final Map<Class<?>, Object> getTags() {
+    if (tags == null) {
+      return Collections.emptyMap();
+    }
+    return Collections.unmodifiableMap(tags);
+  }
+
+  /** Assigns the tag value using the given class key and value. */
+  public final void setTag(Class<?> clazz, Object value) {
+    if (tags == null) {
+      tags = new HashMap<>();
+    }
+    tags.put(clazz, value);
   }
 }

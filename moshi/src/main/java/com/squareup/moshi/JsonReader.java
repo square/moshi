@@ -21,6 +21,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
@@ -196,6 +198,8 @@ public abstract class JsonReader implements Closeable {
 
   /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
   boolean failOnUnknown;
+
+  private Map<Class<?>, Object> tags;
 
   /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
   @CheckReturnValue
@@ -567,6 +571,32 @@ public abstract class JsonReader implements Closeable {
   @CheckReturnValue
   public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
+
+  /** Returns the tag value for the given class key. */
+  @CheckReturnValue
+  public final @Nullable Object getTag(Class<?> clazz) {
+    if (tags == null) {
+      return null;
+    }
+    return tags.get(clazz);
+  }
+
+  /** Returns all tag values as an unmodifiable list. */
+  @CheckReturnValue
+  public final Map<Class<?>, Object> getTags() {
+    if (tags == null) {
+      return Collections.emptyMap();
+    }
+    return Collections.unmodifiableMap(tags);
+  }
+
+  /** Assigns the tag value using the given class key and value. */
+  public final void setTag(Class<?> clazz, Object value) {
+    if (tags == null) {
+      tags = new HashMap<>();
+    }
+    tags.put(clazz, value);
   }
 
   /**
