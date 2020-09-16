@@ -14,30 +14,22 @@
  * limitations under the License.
  */
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-    @Suppress("UnstableApiUsage")
-    exclusiveContent {
-      forRepository {
-        maven {
-          name = "JCenter"
-          setUrl("https://jcenter.bintray.com/")
-        }
-      }
-      filter {
-        includeModule("org.jetbrains.dokka", "dokka-fatjar")
-      }
-    }
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+  kotlin("jvm")
+  kotlin("kapt")
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+  kotlinOptions {
+    freeCompilerArgs = listOf("-progressive")
   }
 }
 
-rootProject.name = "moshi-root"
-include(":moshi")
-include(":adapters")
-include(":examples")
-include(":kotlin:reflect")
-include(":kotlin:codegen")
-include(":kotlin:tests")
-include(":recipes")
+dependencies {
+  kapt(project(":kotlin:codegen"))
+  implementation(project(":moshi"))
+  testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.truth)
+}
