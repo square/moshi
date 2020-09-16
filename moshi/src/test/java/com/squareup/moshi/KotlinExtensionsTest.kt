@@ -76,4 +76,24 @@ class KotlinExtensionsTest {
 
     assertEquals(-1, moshi.adapter<Int>().fromJson("5"))
   }
+
+  @Test
+  fun addAdapterInferred_parameterized() {
+    // An adapter that always returns listOf(-1)
+    val customIntListAdapter = object : JsonAdapter<List<Int>>() {
+      override fun fromJson(reader: JsonReader): List<Int>? {
+        reader.skipValue()
+        return listOf(-1)
+      }
+
+      override fun toJson(writer: JsonWriter, value: List<Int>?) {
+        throw NotImplementedError()
+      }
+    }
+    val moshi = Moshi.Builder()
+      .addAdapter(customIntListAdapter)
+      .build()
+
+    assertEquals(listOf(-1), moshi.adapter<List<Int>>().fromJson("[5]"))
+  }
 }
