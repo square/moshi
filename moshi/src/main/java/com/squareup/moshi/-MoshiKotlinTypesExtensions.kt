@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Square, Inc.
+ * Copyright (C) 2020 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,9 +59,6 @@ inline fun <reified T> supertypeOf(): WildcardType {
   }
   return Types.supertypeOf(type)
 }
-
-/** Returns true if [this] and [other] are equal. */
-fun Type?.isEqualTo(other: Type?): Boolean = Types.equals(this, other)
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
 @ExperimentalStdlibApi
