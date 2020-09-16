@@ -35,8 +35,8 @@ inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annot
 
 /**
  * Returns a type that represents an unknown type that extends [T]. For example, if
- * [T] is [CharSequence], this returns `? extends CharSequence`. If
- * [T] is [Any], this returns `?`, which is shorthand for `? extends Object`.
+ * [T] is [CharSequence], this returns `out CharSequence`. If
+ * [T] is [Any], this returns `*`, which is shorthand for `out Any?`.
  */
 @ExperimentalStdlibApi
 inline fun <reified T> subtypeOf(): WildcardType {
@@ -49,7 +49,7 @@ inline fun <reified T> subtypeOf(): WildcardType {
 
 /**
  * Returns a type that represents an unknown supertype of [T] bound. For example, if [T] is
- * [String], this returns `? super String`.
+ * [String], this returns `in String`.
  */
 @ExperimentalStdlibApi
 inline fun <reified T> supertypeOf(): WildcardType {
