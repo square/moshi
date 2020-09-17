@@ -23,7 +23,6 @@ plugins {
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "1.7"
     freeCompilerArgs = listOf("-progressive")
   }
 }
