@@ -35,6 +35,12 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
+// To make Gradle happy
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
