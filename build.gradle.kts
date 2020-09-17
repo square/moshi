@@ -36,47 +36,50 @@ spotless {
     indentWithSpaces(2)
     endWithNewline()
   }
-  val externalJavaFiles = arrayOf(
-    "**/ClassFactory.java",
-    "**/Iso8601Utils.java",
-    "**/JsonReader.java",
-    "**/JsonReaderPathTest.java",
-    "**/JsonReaderTest.java",
-    "**/JsonScope.java",
-    "**/JsonUtf8Reader.java",
-    "**/JsonUtf8ReaderPathTest.java",
-    "**/JsonUtf8ReaderTest.java",
-    "**/JsonUtf8ReaderTest.java",
-    "**/JsonUtf8Writer.java",
-    "**/JsonUtf8WriterTest.java",
-    "**/JsonWriter.java",
-    "**/JsonWriterPathTest.java",
-    "**/JsonWriterTest.java",
-    "**/LinkedHashTreeMap.java",
-    "**/LinkedHashTreeMapTest.java",
-    "**/PolymorphicJsonAdapterFactory.java",
-    "**/RecursiveTypesResolveTest.java",
-    "**/Types.java",
-    "**/TypesTest.java"
-  )
-  val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-    googleJavaFormat("1.7")
-  }
-  java {
-    configureCommonJavaFormat()
-    target("**/*.java")
-    targetExclude(
-      "**/spotless.java",
-      "**/build/**",
-      *externalJavaFiles
+  // GJF not compatible with JDK 15 yet
+  if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+    val externalJavaFiles = arrayOf(
+      "**/ClassFactory.java",
+      "**/Iso8601Utils.java",
+      "**/JsonReader.java",
+      "**/JsonReaderPathTest.java",
+      "**/JsonReaderTest.java",
+      "**/JsonScope.java",
+      "**/JsonUtf8Reader.java",
+      "**/JsonUtf8ReaderPathTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8Writer.java",
+      "**/JsonUtf8WriterTest.java",
+      "**/JsonWriter.java",
+      "**/JsonWriterPathTest.java",
+      "**/JsonWriterTest.java",
+      "**/LinkedHashTreeMap.java",
+      "**/LinkedHashTreeMapTest.java",
+      "**/PolymorphicJsonAdapterFactory.java",
+      "**/RecursiveTypesResolveTest.java",
+      "**/Types.java",
+      "**/TypesTest.java"
     )
-    licenseHeaderFile("spotless/spotless.java")
-  }
-  format("externalJava", JavaExtension::class.java) {
-    // These don't use our spotless config for header files since we don't want to overwrite the
-    // existing copyright headers.
-    configureCommonJavaFormat()
-    target(*externalJavaFiles)
+    val configureCommonJavaFormat: JavaExtension.() -> Unit = {
+      googleJavaFormat("1.7")
+    }
+    java {
+      configureCommonJavaFormat()
+      target("**/*.java")
+      targetExclude(
+        "**/spotless.java",
+        "**/build/**",
+        *externalJavaFiles
+      )
+      licenseHeaderFile("spotless/spotless.java")
+    }
+    format("externalJava", JavaExtension::class.java) {
+      // These don't use our spotless config for header files since we don't want to overwrite the
+      // existing copyright headers.
+      configureCommonJavaFormat()
+      target(*externalJavaFiles)
+    }
   }
   kotlin {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
