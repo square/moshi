@@ -25,7 +25,7 @@ buildscript {
 plugins {
   id("com.vanniktech.maven.publish") version "0.12.0" apply false
   id("org.jetbrains.dokka") version "0.10.1" apply false
-  id("com.diffplug.spotless") version "5.2.0"
+  id("com.diffplug.spotless") version "5.5.0"
 }
 
 spotless {
@@ -39,18 +39,16 @@ spotless {
     googleJavaFormat("1.7")
     target("**/*.java")
     targetExclude("**/spotless.java")
-    // https://github.com/diffplug/spotless/issues/677
-//    licenseHeaderFile("spotless/spotless.java")
+    licenseHeaderFile("spotless/spotless.java")
   }
   kotlin {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
-    // https://github.com/diffplug/spotless/issues/677
-//    licenseHeaderFile("spotless/spotless.kt")
-//      .updateYearWithLatest(false)
-//    targetExclude("**/Dependencies.kt", "**/spotless.kt")
+    licenseHeaderFile("spotless/spotless.kt")
+      .updateYearWithLatest(false)
+    targetExclude("**/Dependencies.kt", "**/spotless.kt")
   }
   kotlinGradle {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
