@@ -28,6 +28,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
+  kapt(project(":kotlin:codegen"))
   compileOnly(Dependencies.jsr305)
   implementation(project(":moshi"))
   implementation(project(":adapters"))
