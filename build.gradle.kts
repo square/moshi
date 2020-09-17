@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.jvm.tasks.Jar
 
 buildscript {
@@ -35,11 +36,47 @@ spotless {
     indentWithSpaces(2)
     endWithNewline()
   }
-  java {
+  val externalJavaFiles = arrayOf(
+    "**/ClassFactory.java",
+    "**/Iso8601Utils.java",
+    "**/JsonReader.java",
+    "**/JsonReaderPathTest.java",
+    "**/JsonReaderTest.java",
+    "**/JsonScope.java",
+    "**/JsonUtf8Reader.java",
+    "**/JsonUtf8ReaderPathTest.java",
+    "**/JsonUtf8ReaderTest.java",
+    "**/JsonUtf8ReaderTest.java",
+    "**/JsonUtf8Writer.java",
+    "**/JsonUtf8WriterTest.java",
+    "**/JsonWriter.java",
+    "**/JsonWriterPathTest.java",
+    "**/JsonWriterTest.java",
+    "**/LinkedHashTreeMap.java",
+    "**/LinkedHashTreeMapTest.java",
+    "**/PolymorphicJsonAdapterFactory.java",
+    "**/RecursiveTypesResolveTest.java",
+    "**/Types.java",
+    "**/TypesTest.java"
+  )
+  val configureCommonJavaFormat: JavaExtension.() -> Unit = {
     googleJavaFormat("1.7")
+  }
+  java {
+    configureCommonJavaFormat()
     target("**/*.java")
-    targetExclude("**/spotless.java")
+    targetExclude(
+      "**/spotless.java",
+      "**/build/**",
+      *externalJavaFiles
+    )
     licenseHeaderFile("spotless/spotless.java")
+  }
+  format("externalJava", JavaExtension::class.java) {
+    // These don't use our spotless config for header files since we don't want to overwrite the
+    // existing copyright headers.
+    configureCommonJavaFormat()
+    target(*externalJavaFiles)
   }
   kotlin {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
@@ -48,7 +85,7 @@ spotless {
     endWithNewline()
     licenseHeaderFile("spotless/spotless.kt")
       .updateYearWithLatest(false)
-    targetExclude("**/Dependencies.kt", "**/spotless.kt")
+    targetExclude("**/Dependencies.kt", "**/spotless.kt", "**/build/**")
   }
   kotlinGradle {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
