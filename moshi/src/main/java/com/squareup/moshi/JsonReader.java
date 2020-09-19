@@ -21,7 +21,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -580,15 +579,6 @@ public abstract class JsonReader implements Closeable {
       return null;
     }
     return tags.get(clazz);
-  }
-
-  /** Returns all tag values as an unmodifiable list. */
-  @CheckReturnValue
-  public final Map<Class<?>, Object> getTags() {
-    if (tags == null) {
-      return Collections.emptyMap();
-    }
-    return Collections.unmodifiableMap(tags);
   }
 
   /** Assigns the tag value using the given class key and value. */

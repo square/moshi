@@ -28,7 +28,6 @@ import static org.junit.Assume.assumeTrue;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -1439,17 +1438,12 @@ public final class JsonReaderTest {
     JsonReader reader = newReader("{}");
     assertThat(reader.getTag(String.class)).isNull();
     assertThat(reader.getTag(Integer.class)).isNull();
-    assertThat(reader.getTags()).isEmpty();
 
     reader.setTag(String.class, "Foo");
     reader.setTag(Integer.class, "Bar");
 
     assertThat(reader.getTag(String.class)).isEqualTo("Foo");
     assertThat(reader.getTag(Integer.class)).isEqualTo("Bar");
-    assertThat(reader.getTags())
-        .containsOnly(
-            new SimpleEntry<Class<?>, Object>(String.class, "Foo"),
-            new SimpleEntry<Class<?>, Object>(Integer.class, "Bar"));
   }
 
   /** Peek a value, then read it, recursively. */
