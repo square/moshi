@@ -575,7 +575,7 @@ public abstract class JsonReader implements Closeable {
   /** Returns the tag value for the given class key. */
   @SuppressWarnings("unchecked")
   @CheckReturnValue
-  public final @Nullable <T> T tag(Class<? extends T> clazz) {
+  public final @Nullable <T> T tag(Class<T> clazz) {
     if (tags == null) {
       return null;
     }
@@ -583,7 +583,7 @@ public abstract class JsonReader implements Closeable {
   }
 
   /** Assigns the tag value using the given class key and value. */
-  public final <T> void setTag(Class<? extends T> clazz, T value) {
+  public final <T> void setTag(Class<T> clazz, T value) {
     if (clazz != value.getClass()) {
       throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
     }
