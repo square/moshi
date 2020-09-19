@@ -957,13 +957,21 @@ public final class JsonWriterTest {
   @Test
   public void tags() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getTag(String.class)).isNull();
-    assertThat(writer.getTag(Integer.class)).isNull();
+    assertThat(writer.tag(String.class)).isNull();
+    assertThat(writer.tag(Integer.class)).isNull();
 
     writer.setTag(String.class, "Foo");
-    writer.setTag(Integer.class, "Bar");
+    writer.setTag(Integer.class, 1);
+    try {
+      writer.setTag(Integer.class, "Invalid");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected)
+          .hasMessage("Tag value 'Invalid' (java.lang.String) is not of type java.lang.Integer");
+    }
 
-    assertThat(writer.getTag(String.class)).isEqualTo("Foo");
-    assertThat(writer.getTag(Integer.class)).isEqualTo("Bar");
+    assertThat(writer.tag(String.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    assertThat(writer.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
+    assertThat(writer.tag(Long.class)).isNull();
   }
 }

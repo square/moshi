@@ -1436,14 +1436,22 @@ public final class JsonReaderTest {
   @Test
   public void tags() throws IOException {
     JsonReader reader = newReader("{}");
-    assertThat(reader.getTag(String.class)).isNull();
-    assertThat(reader.getTag(Integer.class)).isNull();
+    assertThat(reader.tag(String.class)).isNull();
+    assertThat(reader.tag(Integer.class)).isNull();
 
     reader.setTag(String.class, "Foo");
-    reader.setTag(Integer.class, "Bar");
+    reader.setTag(Integer.class, 1);
+    try {
+      reader.setTag(Integer.class, "Invalid");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected)
+          .hasMessage("Tag value 'Invalid' (java.lang.String) is not of type java.lang.Integer");
+    }
 
-    assertThat(reader.getTag(String.class)).isEqualTo("Foo");
-    assertThat(reader.getTag(Integer.class)).isEqualTo("Bar");
+    assertThat(reader.tag(String.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    assertThat(reader.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
+    assertThat(reader.tag(Long.class)).isNull();
   }
 
   /** Peek a value, then read it, recursively. */
