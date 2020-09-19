@@ -1433,25 +1433,77 @@ public final class JsonReaderTest {
     assertThat(reader.nextString()).isEqualTo("d");
   }
 
+  private static final class TagA {
+    private final int data;
+
+    private TagA(int data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      TagA tagA = (TagA) o;
+
+      return data == tagA.data;
+    }
+
+    @Override
+    public int hashCode() {
+      return data;
+    }
+  }
+
+  private static class TagB {
+    private final int data;
+
+    private TagB(int data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      TagB tagA = (TagB) o;
+
+      return data == tagA.data;
+    }
+
+    @Override
+    public int hashCode() {
+      return data;
+    }
+  }
+
+  private static final class TagBSubType extends TagB {
+    private TagBSubType(int data) {
+      super(data);
+    }
+  }
+
   @Test
   public void tags() throws IOException {
     JsonReader reader = newReader("{}");
-    assertThat(reader.tag(String.class)).isNull();
-    assertThat(reader.tag(Integer.class)).isNull();
+    assertThat(reader.tag(TagA.class)).isNull();
+    assertThat(reader.tag(TagB.class)).isNull();
 
-    reader.setTag(String.class, "Foo");
-    reader.setTag(Integer.class, 1);
+    reader.setTag(TagA.class, new TagA(1));
+    reader.setTag(TagB.class, new TagB(2));
     try {
-      reader.setTag(Integer.class, "Invalid");
+      reader.setTag(TagB.class, new TagBSubType(3));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("Tag value 'Invalid' (java.lang.String) is not of type java.lang.Integer");
+          .hasMessage("Tag value must be of type com.squareup.moshi.JsonReaderTest$TagB");
     }
 
-    assertThat(reader.tag(String.class)).isEqualTo("Foo").isInstanceOf(String.class);
-    assertThat(reader.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
-    assertThat(reader.tag(Long.class)).isNull();
+    assertThat(reader.tag(TagA.class)).isEqualTo(new TagA(1)).isInstanceOf(TagA.class);
+    assertThat(reader.tag(TagB.class)).isEqualTo(new TagB(2)).isInstanceOf(TagB.class);
+    assertThat(reader.tag(TagBSubType.class)).isNull();
   }
 
   /** Peek a value, then read it, recursively. */

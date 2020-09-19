@@ -954,24 +954,76 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{}");
   }
 
+  private static final class TagA {
+    private final int data;
+
+    private TagA(int data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      TagA tagA = (TagA) o;
+
+      return data == tagA.data;
+    }
+
+    @Override
+    public int hashCode() {
+      return data;
+    }
+  }
+
+  private static class TagB {
+    private final int data;
+
+    private TagB(int data) {
+      this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      TagB tagA = (TagB) o;
+
+      return data == tagA.data;
+    }
+
+    @Override
+    public int hashCode() {
+      return data;
+    }
+  }
+
+  private static final class TagBSubType extends TagB {
+    private TagBSubType(int data) {
+      super(data);
+    }
+  }
+
   @Test
   public void tags() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.tag(String.class)).isNull();
-    assertThat(writer.tag(Integer.class)).isNull();
+    assertThat(writer.tag(TagA.class)).isNull();
+    assertThat(writer.tag(TagB.class)).isNull();
 
-    writer.setTag(String.class, "Foo");
-    writer.setTag(Integer.class, 1);
+    writer.setTag(TagA.class, new TagA(1));
+    writer.setTag(TagB.class, new TagB(2));
     try {
-      writer.setTag(Integer.class, "Invalid");
+      writer.setTag(TagB.class, new TagBSubType(3));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("Tag value 'Invalid' (java.lang.String) is not of type java.lang.Integer");
+          .hasMessage("Tag value must be of type com.squareup.moshi.JsonWriterTest$TagB");
     }
 
-    assertThat(writer.tag(String.class)).isEqualTo("Foo").isInstanceOf(String.class);
-    assertThat(writer.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
-    assertThat(writer.tag(Long.class)).isNull();
+    assertThat(writer.tag(TagA.class)).isEqualTo(new TagA(1)).isInstanceOf(TagA.class);
+    assertThat(writer.tag(TagB.class)).isEqualTo(new TagB(2)).isInstanceOf(TagB.class);
+    assertThat(writer.tag(TagBSubType.class)).isNull();
   }
 }

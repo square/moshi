@@ -577,14 +577,8 @@ public abstract class JsonWriter implements Closeable, Flushable {
 
   /** Assigns the tag value using the given class key and value. */
   public final <T> void setTag(Class<? extends T> clazz, T value) {
-    if (!clazz.isInstance(value)) {
-      throw new IllegalArgumentException(
-          "Tag value '"
-              + value
-              + "' ("
-              + value.getClass().getName()
-              + ") is not of type "
-              + clazz.getName());
+    if (clazz != value.getClass()) {
+      throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
     }
     if (tags == null) {
       tags = new HashMap<>();
