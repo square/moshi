@@ -21,7 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
@@ -588,7 +588,7 @@ public abstract class JsonReader implements Closeable {
       throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
     }
     if (tags == null) {
-      tags = new HashMap<>();
+      tags = new LinkedHashMap<>();
     }
     tags.put(clazz, value);
   }
