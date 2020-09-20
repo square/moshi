@@ -259,10 +259,10 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       for (property in allPropertiesSequence.distinctBy { it.name }) {
         val propertyField = signatureSearcher.field(property)
-        val parameterData = parametersByName[property.name]
+        val ktParameter = parametersByName[property.name]
 
         if (Modifier.isTransient(propertyField?.modifiers ?: 0)) {
-          parameterData?.run {
+          ktParameter?.run {
             require(declaresDefaultValue) {
               "No default value for transient constructor parameter '$name' on type '${rawType.canonicalName}'"
             }
@@ -270,31 +270,31 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           continue
         }
 
-        if (parameterData != null) {
-          require(parameterData.km.type valueEquals property.returnType) {
-            "'${property.name}' has a constructor parameter of type ${parameterData.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
+        if (ktParameter != null) {
+          require(ktParameter.km.type valueEquals property.returnType) {
+            "'${property.name}' has a constructor parameter of type ${ktParameter.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
           }
         }
 
-        if (!Flag.Property.IS_VAR(property.flags) && parameterData == null) continue
+        if (!Flag.Property.IS_VAR(property.flags) && ktParameter == null) continue
 
         val getterMethod = signatureSearcher.getter(property)
         val setterMethod = signatureSearcher.setter(property)
         val annotationsMethod = signatureSearcher.syntheticMethodForAnnotations(property)
 
-        val propertyData = KtProperty(
+        val ktProperty = KtProperty(
           km = property,
           jvmField = propertyField,
           jvmGetter = getterMethod,
           jvmSetter = setterMethod,
           jvmAnnotationsMethod = annotationsMethod,
-          parameter = parameterData
+          parameter = ktParameter
         )
-        val allAnnotations = propertyData.annotations.toMutableList()
+        val allAnnotations = ktProperty.annotations.toMutableList()
         val jsonAnnotation = allAnnotations.filterIsInstance<Json>().firstOrNull()
 
         val name = jsonAnnotation?.name ?: property.name
-        val resolvedPropertyType = resolve(type, rawType, propertyData.javaType)
+        val resolvedPropertyType = resolve(type, rawType, ktProperty.javaType)
         val adapter = moshi.adapter<Any>(
           resolvedPropertyType,
           Util.jsonAnnotations(allAnnotations.toTypedArray()),
@@ -306,7 +306,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           name,
           jsonAnnotation?.name ?: name,
           adapter,
-          propertyData
+          ktProperty
         )
       }
 
