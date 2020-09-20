@@ -243,9 +243,6 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val ktConstructor = KtConstructor.create(rawType, kmClass) ?: return null
-      val parametersByName = ktConstructor.parameters.associateBy { it.name }
-
-      val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
       // TODO this doesn't cover platform types
       val allPropertiesSequence = kmClass.properties.asSequence() +
@@ -256,6 +253,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           .filter { Flag.Property.IS_VAR(it.flags) }
 
       val signatureSearcher = JvmSignatureSearcher(rawType)
+      val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
+      val parametersByName = ktConstructor.parameters.associateBy { it.name }
 
       for (property in allPropertiesSequence.distinctBy { it.name }) {
         val propertyField = signatureSearcher.field(property)
