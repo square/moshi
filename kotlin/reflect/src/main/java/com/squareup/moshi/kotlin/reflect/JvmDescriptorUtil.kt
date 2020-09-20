@@ -41,9 +41,6 @@ internal val Class<*>.descriptor: String
     }
   }
 
-internal val Method.descriptor: String
-  get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")${returnType.descriptor}") { it.descriptor }
-
 /**
  * Returns the JVM signature in the form "$Name$MethodDescriptor", for example: `equals(Ljava/lang/Object;)Z`.
  *
@@ -51,10 +48,7 @@ internal val Method.descriptor: String
  *
  * For reference, see the [JVM specification, section 4.3](http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3).
  */
-internal val Method.jvmMethodSignature: String get() = "$name$descriptor"
-
-internal val Constructor<*>.descriptor: String
-  get() = parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")V") { it.descriptor }
+internal val Method.jvmMethodSignature: String get() = "$name${parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")${returnType.descriptor}") { it.descriptor }}"
 
 /**
  * Returns the JVM signature in the form "<init>$MethodDescriptor", for example: `"<init>(Ljava/lang/Object;)V")`.
@@ -63,7 +57,7 @@ internal val Constructor<*>.descriptor: String
  *
  * For reference, see the [JVM specification, section 4.3](http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3).
  */
-internal val Constructor<*>.jvmMethodSignature: String get() = "<init>$descriptor"
+internal val Constructor<*>.jvmMethodSignature: String get() = "<init>${parameterTypes.joinToString(separator = "", prefix = "(", postfix = ")V") { it.descriptor }}"
 
 /**
  * Returns the JVM signature in the form "$Name:$FieldDescriptor", for example: `"value:Ljava/lang/String;"`.
