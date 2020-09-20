@@ -118,7 +118,6 @@ private fun readType(counter: Counter, desc: String): Class<*> {
     }
     else -> error("Unknown character $c")
   }
-
 }
 
 internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {

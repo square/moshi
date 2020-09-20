@@ -298,9 +298,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val signatureSearcher = JvmSignatureSearcher(rawType)
 
-    for (property in allPropertiesSequence.distinctBy { it.name }) {
-      val propertyField = signatureSearcher.field(property)
-      val parameterData = parametersByName[property.name]
+      for (property in allPropertiesSequence.distinctBy { it.name }) {
+        val propertyField = signatureSearcher.field(property)
+        val parameterData = parametersByName[property.name]
 
         if (Modifier.isTransient(propertyField?.modifiers ?: 0)) {
           parameterData?.run {

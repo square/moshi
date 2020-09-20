@@ -175,7 +175,8 @@ internal data class KtProperty(
     ?: jvmGetter?.genericReturnType
     ?: jvmSetter?.genericReturnType
     ?: error(
-      "No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'.")
+      "No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'."
+    )
 
   val annotations: Set<Annotation> by lazy {
     val set = LinkedHashSet<Annotation>()
