@@ -233,7 +233,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         "Cannot serialize local class or object expression ${rawType.name}"
       }
 
-      val kmClass = rawType.toKmClass(throwOnNotClass = true) ?: return null
+      val kmClass = rawType.header()?.toKmClass() ?: return null
 
       require(!Flag.IS_ABSTRACT(kmClass.flags)) {
         "Cannot serialize abstract class ${rawType.name}"
@@ -299,7 +299,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       // TODO this doesn't cover platform types
       val allPropertiesSequence = kmClass.properties.asSequence() +
         generateSequence(rawType) { it.superclass }
-          .mapNotNull { it.toKmClass(false) }
+          .mapNotNull { it.header()?.toKmClass() }
           .flatMap { it.properties.asSequence() }
           .filterNot { Flag.IS_PRIVATE(it.flags) || Flag.IS_PRIVATE_TO_THIS(it.flags) }
           .filter { Flag.Property.IS_VAR(it.flags) }
@@ -499,9 +499,9 @@ private fun defaultPrimitiveValue(type: Type): Any? =
     }
   } else null
 
-private fun Class<*>.toKmClass(throwOnNotClass: Boolean): KmClass? {
+private fun Class<*>.header(): KotlinClassHeader? {
   val metadata = getAnnotation(KOTLIN_METADATA) ?: return null
-  val header = with(metadata) {
+  return with(metadata) {
     KotlinClassHeader(
       kind = kind,
       metadataVersion = metadataVersion,
@@ -513,13 +513,11 @@ private fun Class<*>.toKmClass(throwOnNotClass: Boolean): KmClass? {
       extraInt = extraInt
     )
   }
-  val classMetadata = KotlinClassMetadata.read(header)
+}
+private fun KotlinClassHeader.toKmClass(): KmClass? {
+  val classMetadata = KotlinClassMetadata.read(this)
   if (classMetadata !is KotlinClassMetadata.Class) {
-    if (throwOnNotClass) {
-      throw IllegalStateException("Cannot serialize class with metadata $classMetadata")
-    } else {
-      return null
-    }
+    return null
   }
 
   return classMetadata.toKmClass()
