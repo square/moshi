@@ -27,16 +27,10 @@ import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmClass
-import kotlinx.metadata.KmClassifier
-import kotlinx.metadata.KmClassifier.TypeAlias
-import kotlinx.metadata.KmClassifier.TypeParameter
-import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.KmFlexibleTypeUpperBound
 import kotlinx.metadata.KmProperty
 import kotlinx.metadata.KmType
 import kotlinx.metadata.KmTypeProjection
-import kotlinx.metadata.KmValueParameter
-import kotlinx.metadata.isLocal
 import kotlinx.metadata.jvm.JvmFieldSignature
 import kotlinx.metadata.jvm.JvmMethodSignature
 import kotlinx.metadata.jvm.KotlinClassHeader
@@ -46,7 +40,6 @@ import kotlinx.metadata.jvm.getterSignature
 import kotlinx.metadata.jvm.setterSignature
 import kotlinx.metadata.jvm.signature
 import kotlinx.metadata.jvm.syntheticMethodForAnnotations
-import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -67,7 +60,7 @@ private val ABSENT_VALUE = Any()
  * constructor, and then by setting any additional properties that exist, if any.
  */
 internal class KotlinJsonAdapter<T>(
-  private val constructor: ConstructorData,
+  private val constructor: KtConstructor,
   private val allBindings: List<Binding<T, Any?>?>,
   private val nonTransientBindings: List<Binding<T, Any?>>,
   private val options: JsonReader.Options
@@ -154,7 +147,7 @@ internal class KotlinJsonAdapter<T>(
     val name: String,
     val jsonName: String?,
     val adapter: JsonAdapter<P>,
-    val property: PropertyData,
+    val property: KtProperty,
     val propertyIndex: Int = property.parameter?.index ?: -1
   ) {
 
@@ -182,25 +175,25 @@ internal class KotlinJsonAdapter<T>(
 
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
   class IndexedParameterMap(
-    private val parameterKeys: List<ParameterData>,
+    private val parameterKeys: List<KtParameter>,
     private val parameterValues: Array<Any?>
-  ) : AbstractMutableMap<ParameterData, Any?>() {
+  ) : AbstractMutableMap<KtParameter, Any?>() {
 
-    override fun put(key: ParameterData, value: Any?): Any? = null
+    override fun put(key: KtParameter, value: Any?): Any? = null
 
-    override val entries: MutableSet<MutableMap.MutableEntry<ParameterData, Any?>>
+    override val entries: MutableSet<MutableMap.MutableEntry<KtParameter, Any?>>
       get() {
         val allPossibleEntries = parameterKeys.mapIndexed { index, value ->
-          SimpleEntry<ParameterData, Any?>(value, parameterValues[index])
+          SimpleEntry<KtParameter, Any?>(value, parameterValues[index])
         }
         return allPossibleEntries.filterTo(mutableSetOf()) {
           it.value !== ABSENT_VALUE
         }
       }
 
-    override fun containsKey(key: ParameterData) = parameterValues[key.index] !== ABSENT_VALUE
+    override fun containsKey(key: KtParameter) = parameterValues[key.index] !== ABSENT_VALUE
 
-    override fun get(key: ParameterData): Any? {
+    override fun get(key: KtParameter): Any? {
       val value = parameterValues[key.index]
       return if (value !== ABSENT_VALUE) value else null
     }
@@ -260,7 +253,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val parameterTypes = jvmConstructor.parameterTypes
       val parameters = kmConstructor.valueParameters.withIndex()
         .map { (index, kmParam) ->
-          ParameterData(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
+          KtParameter(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
         }
 
       val anyOptional = parameters.any { it.declaresDefaultValue }
@@ -285,7 +278,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         jvmConstructor
       }
 
-      val constructorData = ConstructorData(
+      val constructorData = KtConstructor(
         rawType,
         kmConstructor,
         actualConstructor,
@@ -333,7 +326,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           signatureSearcher::findMethod
         )
 
-        val propertyData = PropertyData(
+        val propertyData = KtProperty(
           km = property,
           jvmField = propertyField,
           jvmGetter = getterMethod,

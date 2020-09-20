@@ -86,7 +86,7 @@ private fun createClassName(kotlinMetadataName: String): String {
   return kotlinMetadataName.replace("/", ".")
 }
 
-internal data class ParameterData(
+internal data class KtParameter(
   val km: KmValueParameter,
   val index: Int,
   val rawType: Class<*>,
@@ -97,18 +97,18 @@ internal data class ParameterData(
   val isNullable get() = km.type!!.isNullable
 }
 
-internal data class ConstructorData(
+internal data class KtConstructor(
   val type: Class<*>,
   val km: KmConstructor,
   val jvm: Constructor<*>,
-  val parameters: List<ParameterData>,
+  val parameters: List<KtParameter>,
   val isDefault: Boolean
 ) {
   init {
     jvm.isAccessible = true
   }
 
-  fun <R> callBy(args: Map<ParameterData, Any?>): R {
+  fun <R> callBy(args: Map<KtParameter, Any?>): R {
     val arguments = ArrayList<Any?>(parameters.size)
     var mask = 0
     val masks = ArrayList<Int>(1)
@@ -155,13 +155,13 @@ internal data class ConstructorData(
   }
 }
 
-internal data class PropertyData(
+internal data class KtProperty(
   val km: KmProperty,
   val jvmField: Field?,
   val jvmGetter: Method?,
   val jvmSetter: Method?,
   val jvmAnnotationsMethod: Method?,
-  val parameter: ParameterData?
+  val parameter: KtParameter?
 ) {
   init {
     jvmField?.isAccessible = true
