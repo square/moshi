@@ -38,7 +38,6 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.fieldSignature
 import kotlinx.metadata.jvm.getterSignature
 import kotlinx.metadata.jvm.setterSignature
-import kotlinx.metadata.jvm.signature
 import kotlinx.metadata.jvm.syntheticMethodForAnnotations
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -243,48 +242,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
       }
 
-      val kmConstructor = kmClass.constructors.find { Flag.Constructor.IS_PRIMARY(it.flags) }
-        ?: return null
-      val kmConstructorSignature = kmConstructor.signature?.asString() ?: return null
-      val constructorsBySignature = rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
-      val jvmConstructor = constructorsBySignature[kmConstructorSignature] ?: return null
-      val parameterAnnotations = jvmConstructor.parameterAnnotations
-      val parameterTypes = jvmConstructor.parameterTypes
-      val parameters = kmConstructor.valueParameters.withIndex()
-        .map { (index, kmParam) ->
-          KtParameter(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
-        }
-
-      val anyOptional = parameters.any { it.declaresDefaultValue }
-      val actualConstructor = if (anyOptional) {
-        val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
-        val parameterCount = jvmConstructor.parameterTypes.size
-        val maskParamsToAdd = if (parameterCount == 0) {
-          0
-        } else {
-          (parameterCount + 31) / 32
-        }
-        val defaultConstructorSignature = buildString {
-          append(prefix)
-          repeat(maskParamsToAdd) {
-            append("I")
-          }
-          append(Util.DEFAULT_CONSTRUCTOR_MARKER!!.descriptor)
-          append(")V")
-        }
-        constructorsBySignature[defaultConstructorSignature] ?: return null
-      } else {
-        jvmConstructor
-      }
-
-      val constructorData = KtConstructor(
-        rawType,
-        kmConstructor,
-        actualConstructor,
-        parameters,
-        anyOptional
-      )
-      val parametersByName = parameters.associateBy { it.name }
+      val ktConstructor = KtConstructor.create(rawType, kmClass) ?: return null
+      val parametersByName = ktConstructor.parameters.associateBy { it.name }
 
       val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
@@ -353,7 +312,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
 
-      for (parameter in constructorData.parameters) {
+      for (parameter in ktConstructor.parameters) {
         val binding = bindingsByName.remove(parameter.name)
         require(binding != null || parameter.declaresDefaultValue) {
           "No property for required constructor parameter '${parameter.name}' on type '${rawType.canonicalName}'"
@@ -368,7 +327,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val nonTransientBindings = bindings.filterNotNull()
       val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
-      return KotlinJsonAdapter(constructorData, bindings, nonTransientBindings, options).nullSafe()
+      return KotlinJsonAdapter(ktConstructor, bindings, nonTransientBindings, options).nullSafe()
     }
 
   private infix fun KmType?.valueEquals(other: KmType?): Boolean {

@@ -15,7 +15,9 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
+import com.squareup.moshi.internal.Util
 import kotlinx.metadata.Flag
+import kotlinx.metadata.KmClass
 import kotlinx.metadata.KmClassifier
 import kotlinx.metadata.KmClassifier.TypeAlias
 import kotlinx.metadata.KmClassifier.TypeParameter
@@ -24,6 +26,7 @@ import kotlinx.metadata.KmProperty
 import kotlinx.metadata.KmType
 import kotlinx.metadata.KmValueParameter
 import kotlinx.metadata.isLocal
+import kotlinx.metadata.jvm.signature
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
@@ -152,6 +155,52 @@ internal data class KtConstructor(
 
     @Suppress("UNCHECKED_CAST")
     return jvm.newInstance(*arguments.toTypedArray()) as R
+  }
+
+  companion object {
+    fun create(rawType: Class<*>, kmClass: KmClass): KtConstructor? {
+      val kmConstructor = kmClass.constructors.find { Flag.Constructor.IS_PRIMARY(it.flags) }
+        ?: return null
+      val kmConstructorSignature = kmConstructor.signature?.asString() ?: return null
+      val constructorsBySignature = rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
+      val jvmConstructor = constructorsBySignature[kmConstructorSignature] ?: return null
+      val parameterAnnotations = jvmConstructor.parameterAnnotations
+      val parameterTypes = jvmConstructor.parameterTypes
+      val parameters = kmConstructor.valueParameters.withIndex()
+        .map { (index, kmParam) ->
+          KtParameter(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
+        }
+
+      val anyOptional = parameters.any { it.declaresDefaultValue }
+      val actualConstructor = if (anyOptional) {
+        val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
+        val parameterCount = jvmConstructor.parameterTypes.size
+        val maskParamsToAdd = if (parameterCount == 0) {
+          0
+        } else {
+          (parameterCount + 31) / 32
+        }
+        val defaultConstructorSignature = buildString {
+          append(prefix)
+          repeat(maskParamsToAdd) {
+            append("I")
+          }
+          append(Util.DEFAULT_CONSTRUCTOR_MARKER!!.descriptor)
+          append(")V")
+        }
+        constructorsBySignature[defaultConstructorSignature] ?: return null
+      } else {
+        jvmConstructor
+      }
+
+      return KtConstructor(
+        rawType,
+        kmConstructor,
+        actualConstructor,
+        parameters,
+        anyOptional
+      )
+    }
   }
 }
 
