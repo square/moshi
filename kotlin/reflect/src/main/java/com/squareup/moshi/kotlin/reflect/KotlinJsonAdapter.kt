@@ -466,37 +466,15 @@ private val KmType.canonicalName: String
  * Creates a canonical class name as represented in Metadata's [kotlinx.metadata.ClassName], where
  * package names in this name are separated by '/' and class names are separated by '.'.
  *
- * For example: `"org/foo/bar/Baz.Nested"`.
+ * Example ClassName that we want to canonicalize: `"org/foo/bar/Baz.Nested"`.
  *
- * Local classes are prefixed with ".", but for KotlinPoetMetadataSpecs' use case we don't deal
- * with those.
+ * Local classes are prefixed with ".", but for Moshi's use case we don't deal with those.
  */
 private fun createClassName(kotlinMetadataName: String): String {
   require(!kotlinMetadataName.isLocal) {
     "Local/anonymous classes are not supported!"
   }
-  // Top-level: package/of/class/MyClass
-  // Nested A:  package/of/class/MyClass.NestedClass
-  val simpleName = kotlinMetadataName.substringAfterLast(
-    '/', // Drop the package name, e.g. "package/of/class/"
-    '.' // Drop any enclosing classes, e.g. "MyClass."
-  )
-  val packageName = kotlinMetadataName.substringBeforeLast("/", missingDelimiterValue = "")
-  val simpleNames = kotlinMetadataName.removeSuffix(simpleName)
-    .removeSuffix(".") // Trailing "." if any
-    .removePrefix(packageName)
-    .removePrefix("/")
-    .let {
-      if (it.isNotEmpty()) {
-        it.split(".")
-      } else {
-        // Don't split, otherwise we end up with an empty string as the first element!
-        emptyList()
-      }
-    }
-    .plus(simpleName)
-
-  return "${packageName.replace("/", ".")}.${simpleNames.joinToString(".")}"
+  return kotlinMetadataName.replace("/", ".")
 }
 
 @Suppress("SameParameterValue")
