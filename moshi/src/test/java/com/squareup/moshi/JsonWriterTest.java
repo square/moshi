@@ -977,10 +977,12 @@ public final class JsonWriterTest {
     }
   }
 
-  private static class TagB {
+  private interface TagB {}
+
+  private static final class TagBSubType implements TagB {
     private final int data;
 
-    private TagB(int data) {
+    private TagBSubType(int data) {
       this.data = data;
     }
 
@@ -989,7 +991,7 @@ public final class JsonWriterTest {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      TagB tagA = (TagB) o;
+      TagBSubType tagA = (TagBSubType) o;
 
       return data == tagA.data;
     }
@@ -1000,12 +1002,7 @@ public final class JsonWriterTest {
     }
   }
 
-  private static final class TagBSubType extends TagB {
-    private TagBSubType(int data) {
-      super(data);
-    }
-  }
-
+  @SuppressWarnings("rawtypes")
   @Test
   public void tags() throws IOException {
     JsonWriter writer = factory.newWriter();
@@ -1013,17 +1010,19 @@ public final class JsonWriterTest {
     assertThat(writer.tag(TagB.class)).isNull();
 
     writer.setTag(TagA.class, new TagA(1));
-    writer.setTag(TagB.class, new TagB(2));
+    writer.setTag(TagB.class, new TagBSubType(2));
     try {
-      writer.setTag(TagB.class, new TagBSubType(3));
+      writer.setTag((Class) TagA.class, "Invalid");
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("Tag value must be of type com.squareup.moshi.JsonWriterTest$TagB");
+          .hasMessage("Tag value must be of type com.squareup.moshi.JsonWriterTest$TagA");
     }
 
     assertThat(writer.tag(TagA.class)).isEqualTo(new TagA(1)).isInstanceOf(TagA.class);
-    assertThat(writer.tag(TagB.class)).isEqualTo(new TagB(2)).isInstanceOf(TagB.class);
+    assertThat(writer.tag(TagB.class))
+        .isEqualTo(new TagBSubType(2))
+        .isInstanceOf(TagBSubType.class);
     assertThat(writer.tag(TagBSubType.class)).isNull();
   }
 }

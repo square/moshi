@@ -1456,10 +1456,12 @@ public final class JsonReaderTest {
     }
   }
 
-  private static class TagB {
+  private interface TagB {}
+
+  private static final class TagBSubType implements TagB {
     private final int data;
 
-    private TagB(int data) {
+    private TagBSubType(int data) {
       this.data = data;
     }
 
@@ -1468,7 +1470,7 @@ public final class JsonReaderTest {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
 
-      TagB tagA = (TagB) o;
+      TagBSubType tagA = (TagBSubType) o;
 
       return data == tagA.data;
     }
@@ -1479,12 +1481,7 @@ public final class JsonReaderTest {
     }
   }
 
-  private static final class TagBSubType extends TagB {
-    private TagBSubType(int data) {
-      super(data);
-    }
-  }
-
+  @SuppressWarnings("rawtypes")
   @Test
   public void tags() throws IOException {
     JsonReader reader = newReader("{}");
@@ -1492,17 +1489,19 @@ public final class JsonReaderTest {
     assertThat(reader.tag(TagB.class)).isNull();
 
     reader.setTag(TagA.class, new TagA(1));
-    reader.setTag(TagB.class, new TagB(2));
+    reader.setTag(TagB.class, new TagBSubType(2));
     try {
-      reader.setTag(TagB.class, new TagBSubType(3));
+      reader.setTag((Class) TagA.class, "Invalid");
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("Tag value must be of type com.squareup.moshi.JsonReaderTest$TagB");
+          .hasMessage("Tag value must be of type com.squareup.moshi.JsonReaderTest$TagA");
     }
 
     assertThat(reader.tag(TagA.class)).isEqualTo(new TagA(1)).isInstanceOf(TagA.class);
-    assertThat(reader.tag(TagB.class)).isEqualTo(new TagB(2)).isInstanceOf(TagB.class);
+    assertThat(reader.tag(TagB.class))
+        .isEqualTo(new TagBSubType(2))
+        .isInstanceOf(TagBSubType.class);
     assertThat(reader.tag(TagBSubType.class)).isNull();
   }
 
