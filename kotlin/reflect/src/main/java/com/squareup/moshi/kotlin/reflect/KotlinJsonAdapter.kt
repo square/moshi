@@ -449,7 +449,7 @@ private val KmType.canonicalName: String
       append(classifierString)
 
       val args = arguments.joinToString(", ") {
-        "${it.variance?.name} ${it.type?.canonicalName ?: "*"}".trim()
+        "${it.variance?.name} ${it.type?.canonicalName ?: "*"}"
       }
 
       if (args.isNotBlank()) {
