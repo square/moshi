@@ -320,7 +320,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         }
 
         if (parameterData != null) {
-          require(parameterData.km.type isEqualTo property.returnType) {
+          require(parameterData.km.type valueEquals property.returnType) {
             "'${property.name}' has a constructor parameter of type ${parameterData.km.type?.canonicalName} but a property of type ${property.returnType.canonicalName}."
           }
         }
@@ -381,7 +381,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       return KotlinJsonAdapter(constructorData, bindings, nonTransientBindings, options).nullSafe()
     }
 
-  private infix fun KmType?.isEqualTo(other: KmType?): Boolean {
+  private infix fun KmType?.valueEquals(other: KmType?): Boolean {
     return when {
       this === other -> true
       this != null && other != null -> {
@@ -390,8 +390,8 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         arguments areEqualTo other.arguments &&
           classifier == other.classifier &&
           flags == other.flags &&
-          flexibleTypeUpperBound isEqualTo other.flexibleTypeUpperBound &&
-          outerType isEqualTo other.outerType
+          flexibleTypeUpperBound valueEquals other.flexibleTypeUpperBound &&
+          outerType valueEquals other.outerType
       }
       else -> false
     }
@@ -407,7 +407,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val areNotEqual = this.asSequence()
         .zip(other.asSequence())
         // check this and other contains same elements at position
-        .map { (fromThis, fromOther) -> fromThis isEqualTo fromOther }
+        .map { (fromThis, fromOther) -> fromThis valueEquals fromOther }
         // searching for first negative answer
         .contains(false)
       if (areNotEqual) return false
@@ -416,23 +416,23 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     return true
   }
 
-  private infix fun KmTypeProjection?.isEqualTo(other: KmTypeProjection?): Boolean {
+  private infix fun KmTypeProjection?.valueEquals(other: KmTypeProjection?): Boolean {
     return when {
       this === other -> true
       this != null && other != null -> {
         variance == other.variance &&
-          type isEqualTo other.type
+          type valueEquals other.type
       }
       else -> false
     }
   }
 
-  private infix fun KmFlexibleTypeUpperBound?.isEqualTo(other: KmFlexibleTypeUpperBound?): Boolean {
+  private infix fun KmFlexibleTypeUpperBound?.valueEquals(other: KmFlexibleTypeUpperBound?): Boolean {
     return when {
       this === other -> true
       this != null && other != null -> {
         typeFlexibilityId == other.typeFlexibilityId &&
-          type isEqualTo other.type
+          type valueEquals other.type
       }
       else -> false
     }
