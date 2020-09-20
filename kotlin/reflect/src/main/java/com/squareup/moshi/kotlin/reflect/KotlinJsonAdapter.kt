@@ -44,7 +44,6 @@ import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
-import kotlin.LazyThreadSafetyMode.NONE
 
 /** Classes annotated with this are eligible for this adapter. */
 private val KOTLIN_METADATA = Metadata::class.java
@@ -299,9 +298,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       val signatureSearcher = JvmSignatureSearcher(rawType)
 
-      for (property in allPropertiesSequence.distinctBy { it.name }) {
-        val propertyField = property.fieldSignature?.let(signatureSearcher::findField)
-        val parameterData = parametersByName[property.name]
+    for (property in allPropertiesSequence.distinctBy { it.name }) {
+      val propertyField = signatureSearcher.field(property)
+      val parameterData = parametersByName[property.name]
 
         if (Modifier.isTransient(propertyField?.modifiers ?: 0)) {
           parameterData?.run {
@@ -322,9 +321,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
         val getterMethod = signatureSearcher.getter(property)
         val setterMethod = signatureSearcher.setter(property)
-        val annotationsMethod = property.syntheticMethodForAnnotations?.let(
-          signatureSearcher::findMethod
-        )
+        val annotationsMethod = signatureSearcher.syntheticMethodForAnnotations(property)
 
         val propertyData = KtProperty(
           km = property,
@@ -418,7 +415,9 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     }
   }
 
-  private infix fun KmFlexibleTypeUpperBound?.valueEquals(other: KmFlexibleTypeUpperBound?): Boolean {
+  private infix fun KmFlexibleTypeUpperBound?.valueEquals(
+    other: KmFlexibleTypeUpperBound?
+  ): Boolean {
     return when {
       this === other -> true
       this != null && other != null -> {
@@ -445,6 +444,7 @@ private fun Class<*>.header(): KotlinClassHeader? {
     )
   }
 }
+
 private fun KotlinClassHeader.toKmClass(): KmClass? {
   val classMetadata = KotlinClassMetadata.read(this)
   if (classMetadata !is KotlinClassMetadata.Class) {
@@ -454,68 +454,63 @@ private fun KotlinClassHeader.toKmClass(): KmClass? {
   return classMetadata.toKmClass()
 }
 
-private class JvmSignatureSearcher(clazz: Class<*>) {
+private class JvmSignatureSearcher(private val clazz: Class<*>) {
 
-  private val methodSignatureCache = mutableMapOf<String, Method>()
-  private val fieldSignatureCache = mutableMapOf<String, Field>()
-  private val declaredMethodsIterator by lazy(NONE) { clazz.declaredMethods.iterator() }
-  private val declaredFieldsIterator by lazy(NONE) { clazz.declaredFields.iterator() }
-  private val methodIterator by lazy(NONE) { clazz.methods.iterator() }
-  private val fieldIterator by lazy(NONE) { clazz.fields.iterator() }
-
-  fun getter(kmProperty: KmProperty): Method? = kmProperty.getterSignature?.let(::findMethod)
-
-  fun setter(kmProperty: KmProperty): Method? = kmProperty.setterSignature?.let(::findMethod)
-
-  fun findMethod(signature: JvmMethodSignature): Method? {
-    val signatureString = signature.asString()
-    val cached = methodSignatureCache[signatureString]
-    if (cached != null) return cached
-
-    while (declaredMethodsIterator.hasNext()) {
-      val next = declaredMethodsIterator.next()
-      val nextSignature = next.jvmMethodSignature
-      methodSignatureCache[nextSignature] = next
-      if (nextSignature == signatureString) {
-        return next
-      }
-    }
-
-    while (methodIterator.hasNext()) {
-      val next = methodIterator.next()
-      val nextSignature = next.jvmMethodSignature
-      methodSignatureCache[nextSignature] = next
-      if (nextSignature == signatureString) {
-        return next
-      }
-    }
-
-    return null
+  fun syntheticMethodForAnnotations(
+    kmProperty: KmProperty
+  ): Method? = kmProperty.syntheticMethodForAnnotations?.let { signature ->
+    findMethod(clazz, signature)
   }
 
-  fun findField(signature: JvmFieldSignature): Field? {
-    val signatureString = signature.asString()
-    val cached = fieldSignatureCache[signatureString]
-    if (cached != null) return cached
+  fun getter(
+    kmProperty: KmProperty
+  ): Method? = kmProperty.getterSignature?.let { signature ->
+    findMethod(clazz, signature)
+  }
 
-    while (declaredFieldsIterator.hasNext()) {
-      val next = declaredFieldsIterator.next()
-      val nextSignature = next.jvmFieldSignature
-      fieldSignatureCache[nextSignature] = next
-      if (nextSignature == signatureString) {
-        return next
+  fun setter(
+    kmProperty: KmProperty
+  ): Method? = kmProperty.setterSignature?.let { signature ->
+    findMethod(clazz, signature)
+  }
+
+  fun field(
+    kmProperty: KmProperty
+  ): Field? = kmProperty.fieldSignature?.let { signature ->
+    findField(clazz, signature)
+  }
+
+  private fun findMethod(sourceClass: Class<*>, signature: JvmMethodSignature): Method {
+    val parameterTypes = signature.decodeParameterTypes()
+    return try {
+      if (parameterTypes.isEmpty()) {
+        // Save the empty copy
+        sourceClass.getDeclaredMethod(signature.name)
+      } else {
+        sourceClass.getDeclaredMethod(signature.name, *parameterTypes.toTypedArray())
+      }
+    } catch (e: NoSuchMethodException) {
+      // Try finding the superclass method
+      val superClass = sourceClass.superclass
+      if (superClass != Any::class.java) {
+        return findMethod(superClass, signature)
+      } else {
+        throw e
       }
     }
+  }
 
-    while (fieldIterator.hasNext()) {
-      val next = fieldIterator.next()
-      val nextSignature = next.jvmFieldSignature
-      fieldSignatureCache[nextSignature] = next
-      if (nextSignature == signatureString) {
-        return next
+  private fun findField(sourceClass: Class<*>, signature: JvmFieldSignature): Field {
+    return try {
+      sourceClass.getDeclaredField(signature.name)
+    } catch (e: NoSuchFieldException) {
+      // Try finding the superclass field
+      val superClass = sourceClass.superclass
+      if (superClass != Any::class.java) {
+        return findField(superClass, signature)
+      } else {
+        throw e
       }
     }
-
-    return null
   }
 }
