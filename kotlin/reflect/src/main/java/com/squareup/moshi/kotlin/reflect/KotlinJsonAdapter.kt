@@ -166,7 +166,7 @@ internal class KotlinJsonAdapter<T>(
         return it.get(value)
       }
 
-      return null
+      error("Could not get JVM field or invoke JVM getter for property '$name'")
     }
 
     fun set(result: K, value: P) {
