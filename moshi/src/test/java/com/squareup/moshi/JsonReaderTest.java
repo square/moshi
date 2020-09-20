@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import okio.BufferedSource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -1336,6 +1337,100 @@ public final class JsonReaderTest {
     } catch (UnsupportedOperationException expected) {
 
     }
+  }
+
+  @Test
+  public void nextSourceString() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"this is a string\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"this is a string\"");
+    }
+  }
+
+  @Test
+  public void nextSourceLong() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":-2.0}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("-2.0");
+    }
+  }
+
+  @Test
+  public void nextSourceNull() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":null}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("null");
+    }
+  }
+
+  @Test
+  public void nextSourceBoolean() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":false}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("false");
+    }
+  }
+
+  @Test
+  public void nextSourceObject() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":{\"b\":2.0,\"c\":3.0}}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("{\"b\":2.0,\"c\":3.0}");
+    }
+  }
+
+  @Test
+  public void nextSourceArray() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":[2.0,2.0,3.0]}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("[2.0,2.0,3.0]");
+    }
+  }
+
+  /**
+   * When we call {@link JsonReader#selectString} it causes the reader to consume bytes of the input
+   * string. When attempting to read it as a stream afterwards the bytes are reconstructed.
+   */
+  @Test
+  public void nextSourceStringBuffered() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"b\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.selectString(JsonReader.Options.of("x'"))).isEqualTo(-1);
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"b\"");
+    }
+  }
+
+  /** If we don't read the bytes of the source, they JsonReader doesn't lose its place. */
+  @Test
+  public void nextSourceNotConsumed() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":\"b\",\"c\":\"d\"}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    reader.nextSource(); // Not closed.
+    assertThat(reader.nextName()).isEqualTo("c");
+    assertThat(reader.nextString()).isEqualTo("d");
   }
 
   /** Peek a value, then read it, recursively. */

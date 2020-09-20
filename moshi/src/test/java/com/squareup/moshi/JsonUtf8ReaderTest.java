@@ -35,8 +35,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 import okio.Buffer;
+import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
+import okio.Source;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -1384,5 +1386,104 @@ public final class JsonUtf8ReaderTest {
         throw new AssertionError();
       }
     }
+  }
+
+  @Test
+  public void nextSourceObject_withWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": {\n    \"b\": 2,\n    \"c\": 3\n  }\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("{\n    \"b\": 2,\n    \"c\": 3\n  }");
+    }
+  }
+
+  @Test
+  public void nextSourceLong_WithWhitespace() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\n  \"a\": -2\n}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("-2");
+    }
+  }
+
+  /**
+   * Confirm that {@link JsonReader#nextSource} doesn't load data from the underlying stream until
+   * its required by the caller. If the source is backed by a slow network stream, we want users to
+   * get data as it arrives.
+   *
+   * <p>Because we don't have a slow stream in this test, we just add bytes to our underlying stream
+   * immediately before they're needed.
+   */
+  @Test
+  public void nextSourceStreams() throws IOException {
+    Buffer stream = new Buffer();
+    stream.writeUtf8("[\"");
+
+    JsonReader reader = JsonReader.of(Okio.buffer((Source) stream));
+    reader.beginArray();
+    BufferedSource source = reader.nextSource();
+    assertThat(source.readUtf8(1)).isEqualTo("\"");
+    stream.writeUtf8("hello");
+    assertThat(source.readUtf8(5)).isEqualTo("hello");
+    stream.writeUtf8("world");
+    assertThat(source.readUtf8(5)).isEqualTo("world");
+    stream.writeUtf8("\"");
+    assertThat(source.readUtf8(1)).isEqualTo("\"");
+    stream.writeUtf8("]");
+    assertThat(source.exhausted()).isTrue();
+    reader.endArray();
+  }
+
+  @Test
+  public void nextSourceObjectAfterSelect() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("[\"p\u0065psi\"]");
+    reader.beginArray();
+    assertThat(reader.selectName(JsonReader.Options.of("coke"))).isEqualTo(-1);
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"pepsi\""); // not the original characters!
+    }
+  }
+
+  @Test
+  public void nextSourceObjectAfterPromoteNameToValue() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":true}");
+    reader.beginObject();
+    reader.promoteNameToValue();
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(valueSource.readUtf8()).isEqualTo("\"a\"");
+    }
+    assertThat(reader.nextBoolean()).isEqualTo(true);
+    reader.endObject();
+  }
+
+  @Test
+  public void nextSourcePath() throws IOException {
+    // language=JSON
+    JsonReader reader = newReader("{\"a\":true,\"b\":[],\"c\":false}");
+    reader.beginObject();
+
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.nextBoolean()).isTrue();
+    assertThat(reader.getPath()).isEqualTo("$.a");
+
+    assertThat(reader.nextName()).isEqualTo("b");
+    try (BufferedSource valueSource = reader.nextSource()) {
+      assertThat(reader.getPath()).isEqualTo("$.b");
+      assertThat(valueSource.readUtf8()).isEqualTo("[]");
+    }
+    assertThat(reader.getPath()).isEqualTo("$.b");
+
+    assertThat(reader.nextName()).isEqualTo("c");
+    assertThat(reader.getPath()).isEqualTo("$.c");
+    assertThat(reader.nextBoolean()).isFalse();
+    assertThat(reader.getPath()).isEqualTo("$.c");
+    reader.endObject();
   }
 }
