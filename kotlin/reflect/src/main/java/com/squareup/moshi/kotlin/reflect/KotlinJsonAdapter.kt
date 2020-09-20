@@ -397,22 +397,20 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     }
   }
 
-  private infix fun Collection<KmTypeProjection>.areEqualTo(
-    other: Collection<KmTypeProjection>
-  ): Boolean {
+  private infix fun List<KmTypeProjection>.areEqualTo(other: List<KmTypeProjection>): Boolean {
     // check collections aren't same
     if (this !== other) {
       // fast check of sizes
       if (this.size != other.size) return false
-      val areNotEqual = this.asSequence()
-        .zip(other.asSequence())
-        // check this and other contains same elements at position
-        .map { (fromThis, fromOther) -> fromThis valueEquals fromOther }
-        // searching for first negative answer
-        .contains(false)
-      if (areNotEqual) return false
+
+      // check this and other contains same elements at position
+      for (i in 0 until size) {
+        if (!(get(i) valueEquals other[i])) {
+          return false
+        }
+      }
     }
-    // collections are same or they are contains same elements with same order
+    // collections are same or they contain same elements with same order
     return true
   }
 
