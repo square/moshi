@@ -954,75 +954,24 @@ public final class JsonWriterTest {
     assertThat(factory.json()).isEqualTo("{}");
   }
 
-  private static final class TagA {
-    private final int data;
-
-    private TagA(int data) {
-      this.data = data;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      TagA tagA = (TagA) o;
-
-      return data == tagA.data;
-    }
-
-    @Override
-    public int hashCode() {
-      return data;
-    }
-  }
-
-  private interface TagB {}
-
-  private static final class TagBSubType implements TagB {
-    private final int data;
-
-    private TagBSubType(int data) {
-      this.data = data;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      TagBSubType tagA = (TagBSubType) o;
-
-      return data == tagA.data;
-    }
-
-    @Override
-    public int hashCode() {
-      return data;
-    }
-  }
-
   @SuppressWarnings("rawtypes")
   @Test
   public void tags() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.tag(TagA.class)).isNull();
-    assertThat(writer.tag(TagB.class)).isNull();
+    assertThat(writer.tag(Integer.class)).isNull();
+    assertThat(writer.tag(CharSequence.class)).isNull();
 
-    writer.setTag(TagA.class, new TagA(1));
-    writer.setTag(TagB.class, new TagBSubType(2));
+    writer.setTag(Integer.class, 1);
+    writer.setTag(CharSequence.class, "Foo");
     try {
-      writer.setTag((Class) TagA.class, "Invalid");
+      writer.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessage("Tag value must be of type com.squareup.moshi.JsonWriterTest$TagA");
+      assertThat(expected).hasMessage("Tag value must be of type java.lang.CharSequence");
     }
 
-    assertThat(writer.tag(TagA.class)).isEqualTo(new TagA(1)).isInstanceOf(TagA.class);
-    assertThat(writer.tag(TagB.class))
-        .isEqualTo(new TagBSubType(2))
-        .isInstanceOf(TagBSubType.class);
-    assertThat(writer.tag(TagBSubType.class)).isNull();
+    assertThat(writer.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
+    assertThat(writer.tag(CharSequence.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    assertThat(writer.tag(String.class)).isNull();
   }
 }
