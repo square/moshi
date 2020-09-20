@@ -387,7 +387,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       this != null && other != null -> {
         // Note we don't check abbreviatedType because typealiases and their backing types are equal
         // for our purposes.
-        arguments areEqualTo other.arguments &&
+        arguments valueEquals other.arguments &&
           classifier == other.classifier &&
           flags == other.flags &&
           flexibleTypeUpperBound valueEquals other.flexibleTypeUpperBound &&
@@ -397,7 +397,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     }
   }
 
-  private infix fun List<KmTypeProjection>.areEqualTo(other: List<KmTypeProjection>): Boolean {
+  private infix fun List<KmTypeProjection>.valueEquals(other: List<KmTypeProjection>): Boolean {
     // check collections aren't same
     if (this !== other) {
       // fast check of sizes
