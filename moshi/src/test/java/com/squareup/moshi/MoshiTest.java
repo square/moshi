@@ -1269,6 +1269,68 @@ public final class MoshiTest {
     assertThat(adapter.fromJson(json)).isEqualTo(new Pizza(5, true));
   }
 
+  @Test
+  public void precedence() throws Exception {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(new AppendingAdapterFactory(" a"))
+            .addLast(new AppendingAdapterFactory(" y"))
+            .add(new AppendingAdapterFactory(" b"))
+            .addLast(new AppendingAdapterFactory(" z"))
+            .build();
+    JsonAdapter<String> adapter = moshi.adapter(String.class).lenient();
+    assertThat(adapter.toJson("hello")).isEqualTo("\"hello a b y z\"");
+  }
+
+  @Test
+  public void precedenceWithNewBuilder() throws Exception {
+    Moshi moshi1 =
+        new Moshi.Builder()
+            .add(new AppendingAdapterFactory(" a"))
+            .addLast(new AppendingAdapterFactory(" w"))
+            .add(new AppendingAdapterFactory(" b"))
+            .addLast(new AppendingAdapterFactory(" x"))
+            .build();
+    Moshi moshi2 =
+        moshi1
+            .newBuilder()
+            .add(new AppendingAdapterFactory(" c"))
+            .addLast(new AppendingAdapterFactory(" y"))
+            .add(new AppendingAdapterFactory(" d"))
+            .addLast(new AppendingAdapterFactory(" z"))
+            .build();
+
+    JsonAdapter<String> adapter = moshi2.adapter(String.class).lenient();
+    assertThat(adapter.toJson("hello")).isEqualTo("\"hello a b c d w x y z\"");
+  }
+
+  /** Adds a suffix to a string before emitting it. */
+  static final class AppendingAdapterFactory implements JsonAdapter.Factory {
+    private final String suffix;
+
+    AppendingAdapterFactory(String suffix) {
+      this.suffix = suffix;
+    }
+
+    @Override
+    public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+      if (type != String.class) return null;
+
+      final JsonAdapter<String> delegate = moshi.nextAdapter(this, type, annotations);
+      return new JsonAdapter<String>() {
+        @Override
+        public String fromJson(JsonReader reader) throws IOException {
+          throw new AssertionError();
+        }
+
+        @Override
+        public void toJson(JsonWriter writer, String value) throws IOException {
+          delegate.toJson(writer, value + suffix);
+        }
+      };
+    }
+  }
+
   static class Pizza {
     final int diameter;
     final boolean extraCheese;

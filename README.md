@@ -504,6 +504,99 @@ public final class BlackjackHand {
 }
 ```
 
+### Composing Adapters
+
+In some situations Moshi's default Java-to-JSON conversion isn't sufficient. You can compose
+adapters to build upon the standard conversion.
+
+In this example, we turn serialize nulls, then delegate to the built-in adapter:
+
+```java
+class TournamentWithNullsAdapter {
+  @ToJson void toJson(JsonWriter writer, Tournament tournament,
+      JsonAdapter<Tournament> delegate) throws IOException {
+    boolean wasSerializeNulls = writer.getSerializeNulls();
+    writer.setSerializeNulls(true);
+    try {
+      delegate.toJson(writer, tournament);
+    } finally {
+      writer.setLenient(wasSerializeNulls);
+    }
+  }
+}
+```
+
+When we use this to serialize a tournament, nulls are written! But nulls elsewhere in our JSON
+document are skipped as usual.
+
+Moshi has a powerful composition system in its `JsonAdapter.Factory` interface. We can hook in to
+the encoding and decoding process for any type, even without knowing about the types beforehand. In
+this example, we customize types annotated `@AlwaysSerializeNulls`, which an annotation we create,
+not built-in to Moshi:
+
+```java
+@Target(TYPE)
+@Retention(RUNTIME)
+public @interface AlwaysSerializeNulls {}
+```
+
+```java
+@AlwaysSerializeNulls
+static class Car {
+  String make;
+  String model;
+  String color;
+}
+```
+
+Each `JsonAdapter.Factory` interface is invoked by `Moshi` when it needs to build an adapter for a
+user's type. The factory either returns an adapter to use, or null if it doesn't apply to the
+requested type. In our case we match all classes that have our annotation.
+
+```java
+static class AlwaysSerializeNullsFactory implements JsonAdapter.Factory {
+  @Override public JsonAdapter<?> create(
+      Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+    Class<?> rawType = Types.getRawType(type);
+    if (!rawType.isAnnotationPresent(AlwaysSerializeNulls.class)) {
+      return null;
+    }
+
+    JsonAdapter<Object> delegate = moshi.nextAdapter(this, type, annotations);
+    return delegate.serializeNulls();
+  }
+}
+```
+
+After determining that it applies, the factory looks up Moshi's built-in adapter by calling
+`Moshi.nextAdapter()`. This is key to the composition mechanism: adapters delegate to each other!
+The composition in this example is simple: it applies the `serializeNulls()` transform on the
+delegate.
+
+Composing adapters can be very sophisticated:
+
+ * An adapter could transform the input object before it is JSON-encoded. A string could be
+   trimmed or truncated; a value object could be simplified or normalized.
+
+ * An adapter could repair the output object after it is JSON-decoded. It could fill-in missing
+   data or discard unwanted data.
+
+ * The JSON could be given extra structure, such as wrapping values in objects or arrays.
+
+Moshi is itself built on the pattern of repeatedly composing adapters. For example, Moshi's built-in
+adapter for `List<T>` delegates to the adapter of `T`, and calls it repeatedly.
+
+### Precedence
+
+Moshi's composition mechanism tries to find the best adapter for each type. It starts with the first
+adapter or factory registered with `Moshi.Builder.add()`, and proceeds until it finds an adapter for
+the target type.
+
+If a type can be matched multiple adapters, the earliest one wins.
+
+To register an adapter at the end of the list, use `Moshi.Builder.addLast()` instead. This is most
+useful when registering general-purpose adapters, such as the `KotlinJsonAdapterFactory` below.
+
 Kotlin
 ------
 
@@ -517,14 +610,12 @@ JSON. Enable it by adding the `KotlinJsonAdapterFactory` to your `Moshi.Builder`
 
 ```kotlin
 val moshi = Moshi.Builder()
-    // ... add your own JsonAdapters and factories ...
-    .add(KotlinJsonAdapterFactory())
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 ```
 
-Moshi’s adapters are ordered by precedence, so you always want to add the Kotlin adapter after your
-own custom adapters. Otherwise the `KotlinJsonAdapterFactory` will take precedence and your custom
-adapters will not be called.
+Moshi’s adapters are ordered by precedence, so you should use `addLast()` with
+`KotlinJsonAdapterFactory`, and `add()` with your custom adapters.
 
 The reflection adapter requires the following additional dependency:
 
