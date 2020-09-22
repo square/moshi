@@ -329,8 +329,6 @@ final class JsonUtf8Reader extends JsonReader {
       valueSource.discard();
       valueSource = null;
       stackSize--;
-      pathIndices[stackSize - 1]++;
-      pathNames[stackSize - 1] = "null";
       return doPeek();
     } else if (peekStack == JsonScope.CLOSED) {
       throw new IllegalStateException("JsonReader is closed");
@@ -564,6 +562,7 @@ final class JsonUtf8Reader extends JsonReader {
       result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH);
     } else if (p == PEEKED_BUFFERED_NAME) {
       result = peekedString;
+      peekedString = null;
     } else {
       throw new JsonDataException("Expected a name but was " + peek() + " at path " + getPath());
     }
@@ -1069,9 +1068,14 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException("Expected a value but was " + peek() + " at path " + getPath());
     }
 
+    // Advance the path and clear peeked if we haven't already.
+    if (peeked != PEEKED_NONE) {
+      pathIndices[stackSize - 1]++;
+      peeked = PEEKED_NONE;
+    }
+
     valueSource = new JsonValueSource(source, prefix, state, valueSourceStackSize);
     pushScope(JsonScope.STREAMING_VALUE);
-    peeked = PEEKED_NONE;
 
     return Okio.buffer(valueSource);
   }
