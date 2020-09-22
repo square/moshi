@@ -1433,6 +1433,27 @@ public final class JsonReaderTest {
     assertThat(reader.nextString()).isEqualTo("d");
   }
 
+  @SuppressWarnings("rawtypes")
+  @Test
+  public void tags() throws IOException {
+    JsonReader reader = newReader("{}");
+    assertThat(reader.tag(Integer.class)).isNull();
+    assertThat(reader.tag(CharSequence.class)).isNull();
+
+    reader.setTag(Integer.class, 1);
+    reader.setTag(CharSequence.class, "Foo");
+    try {
+      reader.setTag((Class) CharSequence.class, 1);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Tag value must be of type java.lang.CharSequence");
+    }
+
+    assertThat(reader.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
+    assertThat(reader.tag(CharSequence.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    assertThat(reader.tag(String.class)).isNull();
+  }
+
   /** Peek a value, then read it, recursively. */
   private void readValue(JsonReader reader, boolean peekJsonFirst) throws IOException {
     JsonReader.Token token = reader.peek();

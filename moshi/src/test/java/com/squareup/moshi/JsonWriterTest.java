@@ -953,4 +953,25 @@ public final class JsonWriterTest {
     writer.endObject();
     assertThat(factory.json()).isEqualTo("{}");
   }
+
+  @SuppressWarnings("rawtypes")
+  @Test
+  public void tags() throws IOException {
+    JsonWriter writer = factory.newWriter();
+    assertThat(writer.tag(Integer.class)).isNull();
+    assertThat(writer.tag(CharSequence.class)).isNull();
+
+    writer.setTag(Integer.class, 1);
+    writer.setTag(CharSequence.class, "Foo");
+    try {
+      writer.setTag((Class) CharSequence.class, 1);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Tag value must be of type java.lang.CharSequence");
+    }
+
+    assertThat(writer.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
+    assertThat(writer.tag(CharSequence.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    assertThat(writer.tag(String.class)).isNull();
+  }
 }
