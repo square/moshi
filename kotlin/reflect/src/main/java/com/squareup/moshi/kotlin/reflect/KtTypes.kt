@@ -61,7 +61,7 @@ internal val KmType.canonicalName: String
       append(classifierString)
 
       val args = arguments.joinToString(", ") {
-        "${it.variance?.name} ${it.type?.canonicalName ?: "*"}"
+        "${it.variance?.name.orEmpty()} ${it.type?.canonicalName ?: "*"}".trim()
       }
 
       if (args.isNotBlank()) {
