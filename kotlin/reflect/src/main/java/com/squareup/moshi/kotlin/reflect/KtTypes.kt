@@ -109,7 +109,7 @@ internal data class KtConstructor(
     jvm.isAccessible = true
   }
 
-  fun <R> callBy(args: Map<KtParameter, Any?>): R {
+  fun <R> callBy(argumentsMap: Map<KtParameter, Any?>): R {
     val arguments = ArrayList<Any?>(parameters.size)
     var mask = 0
     val masks = ArrayList<Int>(1)
@@ -123,8 +123,8 @@ internal data class KtConstructor(
       }
 
       when {
-        args.containsKey(parameter) -> {
-          arguments += args[parameter]
+        argumentsMap.containsKey(parameter) -> {
+          arguments += argumentsMap[parameter]
         }
         parameter.declaresDefaultValue -> {
           arguments += defaultPrimitiveValue(parameter.rawType)
