@@ -123,9 +123,10 @@ internal data class KtConstructor(
         index = 0
       }
 
+      val possibleArg = argumentsMap[parameter]
       when {
-        argumentsMap.containsKey(parameter) -> {
-          arguments += argumentsMap[parameter]
+        possibleArg != null -> {
+          arguments += possibleArg
         }
         parameter.declaresDefaultValue -> {
           arguments += defaultPrimitiveValue(parameter.rawType)
