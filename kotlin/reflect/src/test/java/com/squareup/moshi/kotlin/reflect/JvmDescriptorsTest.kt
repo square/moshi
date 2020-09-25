@@ -4,7 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.metadata.jvm.JvmMethodSignature
 import org.junit.Test
 
-class JvmDescriptorUtilTest {
+class JvmDescriptorsTest {
 
   private fun getTypesOf(desc: String): List<Class<*>> {
     return JvmMethodSignature("test", desc).decodeParameterTypes()
