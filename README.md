@@ -620,7 +620,6 @@ If you need to add them manually, you can add them from the following files:
 
 - [`moshi`](https://github.com/square/moshi/blob/master/moshi/src/main/resources/META-INF/proguard/moshi.pro).
 - [`moshi-kotlin`](https://github.com/square/moshi/blob/master/kotlin/reflect/src/main/resources/META-INF/proguard/moshi-kotlin.pro)
-- You might also need rules for [Okio](https://github.com/square/okio), which is a dependency of this library.
 
 **Important note:** These rules only cover Moshi's core machinery. You will still need to add appropriate
 rules for your own code based on your usage of reflection. `moshi-kotlin` relies on introspection of Kotlin's
