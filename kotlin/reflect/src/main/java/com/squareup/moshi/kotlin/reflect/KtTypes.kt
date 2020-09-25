@@ -118,13 +118,13 @@ internal data class KtConstructor(
     @Suppress("UseWithIndex")
     for (parameter in parameters) {
       if (index != 0 && index % Integer.SIZE == 0) {
-        masks.add(mask)
+        masks += mask
         mask = 0
       }
 
       when {
         args.containsKey(parameter) -> {
-          arguments.add(args[parameter])
+          arguments += args[parameter]
         }
         parameter.declaresDefaultValue -> {
           arguments += defaultPrimitiveValue(parameter.rawType)
@@ -149,7 +149,7 @@ internal data class KtConstructor(
     arguments.addAll(masks)
 
     // DefaultConstructorMarker
-    arguments.add(null)
+    arguments += null
 
     @Suppress("UNCHECKED_CAST")
     return jvm.newInstance(*arguments.toTypedArray()) as R
