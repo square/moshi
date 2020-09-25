@@ -242,7 +242,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
       }
 
-      val ktConstructor = KtConstructor.create(rawType, kmClass) ?: return null
+      val ktConstructor = KtConstructor.primary(rawType, kmClass) ?: return null
 
       // TODO this doesn't cover platform types
       val allPropertiesSequence = kmClass.properties.asSequence() +
