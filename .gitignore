@@ -25,3 +25,6 @@ obj
 .DS_Store
 
 .gradle
+
+# Temporary until generating a docsite
+docs/

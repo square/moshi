@@ -15,6 +15,8 @@
  */
 
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.dokka.gradle.DokkaTask
+import java.net.URL
 
 buildscript {
   dependencies {
@@ -23,8 +25,8 @@ buildscript {
 }
 
 plugins {
-  id("com.vanniktech.maven.publish") version "0.12.0" apply false
-  id("org.jetbrains.dokka") version "0.10.1" apply false
+  id("com.vanniktech.maven.publish") version "0.13.0" apply false
+  id("org.jetbrains.dokka") version "1.4.10" apply false
   id("com.diffplug.spotless") version "5.2.0"
 }
 
@@ -64,17 +66,11 @@ spotless {
 subprojects {
   repositories {
     mavenCentral()
-    @Suppress("UnstableApiUsage")
-    exclusiveContent {
-      forRepository {
-        maven {
-          name = "JCenter"
-          setUrl("https://jcenter.bintray.com/")
-        }
-      }
-      filter {
-        includeModule("org.jetbrains.dokka", "dokka-fatjar")
-      }
+    jcenter().mavenContent {
+      // Required for Dokka
+      includeModule("org.jetbrains.kotlinx", "kotlinx-html-jvm")
+      includeGroup("org.jetbrains.dokka")
+      includeModule("org.jetbrains", "markdown")
     }
   }
 
@@ -96,6 +92,19 @@ subprojects {
       tasks.withType<Jar>().configureEach {
         manifest {
           attributes("Automatic-Module-Name" to name)
+        }
+      }
+    }
+
+    if (name != "codegen" && pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
+      apply(plugin = "org.jetbrains.dokka")
+      tasks.named<DokkaTask>("dokkaHtml") {
+        outputDirectory.set(rootDir.resolve("docs/1.x"))
+        dokkaSourceSets.configureEach {
+          skipDeprecated.set(true)
+          externalDocumentationLink {
+            url.set(URL("https://square.github.io/okio/2.x/okio/"))
+          }
         }
       }
     }
