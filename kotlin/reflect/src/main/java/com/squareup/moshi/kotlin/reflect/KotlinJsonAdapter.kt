@@ -100,16 +100,18 @@ internal class KotlinJsonAdapter<T>(
 
     // Confirm all parameters are present, optional, or nullable.
     for (i in 0 until constructorSize) {
-      val param = constructor.parameters[i]
-      if (values[i] === ABSENT_VALUE && !param.declaresDefaultValue) {
-        if (!param.isNullable) {
-          throw Util.missingProperty(
-            constructor.parameters[i].name,
-            allBindings[i]?.jsonName,
-            reader
-          )
+      if (values[i] === ABSENT_VALUE) {
+        val param = constructor.parameters[i]
+        if (!param.declaresDefaultValue) {
+          if (!param.isNullable) {
+            throw Util.missingProperty(
+              constructor.parameters[i].name,
+              allBindings[i]?.jsonName,
+              reader
+            )
+          }
+          values[i] = null // Replace absent with null.
         }
-        values[i] = null // Replace absent with null.
       }
     }
 
