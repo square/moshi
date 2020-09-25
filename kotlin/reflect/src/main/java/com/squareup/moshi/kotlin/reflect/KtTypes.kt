@@ -124,8 +124,9 @@ internal data class KtConstructor(
       }
 
       val possibleArg = argumentsMap[parameter]
+      val usePossibleArg = possibleArg != null || parameter in argumentsMap
       when {
-        possibleArg != null -> {
+        usePossibleArg -> {
           arguments += possibleArg
         }
         parameter.declaresDefaultValue -> {
