@@ -120,6 +120,7 @@ internal data class KtConstructor(
       if (index != 0 && index % Integer.SIZE == 0) {
         masks += mask
         mask = 0
+        index = 0
       }
 
       when {
