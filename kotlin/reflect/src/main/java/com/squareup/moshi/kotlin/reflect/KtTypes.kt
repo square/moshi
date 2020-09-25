@@ -69,8 +69,6 @@ internal val KmType.canonicalName: String
         append(args)
         append('>')
       }
-
-      // TODO not sure if we care about expressing the other type information here
     }
   }
 
