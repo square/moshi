@@ -56,7 +56,7 @@ internal val KmType.canonicalName: String
       val classifierString = when (val cl = classifier) {
         is KmClassifier.Class -> createClassName(cl.name)
         is TypeAlias -> createClassName(cl.name)
-        is TypeParameter -> arguments[cl.id].type?.canonicalName ?: "TypeVar(${cl.id})"
+        is TypeParameter -> arguments[cl.id].type?.canonicalName ?: "*"
       }
       append(classifierString)
 
