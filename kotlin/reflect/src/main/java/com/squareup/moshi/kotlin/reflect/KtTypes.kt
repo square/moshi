@@ -175,11 +175,7 @@ internal data class KtConstructor(
       val actualConstructor = if (anyOptional) {
         val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
         val parameterCount = jvmConstructor.parameterTypes.size
-        val maskParamsToAdd = if (parameterCount == 0) {
-          0
-        } else {
-          (parameterCount + 31) / 32
-        }
+        val maskParamsToAdd = (parameterCount + 31) / 32
         val defaultConstructorSignature = buildString {
           append(prefix)
           repeat(maskParamsToAdd) {
