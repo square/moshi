@@ -82,7 +82,7 @@ internal val KmType.canonicalName: String
  */
 private fun createClassName(kotlinMetadataName: String): String {
   require(!kotlinMetadataName.isLocal) {
-    "Local/anonymous classes are not supported!"
+    "Local/anonymous classes are not supported: $kotlinMetadataName"
   }
   return kotlinMetadataName.replace("/", ".")
 }
