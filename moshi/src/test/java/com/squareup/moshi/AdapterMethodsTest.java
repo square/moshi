@@ -16,7 +16,7 @@
 package com.squareup.moshi;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.MoshiTest.Uppercase;
@@ -269,7 +269,11 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected.getMessage())
-          .contains("Conflicting @ToJson methods:", "pointToJson1", "pointToJson2");
+          .contains("Conflicting @ToJson methods:");
+      assertThat(expected.getMessage())
+          .contains("pointToJson1");
+      assertThat(expected.getMessage())
+          .contains("pointToJson2");
     }
   }
 
@@ -293,7 +297,11 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected.getMessage())
-          .contains("Conflicting @FromJson methods:", "pointFromJson1", "pointFromJson2");
+          .contains("Conflicting @FromJson methods:");
+      assertThat(expected.getMessage())
+          .contains("pointFromJson1");
+      assertThat(expected.getMessage())
+          .contains("pointFromJson2");
     }
   }
 
@@ -317,7 +325,7 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "Expected at least one @ToJson or @FromJson method on "
                   + "com.squareup.moshi.AdapterMethodsTest$EmptyJsonAdapter");
     }
@@ -333,7 +341,7 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "Unexpected signature for void "
                   + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureToJsonAdapter.pointToJson"
                   + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
@@ -358,7 +366,7 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "Unexpected signature for void "
                   + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
                   + "(java.lang.String).\n"
@@ -502,12 +510,12 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "No @FromJson adapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
-      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "No next JsonAdapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
@@ -529,12 +537,12 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "No @ToJson adapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
-      assertThat(e).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessage(
+          .hasMessageThat().isEqualTo(
               "No next JsonAdapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
@@ -585,8 +593,8 @@ public final class AdapterMethodsTest {
     Type b = brokenParameterizedType(1, List.class, String.class);
     Type c = brokenParameterizedType(2, List.class, String.class);
 
-    assertThat(moshi.adapter(b)).isSameAs(moshi.adapter(a));
-    assertThat(moshi.adapter(c)).isSameAs(moshi.adapter(a));
+    assertThat(moshi.adapter(b)).isSameInstanceAs(moshi.adapter(a));
+    assertThat(moshi.adapter(c)).isSameInstanceAs(moshi.adapter(a));
   }
 
   @Test
@@ -721,7 +729,7 @@ public final class AdapterMethodsTest {
       new Moshi.Builder().add(new ToJsonAdapterTakingJsonAdapterParameter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageStartingWith("Unexpected signature");
+      assertThat(expected).hasMessageThat().startsWith("Unexpected signature");
     }
   }
 
@@ -738,7 +746,7 @@ public final class AdapterMethodsTest {
       new Moshi.Builder().add(new FromJsonAdapterTakingJsonAdapterParameter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageStartingWith("Unexpected signature");
+      assertThat(expected).hasMessageThat().startsWith("Unexpected signature");
     }
   }
 

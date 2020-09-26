@@ -16,7 +16,7 @@
 package com.squareup.moshi;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;

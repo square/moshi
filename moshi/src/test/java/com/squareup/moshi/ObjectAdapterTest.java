@@ -17,7 +17,7 @@ package com.squareup.moshi;
 
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -229,7 +229,7 @@ public final class ObjectAdapterTest {
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     Map<String, String> value =
         (Map<String, String>) objectAdapter.fromJson("{\"a\":\"b\", \"c\":\"d\"}");
-    assertThat(value).containsExactly(new SimpleEntry<>("A", "B"), new SimpleEntry<>("C", "D"));
+    assertThat(value).containsExactly("A","B", "C", "D");
   }
 
   /**

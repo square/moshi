@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -287,7 +287,7 @@ public final class FlattenTest {
       writer.beginFlatten();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Nesting problem.");
+      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
