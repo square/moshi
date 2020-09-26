@@ -76,7 +76,6 @@ dependencies {
   testImplementation(Dependencies.KotlinPoet.metadataSpecs)
   testImplementation(Dependencies.KotlinPoet.elementsClassInspector)
   testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
   testImplementation(Dependencies.Testing.truth)
   testImplementation(Dependencies.Testing.compileTesting)
   testImplementation(Dependencies.okio2)
