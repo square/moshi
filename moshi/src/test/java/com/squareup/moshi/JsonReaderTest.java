@@ -15,12 +15,12 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.NAME;
 import static com.squareup.moshi.JsonReader.Token.STRING;
 import static com.squareup.moshi.TestUtil.repeat;
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -1083,7 +1083,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a value but was END_OBJECT at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_OBJECT at path $.");
     }
     reader.endObject();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -1097,7 +1099,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a value but was END_ARRAY at path $[0]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_ARRAY at path $[0]");
     }
     reader.endArray();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -1111,7 +1115,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a value but was END_DOCUMENT at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_DOCUMENT at path $");
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
@@ -1446,7 +1452,9 @@ public final class JsonReaderTest {
       reader.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Tag value must be of type java.lang.CharSequence");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Tag value must be of type java.lang.CharSequence");
     }
 
     Object intTag = reader.tag(Integer.class);

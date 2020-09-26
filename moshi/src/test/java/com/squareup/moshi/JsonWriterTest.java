@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.repeat;
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -482,7 +482,8 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
     }
   }
 
@@ -513,7 +514,8 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
     }
   }
 
@@ -849,7 +851,9 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(mapWrongKey);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Map keys must be of type String: java.lang.Integer");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Map keys must be of type String: java.lang.Integer");
     }
 
     Map<String, String> mapNullKey = new LinkedHashMap<>();
@@ -915,7 +919,9 @@ public final class JsonWriterTest {
       writer.nullValue();
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("null cannot be used as a map key in JSON at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("null cannot be used as a map key in JSON at path $.");
     }
   }
 
@@ -928,7 +934,9 @@ public final class JsonWriterTest {
       writer.value(true);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Boolean cannot be used as a map key in JSON at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Boolean cannot be used as a map key in JSON at path $.");
     }
   }
 
@@ -967,7 +975,9 @@ public final class JsonWriterTest {
       writer.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Tag value must be of type java.lang.CharSequence");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Tag value must be of type java.lang.CharSequence");
     }
 
     Object intTag = writer.tag(Integer.class);

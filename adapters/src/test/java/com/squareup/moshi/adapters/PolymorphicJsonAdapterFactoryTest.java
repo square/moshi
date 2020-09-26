@@ -84,7 +84,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [success, error] for key 'type' but found"
                   + " 'data'. Register a subtype for this label.");
     }
@@ -176,7 +177,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
@@ -203,7 +205,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
@@ -256,7 +259,9 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson("{\"type\":{},\"value\":\"Okay!\"}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a string but was BEGIN_OBJECT at path $.type");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a string but was BEGIN_OBJECT at path $.type");
     }
   }
 
@@ -276,7 +281,9 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected BEGIN_OBJECT but was STRING at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected BEGIN_OBJECT but was STRING at path $");
     }
     assertThat(reader.nextString()).isEqualTo("Failure");
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);

@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import android.util.Pair;
@@ -291,7 +291,9 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (IOException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("JSON forbids NaN and infinities: Infinity at path $[0]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JSON forbids NaN and infinities: Infinity at path $[0]");
     }
 
     reader = newReader("[-1E309]");
@@ -300,7 +302,9 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (IOException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[0]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[0]");
     }
   }
 
@@ -361,7 +365,9 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("JSON forbids NaN and infinities: Infinity at path $[1]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JSON forbids NaN and infinities: Infinity at path $[1]");
     }
 
     reader = newReader("[-1E39]");
@@ -370,7 +376,9 @@ public final class MoshiTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[1]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JSON forbids NaN and infinities: -Infinity at path $[1]");
     }
   }
 
@@ -404,14 +412,18 @@ public final class MoshiTest {
       adapter.fromJson("2147483648");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was 2147483648 at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected an int but was 2147483648 at path $");
     }
 
     try {
       adapter.fromJson("-2147483649");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was -2147483649 at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected an int but was -2147483649 at path $");
     }
 
     // Nulls not allowed for int.class
@@ -457,14 +469,18 @@ public final class MoshiTest {
       adapter.fromJson("9223372036854775808");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a long but was 9223372036854775808 at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a long but was 9223372036854775808 at path $");
     }
 
     try {
       adapter.fromJson("-9223372036854775809");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a long but was -9223372036854775809 at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a long but was -9223372036854775809 at path $");
     }
 
     // Nulls not allowed for long.class
@@ -573,7 +589,9 @@ public final class MoshiTest {
       moshi.adapter(Types.supertypeOf(String.class));
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo("No JsonAdapter for ? super java.lang.String (with no annotations)");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("No JsonAdapter for ? super java.lang.String (with no annotations)");
     }
   }
 
@@ -855,7 +873,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No JsonAdapter for java.util.List<java.lang.String> "
                   + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
@@ -871,7 +890,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No JsonAdapter for class java.lang.String "
                   + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
@@ -917,7 +937,9 @@ public final class MoshiTest {
       adapter.fromJson("\"SPOCK\"");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
   }
 
@@ -932,7 +954,8 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $[0]");
     }
     reader.endArray();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -975,14 +998,16 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo("Platform class java.io.File requires explicit JsonAdapter to be registered");
+          .hasMessageThat()
+          .isEqualTo("Platform class java.io.File requires explicit JsonAdapter to be registered");
     }
     try {
       moshi.adapter(KeyGenerator.class);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class javax.crypto.KeyGenerator requires explicit "
                   + "JsonAdapter to be registered");
     }
@@ -991,7 +1016,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class android.util.Pair requires explicit JsonAdapter to be registered");
     }
   }
@@ -1004,7 +1030,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No JsonAdapter for "
                   + "java.util.ArrayList<java.lang.String>, "
                   + "you should probably use List instead of ArrayList "
@@ -1017,7 +1044,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No JsonAdapter for "
                   + "java.util.HashMap<java.lang.String, java.lang.String>, "
                   + "you should probably use Map instead of HashMap "
@@ -1065,7 +1093,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
                   + "\nfor class java.util.UUID uuid"
@@ -1074,7 +1103,8 @@ public final class MoshiTest {
                   + "com.squareup.moshi.MoshiTest$HasPlatformType>");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID " + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -1087,7 +1117,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
                   + "\nfor class java.util.UUID uuid"
@@ -1095,7 +1126,8 @@ public final class MoshiTest {
                   + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID " + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -1108,7 +1140,8 @@ public final class MoshiTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
                   + "\nfor class java.util.UUID uuid"
@@ -1117,7 +1150,8 @@ public final class MoshiTest {
                   + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Platform class java.util.UUID " + "requires explicit JsonAdapter to be registered");
     }
   }
@@ -1129,7 +1163,9 @@ public final class MoshiTest {
           .add(Boolean.class, Localized.class, StandardJsonAdapters.BOOLEAN_JSON_ADAPTER);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Use JsonAdapter.Factory for annotations with elements");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Use JsonAdapter.Factory for annotations with elements");
     }
   }
 
@@ -1213,7 +1249,8 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Nesting too deep at $" + repeat(".a", 255) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat(".a", 255) + ": circular reference?");
     }
   }
 
@@ -1227,7 +1264,8 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Nesting too deep at $" + repeat("[0]", 255) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat("[0]", 255) + ": circular reference?");
     }
   }
 
@@ -1243,7 +1281,8 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Nesting too deep at $[0]" + repeat(".a[0]", 127) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $[0]" + repeat(".a[0]", 127) + ": circular reference?");
     }
   }
 
@@ -1257,7 +1296,8 @@ public final class MoshiTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Map key 'diameter' has multiple values at path $.diameter: 5.0 and 5.0");
+          .hasMessageThat()
+          .isEqualTo("Map key 'diameter' has multiple values at path $.diameter: 5.0 and 5.0");
     }
   }
 

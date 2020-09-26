@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -168,7 +168,8 @@ public final class ClassJsonAdapterTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Conflicting fields:\n"
                   + "    int com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA.a\n"
                   + "    int com.squareup.moshi.ClassJsonAdapterTest$BaseA.a");
@@ -189,7 +190,8 @@ public final class ClassJsonAdapterTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Conflicting fields:\n"
                   + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.foo\n"
                   + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.bar");
@@ -346,7 +348,8 @@ public final class ClassJsonAdapterTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Cannot serialize non-static nested class "
                   + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
     }
@@ -365,7 +368,9 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.FACTORY.create(c.getClass(), NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Cannot serialize anonymous class " + c.getClass().getName());
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Cannot serialize anonymous class " + c.getClass().getName());
     }
   }
 
@@ -377,7 +382,8 @@ public final class ClassJsonAdapterTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Cannot serialize local class " + "com.squareup.moshi.ClassJsonAdapterTest$1Local");
     }
   }
@@ -398,7 +404,8 @@ public final class ClassJsonAdapterTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Cannot serialize abstract class "
                   + "com.squareup.moshi.ClassJsonAdapterTest$Abstract");
     }

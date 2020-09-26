@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
@@ -28,7 +29,6 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.kotlin.reflect.adapter
-import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail

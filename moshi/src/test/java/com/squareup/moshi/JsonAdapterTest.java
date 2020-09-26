@@ -288,7 +288,8 @@ public final class JsonAdapterTest {
       fail();
     } catch (JsonEncodingException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+          .hasMessageThat()
+          .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
     }
   }
 

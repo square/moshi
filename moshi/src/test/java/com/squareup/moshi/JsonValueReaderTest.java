@@ -15,11 +15,11 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.repeat;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -192,7 +192,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected END_ARRAY but was s, a java.lang.String, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected END_ARRAY but was s, a java.lang.String, at path $[0]");
     }
   }
 
@@ -219,7 +220,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected a JSON value but was x, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected a JSON value but was x, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -233,7 +235,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected NAME but was x, a java.lang.StringBuilder, at path $.");
+          .hasMessageThat()
+          .isEqualTo("Expected NAME but was x, a java.lang.StringBuilder, at path $.");
     }
   }
 
@@ -259,7 +262,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -272,7 +276,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -285,7 +290,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected NUMBER but was 1, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -298,7 +304,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected STRING but was s, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected STRING but was s, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -311,7 +318,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected BOOLEAN but was true, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected BOOLEAN but was true, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -324,7 +332,8 @@ public final class JsonValueReaderTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Expected NULL but was null, a java.lang.StringBuilder, at path $[0]");
+          .hasMessageThat()
+          .isEqualTo("Expected NULL but was null, a java.lang.StringBuilder, at path $[0]");
     }
   }
 
@@ -475,7 +484,9 @@ public final class JsonValueReaderTest {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH + 1));
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH + 1));
     }
   }
 
@@ -494,7 +505,9 @@ public final class JsonValueReaderTest {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ".");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ".");
     }
   }
 }

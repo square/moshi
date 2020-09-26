@@ -48,7 +48,9 @@ public final class EnumJsonAdapterTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }

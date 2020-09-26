@@ -15,8 +15,8 @@
  */
 package com.squareup.moshi;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static com.google.common.truth.Truth.assertThat;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.MoshiTest.Uppercase;
@@ -268,12 +268,9 @@ public final class AdapterMethodsTest {
       builder.add(new ConflictingsToJsonAdapter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected.getMessage())
-          .contains("Conflicting @ToJson methods:");
-      assertThat(expected.getMessage())
-          .contains("pointToJson1");
-      assertThat(expected.getMessage())
-          .contains("pointToJson2");
+      assertThat(expected.getMessage()).contains("Conflicting @ToJson methods:");
+      assertThat(expected.getMessage()).contains("pointToJson1");
+      assertThat(expected.getMessage()).contains("pointToJson2");
     }
   }
 
@@ -296,12 +293,9 @@ public final class AdapterMethodsTest {
       builder.add(new ConflictingsFromJsonAdapter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected.getMessage())
-          .contains("Conflicting @FromJson methods:");
-      assertThat(expected.getMessage())
-          .contains("pointFromJson1");
-      assertThat(expected.getMessage())
-          .contains("pointFromJson2");
+      assertThat(expected.getMessage()).contains("Conflicting @FromJson methods:");
+      assertThat(expected.getMessage()).contains("pointFromJson1");
+      assertThat(expected.getMessage()).contains("pointFromJson2");
     }
   }
 
@@ -325,7 +319,8 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected at least one @ToJson or @FromJson method on "
                   + "com.squareup.moshi.AdapterMethodsTest$EmptyJsonAdapter");
     }
@@ -341,7 +336,8 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Unexpected signature for void "
                   + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureToJsonAdapter.pointToJson"
                   + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
@@ -366,7 +362,8 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "Unexpected signature for void "
                   + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
                   + "(java.lang.String).\n"
@@ -510,12 +507,14 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No @FromJson adapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No next JsonAdapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
@@ -537,12 +536,14 @@ public final class AdapterMethodsTest {
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e)
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No @ToJson adapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
-          .hasMessageThat().isEqualTo(
+          .hasMessageThat()
+          .isEqualTo(
               "No next JsonAdapter for interface "
                   + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
     }
