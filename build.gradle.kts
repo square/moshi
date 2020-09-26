@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.jvm.tasks.Jar
 
 buildscript {
@@ -25,7 +26,7 @@ buildscript {
 plugins {
   id("com.vanniktech.maven.publish") version "0.12.0" apply false
   id("org.jetbrains.dokka") version "0.10.1" apply false
-  id("com.diffplug.spotless") version "5.2.0"
+  id("com.diffplug.spotless") version "5.5.0"
 }
 
 spotless {
@@ -35,22 +36,59 @@ spotless {
     indentWithSpaces(2)
     endWithNewline()
   }
-  java {
-    googleJavaFormat("1.7")
-    target("**/*.java")
-    targetExclude("**/spotless.java")
-    // https://github.com/diffplug/spotless/issues/677
-//    licenseHeaderFile("spotless/spotless.java")
+  // GJF not compatible with JDK 15 yet
+  if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+    val externalJavaFiles = arrayOf(
+      "**/ClassFactory.java",
+      "**/Iso8601Utils.java",
+      "**/JsonReader.java",
+      "**/JsonReaderPathTest.java",
+      "**/JsonReaderTest.java",
+      "**/JsonScope.java",
+      "**/JsonUtf8Reader.java",
+      "**/JsonUtf8ReaderPathTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8Writer.java",
+      "**/JsonUtf8WriterTest.java",
+      "**/JsonWriter.java",
+      "**/JsonWriterPathTest.java",
+      "**/JsonWriterTest.java",
+      "**/LinkedHashTreeMap.java",
+      "**/LinkedHashTreeMapTest.java",
+      "**/PolymorphicJsonAdapterFactory.java",
+      "**/RecursiveTypesResolveTest.java",
+      "**/Types.java",
+      "**/TypesTest.java"
+    )
+    val configureCommonJavaFormat: JavaExtension.() -> Unit = {
+      googleJavaFormat("1.7")
+    }
+    java {
+      configureCommonJavaFormat()
+      target("**/*.java")
+      targetExclude(
+        "**/spotless.java",
+        "**/build/**",
+        *externalJavaFiles
+      )
+      licenseHeaderFile("spotless/spotless.java")
+    }
+    format("externalJava", JavaExtension::class.java) {
+      // These don't use our spotless config for header files since we don't want to overwrite the
+      // existing copyright headers.
+      configureCommonJavaFormat()
+      target(*externalJavaFiles)
+    }
   }
   kotlin {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
-    // https://github.com/diffplug/spotless/issues/677
-//    licenseHeaderFile("spotless/spotless.kt")
-//      .updateYearWithLatest(false)
-//    targetExclude("**/Dependencies.kt", "**/spotless.kt")
+    licenseHeaderFile("spotless/spotless.kt")
+      .updateYearWithLatest(false)
+    targetExclude("**/Dependencies.kt", "**/spotless.kt", "**/build/**")
   }
   kotlinGradle {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))

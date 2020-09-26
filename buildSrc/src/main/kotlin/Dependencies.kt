@@ -18,7 +18,7 @@ object Dependencies {
 
   const val asm = "org.ow2.asm:asm:7.1"
   const val jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
-  const val ktlintVersion = "0.38.1"
+  const val ktlintVersion = "0.39.0"
   const val okio = "com.squareup.okio:okio:1.17.5"
   const val okio2 = "com.squareup.okio:okio:2.8.0"
 
