@@ -177,7 +177,7 @@ class GeneratedAdaptersTest {
       """{"data":[null,"why"]}"""
 
     val instance = adapter.fromJson(json)!!
-    assertThat(instance.data).asList().containsExactly(null, "why")
+    assertThat(instance.data).asList().containsExactly(null, "why").inOrder()
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
@@ -193,7 +193,7 @@ class GeneratedAdaptersTest {
       """{"ints":[0,1]}"""
 
     val instance = adapter.fromJson(json)!!
-    assertThat(instance.ints).asList().containsExactly(0, 1)
+    assertThat(instance.ints).asList().containsExactly(0, 1).inOrder()
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
