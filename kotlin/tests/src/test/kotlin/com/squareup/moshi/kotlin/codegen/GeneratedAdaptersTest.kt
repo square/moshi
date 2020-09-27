@@ -28,7 +28,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
-import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail

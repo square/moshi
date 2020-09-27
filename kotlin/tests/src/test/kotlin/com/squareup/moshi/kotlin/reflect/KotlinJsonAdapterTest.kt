@@ -448,7 +448,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
-        "Platform class kotlin.Triple in kotlin.Triple<java.lang.Object, java.lang.Object, java.lang.Object> requires explicit JsonAdapter to be registered"
+        "Platform class kotlin.Triple in kotlin.Triple<?, ?, ?> requires explicit JsonAdapter to be registered"
       )
     }
   }
