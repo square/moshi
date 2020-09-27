@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import java.util.List;
@@ -91,8 +91,9 @@ public final class PromoteNameToValueTest {
       reader.nextBoolean();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e.getMessage())
-          .isIn(
+      assertThat(e)
+          .hasMessageThat()
+          .isAnyOf(
               "Expected BOOLEAN but was true, a java.lang.String, at path $.true",
               "Expected a boolean but was STRING at path $.true");
     }
@@ -130,8 +131,9 @@ public final class PromoteNameToValueTest {
       reader.nextNull();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e.getMessage())
-          .isIn(
+      assertThat(e)
+          .hasMessageThat()
+          .isAnyOf(
               "Expected NULL but was null, a java.lang.String, at path $.null",
               "Expected null but was STRING at path $.null");
     }
@@ -271,7 +273,9 @@ public final class PromoteNameToValueTest {
       writer.value(true);
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Boolean cannot be used as a map key in JSON at path $.");
     }
     writer.value("true");
     assertThat(writer.getPath()).isEqualTo("$.true");
@@ -304,7 +308,9 @@ public final class PromoteNameToValueTest {
       writer.nullValue();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("null cannot be used as a map key in JSON at path $.");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("null cannot be used as a map key in JSON at path $.");
     }
     writer.value("null");
     assertThat(writer.getPath()).isEqualTo("$.null");
@@ -368,7 +374,8 @@ public final class PromoteNameToValueTest {
       fail();
     } catch (IllegalStateException expected) {
       assertThat(expected)
-          .hasMessage("BufferedSource cannot be used as a map key in JSON at path $.");
+          .hasMessageThat()
+          .isEqualTo("BufferedSource cannot be used as a map key in JSON at path $.");
     }
     writer.value("a");
     writer.value("a value");
@@ -386,7 +393,8 @@ public final class PromoteNameToValueTest {
       fail();
     } catch (IllegalStateException expected) {
       assertThat(expected)
-          .hasMessage("BufferedSink cannot be used as a map key in JSON at path $.");
+          .hasMessageThat()
+          .isEqualTo("BufferedSink cannot be used as a map key in JSON at path $.");
     }
     writer.value("a");
     writer.value("a value");

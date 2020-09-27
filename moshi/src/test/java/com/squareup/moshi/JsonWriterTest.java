@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.repeat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -482,7 +482,8 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessage("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
     }
   }
 
@@ -513,7 +514,8 @@ public final class JsonWriterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
     }
   }
 
@@ -626,7 +628,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Nesting problem.");
+      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -639,7 +641,7 @@ public final class JsonWriterTest {
       writer.name("b");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Nesting problem.");
+      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -651,7 +653,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Nesting problem.");
+      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -664,7 +666,7 @@ public final class JsonWriterTest {
       writer.endObject();
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Dangling name: a");
+      assertThat(expected).hasMessageThat().isEqualTo("Dangling name: a");
     }
   }
 
@@ -712,7 +714,7 @@ public final class JsonWriterTest {
       writer.valueSink();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Sink from valueSink() was not closed");
+      assertThat(e).hasMessageThat().isEqualTo("Sink from valueSink() was not closed");
     }
   }
 
@@ -727,7 +729,7 @@ public final class JsonWriterTest {
       writer.valueSink().writeByte('0').close();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Nesting problem.");
+      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -741,7 +743,7 @@ public final class JsonWriterTest {
       writer.value("b");
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Sink from valueSink() was not closed");
+      assertThat(e).hasMessageThat().isEqualTo("Sink from valueSink() was not closed");
     }
   }
 
@@ -755,7 +757,7 @@ public final class JsonWriterTest {
       writer.name("b");
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("Nesting problem.");
+      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -771,7 +773,7 @@ public final class JsonWriterTest {
       sink.writeByte('1');
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessage("closed");
+      assertThat(e).hasMessageThat().isEqualTo("closed");
     }
   }
 
@@ -833,14 +835,14 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(new Object());
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Unsupported type: java.lang.Object");
+      assertThat(e).hasMessageThat().isEqualTo("Unsupported type: java.lang.Object");
     }
 
     try {
       factory.newWriter().jsonValue('1');
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Unsupported type: java.lang.Character");
+      assertThat(e).hasMessageThat().isEqualTo("Unsupported type: java.lang.Character");
     }
 
     Map<Integer, String> mapWrongKey = new LinkedHashMap<>();
@@ -849,7 +851,9 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(mapWrongKey);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Map keys must be of type String: java.lang.Integer");
+      assertThat(e)
+          .hasMessageThat()
+          .isEqualTo("Map keys must be of type String: java.lang.Integer");
     }
 
     Map<String, String> mapNullKey = new LinkedHashMap<>();
@@ -858,7 +862,7 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(mapNullKey);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Map keys must be non-null");
+      assertThat(e).hasMessageThat().isEqualTo("Map keys must be non-null");
     }
   }
 
@@ -915,7 +919,9 @@ public final class JsonWriterTest {
       writer.nullValue();
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("null cannot be used as a map key in JSON at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("null cannot be used as a map key in JSON at path $.");
     }
   }
 
@@ -928,7 +934,9 @@ public final class JsonWriterTest {
       writer.value(true);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Boolean cannot be used as a map key in JSON at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Boolean cannot be used as a map key in JSON at path $.");
     }
   }
 
@@ -941,7 +949,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessage("Nesting problem.");
+      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
     }
   }
 
@@ -967,11 +975,17 @@ public final class JsonWriterTest {
       writer.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Tag value must be of type java.lang.CharSequence");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Tag value must be of type java.lang.CharSequence");
     }
 
-    assertThat(writer.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
-    assertThat(writer.tag(CharSequence.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    Object intTag = writer.tag(Integer.class);
+    assertThat(intTag).isEqualTo(1);
+    assertThat(intTag).isInstanceOf(Integer.class);
+    Object charSequenceTag = writer.tag(CharSequence.class);
+    assertThat(charSequenceTag).isEqualTo("Foo");
+    assertThat(charSequenceTag).isInstanceOf(String.class);
     assertThat(writer.tag(String.class)).isNull();
   }
 }

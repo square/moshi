@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi.adapters;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.JsonAdapter;
@@ -84,7 +84,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [success, error] for key 'type' but found"
                   + " 'data'. Register a subtype for this label.");
     }
@@ -105,7 +106,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
-    assertThat(message).isSameAs(fallbackError);
+    assertThat(message).isSameInstanceAs(fallbackError);
   }
 
   @Test
@@ -176,7 +177,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
@@ -203,7 +205,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "Expected one of [class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
                   + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
@@ -256,7 +259,9 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson("{\"type\":{},\"value\":\"Okay!\"}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected a string but was BEGIN_OBJECT at path $.type");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a string but was BEGIN_OBJECT at path $.type");
     }
   }
 
@@ -276,7 +281,9 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected BEGIN_OBJECT but was STRING at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected BEGIN_OBJECT but was STRING at path $");
     }
     assertThat(reader.nextString()).isEqualTo("Failure");
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -313,7 +320,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
       factory.withSubtype(Error.class, "data");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Labels must be unique.");
+      assertThat(expected).hasMessageThat().isEqualTo("Labels must be unique.");
     }
   }
 

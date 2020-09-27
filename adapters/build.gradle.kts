@@ -25,5 +25,5 @@ dependencies {
 
   testCompileOnly(Dependencies.jsr305)
   testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
+  testImplementation(Dependencies.Testing.truth)
 }

@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
@@ -28,7 +29,6 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.kotlin.reflect.adapter
-import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail
@@ -177,7 +177,7 @@ class GeneratedAdaptersTest {
       """{"data":[null,"why"]}"""
 
     val instance = adapter.fromJson(json)!!
-    assertThat(instance.data).containsExactly(null, "why")
+    assertThat(instance.data).asList().containsExactly(null, "why").inOrder()
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
@@ -193,7 +193,7 @@ class GeneratedAdaptersTest {
       """{"ints":[0,1]}"""
 
     val instance = adapter.fromJson(json)!!
-    assertThat(instance.ints).containsExactly(0, 1)
+    assertThat(instance.ints).asList().containsExactly(0, 1).inOrder()
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
 
@@ -219,7 +219,7 @@ class GeneratedAdaptersTest {
       adapter.fromJson(invalidJson)
       fail("The invalid json should have failed!")
     } catch (e: JsonDataException) {
-      assertThat(e).hasMessageContaining("foo")
+      assertThat(e).hasMessageThat().contains("foo")
     }
   }
 
@@ -933,7 +933,7 @@ class GeneratedAdaptersTest {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Multiple values for 'a' at $.a")
     }
   }
 
@@ -948,7 +948,7 @@ class GeneratedAdaptersTest {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Multiple values for 'a' at $.a")
     }
   }
 
@@ -1272,7 +1272,7 @@ class GeneratedAdaptersTest {
       moshi.adapter<CustomGeneratedClassMissing>()
       fail()
     } catch (e: RuntimeException) {
-      assertThat(e).hasMessageContaining("Failed to find the generated JsonAdapter class")
+      assertThat(e).hasMessageThat().contains("Failed to find the generated JsonAdapter class")
     }
   }
 
@@ -1349,7 +1349,7 @@ class GeneratedAdaptersTest {
       moshi.adapter(MultipleGenerics::class.java)
       fail("Should have failed to construct the adapter due to missing generics")
     } catch (e: RuntimeException) {
-      assertThat(e).hasMessage("Failed to find the generated JsonAdapter constructor for 'class com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest\$MultipleGenerics'. Suspiciously, the type was not parameterized but the target class 'com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultipleGenericsJsonAdapter' is generic. Consider using Types#newParameterizedType() to define these missing type variables.")
+      assertThat(e).hasMessageThat().isEqualTo("Failed to find the generated JsonAdapter constructor for 'class com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest\$MultipleGenerics'. Suspiciously, the type was not parameterized but the target class 'com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultipleGenericsJsonAdapter' is generic. Consider using Types#newParameterizedType() to define these missing type variables.")
     }
   }
 
@@ -1361,7 +1361,7 @@ class GeneratedAdaptersTest {
       )
       fail("Should have failed to construct the adapter due to wrong number of generics")
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage("TypeVariable mismatch: Expecting 4 types for generic type variables [A, B, C, D], but received 1")
+      assertThat(e).hasMessageThat().isEqualTo("TypeVariable mismatch: Expecting 4 types for generic type variables [A, B, C, D], but received 1")
     }
   }
 

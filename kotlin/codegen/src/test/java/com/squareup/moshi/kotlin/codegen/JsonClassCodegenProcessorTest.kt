@@ -15,12 +15,12 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
+import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -616,7 +616,7 @@ class JsonClassCodegenProcessorTest {
 
     result.generatedFiles.filter { it.extension == "pro" }.forEach { generatedFile ->
       when (generatedFile.nameWithoutExtension) {
-        "moshi-testPackage.Aliases" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Aliases
           -keepnames class testPackage.Aliases
@@ -626,7 +626,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.Simple" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Simple
           -keepnames class testPackage.Simple
@@ -636,7 +636,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.Generic" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Generic
           -keepnames class testPackage.Generic
@@ -646,7 +646,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.UsingQualifiers" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.UsingQualifiers" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.UsingQualifiers
           -keepnames class testPackage.UsingQualifiers
@@ -659,7 +659,7 @@ class JsonClassCodegenProcessorTest {
           -keep @interface testPackage.MyQualifier
           """.trimIndent()
         )
-        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MixedTypes
           -keepnames class testPackage.MixedTypes
@@ -669,7 +669,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.DefaultParams
           -keepnames class testPackage.DefaultParams
@@ -685,7 +685,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.Complex" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.Complex" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Complex
           -keepnames class testPackage.Complex
@@ -704,7 +704,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MultipleMasks
           -keepnames class testPackage.MultipleMasks
@@ -720,7 +720,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent()
         )
-        "moshi-testPackage.NestedType.NestedSimple" -> assertThat(generatedFile).hasContent(
+        "moshi-testPackage.NestedType.NestedSimple" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.NestedType${'$'}NestedSimple
           -keepnames class testPackage.NestedType${'$'}NestedSimple

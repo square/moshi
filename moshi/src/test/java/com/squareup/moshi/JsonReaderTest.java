@@ -15,12 +15,12 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.NAME;
 import static com.squareup.moshi.JsonReader.Token.STRING;
 import static com.squareup.moshi.TestUtil.repeat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -193,7 +193,7 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Cannot skip unexpected NUMBER at $.a");
+      assertThat(expected).hasMessageThat().isEqualTo("Cannot skip unexpected NUMBER at $.a");
     }
     // Confirm that the reader is left in a consistent state after the exception.
     reader.setFailOnUnknown(false);
@@ -212,7 +212,7 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Cannot skip unexpected NUMBER at $[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Cannot skip unexpected NUMBER at $[1]");
     }
     // Confirm that the reader is left in a consistent state after the exception.
     reader.setFailOnUnknown(false);
@@ -355,7 +355,7 @@ public final class JsonReaderTest {
       reader.nextDouble();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageContaining("NaN");
+      assertThat(expected).hasMessageThat().contains("NaN");
     }
   }
 
@@ -1053,7 +1053,7 @@ public final class JsonReaderTest {
       reader.skipName();
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("Cannot skip unexpected NAME at $.b");
+      assertThat(e).hasMessageThat().isEqualTo("Cannot skip unexpected NAME at $.b");
     }
   }
 
@@ -1083,7 +1083,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected a value but was END_OBJECT at path $.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_OBJECT at path $.");
     }
     reader.endObject();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -1097,7 +1099,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected a value but was END_ARRAY at path $[0]");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_ARRAY at path $[0]");
     }
     reader.endArray();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
@@ -1111,7 +1115,9 @@ public final class JsonReaderTest {
       reader.skipValue();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Expected a value but was END_DOCUMENT at path $");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Expected a value but was END_DOCUMENT at path $");
     }
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
@@ -1329,7 +1335,7 @@ public final class JsonReaderTest {
     String[] options = new String[] {"a", "b", "c"};
     JsonReader.Options abc = JsonReader.Options.of("a", "b", "c");
     List<String> strings = abc.strings();
-    assertThat(options).containsExactlyElementsOf(strings);
+    assertThat(options).asList().containsExactlyElementsIn(strings).inOrder();
     try {
       // Confirm it's unmodifiable and we can't mutate the original underlying array
       strings.add("d");
@@ -1446,11 +1452,17 @@ public final class JsonReaderTest {
       reader.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Tag value must be of type java.lang.CharSequence");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Tag value must be of type java.lang.CharSequence");
     }
 
-    assertThat(reader.tag(Integer.class)).isEqualTo(1).isInstanceOf(Integer.class);
-    assertThat(reader.tag(CharSequence.class)).isEqualTo("Foo").isInstanceOf(String.class);
+    Object intTag = reader.tag(Integer.class);
+    assertThat(intTag).isEqualTo(1);
+    assertThat(intTag).isInstanceOf(Integer.class);
+    Object charSequenceTag = reader.tag(CharSequence.class);
+    assertThat(charSequenceTag).isEqualTo("Foo");
+    assertThat(charSequenceTag).isInstanceOf(String.class);
     assertThat(reader.tag(String.class)).isNull();
   }
 

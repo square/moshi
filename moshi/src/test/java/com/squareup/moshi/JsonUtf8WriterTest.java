@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import okio.Buffer;

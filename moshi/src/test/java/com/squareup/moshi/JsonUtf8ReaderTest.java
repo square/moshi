@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.BOOLEAN;
@@ -27,7 +28,6 @@ import static com.squareup.moshi.JsonReader.Token.STRING;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -1033,7 +1033,7 @@ public final class JsonUtf8ReaderTest {
       reader1.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessage(message);
+      assertThat(expected).hasMessageThat().isEqualTo(message);
     }
 
     // Also validate that it works when skipping.
@@ -1045,7 +1045,7 @@ public final class JsonUtf8ReaderTest {
       reader2.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessage(message);
+      assertThat(expected).hasMessageThat().isEqualTo(message);
     }
   }
 
@@ -1064,7 +1064,7 @@ public final class JsonUtf8ReaderTest {
       reader.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessage("Expected value at path $[1].a[2]");
+      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $[1].a[2]");
     }
   }
 
@@ -1079,7 +1079,7 @@ public final class JsonUtf8ReaderTest {
       reader.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessage("Expected value at path $.null[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $.null[1]");
     }
   }
 
@@ -1127,7 +1127,9 @@ public final class JsonUtf8ReaderTest {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $" + repeat("[0]", MAX_DEPTH));
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH));
     }
   }
 
@@ -1149,7 +1151,9 @@ public final class JsonUtf8ReaderTest {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Nesting too deep at $" + repeat(".a", MAX_DEPTH));
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH));
     }
   }
 
@@ -1340,7 +1344,7 @@ public final class JsonUtf8ReaderTest {
       reader.nextString();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessage("Invalid escape sequence: \\i at path $[0]");
+      assertThat(expected).hasMessageThat().isEqualTo("Invalid escape sequence: \\i at path $[0]");
     }
   }
 

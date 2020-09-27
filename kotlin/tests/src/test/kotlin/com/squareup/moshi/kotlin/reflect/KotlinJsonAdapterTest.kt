@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
+import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
@@ -26,7 +27,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayOutputStream
@@ -141,7 +142,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Multiple values for 'a' at $.a")
     }
   }
 
@@ -155,7 +156,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4,"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for 'a' at $.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Multiple values for 'a' at $.a")
     }
   }
 
@@ -202,7 +203,7 @@ class KotlinJsonAdapterTest {
       jsonAdapter.fromJson("""{"a":4,"b":null,"b":6}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Multiple values for 'b' at $.b")
+      assertThat(expected).hasMessageThat().isEqualTo("Multiple values for 'b' at $.b")
     }
   }
 
@@ -315,7 +316,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<RequiredTransientConstructorParameter>()
       fail()
     } catch (expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
         "No default value for transient constructor parameter #0 " +
           "a of fun <init>(kotlin.Int): " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter"
@@ -359,7 +360,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<ConstructorParameterWithSameNameAsPropertyButDifferentType>()
       fail()
     } catch (expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
         "'a' has a constructor parameter of type " +
           "kotlin.Int but a property of type kotlin.String."
       )
@@ -446,7 +447,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<Triple<*, *, *>>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Platform class kotlin.Triple in kotlin.Triple<java.lang.Object, java.lang.Object, java.lang.Object> requires explicit JsonAdapter to be registered"
       )
     }
@@ -590,7 +591,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<NonPropertyConstructorParameter>()
       fail()
     } catch (expected: IllegalArgumentException) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
         "No property for required constructor parameter #0 a of fun <init>(" +
           "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}"
       )
@@ -618,7 +619,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<Interface>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "No JsonAdapter for interface " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$Interface (with no annotations)"
       )
@@ -633,7 +634,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<AbstractClass>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize abstract class " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$AbstractClass"
       )
@@ -648,7 +649,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<InnerClass>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize inner class " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$InnerClass"
       )
@@ -664,7 +665,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<LocalClass>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize local class or object expression " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass"
       )
@@ -677,7 +678,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<ObjectDeclaration>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize object declaration " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$ObjectDeclaration"
       )
@@ -704,7 +705,7 @@ class KotlinJsonAdapterTest {
       } else {
         "anonymous class"
       }
-      assertThat(e).hasMessage(
+      assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize $type " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$anonymousClassesNotSupported" +
           "\$expression$1"
@@ -989,7 +990,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<PlainKotlinClass>()
       fail("Should not pass here")
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessageContaining("Reflective serialization of Kotlin classes")
+      assertThat(e).hasMessageThat().contains("Reflective serialization of Kotlin classes")
     }
   }
 
@@ -1142,7 +1143,7 @@ class KotlinJsonAdapterTest {
       moshi.adapter<SealedClass>()
       fail()
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessageContaining("Cannot reflectively serialize sealed class")
+      assertThat(e).hasMessageThat().contains("Cannot reflectively serialize sealed class")
     }
   }
 
@@ -1158,7 +1159,7 @@ class KotlinJsonAdapterTest {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val adapter = moshi.adapter(type)
 
-    assertThat(adapter.fromJson(json)).isEqualToComparingFieldByFieldRecursively(value)
+    Assertions.assertThat(adapter.fromJson(json)).isEqualToComparingFieldByFieldRecursively(value)
     assertThat(adapter.toJson(value)).isEqualTo(json)
   }
 }

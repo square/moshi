@@ -15,8 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -322,7 +322,8 @@ public final class JsonQualifiersTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "interface com.squareup.moshi.JsonQualifiersTest$Millis "
                   + "does not have @JsonQualifier");
     }
@@ -334,7 +335,7 @@ public final class JsonQualifiersTest {
       new Moshi.Builder().add(new AnnotationsConflictJsonAdapter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageContaining("Conflicting @ToJson methods");
+      assertThat(expected).hasMessageThat().contains("Conflicting @ToJson methods");
     }
   }
 
@@ -360,19 +361,22 @@ public final class JsonQualifiersTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No @FromJson adapter for class java.lang.String annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
                   + "\nfor class java.lang.String b"
                   + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
-      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No @FromJson adapter for class java.lang.String "
                   + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause()).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause().getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No next JsonAdapter for class "
                   + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
@@ -395,19 +399,22 @@ public final class JsonQualifiersTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No @ToJson adapter for class java.lang.String annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
                   + "\nfor class java.lang.String b"
                   + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
-      assertThat(expected).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No @ToJson adapter for class java.lang.String "
                   + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected.getCause()).hasCauseExactlyInstanceOf(IllegalArgumentException.class);
+      assertThat(expected.getCause()).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause().getCause())
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "No next JsonAdapter for class "
                   + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }

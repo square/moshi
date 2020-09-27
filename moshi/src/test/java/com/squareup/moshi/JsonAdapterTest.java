@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -125,7 +125,7 @@ public final class JsonAdapterTest {
       toUpperCase.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Unexpected null at $[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
       assertThat(reader.nextNull()).isNull();
     }
     assertThat(toUpperCase.fromJson(reader)).isEqualTo("C");
@@ -138,7 +138,7 @@ public final class JsonAdapterTest {
       toUpperCase.toJson(writer, null);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Unexpected null at $[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
       writer.nullValue();
     }
     toUpperCase.toJson(writer, "c");
@@ -168,7 +168,7 @@ public final class JsonAdapterTest {
       alwaysSkip.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessage("Cannot skip unexpected STRING at $[0]");
+      assertThat(expected).hasMessageThat().isEqualTo("Cannot skip unexpected STRING at $[0]");
     }
     assertThat(reader.nextString()).isEqualTo("a");
     reader.endArray();
@@ -219,7 +219,7 @@ public final class JsonAdapterTest {
       adapter.indent(null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("indent == null");
+      assertThat(expected).hasMessageThat().isEqualTo("indent == null");
     }
   }
 
@@ -265,7 +265,7 @@ public final class JsonAdapterTest {
       brokenAdapter.fromJson("\"value\"");
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessage("JSON document was not fully consumed.");
+      assertThat(e).hasMessageThat().isEqualTo("JSON document was not fully consumed.");
     }
   }
 
@@ -288,7 +288,8 @@ public final class JsonAdapterTest {
       fail();
     } catch (JsonEncodingException e) {
       assertThat(e)
-          .hasMessage("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+          .hasMessageThat()
+          .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
     }
   }
 
@@ -329,12 +330,12 @@ public final class JsonAdapterTest {
   @Test
   public void nullSafeDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nullSafe();
-    assertThat(adapter.nullSafe()).isSameAs(adapter);
+    assertThat(adapter.nullSafe()).isSameInstanceAs(adapter);
   }
 
   @Test
   public void nonNullDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
-    assertThat(adapter.nonNull()).isSameAs(adapter);
+    assertThat(adapter.nonNull()).isSameInstanceAs(adapter);
   }
 }

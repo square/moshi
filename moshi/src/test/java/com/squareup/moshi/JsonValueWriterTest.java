@@ -15,14 +15,13 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -60,11 +59,7 @@ public final class JsonValueWriterTest {
     writer.endObject();
 
     assertThat((Map<String, Object>) writer.root())
-        .containsExactly(
-            new SimpleEntry<String, Object>("a", "s"),
-            new SimpleEntry<String, Object>("b", 1.5d),
-            new SimpleEntry<String, Object>("c", true),
-            new SimpleEntry<String, Object>("d", null));
+        .containsExactly("a", "s", "b", 1.5d, "c", true, "d", null);
   }
 
   @Test
@@ -76,7 +71,9 @@ public final class JsonValueWriterTest {
       writer.name("a").value(2L);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Map key 'a' has multiple values at path $.a: 1 and 2");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Map key 'a' has multiple values at path $.a: 1 and 2");
     }
   }
 
@@ -260,11 +257,7 @@ public final class JsonValueWriterTest {
     writer.value(new Buffer().writeUtf8("null"));
     writer.endObject();
     assertThat((Map<String, Object>) writer.root())
-        .containsExactly(
-            new SimpleEntry<String, Object>("a", singletonList("value")),
-            new SimpleEntry<String, Object>("b", 2.0d),
-            new SimpleEntry<String, Object>("c", 3L),
-            new SimpleEntry<String, Object>("d", null));
+        .containsExactly("a", singletonList("value"), "b", 2.0d, "c", 3L, "d", null);
   }
 
   /**
