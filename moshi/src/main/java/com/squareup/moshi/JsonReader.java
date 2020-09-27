@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.CheckReturnValue;
@@ -196,6 +197,8 @@ public abstract class JsonReader implements Closeable {
 
   /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
   boolean failOnUnknown;
+
+  private Map<Class<?>, Object> tags;
 
   /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
   @CheckReturnValue
@@ -567,6 +570,27 @@ public abstract class JsonReader implements Closeable {
   @CheckReturnValue
   public final String getPath() {
     return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  }
+
+  /** Returns the tag value for the given class key. */
+  @SuppressWarnings("unchecked")
+  @CheckReturnValue
+  public final @Nullable <T> T tag(Class<T> clazz) {
+    if (tags == null) {
+      return null;
+    }
+    return (T) tags.get(clazz);
+  }
+
+  /** Assigns the tag value using the given class key and value. */
+  public final <T> void setTag(Class<T> clazz, T value) {
+    if (!clazz.isAssignableFrom(value.getClass())) {
+      throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
+    }
+    if (tags == null) {
+      tags = new LinkedHashMap<>();
+    }
+    tags.put(clazz, value);
   }
 
   /**

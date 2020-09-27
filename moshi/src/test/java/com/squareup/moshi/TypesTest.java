@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.lang.annotation.Annotation;
@@ -56,7 +56,8 @@ public final class TypesTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage(
+          .hasMessageThat()
+          .isEqualTo(
               "interface com.squareup.moshi.TypesTest$TestAnnotation is not a JsonQualifier.");
     }
   }
@@ -98,14 +99,14 @@ public final class TypesTest {
       Types.newParameterizedType(List.class);
       fail("Should have errored due to missing type variable");
     } catch (Exception e) {
-      assertThat(e).hasMessageContaining("Missing type arguments");
+      assertThat(e).hasMessageThat().contains("Missing type arguments");
     }
 
     try {
       Types.newParameterizedTypeWithOwner(TypesTest.class, A.class);
       fail("Should have errored due to missing type variable");
     } catch (Exception e) {
-      assertThat(e).hasMessageContaining("Missing type arguments");
+      assertThat(e).hasMessageThat().contains("Missing type arguments");
     }
   }
 
@@ -115,7 +116,9 @@ public final class TypesTest {
       Types.newParameterizedType(A.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unexpected owner type for " + A.class + ": null");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("unexpected owner type for " + A.class + ": null");
     }
   }
 
@@ -125,7 +128,9 @@ public final class TypesTest {
       Types.newParameterizedTypeWithOwner(A.class, List.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unexpected owner type for " + List.class + ": " + A.class);
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("unexpected owner type for " + List.class + ": " + A.class);
     }
   }
 
@@ -135,7 +140,9 @@ public final class TypesTest {
       Types.newParameterizedTypeWithOwner(A.class, D.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unexpected owner type for " + D.class + ": " + A.class);
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("unexpected owner type for " + D.class + ": " + A.class);
     }
   }
 
@@ -243,19 +250,25 @@ public final class TypesTest {
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
     assertThat(Types.mapKeyAndValueTypes(mapOfStringIntegerType, Map.class))
-        .containsExactly(String.class, Integer.class);
+        .asList()
+        .containsExactly(String.class, Integer.class)
+        .inOrder();
   }
 
   @Test
   public void propertiesTypes() throws Exception {
     assertThat(Types.mapKeyAndValueTypes(Properties.class, Properties.class))
-        .containsExactly(String.class, String.class);
+        .asList()
+        .containsExactly(String.class, String.class)
+        .inOrder();
   }
 
   @Test
   public void fixedVariablesTypes() throws Exception {
     assertThat(Types.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class))
-        .containsExactly(String.class, Integer.class);
+        .asList()
+        .containsExactly(String.class, Integer.class)
+        .inOrder();
   }
 
   @SuppressWarnings("GetClassOnAnnotation") // Explicitly checking for proxy implementation.
@@ -285,19 +298,25 @@ public final class TypesTest {
       Types.newParameterizedType(List.class, int.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Unexpected primitive int. Use the boxed type.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Unexpected primitive int. Use the boxed type.");
     }
     try {
       Types.subtypeOf(byte.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Unexpected primitive byte. Use the boxed type.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Unexpected primitive byte. Use the boxed type.");
     }
     try {
       Types.subtypeOf(boolean.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Unexpected primitive boolean. Use the boxed type.");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Unexpected primitive boolean. Use the boxed type.");
     }
   }
 
@@ -346,7 +365,7 @@ public final class TypesTest {
       Types.generatedJsonAdapterName(TestNonJsonClass.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageContaining("Class does not have a JsonClass annotation");
+      assertThat(e).hasMessageThat().contains("Class does not have a JsonClass annotation");
     }
   }
 

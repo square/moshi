@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.LinkedHashTreeMap.AvlBuilder;
@@ -279,13 +279,13 @@ public final class LinkedHashTreeMapTest {
     int leftHeight = 0;
     if (node.left != null) {
       assertConsistent(node.left);
-      assertThat(node.left.parent).isSameAs(node);
+      assertThat(node.left.parent).isSameInstanceAs(node);
       leftHeight = node.left.height;
     }
     int rightHeight = 0;
     if (node.right != null) {
       assertConsistent(node.right);
-      assertThat(node.right.parent).isSameAs(node);
+      assertThat(node.right.parent).isSameInstanceAs(node);
       rightHeight = node.right.height;
     }
     if (node.parent != null) {

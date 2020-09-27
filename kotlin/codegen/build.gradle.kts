@@ -35,6 +35,12 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
+// To make Gradle happy
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
@@ -70,7 +76,6 @@ dependencies {
   testImplementation(Dependencies.KotlinPoet.metadataSpecs)
   testImplementation(Dependencies.KotlinPoet.elementsClassInspector)
   testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
   testImplementation(Dependencies.Testing.truth)
   testImplementation(Dependencies.Testing.compileTesting)
   testImplementation(Dependencies.okio2)

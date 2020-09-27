@@ -1,5 +1,21 @@
+/*
+ * Copyright (C) 2020 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.squareup.moshi.kotlin
 
+import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
@@ -11,7 +27,6 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.adapter
-import org.assertj.core.api.Assertions.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -72,7 +87,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required value 'b' missing at $")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $")
     }
   }
 
@@ -87,7 +102,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Required value 'b' (JSON name 'bPrime') missing at \$")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$")
     }
   }
 
@@ -102,7 +117,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -123,7 +138,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -140,7 +155,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"aPrime\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
     }
   }
 
@@ -161,7 +176,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"aPrime\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
     }
   }
 
@@ -178,7 +193,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
     }
   }
 
@@ -199,7 +214,7 @@ class DualKotlinTest(useReflection: Boolean) {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessage("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
     }
   }
 
