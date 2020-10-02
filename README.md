@@ -628,7 +628,7 @@ The reflection adapter requires the following additional dependency:
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.9.3")
+implementation("com.squareup.moshi:moshi-kotlin:1.10.0")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
