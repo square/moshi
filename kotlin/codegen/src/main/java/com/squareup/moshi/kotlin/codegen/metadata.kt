@@ -22,6 +22,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
@@ -44,7 +45,7 @@ import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
 import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
-import com.squareup.moshi.kotlin.codegen.api.mapTypes
+import com.squareup.moshi.kotlin.codegen.api.deepCopy
 import com.squareup.moshi.kotlin.codegen.api.rawType
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
@@ -503,19 +504,25 @@ private fun String.escapeDollarSigns(): String {
 }
 
 internal fun TypeName.unwrapTypeAlias(): TypeName {
-  return mapTypes<ClassName> {
-    tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
-      // If any type is nullable, then the whole thing is nullable
-      var isAnyNullable = isNullable
-      // Keep track of all annotations across type levels. Sort them too for consistency.
-      val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
-        addAll(annotations)
-      }
-      val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
-      runningAnnotations.addAll(nestedUnwrappedType.annotations)
-      isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
-      nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
+  return when (this) {
+    is ClassName -> {
+      tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
+        // If any type is nullable, then the whole thing is nullable
+        var isAnyNullable = isNullable
+        // Keep track of all annotations across type levels. Sort them too for consistency.
+        val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
+          addAll(annotations)
+        }
+        val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
+        runningAnnotations.addAll(nestedUnwrappedType.annotations)
+        isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
+        nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
+      } ?: this
     }
+    is ParameterizedTypeName -> deepCopy(TypeName::unwrapTypeAlias)
+    is TypeVariableName -> deepCopy(transform = TypeName::unwrapTypeAlias)
+    is WildcardTypeName -> deepCopy(TypeName::unwrapTypeAlias)
+    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }
 
