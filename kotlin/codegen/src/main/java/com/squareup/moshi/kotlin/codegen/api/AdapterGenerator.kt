@@ -178,7 +178,7 @@ internal class AdapterGenerator(
       .mapTo(mutableSetOf()) { prop ->
         QualifierAdapterProperty(
           name = prop.name,
-          qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.className }
+          qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
         )
       }
 
