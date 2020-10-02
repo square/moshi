@@ -126,6 +126,7 @@ internal fun TypeVariableName.deepCopy(
   transform: (TypeName) -> TypeName
 ): TypeVariableName {
   return TypeVariableName(name = name, bounds = bounds.map { transform(it) }, variance = variance)
+    .copy(nullable = isNullable, annotations = annotations, tags = tags)
 }
 
 internal fun WildcardTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeName {
