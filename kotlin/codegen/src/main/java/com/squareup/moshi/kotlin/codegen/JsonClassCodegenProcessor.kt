@@ -17,7 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
@@ -59,10 +59,10 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
      *   * `"javax.annotation.Generated"` (JRE <9)
      */
     const val OPTION_GENERATED = "moshi.generated"
-    private val POSSIBLE_GENERATED_NAMES = setOf(
-      "javax.annotation.processing.Generated",
-      "javax.annotation.Generated"
-    )
+    private val POSSIBLE_GENERATED_NAMES = arrayOf(
+      ClassName("javax.annotation.processing", "Generated"),
+      ClassName("javax.annotation", "Generated")
+    ).associateBy { it.canonicalName }
   }
 
   private lateinit var types: Types
@@ -71,7 +71,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   private lateinit var messager: Messager
   private lateinit var cachedClassInspector: MoshiCachedClassInspector
   private val annotation = JsonClass::class.java
-  private var generatedType: TypeElement? = null
+  private var generatedType: ClassName? = null
 
   override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
 
@@ -82,11 +82,10 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
-      require(it in POSSIBLE_GENERATED_NAMES) {
+      POSSIBLE_GENERATED_NAMES[it] ?: error(
         "Invalid option value for $OPTION_GENERATED. Found $it, " +
           "allowable values are $POSSIBLE_GENERATED_NAMES."
-      }
-      processingEnv.elementUtils.getTypeElement(it)
+      )
     }
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
@@ -117,7 +116,8 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
           .prepare { spec ->
             spec.toBuilder()
               .apply {
-                generatedType?.asClassName()?.let { generatedClassName ->
+                @Suppress("DEPRECATION") // This is a Java type
+                generatedType?.let { generatedClassName ->
                   addAnnotation(
                     AnnotationSpec.builder(generatedClassName)
                       .addMember(
