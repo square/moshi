@@ -95,12 +95,13 @@ internal class AdapterGenerator(
   private val className = target.typeName.rawType()
   private val visibility = target.visibility
   private val typeVariables = target.typeVariables
+  private val typeVariableResolver = typeVariables.toTypeVariableResolver()
   private val targetConstructorParams = target.constructor.parameters
     .mapKeys { (_, param) -> param.index }
 
   private val nameAllocator = NameAllocator()
   private val adapterName = "${className.simpleNames.joinToString(separator = "_")}JsonAdapter"
-  private val originalTypeName = target.typeName.stripTypeVarVariance()
+  private val originalTypeName = target.typeName.stripTypeVarVariance(typeVariableResolver)
   private val originalRawTypeName = originalTypeName.rawType()
 
   private val moshiParam = ParameterSpec.builder(
@@ -218,7 +219,7 @@ internal class AdapterGenerator(
     result.superclass(jsonAdapterTypeName)
 
     if (typeVariables.isNotEmpty()) {
-      result.addTypeVariables(typeVariables.map { it.stripTypeVarVariance() as TypeVariableName })
+      result.addTypeVariables(typeVariables.map { it.stripTypeVarVariance(typeVariableResolver) as TypeVariableName })
       // require(types.size == 1) {
       //   "TypeVariable mismatch: Expecting 1 type(s) for generic type variables [T], but received ${types.size} with values $types"
       // }

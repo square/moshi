@@ -68,7 +68,7 @@ class DualKotlinTest(useReflection: Boolean) {
               // Prevent falling back to generated adapter lookup
               val rawType = Types.getRawType(type)
               val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
-              check(!rawType.isAnnotationPresent(metadataClass)) {
+              check(rawType.isEnum || !rawType.isAnnotationPresent(metadataClass)) {
                 "Unhandled Kotlin type in reflective test! $rawType"
               }
               return moshi.nextAdapter<Any>(this, type, annotations)
@@ -585,6 +585,33 @@ class DualKotlinTest(useReflection: Boolean) {
 
   @JsonClass(generateAdapter = true)
   data class OutDeclaration<out T>(val input: T)
+
+  // Regression test for https://github.com/square/moshi/issues/1244
+  @Test fun backwardReferencingTypeVarsAndIntersectionTypes() {
+    val adapter = moshi.adapter<IntersectionTypes<IntersectionTypesEnum>>()
+
+    @Language("JSON")
+    val testJson =
+      """{"value":"VALUE"}"""
+
+    val instance = IntersectionTypes(IntersectionTypesEnum.VALUE)
+    assertThat(adapter.serializeNulls().toJson(instance))
+      .isEqualTo(testJson)
+
+    val result = adapter.fromJson(testJson)!!
+    assertThat(result).isEqualTo(instance)
+  }
+
+  interface IntersectionTypeInterface<E : Enum<E>>
+
+  enum class IntersectionTypesEnum : IntersectionTypeInterface<IntersectionTypesEnum> {
+    VALUE
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class IntersectionTypes<E>(
+    val value: E
+  ) where E : Enum<E>, E : IntersectionTypeInterface<E>
 }
 
 typealias TypeAlias = Int

@@ -37,7 +37,6 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asTypeName
-import kotlin.reflect.KClass
 
 internal fun TypeName.rawType(): ClassName {
   return when (this) {
@@ -103,47 +102,83 @@ internal fun KModifier.checkIsVisibility() {
   }
 }
 
-internal inline fun <reified T : TypeName> TypeName.mapTypes(noinline transform: T.() -> TypeName?): TypeName {
-  return mapTypes(T::class, transform)
-}
-
-@Suppress("UNCHECKED_CAST")
-internal fun <T : TypeName> TypeName.mapTypes(target: KClass<T>, transform: T.() -> TypeName?): TypeName {
-  if (target.java == javaClass) {
-    return (this as T).transform() ?: return this
-  }
+internal fun TypeName.stripTypeVarVariance(resolver: TypeVariableResolver): TypeName {
   return when (this) {
     is ClassName -> this
     is ParameterizedTypeName -> {
-      (rawType.mapTypes(target, transform) as ClassName).parameterizedBy(typeArguments.map { it.mapTypes(target, transform) })
-        .copy(nullable = isNullable, annotations = annotations)
+      deepCopy { it.stripTypeVarVariance(resolver) }
     }
-    is TypeVariableName -> {
-      copy(bounds = bounds.map { it.mapTypes(target, transform) })
-    }
-    is WildcardTypeName -> {
-      // TODO Would be nice if KotlinPoet modeled these easier.
-      // Producer type - empty inTypes, single element outTypes
-      // Consumer type - single element inTypes, single ANY element outType.
-      when {
-        this == STAR -> this
-        outTypes.isNotEmpty() && inTypes.isEmpty() -> {
-          WildcardTypeName.producerOf(outTypes[0].mapTypes(target, transform))
-            .copy(nullable = isNullable, annotations = annotations)
-        }
-        inTypes.isNotEmpty() -> {
-          WildcardTypeName.consumerOf(inTypes[0].mapTypes(target, transform))
-            .copy(nullable = isNullable, annotations = annotations)
-        }
-        else -> throw UnsupportedOperationException("Not possible.")
-      }
-    }
+    is TypeVariableName -> resolver[name]
+    is WildcardTypeName -> deepCopy { it.stripTypeVarVariance(resolver) }
     else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }
 
-internal fun TypeName.stripTypeVarVariance(): TypeName {
-  return mapTypes<TypeVariableName> {
-    TypeVariableName(name = name, bounds = bounds.map { it.mapTypes(TypeVariableName::stripTypeVarVariance) }, variance = null)
+internal fun ParameterizedTypeName.deepCopy(
+  transform: (TypeName) -> TypeName
+): ParameterizedTypeName {
+  return rawType.parameterizedBy(typeArguments.map { transform(it) })
+    .copy(nullable = isNullable, annotations = annotations, tags = tags)
+}
+
+internal fun TypeVariableName.deepCopy(
+  variance: KModifier? = this.variance,
+  transform: (TypeName) -> TypeName
+): TypeVariableName {
+  return TypeVariableName(name = name, bounds = bounds.map { transform(it) }, variance = variance)
+    .copy(nullable = isNullable, annotations = annotations, tags = tags)
+}
+
+internal fun WildcardTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeName {
+  // TODO Would be nice if KotlinPoet modeled these easier.
+  // Producer type - empty inTypes, single element outTypes
+  // Consumer type - single element inTypes, single ANY element outType.
+  return when {
+    this == STAR -> this
+    outTypes.isNotEmpty() && inTypes.isEmpty() -> {
+      WildcardTypeName.producerOf(transform(outTypes[0]))
+        .copy(nullable = isNullable, annotations = annotations)
+    }
+    inTypes.isNotEmpty() -> {
+      WildcardTypeName.consumerOf(transform(inTypes[0]))
+        .copy(nullable = isNullable, annotations = annotations)
+    }
+    else -> throw UnsupportedOperationException("Not possible.")
   }
+}
+
+internal interface TypeVariableResolver {
+  val parametersMap: Map<String, TypeVariableName>
+  operator fun get(index: String): TypeVariableName
+}
+
+internal fun List<TypeName>.toTypeVariableResolver(
+  fallback: TypeVariableResolver? = null,
+  sourceType: String? = null,
+): TypeVariableResolver {
+  val parametersMap = LinkedHashMap<String, TypeVariableName>()
+  val typeParamResolver = { id: String ->
+    parametersMap[id]
+      ?: fallback?.get(id)
+      ?: throw IllegalStateException("No type argument found for $id! Anaylzing $sourceType")
+  }
+
+  val resolver = object : TypeVariableResolver {
+    override val parametersMap: Map<String, TypeVariableName> = parametersMap
+
+    override operator fun get(index: String): TypeVariableName = typeParamResolver(index)
+  }
+
+  // Fill the parametersMap. Need to do sequentially and allow for referencing previously defined params
+  for (typeVar in this) {
+    check(typeVar is TypeVariableName)
+    // Put the simple typevar in first, then it can be referenced in the full toTypeVariable()
+    // replacement later that may add bounds referencing this.
+    val id = typeVar.name
+    parametersMap[id] = TypeVariableName(id)
+    // Now replace it with the full version.
+    parametersMap[id] = typeVar.deepCopy(null) { it.stripTypeVarVariance(resolver) }
+  }
+
+  return resolver
 }
