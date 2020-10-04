@@ -47,7 +47,7 @@ internal data class DelegateKey(
     propertyName: String
   ): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
-      "At${it.className.simpleName}"
+      "At${it.typeName.rawType().simpleName}"
     }
     val adapterName = nameAllocator.newName(
       "${type.toVariableName().decapitalize()}${qualifierNames}Adapter",
