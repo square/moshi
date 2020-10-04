@@ -21,9 +21,10 @@ plugins {
 
 dependencies {
   api(project(":moshi"))
-  api(kotlin("reflect"))
+  implementation(Dependencies.Kotlin.metadata)
 
   testImplementation(kotlin("test"))
   testImplementation(Dependencies.Testing.junit)
+  testImplementation(Dependencies.Testing.assertj)
   testImplementation(Dependencies.Testing.truth)
 }
