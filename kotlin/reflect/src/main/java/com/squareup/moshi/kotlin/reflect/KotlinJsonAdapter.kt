@@ -21,10 +21,10 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
+import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
 import java.util.AbstractMap.SimpleEntry
@@ -184,7 +184,7 @@ class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     JsonAdapter<*>? {
       if (annotations.isNotEmpty()) return null
 
-      val rawType = Types.getRawType(type)
+      val rawType = type.rawType
       if (rawType.isInterface) return null
       if (rawType.isEnum) return null
       if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null

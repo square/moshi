@@ -39,7 +39,9 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -49,6 +51,9 @@ public final class Util {
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
   @Nullable public static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
   @Nullable private static final Class<? extends Annotation> METADATA;
+
+  /** A map from primitive types to their corresponding wrapper types. */
+  private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
 
   static {
     Class<? extends Annotation> metadata = null;
@@ -67,6 +72,20 @@ public final class Util {
     } catch (ClassNotFoundException ignored) {
     }
     DEFAULT_CONSTRUCTOR_MARKER = defaultConstructorMarker;
+
+    Map<Class<?>, Class<?>> primToWrap = new LinkedHashMap<>(16);
+
+    primToWrap.put(boolean.class, Boolean.class);
+    primToWrap.put(byte.class, Byte.class);
+    primToWrap.put(char.class, Character.class);
+    primToWrap.put(double.class, Double.class);
+    primToWrap.put(float.class, Float.class);
+    primToWrap.put(int.class, Integer.class);
+    primToWrap.put(long.class, Long.class);
+    primToWrap.put(short.class, Short.class);
+    primToWrap.put(void.class, Void.class);
+
+    PRIMITIVE_TO_WRAPPER_TYPE = Collections.unmodifiableMap(primToWrap);
   }
 
   // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metada
@@ -182,14 +201,14 @@ public final class Util {
   }
 
   public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable>());
+    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable<?>>());
   }
 
   private static Type resolve(
       Type context,
       Class<?> contextRawType,
       Type toResolve,
-      Collection<TypeVariable> visitedTypeVariables) {
+      Collection<TypeVariable<?>> visitedTypeVariables) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
     while (true) {
       if (toResolve instanceof TypeVariable) {
@@ -642,5 +661,13 @@ public final class Util {
               "Non-null value '%s' (JSON name '%s') was null at %s", propertyName, jsonName, path);
     }
     return new JsonDataException(message);
+  }
+
+  // Public due to inline access in MoshiKotlinTypesExtensions
+  public static <T> Class<T> boxIfPrimitive(Class<T> type) {
+    // cast is safe: long.class and Long.class are both of type Class<Long>
+    @SuppressWarnings("unchecked")
+    Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(type);
+    return (wrapped == null) ? type : wrapped;
   }
 }

@@ -24,9 +24,10 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
+import com.squareup.moshi.adapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.squareup.moshi.kotlin.reflect.adapter
+import com.squareup.moshi.rawType
+import com.squareup.moshi.supertypeOf
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -62,11 +63,11 @@ class DualKotlinTest(useReflection: Boolean) {
           object : Factory {
             override fun create(
               type: Type,
-              annotations: MutableSet<out Annotation>,
+              annotations: Set<Annotation>,
               moshi: Moshi
             ): JsonAdapter<*>? {
               // Prevent falling back to generated adapter lookup
-              val rawType = Types.getRawType(type)
+              val rawType = type.rawType
               val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
               check(rawType.isEnum || !rawType.isAnnotationPresent(metadataClass)) {
                 "Unhandled Kotlin type in reflective test! $rawType"
@@ -446,7 +447,7 @@ class DualKotlinTest(useReflection: Boolean) {
   @Test fun typeAliasUnwrapping() {
     val adapter = moshi
       .newBuilder()
-      .add(Types.supertypeOf(Int::class.javaObjectType), moshi.adapter<Int>())
+      .add(supertypeOf<Int>(), moshi.adapter<Int>())
       .build()
       .adapter<TypeAliasUnwrapping>()
 

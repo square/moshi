@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin
 
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapter
 import org.junit.Test
 
 class DefaultConstructorTest {
@@ -25,7 +26,7 @@ class DefaultConstructorTest {
     val expected = TestClass("requiredClass")
     val json =
       """{"required":"requiredClass"}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+    val instance = Moshi.Builder().build().adapter<TestClass>()
       .fromJson(json)!!
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
@@ -36,7 +37,7 @@ class DefaultConstructorTest {
     val expected = TestClass("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val json =
       """{"required":"requiredClass","optional":"customOptional","optional2":4,"dynamicSelfReferenceOptional":"setDynamic","dynamicOptional":5,"dynamicInlineOptional":6}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+    val instance = Moshi.Builder().build().adapter<TestClass>()
       .fromJson(json)!!
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
@@ -47,7 +48,7 @@ class DefaultConstructorTest {
     val expected = TestClass("requiredClass", "customOptional")
     val json =
       """{"required":"requiredClass","optional":"customOptional"}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>(TestClass::class.java)
+    val instance = Moshi.Builder().build().adapter<TestClass>()
       .fromJson(json)!!
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"

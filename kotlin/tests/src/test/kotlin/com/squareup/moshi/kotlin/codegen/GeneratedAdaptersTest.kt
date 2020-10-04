@@ -26,9 +26,8 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.Types
+import com.squareup.moshi.adapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
-import com.squareup.moshi.kotlin.reflect.adapter
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail
@@ -299,13 +298,7 @@ class GeneratedAdaptersTest {
 
   @Test
   fun nullableTypeParams() {
-    val adapter = moshi.adapter<NullableTypeParams<Int>>(
-      Types.newParameterizedTypeWithOwner(
-        GeneratedAdaptersTest::class.java,
-        NullableTypeParams::class.java,
-        Int::class.javaObjectType
-      )
-    )
+    val adapter = moshi.adapter<NullableTypeParams<Int>>()
     val nullSerializing = adapter.serializeNulls()
 
     val nullableTypeParams = NullableTypeParams(
@@ -597,7 +590,7 @@ class GeneratedAdaptersTest {
 
   @Test fun multipleTransientConstructorParameters() {
     val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
+    val jsonAdapter = moshi.adapter<MultipleTransientConstructorParameters>()
 
     val encoded = MultipleTransientConstructorParameters(3, 5, 7)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
@@ -1346,6 +1339,7 @@ class GeneratedAdaptersTest {
 
   @Test fun typesSizeCheckMessages_noArgs() {
     try {
+      // Note: This is impossible to do if you use the reified adapter extension!
       moshi.adapter(MultipleGenerics::class.java)
       fail("Should have failed to construct the adapter due to missing generics")
     } catch (e: RuntimeException) {

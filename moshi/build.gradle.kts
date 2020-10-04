@@ -14,15 +14,30 @@
  * limitations under the License.
  */
 
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-  `java-library`
+  kotlin("jvm")
   id("com.vanniktech.maven.publish")
 }
 
+tasks.withType<KotlinCompile>()
+  .matching { it.name.contains("test", true) }
+  .configureEach {
+    kotlinOptions {
+      @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
+      freeCompilerArgs += listOf(
+        "-Xopt-in=kotlin.ExperimentalStdlibApi"
+      )
+    }
+  }
+
 dependencies {
   compileOnly(Dependencies.jsr305)
+  compileOnly(Dependencies.Kotlin.stdlib)
   api(Dependencies.okio)
 
+  testImplementation(Dependencies.Kotlin.stdlib)
   testCompileOnly(Dependencies.jsr305)
   testImplementation(Dependencies.Testing.junit)
   testImplementation(Dependencies.Testing.truth)

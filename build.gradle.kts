@@ -120,6 +120,7 @@ subprojects {
     }
   }
 
+  // Apply with "java" instead of just "java-library" so kotlin projects get it too
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       sourceCompatibility = JavaVersion.VERSION_1_7
