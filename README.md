@@ -623,12 +623,12 @@ The reflection adapter requires the following additional dependency:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin</artifactId>
-  <version>1.9.3</version>
+  <version>1.11.0</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.10.0")
+implementation("com.squareup.moshi:moshi-kotlin:1.11.0")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -658,13 +658,13 @@ add the following to your build to enable the annotation processor:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin-codegen</artifactId>
-  <version>1.9.3</version>
+  <version>1.11.0</version>
   <scope>provided</scope>
 </dependency>
 ```
 
 ```kotlin
-kapt("com.squareup.moshi:moshi-kotlin-codegen:1.9.3")
+kapt("com.squareup.moshi:moshi-kotlin-codegen:1.11.0")
 ```
 
 You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
@@ -690,12 +690,12 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.9.3</version>
+  <version>1.11.0</version>
 </dependency>
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.9.3")
+implementation("com.squareup.moshi:moshi:1.11.0")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
