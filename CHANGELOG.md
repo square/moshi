@@ -12,21 +12,21 @@ _2020-10-04_
     ```kotlin
     /** Extension alternative to [Types.nextAnnotations()]. */
     fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>?
- 
+
     /** Extension alternative to [Types.getRawType()]. */
     val Type.rawType: Class<*>
- 
+
     /** Extension alternative to [Types.arrayOf()]. */
     fun KClass<*>.asArrayType(): GenericArrayType
- 
+
     /** Extension alternative to [Types.arrayOf()]. */
     fun Type.asArrayType(): GenericArrayType
     ```
- 
- * New: Experimental Kotlin extensions. These depend on unreleased APIs and may break in a future 
+
+ * New: Experimental Kotlin extensions. These depend on unreleased APIs and may break in a future
    release of Kotlin. If you are comfortable with this, add `@ExperimentalStdlibApi` at the callsite
    or add this argument to your Kotlin compiler: `"-Xopt-in=kotlin.ExperimentalStdlibApi"`.
-     
+
     ```kotlin
     /** Returns the adapter for [T]. */
     inline fun <reified T> Moshi.adapter(): JsonAdapter<T>
@@ -46,7 +46,7 @@ _2020-10-04_
     /** Extension alternative to [Types.supertypeOf()]. */
     inline fun <reified T> supertypeOf(): WildcardType
     ```
-   
+
  * New: `JsonReader.nextSource()`. This returns an Okio `BufferedSource` that streams the UTF-8
    bytes of a JSON value. Use this to accept JSON values without decoding them, to delegate to
    another JSON processor, or for streaming access to very large embedded values.
@@ -481,7 +481,7 @@ _2015-06-16_
  [dates_example]: https://github.com/square/moshi/blob/master/examples/src/main/java/com/squareup/moshi/recipes/ReadAndWriteRfc3339Dates.java
  [gson]: https://github.com/google/gson
  [jackson]: http://wiki.fasterxml.com/JacksonHome
- [kotlin_1_4_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.10 
+ [kotlin_1_4_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.10
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
  [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
  [okio_1_7_5]: https://square.github.io/okio/changelog/#version-1175
