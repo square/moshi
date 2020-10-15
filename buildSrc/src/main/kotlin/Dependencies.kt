@@ -23,8 +23,8 @@ object Dependencies {
   const val okio2 = "com.squareup.okio:okio:2.8.0"
 
   object AnimalSniffer {
-    private const val version = "1.16"
-    const val annotations = "org.codehaus.mojo:animal-sniffer-annotations:$version"
+    const val annotations = "org.codehaus.mojo:animal-sniffer-annotations:1.16"
+    const val java7Signature = "org.codehaus.mojo.signature:java17:1.0@signature"
   }
 
   object AutoService {

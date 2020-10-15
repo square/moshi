@@ -132,6 +132,13 @@ subprojects {
     }
   }
 
+  pluginManager.withPlugin("ru.vyarus.animalsniffer") {
+    dependencies {
+      "compileOnly"(Dependencies.AnimalSniffer.annotations)
+      "signature"(Dependencies.AnimalSniffer.java7Signature)
+    }
+  }
+
   // Configure publishing
   pluginManager.withPlugin("com.vanniktech.maven.publish") {
     // Configure automatic-module-name, but only for published modules

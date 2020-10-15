@@ -17,6 +17,7 @@
 plugins {
   `java-library`
   id("com.vanniktech.maven.publish")
+  id("ru.vyarus.animalsniffer")
 }
 
 dependencies {
