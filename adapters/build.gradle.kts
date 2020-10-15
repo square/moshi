@@ -15,7 +15,7 @@
  */
 
 plugins {
-  `java-library`
+  kotlin("jvm")
   id("com.vanniktech.maven.publish")
   id("ru.vyarus.animalsniffer")
 }

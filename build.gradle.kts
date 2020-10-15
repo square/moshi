@@ -17,6 +17,7 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
 buildscript {
@@ -136,6 +137,15 @@ subprojects {
     dependencies {
       "compileOnly"(Dependencies.AnimalSniffer.annotations)
       "signature"(Dependencies.AnimalSniffer.java7Signature)
+    }
+  }
+
+  pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+    tasks.withType<KotlinCompile>().configureEach {
+      kotlinOptions {
+        @Suppress("SuspiciousCollectionReassignment")
+        freeCompilerArgs += listOf("-progressive")
+      }
     }
   }
 

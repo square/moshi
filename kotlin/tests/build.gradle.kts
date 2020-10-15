@@ -23,7 +23,8 @@ plugins {
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    freeCompilerArgs = listOf(
+    @Suppress("SuspiciousCollectionReassignment")
+    freeCompilerArgs += listOf(
       "-Werror",
       "-Xopt-in=kotlin.ExperimentalStdlibApi",
       "-Xinline-classes"

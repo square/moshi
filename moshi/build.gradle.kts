@@ -27,18 +27,14 @@ tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
       @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-      freeCompilerArgs += listOf(
-        "-Xopt-in=kotlin.ExperimentalStdlibApi"
-      )
+      freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
     }
   }
 
 dependencies {
   compileOnly(Dependencies.jsr305)
-  compileOnly(Dependencies.Kotlin.stdlib)
   api(Dependencies.okio)
 
-  testImplementation(Dependencies.Kotlin.stdlib)
   testCompileOnly(Dependencies.jsr305)
   testImplementation(Dependencies.Testing.junit)
   testImplementation(Dependencies.Testing.truth)
