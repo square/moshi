@@ -22,6 +22,11 @@ object Dependencies {
   const val okio = "com.squareup.okio:okio:1.17.5"
   const val okio2 = "com.squareup.okio:okio:2.8.0"
 
+  object AnimalSniffer {
+    private const val version = "1.16"
+    const val annotations = "org.codehaus.mojo:animal-sniffer-annotations:$version"
+  }
+
   object AutoService {
     private const val version = "1.0-rc7"
     const val annotations = "com.google.auto.service:auto-service-annotations:$version"
