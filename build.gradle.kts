@@ -17,6 +17,7 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
@@ -145,6 +146,12 @@ subprojects {
       kotlinOptions {
         @Suppress("SuspiciousCollectionReassignment")
         freeCompilerArgs += listOf("-progressive")
+      }
+    }
+
+    configure<KotlinProjectExtension> {
+      if (project.name != "examples") {
+        explicitApi()
       }
     }
   }

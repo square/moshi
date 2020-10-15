@@ -26,17 +26,17 @@ import kotlin.reflect.typeOf
  *         itself is handled, nested types (such as in generics) are not resolved.
  */
 @ExperimentalStdlibApi
-inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
+public inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
 @ExperimentalStdlibApi
-inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().javaType, adapter)
+public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().javaType, adapter)
 
 /**
  * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
  *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
  */
 @ExperimentalStdlibApi
-fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
+public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.javaType)
   return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
     // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?

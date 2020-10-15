@@ -46,9 +46,9 @@ import javax.tools.Diagnostic
  */
 @AutoService(Processor::class)
 @IncrementalAnnotationProcessor(ISOLATING)
-class JsonClassCodegenProcessor : AbstractProcessor() {
+public class JsonClassCodegenProcessor : AbstractProcessor() {
 
-  companion object {
+  public companion object {
     /**
      * This annotation processing argument can be specified to have a `@Generated` annotation
      * included in the generated code. It is not encouraged unless you need it for static analysis
@@ -58,7 +58,7 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
      *   * `"javax.annotation.processing.Generated"` (JRE 9+)
      *   * `"javax.annotation.Generated"` (JRE <9)
      */
-    const val OPTION_GENERATED = "moshi.generated"
+    public const val OPTION_GENERATED: String = "moshi.generated"
     private val POSSIBLE_GENERATED_NAMES = arrayOf(
       ClassName("javax.annotation.processing", "Generated"),
       ClassName("javax.annotation", "Generated")
@@ -73,11 +73,11 @@ class JsonClassCodegenProcessor : AbstractProcessor() {
   private val annotation = JsonClass::class.java
   private var generatedType: ClassName? = null
 
-  override fun getSupportedAnnotationTypes() = setOf(annotation.canonicalName)
+  override fun getSupportedAnnotationTypes(): Set<String> = setOf(annotation.canonicalName)
 
   override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latest()
 
-  override fun getSupportedOptions() = setOf(OPTION_GENERATED)
+  override fun getSupportedOptions(): Set<String> = setOf(OPTION_GENERATED)
 
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
