@@ -706,6 +706,8 @@ R8 / ProGuard
 
 Moshi contains minimally required rules for its own internals to work without need for consumers to embed their own. However if you are using reflective serialization and R8 or ProGuard, you must add keep rules in your proguard configuration file for your reflectively serialized classes.
 
+**Note on enums:** any enum classes (java or kotlin) used with moshi must be annotated with `@JsonClass(generateAdapter = false)`. Not annotating the class will result in `NoSuchFieldException` being thrown at adapter creation stage.
+
 License
 --------
 
