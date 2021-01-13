@@ -20,16 +20,13 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.SourceFile.Companion.java
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import kotlin.reflect.KClass
-import kotlin.reflect.KClassifier
-import kotlin.reflect.KType
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.KVariance
+import kotlin.reflect.*
 import kotlin.reflect.KVariance.INVARIANT
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
@@ -466,6 +463,26 @@ class JsonClassCodegenProcessorTest {
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
+  }
+
+  @Test
+  fun `Processor should not fail with an annotation that placed in 'annotation' package`() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          package test.annotation
+
+          import com.squareup.moshi.JsonClass
+
+          annotation class AnAnnotation
+
+          @JsonClass(generateAdapter = true)
+          data class ClassWithAnnotation(@AnAnnotation val a: Int)
+          """
+      )
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
   @Test
