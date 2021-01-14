@@ -483,7 +483,7 @@ internal fun TargetProperty.generator(
 private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return filterTo(mutableSetOf()) {
-    elements.getTypeElement(it.typeName.toString())?.getAnnotation(JSON_QUALIFIER) != null
+    elements.getTypeElement(it.typeName.rawType().canonicalName)?.getAnnotation(JSON_QUALIFIER) != null
   }
 }
 
