@@ -469,7 +469,7 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test
-  fun `Processor should not fail with an annotation that placed in 'annotation' package`() {
+  fun `Processor should not fail with a qualifier that placed in 'annotation' package`() {
     val result = compile(
       kotlin(
         "source.kt",
@@ -477,11 +477,13 @@ class JsonClassCodegenProcessorTest {
           package test.annotation
 
           import com.squareup.moshi.JsonClass
+          import com.squareup.moshi.JsonQualifier
 
-          annotation class AnAnnotation
+          @JsonQualifier
+          annotation class UpperCase
 
           @JsonClass(generateAdapter = true)
-          data class ClassWithAnnotation(@AnAnnotation val a: Int)
+          class ClassWithQualifier(@UpperCase val a: Int)
           """
       )
     )
