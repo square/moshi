@@ -40,6 +40,8 @@ class JsonClassCodegenProcessorTest {
 
   @Test
   fun privateConstructor() {
+    throw RuntimeException("Failing test!")
+
     val result = compile(
       kotlin(
         "source.kt",
