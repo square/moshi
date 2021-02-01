@@ -469,28 +469,6 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test
-  fun `Processor should not fail with a qualifier that placed in 'annotation' package`() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
-          package test.annotation
-
-          import com.squareup.moshi.JsonClass
-          import com.squareup.moshi.JsonQualifier
-
-          @JsonQualifier
-          annotation class UpperCase
-
-          @JsonClass(generateAdapter = true)
-          class ClassWithQualifier(@UpperCase val a: Int)
-          """
-      )
-    )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-  }
-
-  @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
       kotlin(
