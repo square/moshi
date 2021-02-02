@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   kotlin("jvm")
   kotlin("kapt")
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    freeCompilerArgs = listOf("-progressive")
-  }
 }
 
 dependencies {

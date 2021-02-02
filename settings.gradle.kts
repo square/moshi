@@ -23,7 +23,9 @@ pluginManagement {
 
 rootProject.name = "moshi-root"
 include(":moshi")
+include(":moshi:japicmp")
 include(":adapters")
+include(":adapters:japicmp")
 include(":examples")
 include(":kotlin:reflect")
 include(":kotlin:codegen")

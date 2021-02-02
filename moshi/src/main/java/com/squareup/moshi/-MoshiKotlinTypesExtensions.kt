@@ -25,13 +25,13 @@ import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /** Returns the raw [Class] type of this type. */
-val Type.rawType: Class<*> get() = Types.getRawType(this)
+public val Type.rawType: Class<*> get() = Types.getRawType(this)
 
 /**
  * Checks if [this] contains [T]. Returns the subset of [this] without [T], or null if
  * [this] does not contain [T].
  */
-inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? = Types.nextAnnotations(this, T::class.java)
+public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? = Types.nextAnnotations(this, T::class.java)
 
 /**
  * Returns a type that represents an unknown type that extends [T]. For example, if
@@ -39,7 +39,7 @@ inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annot
  * [T] is [Any], this returns `*`, which is shorthand for `out Any?`.
  */
 @ExperimentalStdlibApi
-inline fun <reified T> subtypeOf(): WildcardType {
+public inline fun <reified T> subtypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
     type = Util.boxIfPrimitive(type)
@@ -52,7 +52,7 @@ inline fun <reified T> subtypeOf(): WildcardType {
  * [String], this returns `in String`.
  */
 @ExperimentalStdlibApi
-inline fun <reified T> supertypeOf(): WildcardType {
+public inline fun <reified T> supertypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
     type = Util.boxIfPrimitive(type)
@@ -62,10 +62,10 @@ inline fun <reified T> supertypeOf(): WildcardType {
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
 @ExperimentalStdlibApi
-fun KType.asArrayType(): GenericArrayType = javaType.asArrayType()
+public fun KType.asArrayType(): GenericArrayType = javaType.asArrayType()
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
-fun KClass<*>.asArrayType(): GenericArrayType = java.asArrayType()
+public fun KClass<*>.asArrayType(): GenericArrayType = java.asArrayType()
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
-fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)
+public fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)

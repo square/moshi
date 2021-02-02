@@ -21,6 +21,11 @@ object Dependencies {
   const val ktlintVersion = "0.39.0"
   const val okio = "com.squareup.okio:okio:2.10.0"
 
+  object AnimalSniffer {
+    const val annotations = "org.codehaus.mojo:animal-sniffer-annotations:1.16"
+    const val java7Signature = "org.codehaus.mojo.signature:java17:1.0@signature"
+  }
+
   object AutoService {
     private const val version = "1.0-rc7"
     const val annotations = "com.google.auto.service:auto-service-annotations:$version"
@@ -35,7 +40,6 @@ object Dependencies {
 
   object Kotlin {
     const val version = "1.4.10"
-    const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib:$version"
     const val metadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
   }
 

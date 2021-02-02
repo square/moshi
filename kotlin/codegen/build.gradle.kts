@@ -25,16 +25,11 @@ plugins {
   id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
-configure<JavaPluginExtension> {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
-}
-
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     jvmTarget = "1.8"
-    freeCompilerArgs = listOf(
-      "-progressive",
+    @Suppress("SuspiciousCollectionReassignment")
+    freeCompilerArgs += listOf(
       "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
     )
   }

@@ -17,11 +17,15 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
 
 buildscript {
   dependencies {
     classpath(kotlin("gradle-plugin", version = Dependencies.Kotlin.version))
+    // https://github.com/melix/japicmp-gradle-plugin/issues/36
+    classpath("com.google.guava:guava:28.2-jre")
   }
 }
 
@@ -29,6 +33,8 @@ plugins {
   id("com.vanniktech.maven.publish") version "0.13.0" apply false
   id("org.jetbrains.dokka") version "1.4.10" apply false
   id("com.diffplug.spotless") version "5.6.0"
+  id("ru.vyarus.animalsniffer") version "1.5.1" apply false
+  id("me.champeau.gradle.japicmp") version "0.2.8" apply false
 }
 
 spotless {
@@ -125,6 +131,28 @@ subprojects {
     configure<JavaPluginExtension> {
       sourceCompatibility = JavaVersion.VERSION_1_7
       targetCompatibility = JavaVersion.VERSION_1_7
+    }
+  }
+
+  pluginManager.withPlugin("ru.vyarus.animalsniffer") {
+    dependencies {
+      "compileOnly"(Dependencies.AnimalSniffer.annotations)
+      "signature"(Dependencies.AnimalSniffer.java7Signature)
+    }
+  }
+
+  pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+    tasks.withType<KotlinCompile>().configureEach {
+      kotlinOptions {
+        @Suppress("SuspiciousCollectionReassignment")
+        freeCompilerArgs += listOf("-progressive")
+      }
+    }
+
+    configure<KotlinProjectExtension> {
+      if (project.name != "examples") {
+        explicitApi()
+      }
     }
   }
 
