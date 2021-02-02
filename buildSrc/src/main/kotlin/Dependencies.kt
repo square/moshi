@@ -19,8 +19,7 @@ object Dependencies {
   const val asm = "org.ow2.asm:asm:7.1"
   const val jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
   const val ktlintVersion = "0.39.0"
-  const val okio = "com.squareup.okio:okio:1.17.5"
-  const val okio2 = "com.squareup.okio:okio:2.8.0"
+  const val okio = "com.squareup.okio:okio:2.10.0"
 
   object AutoService {
     private const val version = "1.0-rc7"
@@ -50,8 +49,8 @@ object Dependencies {
 
   object Testing {
     const val assertj = "org.assertj:assertj-core:3.11.1"
-    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.2.11"
-    const val junit = "junit:junit:4.13"
+    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.3.4"
+    const val junit = "junit:junit:4.13.1"
     const val truth = "com.google.truth:truth:1.0.1"
   }
 }

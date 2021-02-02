@@ -83,7 +83,6 @@ dependencies {
   testImplementation(Dependencies.Testing.junit)
   testImplementation(Dependencies.Testing.truth)
   testImplementation(Dependencies.Testing.compileTesting)
-  testImplementation(Dependencies.okio2)
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {

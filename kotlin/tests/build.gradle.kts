@@ -39,5 +39,4 @@ dependencies {
   testImplementation(Dependencies.Testing.junit)
   testImplementation(Dependencies.Testing.assertj)
   testImplementation(Dependencies.Testing.truth)
-  testImplementation(Dependencies.okio2)
 }
