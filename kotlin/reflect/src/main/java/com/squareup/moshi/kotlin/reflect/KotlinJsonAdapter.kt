@@ -94,7 +94,7 @@ internal class KotlinJsonAdapter<T>(
     reader.endObject()
 
     // Confirm all parameters are present, optional, or nullable.
-    var isFullInitialized = true
+    var isFullInitialized = allBindings.size == constructorSize
     for (i in 0 until constructorSize) {
       if (values[i] === ABSENT_VALUE) {
         when {
