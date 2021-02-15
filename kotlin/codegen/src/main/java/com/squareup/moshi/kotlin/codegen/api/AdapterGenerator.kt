@@ -80,7 +80,9 @@ internal class AdapterGenerator(
       "RedundantExplicitType",
       // NameAllocator will just add underscores to differentiate names, which Kotlin doesn't
       // like for stylistic reasons.
-      "LocalVariableName"
+      "LocalVariableName",
+      // KotlinPoet always generates explicit public modifiers for public members.
+      "RedundantVisibilityModifier"
     ).let { suppressions ->
       AnnotationSpec.builder(Suppress::class)
         .addMember(
