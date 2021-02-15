@@ -39,10 +39,14 @@ import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asTypeName
 
 internal fun TypeName.rawType(): ClassName {
+  return findRawType() ?: throw IllegalArgumentException("Cannot get raw type from $this")
+}
+
+internal fun TypeName.findRawType(): ClassName? {
   return when (this) {
     is ClassName -> this
     is ParameterizedTypeName -> rawType
-    else -> throw IllegalArgumentException("Cannot get raw type from $this")
+    else -> null
   }
 }
 
