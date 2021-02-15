@@ -1363,6 +1363,16 @@ class GeneratedAdaptersTest {
   data class MultipleGenerics<A, B, C, D>(val prop: String)
 }
 
+// Regression test for https://github.com/square/moshi/issues/1277
+// Compile-only test
+@JsonClass(generateAdapter = true)
+data class OtherTestModel(val TestModel: TestModel? = null)
+@JsonClass(generateAdapter = true)
+data class TestModel(
+  val someVariable: Int,
+  val anotherVariable: String
+)
+
 // Regression test for https://github.com/square/moshi/issues/1022
 // Compile-only test
 @JsonClass(generateAdapter = true)
