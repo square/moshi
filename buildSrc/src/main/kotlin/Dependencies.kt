@@ -39,7 +39,7 @@ object Dependencies {
   }
 
   object Kotlin {
-    const val version = "1.4.10"
+    const val version = "1.4.30"
     const val metadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.1.0"
   }
 
