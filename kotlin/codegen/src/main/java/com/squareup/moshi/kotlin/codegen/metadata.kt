@@ -231,7 +231,7 @@ internal fun targetType(
   val resolvedTypes = mutableListOf<ResolvedTypeMapping>()
   val superTypes = appliedType.supertypes(types)
     .filterNot { supertype ->
-      @Suppress("DEPRECATION")
+      @Suppress("DEPRECATION") // Appropriate in this case
       supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
         supertype.element.kind != ElementKind.CLASS // Don't load properties for interface types.
     }
@@ -271,7 +271,7 @@ internal fun targetType(
         val superSuperClass = supertype.element.superclass as DeclaredType
 
         // Convert to an element and back to wipe the typed generics off of this
-        @Suppress("DEPRECATION")
+        @Suppress("DEPRECATION") // Appropriate in this case
         val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
         resolvedTypes += ResolvedTypeMapping(
           target = untyped.rawType,
@@ -287,7 +287,7 @@ internal fun targetType(
     }
 
   for ((localAppliedType, supertypeApi) in superTypes.entries) {
-    @Suppress("DEPRECATION")
+    @Suppress("DEPRECATION") // Appropriate in this case
     val appliedClassName = localAppliedType.element.asClassName()
     val supertypeProperties = declaredProperties(
       constructor = constructor,
@@ -315,7 +315,7 @@ internal fun targetType(
     if (forceInternal) KModifier.INTERNAL else visibility
   }
 
-  @Suppress("DEPRECATION")
+  @Suppress("DEPRECATION") // Appropriate in this case
   return TargetType(
     typeName = element.asType().asTypeName(),
     constructor = constructor,
