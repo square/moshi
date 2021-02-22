@@ -60,9 +60,11 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
   }
+  api(Dependencies.KotlinPoet.elementsClassInspector)
   shade(Dependencies.KotlinPoet.elementsClassInspector) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
+    exclude(group = "com.google.guava")
   }
   api(Dependencies.asm)
 

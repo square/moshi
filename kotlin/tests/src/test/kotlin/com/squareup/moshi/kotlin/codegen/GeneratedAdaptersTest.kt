@@ -28,6 +28,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
+import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackage
+import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackageJsonAdapter
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertNull
 import org.junit.Assert.fail
@@ -509,6 +511,22 @@ class GeneratedAdaptersTest {
 
   @JsonClass(generateAdapter = true)
   class ConstructorParameterWithQualifier(@Uppercase(inFrench = true) var a: String, var b: String)
+
+  @Test fun constructorParameterWithQualifierInAnnotationPackage() {
+    val moshi = Moshi.Builder()
+      .add(UppercaseInAnnotationPackageJsonAdapter())
+      .build()
+    val jsonAdapter = moshi.adapter<ConstructorParameterWithQualifierInAnnotationPackage>()
+
+    val encoded = ConstructorParameterWithQualifierInAnnotationPackage("Android")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":"ANDROID"}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":"Android"}""")!!
+    assertThat(decoded.a).isEqualTo("android")
+  }
+
+  @JsonClass(generateAdapter = true)
+  class ConstructorParameterWithQualifierInAnnotationPackage(@UppercaseInAnnotationPackage var a: String)
 
   @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()

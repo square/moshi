@@ -488,7 +488,10 @@ internal fun TargetProperty.generator(
 private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return filterTo(mutableSetOf()) {
-    elements.getTypeElement(it.typeName.toString()).getAnnotation(JSON_QUALIFIER) != null
+    val typeElement = checkNotNull(elements.getTypeElement(it.typeName.rawType().canonicalName)) {
+      "Could not get the type element of $it"
+    }
+    typeElement.getAnnotation(JSON_QUALIFIER) != null
   }
 }
 
