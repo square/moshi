@@ -1464,5 +1464,13 @@ data class Hotwords(
   val `class`: List<String>?
 )
 
+// Regression test for https://github.com/square/moshi/issues/1265
+@JsonClass(generateAdapter = true)
+data class LambdaTypeName(
+  val id: String,
+  @Transient
+  val custom: ((String) -> Boolean)? = null
+)
+
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
