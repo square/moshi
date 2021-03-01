@@ -42,7 +42,7 @@ public abstract class JsonAdapter<T> {
    * Decodes a nullable instance of type {@link T} from the given {@code reader}.
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *                           the caller.
+   *     the caller.
    */
   @CheckReturnValue
   public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
@@ -51,7 +51,7 @@ public abstract class JsonAdapter<T> {
    * Decodes a nullable instance of type {@link T} from the given {@code source}.
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *                           the caller.
+   *     the caller.
    */
   @CheckReturnValue
   public final @Nullable T fromJson(BufferedSource source) throws IOException {
@@ -62,7 +62,7 @@ public abstract class JsonAdapter<T> {
    * Decodes a nullable instance of type {@link T} from the given {@code string}.
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *                           the caller.
+   *     the caller.
    */
   @CheckReturnValue
   public final @Nullable T fromJson(String string) throws IOException {
