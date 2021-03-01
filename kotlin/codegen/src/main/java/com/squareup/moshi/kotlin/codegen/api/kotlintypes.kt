@@ -27,6 +27,7 @@ import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.NOTHING
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -46,6 +47,18 @@ internal fun TypeName.findRawType(): ClassName? {
   return when (this) {
     is ClassName -> this
     is ParameterizedTypeName -> rawType
+    is LambdaTypeName -> {
+      var count = parameters.size
+      if (receiver != null) {
+        count++
+      }
+      val functionSimpleName = if (count >= 23) {
+        "FunctionN"
+      } else {
+        "Function$count"
+      }
+      ClassName("kotlin.jvm.functions", functionSimpleName)
+    }
     else -> null
   }
 }
@@ -80,6 +93,7 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
       val bound = bounds.firstOrNull() ?: ANY
       return bound.asTypeBlock()
     }
+    is LambdaTypeName -> return rawType().asTypeBlock()
     is ClassName -> {
       // Check against the non-nullable version for equality, but we'll keep the nullability in
       // consideration when creating the CodeBlock if needed.
@@ -149,6 +163,14 @@ internal fun WildcardTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeN
     }
     else -> throw UnsupportedOperationException("Not possible.")
   }
+}
+
+internal fun LambdaTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeName {
+  return LambdaTypeName.get(
+    receiver?.let(transform),
+    parameters.map { it.toBuilder(type = transform(it.type)).build() },
+    transform(returnType)
+  ).copy(nullable = isNullable, annotations = annotations, suspending = isSuspending)
 }
 
 internal interface TypeVariableResolver {
