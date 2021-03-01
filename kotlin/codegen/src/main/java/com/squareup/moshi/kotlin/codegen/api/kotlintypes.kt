@@ -78,7 +78,7 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
           // "generic" array just uses the component's raw type
           // java.lang.reflect.Array.newInstance(<raw-type>, 0).javaClass
           CodeBlock.of(
-            "%T.newInstance(%T::class.java, 0).javaClass",
+            "%T.newInstance(%L, 0).javaClass",
             Array::class.java.asClassName(),
             componentType.rawType.asTypeBlock()
           )
