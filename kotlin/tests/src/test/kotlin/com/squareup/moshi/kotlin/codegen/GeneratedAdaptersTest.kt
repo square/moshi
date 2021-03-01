@@ -1455,7 +1455,9 @@ data class SmokeTestType(
   val favoriteNullableArrayValues: Array<String?>,
   val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
   val aliasedName: TypeAliasName = "Woah",
-  val genericAlias: GenericTypeAlias = listOf("Woah")
+  val genericAlias: GenericTypeAlias = listOf("Woah"),
+  // Regression test for https://github.com/square/moshi/issues/1272
+  val nestedArray: Array<Map<String, Any>>? = null
 )
 
 // Compile only, regression test for https://github.com/square/moshi/issues/848
