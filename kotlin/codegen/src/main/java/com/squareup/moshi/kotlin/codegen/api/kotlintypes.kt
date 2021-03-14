@@ -36,7 +36,9 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import java.lang.reflect.Array
 
 internal fun TypeName.rawType(): ClassName {
   return findRawType() ?: throw IllegalArgumentException("Cannot get raw type from $this")
@@ -71,7 +73,18 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
   when (this) {
     is ParameterizedTypeName -> {
       return if (rawType == ARRAY) {
-        CodeBlock.of("%T::class.java", copy(nullable = false))
+        val componentType = typeArguments[0]
+        if (componentType is ParameterizedTypeName) {
+          // "generic" array just uses the component's raw type
+          // java.lang.reflect.Array.newInstance(<raw-type>, 0).javaClass
+          CodeBlock.of(
+            "%T.newInstance(%L, 0).javaClass",
+            Array::class.java.asClassName(),
+            componentType.rawType.asTypeBlock()
+          )
+        } else {
+          CodeBlock.of("%T::class.java", copy(nullable = false))
+        }
       } else {
         rawType.asTypeBlock()
       }
