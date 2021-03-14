@@ -37,14 +37,33 @@ import okio.BufferedSource;
  * <p>Custom JsonAdapter implementations should be designed to be thread-safe.
  */
 public abstract class JsonAdapter<T> {
+
+  /**
+   * Decodes a nullable instance of type {@link T} from the given {@code reader}.
+   *
+   * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
+   *     the caller.
+   */
   @CheckReturnValue
   public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
 
+  /**
+   * Decodes a nullable instance of type {@link T} from the given {@code source}.
+   *
+   * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
+   *     the caller.
+   */
   @CheckReturnValue
   public final @Nullable T fromJson(BufferedSource source) throws IOException {
     return fromJson(JsonReader.of(source));
   }
 
+  /**
+   * Decodes a nullable instance of type {@link T} from the given {@code string}.
+   *
+   * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
+   *     the caller.
+   */
   @CheckReturnValue
   public final @Nullable T fromJson(String string) throws IOException {
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
@@ -55,6 +74,7 @@ public abstract class JsonAdapter<T> {
     return result;
   }
 
+  /** Encodes the given {@code value} with the given {@code writer}. */
   public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
 
   public final void toJson(BufferedSink sink, @Nullable T value) throws IOException {
@@ -62,6 +82,7 @@ public abstract class JsonAdapter<T> {
     toJson(writer, value);
   }
 
+  /** Encodes the given {@code value} into a String and returns it. */
   @CheckReturnValue
   public final String toJson(@Nullable T value) {
     Buffer buffer = new Buffer();
