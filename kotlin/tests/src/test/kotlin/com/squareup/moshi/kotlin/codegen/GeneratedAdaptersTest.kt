@@ -1379,6 +1379,26 @@ class GeneratedAdaptersTest {
 
   @JsonClass(generateAdapter = true)
   data class MultipleGenerics<A, B, C, D>(val prop: String)
+
+  @Test fun functionPropertyTypes() {
+    val adapter = moshi.adapter<LambdaTypeNames>()
+    val json = "{\"id\":\"value\"}"
+    assertThat(adapter.fromJson(json)).isEqualTo(LambdaTypeNames("value"))
+  }
+
+  // Regression test for https://github.com/square/moshi/issues/1265
+  @JsonClass(generateAdapter = true)
+  data class LambdaTypeNames(
+    val id: String,
+    @Transient
+    val simple: ((String) -> Boolean)? = null,
+    // Receivers count as the first param, just annotated with a special annotation to indicate it's a receiver
+    @Transient
+    val receiver: (String.(String) -> Boolean)? = null,
+    // Tests that we use `FunctionN` since it has more than 23 params
+    @Transient
+    val arity: (String.(String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> Boolean)? = null,
+  )
 }
 
 // Regression test for https://github.com/square/moshi/issues/1277

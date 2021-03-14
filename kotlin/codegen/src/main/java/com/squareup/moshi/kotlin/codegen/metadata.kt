@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
@@ -530,6 +531,7 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
     is ParameterizedTypeName -> deepCopy(TypeName::unwrapTypeAlias)
     is TypeVariableName -> deepCopy(transform = TypeName::unwrapTypeAlias)
     is WildcardTypeName -> deepCopy(TypeName::unwrapTypeAlias)
+    is LambdaTypeName -> deepCopy(TypeName::unwrapTypeAlias)
     else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }
