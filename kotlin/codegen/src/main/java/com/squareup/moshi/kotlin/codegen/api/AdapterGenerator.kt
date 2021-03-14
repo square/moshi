@@ -553,7 +553,12 @@ internal class AdapterGenerator(
           // We have to use the default primitive for the available type in order for
           // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
           // the transient type may be a primitive type.
-          result.addCode(input.type.rawType().defaultPrimitiveValue())
+          // Inline a little comment for readability indicating which parameter is it's referring to
+          result.addCode(
+            "/*·%L·*/·%L",
+            input.parameter.name,
+            input.type.rawType().defaultPrimitiveValue()
+          )
         } else {
           result.addCode("%N", (input as ParameterProperty).property.localName)
         }
@@ -580,7 +585,7 @@ internal class AdapterGenerator(
 
     if (useDefaultsConstructor) {
       // Add the masks and a null instance for the trailing default marker instance
-      result.addCode(",\n%L,\nnull", maskNames.map { CodeBlock.of("%L", it) }.joinToCode(", "))
+      result.addCode(",\n%L,\n/*·DefaultConstructorMarker·*/·null", maskNames.map { CodeBlock.of("%L", it) }.joinToCode(", "))
     }
 
     result.addCode("\n»)\n")
