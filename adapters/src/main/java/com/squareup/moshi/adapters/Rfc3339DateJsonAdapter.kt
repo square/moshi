@@ -41,7 +41,7 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
       return reader.nextNull()
     }
     val string = reader.nextString()
-    return Iso8601Utils.parse(string)
+    return string.parseIsoDate()
   }
 
   @Synchronized
@@ -50,7 +50,7 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
     if (value == null) {
       writer.nullValue()
     } else {
-      val string = Iso8601Utils.format(value)
+      val string = value.formatIsoDate()
       writer.value(string)
     }
   }
