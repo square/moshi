@@ -98,8 +98,8 @@ internal fun String.parseIsoDate(): Date {
     var hour = 0
     var minutes = 0
     var seconds = 0
-    var milliseconds =
-      0 // always use 0 otherwise returned date will include millis of current time
+    // always use 0 otherwise returned date will include millis of current time
+    var milliseconds = 0
 
     // if the value has no time component (and no time zone), we are done
     val hasT = checkOffset(this, offset, 'T')
@@ -156,7 +156,8 @@ internal fun String.parseIsoDate(): Date {
         timezone = TimeZone.getTimeZone(timezoneId)
         val act = timezone.id
         if (act != timezoneId) {
-          /* 22-Jan-2015, tatu: Looks like canonical version has colons, but we may be given
+          /*
+           * 22-Jan-2015, tatu: Looks like canonical version has colons, but we may be given
            *    one without. If so, don't sweat.
            *   Yes, very inefficient. Hopefully not hit often.
            *   If it becomes a perf problem, add 'loose' comparison instead.
@@ -217,7 +218,6 @@ private fun checkOffset(value: String, offset: Int, expected: Char): Boolean {
  * @return the int
  * @throws NumberFormatException if the value is not a number
  */
-@Throws(NumberFormatException::class)
 private fun parseInt(value: String, beginIndex: Int, endIndex: Int): Int {
   if (beginIndex < 0 || endIndex > value.length || beginIndex > endIndex) {
     throw NumberFormatException(value)
