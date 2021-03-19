@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc.
+ * Copyright (C) 2011 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,13 +214,13 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         val labelIndex = reader.selectString(labelOptions)
         if (labelIndex == -1 && fallbackJsonAdapter == null) {
           throw JsonDataException(
-            "Expected one of "
-              + labels
-              + " for key '"
-              + labelKey
-              + "' but found '"
-              + reader.nextString()
-              + "'. Register a subtype for this label."
+            "Expected one of " +
+              labels +
+              " for key '" +
+              labelKey +
+              "' but found '" +
+              reader.nextString() +
+              "'. Register a subtype for this label."
           )
         }
         return labelIndex
@@ -253,7 +253,6 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     override fun toString(): String {
       return "PolymorphicJsonAdapter($labelKey)"
     }
-
   }
 
   public companion object {

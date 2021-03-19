@@ -17,12 +17,12 @@ package com.squareup.moshi.adapters
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
-import java.io.IOException
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonReader.Token.STRING
 import com.squareup.moshi.JsonWriter
+import java.io.IOException
 import java.lang.NoSuchFieldException
 
 /**
