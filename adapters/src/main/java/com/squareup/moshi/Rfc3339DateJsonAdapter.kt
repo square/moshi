@@ -20,8 +20,8 @@ import java.io.IOException
 import java.util.Date
 
 @Deprecated(
-  """this class moved to avoid a package name conflict in the Java Platform Module System.
-      The new class is {@code com.squareup.moshi.adapters.Rfc3339DateJsonAdapter}.""",
+  """This class moved to avoid a package name conflict in the Java Platform Module System.
+      The new class is com.squareup.moshi.adapters.Rfc3339DateJsonAdapter.""",
   replaceWith = ReplaceWith("com.squareup.moshi.adapters.Rfc3339DateJsonAdapter"),
   level = DeprecationLevel.ERROR
 )
