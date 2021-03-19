@@ -13,34 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.adapters;
+package com.squareup.moshi.adapters
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonAdapter.Factory
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonReader.Options
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.rawType
+import java.io.IOException
+import java.lang.reflect.Type
+import java.util.ArrayList
+import javax.annotation.CheckReturnValue
 
 /**
  * A JsonAdapter factory for objects that include type information in the JSON. When decoding JSON
  * Moshi uses this type information to determine which class to decode to. When encoding Moshi uses
  * the object’s class to determine what type information to include.
  *
- * <p>Suppose we have an interface, its implementations, and a class that uses them:
+ * Suppose we have an interface, its implementations, and a class that uses them:
  *
- * <pre>{@code
- * interface HandOfCards {
- * }
+ * ```
+ * interface HandOfCards { }
  *
  * class BlackjackHand implements HandOfCards {
  *   Card hidden_card;
@@ -55,276 +51,227 @@ import javax.annotation.Nullable;
  *   String name;
  *   HandOfCards hand;
  * }
- * }</pre>
+ * ```
  *
- * <p>We want to decode the following JSON into the player model above:
+ * We want to decode the following JSON into the player model above:
  *
- * <pre>{@code
+ * ```
  * {
  *   "name": "Jesse",
- *   "hand": {
+ *     "hand": {
  *     "hand_type": "blackjack",
  *     "hidden_card": "9D",
  *     "visible_cards": ["8H", "4C"]
  *   }
  * }
- * }</pre>
+ *```
  *
- * <p>Left unconfigured, Moshi would incorrectly attempt to decode the hand object to the abstract
- * {@code HandOfCards} interface. We configure it to use the appropriate subtype instead:
+ * Left unconfigured, Moshi would incorrectly attempt to decode the hand object to the abstract
+ * `HandOfCards` interface. We configure it to use the appropriate subtype instead:
  *
- * <pre>{@code
+ * ```
  * Moshi moshi = new Moshi.Builder()
- *     .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
- *         .withSubtype(BlackjackHand.class, "blackjack")
- *         .withSubtype(HoldemHand.class, "holdem"))
- *     .build();
- * }</pre>
+ *   .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
+ *   .withSubtype(BlackjackHand.class, "blackjack")
+ *   .withSubtype(HoldemHand.class, "holdem"))
+ *   .build();
+ * ```
  *
- * <p>This class imposes strict requirements on its use:
+ * This class imposes strict requirements on its use:
+ *  * Base types may be classes or interfaces.
+ *  * Subtypes must encode as JSON objects.
+ *  * Type information must be in the encoded object. Each message must have a type label like
+ * `hand_type` whose value is a string like `blackjack` that identifies which type
+ * to use.
+ *  * Each type identifier must be unique.
  *
- * <ul>
- *   <li>Base types may be classes or interfaces.
- *   <li>Subtypes must encode as JSON objects.
- *   <li>Type information must be in the encoded object. Each message must have a type label like
- *       {@code hand_type} whose value is a string like {@code blackjack} that identifies which type
- *       to use.
- *   <li>Each type identifier must be unique.
- * </ul>
- *
- * <p>For best performance type information should be the first field in the object. Otherwise Moshi
+ * For best performance type information should be the first field in the object. Otherwise Moshi
  * must reprocess the JSON stream once it knows the object's type.
  *
- * <p>If an unknown subtype is encountered when decoding:
+ * If an unknown subtype is encountered when decoding:
+ *  * If [.withDefaultValue] is used, then `defaultValue` will be returned.
+ *  * If [.withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.fromJson(reader)` result will be returned.
+ *  * Otherwise a [JsonDataException] will be thrown.
  *
- * <ul>
- *   <li>If {@link #withDefaultValue(Object)} is used, then {@code defaultValue} will be returned.
- *   <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the {@code
- *       fallbackJsonAdapter.fromJson(reader)} result will be returned.
- *   <li>Otherwise a {@link JsonDataException} will be thrown.
- * </ul>
+ * If an unknown type is encountered when encoding:
+ *  * If [.withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.toJson(writer, value)` result will be returned.
+ *  * Otherwise a [IllegalArgumentException] will be thrown.
  *
- * <p>If an unknown type is encountered when encoding:
- *
- * <ul>
- *   <li>If {@link #withFallbackJsonAdapter(JsonAdapter)} is used, then the {@code
- *       fallbackJsonAdapter.toJson(writer, value)} result will be returned.
- *   <li>Otherwise a {@link IllegalArgumentException} will be thrown.
- * </ul>
- *
- * <p>If the same subtype has multiple labels the first one is used when encoding.
+ * If the same subtype has multiple labels the first one is used when encoding.
  */
-public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Factory {
-  final Class<T> baseType;
-  final String labelKey;
-  final List<String> labels;
-  final List<Type> subtypes;
-  @Nullable final JsonAdapter<Object> fallbackJsonAdapter;
-
-  PolymorphicJsonAdapterFactory(
-      Class<T> baseType,
-      String labelKey,
-      List<String> labels,
-      List<Type> subtypes,
-      @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
-    this.baseType = baseType;
-    this.labelKey = labelKey;
-    this.labels = labels;
-    this.subtypes = subtypes;
-    this.fallbackJsonAdapter = fallbackJsonAdapter;
+public class PolymorphicJsonAdapterFactory<T> internal constructor(
+  private val baseType: Class<T>,
+  private val labelKey: String,
+  private val labels: List<String>,
+  private val subtypes: List<Type>,
+  private val fallbackJsonAdapter: JsonAdapter<Any>?
+) : Factory {
+  /** Returns a new factory that decodes instances of `subtype`. */
+  public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
+    require(!labels.contains(label)) { "Labels must be unique." }
+    val newLabels: MutableList<String> = ArrayList(
+      labels
+    )
+    newLabels.add(label)
+    val newSubtypes: MutableList<Type> = ArrayList(
+      subtypes
+    )
+    newSubtypes.add(subtype)
+    return PolymorphicJsonAdapterFactory(
+      baseType = baseType,
+      labelKey = labelKey,
+      labels = newLabels,
+      subtypes = newSubtypes,
+      fallbackJsonAdapter = fallbackJsonAdapter
+    )
   }
 
   /**
-   * @param baseType The base type for which this factory will create adapters. Cannot be Object.
-   * @param labelKey The key in the JSON object whose value determines the type to which to map the
-   *     JSON object.
-   */
-  @CheckReturnValue
-  public static <T> PolymorphicJsonAdapterFactory<T> of(Class<T> baseType, String labelKey) {
-    if (baseType == null) throw new NullPointerException("baseType == null");
-    if (labelKey == null) throw new NullPointerException("labelKey == null");
-    return new PolymorphicJsonAdapterFactory<>(
-        baseType, labelKey, Collections.<String>emptyList(), Collections.<Type>emptyList(), null);
-  }
-
-  /** Returns a new factory that decodes instances of {@code subtype}. */
-  public PolymorphicJsonAdapterFactory<T> withSubtype(Class<? extends T> subtype, String label) {
-    if (subtype == null) throw new NullPointerException("subtype == null");
-    if (label == null) throw new NullPointerException("label == null");
-    if (labels.contains(label)) {
-      throw new IllegalArgumentException("Labels must be unique.");
-    }
-    List<String> newLabels = new ArrayList<>(labels);
-    newLabels.add(label);
-    List<Type> newSubtypes = new ArrayList<>(subtypes);
-    newSubtypes.add(subtype);
-    return new PolymorphicJsonAdapterFactory<>(
-        baseType, labelKey, newLabels, newSubtypes, fallbackJsonAdapter);
-  }
-
-  /**
-   * Returns a new factory that with default to {@code fallbackJsonAdapter.fromJson(reader)} upon
+   * Returns a new factory that with default to `fallbackJsonAdapter.fromJson(reader)` upon
    * decoding of unrecognized labels.
    *
-   * <p>The {@link JsonReader} instance will not be automatically consumed, so make sure to consume
-   * it within your implementation of {@link JsonAdapter#fromJson(JsonReader)}
+   * The [JsonReader] instance will not be automatically consumed, so make sure to consume
+   * it within your implementation of [JsonAdapter.fromJson]
    */
-  public PolymorphicJsonAdapterFactory<T> withFallbackJsonAdapter(
-      @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
-    return new PolymorphicJsonAdapterFactory<>(
-        baseType, labelKey, labels, subtypes, fallbackJsonAdapter);
+  public fun withFallbackJsonAdapter(
+    fallbackJsonAdapter: JsonAdapter<Any>
+  ): PolymorphicJsonAdapterFactory<T> {
+    return PolymorphicJsonAdapterFactory(
+      baseType = baseType,
+      labelKey = labelKey,
+      labels = labels,
+      subtypes = subtypes,
+      fallbackJsonAdapter = fallbackJsonAdapter
+    )
   }
 
   /**
-   * Returns a new factory that will default to {@code defaultValue} upon decoding of unrecognized
+   * Returns a new factory that will default to `defaultValue` upon decoding of unrecognized
    * labels. The default value should be immutable.
    */
-  public PolymorphicJsonAdapterFactory<T> withDefaultValue(@Nullable T defaultValue) {
-    return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue));
+  public fun withDefaultValue(defaultValue: T?): PolymorphicJsonAdapterFactory<T> {
+    return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
   }
 
-  private JsonAdapter<Object> buildFallbackJsonAdapter(final T defaultValue) {
-    return new JsonAdapter<Object>() {
-      @Override
-      public @Nullable Object fromJson(JsonReader reader) throws IOException {
-        reader.skipValue();
-        return defaultValue;
+  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any> {
+    return object : JsonAdapter<Any>() {
+      override fun fromJson(reader: JsonReader): Any? {
+        reader.skipValue()
+        return defaultValue
       }
 
-      @Override
-      public void toJson(JsonWriter writer, Object value) throws IOException {
-        throw new IllegalArgumentException(
-            "Expected one of "
-                + subtypes
-                + " but found "
-                + value
-                + ", a "
-                + value.getClass()
-                + ". Register this subtype.");
+      override fun toJson(writer: JsonWriter, value: Any?) {
+        throw IllegalArgumentException(
+          "Expected one of $subtypes but found $value, a ${value?.javaClass}. Register this subtype."
+        )
       }
-    };
+    }
   }
 
-  @Override
-  public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-    if (Types.getRawType(type) != baseType || !annotations.isEmpty()) {
-      return null;
+  override fun create(type: Type, annotations: Set<Annotation?>, moshi: Moshi): JsonAdapter<*>? {
+    if (type.rawType != baseType || annotations.isNotEmpty()) {
+      return null
     }
-
-    List<JsonAdapter<Object>> jsonAdapters = new ArrayList<>(subtypes.size());
-    for (int i = 0, size = subtypes.size(); i < size; i++) {
-      jsonAdapters.add(moshi.adapter(subtypes.get(i)));
+    val jsonAdapters: List<JsonAdapter<Any>> = List(subtypes.size) { i ->
+      moshi.adapter(subtypes[i])
     }
-
-    return new PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
-        .nullSafe();
+    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+      .nullSafe()
   }
 
-  static final class PolymorphicJsonAdapter extends JsonAdapter<Object> {
-    final String labelKey;
-    final List<String> labels;
-    final List<Type> subtypes;
-    final List<JsonAdapter<Object>> jsonAdapters;
-    @Nullable final JsonAdapter<Object> fallbackJsonAdapter;
+  internal class PolymorphicJsonAdapter(
+    private val labelKey: String,
+    private val labels: List<String>,
+    private val subtypes: List<Type>,
+    private val jsonAdapters: List<JsonAdapter<Any>>,
+    private val fallbackJsonAdapter: JsonAdapter<Any>?
+  ) : JsonAdapter<Any>() {
+    /** Single-element options containing the label's key only.  */
+    private val labelKeyOptions: Options = Options.of(labelKey)
 
-    /** Single-element options containing the label's key only. */
-    final JsonReader.Options labelKeyOptions;
-    /** Corresponds to subtypes. */
-    final JsonReader.Options labelOptions;
+    /** Corresponds to subtypes.  */
+    private val labelOptions: Options = Options.of(*labels.toTypedArray())
 
-    PolymorphicJsonAdapter(
-        String labelKey,
-        List<String> labels,
-        List<Type> subtypes,
-        List<JsonAdapter<Object>> jsonAdapters,
-        @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
-      this.labelKey = labelKey;
-      this.labels = labels;
-      this.subtypes = subtypes;
-      this.jsonAdapters = jsonAdapters;
-      this.fallbackJsonAdapter = fallbackJsonAdapter;
-
-      this.labelKeyOptions = JsonReader.Options.of(labelKey);
-      this.labelOptions = JsonReader.Options.of(labels.toArray(new String[0]));
-    }
-
-    @Override
-    public Object fromJson(JsonReader reader) throws IOException {
-      JsonReader peeked = reader.peekJson();
-      peeked.setFailOnUnknown(false);
-      int labelIndex;
-      try {
-        labelIndex = labelIndex(peeked);
-      } finally {
-        peeked.close();
-      }
-      if (labelIndex == -1) {
-        return this.fallbackJsonAdapter.fromJson(reader);
+    override fun fromJson(reader: JsonReader): Any? {
+      val peeked = reader.peekJson()
+      peeked.setFailOnUnknown(false)
+      val labelIndex = peeked.use(::labelIndex)
+      return if (labelIndex == -1) {
+        fallbackJsonAdapter?.fromJson(reader)
       } else {
-        return jsonAdapters.get(labelIndex).fromJson(reader);
+        jsonAdapters[labelIndex].fromJson(reader)
       }
     }
 
-    private int labelIndex(JsonReader reader) throws IOException {
-      reader.beginObject();
+    private fun labelIndex(reader: JsonReader): Int {
+      reader.beginObject()
       while (reader.hasNext()) {
         if (reader.selectName(labelKeyOptions) == -1) {
-          reader.skipName();
-          reader.skipValue();
-          continue;
+          reader.skipName()
+          reader.skipValue()
+          continue
         }
-
-        int labelIndex = reader.selectString(labelOptions);
-        if (labelIndex == -1 && this.fallbackJsonAdapter == null) {
-          throw new JsonDataException(
-              "Expected one of "
-                  + labels
-                  + " for key '"
-                  + labelKey
-                  + "' but found '"
-                  + reader.nextString()
-                  + "'. Register a subtype for this label.");
+        val labelIndex = reader.selectString(labelOptions)
+        if (labelIndex == -1 && fallbackJsonAdapter == null) {
+          throw JsonDataException(
+            "Expected one of "
+              + labels
+              + " for key '"
+              + labelKey
+              + "' but found '"
+              + reader.nextString()
+              + "'. Register a subtype for this label."
+          )
         }
-        return labelIndex;
+        return labelIndex
       }
-
-      throw new JsonDataException("Missing label for " + labelKey);
+      throw JsonDataException("Missing label for $labelKey")
     }
 
-    @Override
-    public void toJson(JsonWriter writer, Object value) throws IOException {
-      Class<?> type = value.getClass();
-      int labelIndex = subtypes.indexOf(type);
-      final JsonAdapter<Object> adapter;
-      if (labelIndex == -1) {
-        if (fallbackJsonAdapter == null) {
-          throw new IllegalArgumentException(
-              "Expected one of "
-                  + subtypes
-                  + " but found "
-                  + value
-                  + ", a "
-                  + value.getClass()
-                  + ". Register this subtype.");
+    @Throws(IOException::class)
+    override fun toJson(writer: JsonWriter, value: Any?) {
+      val type: Class<*> = value!!.javaClass
+      val labelIndex = subtypes.indexOf(type)
+      val adapter: JsonAdapter<Any> = if (labelIndex == -1) {
+        requireNotNull(fallbackJsonAdapter) {
+          "Expected one of $subtypes but found $value, a ${value.javaClass}. Register this subtype."
         }
-        adapter = fallbackJsonAdapter;
+        fallbackJsonAdapter
       } else {
-        adapter = jsonAdapters.get(labelIndex);
+        jsonAdapters[labelIndex]
       }
-
-      writer.beginObject();
-      if (adapter != fallbackJsonAdapter) {
-        writer.name(labelKey).value(labels.get(labelIndex));
+      writer.beginObject()
+      if (adapter !== fallbackJsonAdapter) {
+        writer.name(labelKey).value(labels[labelIndex])
       }
-      int flattenToken = writer.beginFlatten();
-      adapter.toJson(writer, value);
-      writer.endFlatten(flattenToken);
-      writer.endObject();
+      val flattenToken = writer.beginFlatten()
+      adapter.toJson(writer, value)
+      writer.endFlatten(flattenToken)
+      writer.endObject()
     }
 
-    @Override
-    public String toString() {
-      return "PolymorphicJsonAdapter(" + labelKey + ")";
+    override fun toString(): String {
+      return "PolymorphicJsonAdapter($labelKey)"
+    }
+
+  }
+
+  public companion object {
+    /**
+     * @param baseType The base type for which this factory will create adapters. Cannot be Object.
+     * @param labelKey The key in the JSON object whose value determines the type to which to map the
+     * JSON object.
+     */
+    @JvmStatic
+    @CheckReturnValue
+    public fun <T> of(baseType: Class<T>, labelKey: String): PolymorphicJsonAdapterFactory<T> {
+      return PolymorphicJsonAdapterFactory(
+        baseType = baseType,
+        labelKey = labelKey,
+        labels = emptyList(),
+        subtypes = emptyList(),
+        fallbackJsonAdapter = null
+      )
     }
   }
 }
