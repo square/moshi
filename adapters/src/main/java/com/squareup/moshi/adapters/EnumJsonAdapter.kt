@@ -13,39 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.adapters;
+package com.squareup.moshi.adapters
 
-import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import java.io.IOException;
-import java.util.Arrays;
-import javax.annotation.Nullable;
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonAdapter
+import java.io.IOException
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonReader.Options
+import com.squareup.moshi.JsonReader.Token.STRING
+import com.squareup.moshi.JsonWriter
+import java.lang.NoSuchFieldException
 
 /**
  * A JsonAdapter for enums that allows having a fallback enum value when a deserialized string does
- * not match any enum value. To use, add this as an adapter for your enum type on your {@link
- * com.squareup.moshi.Moshi.Builder Moshi.Builder}:
+ * not match any enum value. To use, add this as an adapter for your enum type on your [ ]:
  *
- * <pre>{@code
+ * ```
  * Moshi moshi = new Moshi.Builder()
- *     .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
- *         .withUnknownFallback(CurrencyCode.USD))
- *     .build();
- * }</pre>
+ *   .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
+ *   .withUnknownFallback(CurrencyCode.USD))
+ *   .build();
+ * ```
  */
-public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
-  final Class<T> enumType;
-  final String[] nameStrings;
-  final T[] constants;
-  final JsonReader.Options options;
-  final boolean useFallbackValue;
-  final @Nullable T fallbackValue;
+public class EnumJsonAdapter<T : Enum<T>> internal constructor(
+  private val enumType: Class<T>,
+  private val fallbackValue: T?,
+  private val useFallbackValue: Boolean,
+) : JsonAdapter<T>() {
 
-  public static <T extends Enum<T>> EnumJsonAdapter<T> create(Class<T> enumType) {
-    return new EnumJsonAdapter<>(enumType, null, false);
+  private val constants: Array<T>
+  private var options: Options
+  private val nameStrings: Array<String>
+
+  init {
+    try {
+      constants = enumType.enumConstants
+      nameStrings = Array(constants.size) { i ->
+        val constantName = constants[i].name
+        val annotation = enumType.getField(constantName)
+          .getAnnotation(Json::class.java)
+        annotation?.name ?: constantName
+      }
+      options = Options.of(*nameStrings)
+    } catch (e: NoSuchFieldException) {
+      throw AssertionError("Missing field in " + enumType.name, e)
+    }
   }
 
   /**
@@ -54,64 +67,46 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
    * null, absent, or not a string. Also, the string values are case-sensitive, and this fallback
    * value will be used even on case mismatches.
    */
-  public EnumJsonAdapter<T> withUnknownFallback(@Nullable T fallbackValue) {
-    return new EnumJsonAdapter<>(enumType, fallbackValue, true);
+  public fun withUnknownFallback(fallbackValue: T?): EnumJsonAdapter<T> {
+    return EnumJsonAdapter(enumType, fallbackValue, true)
   }
 
-  EnumJsonAdapter(Class<T> enumType, @Nullable T fallbackValue, boolean useFallbackValue) {
-    this.enumType = enumType;
-    this.fallbackValue = fallbackValue;
-    this.useFallbackValue = useFallbackValue;
-    try {
-      constants = enumType.getEnumConstants();
-      nameStrings = new String[constants.length];
-      for (int i = 0; i < constants.length; i++) {
-        String constantName = constants[i].name();
-        Json annotation = enumType.getField(constantName).getAnnotation(Json.class);
-        String name = annotation != null ? annotation.name() : constantName;
-        nameStrings[i] = name;
-      }
-      options = JsonReader.Options.of(nameStrings);
-    } catch (NoSuchFieldException e) {
-      throw new AssertionError("Missing field in " + enumType.getName(), e);
-    }
-  }
-
-  @Override
-  public @Nullable T fromJson(JsonReader reader) throws IOException {
-    int index = reader.selectString(options);
-    if (index != -1) return constants[index];
-
-    String path = reader.getPath();
+  @Throws(IOException::class)
+  override fun fromJson(reader: JsonReader): T? {
+    val index = reader.selectString(options)
+    if (index != -1) return constants[index]
+    val path = reader.path
     if (!useFallbackValue) {
-      String name = reader.nextString();
-      throw new JsonDataException(
-          "Expected one of "
-              + Arrays.asList(nameStrings)
-              + " but was "
-              + name
-              + " at path "
-              + path);
+      val name = reader.nextString()
+      throw JsonDataException(
+        "Expected one of ${nameStrings.toList()} but was $name at path $path"
+      )
     }
-    if (reader.peek() != JsonReader.Token.STRING) {
-      throw new JsonDataException(
-          "Expected a string but was " + reader.peek() + " at path " + path);
+    if (reader.peek() != STRING) {
+      throw JsonDataException(
+        "Expected a string but was " + reader.peek() + " at path " + path
+      )
     }
-    reader.skipValue();
-    return fallbackValue;
+    reader.skipValue()
+    return fallbackValue
   }
 
-  @Override
-  public void toJson(JsonWriter writer, T value) throws IOException {
+  @Throws(IOException::class)
+  override fun toJson(writer: JsonWriter, value: T?) {
     if (value == null) {
-      throw new NullPointerException(
-          "value was null! Wrap in .nullSafe() to write nullable values.");
+      throw NullPointerException(
+        "value was null! Wrap in .nullSafe() to write nullable values."
+      )
     }
-    writer.value(nameStrings[value.ordinal()]);
+    writer.value(nameStrings[value.ordinal])
   }
 
-  @Override
-  public String toString() {
-    return "EnumJsonAdapter(" + enumType.getName() + ")";
+  override fun toString(): String = "EnumJsonAdapter(" + enumType.name + ")"
+
+  public companion object {
+    @JvmStatic
+    public fun <T : Enum<T>> create(enumType: Class<T>): EnumJsonAdapter<T> {
+      return EnumJsonAdapter(enumType, null, false)
+    }
   }
 }
