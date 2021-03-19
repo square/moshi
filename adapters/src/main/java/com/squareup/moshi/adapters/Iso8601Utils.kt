@@ -13,58 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.adapters;
+package com.squareup.moshi.adapters
 
-import com.squareup.moshi.JsonDataException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import com.squareup.moshi.JsonDataException
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
+import java.util.Locale
+import java.util.TimeZone
+import kotlin.math.min
+import kotlin.math.pow
 
 /**
  * Jackson’s date formatter, pruned to Moshi's needs. Forked from this file:
  * https://github.com/FasterXML/jackson-databind/blob/67ebf7305f492285a8f9f4de31545f5f16fc7c3a/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
  *
- * <p>Utilities methods for manipulating dates in iso8601 format. This is much much faster and GC
+ * Utilities methods for manipulating dates in iso8601 format. This is much much faster and GC
  * friendly than using SimpleDateFormat so highly suitable if you (un)serialize lots of date
  * objects.
  *
- * <p>Supported parse format:
- * [yyyy-MM-dd|yyyyMMdd][T(hh:mm[:ss[.sss]]|hhmm[ss[.sss]])]?[Z|[+-]hh[:]mm]]
+ * Supported parse format:
+ * `[yyyy-MM-dd|yyyyMMdd][T(hh:mm[:ss[.sss]]|hhmm[ss[.sss]])]?[Z|[+-]hh[:]mm]]`
  *
- * @see <a href="http://www.w3.org/TR/NOTE-datetime">this specification</a>
+ * @see [this specification](http://www.w3.org/TR/NOTE-datetime)
  */
-final class Iso8601Utils {
-  /** ID to represent the 'GMT' string */
-  static final String GMT_ID = "GMT";
+internal object Iso8601Utils {
+  /** ID to represent the 'GMT' string  */
+  private const val GMT_ID = "GMT"
 
-  /** The GMT timezone, prefetched to avoid more lookups. */
-  static final TimeZone TIMEZONE_Z = TimeZone.getTimeZone(GMT_ID);
+  /** The GMT timezone, prefetched to avoid more lookups.  */
+  private val TIMEZONE_Z: TimeZone = TimeZone.getTimeZone(GMT_ID)
 
-  /** Returns {@code date} formatted as yyyy-MM-ddThh:mm:ss.sssZ */
-  public static String format(Date date) {
-    Calendar calendar = new GregorianCalendar(TIMEZONE_Z, Locale.US);
-    calendar.setTime(date);
+  /** Returns `date` formatted as yyyy-MM-ddThh:mm:ss.sssZ  */
+  fun format(date: Date): String {
+    val calendar: Calendar = GregorianCalendar(TIMEZONE_Z, Locale.US)
+    calendar.time = date
 
     // estimate capacity of buffer as close as we can (yeah, that's pedantic ;)
-    int capacity = "yyyy-MM-ddThh:mm:ss.sssZ".length();
-    StringBuilder formatted = new StringBuilder(capacity);
-    padInt(formatted, calendar.get(Calendar.YEAR), "yyyy".length());
-    formatted.append('-');
-    padInt(formatted, calendar.get(Calendar.MONTH) + 1, "MM".length());
-    formatted.append('-');
-    padInt(formatted, calendar.get(Calendar.DAY_OF_MONTH), "dd".length());
-    formatted.append('T');
-    padInt(formatted, calendar.get(Calendar.HOUR_OF_DAY), "hh".length());
-    formatted.append(':');
-    padInt(formatted, calendar.get(Calendar.MINUTE), "mm".length());
-    formatted.append(':');
-    padInt(formatted, calendar.get(Calendar.SECOND), "ss".length());
-    formatted.append('.');
-    padInt(formatted, calendar.get(Calendar.MILLISECOND), "sss".length());
-    formatted.append('Z');
-    return formatted.toString();
+    val capacity = "yyyy-MM-ddThh:mm:ss.sssZ".length
+    val formatted = StringBuilder(capacity)
+    padInt(formatted, calendar[Calendar.YEAR], "yyyy".length)
+    formatted.append('-')
+    padInt(formatted, calendar[Calendar.MONTH] + 1, "MM".length)
+    formatted.append('-')
+    padInt(formatted, calendar[Calendar.DAY_OF_MONTH], "dd".length)
+    formatted.append('T')
+    padInt(formatted, calendar[Calendar.HOUR_OF_DAY], "hh".length)
+    formatted.append(':')
+    padInt(formatted, calendar[Calendar.MINUTE], "mm".length)
+    formatted.append(':')
+    padInt(formatted, calendar[Calendar.SECOND], "ss".length)
+    formatted.append('.')
+    padInt(formatted, calendar[Calendar.MILLISECOND], "sss".length)
+    formatted.append('Z')
+    return formatted.toString()
   }
 
   /**
@@ -74,128 +76,123 @@ final class Iso8601Utils {
    * @param date ISO string to parse in the appropriate format.
    * @return the parsed date
    */
-  public static Date parse(String date) {
-    try {
-      int offset = 0;
+  fun parse(date: String): Date {
+    return try {
+      var offset = 0
 
       // extract year
-      int year = parseInt(date, offset, offset += 4);
+      val year = parseInt(date, offset, 4.let { offset += it; offset })
       if (checkOffset(date, offset, '-')) {
-        offset += 1;
+        offset += 1
       }
 
       // extract month
-      int month = parseInt(date, offset, offset += 2);
+      val month = parseInt(date, offset, 2.let { offset += it; offset })
       if (checkOffset(date, offset, '-')) {
-        offset += 1;
+        offset += 1
       }
 
       // extract day
-      int day = parseInt(date, offset, offset += 2);
+      val day = parseInt(date, offset, 2.let { offset += it; offset })
       // default time value
-      int hour = 0;
-      int minutes = 0;
-      int seconds = 0;
-      int milliseconds =
-          0; // always use 0 otherwise returned date will include millis of current time
+      var hour = 0
+      var minutes = 0
+      var seconds = 0
+      var milliseconds =
+        0 // always use 0 otherwise returned date will include millis of current time
 
       // if the value has no time component (and no time zone), we are done
-      boolean hasT = checkOffset(date, offset, 'T');
-
-      if (!hasT && (date.length() <= offset)) {
-        Calendar calendar = new GregorianCalendar(year, month - 1, day);
-
-        return calendar.getTime();
+      val hasT = checkOffset(date, offset, 'T')
+      if (!hasT && date.length <= offset) {
+        val calendar: Calendar = GregorianCalendar(year, month - 1, day)
+        return calendar.time
       }
-
       if (hasT) {
 
         // extract hours, minutes, seconds and milliseconds
-        hour = parseInt(date, offset += 1, offset += 2);
+        hour = parseInt(date, 1.let { offset += it; offset }, 2.let { offset += it; offset })
         if (checkOffset(date, offset, ':')) {
-          offset += 1;
+          offset += 1
         }
-
-        minutes = parseInt(date, offset, offset += 2);
+        minutes = parseInt(date, offset, 2.let { offset += it; offset })
         if (checkOffset(date, offset, ':')) {
-          offset += 1;
+          offset += 1
         }
         // second and milliseconds can be optional
-        if (date.length() > offset) {
-          char c = date.charAt(offset);
+        if (date.length > offset) {
+          val c = date[offset]
           if (c != 'Z' && c != '+' && c != '-') {
-            seconds = parseInt(date, offset, offset += 2);
-            if (seconds > 59 && seconds < 63) seconds = 59; // truncate up to 3 leap seconds
+            seconds = parseInt(date, offset, 2.let { offset += it; offset })
+            if (seconds in 60..62) seconds = 59 // truncate up to 3 leap seconds
             // milliseconds can be optional in the format
             if (checkOffset(date, offset, '.')) {
-              offset += 1;
-              int endOffset = indexOfNonDigit(date, offset + 1); // assume at least one digit
-              int parseEndOffset = Math.min(endOffset, offset + 3); // parse up to 3 digits
-              int fraction = parseInt(date, offset, parseEndOffset);
-              milliseconds = (int) (Math.pow(10, 3 - (parseEndOffset - offset)) * fraction);
-              offset = endOffset;
+              offset += 1
+              val endOffset = indexOfNonDigit(date, offset + 1) // assume at least one digit
+              val parseEndOffset = min(endOffset, offset + 3) // parse up to 3 digits
+              val fraction = parseInt(date, offset, parseEndOffset)
+              milliseconds =
+                (10.0.pow((3 - (parseEndOffset - offset)).toDouble()) * fraction).toInt()
+              offset = endOffset
             }
           }
         }
       }
 
       // extract timezone
-      if (date.length() <= offset) {
-        throw new IllegalArgumentException("No time zone indicator");
-      }
-
-      TimeZone timezone;
-      char timezoneIndicator = date.charAt(offset);
-
+      require(date.length > offset) { "No time zone indicator" }
+      val timezone: TimeZone
+      val timezoneIndicator = date[offset]
       if (timezoneIndicator == 'Z') {
-        timezone = TIMEZONE_Z;
+        timezone = TIMEZONE_Z
       } else if (timezoneIndicator == '+' || timezoneIndicator == '-') {
-        String timezoneOffset = date.substring(offset);
+        val timezoneOffset = date.substring(offset)
         // 18-Jun-2015, tatu: Minor simplification, skip offset of "+0000"/"+00:00"
-        if ("+0000".equals(timezoneOffset) || "+00:00".equals(timezoneOffset)) {
-          timezone = TIMEZONE_Z;
+        if ("+0000" == timezoneOffset || "+00:00" == timezoneOffset) {
+          timezone = TIMEZONE_Z
         } else {
           // 18-Jun-2015, tatu: Looks like offsets only work from GMT, not UTC...
           //    not sure why, but it is what it is.
-          String timezoneId = GMT_ID + timezoneOffset;
-          timezone = TimeZone.getTimeZone(timezoneId);
-          String act = timezone.getID();
-          if (!act.equals(timezoneId)) {
+          val timezoneId = GMT_ID + timezoneOffset
+          timezone = TimeZone.getTimeZone(timezoneId)
+          val act = timezone.id
+          if (act != timezoneId) {
             /* 22-Jan-2015, tatu: Looks like canonical version has colons, but we may be given
              *    one without. If so, don't sweat.
              *   Yes, very inefficient. Hopefully not hit often.
              *   If it becomes a perf problem, add 'loose' comparison instead.
              */
-            String cleaned = act.replace(":", "");
-            if (!cleaned.equals(timezoneId)) {
-              throw new IndexOutOfBoundsException(
-                  "Mismatching time zone indicator: "
-                      + timezoneId
-                      + " given, resolves to "
-                      + timezone.getID());
+            val cleaned = act.replace(":", "")
+            if (cleaned != timezoneId) {
+              throw IndexOutOfBoundsException(
+                "Mismatching time zone indicator: "
+                  + timezoneId
+                  + " given, resolves to "
+                  + timezone.id
+              )
             }
           }
         }
       } else {
-        throw new IndexOutOfBoundsException(
-            "Invalid time zone indicator '" + timezoneIndicator + "'");
+        throw IndexOutOfBoundsException(
+          "Invalid time zone indicator '$timezoneIndicator'"
+        )
       }
-
-      Calendar calendar = new GregorianCalendar(timezone);
-      calendar.setLenient(false);
-      calendar.set(Calendar.YEAR, year);
-      calendar.set(Calendar.MONTH, month - 1);
-      calendar.set(Calendar.DAY_OF_MONTH, day);
-      calendar.set(Calendar.HOUR_OF_DAY, hour);
-      calendar.set(Calendar.MINUTE, minutes);
-      calendar.set(Calendar.SECOND, seconds);
-      calendar.set(Calendar.MILLISECOND, milliseconds);
-
-      return calendar.getTime();
+      val calendar: Calendar = GregorianCalendar(timezone)
+      calendar.isLenient = false
+      calendar[Calendar.YEAR] = year
+      calendar[Calendar.MONTH] = month - 1
+      calendar[Calendar.DAY_OF_MONTH] = day
+      calendar[Calendar.HOUR_OF_DAY] = hour
+      calendar[Calendar.MINUTE] = minutes
+      calendar[Calendar.SECOND] = seconds
+      calendar[Calendar.MILLISECOND] = milliseconds
+      calendar.time
       // If we get a ParseException it'll already have the right message/offset.
       // Other exception types can convert here.
-    } catch (IndexOutOfBoundsException | IllegalArgumentException e) {
-      throw new JsonDataException("Not an RFC 3339 date: " + date, e);
+    } catch (e: IndexOutOfBoundsException) {
+      throw JsonDataException("Not an RFC 3339 date: $date", e)
+    } catch (e: IllegalArgumentException) {
+      throw JsonDataException("Not an RFC 3339 date: $date", e)
     }
   }
 
@@ -207,8 +204,8 @@ final class Iso8601Utils {
    * @param expected the expected character
    * @return true if the expected character exist at the given offset
    */
-  private static boolean checkOffset(String value, int offset, char expected) {
-    return (offset < value.length()) && (value.charAt(offset) == expected);
+  private fun checkOffset(value: String, offset: Int, expected: Char): Boolean {
+    return offset < value.length && value[offset] == expected
   }
 
   /**
@@ -220,31 +217,31 @@ final class Iso8601Utils {
    * @return the int
    * @throws NumberFormatException if the value is not a number
    */
-  private static int parseInt(String value, int beginIndex, int endIndex)
-      throws NumberFormatException {
-    if (beginIndex < 0 || endIndex > value.length() || beginIndex > endIndex) {
-      throw new NumberFormatException(value);
+  @Throws(NumberFormatException::class)
+  private fun parseInt(value: String, beginIndex: Int, endIndex: Int): Int {
+    if (beginIndex < 0 || endIndex > value.length || beginIndex > endIndex) {
+      throw NumberFormatException(value)
     }
     // use same logic as in Integer.parseInt() but less generic we're not supporting negative values
-    int i = beginIndex;
-    int result = 0;
-    int digit;
+    var i = beginIndex
+    var result = 0
+    var digit: Int
     if (i < endIndex) {
-      digit = Character.digit(value.charAt(i++), 10);
+      digit = Character.digit(value[i++], 10)
       if (digit < 0) {
-        throw new NumberFormatException("Invalid number: " + value.substring(beginIndex, endIndex));
+        throw NumberFormatException("Invalid number: " + value.substring(beginIndex, endIndex))
       }
-      result = -digit;
+      result = -digit
     }
     while (i < endIndex) {
-      digit = Character.digit(value.charAt(i++), 10);
+      digit = Character.digit(value[i++], 10)
       if (digit < 0) {
-        throw new NumberFormatException("Invalid number: " + value.substring(beginIndex, endIndex));
+        throw NumberFormatException("Invalid number: " + value.substring(beginIndex, endIndex))
       }
-      result *= 10;
-      result -= digit;
+      result *= 10
+      result -= digit
     }
-    return -result;
+    return -result
   }
 
   /**
@@ -254,22 +251,22 @@ final class Iso8601Utils {
    * @param value the integer value to pad if necessary.
    * @param length the length of the string we should zero pad
    */
-  private static void padInt(StringBuilder buffer, int value, int length) {
-    String strValue = Integer.toString(value);
-    for (int i = length - strValue.length(); i > 0; i--) {
-      buffer.append('0');
+  private fun padInt(buffer: StringBuilder, value: Int, length: Int) {
+    val strValue = value.toString()
+    for (i in length - strValue.length downTo 1) {
+      buffer.append('0')
     }
-    buffer.append(strValue);
+    buffer.append(strValue)
   }
 
   /**
    * Returns the index of the first character in the string that is not a digit, starting at offset.
    */
-  private static int indexOfNonDigit(String string, int offset) {
-    for (int i = offset; i < string.length(); i++) {
-      char c = string.charAt(i);
-      if (c < '0' || c > '9') return i;
+  private fun indexOfNonDigit(string: String, offset: Int): Int {
+    for (i in offset until string.length) {
+      val c = string[i]
+      if (c < '0' || c > '9') return i
     }
-    return string.length();
+    return string.length
   }
 }
