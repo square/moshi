@@ -13,42 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.adapters;
+package com.squareup.moshi.adapters
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import java.io.IOException;
-import java.util.Date;
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonReader.Token.NULL
+import com.squareup.moshi.JsonWriter
+import java.io.IOException
+import java.util.Date
 
 /**
- * Formats dates using <a href="https://www.ietf.org/rfc/rfc3339.txt">RFC 3339</a>, which is
- * formatted like {@code 2015-09-26T18:23:50.250Z}. This adapter is null-safe. To use, add this as
- * an adapter for {@code Date.class} on your {@link com.squareup.moshi.Moshi.Builder Moshi.Builder}:
+ * Formats dates using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt), which is
+ * formatted like `2015-09-26T18:23:50.250Z`. This adapter is null-safe. To use, add this as
+ * an adapter for `Date.class` on your [Moshi.Builder][com.squareup.moshi.Moshi.Builder]:
  *
- * <pre>{@code
+ * ```
  * Moshi moshi = new Moshi.Builder()
- *     .add(Date.class, new Rfc3339DateJsonAdapter())
- *     .build();
- * }</pre>
+ *   .add(Date.class, new Rfc3339DateJsonAdapter())
+ *   .build();
+ * ```
  */
-public final class Rfc3339DateJsonAdapter extends JsonAdapter<Date> {
-  @Override
-  public synchronized Date fromJson(JsonReader reader) throws IOException {
-    if (reader.peek() == JsonReader.Token.NULL) {
-      return reader.nextNull();
+public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
+  @Synchronized
+  @Throws(IOException::class)
+  override fun fromJson(reader: JsonReader): Date? {
+    if (reader.peek() == NULL) {
+      return reader.nextNull()
     }
-    String string = reader.nextString();
-    return Iso8601Utils.parse(string);
+    val string = reader.nextString()
+    return Iso8601Utils.parse(string)
   }
 
-  @Override
-  public synchronized void toJson(JsonWriter writer, Date value) throws IOException {
+  @Synchronized
+  @Throws(IOException::class)
+  override fun toJson(writer: JsonWriter, value: Date?) {
     if (value == null) {
-      writer.nullValue();
+      writer.nullValue()
     } else {
-      String string = Iso8601Utils.format(value);
-      writer.value(string);
+      val string = Iso8601Utils.format(value)
+      writer.value(string)
     }
   }
 }
