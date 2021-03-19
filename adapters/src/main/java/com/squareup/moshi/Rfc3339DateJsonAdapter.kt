@@ -13,26 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import java.util.Date;
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
+import java.io.IOException
+import java.util.Date
 
-/**
- * @deprecated this class moved to avoid a package name conflict in the Java Platform Module System.
- *     The new class is {@code com.squareup.moshi.adapters.Rfc3339DateJsonAdapter}.
- */
-public final class Rfc3339DateJsonAdapter extends JsonAdapter<Date> {
-  private final com.squareup.moshi.adapters.Rfc3339DateJsonAdapter delegate =
-      new com.squareup.moshi.adapters.Rfc3339DateJsonAdapter();
+@Deprecated(
+  """this class moved to avoid a package name conflict in the Java Platform Module System.
+      The new class is {@code com.squareup.moshi.adapters.Rfc3339DateJsonAdapter}.""",
+  replaceWith = ReplaceWith("com.squareup.moshi.adapters.Rfc3339DateJsonAdapter"),
+  level = DeprecationLevel.ERROR
+)
+public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
 
-  @Override
-  public Date fromJson(JsonReader reader) throws IOException {
-    return delegate.fromJson(reader);
+  private val delegate = Rfc3339DateJsonAdapter()
+
+  @Throws(IOException::class)
+  override fun fromJson(reader: JsonReader): Date? {
+    return delegate.fromJson(reader)
   }
 
-  @Override
-  public void toJson(JsonWriter writer, Date value) throws IOException {
-    delegate.toJson(writer, value);
+  @Throws(IOException::class)
+  override fun toJson(writer: JsonWriter, value: Date?) {
+    delegate.toJson(writer, value)
   }
 }
