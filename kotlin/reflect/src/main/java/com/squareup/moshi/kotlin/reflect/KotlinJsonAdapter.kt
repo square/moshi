@@ -23,11 +23,10 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
-import com.squareup.moshi.internal.Util.resolve
 import com.squareup.moshi.rawType
+import com.squareup.moshi.resolve
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
-import java.util.AbstractMap.SimpleEntry
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -37,7 +36,6 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.javaType
 
 /** Classes annotated with this are eligible for this adapter. */
 private val KOTLIN_METADATA = Metadata::class.java
@@ -82,14 +80,6 @@ internal class KotlinJsonAdapter<T>(
       }
 
       values[propertyIndex] = binding.adapter.fromJson(reader)
-
-      if (values[propertyIndex] == null && !binding.property.returnType.isMarkedNullable) {
-        throw Util.unexpectedNull(
-          binding.property.name,
-          binding.jsonName,
-          reader
-        )
-      }
     }
     reader.endObject()
 
@@ -252,7 +242,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         }
 
         val name = jsonAnnotation?.name ?: property.name
-        val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
+        val resolvedPropertyType = resolve(type, rawType, property.returnType)
         val adapter = moshi.adapter<Any>(
           resolvedPropertyType,
           Util.jsonAnnotations(allAnnotations.toTypedArray()),

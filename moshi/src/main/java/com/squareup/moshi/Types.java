@@ -19,6 +19,7 @@ import static com.squareup.moshi.internal.Util.EMPTY_TYPE_ARRAY;
 import static com.squareup.moshi.internal.Util.getGenericSupertype;
 import static com.squareup.moshi.internal.Util.resolve;
 
+import com.squareup.moshi.internal.Util;
 import com.squareup.moshi.internal.Util.GenericArrayTypeImpl;
 import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
 import com.squareup.moshi.internal.Util.WildcardTypeImpl;
@@ -185,6 +186,9 @@ public final class Types {
     } else if (type instanceof WildcardType) {
       return getRawType(((WildcardType) type).getUpperBounds()[0]);
 
+    } else if (type instanceof Util.KotlinType) {
+      Util.KotlinType kotlinType = (Util.KotlinType) type;
+      return getRawType(kotlinType.getOriginalType());
     } else {
       String className = type == null ? "null" : type.getClass().getName();
       throw new IllegalArgumentException(
@@ -265,6 +269,12 @@ public final class Types {
       return va.getGenericDeclaration() == vb.getGenericDeclaration()
           && va.getName().equals(vb.getName());
 
+    } else if (a instanceof Util.KotlinType) {
+      if (!(b instanceof Util.KotlinType)) return false;
+      Util.KotlinType ka = (Util.KotlinType) a;
+      Util.KotlinType kb = (Util.KotlinType) b;
+      return ka.getMarkedNullable() == kb.getMarkedNullable()
+          && equals(ka.getOriginalType(), kb.getOriginalType());
     } else {
       // This isn't a supported type.
       return false;

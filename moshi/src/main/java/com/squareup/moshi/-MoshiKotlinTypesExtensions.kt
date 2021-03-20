@@ -27,6 +27,8 @@ import kotlin.reflect.typeOf
 /** Returns the raw [Class] type of this type. */
 public val Type.rawType: Class<*> get() = Types.getRawType(this)
 
+public val KType.toKotlinType: Util.KotlinType get() = Util.KotlinType(this)
+
 /**
  * Checks if [this] contains [T]. Returns the subset of [this] without [T], or null if
  * [this] does not contain [T].
@@ -45,6 +47,13 @@ public inline fun <reified T> subtypeOf(): WildcardType {
     type = Util.boxIfPrimitive(type)
   }
   return Types.subtypeOf(type)
+}
+
+/**
+ * Returns resolved Type wrapped to [Util.KotlinType]
+ */
+public fun resolve(context: Type?, contextRawType: Class<*>?, toResolve: KType): Type {
+  return Util.resolve(context, contextRawType, toResolve.toKotlinType)
 }
 
 /**

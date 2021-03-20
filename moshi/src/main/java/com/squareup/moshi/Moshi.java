@@ -48,6 +48,7 @@ public final class Moshi {
 
   static {
     BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
+    BUILT_IN_FACTORIES.add(KotlinTypeAdapteFactory.FACTORY);
     BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);

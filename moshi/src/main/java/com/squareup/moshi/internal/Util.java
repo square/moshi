@@ -26,6 +26,10 @@ import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+import kotlin.reflect.KType;
+import kotlin.reflect.KTypeProjection;
+import kotlin.reflect.TypesJVMKt;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -41,9 +45,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class Util {
@@ -210,6 +217,10 @@ public final class Util {
       Type toResolve,
       Collection<TypeVariable<?>> visitedTypeVariables) {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
+    if (context instanceof KotlinType) {
+      // avoid use KotlinType in context
+      context = ((KotlinType) context).getOriginalType();
+    }
     while (true) {
       if (toResolve instanceof TypeVariable) {
         TypeVariable<?> typeVariable = (TypeVariable<?>) toResolve;
@@ -278,7 +289,16 @@ public final class Util {
           }
         }
         return original;
-
+      } else if (toResolve instanceof KotlinType) {
+        KotlinType kotlinType = (KotlinType) toResolve;
+        Type resolvedType = resolve(context, contextRawType, kotlinType.getOriginalType(), visitedTypeVariables);
+        boolean isMarkedNullable = kotlinType.getMarkedNullable();
+        if (resolvedType instanceof KotlinType) {
+          KotlinType rawKotlinType = (KotlinType) resolvedType;
+          isMarkedNullable = isMarkedNullable || rawKotlinType.isMarkedNullable;
+          resolvedType = rawKotlinType.originalType;
+        }
+        return new KotlinType(isMarkedNullable, resolvedType);
       } else {
         return toResolve;
       }
@@ -366,6 +386,72 @@ public final class Util {
   static void checkNotPrimitive(Type type) {
     if ((type instanceof Class<?>) && ((Class<?>) type).isPrimitive()) {
       throw new IllegalArgumentException("Unexpected primitive " + type + ". Use the boxed type.");
+    }
+  }
+
+  /**
+   * Returns ParametrizedType or GenericTpe wrapped by KotlinType and save nullable state.
+   */
+  static Type resolveKotlinArgumentsType(KType kotlinType, Type originalType) {
+    if (kotlinType != null && originalType instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) originalType;
+      Type[] rawArguments = parameterizedType.getActualTypeArguments();
+      List<KTypeProjection> kTypeProjections = kotlinType.getArguments();
+      Type[] kotlinArguments = new Type[kTypeProjections.size()];
+      for (int i = 0; i < rawArguments.length; i++) {
+        KType kType = kTypeProjections.get(i).getType();
+        if (kType != null) {
+          kotlinArguments[i] = new KotlinType(kType);
+        } else {
+          kotlinArguments[i] = new KotlinType(false, rawArguments[i]);
+        }
+      }
+      return new ParameterizedTypeImpl(parameterizedType.getOwnerType(), parameterizedType.getRawType(), kotlinArguments);
+    } else if (kotlinType != null && originalType instanceof GenericArrayType) {
+      GenericArrayType genericArrayType = (GenericArrayType) originalType;
+      Type componentType = genericArrayType.getGenericComponentType();
+      KType kType = kotlinType.getArguments().get(0).getType();
+      Type component;
+      if (kType != null) {
+        component = new KotlinType(kType);
+      } else {
+        component = new KotlinType(false, componentType);
+      }
+      return Types.arrayOf(component);
+    } else {
+      return originalType;
+    }
+  }
+
+  public static final class KotlinType implements Type {
+    private final boolean isMarkedNullable;
+    private final Type originalType;
+
+    public KotlinType(@Nonnull KType kotlinType) {
+      this(kotlinType.isMarkedNullable(), resolveKotlinArgumentsType(kotlinType, TypesJVMKt.getJavaType(kotlinType)));
+    }
+
+    KotlinType(boolean isMarkedNullable, Type originalType) {
+      this.isMarkedNullable = isMarkedNullable;
+      this.originalType = canonicalize(originalType);
+    }
+
+    public boolean getMarkedNullable() {
+      return isMarkedNullable;
+    }
+
+    public Type getOriginalType() {
+      return originalType;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof KotlinType && Types.equals(this, (KotlinType) other);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(isMarkedNullable, originalType);
     }
   }
 
