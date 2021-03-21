@@ -30,6 +30,10 @@ class ArgumentsJsonAdapterTest {
     val collectionsData: CollectionDataDoubleParameter<Int, Int>
   )
 
+  data class ResolveNonNullArray(
+    val array: Array<Int>
+  )
+
   @Test
   fun nonNullInnerCollection_nullItem() {
     val moshi = Moshi.Builder()
@@ -167,6 +171,34 @@ class ArgumentsJsonAdapterTest {
     val excepted = mapOf<String?, String?>("zero" to "0", "first" to "1", "second" to null)
     val result = adapter.fromJson("""{ "zero":"0", "first":"1", "second": null }""".trimMargin())
     Truth.assertThat(result).isEqualTo(excepted)
+  }
+
+  @ExperimentalStdlibApi
+  @Test
+  fun nonNullArray_nullItem() {
+    val moshi = Moshi.Builder()
+      .add(KotlinJsonAdapterFactory())
+      .build()
+    val adapter = moshi.adapter<ResolveNonNullArray>()
+    try {
+      adapter.fromJson("""{ "array" : [0, 1, 2, 3, null ] }""".trimMargin())
+    } catch (ex: JsonDataException) {
+      Truth.assertThat(ex).hasMessageThat().contains("Unexpected null at \$.array[4]")
+    }
+  }
+
+  @ExperimentalStdlibApi
+  @Test
+  fun listStarProjectionNonNullList_nullItem() {
+    val moshi = Moshi.Builder()
+      .add(KotlinJsonAdapterFactory())
+      .build()
+    val adapter = moshi.adapter<List<*>>()
+    try {
+      adapter.fromJson("""[0, 1, 2, 3, null ]""".trimMargin())
+    } catch (ex: JsonDataException) {
+      Truth.assertThat(ex).hasMessageThat().contains("Unexpected null at \$[4]")
+    }
   }
 
 }

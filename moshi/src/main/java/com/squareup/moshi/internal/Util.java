@@ -393,7 +393,18 @@ public final class Util {
    * Returns ParametrizedType or GenericTpe wrapped by KotlinType and save nullable state.
    */
   static Type resolveKotlinArgumentsType(KType kotlinType, Type originalType) {
-    if (kotlinType != null && originalType instanceof ParameterizedType) {
+    if (kotlinType != null && originalType instanceof Class && ((Class<?>) originalType).isArray()) {
+      Class<?> arrayType = (Class<?>) originalType;
+      Type componentType = arrayType.getComponentType();
+      KType kType = kotlinType.getArguments().get(0).getType();
+      Type component;
+      if (kType != null) {
+        component = new KotlinType(kType);
+      } else {
+        component = new KotlinType(false, componentType);
+      }
+      return Types.arrayOf(component);
+    } else if (kotlinType != null && originalType instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) originalType;
       Type[] rawArguments = parameterizedType.getActualTypeArguments();
       List<KTypeProjection> kTypeProjections = kotlinType.getArguments();
