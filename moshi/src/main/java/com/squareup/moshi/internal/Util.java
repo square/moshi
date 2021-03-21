@@ -431,7 +431,7 @@ public final class Util {
       this(kotlinType.isMarkedNullable(), resolveKotlinArgumentsType(kotlinType, TypesJVMKt.getJavaType(kotlinType)));
     }
 
-    KotlinType(boolean isMarkedNullable, Type originalType) {
+    public KotlinType(boolean isMarkedNullable, Type originalType) {
       this.isMarkedNullable = isMarkedNullable;
       this.originalType = canonicalize(originalType);
     }

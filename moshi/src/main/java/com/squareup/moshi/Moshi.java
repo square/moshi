@@ -47,8 +47,8 @@ public final class Moshi {
   static final List<JsonAdapter.Factory> BUILT_IN_FACTORIES = new ArrayList<>(5);
 
   static {
-    BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
     BUILT_IN_FACTORIES.add(KotlinTypeAdapteFactory.FACTORY);
+    BUILT_IN_FACTORIES.add(StandardJsonAdapters.FACTORY);
     BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);

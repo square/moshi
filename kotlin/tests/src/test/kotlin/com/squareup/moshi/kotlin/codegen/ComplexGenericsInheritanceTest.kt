@@ -19,9 +19,11 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.fail
 import org.junit.Test
 
 class ComplexGenericsInheritanceTest {
@@ -101,6 +103,20 @@ class ComplexGenericsInheritanceTest {
     assertThat(instance).isEqualTo(testInstance)
     assertThat(adapter.toJson(testInstance)).isEqualTo(json)
   }
+
+  @Test
+  fun nonNullList_nullableItem() {
+    val adapter = moshi.adapter<NonNullListResponse>()
+
+    try {
+      @Language("JSON")
+      val json = """{"items":  [1,2,3,null]}"""
+      adapter.fromJson(json)
+      fail()
+    } catch (ex: JsonDataException) {
+      assertThat(ex).hasMessageThat().contains("Unexpected null at \$.items[3]")
+    }
+  }
 }
 
 open class ResponseWithSettableProperty<T, R> {
@@ -120,6 +136,9 @@ data class PersonResponse(
 ) : ResponseWithSettableProperty<Person, String>()
 
 abstract class NestedResponse<T : Personable> : ResponseWithSettableProperty<T, String>()
+
+@JsonClass(generateAdapter = true)
+data class NonNullListResponse(val items: List<Int>)
 
 @JsonClass(generateAdapter = true)
 data class NestedPersonResponse(val extra: String? = null) : NestedResponse<Person>()

@@ -33,19 +33,26 @@ import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.moshi.Types
 
 /**
- * Renders literals like `Types.newParameterizedType(List::class.java, String::class.java)`.
+ * Renders literals like `Util.KotlinType(true, Types.newParameterizedType(List::class.java, String::class.java))`.
+ * Wraps TypeName in Util.KotlinType and save nullable information.
  * Rendering is pluggable so that type variables can either be resolved or emitted as other code
  * blocks.
  */
 internal abstract class TypeRenderer {
+  private val kotlinType = ClassName("com.squareup.moshi.internal", "Util")
+
   abstract fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock
 
-  fun render(typeName: TypeName, forceBox: Boolean = false): CodeBlock {
+  fun render(typeName: TypeName, forceBox: Boolean = false, isWrapped: Boolean = false): CodeBlock {
     if (typeName.annotations.isNotEmpty()) {
       return render(typeName.copy(annotations = emptyList()), forceBox)
     }
+    if (isWrapped.not()) {
+      return CodeBlock.of("%T.KotlinType(%L, %L)", kotlinType, typeName.isNullable, render(typeName, isWrapped = true))
+    }
+
     if (typeName.isNullable) {
-      return renderObjectType(typeName.copy(nullable = false))
+      return renderObjectType(typeName)
     }
 
     return when (typeName) {
@@ -111,9 +118,9 @@ internal abstract class TypeRenderer {
 
   private fun renderObjectType(typeName: TypeName): CodeBlock {
     return if (typeName.isPrimitive()) {
-      CodeBlock.of("%T::class.javaObjectType", typeName)
+      CodeBlock.of("%T.KotlinType(%L, %T::class.javaObjectType)", kotlinType, typeName.isNullable, typeName)
     } else {
-      render(typeName)
+      render(typeName.copy(nullable = false))
     }
   }
 
