@@ -166,8 +166,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
    * Returns a new factory that with default to {@code fallbackJsonAdapter.fromJson(reader)} upon
    * decoding of unrecognized labels.
    *
-   * <p>The {@link JsonReader} instance will not be automatically consumed, so sure to consume it
-   * within your implementation of {@link JsonAdapter#fromJson(JsonReader)}
+   * <p>The {@link JsonReader} instance will not be automatically consumed, so make sure to consume
+   * it within your implementation of {@link JsonAdapter#fromJson(JsonReader)}
    */
   public PolymorphicJsonAdapterFactory<T> withFallbackJsonAdapter(
       @Nullable JsonAdapter<Object> fallbackJsonAdapter) {
