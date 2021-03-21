@@ -26,10 +26,6 @@ import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
-import kotlin.reflect.KType;
-import kotlin.reflect.KTypeProjection;
-import kotlin.reflect.TypesJVMKt;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
@@ -52,6 +48,9 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import kotlin.reflect.KType;
+import kotlin.reflect.KTypeProjection;
+import kotlin.reflect.TypesJVMKt;
 
 public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
@@ -291,7 +290,8 @@ public final class Util {
         return original;
       } else if (toResolve instanceof KotlinType) {
         KotlinType kotlinType = (KotlinType) toResolve;
-        Type resolvedType = resolve(context, contextRawType, kotlinType.getOriginalType(), visitedTypeVariables);
+        Type resolvedType =
+            resolve(context, contextRawType, kotlinType.getOriginalType(), visitedTypeVariables);
         boolean isMarkedNullable = kotlinType.getMarkedNullable();
         if (resolvedType instanceof KotlinType) {
           KotlinType rawKotlinType = (KotlinType) resolvedType;
@@ -389,11 +389,11 @@ public final class Util {
     }
   }
 
-  /**
-   * Returns ParametrizedType or GenericTpe wrapped by KotlinType and save nullable state.
-   */
+  /** Returns ParametrizedType or GenericTpe wrapped by KotlinType and save nullable state. */
   static Type resolveKotlinArgumentsType(KType kotlinType, Type originalType) {
-    if (kotlinType != null && originalType instanceof Class && ((Class<?>) originalType).isArray()) {
+    if (kotlinType != null
+        && originalType instanceof Class
+        && ((Class<?>) originalType).isArray()) {
       Class<?> arrayType = (Class<?>) originalType;
       Type componentType = arrayType.getComponentType();
       KType kType = kotlinType.getArguments().get(0).getType();
@@ -417,7 +417,8 @@ public final class Util {
           kotlinArguments[i] = new KotlinType(false, rawArguments[i]);
         }
       }
-      return new ParameterizedTypeImpl(parameterizedType.getOwnerType(), parameterizedType.getRawType(), kotlinArguments);
+      return new ParameterizedTypeImpl(
+          parameterizedType.getOwnerType(), parameterizedType.getRawType(), kotlinArguments);
     } else if (kotlinType != null && originalType instanceof GenericArrayType) {
       GenericArrayType genericArrayType = (GenericArrayType) originalType;
       Type componentType = genericArrayType.getGenericComponentType();
@@ -439,7 +440,9 @@ public final class Util {
     private final Type originalType;
 
     public KotlinType(@Nonnull KType kotlinType) {
-      this(kotlinType.isMarkedNullable(), resolveKotlinArgumentsType(kotlinType, TypesJVMKt.getJavaType(kotlinType)));
+      this(
+          kotlinType.isMarkedNullable(),
+          resolveKotlinArgumentsType(kotlinType, TypesJVMKt.getJavaType(kotlinType)));
     }
 
     public KotlinType(boolean isMarkedNullable, Type originalType) {
