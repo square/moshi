@@ -19,8 +19,10 @@ import com.google.common.truth.Truth
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
+import com.squareup.moshi.toKotlinType
 import org.junit.Assert
 import org.junit.Test
+import kotlin.reflect.typeOf
 
 class ArgumentsJsonAdapterTest {
 
@@ -49,11 +51,13 @@ class ArgumentsJsonAdapterTest {
     val array: Array<Int>
   )
 
+  private val moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .add(KotlinTypeAdapterFactory())
+    .build()
+
   @Test
   fun nonNullInnerCollection_nullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter(ResolveNonNullOneParameter::class.java)
     try {
       adapter.fromJson("""{ "collectionsData": { "collection": { "items": [0, 1, 2, 3, null] } } } """)
@@ -65,9 +69,6 @@ class ArgumentsJsonAdapterTest {
 
   @Test
   fun nonNullInnerCollection_nonNullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val excepted = ResolveNonNullOneParameter(
       collectionsData = CollectionsDataSingleParameter(
         collection = ParametrizedJavaDTO(listOf(0, 1, 2, 3))
@@ -80,9 +81,6 @@ class ArgumentsJsonAdapterTest {
 
   @Test
   fun nullableInnerCollection_nonNullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val excepted = ResolveNullableOneParameter(
       collectionsData = CollectionsDataSingleParameter(
         collection = ParametrizedJavaDTO(listOf(0, 1, 2, 3))
@@ -95,9 +93,6 @@ class ArgumentsJsonAdapterTest {
 
   @Test
   fun nullableInnerCollection_nullableItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val excepted = ResolveNullableOneParameter(
       collectionsData = CollectionsDataSingleParameter(
         collection = ParametrizedJavaDTO(listOf(0, 1, null, 2, 3))
@@ -110,9 +105,6 @@ class ArgumentsJsonAdapterTest {
 
   @Test
   fun nonNullInnerDoubleParameterCollection_firstCollectionNullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter(ResolveNonNullDoubleParameter::class.java)
     try {
       adapter.fromJson(
@@ -129,9 +121,6 @@ class ArgumentsJsonAdapterTest {
 
   @Test
   fun nonNullInnerDoubleParameterCollection_secondCollectionNullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter(ResolveNonNullDoubleParameter::class.java)
     try {
       adapter.fromJson(
@@ -149,8 +138,8 @@ class ArgumentsJsonAdapterTest {
   @ExperimentalStdlibApi
   @Test
   fun nonNullList_nullItem() {
-    val moshi = Moshi.Builder().build()
-    val adapter = moshi.adapter<List<Int>>()
+    val kotlinType = typeOf<List<Int>>().toKotlinType
+    val adapter = moshi.adapter<List<Int>>(kotlinType)
     try {
       adapter.fromJson("""[0, 1, null, 2, 3]""".trimMargin())
       Assert.fail("Should have errored due nullable item in non null list")
@@ -162,7 +151,6 @@ class ArgumentsJsonAdapterTest {
   @ExperimentalStdlibApi
   @Test
   fun nullableList_nullItem() {
-    val moshi = Moshi.Builder().build()
     val adapter = moshi.adapter<List<Int?>>()
     val excepted = listOf(0, 1, null, 2, 3)
     val result = adapter.fromJson("""[0, 1, null, 2, 3]""".trimMargin())
@@ -172,8 +160,8 @@ class ArgumentsJsonAdapterTest {
   @ExperimentalStdlibApi
   @Test
   fun nonNullMap_nullValue() {
-    val moshi = Moshi.Builder().build()
-    val adapter = moshi.adapter<Map<String, String>>()
+    val kotlinType = typeOf<Map<String, String>>().toKotlinType
+    val adapter = moshi.adapter<Map<String, String>>(kotlinType)
     try {
       adapter.fromJson("""{ "zero":"0", "first":"1", "second":null }""".trimMargin())
       Assert.fail("Should have errored due nullable item in non null map")
@@ -184,10 +172,9 @@ class ArgumentsJsonAdapterTest {
 
   @ExperimentalStdlibApi
   @Test
-  fun nonNullMap_nullKey() {
-    val moshi = Moshi.Builder().build()
+  fun nullableMap_nullKey() {
     val adapter = moshi.adapter<Map<String, String?>>()
-    val excepted = mapOf<String?, String?>("zero" to "0", "first" to "1", "second" to null)
+    val excepted = mapOf("zero" to "0", "first" to "1", "second" to null)
     val result = adapter.fromJson("""{ "zero":"0", "first":"1", "second": null }""".trimMargin())
     Truth.assertThat(result).isEqualTo(excepted)
   }
@@ -195,9 +182,6 @@ class ArgumentsJsonAdapterTest {
   @ExperimentalStdlibApi
   @Test
   fun nonNullArray_nullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter<ResolveNonNullArray>()
     try {
       adapter.fromJson("""{ "array" : [0, 1, 2, 3, null ] }""".trimMargin())
@@ -209,9 +193,6 @@ class ArgumentsJsonAdapterTest {
   @ExperimentalStdlibApi
   @Test
   fun listStarProjectionNonNullList_nullItem() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter<List<*>>()
     try {
       adapter.fromJson("""[0, 1, 2, 3, null ]""".trimMargin())

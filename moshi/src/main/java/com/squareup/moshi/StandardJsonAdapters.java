@@ -55,6 +55,8 @@ final class StandardJsonAdapters {
           if (type == Short.class) return SHORT_JSON_ADAPTER.nullSafe();
           if (type == String.class) return STRING_JSON_ADAPTER.nullSafe();
           if (type == Object.class) return new ObjectJsonAdapter(moshi).nullSafe();
+          if (type instanceof Util.KotlinType)
+            return moshi.adapter(((Util.KotlinType) type).getOriginalType(), annotations);
 
           Class<?> rawType = Types.getRawType(type);
 

@@ -48,10 +48,15 @@ internal abstract class TypeRenderer {
       return render(typeName.copy(annotations = emptyList()), forceBox)
     }
     if (isWrapped.not()) {
-      return CodeBlock.of("%T.KotlinType(%L, %L)", kotlinType, typeName.isNullable, render(typeName, isWrapped = true))
+      return CodeBlock.of(
+        "%T.KotlinType(%L, %L)",
+        kotlinType,
+        typeName.isNullable,
+        render(typeName.copy(nullable = false), isWrapped = true)
+      )
     }
 
-    if (typeName.isNullable) {
+    if (typeName.isPrimitive()) {
       return renderObjectType(typeName)
     }
 
@@ -118,9 +123,9 @@ internal abstract class TypeRenderer {
 
   private fun renderObjectType(typeName: TypeName): CodeBlock {
     return if (typeName.isPrimitive()) {
-      CodeBlock.of("%T.KotlinType(%L, %T::class.javaObjectType)", kotlinType, typeName.isNullable, typeName)
+      CodeBlock.of("%T::class.javaObjectType", typeName)
     } else {
-      render(typeName.copy(nullable = false))
+      render(typeName)
     }
   }
 

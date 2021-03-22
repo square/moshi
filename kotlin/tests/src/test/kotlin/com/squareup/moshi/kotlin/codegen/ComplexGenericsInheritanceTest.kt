@@ -22,6 +22,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
+import com.squareup.moshi.kotlin.reflect.KotlinTypeAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -106,7 +107,11 @@ class ComplexGenericsInheritanceTest {
 
   @Test
   fun nonNullList_nullableItem() {
-    val adapter = moshi.adapter<NonNullListResponse>()
+    val adapter = moshi
+      .newBuilder()
+      .add(KotlinTypeAdapterFactory())
+      .build()
+      .adapter<NonNullListResponse>()
 
     try {
       @Language("JSON")
