@@ -445,7 +445,7 @@ public final class Util {
           resolveKotlinArgumentsType(kotlinType, TypesJVMKt.getJavaType(kotlinType)));
     }
 
-    public KotlinType(boolean isMarkedNullable, Type originalType) {
+    public KotlinType(boolean isMarkedNullable, @Nonnull Type originalType) {
       this.isMarkedNullable = isMarkedNullable;
       this.originalType = canonicalize(originalType);
     }
@@ -466,6 +466,15 @@ public final class Util {
     @Override
     public int hashCode() {
       return Objects.hash(isMarkedNullable, originalType);
+    }
+
+    @Override
+    public String toString() {
+      String stringOfType = typeToString(originalType);
+      if (isMarkedNullable) {
+        stringOfType += "?";
+      }
+      return stringOfType;
     }
   }
 
