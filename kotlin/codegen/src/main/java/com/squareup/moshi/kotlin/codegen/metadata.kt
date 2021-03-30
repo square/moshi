@@ -62,6 +62,7 @@ import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic.Kind.ERROR
+import javax.tools.Diagnostic.Kind.WARNING
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
@@ -94,7 +95,7 @@ internal fun primaryConstructor(
       index = index,
       type = parameter.type,
       hasDefault = parameter.defaultValue != null,
-      qualifiers = parameter.annotations.qualifiers(elements),
+      qualifiers = parameter.annotations.qualifiers(messager, elements),
       jsonName = parameter.annotations.jsonName()
     )
   }
@@ -450,7 +451,7 @@ internal fun TargetProperty.generator(
   }
 
   // Merge parameter and property annotations
-  val qualifiers = parameter?.qualifiers.orEmpty() + propertySpec.annotations.qualifiers(elements)
+  val qualifiers = parameter?.qualifiers.orEmpty() + propertySpec.annotations.qualifiers(messager, elements)
   for (jsonQualifier in qualifiers) {
     val qualifierRawType = jsonQualifier.typeName.rawType()
     // Check Java types since that covers both Java and Kotlin annotations.
@@ -486,13 +487,17 @@ internal fun TargetProperty.generator(
   )
 }
 
-private fun List<AnnotationSpec>?.qualifiers(elements: Elements): Set<AnnotationSpec> {
+private fun List<AnnotationSpec>?.qualifiers(
+  messager: Messager,
+  elements: Elements
+): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return filterTo(mutableSetOf()) {
-    val typeElement = checkNotNull(elements.getTypeElement(it.typeName.rawType().canonicalName)) {
-      "Could not get the type element of $it"
+    val typeElement: TypeElement? = elements.getTypeElement(it.typeName.rawType().canonicalName)
+    if (typeElement == null) {
+      messager.printMessage(WARNING, "Could not get the TypeElement of $it")
     }
-    typeElement.getAnnotation(JSON_QUALIFIER) != null
+    typeElement?.getAnnotation(JSON_QUALIFIER) != null
   }
 }
 
