@@ -366,6 +366,7 @@ internal class AdapterGenerator(
     val maskNames = Array(maskCount) { index ->
       nameAllocator.newName("mask$index")
     }
+    val maskAllSetValues = Array(maskCount) { -1 }
     val useDefaultsConstructor = components.filterIsInstance<ParameterComponent>()
       .any { it.parameter.hasDefault }
     if (useDefaultsConstructor) {
@@ -440,6 +441,9 @@ internal class AdapterGenerator(
         }
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
+          if (input is ParameterComponent && input.parameter.hasDefault) {
+            maskAllSetValues[maskNameIndex] = maskAllSetValues[maskNameIndex] and inverted
+          }
           result.addComment("\$mask = \$mask and (1 shl %L).inv()", maskIndex)
           result.addStatement(
             "%1L = %1L and 0x%2L.toInt()",
@@ -495,12 +499,50 @@ internal class AdapterGenerator(
     val hasNonConstructorProperties = nonTransientProperties.any { !it.hasConstructorParameter }
     val returnOrResultAssignment = if (hasNonConstructorProperties) {
       // Save the result var for reuse
-      CodeBlock.of("val %N = ", resultName)
+      result.addStatement("val %N: %T", resultName, originalTypeName)
+      CodeBlock.of("%N = ", resultName)
     } else {
       CodeBlock.of("return·")
     }
+
+    // Used to indicate we're in an if-block that's assigning our result value and
+    // needs to be closed with endControlFlow
+    var closeNextControlFlowInAssignment = false
+
     if (useDefaultsConstructor) {
+      // Happy path - all parameters with defaults are set
+      val allMasksAreSetBlock = maskNames.withIndex()
+        .map { (index, maskName) ->
+          CodeBlock.of("$maskName·== 0x${Integer.toHexString(maskAllSetValues[index])}.toInt()")
+        }
+        .joinToCode("·&& ")
+      result.beginControlFlow("if (%L)", allMasksAreSetBlock)
+      result.addComment("All parameters with defaults are set, invoke the constructor directly")
+      result.addCode("«%L·%T(", returnOrResultAssignment, originalTypeName)
+      var localSeparator = "\n"
+      val paramsToSet = components.filterIsInstance<ParameterProperty>()
+        .filterNot { it.property.isTransient }
+
+      // Set all non-transient property parameters
+      for (input in paramsToSet) {
+        result.addCode(localSeparator)
+        val property = input.property
+        result.addCode("%N = %N", property.name, property.localName)
+        if (property.isRequired) {
+          result.addMissingPropertyCheck(property, readerParam)
+        } else if (!input.type.isNullable) {
+          // Unfortunately incurs an intrinsic null-check even though we know it's set, but
+          // maybe in the future we can use contracts to omit them.
+          result.addCode("·as·%T", input.type)
+        }
+        localSeparator = ",\n"
+      }
+      result.addCode("\n»)\n")
+      result.nextControlFlow("else")
+      closeNextControlFlowInAssignment = true
+
       classBuilder.addProperty(constructorProperty)
+      result.addComment("Reflectively invoke the synthetic defaults constructor")
       // Dynamic default constructor call
       val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
       val args = constructorPropertyTypes
@@ -569,15 +611,7 @@ internal class AdapterGenerator(
       if (input is PropertyComponent) {
         val property = input.property
         if (!property.isTransient && property.isRequired) {
-          val missingPropertyBlock =
-            CodeBlock.of(
-              "%T.missingProperty(%S, %S, %N)",
-              MOSHI_UTIL,
-              property.localName,
-              property.jsonName,
-              readerParam
-            )
-          result.addCode(" ?: throw·%L", missingPropertyBlock)
+          result.addMissingPropertyCheck(property, readerParam)
         }
       }
       separator = ",\n"
@@ -589,6 +623,11 @@ internal class AdapterGenerator(
     }
 
     result.addCode("\n»)\n")
+
+    // Close the result assignment control flow, if any
+    if (closeNextControlFlowInAssignment) {
+      result.endControlFlow()
+    }
 
     // Assign properties not present in the constructor.
     for (property in nonTransientProperties) {
@@ -659,6 +698,18 @@ internal class AdapterGenerator(
 
     return result.build()
   }
+}
+
+private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator, readerParam: ParameterSpec) {
+  val missingPropertyBlock =
+    CodeBlock.of(
+      "%T.missingProperty(%S, %S, %N)",
+      MOSHI_UTIL,
+      property.localName,
+      property.jsonName,
+      readerParam
+    )
+  addCode(" ?: throw·%L", missingPropertyBlock)
 }
 
 /** Represents a prepared adapter with its [spec] and optional associated [proguardConfig]. */
