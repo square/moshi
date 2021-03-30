@@ -30,11 +30,11 @@ buildscript {
 }
 
 plugins {
-  id("com.vanniktech.maven.publish") version "0.13.0" apply false
-  id("org.jetbrains.dokka") version "1.4.10" apply false
-  id("com.diffplug.spotless") version "5.6.0"
-  id("ru.vyarus.animalsniffer") version "1.5.1" apply false
-  id("me.champeau.gradle.japicmp") version "0.2.8" apply false
+  id("com.vanniktech.maven.publish") version "0.14.2" apply false
+  id("org.jetbrains.dokka") version "1.4.30" apply false
+  id("com.diffplug.spotless") version "5.11.0"
+  id("ru.vyarus.animalsniffer") version "1.5.3" apply false
+  id("me.champeau.gradle.japicmp") version "0.2.9" apply false
 }
 
 spotless {

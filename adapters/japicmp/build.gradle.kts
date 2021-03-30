@@ -36,11 +36,11 @@ val japicmp = tasks.register<JapicmpTask>("japicmp") {
   dependsOn("jar")
   oldClasspath = baseline
   newClasspath = latest
-  onlyBinaryIncompatibleModified = true
-  failOnModification = true
+  isOnlyBinaryIncompatibleModified = true
+  isFailOnModification = true
   txtOutputFile = file("$buildDir/reports/japi.txt")
-  ignoreMissingClasses = true
-  includeSynthetic = true
+  isIgnoreMissingClasses = true
+  isIncludeSynthetic = true
 }
 
 tasks.named("check").configure {
