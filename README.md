@@ -623,7 +623,7 @@ The reflection adapter requires the following additional dependency:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin</artifactId>
-  <version>1.11.0</version>
+  <version>1.12.0</version>
 </dependency>
 ```
 
@@ -658,7 +658,7 @@ add the following to your build to enable the annotation processor:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin-codegen</artifactId>
-  <version>1.11.0</version>
+  <version>1.12.0</version>
   <scope>provided</scope>
 </dependency>
 ```
@@ -690,7 +690,7 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.11.0</version>
+  <version>1.12.0</version>
 </dependency>
 ```
 or Gradle:

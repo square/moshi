@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+## Version 1.12.0
+
+_2021-04-01_
+
+ * New: Improve generated code performance when all properties are set.
+ * Fix: Don't crash on a missing type element like `@SuppressLint`.
+ * Fix: Update the JVM metadata library to avoid problems on Kotlin 1.5.0-M2.
+ * Fix: Support generic arrays with defaults in generated adapters.
+ * Fix: Don't generate code with simple name collisions.
+ * Upgrade: [Okio 2.10.0][okio_2_10_0].
+ * Upgrade: [Kotlin 1.4.31][kotlin_1_4_31].
+
 ## Version 1.11.0
 
 _2020-10-04_
@@ -482,7 +494,9 @@ _2015-06-16_
  [gson]: https://github.com/google/gson
  [jackson]: http://wiki.fasterxml.com/JacksonHome
  [kotlin_1_4_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.10
+ [kotlin_1_4_31]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.31
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
  [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
  [okio_1_7_5]: https://square.github.io/okio/changelog/#version-1175
+ [okio_2_10_0]: https://square.github.io/okio/changelog/#version-2100
  [rfc_7159]: https://tools.ietf.org/html/rfc7159
