@@ -1,0 +1,589 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>JsonReader</title>
+<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="moshi::com.squareup.moshi/JsonReader///PointingToDeclaration//1316168601">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">moshi</a>/<a href="../index.html">com.squareup.moshi</a>/<a href="index.html">JsonReader</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Json</span><wbr></wbr><span>Reader</span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract class <a href="index.html">JsonReader</a> : <a href="https://docs.oracle.com/javase/8/docs/api/java/io/Closeable.html">Closeable</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>) encoded value as a stream of tokens. This stream includes both literal values (strings, numbers, booleans, and nulls) as well as the begin and end delimiters of objects and arrays. The tokens are traversed in depth-first order, the same order that they appear in the JSON document. Within JSON objects, name/value pairs are represented by a single token. </p>Parsing JSONTo create a recursive descent parser for your own JSON streams, first create an entry point method that creates a <code>{@code JsonReader}</code>. <p class="paragraph">Next, create handler methods for each structure in your JSON text. You'll need a method for each object type and for each array type. </p><ul><li>Within array handling methods, first call <a href="begin-array.html">beginArray</a> to consume the array's opening bracket. Then create a while loop that accumulates values, terminating when <a href="has-next.html">hasNext</a> is false. Finally, read the array's closing bracket by calling <a href="end-array.html"></a>. </li><li>Within object handling methods, first call <a href="begin-object.html">beginObject</a> to consume the object's opening brace. Then create a while loop that assigns values to local variables based on their name. This loop should terminate when <a href="has-next.html">hasNext</a> is false. Finally, read the object's closing brace by calling <a href="end-object.html">endObject</a>. </li></ul><p class="paragraph">When a nested object or array is encountered, delegate to the corresponding handler method. </p><p class="paragraph">When an unknown name is encountered, strict parsers should fail with an exception. Lenient parsers should call <a href="skip-value.html">skipValue</a> to recursively skip the value's nested tokens, which may otherwise conflict. </p><p class="paragraph">If a value may be null, you should first check using <a href="peek.html">peek</a>. Null literals can be consumed using either <a href="next-null.html">nextNull</a> or <a href="skip-value.html">skipValue</a>. </p>ExampleSuppose we'd like to parse a stream of messages such as the following: <div class="sample-container"><code class="" theme="idea"><pre><code>{@code * [ * { * &quot;id&quot;: 912345678901, * &quot;text&quot;: &quot;How do I read a JSON stream in Java?&quot;, * &quot;geo&quot;: null, * &quot;user&quot;: { * &quot;name&quot;: &quot;json_newb&quot;, * &quot;followers_count&quot;: 41 * } * }, * { * &quot;id&quot;: 912345678902, * &quot;text&quot;: &quot;@json_newb just use JsonReader!&quot;, * &quot;geo&quot;: [50.454722, -104.606667], * &quot;user&quot;: { * &quot;name&quot;: &quot;jesse&quot;, * &quot;followers_count&quot;: 2 * } * } * ] * }</code></pre></code></div>This code implements the parser for the above structure: <div class="sample-container"><code class="" theme="idea"><pre><code>{@code * public ListreadJsonStream(BufferedSource source) throws IOException {
+ *   JsonReader reader = JsonReader.of(source);
+ *   try {
+ *     return readMessagesArray(reader);
+ *   } finally {
+ *     reader.close();
+ *   }
+ * }
+ *
+ * public List</code></pre></code></div>Number HandlingThis reader permits numeric values to be read as strings and string values to be read as numbers. For example, both elements of the JSON array <code>{@code [1, &quot;1&quot;]}</code> may be read using either <a href="next-int.html"></a> or <a href="next-string.html">nextString</a>. This behavior is intended to prevent lossy numeric conversions: double is JavaScript's only numeric type and very large values like <code>{@code 9007199254740993}</code> cannot be represented exactly on that platform. To minimize precision loss, extremely large values should be written and read as strings in JSON. <p class="paragraph">Each <code>{@code JsonReader}</code> may be used to read a single JSON stream. Instances of this class are not thread safe.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Types">Types</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Types</h2>
+              <div class="table" data-togglable="Types"><a data-name="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Options" id="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-options/index.html">Options</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">class <a href="-options/index.html">Options</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Options" id="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Options" id="%5Bcom.squareup.moshi%2FJsonReader.Options%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>A set of strings to be chosen with <a href="select-name.html">selectName</a> or <a href="select-string.html">selectString</a>.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Token" id="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="-token/index.html">Token</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">enum <a href="-token/index.html">Token</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Token" id="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" anchor-label="Token" id="%5Bcom.squareup.moshi%2FJsonReader.Token%2F%2F%2FPointingToDeclaration%2F%5D%2FClasslikes%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>A structure, name, or value type in a JSON-encoded string.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="begin-array.html">beginArray</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="begin-array.html">beginArray</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Consumes the next token from the JSON stream and asserts that it is the beginning of a newarray.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="begin-object.html">beginObject</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="begin-object.html">beginObject</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="beginObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FbeginObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Consumes the next token from the JSON stream and asserts that it is the beginning of a newobject.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bjava.io%2FCloseable%2Fclose%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="close" id="%5Bjava.io%2FCloseable%2Fclose%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="../-json-writer/index.html#%5Bjava.io%2FCloseable%2Fclose%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601">close</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bjava.io%2FCloseable%2Fclose%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="../-json-writer/index.html#%5Bjava.io%2FCloseable%2Fclose%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601">close</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="end-array.html">endArray</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="end-array.html">endArray</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endArray" id="%5Bcom.squareup.moshi%2FJsonReader%2FendArray%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Consumes the next token from the JSON stream and asserts that it is the end of the currentarray.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="end-object.html">endObject</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="end-object.html">endObject</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="endObject" id="%5Bcom.squareup.moshi%2FJsonReader%2FendObject%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Consumes the next token from the JSON stream and asserts that it is the end of the currentobject.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="fail-on-unknown.html">failOnUnknown</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>fun <a href="fail-on-unknown.html">failOnUnknown</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns true if this parser forbids skipping names and values.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="getPath" id="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="get-path.html">getPath</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>fun <a href="get-path.html">getPath</a>(): <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="getPath" id="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="getPath" id="%5Bcom.squareup.moshi%2FJsonReader%2FgetPath%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to the current locationin the JSON value.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="hasNext" id="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="has-next.html">hasNext</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="has-next.html">hasNext</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="hasNext" id="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="hasNext" id="%5Bcom.squareup.moshi%2FJsonReader%2FhasNext%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns true if the current array or object has another element.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="isLenient" id="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="is-lenient.html">isLenient</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>fun <a href="is-lenient.html">isLenient</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="isLenient" id="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="isLenient" id="%5Bcom.squareup.moshi%2FJsonReader%2FisLenient%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns true if this parser is liberal in what it accepts.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextBoolean" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-boolean.html">nextBoolean</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-boolean.html">nextBoolean</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextBoolean" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextBoolean" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextBoolean%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/BOOLEAN/#/PointingToDeclaration/">boolean</span> value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextDouble" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-double.html">nextDouble</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-double.html">nextDouble</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html">Double</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextDouble" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextDouble" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextDouble%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/NUMBER/#/PointingToDeclaration/">double</span> value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextInt" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-int.html">nextInt</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-int.html">nextInt</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextInt" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextInt" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextInt%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/NUMBER/#/PointingToDeclaration/">int</span> value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextLong" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-long.html">nextLong</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-long.html">nextLong</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextLong" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextLong" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextLong%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/NUMBER/#/PointingToDeclaration/">long</span> value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextName" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-name.html">nextName</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="next-name.html">nextName</a>(): <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextName" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextName" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the next token, a <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/NAME/#/PointingToDeclaration/">property name</span>, and consumes it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextNull" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-null.html">nextNull</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nullable.html">Nullable</a>()</div></div>abstract fun &lt;<a href="next-null.html">T</a>&gt; <a href="next-null.html">nextNull</a>(): <a href="../../com.squareup.moshi.internal/-null-safe-json-adapter/index.html">T</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextNull" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextNull" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextNull%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Consumes the next token from the JSON stream and asserts that it is a literal null.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextSource" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-source.html">nextSource</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-source.html">nextSource</a>(): <a href="https://square.github.io/okio/2.x/okio/okio/-buffered-source/index.html">BufferedSource</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextSource" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextSource" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextSource%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the next value as a stream of UTF-8 bytes and consumes it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextString" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="next-string.html">nextString</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="next-string.html">nextString</a>(): <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextString" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="nextString" id="%5Bcom.squareup.moshi%2FJsonReader%2FnextString%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/STRING/#/PointingToDeclaration/">string</span> value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="of" id="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="of.html">of</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>open fun <a href="of.html">of</a>(source: <a href="https://square.github.io/okio/2.x/okio/okio/-buffered-source/index.html">BufferedSource</a>): <a href="index.html">JsonReader</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="of" id="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="of" id="%5Bcom.squareup.moshi%2FJsonReader%2Fof%2F%23okio.BufferedSource%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns a new instance that reads UTF-8 encoded JSON from <code>{@code source}</code>.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peek" id="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="peek.html">peek</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="peek.html">peek</a>(): <a href="-token/index.html">JsonReader.Token</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peek" id="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peek" id="%5Bcom.squareup.moshi%2FJsonReader%2Fpeek%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the type of the next token without consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peekJson" id="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="peek-json.html">peekJson</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="peek-json.html">peekJson</a>(): <a href="index.html">JsonReader</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peekJson" id="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="peekJson" id="%5Bcom.squareup.moshi%2FJsonReader%2FpeekJson%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns a new <code>{@code JsonReader}</code> that can read data from this <code>{@code JsonReader}</code> withoutconsuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="promoteNameToValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="promote-name-to-value.html">promoteNameToValue</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="promote-name-to-value.html">promoteNameToValue</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="promoteNameToValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="promoteNameToValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FpromoteNameToValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Changes the reader to treat the next name as a string value.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="readJsonValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="read-json-value.html">readJsonValue</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nullable.html">Nullable</a>()</div></div>fun <a href="read-json-value.html">readJsonValue</a>(): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="readJsonValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="readJsonValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FreadJsonValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the value of the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectName" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="select-name.html">selectName</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="select-name.html">selectName</a>(options: <a href="-options/index.html">JsonReader.Options</a>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectName" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectName" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectName%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>If the next token is a <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/NAME/#/PointingToDeclaration/">property name</span> that's in <code>{@code options}</code>, thisconsumes it and returns its index.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectString" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="select-string.html">selectString</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>abstract fun <a href="select-string.html">selectString</a>(options: <a href="-options/index.html">JsonReader.Options</a>): <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectString" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="selectString" id="%5Bcom.squareup.moshi%2FJsonReader%2FselectString%2F%23com.squareup.moshi.JsonReader.Options%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>If the next token is a <span data-unresolved-link="com.squareup.moshi/JsonReader.Token/STRING/#/PointingToDeclaration/">string</span> that's in <code>{@code options}</code>, thisconsumes it and returns its index.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="setTag" id="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="set-tag.html">setTag</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">fun &lt;<a href="set-tag.html">T</a>&gt; <a href="set-tag.html">setTag</a>(clazz: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html">Class</a>&lt;<a href="../../com.squareup.moshi.internal/-null-safe-json-adapter/index.html">T</a>&gt;, value: <a href="../../com.squareup.moshi.internal/-null-safe-json-adapter/index.html">T</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="setTag" id="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="setTag" id="%5Bcom.squareup.moshi%2FJsonReader%2FsetTag%2F%23java.lang.Class%3CT%3E%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Assigns the tag value using the given class key and value.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipName" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="skip-name.html">skipName</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="skip-name.html">skipName</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipName" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipName" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipName%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Skips the next token, consuming it.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="skip-value.html">skipValue</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace">abstract fun <a href="skip-value.html">skipValue</a>()<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="skipValue" id="%5Bcom.squareup.moshi%2FJsonReader%2FskipValue%2F%23%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Skips the next value recursively.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="tag" id="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="tag.html">tag</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nullable.html">Nullable</a>()</div></div>fun &lt;<a href="tag.html">T</a>&gt; <a href="tag.html">tag</a>(clazz: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html">Class</a>&lt;<a href="../../com.squareup.moshi.internal/-null-safe-json-adapter/index.html">T</a>&gt;): <a href="../../com.squareup.moshi.internal/-null-safe-json-adapter/index.html">T</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="tag" id="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" anchor-label="tag" id="%5Bcom.squareup.moshi%2FJsonReader%2Ftag%2F%23java.lang.Class%3CT%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>Returns the tag value for the given class key.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h2 class="">Properties</h2>
+              <div class="table" data-togglable="Properties"><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="fail-on-unknown.html">failOnUnknown</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="symbol monospace"> open var <a href="fail-on-unknown.html">failOnUnknown</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="failOnUnknown" id="%5Bcom.squareup.moshi%2FJsonReader%2FfailOnUnknown%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>True to throw a <a href="../-json-data-exception/index.html">JsonDataException</a> on any attempt to call <a href="skip-value.html">skipValue</a>.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="lenient" id="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":moshi:dokkaHtml/main" data-filterable-set=":moshi:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="lenient.html">lenient</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title">
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":moshi:dokkaHtml/main"><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="lenient" id="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a><div class="symbol monospace"> open var <a href="lenient.html">lenient</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" anchor-label="lenient" id="%5Bcom.squareup.moshi%2FJsonReader%2Flenient%2F%23%2FPointingToDeclaration%2F%5D%2FProperties%2F1316168601" data-filterable-set=":moshi:dokkaHtml/main"></a>True to accept non-spec compliant JSON.</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2021 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

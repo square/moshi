@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>PolymorphicJsonAdapterFactory</title>
+<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
+  <body>
+    <div id="container">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
+        <div id="sideMenu"></div>
+      </div>
+      <div id="main">
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="adapters::com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory///PointingToDeclaration//1415110173">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">adapters</a>/<a href="../index.html">com.squareup.moshi.adapters</a>/<a href="index.html">PolymorphicJsonAdapterFactory</a></div>
+            <div class="pull-right d-flex">
+              <div id="searchBar"></div>
+            </div>
+          </div>
+          <div class="cover ">
+            <h1 class="cover"><span>Polymorphic</span><wbr></wbr><span>Json</span><wbr></wbr><span>Adapter</span><wbr></wbr><span>Factory</span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace">class <a href="index.html">PolymorphicJsonAdapterFactory</a>&lt;<a href="index.html">T</a>&gt; : <span data-unresolved-link="com.squareup.moshi/JsonAdapter.Factory///PointingToDeclaration/">JsonAdapter.Factory</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">A JsonAdapter factory for objects that include type information in the JSON. When decoding JSON Moshi uses this type information to determine which class to decode to. When encoding Moshi uses the object’s class to determine what type information to include. </p><p class="paragraph">Suppose we have an interface, its implementations, and a class that uses them: </p><div class="sample-container"><code class="" theme="idea"><pre><code>{@code * interface HandOfCards { * } * * class BlackjackHand implements HandOfCards { * Card hidden_card; * Listvisible_cards;
+ * }
+ *
+ * class HoldemHand implements HandOfCards {
+ *   Set</code></pre></code></div><p class="paragraph">We want to decode the following JSON into the player model above: </p><div class="sample-container"><code class="" theme="idea"><pre><code>{@code * { * &quot;name&quot;: &quot;Jesse&quot;, * &quot;hand&quot;: { * &quot;hand_type&quot;: &quot;blackjack&quot;, * &quot;hidden_card&quot;: &quot;9D&quot;, * &quot;visible_cards&quot;: [&quot;8H&quot;, &quot;4C&quot;] * } * } * }</code></pre></code></div><p class="paragraph">Left unconfigured, Moshi would incorrectly attempt to decode the hand object to the abstract <code>{@code HandOfCards}</code> interface. We configure it to use the appropriate subtype instead: </p><div class="sample-container"><code class="" theme="idea"><pre><code>{@code * Moshi moshi = new Moshi.Builder() * .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, &quot;hand_type&quot;) * .withSubtype(BlackjackHand.class, &quot;blackjack&quot;) * .withSubtype(HoldemHand.class, &quot;holdem&quot;)) * .build(); * }</code></pre></code></div><p class="paragraph">This class imposes strict requirements on its use: </p><ul><li>Base types may be classes or interfaces. </li><li>Subtypes must encode as JSON objects. </li><li>Type information must be in the encoded object. Each message must have a type label like <code>{@code hand_type}</code> whose value is a string like <code>{@code blackjack}</code> that identifies which type to use. </li><li>Each type identifier must be unique. </li></ul><p class="paragraph">For best performance type information should be the first field in the object. Otherwise Moshi must reprocess the JSON stream once it knows the object's type. </p><p class="paragraph">If an unknown subtype is encountered when decoding: </p><ul><li>If <a href="with-default-value.html">withDefaultValue</a> is used, then <code>{@code defaultValue}</code> will be returned. </li><li>If <a href="with-fallback-json-adapter.html">withFallbackJsonAdapter</a> is used, then the <code>{@code * fallbackJsonAdapter.fromJson(reader)}</code> result will be returned. </li><li>Otherwise a <span data-unresolved-link="com.squareup.moshi/JsonDataException///PointingToDeclaration/">JsonDataException</span> will be thrown. </li></ul><p class="paragraph">If an unknown type is encountered when encoding: </p><ul><li>If <a href="with-fallback-json-adapter.html">withFallbackJsonAdapter</a> is used, then the <code>{@code * fallbackJsonAdapter.toJson(writer, value)}</code> result will be returned. </li><li>Otherwise a <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/IllegalArgumentException.html">IllegalArgumentException</a> will be thrown. </li></ul><p class="paragraph">If the same subtype has multiple labels the first one is used when encoding.</p></div></div>
+          </div>
+          <div class="tabbedcontent">
+            <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Functions">Functions</button></div>
+            <div class="tabs-section-body">
+              <h2 class="">Functions</h2>
+              <div class="table" data-togglable="Functions"><a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%2C+com.squareup.moshi%2FJsonAdapter.Factory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="create" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%2C+com.squareup.moshi%2FJsonAdapter.Factory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="create.html">create</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%2C+com.squareup.moshi%2FJsonAdapter.Factory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace">open fun <a href="create.html">create</a>(type: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Type.html">Type</a>, annotations: <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Set.html">Set</a>&lt;out <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/annotation/Annotation.html">Annotation</a>&gt;, moshi: <span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span>): <span data-unresolved-link="com.squareup.moshi/JsonAdapter///PointingToDeclaration/">JsonAdapter</span>&lt;out <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="symbol monospace">abstract fun <a href="index.html#%5Bcom.squareup.moshi%2FJsonAdapter.Factory%2Fcreate%2F%23java.lang.reflect.Type%23java.util.Set%3C%3F+extends+java.lang.annotation.Annotation%3E%23com.squareup.moshi.Moshi%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173">create</a>(p: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Type.html">Type</a>, p1: <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Set.html">Set</a>&lt;out <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/annotation/Annotation.html">Annotation</a>&gt;, p2: <span data-unresolved-link="com.squareup.moshi/Moshi///PointingToDeclaration/">Moshi</span>): <span data-unresolved-link="com.squareup.moshi/JsonAdapter///PointingToDeclaration/">JsonAdapter</span>&lt;out <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+</div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="of" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="of.html">of</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block">@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/CheckReturnValue.html">CheckReturnValue</a>()</div></div>open fun &lt;<a href="of.html">T</a>&gt; <a href="of.html">of</a>(baseType: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html">Class</a>&lt;<a href="../-enum-json-adapter/index.html">T</a>&gt;, labelKey: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html">String</a>): <a href="index.html">PolymorphicJsonAdapterFactory</a>&lt;<a href="../-enum-json-adapter/index.html">T</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="of" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="of" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2Fof%2F%23java.lang.Class%3CT%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>The base type for which this factory will create adapters.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withDefaultValue" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="with-default-value.html">withDefaultValue</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace">open fun <a href="with-default-value.html">withDefaultValue</a>(<span>@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nullable.html">Nullable</a>() </span>defaultValue: <a href="../-enum-json-adapter/index.html">T</a>): <a href="index.html">PolymorphicJsonAdapterFactory</a>&lt;<a href="../-enum-json-adapter/index.html">T</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withDefaultValue" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withDefaultValue" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithDefaultValue%2F%23T%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>Returns a new factory that will default to <code>{@code defaultValue}</code> upon decoding of unrecognizedlabels.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withFallbackJsonAdapter" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="with-fallback-json-adapter.html">withFallbackJsonAdapter</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace">open fun <a href="with-fallback-json-adapter.html">withFallbackJsonAdapter</a>(<span>@<a href="https://docs.oracle.com/javase/8/docs/api/javax/annotation/Nullable.html">Nullable</a>() </span>fallbackJsonAdapter: <span data-unresolved-link="com.squareup.moshi/JsonAdapter///PointingToDeclaration/">JsonAdapter</span>&lt;<a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a>&gt;): <a href="index.html">PolymorphicJsonAdapterFactory</a>&lt;<a href="../-enum-json-adapter/index.html">T</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withFallbackJsonAdapter" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withFallbackJsonAdapter" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithFallbackJsonAdapter%2F%23com.squareup.moshi.JsonAdapter%3Cjava.lang.Object%3E%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>Returns a new factory that with default to <code>{@code fallbackJsonAdapter.fromJson(reader)}</code> upondecoding of unrecognized labels.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withSubtype" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>
+                <div class="table-row" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main">
+                  <div class="main-subrow keyValue ">
+                    <div class=""><span class="inline-flex"><a href="with-subtype.html">withSubtype</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173"></span>
+                          <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                        </span></span></div>
+                    <div>
+                      <div class="title"><div class="divergent-group" data-filterable-current=":adapters:dokkaHtml/main" data-filterable-set=":adapters:dokkaHtml/main"><div class="with-platform-tags"><span class="pull-right"></span></div>
+
+  <div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":adapters:dokkaHtml/main"><div class="symbol monospace">open fun <a href="with-subtype.html">withSubtype</a>(subtype: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Class.html">Class</a>&lt;out <a href="../-enum-json-adapter/index.html">T</a>&gt;, label: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html">String</a>): <a href="index.html">PolymorphicJsonAdapterFactory</a>&lt;<a href="../-enum-json-adapter/index.html">T</a>&gt;<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+  </div>
+<a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withSubtype" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a><div class="brief "><a data-name="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" anchor-label="withSubtype" id="%5Bcom.squareup.moshi.adapters%2FPolymorphicJsonAdapterFactory%2FwithSubtype%2F%23java.lang.Class%3C%3F+extends+T%3E%23java.lang.String%2FPointingToDeclaration%2F%5D%2FFunctions%2F1415110173" data-filterable-set=":adapters:dokkaHtml/main"></a>Returns a new factory that decodes instances of <code>{@code subtype}</code>.</div></div>
+</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2021 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+      </div>
+    </div>
+  </body>
+</html>
+

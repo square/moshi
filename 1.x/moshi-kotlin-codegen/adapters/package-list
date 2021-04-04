@@ -1,0 +1,25 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.squareup.moshi.adapters////PointingToDeclaration/adapters/com.squareup.moshi.adapters/index.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter///PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/index.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter/create/#java.lang.Class<T>/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/create.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter/fromJson/#com.squareup.moshi.JsonReader/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/from-json.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter/toJson/#com.squareup.moshi.JsonWriter#T/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/to-json.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter/toString/#/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/to-string.html
+$dokka.location:com.squareup.moshi.adapters/EnumJsonAdapter/withUnknownFallback/#T/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-enum-json-adapter/with-unknown-fallback.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory///PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/index.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory/create/#java.lang.reflect.Type#java.util.Set<? extends java.lang.annotation.Annotation>#com.squareup.moshi.Moshi/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/create.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory/of/#java.lang.Class<T>#java.lang.String/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/of.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory/withDefaultValue/#T/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/with-default-value.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory/withFallbackJsonAdapter/#com.squareup.moshi.JsonAdapter<java.lang.Object>/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/with-fallback-json-adapter.html
+$dokka.location:com.squareup.moshi.adapters/PolymorphicJsonAdapterFactory/withSubtype/#java.lang.Class<? extends T>#java.lang.String/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-polymorphic-json-adapter-factory/with-subtype.html
+$dokka.location:com.squareup.moshi.adapters/Rfc3339DateJsonAdapter///PointingToDeclaration/adapters/com.squareup.moshi.adapters/-rfc3339-date-json-adapter/index.html
+$dokka.location:com.squareup.moshi.adapters/Rfc3339DateJsonAdapter/fromJson/#com.squareup.moshi.JsonReader/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-rfc3339-date-json-adapter/from-json.html
+$dokka.location:com.squareup.moshi.adapters/Rfc3339DateJsonAdapter/toJson/#com.squareup.moshi.JsonWriter#java.util.Date/PointingToDeclaration/adapters/com.squareup.moshi.adapters/-rfc3339-date-json-adapter/to-json.html
+$dokka.location:com.squareup.moshi////PointingToDeclaration/adapters/com.squareup.moshi/index.html
+$dokka.location:com.squareup.moshi/Rfc3339DateJsonAdapter///PointingToDeclaration/adapters/com.squareup.moshi/-rfc3339-date-json-adapter/index.html
+$dokka.location:com.squareup.moshi/Rfc3339DateJsonAdapter/fromJson/#com.squareup.moshi.JsonReader/PointingToDeclaration/adapters/com.squareup.moshi/-rfc3339-date-json-adapter/from-json.html
+$dokka.location:com.squareup.moshi/Rfc3339DateJsonAdapter/toJson/#com.squareup.moshi.JsonWriter#java.util.Date/PointingToDeclaration/adapters/com.squareup.moshi/-rfc3339-date-json-adapter/to-json.html
+com.squareup.moshi
+com.squareup.moshi.adapters
+

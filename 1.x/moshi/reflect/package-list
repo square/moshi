@@ -1,0 +1,5 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+com.squareup.moshi.kotlin.reflect
+

@@ -1,0 +1,14 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.squareup.moshi.kotlin.codegen////PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/index.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor.Companion///PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/-companion/index.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor.Companion/OPTION_GENERATED/#/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/-companion/-o-p-t-i-o-n_-g-e-n-e-r-a-t-e-d.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor///PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/index.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/JsonClassCodegenProcessor/#/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/-json-class-codegen-processor.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/getSupportedAnnotationTypes/#/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/get-supported-annotation-types.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/getSupportedOptions/#/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/get-supported-options.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/getSupportedSourceVersion/#/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/get-supported-source-version.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/init/#javax.annotation.processing.ProcessingEnvironment/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/init.html
+$dokka.location:com.squareup.moshi.kotlin.codegen/JsonClassCodegenProcessor/process/#kotlin.collections.Set[javax.lang.model.element.TypeElement]#javax.annotation.processing.RoundEnvironment/PointingToDeclaration/codegen/com.squareup.moshi.kotlin.codegen/-json-class-codegen-processor/process.html
+com.squareup.moshi.kotlin.codegen
+

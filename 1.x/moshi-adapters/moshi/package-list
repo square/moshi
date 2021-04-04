@@ -1,0 +1,6 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+com.squareup.moshi
+com.squareup.moshi.internal
+

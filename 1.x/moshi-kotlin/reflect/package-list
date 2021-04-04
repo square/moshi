@@ -1,0 +1,8 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.squareup.moshi.kotlin.reflect////PointingToDeclaration/reflect/com.squareup.moshi.kotlin.reflect/index.html
+$dokka.location:com.squareup.moshi.kotlin.reflect/KotlinJsonAdapterFactory///PointingToDeclaration/reflect/com.squareup.moshi.kotlin.reflect/-kotlin-json-adapter-factory/index.html
+$dokka.location:com.squareup.moshi.kotlin.reflect/KotlinJsonAdapterFactory/KotlinJsonAdapterFactory/#/PointingToDeclaration/reflect/com.squareup.moshi.kotlin.reflect/-kotlin-json-adapter-factory/-kotlin-json-adapter-factory.html
+$dokka.location:com.squareup.moshi.kotlin.reflect/KotlinJsonAdapterFactory/create/#java.lang.reflect.Type#kotlin.collections.MutableSet[kotlin.Annotation]#com.squareup.moshi.Moshi/PointingToDeclaration/reflect/com.squareup.moshi.kotlin.reflect/-kotlin-json-adapter-factory/create.html
+com.squareup.moshi.kotlin.reflect
+
