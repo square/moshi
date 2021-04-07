@@ -664,7 +664,7 @@ add the following to your build to enable the annotation processor:
 ```
 
 ```kotlin
-kapt("com.squareup.moshi:moshi-kotlin-codegen:1.11.0")
+kapt("com.squareup.moshi:moshi-kotlin-codegen:1.12.0")
 ```
 
 You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
@@ -695,7 +695,7 @@ Download [the latest JAR][dl] or depend via Maven:
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.11.0")
+implementation("com.squareup.moshi:moshi:1.12.0")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
