@@ -188,111 +188,111 @@ internal class KotlinJsonAdapter<T>(
 public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi):
     JsonAdapter<*>? {
-      if (annotations.isNotEmpty()) return null
+    if (annotations.isNotEmpty()) return null
 
-      val rawType = type.rawType
-      if (rawType.isInterface) return null
-      if (rawType.isEnum) return null
-      if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
-      if (Util.isPlatformType(rawType)) return null
-      try {
-        val generatedAdapter = generatedAdapter(moshi, type, rawType)
-        if (generatedAdapter != null) {
-          return generatedAdapter
-        }
-      } catch (e: RuntimeException) {
-        if (e.cause !is ClassNotFoundException) {
-          throw e
-        }
-        // Fall back to a reflective adapter when the generated adapter is not found.
+    val rawType = type.rawType
+    if (rawType.isInterface) return null
+    if (rawType.isEnum) return null
+    if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
+    if (Util.isPlatformType(rawType)) return null
+    try {
+      val generatedAdapter = generatedAdapter(moshi, type, rawType)
+      if (generatedAdapter != null) {
+        return generatedAdapter
       }
-
-      require(!rawType.isLocalClass) {
-        "Cannot serialize local class or object expression ${rawType.name}"
+    } catch (e: RuntimeException) {
+      if (e.cause !is ClassNotFoundException) {
+        throw e
       }
-      val rawTypeKotlin = rawType.kotlin
-      require(!rawTypeKotlin.isAbstract) {
-        "Cannot serialize abstract class ${rawType.name}"
-      }
-      require(!rawTypeKotlin.isInner) {
-        "Cannot serialize inner class ${rawType.name}"
-      }
-      require(rawTypeKotlin.objectInstance == null) {
-        "Cannot serialize object declaration ${rawType.name}"
-      }
-      require(!rawTypeKotlin.isSealed) {
-        "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
-      }
-
-      val constructor = rawTypeKotlin.primaryConstructor ?: return null
-      val parametersByName = constructor.parameters.associateBy { it.name }
-      constructor.isAccessible = true
-
-      val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
-
-      for (property in rawTypeKotlin.memberProperties) {
-        val parameter = parametersByName[property.name]
-
-        if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
-          require(parameter == null || parameter.isOptional) {
-            "No default value for transient constructor $parameter"
-          }
-          continue
-        }
-
-        require(parameter == null || parameter.type == property.returnType) {
-          "'${property.name}' has a constructor parameter of type ${parameter!!.type} but a property of type ${property.returnType}."
-        }
-
-        if (property !is KMutableProperty1 && parameter == null) continue
-
-        property.isAccessible = true
-        val allAnnotations = property.annotations.toMutableList()
-        var jsonAnnotation = property.findAnnotation<Json>()
-
-        if (parameter != null) {
-          allAnnotations += parameter.annotations
-          if (jsonAnnotation == null) {
-            jsonAnnotation = parameter.findAnnotation()
-          }
-        }
-
-        val name = jsonAnnotation?.name ?: property.name
-        val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
-        val adapter = moshi.adapter<Any>(
-          resolvedPropertyType,
-          Util.jsonAnnotations(allAnnotations.toTypedArray()),
-          property.name
-        )
-
-        @Suppress("UNCHECKED_CAST")
-        bindingsByName[property.name] = KotlinJsonAdapter.Binding(
-          name,
-          jsonAnnotation?.name ?: name,
-          adapter,
-          property as KProperty1<Any, Any?>,
-          parameter,
-          parameter?.index ?: -1
-        )
-      }
-
-      val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
-
-      for (parameter in constructor.parameters) {
-        val binding = bindingsByName.remove(parameter.name)
-        require(binding != null || parameter.isOptional) {
-          "No property for required constructor $parameter"
-        }
-        bindings += binding
-      }
-
-      var index = bindings.size
-      for (bindingByName in bindingsByName) {
-        bindings += bindingByName.value.copy(propertyIndex = index++)
-      }
-
-      val nonTransientBindings = bindings.filterNotNull()
-      val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
-      return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
+      // Fall back to a reflective adapter when the generated adapter is not found.
     }
+
+    require(!rawType.isLocalClass) {
+      "Cannot serialize local class or object expression ${rawType.name}"
+    }
+    val rawTypeKotlin = rawType.kotlin
+    require(!rawTypeKotlin.isAbstract) {
+      "Cannot serialize abstract class ${rawType.name}"
+    }
+    require(!rawTypeKotlin.isInner) {
+      "Cannot serialize inner class ${rawType.name}"
+    }
+    require(rawTypeKotlin.objectInstance == null) {
+      "Cannot serialize object declaration ${rawType.name}"
+    }
+    require(!rawTypeKotlin.isSealed) {
+      "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
+    }
+
+    val constructor = rawTypeKotlin.primaryConstructor ?: return null
+    val parametersByName = constructor.parameters.associateBy { it.name }
+    constructor.isAccessible = true
+
+    val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
+
+    for (property in rawTypeKotlin.memberProperties) {
+      val parameter = parametersByName[property.name]
+
+      if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
+        require(parameter == null || parameter.isOptional) {
+          "No default value for transient constructor $parameter"
+        }
+        continue
+      }
+
+      require(parameter == null || parameter.type == property.returnType) {
+        "'${property.name}' has a constructor parameter of type ${parameter!!.type} but a property of type ${property.returnType}."
+      }
+
+      if (property !is KMutableProperty1 && parameter == null) continue
+
+      property.isAccessible = true
+      val allAnnotations = property.annotations.toMutableList()
+      var jsonAnnotation = property.findAnnotation<Json>()
+
+      if (parameter != null) {
+        allAnnotations += parameter.annotations
+        if (jsonAnnotation == null) {
+          jsonAnnotation = parameter.findAnnotation()
+        }
+      }
+
+      val name = jsonAnnotation?.name ?: property.name
+      val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
+      val adapter = moshi.adapter<Any>(
+        resolvedPropertyType,
+        Util.jsonAnnotations(allAnnotations.toTypedArray()),
+        property.name
+      )
+
+      @Suppress("UNCHECKED_CAST")
+      bindingsByName[property.name] = KotlinJsonAdapter.Binding(
+        name,
+        jsonAnnotation?.name ?: name,
+        adapter,
+        property as KProperty1<Any, Any?>,
+        parameter,
+        parameter?.index ?: -1
+      )
+    }
+
+    val bindings = ArrayList<KotlinJsonAdapter.Binding<Any, Any?>?>()
+
+    for (parameter in constructor.parameters) {
+      val binding = bindingsByName.remove(parameter.name)
+      require(binding != null || parameter.isOptional) {
+        "No property for required constructor $parameter"
+      }
+      bindings += binding
+    }
+
+    var index = bindings.size
+    for (bindingByName in bindingsByName) {
+      bindings += bindingByName.value.copy(propertyIndex = index++)
+    }
+
+    val nonTransientBindings = bindings.filterNotNull()
+    val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
+    return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
+  }
 }

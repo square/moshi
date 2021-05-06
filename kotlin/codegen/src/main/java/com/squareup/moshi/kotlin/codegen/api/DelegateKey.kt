@@ -31,6 +31,7 @@ import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
+import java.util.Locale
 
 /** A JsonAdapter that can be used to encode and decode a particular field. */
 internal data class DelegateKey(
@@ -50,7 +51,7 @@ internal data class DelegateKey(
       "At${it.typeName.rawType().simpleName}"
     }
     val adapterName = nameAllocator.newName(
-      "${type.toVariableName().decapitalize()}${qualifierNames}Adapter",
+      "${type.toVariableName().replaceFirstChar { it.lowercase(Locale.US) }}${qualifierNames}Adapter",
       this
     )
 

@@ -1191,11 +1191,14 @@ class GeneratedAdaptersTest {
   annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
 
   class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase(inFrench = true) s: String): String {
-      return s.toUpperCase(Locale.US)
+    @ToJson
+    fun toJson(@Uppercase(inFrench = true) s: String): String {
+      return s.uppercase(Locale.US)
     }
-    @FromJson @Uppercase(inFrench = true) fun fromJson(s: String): String {
-      return s.toLowerCase(Locale.US)
+    @FromJson
+    @Uppercase(inFrench = true)
+    fun fromJson(s: String): String {
+      return s.lowercase(Locale.US)
     }
   }
 

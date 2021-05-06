@@ -24,10 +24,13 @@ import java.util.Locale
 annotation class UppercaseInAnnotationPackage
 
 class UppercaseInAnnotationPackageJsonAdapter {
-  @ToJson fun toJson(@UppercaseInAnnotationPackage s: String): String {
-    return s.toUpperCase(Locale.US)
+  @ToJson
+  fun toJson(@UppercaseInAnnotationPackage s: String): String {
+    return s.uppercase(Locale.US)
   }
-  @FromJson @UppercaseInAnnotationPackage fun fromJson(s: String): String {
-    return s.toLowerCase(Locale.US)
+  @FromJson
+  @UppercaseInAnnotationPackage
+  fun fromJson(s: String): String {
+    return s.lowercase(Locale.US)
   }
 }

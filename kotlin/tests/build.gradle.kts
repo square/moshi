@@ -26,8 +26,7 @@ tasks.withType<KotlinCompile>().configureEach {
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
       "-Werror",
-      "-Xopt-in=kotlin.ExperimentalStdlibApi",
-      "-Xinline-classes"
+      "-Xopt-in=kotlin.ExperimentalStdlibApi"
     )
   }
 }
