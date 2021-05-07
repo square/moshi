@@ -916,11 +916,14 @@ class KotlinJsonAdapterTest {
   annotation class Uppercase
 
   class UppercaseJsonAdapter {
-    @ToJson fun toJson(@Uppercase s: String): String {
-      return s.toUpperCase(Locale.US)
+    @ToJson
+    fun toJson(@Uppercase s: String): String {
+      return s.uppercase(Locale.US)
     }
-    @FromJson @Uppercase fun fromJson(s: String): String {
-      return s.toLowerCase(Locale.US)
+    @FromJson
+    @Uppercase
+    fun fromJson(s: String): String {
+      return s.lowercase(Locale.US)
     }
   }
 

@@ -285,9 +285,9 @@ class DualKotlinTest(useReflection: Boolean) {
   }
 
   @Test fun inlineClass() {
-    val adapter = moshi.adapter<InlineClass>()
+    val adapter = moshi.adapter<ValueClass>()
 
-    val inline = InlineClass(5)
+    val inline = ValueClass(5)
 
     val expectedJson =
       """{"i":5}"""
@@ -300,12 +300,12 @@ class DualKotlinTest(useReflection: Boolean) {
   }
 
   @JsonClass(generateAdapter = true)
-  data class InlineConsumer(val inline: InlineClass)
+  data class InlineConsumer(val inline: ValueClass)
 
   @Test fun inlineClassConsumer() {
     val adapter = moshi.adapter<InlineConsumer>()
 
-    val consumer = InlineConsumer(InlineClass(23))
+    val consumer = InlineConsumer(ValueClass(23))
 
     @Language("JSON")
     val expectedJson =
@@ -622,9 +622,10 @@ typealias GenericTypeAlias = List<out GenericClass<in TypeAlias>?>?
 @JsonClass(generateAdapter = true)
 data class GenericClass<T>(val value: T)
 
-// Has to be outside since inline classes are only allowed on top level
+// Has to be outside since value classes are only allowed on top level
+@JvmInline
 @JsonClass(generateAdapter = true)
-inline class InlineClass(val i: Int)
+value class ValueClass(val i: Int)
 
 typealias A = Int
 typealias NullableA = A?

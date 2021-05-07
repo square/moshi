@@ -18,7 +18,7 @@ object Dependencies {
 
   const val asm = "org.ow2.asm:asm:7.1"
   const val jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
-  const val ktlintVersion = "0.39.0"
+  const val ktlintVersion = "0.41.0"
   const val okio = "com.squareup.okio:okio:2.10.0"
 
   object AnimalSniffer {
@@ -39,8 +39,8 @@ object Dependencies {
   }
 
   object Kotlin {
-    const val version = "1.4.32"
-    const val metadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.2.0"
+    const val version = "1.5.0"
+    const val metadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0"
   }
 
   object KotlinPoet {
@@ -53,7 +53,7 @@ object Dependencies {
 
   object Testing {
     const val assertj = "org.assertj:assertj-core:3.11.1"
-    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.3.6"
+    const val compileTesting = "com.github.tschuchortdev:kotlin-compile-testing:1.4.0"
     const val junit = "junit:junit:4.13.2"
     const val truth = "com.google.truth:truth:1.0.1"
   }

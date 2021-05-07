@@ -23,11 +23,14 @@ plugins {
 }
 
 tasks.withType<KotlinCompile>()
-  .matching { it.name.contains("test", true) }
   .configureEach {
     kotlinOptions {
-      @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-      freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+      jvmTarget = "1.6"
+
+      if (name.contains("test", true)) {
+        @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
+        freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+      }
     }
   }
 

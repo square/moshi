@@ -22,7 +22,7 @@ plugins {
   kotlin("jvm")
   kotlin("kapt")
   id("com.vanniktech.maven.publish")
-  id("com.github.johnrengelman.shadow") version "6.0.0"
+  id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -102,6 +102,6 @@ val shadowJar = tasks.shadowJar.apply {
 }
 
 artifacts {
-  runtime(shadowJar)
+  runtimeOnly(shadowJar)
   archives(shadowJar)
 }
