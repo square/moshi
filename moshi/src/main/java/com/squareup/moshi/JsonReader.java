@@ -436,7 +436,7 @@ public abstract class JsonReader implements Closeable {
    * JsonReader reader = JsonReader.of(new Buffer().writeUtf8(json));
    * reader.beginObject();
    * assertThat(reader.nextName()).isEqualTo("a");
-   * try (BufferedSource bufferedSource = reader.valueSource()) {
+   * try (BufferedSource bufferedSource = reader.nextSource()) {
    *   assertThat(bufferedSource.readUtf8()).isEqualTo("[4,  5  ,6.0, {\"x\":7}, 8]");
    * }
    * assertThat(reader.nextName()).isEqualTo("b");
@@ -455,7 +455,7 @@ public abstract class JsonReader implements Closeable {
    * <pre>{@code
    * JsonReader reader = ...
    * reader.beginArray();
-   * BufferedSource source = reader.valueSource();
+   * BufferedSource source = reader.nextSource();
    * reader.endArray();
    * source.readUtf8(); // Crash!
    * }</pre>
