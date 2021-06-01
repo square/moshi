@@ -708,7 +708,7 @@ Moshi contains minimally required rules for its own internals to work without ne
 
 #### Enums
 
-Remember to annotate enums with `@JsonClass(generateAdapter = false)` to prevent them from being removed from your code by R8/ProGuard.
+Annotate enums with `@JsonClass(generateAdapter = false)` to prevent them from being removed/obfuscated from your code by R8/ProGuard.
 
 License
 --------
