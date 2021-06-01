@@ -368,7 +368,7 @@ class JsonClassCodegenProcessorTest {
           """
       )
     ).apply {
-      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
+      kaptArgs[JsonClassCodegenProcessor.OPTION_PROGUARD_CODE_GENERATED] = "false"
     }.compile()
     assertThat(result.messages).contains(
       "Moshi will not generate Proguard rule." +
