@@ -96,7 +96,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       )
     }
 
-    generatedProguard = processingEnv.options[OPTION_PROGUARD_CODE_GENERATED]?.toBoolean() ?: true
+    generatedProguard = processingEnv.options[OPTION_PROGUARD_CODE_GENERATED]?.toBooleanStrictOrNull() ?: true
 
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
