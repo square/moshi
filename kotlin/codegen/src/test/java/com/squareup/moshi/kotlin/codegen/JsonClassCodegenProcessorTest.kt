@@ -355,6 +355,27 @@ class JsonClassCodegenProcessorTest {
       "Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}"
     )
   }
+  @Test
+  fun disableProguardGenerating() {
+    val result = prepareCompilation(
+      kotlin(
+        "source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class Foo(val a: Int)
+          """
+      )
+    ).apply {
+      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
+    }.compile()
+    assertThat(result.messages).contains(
+      "Moshi will not generate Proguard rule." +
+        " obfuscation will break your application" +
+        " unless having your own JsonAdapter look-up tool"
+    )
+  }
 
   @Test
   fun multipleErrors() {
