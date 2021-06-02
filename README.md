@@ -65,7 +65,6 @@ val jsonAdapter: JsonAdapter<BlackjackHand> = moshi.adapter(BlackjackHand::class
 val json: String = jsonAdapter.toJson(blackjackHand)
 println(json)
 ```
-
 </details>
 
 ### Built-in Type Adapters
@@ -289,6 +288,7 @@ class Event {
 Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi do the
 transformation automatically. We simply define another class `EventJson` that directly corresponds
 to the JSON structure:
+
 <details open>
     <summary>Java</summary>
 
@@ -318,6 +318,7 @@ to convert an `EventJson` to an `Event` and back. Now, whenever we are asking Mo
 to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to
 serialize an `Event` Moshi will first create an `EventJson` object and then serialize that object as
 usual.
+
 <details open>
     <summary>Java</summary>
 
@@ -386,8 +387,7 @@ val moshi = Moshi.Builder()
 ```
 </details>
 
-
-    se the JSON directly to an `Event`.
+We can now use Moshi to parse the JSON directly to an `Event`.
 
 <details open>
     <summary>Java</summary>
