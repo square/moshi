@@ -65,7 +65,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
      * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
      * This is enabled by default
      */
-    public const val OPTION_PROGUARD_CODE_GENERATED: String = "moshi.enabledProguardGenerated"
+    public const val OPTION_ENABLE_PROGUARD_RULE_GENERATION: String = "moshi.enabledProguardGenerated"
     private val POSSIBLE_GENERATED_NAMES = arrayOf(
       ClassName("javax.annotation.processing", "Generated"),
       ClassName("javax.annotation", "Generated")
@@ -79,7 +79,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
   private lateinit var cachedClassInspector: MoshiCachedClassInspector
   private val annotation = JsonClass::class.java
   private var generatedType: ClassName? = null
-  private var generatedProguard: Boolean = true
+  private var generateProguardRules: Boolean = true
 
   override fun getSupportedAnnotationTypes(): Set<String> = setOf(annotation.canonicalName)
 
@@ -96,7 +96,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       )
     }
 
-    generatedProguard = processingEnv.options[OPTION_PROGUARD_CODE_GENERATED]?.toBooleanStrictOrNull() ?: true
+    generateProguardRules = processingEnv.options[OPTION_ENABLE_PROGUARD_RULE_GENERATION]?.toBooleanStrictOrNull() ?: true
 
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
@@ -124,7 +124,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         val preparedAdapter = generator
-          .prepare(generatedProguard) { spec ->
+          .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
               .apply {
                 @Suppress("DEPRECATION") // This is a Java type
@@ -145,15 +145,8 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
           }
 
         preparedAdapter.spec.writeTo(filer)
-        if (generatedProguard) {
+        if (generateProguardRules) {
           preparedAdapter.proguardConfig?.writeTo(filer, type)
-        } else {
-          messager.printMessage(
-            Diagnostic.Kind.WARNING,
-            "Moshi will not generate Proguard rule." +
-              " obfuscation will break your application" +
-              " unless having your own JsonAdapter look-up tool"
-          )
         }
       }
     }

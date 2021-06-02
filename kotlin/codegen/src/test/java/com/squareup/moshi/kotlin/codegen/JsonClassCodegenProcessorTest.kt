@@ -356,7 +356,7 @@ class JsonClassCodegenProcessorTest {
     )
   }
   @Test
-  fun disableProguardGenerating() {
+  fun disableProguardRulesGenerating() {
     val result = prepareCompilation(
       kotlin(
         "source.kt",
@@ -368,13 +368,9 @@ class JsonClassCodegenProcessorTest {
           """
       )
     ).apply {
-      kaptArgs[JsonClassCodegenProcessor.OPTION_PROGUARD_CODE_GENERATED] = "false"
+      kaptArgs[JsonClassCodegenProcessor.OPTION_ENABLE_PROGUARD_RULE_GENERATION] = "false"
     }.compile()
-    assertThat(result.messages).contains(
-      "Moshi will not generate Proguard rule." +
-        " obfuscation will break your application" +
-        " unless having your own JsonAdapter look-up tool"
-    )
+    assertThat(result.generatedFiles.all { !it.endsWith(".pro") }).isFalse()
   }
 
   @Test
