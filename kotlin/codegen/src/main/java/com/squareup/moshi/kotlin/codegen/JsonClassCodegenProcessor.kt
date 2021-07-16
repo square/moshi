@@ -61,11 +61,12 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
     public const val OPTION_GENERATED: String = "moshi.generated"
 
     /**
-     * This annotation processing argument disables proguard rule generation.
+     * This boolean processing option can control proguard rule generation.
      * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
-     * This is enabled by default
+     * This is enabled by default.
      */
-    public const val OPTION_ENABLE_PROGUARD_RULE_GENERATION: String = "moshi.enabledProguardGenerated"
+    public const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
+
     private val POSSIBLE_GENERATED_NAMES = arrayOf(
       ClassName("javax.annotation.processing", "Generated"),
       ClassName("javax.annotation", "Generated")
@@ -96,7 +97,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       )
     }
 
-    generateProguardRules = processingEnv.options[OPTION_ENABLE_PROGUARD_RULE_GENERATION]?.toBooleanStrictOrNull() ?: true
+    generateProguardRules = processingEnv.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
 
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
@@ -145,9 +146,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
           }
 
         preparedAdapter.spec.writeTo(filer)
-        if (generateProguardRules) {
-          preparedAdapter.proguardConfig?.writeTo(filer, type)
-        }
+        preparedAdapter.proguardConfig?.writeTo(filer, type)
       }
     }
 
