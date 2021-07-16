@@ -61,7 +61,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
     public const val OPTION_GENERATED: String = "moshi.generated"
 
     /**
-     * This annotation processing argument can disable proguard rule generating.
+     * This annotation processing argument disables proguard rule generation.
      * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
      * This is enabled by default
      */

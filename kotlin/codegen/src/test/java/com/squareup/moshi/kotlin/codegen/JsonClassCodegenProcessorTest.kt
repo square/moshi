@@ -370,7 +370,7 @@ class JsonClassCodegenProcessorTest {
     ).apply {
       kaptArgs[JsonClassCodegenProcessor.OPTION_ENABLE_PROGUARD_RULE_GENERATION] = "false"
     }.compile()
-    assertThat(result.generatedFiles.all { !it.endsWith(".pro") }).isFalse()
+    assertThat(result.generatedFiles.filter { it.endsWith(".pro") }).isEmpty()
   }
 
   @Test
