@@ -59,6 +59,13 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
      *   * `"javax.annotation.Generated"` (JRE <9)
      */
     public const val OPTION_GENERATED: String = "moshi.generated"
+
+    /**
+     * This annotation processing argument disables proguard rule generation.
+     * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
+     * This is enabled by default
+     */
+    public const val OPTION_ENABLE_PROGUARD_RULE_GENERATION: String = "moshi.enabledProguardGenerated"
     private val POSSIBLE_GENERATED_NAMES = arrayOf(
       ClassName("javax.annotation.processing", "Generated"),
       ClassName("javax.annotation", "Generated")
@@ -72,6 +79,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
   private lateinit var cachedClassInspector: MoshiCachedClassInspector
   private val annotation = JsonClass::class.java
   private var generatedType: ClassName? = null
+  private var generateProguardRules: Boolean = true
 
   override fun getSupportedAnnotationTypes(): Set<String> = setOf(annotation.canonicalName)
 
@@ -87,6 +95,9 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
           "allowable values are $POSSIBLE_GENERATED_NAMES."
       )
     }
+
+    generateProguardRules = processingEnv.options[OPTION_ENABLE_PROGUARD_RULE_GENERATION]?.toBooleanStrictOrNull() ?: true
+
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
     this.filer = processingEnv.filer
@@ -113,7 +124,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         val preparedAdapter = generator
-          .prepare { spec ->
+          .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
               .apply {
                 @Suppress("DEPRECATION") // This is a Java type
@@ -134,7 +145,9 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
           }
 
         preparedAdapter.spec.writeTo(filer)
-        preparedAdapter.proguardConfig?.writeTo(filer, type)
+        if (generateProguardRules) {
+          preparedAdapter.proguardConfig?.writeTo(filer, type)
+        }
       }
     }
 

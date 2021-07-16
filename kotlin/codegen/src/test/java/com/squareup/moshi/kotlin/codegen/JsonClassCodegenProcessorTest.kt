@@ -355,6 +355,23 @@ class JsonClassCodegenProcessorTest {
       "Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}"
     )
   }
+  @Test
+  fun disableProguardRulesGenerating() {
+    val result = prepareCompilation(
+      kotlin(
+        "source.kt",
+        """
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class Foo(val a: Int)
+          """
+      )
+    ).apply {
+      kaptArgs[JsonClassCodegenProcessor.OPTION_ENABLE_PROGUARD_RULE_GENERATION] = "false"
+    }.compile()
+    assertThat(result.generatedFiles.filter { it.endsWith(".pro") }).isEmpty()
+  }
 
   @Test
   fun multipleErrors() {
