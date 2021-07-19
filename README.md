@@ -443,7 +443,7 @@ public final class BlackjackHand {
 ```
 
 Transient fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
-JSON contains a value for the field. Instead it will get a default value.
+JSON contains a value for the field. Instead, it will get a default value.
 
 
 ### Default Values & Constructors
