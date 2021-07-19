@@ -27,4 +27,4 @@ obj
 .gradle
 
 # Temporary until generating a docsite
-docs/
+docs/1.x

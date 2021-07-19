@@ -20,7 +20,7 @@ Download [the latest JAR][1] or grab via [Maven][2]:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-adapters</artifactId>
-  <version>latest.version</version>
+  <version>1.11.0</version>
 </dependency>
 ```
 or [Gradle][2]:
