@@ -437,7 +437,7 @@ internal fun TargetProperty.generator(
     return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
-  if (!isVisible) {
+  if (!isVisible && parameter != null) {
     messager.printMessage(
       ERROR,
       "property $name is not visible",

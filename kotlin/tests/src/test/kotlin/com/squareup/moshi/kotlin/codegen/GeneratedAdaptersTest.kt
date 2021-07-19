@@ -1489,5 +1489,16 @@ data class Hotwords(
   val `class`: List<String>?
 )
 
+// Compile-only, regression test for https://github.com/square/moshi/issues/1259
+@JsonClass(generateAdapter = true)
+data class PrivateComputedProperty(val fieldA: String, val fieldB: Int) {
+  private val computed: String
+    get() = if (fieldB == 0) {
+      "zero"
+    } else {
+      fieldA
+    }
+}
+
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
