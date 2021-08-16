@@ -39,7 +39,7 @@ jobs:
       - name: Configure JDK
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt'
+          distribution: 'zulu'
           java-version: ${{ matrix.java-version }}
 
       - name: Test
