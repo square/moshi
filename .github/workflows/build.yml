@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew build check --stacktrace
 
       - name: Publish (default branch only)
-        if: github.ref == 'refs/heads/master' && matrix.java-version == '8'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '8'
         run: ./gradlew uploadArchives
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
