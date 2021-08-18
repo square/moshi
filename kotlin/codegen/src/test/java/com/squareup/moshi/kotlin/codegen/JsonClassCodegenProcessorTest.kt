@@ -47,7 +47,7 @@ class JsonClassCodegenProcessorTest {
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
-          class PrivateConstructor private constructor(var a: Int, var b: Int) {
+          class PrivateConstructor private constructor(val a: Int, val b: Int) {
             fun a() = a
             fun b() = b
             companion object {
