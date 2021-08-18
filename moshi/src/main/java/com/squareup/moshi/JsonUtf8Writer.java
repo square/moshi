@@ -358,6 +358,7 @@ final class JsonUtf8Writer extends JsonWriter {
    * and escapes those characters that require it.
    */
   static void string(BufferedSink sink, String value) throws IOException {
+    String[] replacements = REPLACEMENT_CHARS;
     sink.writeByte('"');
     int last = 0;
     int length = value.length();
@@ -365,7 +366,7 @@ final class JsonUtf8Writer extends JsonWriter {
       char c = value.charAt(i);
       String replacement;
       if (c < 128) {
-        replacement = REPLACEMENT_CHARS[c];
+        replacement = replacements[c];
         if (replacement == null) {
           continue;
         }

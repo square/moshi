@@ -212,8 +212,8 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
     }
 
     List<JsonAdapter<Object>> jsonAdapters = new ArrayList<>(subtypes.size());
-    for (Type subtype : subtypes) {
-      jsonAdapters.add(moshi.adapter(subtype));
+    for (int i = 0, size = subtypes.size(); i < size; i++) {
+      jsonAdapters.add(moshi.adapter(subtypes.get(i)));
     }
 
     return new PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)

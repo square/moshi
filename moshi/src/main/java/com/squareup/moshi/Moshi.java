@@ -141,8 +141,8 @@ public final class Moshi {
       if (adapterFromCall != null) return adapterFromCall;
 
       // Ask each factory to create the JSON adapter.
-      for (JsonAdapter.Factory factory : factories) {
-        JsonAdapter<T> result = (JsonAdapter<T>) factory.create(type, annotations, this);
+      for (int i = 0, size = factories.size(); i < size; i++) {
+        JsonAdapter<T> result = (JsonAdapter<T>) factories.get(i).create(type, annotations, this);
         if (result == null) continue;
 
         // Success! Notify the LookupChain so it is cached and can be used by re-entrant calls.
@@ -321,7 +321,8 @@ public final class Moshi {
      */
     <T> JsonAdapter<T> push(Type type, @Nullable String fieldName, Object cacheKey) {
       // Try to find a lookup with the same key for the same call.
-      for (Lookup<?> lookup : callLookups) {
+      for (int i = 0, size = callLookups.size(); i < size; i++) {
+        Lookup<?> lookup = callLookups.get(i);
         if (lookup.cacheKey.equals(cacheKey)) {
           Lookup<T> hit = (Lookup<T>) lookup;
           stack.add(hit);
@@ -355,7 +356,8 @@ public final class Moshi {
 
       if (success) {
         synchronized (adapterCache) {
-          for (Lookup<?> lookup : callLookups) {
+          for (int i = 0, size = callLookups.size(); i < size; i++) {
+            Lookup<?> lookup = callLookups.get(i);
             JsonAdapter<?> replaced = adapterCache.put(lookup.cacheKey, lookup.adapter);
             if (replaced != null) {
               ((Lookup<Object>) lookup).adapter = (JsonAdapter<Object>) replaced;
