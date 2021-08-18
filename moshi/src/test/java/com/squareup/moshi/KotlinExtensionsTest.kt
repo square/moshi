@@ -61,7 +61,7 @@ class KotlinExtensionsTest {
   fun addAdapterInferred() {
     // An adapter that always returns -1
     val customIntdapter = object : JsonAdapter<Int>() {
-      override fun fromJson(reader: JsonReader): Int? {
+      override fun fromJson(reader: JsonReader): Int {
         reader.skipValue()
         return -1
       }
@@ -81,7 +81,7 @@ class KotlinExtensionsTest {
   fun addAdapterInferred_parameterized() {
     // An adapter that always returns listOf(-1)
     val customIntListAdapter = object : JsonAdapter<List<Int>>() {
-      override fun fromJson(reader: JsonReader): List<Int>? {
+      override fun fromJson(reader: JsonReader): List<Int> {
         reader.skipValue()
         return listOf(-1)
       }

@@ -49,7 +49,7 @@ final class JsonUtf8Writer extends JsonWriter {
   static {
     REPLACEMENT_CHARS = new String[128];
     for (int i = 0; i <= 0x1f; i++) {
-      REPLACEMENT_CHARS[i] = String.format("\\u%04x", (int) i);
+      REPLACEMENT_CHARS[i] = String.format("\\u%04x", i);
     }
     REPLACEMENT_CHARS['"'] = "\\\"";
     REPLACEMENT_CHARS['\\'] = "\\\\";
@@ -358,7 +358,6 @@ final class JsonUtf8Writer extends JsonWriter {
    * and escapes those characters that require it.
    */
   static void string(BufferedSink sink, String value) throws IOException {
-    String[] replacements = REPLACEMENT_CHARS;
     sink.writeByte('"');
     int last = 0;
     int length = value.length();
@@ -366,7 +365,7 @@ final class JsonUtf8Writer extends JsonWriter {
       char c = value.charAt(i);
       String replacement;
       if (c < 128) {
-        replacement = replacements[c];
+        replacement = REPLACEMENT_CHARS[c];
         if (replacement == null) {
           continue;
         }

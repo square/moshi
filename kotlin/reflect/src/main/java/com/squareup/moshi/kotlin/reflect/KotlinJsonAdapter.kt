@@ -27,7 +27,6 @@ import com.squareup.moshi.internal.Util.resolve
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
-import java.util.AbstractMap.SimpleEntry
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter

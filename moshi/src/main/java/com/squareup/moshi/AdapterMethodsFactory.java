@@ -313,8 +313,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   /** Returns the matching adapter method from the list. */
   private static @Nullable AdapterMethod get(
       List<AdapterMethod> adapterMethods, Type type, Set<? extends Annotation> annotations) {
-    for (int i = 0, size = adapterMethods.size(); i < size; i++) {
-      AdapterMethod adapterMethod = adapterMethods.get(i);
+    for (AdapterMethod adapterMethod : adapterMethods) {
       if (Types.equals(adapterMethod.type, type) && adapterMethod.annotations.equals(annotations)) {
         return adapterMethod;
       }
