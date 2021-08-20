@@ -21,6 +21,11 @@ plugins {
   kotlin("kapt")
 }
 
+tasks.withType<Test>().configureEach {
+  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected ByteArrayOutputStream.buf field
+  jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
+}
+
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     @Suppress("SuspiciousCollectionReassignment")
