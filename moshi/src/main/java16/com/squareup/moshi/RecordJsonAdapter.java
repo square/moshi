@@ -92,6 +92,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       }
       var adapter = moshi.adapter(componentType, annotations);
       var accessor = component.getAccessor();
+      accessor.setAccessible(true);
       var componentBinding = new ComponentBinding<>(name, jsonName, adapter, accessor);
       var replaced = bindings.put(jsonName, componentBinding);
       if (replaced != null) {
@@ -115,18 +116,6 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
   };
 
   private static record ComponentBinding<T>(String name, String jsonName, JsonAdapter<T> adapter, Method accessor) {
-    <R> R invokeGet(T instance) throws IllegalAccessException, InvocationTargetException {
-      var initialAccess = accessor.canAccess(instance);
-      try {
-        if (!initialAccess) {
-          accessor.setAccessible(true);
-        }
-        //noinspection unchecked
-        return (R) accessor.invoke(instance);
-      } finally {
-        accessor.setAccessible(false);
-      }
-    }
   }
 
     private final String targetClass;
@@ -183,7 +172,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       for (var binding : componentBindingsArray) {
         writer.name(binding.jsonName);
         try {
-          binding.adapter.toJson(writer, binding.invokeGet(value));
+          binding.adapter.toJson(writer, binding.accessor.invoke(value));
         } catch (IllegalAccessException | InvocationTargetException e) {
           throw new AssertionError(e);
         }
