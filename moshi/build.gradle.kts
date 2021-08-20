@@ -30,9 +30,11 @@ val java16 by sourceSets.creating {
 }
 
 tasks.named<JavaCompile>("compileJava16Java") {
-  javaCompiler.set(javaToolchains.compilerFor {
-    languageVersion.set(JavaLanguageVersion.of(16))
-  })
+  javaCompiler.set(
+    javaToolchains.compilerFor {
+      languageVersion.set(JavaLanguageVersion.of(16))
+    }
+  )
   options.release.set(16)
 }
 
