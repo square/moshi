@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -90,7 +91,10 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
           }
         }
       }
-      var adapter = moshi.adapter(componentType, annotations);
+      if (qualifiers == null) {
+        qualifiers = Collections.emptySet();
+      }
+      var adapter = moshi.adapter(componentType, qualifiers);
       var accessor = component.getAccessor();
       accessor.setAccessible(true);
       var componentBinding = new ComponentBinding<>(name, jsonName, adapter, accessor);
