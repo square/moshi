@@ -13,7 +13,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
 
     @Nullable @Override
     public JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-      throw new AssertionError();
+      return null;
     }
   };
 
