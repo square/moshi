@@ -126,12 +126,15 @@ subprojects {
   }
 
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
-  if (project.name != "records-tests") {
-    pluginManager.withPlugin("java") {
-      configure<JavaPluginExtension> {
-        toolchain {
-          languageVersion.set(JavaLanguageVersion.of(8))
-        }
+  pluginManager.withPlugin("java") {
+    configure<JavaPluginExtension> {
+      toolchain {
+        languageVersion.set(JavaLanguageVersion.of(16))
+      }
+    }
+    if (project.name != "records-tests") {
+      tasks.withType<JavaCompile>().configureEach {
+        options.release.set(8)
       }
     }
   }

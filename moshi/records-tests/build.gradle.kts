@@ -18,12 +18,6 @@ plugins {
   `java-library`
 }
 
-java {
-  toolchain {
-    languageVersion.set(JavaLanguageVersion.of(16))
-  }
-}
-
 tasks.withType<JavaCompile>().configureEach {
   options.release.set(16)
 }
