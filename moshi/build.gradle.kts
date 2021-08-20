@@ -38,13 +38,13 @@ tasks.named<JavaCompile>("compileJava16Java") {
   options.release.set(16)
 }
 
+// We need to include our actual RecordJsonAdapter from java16 sources and replace the shime
 tasks.named<Jar>("jar") {
   from(java16.output) {
-//    into("META-INF/versions/9")
-//    include("module-info.class")
-    duplicatesStrategy = DuplicatesStrategy.WARN
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
   }
   manifest {
+    // Indicate that this is a multi release jar
     attributes("Multi-Release" to "true")
   }
 }
@@ -67,6 +67,7 @@ tasks.withType<KotlinCompile>()
   }
 
 dependencies {
+  // So the j16 source set can "see" main Moshi sources
   "java16Implementation"(mainSourceSet.output)
   compileOnly(Dependencies.jsr305)
   api(Dependencies.okio)
