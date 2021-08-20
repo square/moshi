@@ -37,7 +37,7 @@ tasks.named<JavaCompile>("compileJava16Java") {
   options.release.set(16)
 }
 
-// We need to include our actual RecordJsonAdapter from java16 sources and replace the shime
+// We need to include our actual RecordJsonAdapter from java16 sources and replace the shim
 tasks.named<Jar>("jar") {
   from(java16.output) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
