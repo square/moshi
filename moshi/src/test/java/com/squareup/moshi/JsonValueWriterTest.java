@@ -152,10 +152,10 @@ public final class JsonValueWriterTest {
   public void primitiveIntegerTypesEmitLong() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
-    writer.value(new Byte(Byte.MIN_VALUE));
-    writer.value(new Short(Short.MIN_VALUE));
-    writer.value(new Integer(Integer.MIN_VALUE));
-    writer.value(new Long(Long.MIN_VALUE));
+    writer.value(Byte.valueOf(Byte.MIN_VALUE));
+    writer.value(Short.valueOf(Short.MIN_VALUE));
+    writer.value(Integer.valueOf(Integer.MIN_VALUE));
+    writer.value(Long.valueOf(Long.MIN_VALUE));
     writer.endArray();
 
     List<Number> numbers =
@@ -167,8 +167,8 @@ public final class JsonValueWriterTest {
   public void primitiveFloatingPointTypesEmitDouble() throws Exception {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
-    writer.value(new Float(0.5f));
-    writer.value(new Double(0.5d));
+    writer.value(Float.valueOf(0.5f));
+    writer.value(Double.valueOf(0.5d));
     writer.endArray();
 
     List<Number> numbers = Arrays.<Number>asList(0.5d, 0.5d);

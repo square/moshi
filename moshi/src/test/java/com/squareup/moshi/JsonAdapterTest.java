@@ -126,7 +126,7 @@ public final class JsonAdapterTest {
       fail();
     } catch (JsonDataException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
-      assertThat(reader.nextNull()).isNull();
+      assertThat(reader.<Object>nextNull()).isNull();
     }
     assertThat(toUpperCase.fromJson(reader)).isEqualTo("C");
     reader.endArray();

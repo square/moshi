@@ -59,7 +59,7 @@ public final class JsonValueReaderTest {
 
     assertThat(reader.hasNext()).isTrue();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NULL);
-    assertThat(reader.nextNull()).isNull();
+    assertThat(reader.<Object>nextNull()).isNull();
 
     assertThat(reader.hasNext()).isFalse();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_ARRAY);
@@ -103,7 +103,7 @@ public final class JsonValueReaderTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NAME);
     assertThat(reader.nextName()).isEqualTo("d");
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.NULL);
-    assertThat(reader.nextNull()).isNull();
+    assertThat(reader.<Object>nextNull()).isNull();
 
     assertThat(reader.hasNext()).isFalse();
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_OBJECT);
