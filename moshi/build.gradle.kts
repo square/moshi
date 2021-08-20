@@ -42,10 +42,6 @@ tasks.named<Jar>("jar") {
   from(java16.output) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
   }
-  manifest {
-    // Indicate that this is a multi release jar
-    attributes("Multi-Release" to "true")
-  }
 }
 
 configurations {
