@@ -44,6 +44,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public final class Util {
@@ -54,6 +55,8 @@ public final class Util {
 
   /** A map from primitive types to their corresponding wrapper types. */
   private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
+
+  private static final AtomicBoolean RECORDS_AVAILABLE = new AtomicBoolean(false);
 
   static {
     Class<? extends Annotation> metadata = null;
@@ -86,6 +89,12 @@ public final class Util {
     primToWrap.put(void.class, Void.class);
 
     PRIMITIVE_TO_WRAPPER_TYPE = Collections.unmodifiableMap(primToWrap);
+
+    try {
+      Class.forName("java.lang.reflect.RecordComponent");
+      RECORDS_AVAILABLE.set(true);
+    } catch (ClassNotFoundException ignored) {
+    }
   }
 
   // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metada
@@ -669,5 +678,9 @@ public final class Util {
     @SuppressWarnings("unchecked")
     Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(type);
     return (wrapped == null) ? type : wrapped;
+  }
+
+  public static boolean recordsAvailable() {
+    return RECORDS_AVAILABLE.get();
   }
 }
