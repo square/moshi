@@ -70,7 +70,7 @@ spotless {
       "**/TypesTest.java"
     )
     val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-      googleJavaFormat("1.7")
+      googleJavaFormat("1.10")
     }
     java {
       configureCommonJavaFormat()
