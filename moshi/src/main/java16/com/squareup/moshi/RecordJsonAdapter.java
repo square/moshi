@@ -113,6 +113,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
     try {
       //noinspection unchecked
       constructor = (Constructor<Object>) rawType.getDeclaredConstructor(constructorParams);
+      constructor.setAccessible(true);
     } catch (NoSuchMethodException e) {
       throw new AssertionError(e);
     }
