@@ -27,18 +27,11 @@ plugins {
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "1.8"
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
       "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
     )
   }
-}
-
-// To make Gradle happy
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 val shade: Configuration = configurations.maybeCreate("compileShaded")

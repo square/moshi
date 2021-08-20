@@ -22,11 +22,41 @@ plugins {
   id("ru.vyarus.animalsniffer")
 }
 
+val mainSourceSet by sourceSets.named("main")
+val java16 by sourceSets.creating {
+  java {
+    srcDir("src/main/java16")
+  }
+}
+
+tasks.named<JavaCompile>("compileJava16Java") {
+  javaCompiler.set(javaToolchains.compilerFor {
+    languageVersion.set(JavaLanguageVersion.of(16))
+  })
+  options.release.set(16)
+}
+
+tasks.named<Jar>("jar") {
+  from(java16.output) {
+//    into("META-INF/versions/9")
+//    include("module-info.class")
+    duplicatesStrategy = DuplicatesStrategy.WARN
+  }
+  manifest {
+    attributes("Multi-Release" to "true")
+  }
+}
+
+configurations {
+  "java16Implementation" {
+    extendsFrom(api.get())
+    extendsFrom(implementation.get())
+  }
+}
+
 tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
-      jvmTarget = "1.6"
-
       if (name.contains("test", true)) {
         @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
         freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
@@ -35,6 +65,7 @@ tasks.withType<KotlinCompile>()
   }
 
 dependencies {
+  "java16Implementation"(mainSourceSet.output)
   compileOnly(Dependencies.jsr305)
   api(Dependencies.okio)
 
