@@ -87,7 +87,6 @@ public final class RecordsTest {
       String[] favoriteArrayValues,
       Map<String, String> foodPreferences,
       Set<List<Map<String, int[]>>> setListMapArrayInt,
-      // Regression test for https://github.com/square/moshi/issues/1272
       Map<String, Object>[] nestedArray) {
     @Override
     public boolean equals(Object o) {
