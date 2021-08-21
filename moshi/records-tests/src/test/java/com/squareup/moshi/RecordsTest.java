@@ -15,41 +15,42 @@
  */
 package com.squareup.moshi;
 
+import static com.google.common.truth.Truth.assertThat;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import org.junit.Test;
-
-import static com.google.common.truth.Truth.assertThat;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public final class RecordsTest {
 
   private final Moshi moshi = new Moshi.Builder().build();
 
-  @Test public void genericRecord() throws IOException {
+  @Test
+  public void genericRecord() throws IOException {
     var adapter =
-      moshi.<GenericRecord<String>>adapter(Types.newParameterizedType(GenericRecord.class,
-        String.class));
+        moshi.<GenericRecord<String>>adapter(
+            Types.newParameterizedType(GenericRecord.class, String.class));
     assertThat(adapter.fromJson("{\"value\":\"Okay!\"}")).isEqualTo(new GenericRecord<>("Okay!"));
   }
 
-  @Test public void genericBoundedRecord() throws IOException {
-    var adapter = moshi.<GenericBoundedRecord<Integer>>adapter(Types.newParameterizedType(
-      GenericBoundedRecord.class,
-      Integer.class));
+  @Test
+  public void genericBoundedRecord() throws IOException {
+    var adapter =
+        moshi.<GenericBoundedRecord<Integer>>adapter(
+            Types.newParameterizedType(GenericBoundedRecord.class, Integer.class));
     assertThat(adapter.fromJson("{\"value\":4}")).isEqualTo(new GenericBoundedRecord<>(4));
   }
 
-  @Test public void qualifiedValues() throws IOException {
-    var adapter = moshi
-      .newBuilder()
-      .add(new ColorAdapter())
-      .build()
-      .adapter(QualifiedValues.class);
-    assertThat(adapter.fromJson("{\"value\":\"#ff0000\"}")).isEqualTo(new QualifiedValues(16711680));
+  @Test
+  public void qualifiedValues() throws IOException {
+    var adapter = moshi.newBuilder().add(new ColorAdapter()).build().adapter(QualifiedValues.class);
+    assertThat(adapter.fromJson("{\"value\":\"#ff0000\"}"))
+        .isEqualTo(new QualifiedValues(16711680));
   }
 
-  @Test public void jsonName() throws IOException {
+  @Test
+  public void jsonName() throws IOException {
     var adapter = moshi.adapter(JsonName.class);
     assertThat(adapter.fromJson("{\"actualValue\":3}")).isEqualTo(new JsonName(3));
   }
@@ -63,16 +64,18 @@ record QualifiedValues(@HexColor int value) {}
 
 @Retention(RUNTIME)
 @JsonQualifier
-@interface HexColor {
-}
+@interface HexColor {}
 
 /** Converts strings like #ff0000 to the corresponding color ints. */
 class ColorAdapter {
-  @ToJson String toJson(@HexColor int rgb) {
+  @ToJson
+  String toJson(@HexColor int rgb) {
     return String.format("#%06x", rgb);
   }
 
-  @FromJson @HexColor int fromJson(String rgb) {
+  @FromJson
+  @HexColor
+  int fromJson(String rgb) {
     return Integer.parseInt(rgb.substring(1), 16);
   }
 }

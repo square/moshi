@@ -59,7 +59,8 @@ final class FallbackEnum {
               return null;
             }
             //noinspection rawtypes
-            return new FallbackEnumJsonAdapter<>((Class<? extends Enum>) rawType, ((Fallback) annotation).value());
+            return new FallbackEnumJsonAdapter<>(
+                (Class<? extends Enum>) rawType, ((Fallback) annotation).value());
           }
         };
 
