@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi.records;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.squareup.moshi.FromJson;
+import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonQualifier;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.ToJson;
+import com.squareup.moshi.Types;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import org.junit.Test;
