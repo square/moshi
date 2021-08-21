@@ -51,9 +51,7 @@ public final class Moshi {
     BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
-    if (Util.recordsAvailable()) {
-      BUILT_IN_FACTORIES.add(RecordJsonAdapter.FACTORY);
-    }
+    BUILT_IN_FACTORIES.add(RecordJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
   }
 

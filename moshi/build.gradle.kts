@@ -37,13 +37,12 @@ tasks.named<JavaCompile>("compileJava16Java") {
   options.release.set(16)
 }
 
-// We need to include our actual RecordJsonAdapter from java16 sources and replace the shim
+// Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
 tasks.named<Jar>("jar") {
   from(java16.output) {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    into("META-INF/versions/16")
   }
   manifest {
-    // Indicate that this is a multi release jar
     attributes("Multi-Release" to "true")
   }
 }
