@@ -22,7 +22,6 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -69,6 +68,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
         var components = rawType.getRecordComponents();
         var bindings = new LinkedHashMap<String, ComponentBinding<?>>();
         var constructorParams = new Class<?>[components.length];
+        var lookup = MethodHandles.lookup();
         for (int i = 0, componentsLength = components.length; i < componentsLength; i++) {
           RecordComponent component = components[i];
           constructorParams[i] = component.getType();
@@ -105,8 +105,12 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
             qualifiers = Collections.emptySet();
           }
           var adapter = moshi.adapter(componentType, qualifiers);
-          var accessor = component.getAccessor();
-          accessor.setAccessible(true);
+          MethodHandle accessor;
+          try {
+            accessor = lookup.unreflect(component.getAccessor());
+          } catch (IllegalAccessException e) {
+            throw new AssertionError(e);
+          }
           var componentBinding = new ComponentBinding<>(name, jsonName, adapter, accessor);
           var replaced = bindings.put(jsonName, componentBinding);
           if (replaced != null) {
@@ -122,9 +126,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
 
         MethodHandle constructor;
         try {
-          constructor =
-              MethodHandles.lookup()
-                  .findConstructor(rawType, methodType(void.class, constructorParams));
+          constructor = lookup.findConstructor(rawType, methodType(void.class, constructorParams));
         } catch (NoSuchMethodException | IllegalAccessException e) {
           throw new AssertionError(e);
         }
@@ -132,7 +134,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       };
 
   private static record ComponentBinding<T>(
-      String name, String jsonName, JsonAdapter<T> adapter, Method accessor) {}
+      String name, String jsonName, JsonAdapter<T> adapter, MethodHandle accessor) {}
 
   private final String targetClass;
   private final MethodHandle constructor;
@@ -194,13 +196,15 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       writer.name(binding.jsonName);
       try {
         binding.adapter.toJson(writer, binding.accessor.invoke(value));
-      } catch (InvocationTargetException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-        if (cause instanceof Error) throw (Error) cause;
-        throw new RuntimeException(cause);
-      } catch (IllegalAccessException e) {
-        throw new AssertionError(e);
+      } catch (Throwable e) {
+        if (e instanceof InvocationTargetException ite) {
+          Throwable cause = ite.getCause();
+          if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+          if (cause instanceof Error) throw (Error) cause;
+          throw new RuntimeException(cause);
+        } else {
+          throw new AssertionError(e);
+        }
       }
     }
 
