@@ -15,9 +15,12 @@
  */
 package com.squareup.moshi;
 
+import static java.lang.invoke.MethodType.methodType;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -116,30 +119,33 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
                     + componentBinding.name);
           }
         }
-        Constructor<Object> constructor;
+
+        MethodHandle constructor;
         try {
-          //noinspection unchecked
-          constructor = (Constructor<Object>) rawType.getDeclaredConstructor(constructorParams);
-          constructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
+          constructor =
+              MethodHandles.lookup()
+                  .findConstructor(rawType, methodType(void.class, constructorParams));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
           throw new AssertionError(e);
         }
-        return new RecordJsonAdapter<>(constructor, bindings).nullSafe();
+        return new RecordJsonAdapter<>(constructor, rawType.getSimpleName(), bindings).nullSafe();
       };
 
   private static record ComponentBinding<T>(
       String name, String jsonName, JsonAdapter<T> adapter, Method accessor) {}
 
   private final String targetClass;
-  private final Constructor<T> constructor;
+  private final MethodHandle constructor;
   private final ComponentBinding<Object>[] componentBindingsArray;
   private final JsonReader.Options options;
 
   @SuppressWarnings("ToArrayCallWithZeroLengthArrayArgument")
   public RecordJsonAdapter(
-      Constructor<T> constructor, Map<String, ComponentBinding<?>> componentBindings) {
+      MethodHandle constructor,
+      String targetClass,
+      Map<String, ComponentBinding<?>> componentBindings) {
     this.constructor = constructor;
-    this.targetClass = constructor.getDeclaringClass().getSimpleName();
+    this.targetClass = targetClass;
     //noinspection unchecked
     this.componentBindingsArray =
         componentBindings.values().toArray(new ComponentBinding[componentBindings.size()]);
@@ -165,21 +171,18 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
     }
     reader.endObject();
 
-    var initialAccess = constructor.canAccess(null);
     try {
-      if (!initialAccess) {
-        constructor.setAccessible(true);
+      //noinspection unchecked
+      return (T) constructor.invokeWithArguments(resultsArray);
+    } catch (Throwable e) {
+      if (e instanceof InvocationTargetException ite) {
+        Throwable cause = ite.getCause();
+        if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+        if (cause instanceof Error) throw (Error) cause;
+        throw new RuntimeException(cause);
+      } else {
+        throw new AssertionError(e);
       }
-      return constructor.newInstance(resultsArray);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-      if (cause instanceof Error) throw (Error) cause;
-      throw new RuntimeException(cause);
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new AssertionError(e);
-    } finally {
-      constructor.setAccessible(false);
     }
   }
 
