@@ -36,15 +36,19 @@ public final class RecordsTest {
   public void genericRecord() throws IOException {
     var adapter =
         moshi.<GenericRecord<String>>adapter(
-            Types.newParameterizedType(GenericRecord.class, String.class));
+            Types.newParameterizedTypeWithOwner(
+                RecordsTest.class, GenericRecord.class, String.class));
     assertThat(adapter.fromJson("{\"value\":\"Okay!\"}")).isEqualTo(new GenericRecord<>("Okay!"));
   }
+
+  public static record GenericRecord<T>(T value) {}
 
   @Test
   public void genericBoundedRecord() throws IOException {
     var adapter =
         moshi.<GenericBoundedRecord<Integer>>adapter(
-            Types.newParameterizedType(GenericBoundedRecord.class, Integer.class));
+            Types.newParameterizedTypeWithOwner(
+                RecordsTest.class, GenericBoundedRecord.class, Integer.class));
     assertThat(adapter.fromJson("{\"value\":4}")).isEqualTo(new GenericBoundedRecord<>(4));
   }
 
@@ -55,35 +59,33 @@ public final class RecordsTest {
         .isEqualTo(new QualifiedValues(16711680));
   }
 
+  public static record QualifiedValues(@HexColor int value) {}
+
+  @Retention(RUNTIME)
+  @JsonQualifier
+  @interface HexColor {}
+
+  /** Converts strings like #ff0000 to the corresponding color ints. */
+  public static class ColorAdapter {
+    @ToJson
+    public String toJson(@HexColor int rgb) {
+      return String.format("#%06x", rgb);
+    }
+
+    @FromJson
+    @HexColor
+    public int fromJson(String rgb) {
+      return Integer.parseInt(rgb.substring(1), 16);
+    }
+  }
+
+  public static record GenericBoundedRecord<T extends Number>(T value) {}
+
   @Test
   public void jsonName() throws IOException {
     var adapter = moshi.adapter(JsonName.class);
     assertThat(adapter.fromJson("{\"actualValue\":3}")).isEqualTo(new JsonName(3));
   }
+
+  public static record JsonName(@Json(name = "actualValue") int value) {}
 }
-
-record GenericBoundedRecord<T extends Number>(T value) {}
-
-record GenericRecord<T>(T value) {}
-
-record QualifiedValues(@HexColor int value) {}
-
-@Retention(RUNTIME)
-@JsonQualifier
-@interface HexColor {}
-
-/** Converts strings like #ff0000 to the corresponding color ints. */
-class ColorAdapter {
-  @ToJson
-  String toJson(@HexColor int rgb) {
-    return String.format("#%06x", rgb);
-  }
-
-  @FromJson
-  @HexColor
-  int fromJson(String rgb) {
-    return Integer.parseInt(rgb.substring(1), 16);
-  }
-}
-
-record JsonName(@Json(name = "actualValue") int value) {}
