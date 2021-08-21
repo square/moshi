@@ -171,7 +171,12 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
         constructor.setAccessible(true);
       }
       return constructor.newInstance(resultsArray);
-    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+      if (cause instanceof Error) throw (Error) cause;
+      throw new RuntimeException(cause);
+    } catch (InstantiationException | IllegalAccessException e) {
       throw new AssertionError(e);
     } finally {
       constructor.setAccessible(false);
@@ -186,7 +191,12 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       writer.name(binding.jsonName);
       try {
         binding.adapter.toJson(writer, binding.accessor.invoke(value));
-      } catch (IllegalAccessException | InvocationTargetException e) {
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+        if (cause instanceof Error) throw (Error) cause;
+        throw new RuntimeException(cause);
+      } catch (IllegalAccessException e) {
         throw new AssertionError(e);
       }
     }
