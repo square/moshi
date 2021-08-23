@@ -41,7 +41,7 @@ dependencies {
   testImplementation(project(":moshi"))
   testImplementation(project(":kotlin:reflect"))
   testImplementation(kotlin("reflect"))
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
-  testImplementation(Dependencies.Testing.truth)
+  testImplementation(libs.junit)
+  testImplementation(libs.assertj)
+  testImplementation(libs.truth)
 }

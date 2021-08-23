@@ -31,3 +31,5 @@ include(":examples")
 include(":kotlin:reflect")
 include(":kotlin:codegen")
 include(":kotlin:tests")
+
+enableFeaturePreview("VERSION_CATALOGS")
