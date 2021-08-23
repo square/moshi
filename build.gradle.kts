@@ -23,17 +23,17 @@ import java.net.URL
 
 buildscript {
   dependencies {
-    classpath(kotlin("gradle-plugin", version = Dependencies.Kotlin.version))
+    classpath(kotlin("gradle-plugin", version = libs.versions.kotlin.get()))
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
     classpath("com.google.guava:guava:28.2-jre")
   }
 }
 
 plugins {
-  id("com.vanniktech.maven.publish") version "0.14.2" apply false
-  id("org.jetbrains.dokka") version "1.4.32" apply false
-  id("com.diffplug.spotless") version "5.12.4"
-  id("me.champeau.gradle.japicmp") version "0.2.9" apply false
+  alias(libs.plugins.mavenPublish) apply false
+  alias(libs.plugins.dokka) apply false
+  alias(libs.plugins.spotless)
+  alias(libs.plugins.japicmp) apply false
 }
 
 spotless {
@@ -67,7 +67,7 @@ spotless {
     "**/TypesTest.java"
   )
   val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-    googleJavaFormat("1.11.0")
+    googleJavaFormat(libs.versions.gjf.get())
   }
   java {
     configureCommonJavaFormat()
@@ -86,7 +86,7 @@ spotless {
     target(*externalJavaFiles)
   }
   kotlin {
-    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
@@ -95,7 +95,7 @@ spotless {
     targetExclude("**/Dependencies.kt", "**/spotless.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
@@ -106,20 +106,6 @@ spotless {
 subprojects {
   repositories {
     mavenCentral()
-    // Required for Dokka
-    exclusiveContent {
-      forRepository {
-        maven {
-          name = "JCenter"
-          setUrl("https://jcenter.bintray.com/")
-        }
-      }
-      filter {
-        includeModule("org.jetbrains.kotlinx", "kotlinx-html-jvm")
-        includeGroup("org.jetbrains.dokka")
-        includeModule("org.jetbrains", "markdown")
-      }
-    }
   }
 
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
@@ -141,7 +127,7 @@ subprojects {
       kotlinOptions {
         @Suppress("SuspiciousCollectionReassignment")
         freeCompilerArgs += listOf("-progressive")
-        jvmTarget = "1.8"
+        jvmTarget = libs.versions.jvmTarget.get()
       }
     }
 

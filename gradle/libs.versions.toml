@@ -1,0 +1,53 @@
+# Copyright (C) 2021 Square, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[versions]
+autoService = "1.0"
+gjf = "1.11.0"
+incap = "0.3"
+jvmTarget = "1.8"
+kotlin = "1.5.21"
+kotlinCompileTesting = "1.4.3"
+kotlinpoet = "1.9.0"
+ktlint = "0.41.0"
+
+[plugins]
+dokka = { id = "org.jetbrains.dokka", version = "1.5.0" }
+japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.17.0" }
+mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.0.0" }
+spotless = { id = "com.diffplug.spotless", version = "5.14.2" }
+
+[libraries]
+asm = "org.ow2.asm:asm:9.2"
+autoCommon = "com.google.auto:auto-common:1.1"
+autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
+autoService-processor = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
+incap = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
+incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
+jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
+kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+kotlinpoet-elementsClassInspector = { module = "com.squareup:kotlinpoet-classinspector-elements", version.ref = "kotlinpoet" }
+kotlinpoet-metadata-core = { module = "com.squareup:kotlinpoet-metadata", version.ref = "kotlinpoet" }
+kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs", version.ref = "kotlinpoet" }
+kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0"
+okio = "com.squareup.okio:okio:2.10.0"
+
+# Test libs
+assertj = "org.assertj:assertj-core:3.11.1"
+junit = "junit:junit:4.13.2"
+kotlinCompileTesting = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "kotlinCompileTesting" }
+truth = "com.google.truth:truth:1.1.3"

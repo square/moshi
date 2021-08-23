@@ -24,7 +24,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 dependencies {
   testImplementation(project(":moshi"))
-  testCompileOnly(Dependencies.jsr305)
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.truth)
+  testCompileOnly(libs.jsr305)
+  testImplementation(libs.junit)
+  testImplementation(libs.truth)
 }

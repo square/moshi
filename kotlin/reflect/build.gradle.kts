@@ -24,6 +24,6 @@ dependencies {
   api(kotlin("reflect"))
 
   testImplementation(kotlin("test"))
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.truth)
+  testImplementation(libs.junit)
+  testImplementation(libs.truth)
 }

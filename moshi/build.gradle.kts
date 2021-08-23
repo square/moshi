@@ -72,10 +72,10 @@ tasks.withType<KotlinCompile>()
 dependencies {
   // So the j16 source set can "see" main Moshi sources
   "java16Implementation"(mainSourceSet.output)
-  compileOnly(Dependencies.jsr305)
-  api(Dependencies.okio)
+  compileOnly(libs.jsr305)
+  api(libs.okio)
 
-  testCompileOnly(Dependencies.jsr305)
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.truth)
+  testCompileOnly(libs.jsr305)
+  testImplementation(libs.junit)
+  testImplementation(libs.truth)
 }
