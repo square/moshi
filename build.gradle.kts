@@ -31,7 +31,7 @@ buildscript {
 
 plugins {
   id("com.vanniktech.maven.publish") version "0.14.2" apply false
-  id("org.jetbrains.dokka") version "1.4.32" apply false
+  id("org.jetbrains.dokka") version "1.5.0" apply false
   id("com.diffplug.spotless") version "5.12.4"
   id("me.champeau.gradle.japicmp") version "0.2.9" apply false
 }
@@ -106,20 +106,6 @@ spotless {
 subprojects {
   repositories {
     mavenCentral()
-    // Required for Dokka
-    exclusiveContent {
-      forRepository {
-        maven {
-          name = "JCenter"
-          setUrl("https://jcenter.bintray.com/")
-        }
-      }
-      filter {
-        includeModule("org.jetbrains.kotlinx", "kotlinx-html-jvm")
-        includeGroup("org.jetbrains.dokka")
-        includeModule("org.jetbrains", "markdown")
-      }
-    }
   }
 
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
