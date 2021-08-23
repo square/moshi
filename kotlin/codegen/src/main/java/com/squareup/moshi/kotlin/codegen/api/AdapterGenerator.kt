@@ -85,7 +85,10 @@ internal class AdapterGenerator(
       // KotlinPoet always generates explicit public modifiers for public members.
       "RedundantVisibilityModifier",
       // For LambdaTypeNames we have to import kotlin.functions.* types
-      "PLATFORM_CLASS_MAPPED_TO_KOTLIN"
+      "PLATFORM_CLASS_MAPPED_TO_KOTLIN",
+      // Cover for calling fromJson() on a Nothing property type. Theoretically nonsensical but we
+      // support it
+      "IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION"
     ).let { suppressions ->
       AnnotationSpec.builder(Suppress::class)
         .useSiteTarget(FILE)

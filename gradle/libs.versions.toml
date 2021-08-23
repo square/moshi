@@ -17,9 +17,9 @@ autoService = "1.0"
 gjf = "1.11.0"
 incap = "0.3"
 jvmTarget = "1.8"
-kotlin = "1.5.0"
+kotlin = "1.5.21"
 kotlinCompileTesting = "1.4.3"
-kotlinpoet = "1.8.0"
+kotlinpoet = "1.9.0"
 ktlint = "0.41.0"
 
 [plugins]

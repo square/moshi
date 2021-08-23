@@ -23,6 +23,7 @@ import com.squareup.kotlinpoet.CHAR
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
@@ -79,6 +80,7 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
     else -> CodeBlock.of("null")
   }
 
+@OptIn(DelicateKotlinPoetApi::class)
 internal fun TypeName.asTypeBlock(): CodeBlock {
   if (annotations.isNotEmpty()) {
     return copy(annotations = emptyList()).asTypeBlock()
