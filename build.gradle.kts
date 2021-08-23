@@ -33,7 +33,6 @@ plugins {
   id("com.vanniktech.maven.publish") version "0.14.2" apply false
   id("org.jetbrains.dokka") version "1.4.32" apply false
   id("com.diffplug.spotless") version "5.12.4"
-  id("ru.vyarus.animalsniffer") version "1.5.3" apply false
   id("me.champeau.gradle.japicmp") version "0.2.9" apply false
 }
 
@@ -44,50 +43,47 @@ spotless {
     indentWithSpaces(2)
     endWithNewline()
   }
-  // GJF not compatible with JDK 15 yet
-  if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
-    val externalJavaFiles = arrayOf(
-      "**/ClassFactory.java",
-      "**/Iso8601Utils.java",
-      "**/JsonReader.java",
-      "**/JsonReaderPathTest.java",
-      "**/JsonReaderTest.java",
-      "**/JsonScope.java",
-      "**/JsonUtf8Reader.java",
-      "**/JsonUtf8ReaderPathTest.java",
-      "**/JsonUtf8ReaderTest.java",
-      "**/JsonUtf8ReaderTest.java",
-      "**/JsonUtf8Writer.java",
-      "**/JsonUtf8WriterTest.java",
-      "**/JsonWriter.java",
-      "**/JsonWriterPathTest.java",
-      "**/JsonWriterTest.java",
-      "**/LinkedHashTreeMap.java",
-      "**/LinkedHashTreeMapTest.java",
-      "**/PolymorphicJsonAdapterFactory.java",
-      "**/RecursiveTypesResolveTest.java",
-      "**/Types.java",
-      "**/TypesTest.java"
+  val externalJavaFiles = arrayOf(
+    "**/ClassFactory.java",
+    "**/Iso8601Utils.java",
+    "**/JsonReader.java",
+    "**/JsonReaderPathTest.java",
+    "**/JsonReaderTest.java",
+    "**/JsonScope.java",
+    "**/JsonUtf8Reader.java",
+    "**/JsonUtf8ReaderPathTest.java",
+    "**/JsonUtf8ReaderTest.java",
+    "**/JsonUtf8ReaderTest.java",
+    "**/JsonUtf8Writer.java",
+    "**/JsonUtf8WriterTest.java",
+    "**/JsonWriter.java",
+    "**/JsonWriterPathTest.java",
+    "**/JsonWriterTest.java",
+    "**/LinkedHashTreeMap.java",
+    "**/LinkedHashTreeMapTest.java",
+    "**/PolymorphicJsonAdapterFactory.java",
+    "**/RecursiveTypesResolveTest.java",
+    "**/Types.java",
+    "**/TypesTest.java"
+  )
+  val configureCommonJavaFormat: JavaExtension.() -> Unit = {
+    googleJavaFormat("1.11.0")
+  }
+  java {
+    configureCommonJavaFormat()
+    target("**/*.java")
+    targetExclude(
+      "**/spotless.java",
+      "**/build/**",
+      *externalJavaFiles
     )
-    val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-      googleJavaFormat("1.7")
-    }
-    java {
-      configureCommonJavaFormat()
-      target("**/*.java")
-      targetExclude(
-        "**/spotless.java",
-        "**/build/**",
-        *externalJavaFiles
-      )
-      licenseHeaderFile("spotless/spotless.java")
-    }
-    format("externalJava", JavaExtension::class.java) {
-      // These don't use our spotless config for header files since we don't want to overwrite the
-      // existing copyright headers.
-      configureCommonJavaFormat()
-      target(*externalJavaFiles)
-    }
+    licenseHeaderFile("spotless/spotless.java")
+  }
+  format("externalJava", JavaExtension::class.java) {
+    // These don't use our spotless config for header files since we don't want to overwrite the
+    // existing copyright headers.
+    configureCommonJavaFormat()
+    target(*externalJavaFiles)
   }
   kotlin {
     ktlint(Dependencies.ktlintVersion).userData(mapOf("indent_size" to "2"))
@@ -129,15 +125,14 @@ subprojects {
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
-      sourceCompatibility = JavaVersion.VERSION_1_7
-      targetCompatibility = JavaVersion.VERSION_1_7
+      toolchain {
+        languageVersion.set(JavaLanguageVersion.of(16))
+      }
     }
-  }
-
-  pluginManager.withPlugin("ru.vyarus.animalsniffer") {
-    dependencies {
-      "compileOnly"(Dependencies.AnimalSniffer.annotations)
-      "signature"(Dependencies.AnimalSniffer.java7Signature)
+    if (project.name != "records-tests") {
+      tasks.withType<JavaCompile>().configureEach {
+        options.release.set(8)
+      }
     }
   }
 
@@ -146,6 +141,7 @@ subprojects {
       kotlinOptions {
         @Suppress("SuspiciousCollectionReassignment")
         freeCompilerArgs += listOf("-progressive")
+        jvmTarget = "1.8"
       }
     }
 

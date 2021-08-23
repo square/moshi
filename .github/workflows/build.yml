@@ -10,14 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         java-version:
-          - 8
-          - 9
-          - 10
-          - 11
-          - 12
-          - 13
-          - 14
-          - 15
+          - 16
 
     steps:
       - name: Checkout
@@ -46,7 +39,7 @@ jobs:
         run: ./gradlew build check --stacktrace
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '8'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '16'
         run: ./gradlew uploadArchives
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}

@@ -19,14 +19,49 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("jvm")
   id("com.vanniktech.maven.publish")
-  id("ru.vyarus.animalsniffer")
+}
+
+val mainSourceSet by sourceSets.named("main")
+val java16 by sourceSets.creating {
+  java {
+    srcDir("src/main/java16")
+  }
+}
+
+tasks.named<JavaCompile>("compileJava16Java") {
+  javaCompiler.set(
+    javaToolchains.compilerFor {
+      languageVersion.set(JavaLanguageVersion.of(16))
+    }
+  )
+  options.release.set(16)
+}
+
+// Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
+tasks.named<Jar>("jar") {
+  from(java16.output) {
+    into("META-INF/versions/16")
+  }
+  manifest {
+    attributes("Multi-Release" to "true")
+  }
+}
+
+configurations {
+  "java16Implementation" {
+    extendsFrom(api.get())
+    extendsFrom(implementation.get())
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected ByteArrayOutputStream.buf field
+  jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 
 tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
-      jvmTarget = "1.6"
-
       if (name.contains("test", true)) {
         @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
         freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
@@ -35,6 +70,8 @@ tasks.withType<KotlinCompile>()
   }
 
 dependencies {
+  // So the j16 source set can "see" main Moshi sources
+  "java16Implementation"(mainSourceSet.output)
   compileOnly(Dependencies.jsr305)
   api(Dependencies.okio)
 

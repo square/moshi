@@ -58,9 +58,9 @@ final class FallbackEnum {
             if (!(annotation instanceof Fallback)) {
               return null;
             }
-            Class<Enum> enumType = (Class<Enum>) rawType;
-            Enum<?> fallback = Enum.valueOf(enumType, ((Fallback) annotation).value());
-            return new FallbackEnumJsonAdapter<>(enumType, fallback);
+            //noinspection rawtypes
+            return new FallbackEnumJsonAdapter<>(
+                (Class<? extends Enum>) rawType, ((Fallback) annotation).value());
           }
         };
 
@@ -70,9 +70,9 @@ final class FallbackEnum {
     final JsonReader.Options options;
     final T defaultValue;
 
-    FallbackEnumJsonAdapter(Class<T> enumType, T defaultValue) {
+    FallbackEnumJsonAdapter(Class<T> enumType, String fallbackName) {
       this.enumType = enumType;
-      this.defaultValue = defaultValue;
+      this.defaultValue = Enum.valueOf(enumType, fallbackName);
       try {
         constants = enumType.getEnumConstants();
         nameStrings = new String[constants.length];

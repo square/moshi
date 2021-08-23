@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,17 @@
  * limitations under the License.
  */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-  kotlin("jvm")
-  kotlin("kapt")
+  `java-library`
 }
 
-tasks.withType<Test>().configureEach {
-  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected ByteArrayOutputStream.buf field
-  jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    @Suppress("SuspiciousCollectionReassignment")
-    freeCompilerArgs += listOf(
-      "-Werror",
-      "-Xopt-in=kotlin.ExperimentalStdlibApi"
-    )
-  }
+tasks.withType<JavaCompile>().configureEach {
+  options.release.set(16)
 }
 
 dependencies {
-  kaptTest(project(":kotlin:codegen"))
   testImplementation(project(":moshi"))
-  testImplementation(project(":kotlin:reflect"))
-  testImplementation(kotlin("reflect"))
+  testCompileOnly(Dependencies.jsr305)
   testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.assertj)
   testImplementation(Dependencies.Testing.truth)
 }
