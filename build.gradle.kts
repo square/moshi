@@ -30,7 +30,7 @@ buildscript {
 }
 
 plugins {
-  id("com.vanniktech.maven.publish") version "0.14.2" apply false
+  id("com.vanniktech.maven.publish") version "0.17.0" apply false
   id("org.jetbrains.dokka") version "1.5.0" apply false
   id("com.diffplug.spotless") version "5.12.4"
   id("me.champeau.gradle.japicmp") version "0.2.9" apply false
