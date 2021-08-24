@@ -565,7 +565,7 @@ public final class JsonReaderTest {
     assertThat(reader2.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
 
     JsonReader reader3 = newReader("null");
-    assertThat(reader3.nextNull()).isNull();
+    assertThat(reader3.<Object>nextNull()).isNull();
     assertThat(reader3.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
 
     JsonReader reader4 = newReader("123");

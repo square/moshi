@@ -115,10 +115,7 @@ class KotlinJsonAdapterTest {
     assertThat(decoded.b).isEqualTo(5)
   }
 
-  class ImmutableProperties(a: Int, b: Int) {
-    val a = a
-    val b = b
-  }
+  class ImmutableProperties(val a: Int, val b: Int)
 
   @Test fun constructorDefaults() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -432,13 +429,13 @@ class KotlinJsonAdapterTest {
 
     val decoded = jsonAdapter.fromJson("""{"a":4,"buf":[0,0],"size":0}""")!!
     assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.buf()).isEqualTo(ByteArray(2, { 0 }))
+    assertThat(decoded.buf()).isEqualTo(ByteArray(2) { 0 })
     assertThat(decoded.count()).isEqualTo(0)
   }
 
   internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {
-    fun buf() = buf
-    fun count() = count
+    fun buf(): ByteArray = buf
+    fun count(): Int = count
   }
 
   @Test fun platformTypeThrows() {

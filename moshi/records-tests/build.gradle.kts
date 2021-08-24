@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,16 @@
  */
 
 plugins {
-  `kotlin-dsl`
+  `java-library`
 }
 
-kotlinDslPluginOptions {
-  experimentalWarning.set(false)
+tasks.withType<JavaCompile>().configureEach {
+  options.release.set(16)
 }
 
-repositories {
-  mavenCentral()
+dependencies {
+  testImplementation(project(":moshi"))
+  testCompileOnly(libs.jsr305)
+  testImplementation(libs.junit)
+  testImplementation(libs.truth)
 }

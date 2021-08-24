@@ -24,9 +24,12 @@ pluginManagement {
 rootProject.name = "moshi-root"
 include(":moshi")
 include(":moshi:japicmp")
+include(":moshi:records-tests")
 include(":adapters")
 include(":adapters:japicmp")
 include(":examples")
 include(":kotlin:reflect")
 include(":kotlin:codegen")
 include(":kotlin:tests")
+
+enableFeaturePreview("VERSION_CATALOGS")

@@ -22,23 +22,33 @@ plugins {
   kotlin("jvm")
   kotlin("kapt")
   id("com.vanniktech.maven.publish")
-  id("com.github.johnrengelman.shadow") version "7.0.0"
+  alias(libs.plugins.mavenShadow)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
-    jvmTarget = "1.8"
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
-      "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview"
+      "-Xopt-in=kotlin.RequiresOptIn",
+      "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
     )
   }
 }
 
-// To make Gradle happy
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+tasks.withType<Test>().configureEach {
+  // For kapt to work with kotlin-compile-testing
+  jvmArgs(
+    "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+  )
 }
 
 val shade: Configuration = configurations.maybeCreate("compileShaded")
@@ -48,38 +58,38 @@ dependencies {
   // https://youtrack.jetbrains.com/issue/KT-41702
   api(project(":moshi"))
   api(kotlin("reflect"))
-  shade(Dependencies.Kotlin.metadata) {
+  shade(libs.kotlinxMetadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
-  api(Dependencies.KotlinPoet.kotlinPoet)
-  shade(Dependencies.KotlinPoet.metadata) {
+  api(libs.kotlinpoet)
+  shade(libs.kotlinpoet.metadata.core) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
   }
-  shade(Dependencies.KotlinPoet.metadataSpecs) {
+  shade(libs.kotlinpoet.metadata.specs) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
   }
-  api(Dependencies.KotlinPoet.elementsClassInspector)
-  shade(Dependencies.KotlinPoet.elementsClassInspector) {
+  api(libs.kotlinpoet.elementsClassInspector)
+  shade(libs.kotlinpoet.elementsClassInspector) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
-  api(Dependencies.asm)
+  api(libs.asm)
 
-  api(Dependencies.AutoService.annotations)
-  kapt(Dependencies.AutoService.processor)
-  api(Dependencies.Incap.annotations)
-  kapt(Dependencies.Incap.processor)
+  api(libs.autoService)
+  kapt(libs.autoService.processor)
+  api(libs.incap)
+  kapt(libs.incap.processor)
 
   // Copy these again as they're not automatically included since they're shaded
-  testImplementation(Dependencies.KotlinPoet.metadata)
-  testImplementation(Dependencies.KotlinPoet.metadataSpecs)
-  testImplementation(Dependencies.KotlinPoet.elementsClassInspector)
-  testImplementation(Dependencies.Testing.junit)
-  testImplementation(Dependencies.Testing.truth)
-  testImplementation(Dependencies.Testing.compileTesting)
+  testImplementation(libs.kotlinpoet.metadata.core)
+  testImplementation(libs.kotlinpoet.metadata.specs)
+  testImplementation(libs.kotlinpoet.elementsClassInspector)
+  testImplementation(libs.junit)
+  testImplementation(libs.truth)
+  testImplementation(libs.kotlinCompileTesting)
 }
 
 val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {

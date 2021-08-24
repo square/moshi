@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -117,6 +118,7 @@ internal fun primaryConstructor(
 }
 
 /** Returns a target type for `element`, or null if it cannot be used with code gen. */
+@OptIn(DelicateKotlinPoetApi::class)
 @KotlinPoetMetadataPreview
 internal fun targetType(
   messager: Messager,
@@ -233,7 +235,6 @@ internal fun targetType(
   val resolvedTypes = mutableListOf<ResolvedTypeMapping>()
   val superTypes = appliedType.supertypes(types)
     .filterNot { supertype ->
-      @Suppress("DEPRECATION") // Appropriate in this case
       supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
         supertype.element.kind != ElementKind.CLASS // Don't load properties for interface types.
     }
@@ -273,7 +274,6 @@ internal fun targetType(
         val superSuperClass = supertype.element.superclass as DeclaredType
 
         // Convert to an element and back to wipe the typed generics off of this
-        @Suppress("DEPRECATION") // Appropriate in this case
         val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
         resolvedTypes += ResolvedTypeMapping(
           target = untyped.rawType,
@@ -289,7 +289,6 @@ internal fun targetType(
     }
 
   for ((localAppliedType, supertypeApi) in superTypes.entries) {
-    @Suppress("DEPRECATION") // Appropriate in this case
     val appliedClassName = localAppliedType.element.asClassName()
     val supertypeProperties = declaredProperties(
       constructor = constructor,
@@ -317,7 +316,6 @@ internal fun targetType(
     if (forceInternal) KModifier.INTERNAL else visibility
   }
 
-  @Suppress("DEPRECATION") // Appropriate in this case
   return TargetType(
     typeName = element.asType().asTypeName(),
     constructor = constructor,

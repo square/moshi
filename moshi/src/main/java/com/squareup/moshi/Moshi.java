@@ -51,6 +51,7 @@ public final class Moshi {
     BUILT_IN_FACTORIES.add(CollectionJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
+    BUILT_IN_FACTORIES.add(RecordJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
   }
 
@@ -184,7 +185,7 @@ public final class Moshi {
   @CheckReturnValue
   public Moshi.Builder newBuilder() {
     Builder result = new Builder();
-    for (int i = 0, limit = lastOffset; i < limit; i++) {
+    for (int i = 0; i < lastOffset; i++) {
       result.add(factories.get(i));
     }
     for (int i = lastOffset, limit = factories.size() - BUILT_IN_FACTORIES.size(); i < limit; i++) {
