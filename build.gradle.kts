@@ -24,8 +24,7 @@ import java.net.URL
 buildscript {
   dependencies {
     classpath(kotlin("gradle-plugin", version = libs.versions.kotlin.get()))
-    // https://github.com/melix/japicmp-gradle-plugin/issues/36
-    classpath("com.google.guava:guava:28.2-jre")
+    classpath(libs.guava)
   }
 }
 

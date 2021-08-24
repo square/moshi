@@ -25,7 +25,7 @@ val baseline = configurations.create("baseline")
 val latest = configurations.create("latest")
 
 dependencies {
-  baseline("com.squareup.moshi:moshi-adapters:1.12.0") {
+  baseline(libs.moshiAdapters) {
     isTransitive = false
     isForce = true
   }
