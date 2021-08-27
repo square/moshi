@@ -21,7 +21,7 @@ kotlin = "1.5.21"
 kotlinCompileTesting = "1.4.3"
 kotlinpoet = "1.9.0"
 ktlint = "0.42.1"
-moshi = "1.12.0"
+moshiForJapicmp = "1.12.0"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "1.5.0" }
@@ -46,8 +46,8 @@ kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs",
 kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0"
 okio = "com.squareup.okio:okio:2.10.0"
 guava = "com.google.guava:guava:30.1.1-jre"
-moshiForJapicmp = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
-moshiAdaptersForJapicmp = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+moshiForJapicmp = { module = "com.squareup.moshi:moshi", version.ref = "moshiForJapicmp" }
+moshiAdaptersForJapicmp = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshiForJapicmp" }
 
 # Test libs
 assertj = "org.assertj:assertj-core:3.11.1"
