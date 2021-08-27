@@ -40,4 +40,4 @@ jobs:
 
       - name: Publish (default branch only)
         if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '16'
-        run: ./gradlew publishToMavenCentral -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+        run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }}
