@@ -46,8 +46,8 @@ kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs",
 kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0"
 okio = "com.squareup.okio:okio:2.10.0"
 guava = "com.google.guava:guava:30.1.1-jre"
-moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
-moshiAdapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+moshiForJapicmp = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
+moshiAdaptersForJapicmp = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
 
 # Test libs
 assertj = "org.assertj:assertj-core:3.11.1"

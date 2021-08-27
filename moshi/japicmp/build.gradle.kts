@@ -25,7 +25,7 @@ val baseline = configurations.create("baseline")
 val latest = configurations.create("latest")
 
 dependencies {
-  baseline(libs.moshi) {
+  baseline(libs.moshiForJapicmp) {
     isTransitive = false
     isForce = true
   }
