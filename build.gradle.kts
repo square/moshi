@@ -15,11 +15,12 @@
  */
 
 import com.diffplug.gradle.spotless.JavaExtension
+import com.diffplug.gradle.spotless.SpotlessExtension
+import java.net.URL
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
 
 buildscript {
   dependencies {
@@ -32,75 +33,8 @@ buildscript {
 plugins {
   alias(libs.plugins.mavenPublish) apply false
   alias(libs.plugins.dokka) apply false
-  alias(libs.plugins.spotless)
+  alias(libs.plugins.spotless) apply false
   alias(libs.plugins.japicmp) apply false
-}
-
-spotless {
-  format("misc") {
-    target("*.md", ".gitignore")
-    trimTrailingWhitespace()
-    indentWithSpaces(2)
-    endWithNewline()
-  }
-  val externalJavaFiles = arrayOf(
-    "**/ClassFactory.java",
-    "**/Iso8601Utils.java",
-    "**/JsonReader.java",
-    "**/JsonReaderPathTest.java",
-    "**/JsonReaderTest.java",
-    "**/JsonScope.java",
-    "**/JsonUtf8Reader.java",
-    "**/JsonUtf8ReaderPathTest.java",
-    "**/JsonUtf8ReaderTest.java",
-    "**/JsonUtf8ReaderTest.java",
-    "**/JsonUtf8Writer.java",
-    "**/JsonUtf8WriterTest.java",
-    "**/JsonWriter.java",
-    "**/JsonWriterPathTest.java",
-    "**/JsonWriterTest.java",
-    "**/LinkedHashTreeMap.java",
-    "**/LinkedHashTreeMapTest.java",
-    "**/PolymorphicJsonAdapterFactory.java",
-    "**/RecursiveTypesResolveTest.java",
-    "**/Types.java",
-    "**/TypesTest.java"
-  )
-  val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-    googleJavaFormat(libs.versions.gjf.get())
-  }
-  java {
-    configureCommonJavaFormat()
-    target("**/*.java")
-    targetExclude(
-      "**/spotless.java",
-      "**/build/**",
-      *externalJavaFiles
-    )
-    licenseHeaderFile("spotless/spotless.java")
-  }
-  format("externalJava", JavaExtension::class.java) {
-    // These don't use our spotless config for header files since we don't want to overwrite the
-    // existing copyright headers.
-    configureCommonJavaFormat()
-    target(*externalJavaFiles)
-  }
-  kotlin {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
-    target("**/*.kt")
-    trimTrailingWhitespace()
-    endWithNewline()
-    licenseHeaderFile("spotless/spotless.kt")
-      .updateYearWithLatest(false)
-    targetExclude("**/Dependencies.kt", "**/spotless.kt", "**/build/**")
-  }
-  kotlinGradle {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
-    target("**/*.gradle.kts")
-    trimTrailingWhitespace()
-    endWithNewline()
-    licenseHeaderFile("spotless/spotless.kts", "(import|plugins|buildscript|dependencies|pluginManagement)")
-  }
 }
 
 subprojects {
@@ -164,6 +98,74 @@ subprojects {
           }
         }
       }
+    }
+  }
+
+  apply(plugin = "com.diffplug.spotless")
+  configure<SpotlessExtension> {
+    format("misc") {
+      target("*.md", ".gitignore")
+      trimTrailingWhitespace()
+      indentWithSpaces(2)
+      endWithNewline()
+    }
+    val externalJavaFiles = arrayOf(
+      "**/ClassFactory.java",
+      "**/Iso8601Utils.java",
+      "**/JsonReader.java",
+      "**/JsonReaderPathTest.java",
+      "**/JsonReaderTest.java",
+      "**/JsonScope.java",
+      "**/JsonUtf8Reader.java",
+      "**/JsonUtf8ReaderPathTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8ReaderTest.java",
+      "**/JsonUtf8Writer.java",
+      "**/JsonUtf8WriterTest.java",
+      "**/JsonWriter.java",
+      "**/JsonWriterPathTest.java",
+      "**/JsonWriterTest.java",
+      "**/LinkedHashTreeMap.java",
+      "**/LinkedHashTreeMapTest.java",
+      "**/PolymorphicJsonAdapterFactory.java",
+      "**/RecursiveTypesResolveTest.java",
+      "**/Types.java",
+      "**/TypesTest.java"
+    )
+    val configureCommonJavaFormat: JavaExtension.() -> Unit = {
+      googleJavaFormat(libs.versions.gjf.get())
+    }
+    java {
+      configureCommonJavaFormat()
+      target("**/*.java")
+      targetExclude(
+        "**/spotless.java",
+        "**/build/**",
+        *externalJavaFiles
+      )
+      licenseHeaderFile("$rootDir/spotless/spotless.java")
+    }
+    format("externalJava", JavaExtension::class.java) {
+      // These don't use our spotless config for header files since we don't want to overwrite the
+      // existing copyright headers.
+      configureCommonJavaFormat()
+      target(*externalJavaFiles)
+    }
+    kotlin {
+      ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+      target("**/*.kt")
+      trimTrailingWhitespace()
+      endWithNewline()
+      licenseHeaderFile("$rootDir/spotless/spotless.kt")
+        .updateYearWithLatest(false)
+      targetExclude("**/Dependencies.kt", "**/spotless.kt", "**/build/**")
+    }
+    kotlinGradle {
+      ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+      target("**/*.gradle.kts")
+      trimTrailingWhitespace()
+      endWithNewline()
+      licenseHeaderFile("$rootDir/spotless/spotless.kts", "(import|plugins|buildscript|dependencies|pluginManagement)")
     }
   }
 }
