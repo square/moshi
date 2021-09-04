@@ -166,11 +166,7 @@ internal class AdapterGenerator(
     .initializer("null")
     .build()
 
-  fun prepare(
-    generateProguardRules: Boolean,
-    instantiateAnnotations: Boolean,
-    typeHook: (TypeSpec) -> TypeSpec = { it }
-  ): PreparedAdapter {
+  fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
     val reservedSimpleNames = mutableSetOf<String>()
     for (property in nonTransientProperties) {
       // Allocate names for simple property types first to avoid collisions
@@ -189,7 +185,7 @@ internal class AdapterGenerator(
     result.addAnnotation(COMMON_SUPPRESS)
     result.addType(generatedAdapter)
     val proguardConfig = if (generateProguardRules) {
-      generatedAdapter.createProguardRule(instantiateAnnotations)
+      generatedAdapter.createProguardRule(target.instantiateAnnotations)
     } else {
       null
     }
