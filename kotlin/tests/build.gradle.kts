@@ -34,11 +34,14 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 
+val useWError = findProperty("kotlinLanguageVersion")?.toString()
+  ?.startsWith("1.5")
+  ?: false
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
+    allWarningsAsErrors = useWError
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
-//      "-Werror", // TODO temporary due to testing language version 1.6
       "-Xopt-in=kotlin.ExperimentalStdlibApi"
     )
   }
