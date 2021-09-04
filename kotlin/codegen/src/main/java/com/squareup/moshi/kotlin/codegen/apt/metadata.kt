@@ -418,7 +418,8 @@ private val TargetProperty.isVisible: Boolean
 internal fun TargetProperty.generator(
   messager: Messager,
   sourceElement: TypeElement,
-  elements: Elements
+  elements: Elements,
+  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
@@ -429,7 +430,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
   }
 
   if (!isVisible) {
@@ -478,7 +479,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
   )
 }
 

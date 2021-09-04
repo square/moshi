@@ -166,7 +166,11 @@ internal class AdapterGenerator(
     .initializer("null")
     .build()
 
-  fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
+  fun prepare(
+    generateProguardRules: Boolean,
+    instantiateAnnotations: Boolean,
+    typeHook: (TypeSpec) -> TypeSpec = { it }
+  ): PreparedAdapter {
     val reservedSimpleNames = mutableSetOf<String>()
     for (property in nonTransientProperties) {
       // Allocate names for simple property types first to avoid collisions
@@ -185,26 +189,31 @@ internal class AdapterGenerator(
     result.addAnnotation(COMMON_SUPPRESS)
     result.addType(generatedAdapter)
     val proguardConfig = if (generateProguardRules) {
-      generatedAdapter.createProguardRule()
+      generatedAdapter.createProguardRule(instantiateAnnotations)
     } else {
       null
     }
     return PreparedAdapter(result.build(), proguardConfig)
   }
 
-  private fun TypeSpec.createProguardRule(): ProguardConfig {
-    val adapterProperties = propertySpecs
-      .asSequence()
-      .filter { prop ->
-        prop.type.rawType() == JsonAdapter::class.asClassName()
-      }
-      .filter { prop -> prop.annotations.isNotEmpty() }
-      .mapTo(mutableSetOf()) { prop ->
-        QualifierAdapterProperty(
-          name = prop.name,
-          qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
-        )
-      }
+  private fun TypeSpec.createProguardRule(instantiateAnnotations: Boolean): ProguardConfig {
+    val adapterProperties = if (instantiateAnnotations) {
+      // Don't need to do anything special if we instantiate them directly!
+      emptySet()
+    } else {
+      propertySpecs
+        .asSequence()
+        .filter { prop ->
+          prop.type.rawType() == JsonAdapter::class.asClassName()
+        }
+        .filter { prop -> prop.annotations.isNotEmpty() }
+        .mapTo(mutableSetOf()) { prop ->
+          QualifierAdapterProperty(
+            name = prop.name,
+            qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
+          )
+        }
+    }
 
     val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
       1 -> listOf(CN_MOSHI.reflectionName())

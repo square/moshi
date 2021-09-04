@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
@@ -29,6 +30,7 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
 import java.util.Locale
@@ -36,7 +38,8 @@ import java.util.Locale
 /** A JsonAdapter that can be used to encode and decode a particular field. */
 internal data class DelegateKey(
   private val type: TypeName,
-  private val jsonQualifiers: List<AnnotationSpec>
+  private val jsonQualifiers: List<AnnotationSpec>,
+  private val instantiateAnnotations: Boolean
 ) {
   val nullable get() = type.isNullable
 
@@ -60,8 +63,12 @@ internal data class DelegateKey(
       moshiParameter,
       typeRenderer.render(type)
     )
+
     val (initializerString, args) = when {
       jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
+      instantiateAnnotations -> {
+        ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
+      }
       else -> {
         ", %T.getFieldJsonQualifierAnnotations(javaClass, " +
           "%S)" to arrayOf(Types::class.asTypeName(), adapterName)
@@ -70,10 +77,23 @@ internal data class DelegateKey(
     val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-      .addAnnotations(jsonQualifiers)
+      .apply {
+        if (!instantiateAnnotations) {
+          addAnnotations(jsonQualifiers)
+        }
+      }
       .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
       .build()
   }
+}
+
+private fun AnnotationSpec.asInstantiationExpression(): CodeBlock {
+  // <Type>(args)
+  return CodeBlock.of(
+    "%T(%L)",
+    typeName,
+    members.joinToCode()
+  )
 }
 
 /**

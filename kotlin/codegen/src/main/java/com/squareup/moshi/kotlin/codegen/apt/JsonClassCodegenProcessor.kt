@@ -103,7 +103,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       if (jsonClass.generateAdapter && jsonClass.generator.isEmpty()) {
         val generator = adapterGenerator(type, cachedClassInspector) ?: continue
         val preparedAdapter = generator
-          .prepare(generateProguardRules) { spec ->
+          .prepare(generateProguardRules, true) { spec ->
             spec.toBuilder()
               .apply {
                 @Suppress("DEPRECATION") // This is a Java type
@@ -139,7 +139,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
-      val generator = property.generator(messager, element, elements)
+      val generator = property.generator(messager, element, elements, instantiateAnnotations = true)
       if (generator != null) {
         properties[property.name] = generator
       }
