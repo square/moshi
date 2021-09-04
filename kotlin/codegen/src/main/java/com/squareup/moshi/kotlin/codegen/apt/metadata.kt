@@ -458,6 +458,7 @@ internal fun TargetProperty.generator(
     // Check Java types since that covers both Java and Kotlin annotations.
     val annotationElement = elements.getTypeElement(qualifierRawType.canonicalName)
       ?: continue
+
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(
@@ -466,12 +467,14 @@ internal fun TargetProperty.generator(
         )
       }
     }
-    annotationElement.getAnnotation(Target::class.java)?.let {
-      if (ElementType.FIELD !in it.value) {
-        messager.printMessage(
-          ERROR,
-          "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-        )
+    if (!instantiateAnnotations) {
+      annotationElement.getAnnotation(Target::class.java)?.let {
+        if (ElementType.FIELD !in it.value) {
+          messager.printMessage(
+            ERROR,
+            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+          )
+        }
       }
     }
   }
