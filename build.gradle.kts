@@ -128,6 +128,7 @@ subprojects {
         @Suppress("SuspiciousCollectionReassignment")
         freeCompilerArgs += listOf("-progressive")
         jvmTarget = libs.versions.jvmTarget.get()
+        languageVersion = "1.6"
       }
     }
 
