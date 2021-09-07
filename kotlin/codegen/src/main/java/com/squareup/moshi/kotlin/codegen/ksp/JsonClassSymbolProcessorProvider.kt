@@ -146,25 +146,17 @@ private class JsonClassSymbolProcessor(
     return emptyList()
   }
 
+  /** Writes this config to a [codeGenerator]. */
   private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile) {
-    // TODO outputFile needs to be public
-    val name = "META-INF/proguard/moshi-${targetClass.canonicalName}"
     val file = codeGenerator.createNewFile(
       dependencies = Dependencies(aggregating = false, originatingKSFile),
       packageName = "",
-      fileName = name,
+      fileName = outputFilePath(targetClass.canonicalName),
       extensionName = "pro"
     )
     // Don't use writeTo(file) because that tries to handle directories under the hood
     OutputStreamWriter(file, StandardCharsets.UTF_8)
-      .use {
-        // TODO writeTo(Appendable) needs to be public
-        ProguardConfig::class.java.getDeclaredMethod("writeTo", Appendable::class.java)
-          .apply {
-            isAccessible = true
-          }
-          .invoke(this, it)
-      }
+      .use(::writeTo)
   }
 
   private fun adapterGenerator(

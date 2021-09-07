@@ -21,6 +21,7 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType.ISOLATING
@@ -31,10 +32,12 @@ import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
+import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.util.Elements
 import javax.lang.model.util.Types
 import javax.tools.Diagnostic
+import javax.tools.StandardLocation
 
 /**
  * An annotation processor that reads Kotlin data classes and generates Moshi JsonAdapters for them.
@@ -189,4 +192,11 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
 
     return AdapterGenerator(type, sortedProperties)
   }
+}
+
+/** Writes this config to a [filer]. */
+private fun ProguardConfig.writeTo(filer: Filer, vararg originatingElements: Element) {
+  filer.createResource(StandardLocation.CLASS_OUTPUT, "", outputFilePath(targetClass.canonicalName), *originatingElements)
+    .openWriter()
+    .use(::writeTo)
 }
