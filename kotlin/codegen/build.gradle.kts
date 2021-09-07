@@ -75,6 +75,12 @@ dependencies {
   api(libs.incap)
   kapt(libs.incap.processor)
 
+  // KSP deps
+  compileOnly(libs.ksp)
+  compileOnly(libs.ksp.api)
+  compileOnly(libs.kotlin.compilerEmbeddable)
+  testImplementation(libs.kotlinCompileTesting.ksp)
+
   // Copy these again as they're not automatically included since they're shaded
   testImplementation(libs.kotlinpoet.metadata)
   testImplementation(libs.junit)
