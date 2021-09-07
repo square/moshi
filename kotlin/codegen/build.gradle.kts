@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
-  kotlin("kapt")
+  alias(libs.plugins.ksp)
   id("com.vanniktech.maven.publish")
   alias(libs.plugins.mavenShadow)
 }
@@ -35,29 +35,11 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // For kapt to work with kotlin-compile-testing
-  jvmArgs(
-    "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-  )
-}
-
 val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
-  // Use `api` because kapt will not resolve `runtime` dependencies without it, only `compile`
-  // https://youtrack.jetbrains.com/issue/KT-41702
-  api(project(":moshi"))
-  api(kotlin("reflect"))
+  implementation(project(":moshi"))
+  implementation(kotlin("reflect"))
   shade(libs.kotlinxMetadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
@@ -67,13 +49,11 @@ dependencies {
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
-  api(libs.guava)
-  api(libs.asm)
+  implementation(libs.guava)
+  implementation(libs.asm)
 
-  api(libs.autoService)
-  kapt(libs.autoService.processor)
-  api(libs.incap)
-  kapt(libs.incap.processor)
+  implementation(libs.autoService)
+  ksp(libs.autoService.ksp)
 
   // KSP deps
   compileOnly(libs.ksp)
