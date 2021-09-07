@@ -23,8 +23,6 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType.ISOLATING
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Filer
 import javax.annotation.processing.Messager
@@ -48,7 +46,6 @@ import javax.tools.StandardLocation
  * adapter will also be internal).
  */
 @AutoService(Processor::class)
-@IncrementalAnnotationProcessor(ISOLATING)
 public class JsonClassCodegenProcessor : AbstractProcessor() {
 
   public companion object {
