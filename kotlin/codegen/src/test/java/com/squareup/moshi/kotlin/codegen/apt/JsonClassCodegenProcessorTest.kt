@@ -18,6 +18,9 @@ package com.squareup.moshi.kotlin.codegen.apt
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
+import com.squareup.moshi.kotlin.codegen.api.Options
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
@@ -324,7 +327,6 @@ class JsonClassCodegenProcessorTest {
         """
           import com.squareup.moshi.JsonClass
 
-          import com.squareup.moshi.JsonClass
           @JsonClass(generateAdapter = true)
           class NonPropertyConstructorParameter(a: Int, val b: Int)
           """
@@ -349,10 +351,10 @@ class JsonClassCodegenProcessorTest {
           """
       )
     ).apply {
-      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
+      kaptArgs[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
     assertThat(result.messages).contains(
-      "Invalid option value for ${JsonClassCodegenProcessor.OPTION_GENERATED}"
+      "Invalid option value for $OPTION_GENERATED"
     )
   }
   @Test
@@ -368,7 +370,7 @@ class JsonClassCodegenProcessorTest {
           """
       )
     ).apply {
-      kaptArgs[JsonClassCodegenProcessor.OPTION_GENERATE_PROGUARD_RULES] = "false"
+      kaptArgs[OPTION_GENERATE_PROGUARD_RULES] = "false"
     }.compile()
     assertThat(result.generatedFiles.filter { it.endsWith(".pro") }).isEmpty()
   }

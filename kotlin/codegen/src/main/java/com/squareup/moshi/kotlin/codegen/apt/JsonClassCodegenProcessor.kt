@@ -21,6 +21,9 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
+import com.squareup.moshi.kotlin.codegen.api.Options.POSSIBLE_GENERATED_NAMES
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import javax.annotation.processing.AbstractProcessor
@@ -47,31 +50,6 @@ import javax.tools.StandardLocation
  */
 @AutoService(Processor::class)
 public class JsonClassCodegenProcessor : AbstractProcessor() {
-
-  public companion object {
-    /**
-     * This annotation processing argument can be specified to have a `@Generated` annotation
-     * included in the generated code. It is not encouraged unless you need it for static analysis
-     * reasons and not enabled by default.
-     *
-     * Note that this can only be one of the following values:
-     *   * `"javax.annotation.processing.Generated"` (JRE 9+)
-     *   * `"javax.annotation.Generated"` (JRE <9)
-     */
-    public const val OPTION_GENERATED: String = "moshi.generated"
-
-    /**
-     * This boolean processing option can control proguard rule generation.
-     * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
-     * This is enabled by default.
-     */
-    public const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
-
-    private val POSSIBLE_GENERATED_NAMES = arrayOf(
-      ClassName("javax.annotation.processing", "Generated"),
-      ClassName("javax.annotation", "Generated")
-    ).associateBy { it.canonicalName }
-  }
 
   private lateinit var types: Types
   private lateinit var elements: Elements

@@ -29,35 +29,16 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
+import com.squareup.moshi.kotlin.codegen.api.Options.POSSIBLE_GENERATED_NAMES
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
-import com.squareup.moshi.kotlin.codegen.ksp.JsonClassSymbolProcessorProvider.Companion.OPTION_GENERATED
-import com.squareup.moshi.kotlin.codegen.ksp.JsonClassSymbolProcessorProvider.Companion.OPTION_GENERATE_PROGUARD_RULES
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 
 @AutoService(SymbolProcessorProvider::class)
 public class JsonClassSymbolProcessorProvider : SymbolProcessorProvider {
-  public companion object {
-    /**
-     * This processing option can be specified to have a `@Generated` annotation
-     * included in the generated code. It is not encouraged unless you need it for static analysis
-     * reasons and not enabled by default.
-     *
-     * Note that this can only be one of the following values:
-     *   * `"javax.annotation.processing.Generated"` (JRE 9+)
-     *   * `"javax.annotation.Generated"` (JRE <9)
-     */
-    public const val OPTION_GENERATED: String = "moshi.generated"
-
-    /**
-     * This boolean processing option can disable proguard rule generation.
-     * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
-     * This is enabled by default.
-     */
-    public const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
-  }
-
   override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
     return JsonClassSymbolProcessor(environment)
   }
@@ -68,11 +49,6 @@ private class JsonClassSymbolProcessor(
 ) : SymbolProcessor {
 
   private companion object {
-    val POSSIBLE_GENERATED_NAMES = setOf(
-      "javax.annotation.processing.Generated",
-      "javax.annotation.Generated"
-    )
-
     val JSON_CLASS_NAME = JsonClass::class.qualifiedName!!
   }
 
@@ -80,7 +56,7 @@ private class JsonClassSymbolProcessor(
   private val logger = environment.logger
   private val generatedOption = environment.options[OPTION_GENERATED]?.also {
     logger.check(it in POSSIBLE_GENERATED_NAMES) {
-      "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are $POSSIBLE_GENERATED_NAMES."
+      "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are ${POSSIBLE_GENERATED_NAMES.keys}."
     }
   }
   private val generateProguardRules = environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true

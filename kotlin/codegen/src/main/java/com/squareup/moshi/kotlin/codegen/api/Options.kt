@@ -1,0 +1,43 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.squareup.moshi.kotlin.codegen.api
+
+import com.squareup.kotlinpoet.ClassName
+
+internal object Options {
+  /**
+   * This processing option can be specified to have a `@Generated` annotation
+   * included in the generated code. It is not encouraged unless you need it for static analysis
+   * reasons and not enabled by default.
+   *
+   * Note that this can only be one of the following values:
+   *   * `"javax.annotation.processing.Generated"` (JRE 9+)
+   *   * `"javax.annotation.Generated"` (JRE <9)
+   */
+  const val OPTION_GENERATED: String = "moshi.generated"
+
+  /**
+   * This boolean processing option can disable proguard rule generation.
+   * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
+   * This is enabled by default.
+   */
+  const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
+
+  val POSSIBLE_GENERATED_NAMES = arrayOf(
+    ClassName("javax.annotation.processing", "Generated"),
+    ClassName("javax.annotation", "Generated")
+  ).associateBy { it.canonicalName }
+}
