@@ -18,7 +18,7 @@ gjf = "1.11.0"
 incap = "0.3"
 jvmTarget = "1.8"
 kotlin = "1.5.21"
-kotlinCompileTesting = "1.4.3"
+kotlinCompileTesting = "1.4.4"
 kotlinpoet = "1.9.0"
 ktlint = "0.42.1"
 moshiForJapicmp = "1.12.0"
@@ -28,7 +28,7 @@ dokka = { id = "org.jetbrains.dokka", version = "1.5.0" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.17.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.0.0" }
-spotless = { id = "com.diffplug.spotless", version = "5.14.3" }
+spotless = { id = "com.diffplug.spotless", version = "5.15.0" }
 
 [libraries]
 asm = "org.ow2.asm:asm:9.2"
