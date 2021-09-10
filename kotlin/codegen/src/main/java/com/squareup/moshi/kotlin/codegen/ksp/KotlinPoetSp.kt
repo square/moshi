@@ -133,11 +133,6 @@ internal fun KSClassDeclaration.toClassName(): ClassName {
   return ClassName(pkgName, simpleNames)
 }
 
-internal fun KSTypeParameter.toTypeName(typeParamResolver: TypeParameterResolver): TypeName {
-  if (variance == STAR) return KpStar
-  return toTypeVariableName(typeParamResolver)
-}
-
 internal fun KSTypeParameter.toTypeVariableName(
   typeParamResolver: TypeParameterResolver,
 ): TypeVariableName {

@@ -15,11 +15,9 @@
  */
 package com.squareup.moshi.kotlin.codegen.ksp
 
-import com.google.devtools.ksp.getAllSuperTypes
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
-import com.google.devtools.ksp.symbol.ClassKind.CLASS
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -50,13 +48,6 @@ internal fun Resolver.getClassDeclarationByName(fqcn: String): KSClassDeclaratio
 }
 
 internal fun KSClassDeclaration.asType() = asType(emptyList())
-
-internal fun KSClassDeclaration.superclass(resolver: Resolver): KSType {
-  return getAllSuperTypes().firstOrNull {
-    val decl = it.declaration
-    decl is KSClassDeclaration && decl.classKind == CLASS
-  } ?: resolver.builtIns.anyType
-}
 
 internal fun KSClassDeclaration.isKotlinClass(resolver: Resolver): Boolean {
   return origin == KOTLIN ||
@@ -124,7 +115,6 @@ internal fun Visibility.asKModifier(): KModifier {
 
 internal fun KSAnnotation.toAnnotationSpec(resolver: Resolver): AnnotationSpec {
   val element = annotationType.resolve().unwrapTypeAlias().declaration as KSClassDeclaration
-  // TODO support generic annotations
   val builder = AnnotationSpec.builder(element.toClassName())
   for (argument in arguments) {
     val member = CodeBlock.builder()
@@ -178,7 +168,11 @@ internal fun memberForValue(value: Any) = when (value) {
   is Enum<*> -> CodeBlock.of("%T.%L", value.javaClass, value.name)
   is String -> CodeBlock.of("%S", value)
   is Float -> CodeBlock.of("%Lf", value)
-//  is Char -> CodeBlock.of("'%L'", characterLiteralWithoutSingleQuotes(value)) // TODO public?
+  is Double -> CodeBlock.of("%L", value)
+  is Char -> CodeBlock.of("$value.toChar()")
+  is Byte -> CodeBlock.of("$value.toByte()")
+  is Short -> CodeBlock.of("$value.toShort()")
+  // Int or Boolean
   else -> CodeBlock.of("%L", value)
 }
 

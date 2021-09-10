@@ -146,19 +146,6 @@ private class JsonClassSymbolProcessor(
     return emptyList()
   }
 
-  /** Writes this config to a [codeGenerator]. */
-  private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile) {
-    val file = codeGenerator.createNewFile(
-      dependencies = Dependencies(aggregating = false, originatingKSFile),
-      packageName = "",
-      fileName = outputFilePath(targetClass.canonicalName),
-      extensionName = "pro"
-    )
-    // Don't use writeTo(file) because that tries to handle directories under the hood
-    OutputStreamWriter(file, StandardCharsets.UTF_8)
-      .use(::writeTo)
-  }
-
   private fun adapterGenerator(
     logger: KSPLogger,
     resolver: Resolver,
@@ -193,4 +180,17 @@ private class JsonClassSymbolProcessor(
 
     return AdapterGenerator(type, sortedProperties)
   }
+}
+
+/** Writes this config to a [codeGenerator]. */
+private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile) {
+  val file = codeGenerator.createNewFile(
+    dependencies = Dependencies(aggregating = false, originatingKSFile),
+    packageName = "",
+    fileName = outputFilePath(targetClass.canonicalName),
+    extensionName = "pro"
+  )
+  // Don't use writeTo(file) because that tries to handle directories under the hood
+  OutputStreamWriter(file, StandardCharsets.UTF_8)
+    .use(::writeTo)
 }

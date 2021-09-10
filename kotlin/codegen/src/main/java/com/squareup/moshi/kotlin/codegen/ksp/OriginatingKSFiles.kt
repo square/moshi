@@ -27,8 +27,6 @@ internal interface OriginatingKSFiles {
   val files: List<KSFile>
 }
 
-internal data class OriginatingKSFilesImpl(override val files: List<KSFile>) : OriginatingKSFiles
-
 internal interface MutableOriginatingKSFiles : OriginatingKSFiles {
   override val files: MutableList<KSFile>
 }
@@ -56,14 +54,6 @@ private fun Taggable.getKSFilesTag(): List<KSFile> {
 }
 
 internal fun TypeSpec.Builder.addOriginatingKSFile(ksFile: KSFile): TypeSpec.Builder = apply {
-  getOrCreateKSFilesTag().add(ksFile)
-}
-
-internal fun FunSpec.Builder.addOriginatingKSFile(ksFile: KSFile): FunSpec.Builder = apply {
-  getOrCreateKSFilesTag().add(ksFile)
-}
-
-internal fun PropertySpec.Builder.addOriginatingKSFile(ksFile: KSFile): PropertySpec.Builder = apply {
   getOrCreateKSFilesTag().add(ksFile)
 }
 

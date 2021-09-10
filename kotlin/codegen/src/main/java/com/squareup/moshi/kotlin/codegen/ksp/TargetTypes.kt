@@ -36,7 +36,6 @@ import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
@@ -117,7 +116,6 @@ internal fun targetType(
       originalType = originalType,
       classDecl = classDecl,
       resolver = resolver,
-      // TODO cache this?
       typeParameterResolver = classDecl.typeParameters
         .toTypeParameterResolver(classTypeParamsResolver)
     )
@@ -265,23 +263,4 @@ private fun KSPropertyDeclaration.toPropertySpec(
 
 private fun String.escapeDollarSigns(): String {
   return replace("\$", "\${\'\$\'}")
-}
-
-internal fun TypeName.unwrapTypeAlias(): TypeName {
-  // TODO do we need to unwrap?
-  return this
-//  return mapTypes<ClassName> {
-//    tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
-//      // If any type is nullable, then the whole thing is nullable
-//      var isAnyNullable = isNullable
-//      // Keep track of all annotations across type levels. Sort them too for consistency.
-//      val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
-//        addAll(annotations)
-//      }
-//      val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
-//      runningAnnotations.addAll(nestedUnwrappedType.annotations)
-//      isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
-//      nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
-//    }
-//  }
 }
