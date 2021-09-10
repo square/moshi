@@ -375,6 +375,7 @@ class JsonClassSymbolProcessorTest {
     )
   }
 
+  @Ignore("https://github.com/google/ksp/issues/621")
   @Test
   fun disableProguardGeneration() {
     val compilation = prepareCompilation(
@@ -523,6 +524,7 @@ class JsonClassSymbolProcessorTest {
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
 
+  @Ignore("https://github.com/google/ksp/issues/621")
   @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
@@ -552,6 +554,7 @@ class JsonClassSymbolProcessorTest {
 //    )
   }
 
+  @Ignore("https://github.com/google/ksp/issues/621")
   @Test
   fun `Processor should generate comprehensive proguard rules`() {
     val compilation = prepareCompilation(
