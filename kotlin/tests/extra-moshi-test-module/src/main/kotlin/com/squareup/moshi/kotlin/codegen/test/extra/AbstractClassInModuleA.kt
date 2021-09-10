@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.squareup.moshi.kotlin.codegen.test.extra
 
-pluginManagement {
-  repositories {
-    mavenCentral()
-    gradlePluginPortal()
-  }
-}
-
-rootProject.name = "moshi-root"
-include(":moshi")
-include(":moshi:japicmp")
-include(":moshi:records-tests")
-include(":adapters")
-include(":adapters:japicmp")
-include(":examples")
-include(":kotlin:reflect")
-include(":kotlin:codegen")
-include(":kotlin:tests")
-include(":kotlin:tests:extra-moshi-test-module")
-
-enableFeaturePreview("VERSION_CATALOGS")
+public abstract class AbstractClassInModuleA
