@@ -18,7 +18,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
-  kotlin("kapt")
+  kotlin("kapt") apply false
+  alias(libs.plugins.ksp) apply false
+}
+
+val useKsp = hasProperty("useKsp")
+if (useKsp) {
+  apply(plugin = "com.google.devtools.ksp")
+} else {
+  apply(plugin = "org.jetbrains.kotlin.kapt")
 }
 
 tasks.withType<Test>().configureEach {
@@ -33,13 +41,33 @@ tasks.withType<KotlinCompile>().configureEach {
       "-Werror",
       "-Xopt-in=kotlin.ExperimentalStdlibApi"
     )
+
+    println("Adding args to $name")
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(11)) })
+    kotlinDaemonJvmArguments.addAll(
+      "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+      "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    )
   }
 }
 
 dependencies {
-  kaptTest(project(":kotlin:codegen"))
+  if (useKsp) {
+    "kspTest"(project(":kotlin:codegen"))
+  } else {
+    "kaptTest"(project(":kotlin:codegen"))
+  }
   testImplementation(project(":moshi"))
   testImplementation(project(":kotlin:reflect"))
+  testImplementation(project(":kotlin:tests:extra-moshi-test-module"))
   testImplementation(kotlin("reflect"))
   testImplementation(libs.junit)
   testImplementation(libs.assertj)

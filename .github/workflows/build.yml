@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
+    name: 'Java ${{ matrix.java-version }} | KSP ${{ matrix.use-ksp }}'
     runs-on: ubuntu-latest
 
     strategy:
@@ -11,6 +12,7 @@ jobs:
       matrix:
         java-version:
           - 16
+        use-ksp: [ true, false ]
 
     steps:
       - name: Checkout
@@ -36,7 +38,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
 
       - name: Test
-        run: ./gradlew build check --stacktrace
+        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }}
 
       - name: Publish (default branch only)
         if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '16'
