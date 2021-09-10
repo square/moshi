@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi.kotlin.codegen;
 
+import com.squareup.moshi.kotlin.codegen.apt.JsonClassCodegenProcessorTest;
+
 /** For {@link JsonClassCodegenProcessorTest#extendJavaType}. */
 public class JavaSuperclass {
   public int a = 1;

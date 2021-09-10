@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin.codegen
+package com.squareup.moshi.kotlin.codegen.apt
 
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
