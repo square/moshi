@@ -27,8 +27,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.kotlin.codegen.test.extra.AbstractClassInModuleA
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -702,5 +702,5 @@ data class ClassWithQualifier(
 // Regression for https://github.com/ZacSweers/MoshiX/issues/120
 @JsonClass(generateAdapter = true)
 data class DataClassInModuleB(
-  val id : String
+  val id: String
 ) : AbstractClassInModuleA()
