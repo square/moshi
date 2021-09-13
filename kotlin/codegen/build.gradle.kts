@@ -74,6 +74,8 @@ dependencies {
   compileOnly(libs.ksp)
   compileOnly(libs.ksp.api)
   compileOnly(libs.kotlin.compilerEmbeddable)
+  // Always force the latest KSP version to match the one we're compiling against
+  testImplementation(libs.ksp)
   testImplementation(libs.kotlin.compilerEmbeddable)
   testImplementation(libs.kotlinCompileTesting.ksp)
 
