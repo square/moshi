@@ -106,6 +106,9 @@ spotless {
 subprojects {
   repositories {
     mavenCentral()
+    maven {
+      setUrl("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
+    }
   }
 
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
@@ -125,8 +128,8 @@ subprojects {
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
       kotlinOptions {
-        @Suppress("SuspiciousCollectionReassignment")
-        freeCompilerArgs += listOf("-progressive")
+//        @Suppress("SuspiciousCollectionReassignment")
+//        freeCompilerArgs += listOf("-progressive")
         jvmTarget = libs.versions.jvmTarget.get()
         languageVersion = findProperty("kotlinLanguageVersion")?.toString() ?: "1.5"
       }
