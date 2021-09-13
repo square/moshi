@@ -163,7 +163,7 @@ private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFi
   val file = codeGenerator.createNewFile(
     dependencies = Dependencies(aggregating = false, originatingKSFile),
     packageName = "",
-    fileName = outputFilePath(targetClass.canonicalName),
+    fileName = outputFilePathWithoutExtension(targetClass.canonicalName),
     extensionName = "pro"
   )
   // Don't use writeTo(file) because that tries to handle directories under the hood

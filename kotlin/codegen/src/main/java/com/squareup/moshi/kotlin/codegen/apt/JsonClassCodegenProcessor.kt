@@ -171,7 +171,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
 
 /** Writes this config to a [filer]. */
 private fun ProguardConfig.writeTo(filer: Filer, vararg originatingElements: Element) {
-  filer.createResource(StandardLocation.CLASS_OUTPUT, "", outputFilePath(targetClass.canonicalName), *originatingElements)
+  filer.createResource(StandardLocation.CLASS_OUTPUT, "", "${outputFilePathWithoutExtension(targetClass.canonicalName)}.pro", *originatingElements)
     .openWriter()
     .use(::writeTo)
 }

@@ -39,8 +39,8 @@ internal data class ProguardConfig(
   val targetConstructorParams: List<String>,
   val qualifierProperties: Set<QualifierAdapterProperty>
 ) {
-  fun outputFilePath(canonicalName: String): String {
-    return "META-INF/proguard/moshi-$canonicalName.pro"
+  fun outputFilePathWithoutExtension(canonicalName: String): String {
+    return "META-INF/proguard/moshi-$canonicalName"
   }
 
   fun writeTo(out: Appendable): Unit = out.run {
