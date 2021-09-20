@@ -34,6 +34,7 @@ asm = "org.ow2.asm:asm:9.2"
 autoCommon = "com.google.auto:auto-common:1.1"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-processor = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
+guava = { module = "com.google.guava:guava", version = "30.1.1-jre" }
 incap = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
 incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"

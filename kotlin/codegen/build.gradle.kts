@@ -67,6 +67,7 @@ dependencies {
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
+  api(libs.guava)
   api(libs.asm)
 
   api(libs.autoService)
