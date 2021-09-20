@@ -18,7 +18,7 @@ package com.squareup.moshi.kotlin.codegen.apt
 import com.google.auto.service.AutoService
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.classinspector.elements.ElementsClassInspector
+import com.squareup.kotlinpoet.metadata.classinspectors.ElementsClassInspector
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
