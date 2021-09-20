@@ -10,8 +10,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java-version:
-          - 16
         use-ksp: [ true, false ]
 
     steps:
@@ -27,19 +25,19 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ matrix.java-version }}-${{ hashFiles('checksum.txt') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('checksum.txt') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-${{ matrix.java-version }}-
+            ${{ runner.os }}-gradle-
 
       - name: Configure JDK
         uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: ${{ matrix.java-version }}
+          java-version: '17'
 
       - name: Test
         run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.java-version == '16'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master'
         run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }}
