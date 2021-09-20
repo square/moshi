@@ -19,7 +19,7 @@ incap = "0.3"
 jvmTarget = "1.8"
 kotlin = "1.5.21"
 kotlinCompileTesting = "1.4.3"
-kotlinpoet = "1.9.0"
+kotlinpoet = "1.10.0"
 ktlint = "0.41.0"
 
 [plugins]
@@ -34,15 +34,14 @@ asm = "org.ow2.asm:asm:9.2"
 autoCommon = "com.google.auto:auto-common:1.1"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-processor = { module = "com.google.auto.service:auto-service", version.ref = "autoService" }
+guava = { module = "com.google.guava:guava", version = "30.1.1-jre" }
 incap = { module = "net.ltgt.gradle.incap:incap", version.ref = "incap" }
 incap-processor = { module = "net.ltgt.gradle.incap:incap-processor", version.ref = "incap" }
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
-kotlinpoet-elementsClassInspector = { module = "com.squareup:kotlinpoet-classinspector-elements", version.ref = "kotlinpoet" }
-kotlinpoet-metadata-core = { module = "com.squareup:kotlinpoet-metadata", version.ref = "kotlinpoet" }
-kotlinpoet-metadata-specs = { module = "com.squareup:kotlinpoet-metadata-specs", version.ref = "kotlinpoet" }
+kotlinpoet-metadata = { module = "com.squareup:kotlinpoet-metadata", version.ref = "kotlinpoet" }
 kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0"
 okio = "com.squareup.okio:okio:2.10.0"
 

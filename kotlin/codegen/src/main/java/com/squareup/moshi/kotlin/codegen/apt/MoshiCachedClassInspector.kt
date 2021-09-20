@@ -16,11 +16,15 @@
 package com.squareup.moshi.kotlin.codegen.apt
 
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.metadata.ImmutableKmClass
 import com.squareup.kotlinpoet.metadata.specs.ClassInspector
 import com.squareup.kotlinpoet.metadata.specs.toTypeSpec
-import com.squareup.kotlinpoet.metadata.toImmutableKmClass
+import com.squareup.kotlinpoet.metadata.toKmClass
+import kotlinx.metadata.KmClass
+import java.util.TreeMap
 import javax.lang.model.element.TypeElement
+
+/** KmClass doesn't implement equality natively. */
+private val KmClassComparator = compareBy<KmClass> { it.name }
 
 /**
  * This cached API over [ClassInspector] that caches certain lookups Moshi does potentially multiple
@@ -29,16 +33,16 @@ import javax.lang.model.element.TypeElement
  */
 internal class MoshiCachedClassInspector(private val classInspector: ClassInspector) {
   private val elementToSpecCache = mutableMapOf<TypeElement, TypeSpec>()
-  private val kmClassToSpecCache = mutableMapOf<ImmutableKmClass, TypeSpec>()
-  private val metadataToKmClassCache = mutableMapOf<Metadata, ImmutableKmClass>()
+  private val kmClassToSpecCache = TreeMap<KmClass, TypeSpec>(KmClassComparator)
+  private val metadataToKmClassCache = mutableMapOf<Metadata, KmClass>()
 
-  fun toImmutableKmClass(metadata: Metadata): ImmutableKmClass {
+  fun toKmClass(metadata: Metadata): KmClass {
     return metadataToKmClassCache.getOrPut(metadata) {
-      metadata.toImmutableKmClass()
+      metadata.toKmClass()
     }
   }
 
-  fun toTypeSpec(kmClass: ImmutableKmClass): TypeSpec {
+  fun toTypeSpec(kmClass: KmClass): TypeSpec {
     return kmClassToSpecCache.getOrPut(kmClass) {
       kmClass.toTypeSpec(classInspector)
     }
@@ -46,7 +50,7 @@ internal class MoshiCachedClassInspector(private val classInspector: ClassInspec
 
   fun toTypeSpec(element: TypeElement): TypeSpec {
     return elementToSpecCache.getOrPut(element) {
-      toTypeSpec(toImmutableKmClass(element.metadata))
+      toTypeSpec(toKmClass(element.metadata))
     }
   }
 }

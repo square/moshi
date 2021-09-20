@@ -62,20 +62,12 @@ dependencies {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
   api(libs.kotlinpoet)
-  shade(libs.kotlinpoet.metadata.core) {
-    exclude(group = "org.jetbrains.kotlin")
-    exclude(group = "com.squareup", module = "kotlinpoet")
-  }
-  shade(libs.kotlinpoet.metadata.specs) {
-    exclude(group = "org.jetbrains.kotlin")
-    exclude(group = "com.squareup", module = "kotlinpoet")
-  }
-  api(libs.kotlinpoet.elementsClassInspector)
-  shade(libs.kotlinpoet.elementsClassInspector) {
+  shade(libs.kotlinpoet.metadata) {
     exclude(group = "org.jetbrains.kotlin")
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
+  api(libs.guava)
   api(libs.asm)
 
   api(libs.autoService)
@@ -84,9 +76,7 @@ dependencies {
   kapt(libs.incap.processor)
 
   // Copy these again as they're not automatically included since they're shaded
-  testImplementation(libs.kotlinpoet.metadata.core)
-  testImplementation(libs.kotlinpoet.metadata.specs)
-  testImplementation(libs.kotlinpoet.elementsClassInspector)
+  testImplementation(libs.kotlinpoet.metadata)
   testImplementation(libs.junit)
   testImplementation(libs.truth)
   testImplementation(libs.kotlinCompileTesting)

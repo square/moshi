@@ -27,7 +27,6 @@ import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.metadata.ImmutableKmConstructor
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
 import com.squareup.kotlinpoet.metadata.isAbstract
 import com.squareup.kotlinpoet.metadata.isClass
@@ -37,8 +36,8 @@ import com.squareup.kotlinpoet.metadata.isInternal
 import com.squareup.kotlinpoet.metadata.isLocal
 import com.squareup.kotlinpoet.metadata.isPublic
 import com.squareup.kotlinpoet.metadata.isSealed
-import com.squareup.kotlinpoet.metadata.specs.TypeNameAliasTag
 import com.squareup.kotlinpoet.tag
+import com.squareup.kotlinpoet.tags.TypeAliasTag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
@@ -49,6 +48,8 @@ import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.deepCopy
 import com.squareup.moshi.kotlin.codegen.api.rawType
+import kotlinx.metadata.KmConstructor
+import kotlinx.metadata.jvm.signature
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -101,7 +102,7 @@ internal fun primaryConstructor(
     )
   }
 
-  val kmConstructorSignature = primaryConstructor.tag<ImmutableKmConstructor>()?.signature?.toString()
+  val kmConstructorSignature = primaryConstructor.tag<KmConstructor>()?.signature?.toString()
     ?: run {
       messager.printMessage(
         ERROR,
@@ -138,7 +139,7 @@ internal fun targetType(
   }
 
   val kmClass = try {
-    cachedClassInspector.toImmutableKmClass(typeMetadata)
+    cachedClassInspector.toKmClass(typeMetadata)
   } catch (e: UnsupportedOperationException) {
     messager.printMessage(
       ERROR,
@@ -173,7 +174,7 @@ internal fun targetType(
       )
       return null
     }
-    kmClass.isSealed -> {
+    kmClass.flags.isSealed -> {
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be sealed",
@@ -181,7 +182,7 @@ internal fun targetType(
       )
       return null
     }
-    kmClass.isAbstract -> {
+    kmClass.flags.isAbstract -> {
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be abstract",
@@ -189,7 +190,7 @@ internal fun targetType(
       )
       return null
     }
-    kmClass.isLocal -> {
+    kmClass.flags.isLocal -> {
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be local",
@@ -197,7 +198,7 @@ internal fun targetType(
       )
       return null
     }
-    !kmClass.isPublic && !kmClass.isInternal -> {
+    !kmClass.flags.isPublic && !kmClass.flags.isInternal -> {
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must be internal or public",
@@ -311,8 +312,8 @@ internal fun targetType(
     // Implicitly public, so now look up the hierarchy
     val forceInternal = generateSequence<Element>(element) { it.enclosingElement }
       .filterIsInstance<TypeElement>()
-      .map { cachedClassInspector.toImmutableKmClass(it.metadata) }
-      .any { it.isInternal }
+      .map { cachedClassInspector.toKmClass(it.metadata) }
+      .any { it.flags.isInternal }
     if (forceInternal) KModifier.INTERNAL else visibility
   }
 
@@ -518,7 +519,7 @@ private fun String.escapeDollarSigns(): String {
 internal fun TypeName.unwrapTypeAlias(): TypeName {
   return when (this) {
     is ClassName -> {
-      tag<TypeNameAliasTag>()?.type?.let { unwrappedType ->
+      tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
         // If any type is nullable, then the whole thing is nullable
         var isAnyNullable = isNullable
         // Keep track of all annotations across type levels. Sort them too for consistency.
