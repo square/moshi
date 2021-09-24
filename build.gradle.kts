@@ -106,9 +106,6 @@ spotless {
 subprojects {
   repositories {
     mavenCentral()
-    maven {
-      setUrl("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev")
-    }
   }
 
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
