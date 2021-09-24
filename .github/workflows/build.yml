@@ -11,7 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         use-ksp: [ true, false ]
-        kotlin-version: [ '1.5.31', '1.6.0' ]
+        kotlin-version: [ '1.5.31', '1.6.0-M1' ]
 
     env:
       MOSHI_KOTLIN_VERSION: '${{ matrix.kotlin-version }}'
