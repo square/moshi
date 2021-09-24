@@ -23,7 +23,9 @@ import java.net.URL
 
 buildscript {
   dependencies {
-    classpath(kotlin("gradle-plugin", version = libs.versions.kotlin.get()))
+    val versionOverride = System.getenv("MOSHI_KOTLIN_VERSION")
+      ?: libs.versions.kotlin.get()
+    classpath(kotlin("gradle-plugin", version = versionOverride))
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
     classpath("com.google.guava:guava:28.2-jre")
   }
@@ -128,7 +130,6 @@ subprojects {
 //        @Suppress("SuspiciousCollectionReassignment")
 //        freeCompilerArgs += listOf("-progressive")
         jvmTarget = libs.versions.jvmTarget.get()
-        languageVersion = findProperty("kotlinLanguageVersion")?.toString() ?: "1.5"
       }
     }
 

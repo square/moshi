@@ -11,7 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         use-ksp: [ true, false ]
-        kotlin-language-version: [ '1.5', '1.6' ]
+        kotlin-version: [ '1.5', '1.6' ]
+
+    env:
+      MOSHI_KOTLIN_VERSION: '${{ matrix.kotlin-version }}'
 
     steps:
       - name: Checkout
@@ -37,8 +40,8 @@ jobs:
           java-version: '17'
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }} -PkotlinLanguageVersion=${{ matrix.kotlin-language-version }}
+        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }}  -PkotlinVersion=${{ matrix.kotlin-version }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31'
         run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }}
