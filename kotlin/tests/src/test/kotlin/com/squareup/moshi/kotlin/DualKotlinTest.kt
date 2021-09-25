@@ -348,47 +348,48 @@ class DualKotlinTest(useReflection: Boolean) {
   abstract class AssetMetaData<A : Asset<A>>
 
   // Regression test for https://github.com/ZacSweers/MoshiX/issues/125
-  // TODO enable this after next KotlinPoet release, which fixes this for metadata parsing
-//  @Test fun selfReferencingTypeVars() {
-//    val adapter = moshi.adapter<StringNodeNumberNode>()
-//
-//    val data = StringNodeNumberNode().also {
-//      it.t = StringNodeNumberNode().also {
-//        it.text = "child 1"
-//      }
-//      it.text = "root"
-//      it.r = NumberStringNode().also {
-//        it.number = 0
-//        it.t = NumberStringNode().also {
-//          it.number = 1
-//        }
-//        it.r = StringNodeNumberNode().also {
-//          it.text = "grand child 1"
-//        }
-//      }
-//    }
-//    assertThat(adapter.toJson(data))
-//      //language=JSON
-//      .isEqualTo("""
-//        {"text":"root","t":{"text":"child 1"},"r":{"number":0,"t":{"number":1},"r":{"text":"grand child 1"}}}
-//       """.trimIndent())
-//  }
-//
-//  @JsonClass(generateAdapter = true)
-//  open class Node<T : Node<T, R>, R : Node<R, T>> {
-//    var t : T? = null
-//    var r : R? = null
-//  }
-//
-//  @JsonClass(generateAdapter = true)
-//  class StringNodeNumberNode : Node<StringNodeNumberNode, NumberStringNode>() {
-//    var text: String = ""
-//  }
-//
-//  @JsonClass(generateAdapter = true)
-//  class NumberStringNode : Node<NumberStringNode, StringNodeNumberNode>() {
-//    var number: Int = 0
-//  }
+  @Test fun selfReferencingTypeVars() {
+    val adapter = moshi.adapter<StringNodeNumberNode>()
+
+    val data = StringNodeNumberNode().also {
+      it.t = StringNodeNumberNode().also {
+        it.text = "child 1"
+      }
+      it.text = "root"
+      it.r = NumberStringNode().also {
+        it.number = 0
+        it.t = NumberStringNode().also {
+          it.number = 1
+        }
+        it.r = StringNodeNumberNode().also {
+          it.text = "grand child 1"
+        }
+      }
+    }
+    assertThat(adapter.toJson(data))
+      //language=JSON
+      .isEqualTo(
+        """
+        {"text":"root","t":{"text":"child 1"},"r":{"number":0,"t":{"number":1},"r":{"text":"grand child 1"}}}
+        """.trimIndent()
+      )
+  }
+
+  @JsonClass(generateAdapter = true)
+  open class Node<T : Node<T, R>, R : Node<R, T>> {
+    var t: T? = null
+    var r: R? = null
+  }
+
+  @JsonClass(generateAdapter = true)
+  class StringNodeNumberNode : Node<StringNodeNumberNode, NumberStringNode>() {
+    var text: String = ""
+  }
+
+  @JsonClass(generateAdapter = true)
+  class NumberStringNode : Node<NumberStringNode, StringNodeNumberNode>() {
+    var number: Int = 0
+  }
 
   // Regression test for https://github.com/square/moshi/issues/968
   @Test fun abstractSuperProperties() {
