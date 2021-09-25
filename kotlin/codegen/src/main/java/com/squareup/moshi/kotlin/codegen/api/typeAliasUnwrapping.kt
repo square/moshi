@@ -26,10 +26,6 @@ import com.squareup.kotlinpoet.tag
 import com.squareup.kotlinpoet.tags.TypeAliasTag
 import java.util.TreeSet
 
-/*
- * Example implementation of how to unwrap a typealias from TypeNameAliasTag
- */
-
 internal fun TypeName.unwrapTypeAliasReal(): TypeName {
   return tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
     // If any type is nullable, then the whole thing is nullable
