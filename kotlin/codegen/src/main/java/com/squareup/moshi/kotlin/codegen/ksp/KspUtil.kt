@@ -38,6 +38,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ksp.toClassName
 
 internal inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration {
   return getClassDeclarationByName(T::class.qualifiedName!!)

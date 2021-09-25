@@ -27,6 +27,9 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
@@ -111,7 +114,7 @@ private class JsonClassSymbolProcessor(
                 .addOriginatingKSFile(originatingFile)
                 .build()
             }
-          preparedAdapter.spec.writeTo(codeGenerator)
+          preparedAdapter.spec.writeTo(codeGenerator, aggregating = false)
           preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
         } catch (e: Exception) {
           logger.error(

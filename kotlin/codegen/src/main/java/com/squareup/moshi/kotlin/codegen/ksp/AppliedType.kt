@@ -22,6 +22,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.ksp.toClassName
 
 private val OBJECT_CLASS = java.lang.Object::class.asClassName()
 
@@ -31,7 +32,7 @@ private val OBJECT_CLASS = java.lang.Object::class.asClassName()
  */
 internal class AppliedType private constructor(
   val type: KSClassDeclaration,
-  val typeName: TypeName = type.toTypeName()
+  val typeName: TypeName = type.toClassName()
 ) {
 
   /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
@@ -49,7 +50,7 @@ internal class AppliedType private constructor(
       }
       val qualifiedName = decl.qualifiedName
       val superTypeKsClass = resolver.getClassDeclarationByName(qualifiedName!!)!!
-      val typeName = decl.toTypeName()
+      val typeName = decl.toClassName()
       if (typeName == ANY || typeName == OBJECT_CLASS) {
         // Don't load properties for kotlin.Any/java.lang.Object.
         continue
