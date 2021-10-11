@@ -1097,13 +1097,12 @@ internal class JsonUtf8Reader : JsonReader {
         }
         // Equivalent to Integer.parseInt(stringPool.get(buffer, pos, 4), 16);
         var result = 0.toChar()
-        repeat(4) { i ->
-          val b = buffer[i.toLong()].toInt()
-          result = (b shl 4).toChar()
-          result += when (val c = Char(b)) {
+        for (i in 0 until 4){
+          result = (result.code shl 4).toChar()
+          result += when (val c = buffer[i.toLong()].asChar()) {
             in '0'..'9' -> c - '0'
             in 'a'..'f' -> c - 'a' + 10
-            in 'A'..'F' -> c - 'A'
+            in 'A'..'F' -> c - 'A' + 10
             else -> {
               throw syntaxError("\\u" + buffer.readUtf8(4))
             }
