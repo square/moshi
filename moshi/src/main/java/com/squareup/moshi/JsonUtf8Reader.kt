@@ -15,14 +15,14 @@
  */
 package com.squareup.moshi
 
+import java.io.EOFException
+import java.io.IOException
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.buffer
-import java.io.EOFException
-import java.io.IOException
-import java.math.BigDecimal
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON.  */
@@ -181,7 +181,7 @@ internal class JsonUtf8Reader : JsonReader {
         buffer.readByte() // consume ']' or ','.
         when (c) {
           ']' -> return PEEKED_END_ARRAY.also { peeked = it }
-          ';' -> checkLenient() // fall-through
+          ';' -> checkLenient()
           ',' -> Unit /*no op*/
           else -> throw syntaxError("Unterminated array")
         }
@@ -195,7 +195,7 @@ internal class JsonUtf8Reader : JsonReader {
           when (c) {
             '}' -> return PEEKED_END_OBJECT.also { peeked = it }
             ',' -> Unit /*no op*/
-            ';' -> checkLenient() // fall-through
+            ';' -> checkLenient()
             else -> throw syntaxError("Unterminated object")
           }
         }
@@ -270,9 +270,7 @@ internal class JsonUtf8Reader : JsonReader {
             checkLenient()
             PEEKED_NULL.also { peeked = it }
           }
-          else -> {
-            throw syntaxError("Unexpected value")
-          }
+          else -> throw syntaxError("Unexpected value")
         }
       }
       // In lenient mode, a 0-length literal in an array means 'null'.
@@ -281,9 +279,7 @@ internal class JsonUtf8Reader : JsonReader {
           checkLenient()
           PEEKED_NULL.also { peeked = it }
         }
-        else -> {
-          throw syntaxError("Unexpected value")
-        }
+        else -> throw syntaxError("Unexpected value")
       }
       '\'' -> {
         checkLenient()
@@ -342,9 +338,7 @@ internal class JsonUtf8Reader : JsonReader {
         keywordUpper = "NULL"
         peeking = PEEKED_NULL
       }
-      else -> {
-        return PEEKED_NONE
-      }
+      else -> return PEEKED_NONE
     }
 
     // Confirm that chars [1..length) match the keyword.
@@ -427,14 +421,14 @@ internal class JsonUtf8Reader : JsonReader {
           }
           when (last) {
             NUMBER_CHAR_SIGN, NUMBER_CHAR_NONE -> {
-              value = -(c.code - '0'.code).toLong()
+              value = -(c - '0').toLong()
               last = NUMBER_CHAR_DIGIT
             }
             NUMBER_CHAR_DIGIT -> {
               if (value == 0L) {
                 return PEEKED_NONE // Leading '0' prefix is not allowed (since it could be octal).
               }
-              val newValue = value * 10 - (c.code - '0'.code).toLong()
+              val newValue = value * 10 - (c - '0').toLong()
               fitsInLong = fitsInLong and
                 (
                   value > MIN_INCOMPLETE_INTEGER ||
@@ -594,9 +588,7 @@ internal class JsonUtf8Reader : JsonReader {
       }
       PEEKED_LONG -> result = peekedLong.toString()
       PEEKED_NUMBER -> result = buffer.readUtf8(peekedNumberLength.toLong())
-      else -> {
-        throw JsonDataException("Expected a string but was " + peek() + " at path " + path)
-      }
+      else -> throw JsonDataException("Expected a string but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
     pathIndices[stackSize - 1]++
@@ -650,16 +642,16 @@ internal class JsonUtf8Reader : JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek()
     }
-    when (p) {
+    return when (p) {
       PEEKED_TRUE -> {
         peeked = PEEKED_NONE
         pathIndices[stackSize - 1]++
-        return true
+        true
       }
       PEEKED_FALSE -> {
         peeked = PEEKED_NONE
         pathIndices[stackSize - 1]++
-        return false
+        false
       }
       else -> throw JsonDataException("Expected a boolean but was " + peek() + " at path " + path)
     }
@@ -696,9 +688,7 @@ internal class JsonUtf8Reader : JsonReader {
       p == PEEKED_DOUBLE_QUOTED -> peekedString = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       p == PEEKED_SINGLE_QUOTED -> peekedString = nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
       p == PEEKED_UNQUOTED -> peekedString = nextUnquotedValue()
-      p != PEEKED_BUFFERED -> {
-        throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
-      }
+      p != PEEKED_BUFFERED -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
     peeked = PEEKED_BUFFERED
     val result: Double = try {
@@ -773,7 +763,8 @@ internal class JsonUtf8Reader : JsonReader {
       if (index == -1L) throw syntaxError("Unterminated string")
 
       // If we've got an escape character, we're going to need a string builder.
-      if (Char(buffer[index].toInt()) == '\\') {
+
+      if (buffer[index].asChar() == '\\') {
         if (builder == null) builder = StringBuilder()
         builder.append(buffer.readUtf8(index))
         buffer.readByte() // '\'
@@ -806,7 +797,7 @@ internal class JsonUtf8Reader : JsonReader {
     while (true) {
       val index = source.indexOfElement(runTerminator)
       if (index == -1L) throw syntaxError("Unterminated string")
-      if (Char(buffer[index].toInt()) == '\\') {
+      if (buffer[index].asChar() == '\\') {
         buffer.skip(index + 1)
         readEscapeCharacter()
       } else {
@@ -1009,7 +1000,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           checkLenient()
           val peek = buffer[1]
-          return when (Char(peek.toInt())) {
+          return when (peek.asChar()) {
             '*' -> {
               // skip a /* c-style comment */
               buffer.readByte() // '/'
@@ -1175,4 +1166,4 @@ internal class JsonUtf8Reader : JsonReader {
   }
 }
 
-private fun Byte.asChar() : Char = toInt().toChar()
+private inline fun Byte.asChar() : Char = toInt().toChar()
