@@ -101,10 +101,10 @@ internal class JsonUtf8Reader : JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek()
     }
-    peeked = if (p == PEEKED_END_ARRAY) {
+    if (p == PEEKED_END_ARRAY) {
       stackSize--
       pathIndices[stackSize - 1]++
-      PEEKED_NONE
+      peeked = PEEKED_NONE
     } else {
       throw JsonDataException("Expected END_ARRAY but was ${peek()} at path $path")
     }
@@ -116,9 +116,9 @@ internal class JsonUtf8Reader : JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek()
     }
-    peeked = if (p == PEEKED_BEGIN_OBJECT) {
+    if (p == PEEKED_BEGIN_OBJECT) {
       pushScope(JsonScope.EMPTY_OBJECT)
-      PEEKED_NONE
+      peeked = PEEKED_NONE
     } else {
       throw JsonDataException("Expected BEGIN_OBJECT but was ${peek()} at path $path")
     }
@@ -199,31 +199,33 @@ internal class JsonUtf8Reader : JsonReader {
             else -> throw syntaxError("Unterminated object")
           }
         }
-        return when (val c = nextNonWhitespace(true).toChar()) {
+        val next = when (val c = nextNonWhitespace(true).toChar()) {
           '"' -> {
             buffer.readByte() // consume the '\"'.
-            PEEKED_DOUBLE_QUOTED_NAME.also { peeked = it }
+            PEEKED_DOUBLE_QUOTED_NAME
           }
           '\'' -> {
             buffer.readByte() // consume the '\''.
             checkLenient()
-            PEEKED_SINGLE_QUOTED_NAME.also { peeked = it }
+            PEEKED_SINGLE_QUOTED_NAME
           }
           '}' -> if (peekStack != JsonScope.NONEMPTY_OBJECT) {
             buffer.readByte() // consume the '}'.
-            PEEKED_END_OBJECT.also { peeked = it }
+            PEEKED_END_OBJECT
           } else {
             throw syntaxError("Expected name")
           }
           else -> {
             checkLenient()
             if (isLiteral(c.code)) {
-              PEEKED_UNQUOTED_NAME.also { peeked = it }
+              PEEKED_UNQUOTED_NAME
             } else {
               throw syntaxError("Expected name")
             }
           }
         }
+        peeked = next
+        return next
       }
       JsonScope.DANGLING_NAME -> {
         scopes[stackSize - 1] = JsonScope.NONEMPTY_OBJECT
@@ -683,11 +685,11 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return peekedLong.toDouble()
     }
-    when {
-      p == PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
-      p == PEEKED_DOUBLE_QUOTED -> peekedString = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-      p == PEEKED_SINGLE_QUOTED -> peekedString = nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
-      p == PEEKED_UNQUOTED -> peekedString = nextUnquotedValue()
+    peekedString = when {
+      p == PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
+      p == PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+      p == PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+      p == PEEKED_UNQUOTED -> nextUnquotedValue()
       p != PEEKED_BUFFERED -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
     peeked = PEEKED_BUFFERED
@@ -987,7 +989,7 @@ internal class JsonUtf8Reader : JsonReader {
      * 'p' and 'l' after any (potentially indirect) call to the same method.
      */
     var p: Long = 0
-    loop@ while (source.request((p + 1))) {
+    while (source.request((p + 1))) {
       val c = buffer[p++].asChar()
       when (c) {
         '\n', ' ', '\r', '\t' -> continue
@@ -1032,11 +1034,10 @@ internal class JsonUtf8Reader : JsonReader {
         else -> return c.code
       }
     }
-    return if (throwOnEof) {
+    if (throwOnEof) {
       throw EOFException("End of input")
-    } else {
-      -1
     }
+    return -1
   }
 
   @Throws(IOException::class)
