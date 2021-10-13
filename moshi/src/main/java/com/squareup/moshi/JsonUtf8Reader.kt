@@ -15,14 +15,14 @@
  */
 package com.squareup.moshi
 
-import java.io.EOFException
-import java.io.IOException
-import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.buffer
+import java.io.EOFException
+import java.io.IOException
+import java.math.BigDecimal
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON.  */
@@ -1098,14 +1098,14 @@ internal class JsonUtf8Reader : JsonReader {
     if (!source.request(1)) {
       throw syntaxError("Unterminated escape sequence")
     }
-    return when (val escaped = buffer.readByte().asChar()){
+    return when (val escaped = buffer.readByte().asChar()) {
       'u' -> {
         if (!source.request(4)) {
           throw EOFException("Unterminated escape sequence at path $path")
         }
         // Equivalent to Integer.parseInt(stringPool.get(buffer, pos, 4), 16);
         var result = 0.toChar()
-        for (i in 0 until 4){
+        for (i in 0 until 4) {
           result = (result.code shl 4).toChar()
           result += when (val c = buffer[i.toLong()].asChar()) {
             in '0'..'9' -> c - '0'
@@ -1183,4 +1183,4 @@ internal class JsonUtf8Reader : JsonReader {
   }
 }
 
-private inline fun Byte.asChar() : Char = toInt().toChar()
+private inline fun Byte.asChar(): Char = toInt().toChar()
