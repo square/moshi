@@ -180,7 +180,10 @@ internal class JsonUtf8Reader : JsonReader {
         val c = nextNonWhitespace(true).toChar()
         buffer.readByte() // consume ']' or ','.
         when (c) {
-          ']' -> return PEEKED_END_ARRAY.also { peeked = it }
+          ']' -> {
+            peeked = PEEKED_END_ARRAY
+            peeked
+          }
           ';' -> checkLenient()
           ',' -> Unit /*no op*/
           else -> throw syntaxError("Unterminated array")
@@ -193,7 +196,10 @@ internal class JsonUtf8Reader : JsonReader {
           val c = nextNonWhitespace(true).toChar()
           buffer.readByte() // Consume '}' or ','.
           when (c) {
-            '}' -> return PEEKED_END_OBJECT.also { peeked = it }
+            '}' -> {
+              peeked = PEEKED_END_OBJECT
+              return peeked
+            }
             ',' -> Unit /*no op*/
             ';' -> checkLenient()
             else -> throw syntaxError("Unterminated object")
@@ -236,7 +242,7 @@ internal class JsonUtf8Reader : JsonReader {
           ':' -> Unit /*no op*/
           '=' -> {
             checkLenient()
-            if (source.request(1) && buffer[0] == '>'.code.toByte()) {
+            if (source.request(1) && buffer[0].asChar() == '>') {
               buffer.readByte() // Consume '>'.
             }
           }
@@ -246,7 +252,8 @@ internal class JsonUtf8Reader : JsonReader {
       JsonScope.EMPTY_DOCUMENT -> scopes[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT
       JsonScope.NONEMPTY_DOCUMENT -> {
         if (nextNonWhitespace(false) == -1) {
-          return PEEKED_EOF.also { peeked = it }
+          peeked = PEEKED_EOF
+          return peeked
         } else {
           checkLenient()
         }
@@ -259,18 +266,20 @@ internal class JsonUtf8Reader : JsonReader {
       }
       else -> check(peekStack != JsonScope.CLOSED) { "JsonReader is closed" }
     }
-    // "fallthrough from previous `when`
+    // "fallthrough" from previous `when`
     when (nextNonWhitespace(true).toChar()) {
       ']' -> {
         if (peekStack == JsonScope.EMPTY_ARRAY) {
           buffer.readByte() // Consume ']'.
-          return PEEKED_END_ARRAY.also { peeked = it }
+          peeked = PEEKED_END_ARRAY
+          return peeked
         }
         // In lenient mode, a 0-length literal in an array means 'null'.
         return when (peekStack) {
           JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
             checkLenient()
-            PEEKED_NULL.also { peeked = it }
+            peeked = PEEKED_NULL
+            peeked
           }
           else -> throw syntaxError("Unexpected value")
         }
@@ -279,26 +288,31 @@ internal class JsonUtf8Reader : JsonReader {
       ';', ',' -> return when (peekStack) {
         JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
           checkLenient()
-          PEEKED_NULL.also { peeked = it }
+          peeked = PEEKED_NULL
+          peeked
         }
         else -> throw syntaxError("Unexpected value")
       }
       '\'' -> {
         checkLenient()
         buffer.readByte() // Consume '\''.
-        return PEEKED_SINGLE_QUOTED.also { peeked = it }
+        peeked = PEEKED_SINGLE_QUOTED
+        return peeked
       }
       '"' -> {
         buffer.readByte() // Consume '\"'.
-        return PEEKED_DOUBLE_QUOTED.also { peeked = it }
+        peeked = PEEKED_DOUBLE_QUOTED
+        return peeked
       }
       '[' -> {
         buffer.readByte() // Consume '['.
-        return PEEKED_BEGIN_ARRAY.also { peeked = it }
+        peeked = PEEKED_BEGIN_ARRAY
+        return peeked
       }
       '{' -> {
         buffer.readByte() // Consume '{'.
-        return PEEKED_BEGIN_OBJECT.also { peeked = it }
+        peeked = PEEKED_BEGIN_OBJECT
+        return peeked
       }
       else -> Unit /* no-op */
     }
@@ -314,7 +328,8 @@ internal class JsonUtf8Reader : JsonReader {
       throw syntaxError("Expected value")
     }
     checkLenient()
-    return PEEKED_UNQUOTED.also { peeked = it }
+    peeked = PEEKED_UNQUOTED
+    return peeked
   }
 
   @Throws(IOException::class)
@@ -361,7 +376,8 @@ internal class JsonUtf8Reader : JsonReader {
 
     // We've found the keyword followed either by EOF or by a non-literal character.
     buffer.skip(length.toLong())
-    return peeking.also { peeked = it }
+    peeked = peeking
+    return peeked
   }
 
   @Throws(IOException::class)
@@ -455,13 +471,15 @@ internal class JsonUtf8Reader : JsonReader {
         && (value != 0L || !negative) -> {
         peekedLong = if (negative) value else -value
         buffer.skip(i)
-        PEEKED_LONG.also { peeked = it }
+        peeked = PEEKED_LONG
+        peeked
       }
       last == NUMBER_CHAR_DIGIT ||
         last == NUMBER_CHAR_FRACTION_DIGIT
         || last == NUMBER_CHAR_EXP_DIGIT -> {
         peekedNumberLength = i.toInt()
-        PEEKED_NUMBER.also { peeked = it }
+        peeked = PEEKED_NUMBER
+        peeked
       }
       else -> PEEKED_NONE
     }
