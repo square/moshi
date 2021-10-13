@@ -387,7 +387,7 @@ internal class JsonUtf8Reader : JsonReader {
     var fitsInLong = true
     var last = NUMBER_CHAR_NONE
     var i: Long = 0
-    charactersOfNumber@ while (true) {
+    while (true) {
       if (!source.request((i + 1))) {
         break
       }
@@ -434,7 +434,7 @@ internal class JsonUtf8Reader : JsonReader {
         }
         else -> {
           if (c !in '0'..'9') {
-            if (!isLiteral(c.code)) break@charactersOfNumber
+            if (!isLiteral(c.code)) break
             return PEEKED_NONE
           }
           when (last) {
@@ -570,9 +570,7 @@ internal class JsonUtf8Reader : JsonReader {
       p == PEEKED_UNQUOTED_NAME -> skipUnquotedValue()
       p == PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       p == PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
-      p != PEEKED_BUFFERED_NAME -> {
-        throw JsonDataException("Expected a name but was ${peek()} at path $path")
-      }
+      p != PEEKED_BUFFERED_NAME -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
     pathNames[stackSize - 1] = "null"
@@ -673,7 +671,7 @@ internal class JsonUtf8Reader : JsonReader {
         pathIndices[stackSize - 1]++
         false
       }
-      else -> throw JsonDataException("Expected a boolean but was " + peek() + " at path " + path)
+      else -> throw JsonDataException("Expected a boolean but was ${peek()} at path $path")
     }
   }
 
@@ -688,7 +686,7 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       null
     } else {
-      throw JsonDataException("Expected null but was " + peek() + " at path " + path)
+      throw JsonDataException("Expected null but was ${peek()} at path $path")
     }
   }
 
@@ -703,16 +701,17 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return peekedLong.toDouble()
     }
-    peekedString = when {
+    val next = when {
       p == PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
       p == PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       p == PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
       p == PEEKED_UNQUOTED -> nextUnquotedValue()
       p != PEEKED_BUFFERED -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
+    peekedString = next
     peeked = PEEKED_BUFFERED
     val result: Double = try {
-      peekedString!!.toDouble()
+      next.toDouble()
     } catch (e: NumberFormatException) {
       throw JsonDataException("Expected a double but was $peekedString at path $path")
     }
@@ -862,9 +861,7 @@ internal class JsonUtf8Reader : JsonReader {
           // Fall back to parse as a double below.
         }
       }
-      p != PEEKED_BUFFERED -> {
-        throw JsonDataException("Expected an int but was " + peek() + " at path " + path)
-      }
+      p != PEEKED_BUFFERED -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
     val asDouble: Double = try {
@@ -987,9 +984,10 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       peeked = PEEKED_NONE
     }
-    valueSource = JsonValueSource(source, prefix, state, valueSourceStackSize)
+    val nextSource = JsonValueSource(source, prefix, state, valueSourceStackSize)
+    valueSource = nextSource
     pushScope(JsonScope.STREAMING_VALUE)
-    return valueSource!!.buffer()
+    return nextSource.buffer()
   }
 
   /**
