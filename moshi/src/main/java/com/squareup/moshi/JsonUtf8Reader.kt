@@ -500,18 +500,16 @@ internal class JsonUtf8Reader : JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek()
     }
-    val result: String
-    when (p) {
-      PEEKED_UNQUOTED_NAME -> result = nextUnquotedValue()
-      PEEKED_DOUBLE_QUOTED_NAME -> result = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-      PEEKED_SINGLE_QUOTED_NAME -> result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+    val result = when (p) {
+      PEEKED_UNQUOTED_NAME -> nextUnquotedValue()
+      PEEKED_DOUBLE_QUOTED_NAME -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+      PEEKED_SINGLE_QUOTED_NAME -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
       PEEKED_BUFFERED_NAME -> {
-        result = peekedString!!
+        val name = peekedString!!
         peekedString = null
+        name
       }
-      else -> {
-        throw JsonDataException("Expected a name but was ${peek()} at path $path")
-      }
+      else -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
     pathNames[stackSize - 1] = result
@@ -592,17 +590,17 @@ internal class JsonUtf8Reader : JsonReader {
     if (p == PEEKED_NONE) {
       p = doPeek()
     }
-    val result: String
-    when (p) {
-      PEEKED_UNQUOTED -> result = nextUnquotedValue()
-      PEEKED_DOUBLE_QUOTED -> result = nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-      PEEKED_SINGLE_QUOTED -> result = nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+    val result = when (p) {
+      PEEKED_UNQUOTED -> nextUnquotedValue()
+      PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+      PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
       PEEKED_BUFFERED -> {
-        result = peekedString!!
+        val buffered = peekedString!!
         peekedString = null
+        buffered
       }
-      PEEKED_LONG -> result = peekedLong.toString()
-      PEEKED_NUMBER -> result = buffer.readUtf8(peekedNumberLength.toLong())
+      PEEKED_LONG -> peekedLong.toString()
+      PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
       else -> throw JsonDataException("Expected a string but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
@@ -707,7 +705,7 @@ internal class JsonUtf8Reader : JsonReader {
     }
     peekedString = next
     peeked = PEEKED_BUFFERED
-    val result: Double = try {
+    val result = try {
       next.toDouble()
     } catch (e: NumberFormatException) {
       throw JsonDataException("Expected a double but was $peekedString at path $path")
@@ -779,7 +777,6 @@ internal class JsonUtf8Reader : JsonReader {
       if (index == -1L) throw syntaxError("Unterminated string")
 
       // If we've got an escape character, we're going to need a string builder.
-
       if (buffer[index].asChar() == '\\') {
         if (builder == null) builder = StringBuilder()
         builder.append(buffer.readUtf8(index))
@@ -845,12 +842,13 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return result
     }
-    when {
-      p == PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
-      p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED -> {
-        peekedString = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+    when (p) {
+      PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
+      PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
+        val next = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
         try {
-          result = peekedString!!.toInt()
+          result = next.toInt()
+          peekedString = next
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
           return result
@@ -858,7 +856,7 @@ internal class JsonUtf8Reader : JsonReader {
           // Fall back to parse as a double below.
         }
       }
-      p != PEEKED_BUFFERED -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
+      else -> if (p != PEEKED_BUFFERED) throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
     val asDouble = try {
@@ -888,7 +886,7 @@ internal class JsonUtf8Reader : JsonReader {
   @Throws(IOException::class)
   override fun skipValue() {
     if (failOnUnknown) {
-      throw JsonDataException("Cannot skip unexpected " + peek() + " at " + path)
+      throw JsonDataException("Cannot skip unexpected ${peek()} at $path")
     }
     var count = 0
     do {
@@ -923,9 +921,7 @@ internal class JsonUtf8Reader : JsonReader {
         PEEKED_DOUBLE_QUOTED, PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
         PEEKED_SINGLE_QUOTED, PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
         PEEKED_NUMBER -> buffer.skip(peekedNumberLength.toLong())
-        PEEKED_EOF -> {
-          throw JsonDataException("Expected a value but was ${peek()} at path $path")
-        }
+        PEEKED_EOF -> throw JsonDataException("Expected a value but was ${peek()} at path $path")
       }
       peeked = PEEKED_NONE
     } while (count != 0)
@@ -971,9 +967,7 @@ internal class JsonUtf8Reader : JsonReader {
           jsonWriter.value(string)
         }
       }
-      else -> {
-        throw JsonDataException("Expected a value but was ${peek()} at path $path")
-      }
+      else -> throw JsonDataException("Expected a value but was ${peek()} at path $path")
     }
 
     // Advance the path and clear peeked if we haven't already.
@@ -994,12 +988,12 @@ internal class JsonUtf8Reader : JsonReader {
   @Throws(IOException::class)
   private fun nextNonWhitespace(throwOnEof: Boolean): Int {
     /*
-     * This code uses ugly local variables 'p' and 'l' representing the 'pos'
-     * and 'limit' fields respectively. Using locals rather than fields saves
-     * a few field reads for each whitespace character in a pretty-printed
-     * document, resulting in a 5% speedup. We need to flush 'p' to its field
-     * before any (potentially indirect) call to fillBuffer() and reread both
-     * 'p' and 'l' after any (potentially indirect) call to the same method.
+     * This code uses ugly local variable 'p' to represent the 'pos' field.
+     * Using locals rather than fields saves a few field reads for each
+     * whitespace character in a pretty-printed document, resulting in a
+     * 5% speedup. We need to flush 'p' to its field before any
+     * (potentially indirect) call to fillBuffer() and reread 'p' after
+     * any (potentially indirect) call to the same method.
      */
     var p = 0L
     while (source.request(p + 1)) {
@@ -1108,9 +1102,7 @@ internal class JsonUtf8Reader : JsonReader {
             in '0'..'9' -> c - '0'
             in 'a'..'f' -> c - 'a' + 10
             in 'A'..'F' -> c - 'A' + 10
-            else -> {
-              throw syntaxError("\\u" + buffer.readUtf8(4))
-            }
+            else -> throw syntaxError("\\u" + buffer.readUtf8(4))
           }
         }
         buffer.skip(4)
@@ -1139,11 +1131,11 @@ internal class JsonUtf8Reader : JsonReader {
 
   companion object {
     private const val MIN_INCOMPLETE_INTEGER = Long.MIN_VALUE / 10
-    private val SINGLE_QUOTE_OR_SLASH: ByteString = "'\\".encodeUtf8()
-    private val DOUBLE_QUOTE_OR_SLASH: ByteString = "\"\\".encodeUtf8()
-    private val UNQUOTED_STRING_TERMINALS: ByteString = "{}[]:, \n\t\r\u000C/\\;#=".encodeUtf8()
-    private val LINEFEED_OR_CARRIAGE_RETURN: ByteString = "\n\r".encodeUtf8()
-    private val CLOSING_BLOCK_COMMENT: ByteString = "*/".encodeUtf8()
+    private val SINGLE_QUOTE_OR_SLASH = "'\\".encodeUtf8()
+    private val DOUBLE_QUOTE_OR_SLASH = "\"\\".encodeUtf8()
+    private val UNQUOTED_STRING_TERMINALS = "{}[]:, \n\t\r\u000C/\\;#=".encodeUtf8()
+    private val LINEFEED_OR_CARRIAGE_RETURN = "\n\r".encodeUtf8()
+    private val CLOSING_BLOCK_COMMENT = "*/".encodeUtf8()
     private const val PEEKED_NONE = 0
     private const val PEEKED_BEGIN_OBJECT = 1
     private const val PEEKED_END_OBJECT = 2
