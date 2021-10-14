@@ -79,10 +79,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun beginArray() {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_BEGIN_ARRAY) {
       pushScope(JsonScope.EMPTY_ARRAY)
       pathIndices[stackSize - 1] = 0
@@ -94,10 +91,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun endArray() {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_END_ARRAY) {
       stackSize--
       pathIndices[stackSize - 1]++
@@ -109,10 +103,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun beginObject() {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_BEGIN_OBJECT) {
       pushScope(JsonScope.EMPTY_OBJECT)
       peeked = PEEKED_NONE
@@ -123,10 +114,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun endObject() {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_END_OBJECT) {
       stackSize--
       pathNames[stackSize] = null // Free the last path name so that it can be garbage collected!
@@ -139,20 +127,13 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun hasNext(): Boolean {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     return p != PEEKED_END_OBJECT && p != PEEKED_END_ARRAY && p != PEEKED_EOF
   }
 
   @Throws(IOException::class)
   override fun peek(): Token {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
-    return when (p) {
+    return when (peekIfNone()) {
       PEEKED_BEGIN_OBJECT -> Token.BEGIN_OBJECT
       PEEKED_END_OBJECT -> Token.END_OBJECT
       PEEKED_BEGIN_ARRAY -> Token.BEGIN_ARRAY
@@ -496,11 +477,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextName(): String {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
-    val result = when (p) {
+    val result = when (peekIfNone()) {
       PEEKED_UNQUOTED_NAME -> nextUnquotedValue()
       PEEKED_DOUBLE_QUOTED_NAME -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       PEEKED_SINGLE_QUOTED_NAME -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
@@ -518,10 +495,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun selectName(options: Options): Int {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p < PEEKED_SINGLE_QUOTED_NAME || p > PEEKED_BUFFERED_NAME) {
       return -1
     }
@@ -557,10 +531,7 @@ internal class JsonUtf8Reader : JsonReader {
       nextName() // Move the path forward onto the offending name.
       throw JsonDataException("Cannot skip unexpected $peeked at $path")
     }
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     when {
       p == PEEKED_UNQUOTED_NAME -> skipUnquotedValue()
       p == PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
@@ -586,11 +557,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextString(): String {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
-    val result = when (p) {
+    val result = when (peekIfNone()) {
       PEEKED_UNQUOTED -> nextUnquotedValue()
       PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
@@ -610,10 +577,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun selectString(options: Options): Int {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p < PEEKED_SINGLE_QUOTED || p > PEEKED_BUFFERED) {
       return -1
     }
@@ -651,11 +615,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextBoolean(): Boolean {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
-    return when (p) {
+    return when (peekIfNone()) {
       PEEKED_TRUE -> {
         peeked = PEEKED_NONE
         pathIndices[stackSize - 1]++
@@ -672,10 +632,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun <T> nextNull(): T? {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     return if (p == PEEKED_NULL) {
       peeked = PEEKED_NONE
       pathIndices[stackSize - 1]++
@@ -687,10 +644,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextDouble(): Double {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_LONG) {
       peeked = PEEKED_NONE
       pathIndices[stackSize - 1]++
@@ -721,10 +675,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextLong(): Long {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     if (p == PEEKED_LONG) {
       peeked = PEEKED_NONE
       pathIndices[stackSize - 1]++
@@ -828,10 +779,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextInt(): Int {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     var result: Int
     if (p == PEEKED_LONG) {
       result = peekedLong.toInt()
@@ -931,10 +879,7 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   override fun nextSource(): BufferedSource {
-    var p = peeked
-    if (p == PEEKED_NONE) {
-      p = doPeek()
-    }
+    val p = peekIfNone()
     var valueSourceStackSize = 0
     val prefix = Buffer()
     var state = JsonValueSource.STATE_END_OF_JSON
@@ -1127,6 +1072,11 @@ internal class JsonUtf8Reader : JsonReader {
       peekedString = nextName()
       peeked = PEEKED_BUFFERED
     }
+  }
+
+  private inline fun peekIfNone(): Int {
+    val p = peeked
+    return if (p == PEEKED_NONE) doPeek() else p
   }
 
   companion object {
