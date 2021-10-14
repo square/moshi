@@ -34,7 +34,7 @@ internal class JsonUtf8Reader : JsonReader {
    * A peeked value that was composed entirely of digits with an optional leading dash. Positive
    * values may not have a leading 0.
    */
-  private var peekedLong: Long = 0
+  private var peekedLong = 0L
 
   /** The number of characters in a peeked number literal.  */
   private var peekedNumberLength = 0
@@ -52,10 +52,7 @@ internal class JsonUtf8Reader : JsonReader {
    */
   private var valueSource: JsonValueSource? = null
 
-  constructor(source: BufferedSource?) {
-    if (source == null) {
-      throw NullPointerException("source == null")
-    }
+  constructor(source: BufferedSource) {
     this.source = source
     buffer = source.buffer
     pushScope(JsonScope.EMPTY_DOCUMENT)
@@ -362,7 +359,7 @@ internal class JsonUtf8Reader : JsonReader {
     val length = keyword.length
     for (i in 1 until length) {
       val i_long = i.toLong()
-      if (!source.request((i_long + 1))) {
+      if (!source.request(i_long + 1)) {
         return PEEKED_NONE
       }
       c = buffer[i_long].asChar()
@@ -382,13 +379,13 @@ internal class JsonUtf8Reader : JsonReader {
 
   @Throws(IOException::class)
   private fun peekNumber(): Int {
-    var value: Long = 0 // Negative to accommodate Long.MIN_VALUE more easily.
+    var value = 0L // Negative to accommodate Long.MIN_VALUE more easily.
     var negative = false
     var fitsInLong = true
     var last = NUMBER_CHAR_NONE
-    var i: Long = 0
+    var i = 0L
     while (true) {
-      if (!source.request((i + 1))) {
+      if (!source.request(i + 1)) {
         break
       }
       when (val c = buffer[i].asChar()) {
@@ -753,7 +750,7 @@ internal class JsonUtf8Reader : JsonReader {
       }
     }
     peeked = PEEKED_BUFFERED
-    val result: Long = try {
+    val result = try {
       val asDecimal = BigDecimal(peekedString)
       asDecimal.longValueExact()
     } catch (e: NumberFormatException) {
@@ -816,11 +813,11 @@ internal class JsonUtf8Reader : JsonReader {
     while (true) {
       val index = source.indexOfElement(runTerminator)
       if (index == -1L) throw syntaxError("Unterminated string")
-      if (buffer[index].asChar() == '\\') {
-        buffer.skip(index + 1)
+      val terminator = buffer[index].asChar()
+      buffer.skip(index + 1)
+      if (terminator == '\\') {
         readEscapeCharacter()
       } else {
-        buffer.skip(index + 1)
         return
       }
     }
@@ -864,7 +861,7 @@ internal class JsonUtf8Reader : JsonReader {
       p != PEEKED_BUFFERED -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
-    val asDouble: Double = try {
+    val asDouble = try {
       peekedString!!.toDouble()
     } catch (e: NumberFormatException) {
       throw JsonDataException("Expected an int but was $peekedString at path $path")
@@ -1004,13 +1001,13 @@ internal class JsonUtf8Reader : JsonReader {
      * before any (potentially indirect) call to fillBuffer() and reread both
      * 'p' and 'l' after any (potentially indirect) call to the same method.
      */
-    var p: Long = 0
-    while (source.request((p + 1))) {
+    var p = 0L
+    while (source.request(p + 1)) {
       val c = buffer[p++].asChar()
       when (c) {
         '\n', ' ', '\r', '\t' -> continue
       }
-      buffer.skip((p - 1))
+      buffer.skip(p - 1)
       when (c) {
         '/' -> {
           if (!source.request(2)) {
@@ -1073,7 +1070,7 @@ internal class JsonUtf8Reader : JsonReader {
     buffer.skip(if (index != -1L) index + 1 else buffer.size)
   }
 
-  /** Skips through the next closing block comment.  */
+  /** Skips through the next closing block comment. */
   @Throws(IOException::class)
   private fun skipToEndOfBlockComment(): Boolean {
     val index = source.indexOf(CLOSING_BLOCK_COMMENT)
