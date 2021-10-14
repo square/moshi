@@ -838,11 +838,7 @@ internal class JsonUtf8Reader : JsonReader {
     }
     var count = 0
     do {
-      var p = peeked
-      if (p == PEEKED_NONE) {
-        p = doPeek()
-      }
-      when (p) {
+      when (peekIfNone()) {
         PEEKED_BEGIN_ARRAY -> {
           pushScope(JsonScope.EMPTY_ARRAY)
           count++
