@@ -40,59 +40,16 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ksp.toClassName
 
-internal inline fun <reified T> Resolver.getClassDeclarationByName(): KSClassDeclaration {
-  return getClassDeclarationByName(T::class.qualifiedName!!)
-}
-
-internal fun Resolver.getClassDeclarationByName(fqcn: String): KSClassDeclaration {
-  return getClassDeclarationByName(getKSNameFromString(fqcn)) ?: error("Class '$fqcn' not found.")
-}
-
 internal fun KSClassDeclaration.asType() = asType(emptyList())
 
-internal fun KSClassDeclaration.isKotlinClass(resolver: Resolver): Boolean {
+internal fun KSClassDeclaration.isKotlinClass(): Boolean {
   return origin == KOTLIN ||
     origin == KOTLIN_LIB ||
-    hasAnnotation(resolver.getClassDeclarationByName<Metadata>().asType())
+    isAnnotationPresent(Metadata::class)
 }
 
-internal fun KSAnnotated.hasAnnotation(target: KSType): Boolean {
-  return findAnnotationWithType(target) != null
-}
-
-internal inline fun <reified T : Annotation> KSAnnotated.findAnnotationWithType(
-  resolver: Resolver,
-): KSAnnotation? {
-  return findAnnotationWithType(resolver.getClassDeclarationByName<T>().asType())
-}
-
-internal fun KSAnnotated.findAnnotationWithType(target: KSType): KSAnnotation? {
-  return annotations.find { it.annotationType.resolve() == target }
-}
-
-internal inline fun <reified T> KSAnnotation.getMember(name: String): T {
-  val matchingArg = arguments.find { it.name?.asString() == name }
-    ?: error(
-      "No member name found for '$name'. All arguments: ${arguments.map { it.name?.asString() }}"
-    )
-  return when (val argValue = matchingArg.value) {
-    is List<*> -> {
-      if (argValue.isEmpty()) {
-        argValue as T
-      } else {
-        val first = argValue[0]
-        if (first is KSType) {
-          argValue.map { (it as KSType).toClassName() } as T
-        } else {
-          argValue as T
-        }
-      }
-    }
-    is KSType -> argValue.toClassName() as T
-    else -> {
-      argValue as? T ?: error("Null value found for @${shortName.getShortName()}.$name. All args -> $arguments")
-    }
-  }
+internal inline fun <reified T : Annotation> KSAnnotated.findAnnotationWithType(): T? {
+  return getAnnotationsByType(T::class).firstOrNull()
 }
 
 internal fun KSType.unwrapTypeAlias(): KSType {

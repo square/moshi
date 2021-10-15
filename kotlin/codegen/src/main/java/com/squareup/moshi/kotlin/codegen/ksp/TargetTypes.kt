@@ -109,7 +109,7 @@ internal fun targetType(
   val originalType = appliedType.type
   for (supertype in appliedType.supertypes(resolver)) {
     val classDecl = supertype.type
-    if (!classDecl.isKotlinClass(resolver)) {
+    if (!classDecl.isKotlinClass()) {
       logger.error(
         """
         @JsonClass can't be applied to $type: supertype $supertype is not a Kotlin type.
@@ -181,7 +181,7 @@ internal fun primaryConstructor(
       type = parameter.type.toTypeName(typeParameterResolver),
       hasDefault = parameter.hasDefault,
       qualifiers = parameter.qualifiers(resolver),
-      jsonName = parameter.jsonName(resolver)
+      jsonName = parameter.jsonName()
     )
   }
 
@@ -198,20 +198,17 @@ internal fun primaryConstructor(
 
 private fun KSAnnotated?.qualifiers(resolver: Resolver): Set<AnnotationSpec> {
   if (this == null) return setOf()
-  val jsonQualifierType = resolver.getClassDeclarationByName<JsonQualifier>().asType()
   return annotations
     .filter {
-      it.annotationType.resolve().declaration.findAnnotationWithType(jsonQualifierType) != null
+      it.annotationType.resolve().declaration.isAnnotationPresent(JsonQualifier::class)
     }
     .mapTo(mutableSetOf()) {
       it.toAnnotationSpec(resolver)
     }
 }
 
-private fun KSAnnotated?.jsonName(resolver: Resolver): String? {
-  if (this == null) return null
-  val jsonType = resolver.getClassDeclarationByName<Json>().asType()
-  return findAnnotationWithType(jsonType)?.getMember<String>("name")
+private fun KSAnnotated?.jsonName(): String? {
+  return this?.findAnnotationWithType<Json>()?.name
 }
 
 private fun declaredProperties(
@@ -237,7 +234,7 @@ private fun declaredProperties(
       propertySpec = propertySpec,
       parameter = parameter,
       visibility = property.modifiers.map { KModifier.valueOf(it.name) }.visibility(),
-      jsonName = parameter?.jsonName ?: property.jsonName(resolver)
+      jsonName = parameter?.jsonName ?: property.jsonName()
         ?: name.escapeDollarSigns()
     )
   }
@@ -257,15 +254,13 @@ private fun KSPropertyDeclaration.toPropertySpec(
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
     .apply {
-      if (hasAnnotation(resolver.getClassDeclarationByName<Transient>().asType())) {
+      if (isAnnotationPresent(Transient::class)) {
         addAnnotation(Transient::class)
       }
       addAnnotations(
         this@toPropertySpec.annotations
           .mapNotNull {
-            if ((it.annotationType.resolve().unwrapTypeAlias().declaration as KSClassDeclaration).isJsonQualifier(
-                resolver
-              )
+            if ((it.annotationType.resolve().unwrapTypeAlias().declaration as KSClassDeclaration).isJsonQualifier
             ) {
               it.toAnnotationSpec(resolver)
             } else {

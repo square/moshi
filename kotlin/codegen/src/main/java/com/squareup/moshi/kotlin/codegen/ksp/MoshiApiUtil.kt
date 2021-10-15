@@ -21,7 +21,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
@@ -86,21 +85,20 @@ internal fun TargetProperty.generator(
   for (jsonQualifier in qualifiers) {
     val qualifierRawType = jsonQualifier.typeName.rawType()
     // Check Java types since that covers both Java and Kotlin annotations.
-    val annotationElement = resolver.getClassDeclarationByName(qualifierRawType.canonicalName)
-    annotationElement.findAnnotationWithType<Retention>(resolver)?.let {
-      // TODO this is super hacky but I don't know how else to compare enums here
-      if (it.getMember<TypeName>("value") != AnnotationRetention::class.asClassName().nestedClass("RUNTIME")) {
-        logger.error(
-          "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
-        )
+    resolver.getClassDeclarationByName(qualifierRawType.canonicalName)?.let { annotationElement ->
+      annotationElement.findAnnotationWithType<Retention>()?.let {
+        if (it.value != AnnotationRetention.RUNTIME) {
+          logger.error(
+            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
+          )
+        }
       }
-    }
-    annotationElement.findAnnotationWithType<Target>(resolver)?.let {
-      // TODO this is super hacky but I don't know how else to compare enums here
-      if (AnnotationTarget::class.asClassName().nestedClass("FIELD") !in it.getMember<List<TypeName>>("allowedTargets")) {
-        logger.error(
-          "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-        )
+      annotationElement.findAnnotationWithType<Target>()?.let {
+        if (AnnotationTarget.FIELD !in it.allowedTargets) {
+          logger.error(
+            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+          )
+        }
       }
     }
   }
@@ -117,7 +115,5 @@ internal fun TargetProperty.generator(
   )
 }
 
-internal fun KSClassDeclaration.isJsonQualifier(resolver: Resolver): Boolean {
-  val jsonQualifier = resolver.getClassDeclarationByName<JsonQualifier>().asType()
-  return hasAnnotation(jsonQualifier)
-}
+internal val KSClassDeclaration.isJsonQualifier: Boolean
+  get() = isAnnotationPresent(JsonQualifier::class)

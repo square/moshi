@@ -77,14 +77,6 @@ private class JsonClassSymbolProcessor(
         .build()
     }
 
-    val jsonClassType = resolver.getClassDeclarationByName(
-      resolver.getKSNameFromString(JSON_CLASS_NAME)
-    )
-      ?.asType()
-      ?: run {
-        logger.error("JsonClass type not found on the classpath.")
-        return emptyList()
-      }
     resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)
       .asSequence()
       .forEach { type ->
@@ -94,13 +86,13 @@ private class JsonClassSymbolProcessor(
           return@forEach
         }
 
-        val jsonClassAnnotation = type.findAnnotationWithType(jsonClassType) ?: return@forEach
+        val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: return@forEach
 
-        val generator = jsonClassAnnotation.getMember<String>("generator")
+        val generator = jsonClassAnnotation.generator
 
         if (generator.isNotEmpty()) return@forEach
 
-        if (!jsonClassAnnotation.getMember<Boolean>("generateAdapter")) return@forEach
+        if (!jsonClassAnnotation.generateAdapter) return@forEach
 
         val originatingFile = type.containingFile!!
         val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
