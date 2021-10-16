@@ -123,7 +123,8 @@ internal fun targetType(
   elements: Elements,
   types: Types,
   element: TypeElement,
-  cachedClassInspector: MoshiCachedClassInspector
+  cachedClassInspector: MoshiCachedClassInspector,
+  instantiateAnnotationsEnabled: Boolean
 ): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
@@ -205,9 +206,11 @@ internal fun targetType(
     }
   }
 
-  val (major, minor, patch) = typeMetadata.metadataVersion
-  val languageVersion = KotlinVersion(major, minor, patch)
-  val instantiateAnnotations = languageVersion >= ANNOTATION_INSTANTIATION_MIN_VERSION
+  val instantiateAnnotations = instantiateAnnotationsEnabled && run {
+    val (major, minor, patch) = typeMetadata.metadataVersion
+    val languageVersion = KotlinVersion(major, minor, patch)
+    languageVersion >= ANNOTATION_INSTANTIATION_MIN_VERSION
+  }
   val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
