@@ -45,12 +45,25 @@ class JsonClassSymbolProcessorTest(
     @JvmStatic
     @Parameterized.Parameters(name = "languageVersion={0},instantiateAnnotations={1}")
     fun data(): Collection<Array<Any>> {
-      return listOf(
-        arrayOf("1.5", true),
-        arrayOf("1.6", false),
-        // TODO KSP doesn't recognize language version yet https://github.com/google/ksp/issues/611
-//        arrayOf("1.6", true),
-      )
+      // TODO KSP doesn't recognize language version yet https://github.com/google/ksp/issues/611
+      //  toe-holds for the future
+      val runtimeVersion = KotlinVersion.CURRENT
+      return buildList {
+        if (runtimeVersion.major != 1 || runtimeVersion.minor != 6) {
+          // True by default but still 1.5
+          // Can't test when running with 1.6 because lang version is still 1.6 per above comment
+          add(arrayOf("1.5", true))
+        }
+        // Redundant case, set to false but still 1.5
+        add(arrayOf("1.5", false))
+        if (runtimeVersion.major != 1 || runtimeVersion.minor != 5) {
+          // Happy case - 1.6 and true by default
+          // Can't test when running with 1.5 because lang version is still 1.5 per above comment
+          add(arrayOf("1.6", true))
+        }
+        // 1.6 but explicitly disabled
+        add(arrayOf("1.6", false))
+      }
     }
   }
 
