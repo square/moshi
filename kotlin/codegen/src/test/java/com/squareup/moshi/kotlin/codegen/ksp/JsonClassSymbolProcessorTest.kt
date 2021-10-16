@@ -48,7 +48,7 @@ class JsonClassSymbolProcessorTest(
       // TODO KSP doesn't recognize language version yet https://github.com/google/ksp/issues/611
       //  toe-holds for the future
       val runtimeVersion = KotlinVersion.CURRENT
-      return buildList {
+      return mutableListOf<Array<Any>>().apply {
         if (runtimeVersion.major != 1 || runtimeVersion.minor != 6) {
           // True by default but still 1.5
           // Can't test when running with 1.6 because lang version is still 1.6 per above comment
