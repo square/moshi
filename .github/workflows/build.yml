@@ -40,8 +40,8 @@ jobs:
           java-version: '17'
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }}  -PkotlinVersion=${{ matrix.kotlin-version }}
+        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }} -PkotlinVersion=${{ matrix.kotlin-version }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.use-ksp == 'false'
         run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }}
