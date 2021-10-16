@@ -217,8 +217,12 @@ internal fun List<TypeName>.toTypeVariableResolver(
     // replacement later that may add bounds referencing this.
     val id = typeVar.name
     parametersMap[id] = TypeVariableName(id)
+  }
+
+  for (typeVar in this) {
+    check(typeVar is TypeVariableName)
     // Now replace it with the full version.
-    parametersMap[id] = typeVar.deepCopy(null) { it.stripTypeVarVariance(resolver) }
+    parametersMap[typeVar.name] = typeVar.deepCopy(null) { it.stripTypeVarVariance(resolver) }
   }
 
   return resolver

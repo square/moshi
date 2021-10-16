@@ -22,12 +22,13 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonAdapter.Factory
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
+import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
+import com.squareup.moshi.kotlin.codegen.test.extra.AbstractClassInModuleA
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.squareup.moshi.rawType
-import com.squareup.moshi.supertypeOf
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
@@ -63,11 +64,11 @@ class DualKotlinTest(useReflection: Boolean) {
           object : Factory {
             override fun create(
               type: Type,
-              annotations: Set<Annotation>,
+              annotations: MutableSet<out Annotation>,
               moshi: Moshi
             ): JsonAdapter<*>? {
               // Prevent falling back to generated adapter lookup
-              val rawType = type.rawType
+              val rawType = Types.getRawType(type)
               val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
               check(rawType.isEnum || !rawType.isAnnotationPresent(metadataClass)) {
                 "Unhandled Kotlin type in reflective test! $rawType"
@@ -248,21 +249,21 @@ class DualKotlinTest(useReflection: Boolean) {
     val hasNonNullConstructorParameterAdapter =
       localMoshi.adapter<HasNonNullConstructorParameter>()
     assertThat(
+      //language=JSON
       hasNonNullConstructorParameterAdapter
-//language=JSON
         .fromJson("{\"a\":null}")
     ).isEqualTo(HasNonNullConstructorParameter("fallback"))
 
     val hasNullableConstructorParameterAdapter =
       localMoshi.adapter<HasNullableConstructorParameter>()
     assertThat(
+      //language=JSON
       hasNullableConstructorParameterAdapter
-//language=JSON
         .fromJson("{\"a\":null}")
     ).isEqualTo(HasNullableConstructorParameter("fallback"))
+    //language=JSON
     assertThat(
       hasNullableConstructorParameterAdapter
-//language=JSON
         .toJson(HasNullableConstructorParameter(null))
     ).isEqualTo("{\"a\":\"fallback\"}")
   }
@@ -284,7 +285,7 @@ class DualKotlinTest(useReflection: Boolean) {
     assertThat(decoded.a).isEqualTo(null)
   }
 
-  @Test fun inlineClass() {
+  @Test fun valueClass() {
     val adapter = moshi.adapter<ValueClass>()
 
     val inline = ValueClass(5)
@@ -297,6 +298,13 @@ class DualKotlinTest(useReflection: Boolean) {
       """{"i":6}"""
     val result = adapter.fromJson(testJson)!!
     assertThat(result.i).isEqualTo(6)
+
+    // TODO doesn't work yet.
+    //  need to invoke the constructor_impl$default static method, invoke constructor with result
+//    val testEmptyJson =
+//      """{}"""
+//    val result2 = adapter.fromJson(testEmptyJson)!!
+//    assertThat(result2.i).isEqualTo(0)
   }
 
   @JsonClass(generateAdapter = true)
@@ -338,6 +346,50 @@ class DualKotlinTest(useReflection: Boolean) {
   class TextAsset : Asset<TextAsset>()
   abstract class Asset<A : Asset<A>>
   abstract class AssetMetaData<A : Asset<A>>
+
+  // Regression test for https://github.com/ZacSweers/MoshiX/issues/125
+  @Test fun selfReferencingTypeVars() {
+    val adapter = moshi.adapter<StringNodeNumberNode>()
+
+    val data = StringNodeNumberNode().also {
+      it.t = StringNodeNumberNode().also {
+        it.text = "child 1"
+      }
+      it.text = "root"
+      it.r = NumberStringNode().also {
+        it.number = 0
+        it.t = NumberStringNode().also {
+          it.number = 1
+        }
+        it.r = StringNodeNumberNode().also {
+          it.text = "grand child 1"
+        }
+      }
+    }
+    assertThat(adapter.toJson(data))
+      //language=JSON
+      .isEqualTo(
+        """
+        {"text":"root","t":{"text":"child 1"},"r":{"number":0,"t":{"number":1},"r":{"text":"grand child 1"}}}
+        """.trimIndent()
+      )
+  }
+
+  @JsonClass(generateAdapter = true)
+  open class Node<T : Node<T, R>, R : Node<R, T>> {
+    var t: T? = null
+    var r: R? = null
+  }
+
+  @JsonClass(generateAdapter = true)
+  class StringNodeNumberNode : Node<StringNodeNumberNode, NumberStringNode>() {
+    var text: String = ""
+  }
+
+  @JsonClass(generateAdapter = true)
+  class NumberStringNode : Node<NumberStringNode, StringNodeNumberNode>() {
+    var number: Int = 0
+  }
 
   // Regression test for https://github.com/square/moshi/issues/968
   @Test fun abstractSuperProperties() {
@@ -447,7 +499,7 @@ class DualKotlinTest(useReflection: Boolean) {
   @Test fun typeAliasUnwrapping() {
     val adapter = moshi
       .newBuilder()
-      .add(supertypeOf<Int>(), moshi.adapter<Int>())
+      .add(Types.supertypeOf(Int::class.javaObjectType), moshi.adapter<Int>())
       .build()
       .adapter<TypeAliasUnwrapping>()
 
@@ -587,8 +639,7 @@ class DualKotlinTest(useReflection: Boolean) {
   @JsonClass(generateAdapter = true)
   data class OutDeclaration<out T>(val input: T)
 
-  // Regression test for https://github.com/square/moshi/issues/1244
-  @Test fun backwardReferencingTypeVarsAndIntersectionTypes() {
+  @Test fun intersectionTypes() {
     val adapter = moshi.adapter<IntersectionTypes<IntersectionTypesEnum>>()
 
     @Language("JSON")
@@ -625,7 +676,7 @@ data class GenericClass<T>(val value: T)
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
 @JsonClass(generateAdapter = true)
-value class ValueClass(val i: Int)
+value class ValueClass(val i: Int = 0)
 
 typealias A = Int
 typealias NullableA = A?
@@ -634,3 +685,23 @@ typealias NullableB = B?
 typealias C = NullableA
 typealias D = C
 typealias E = D
+
+// Regression test for enum constants in annotations and array types
+// https://github.com/ZacSweers/MoshiX/issues/103
+@Retention(RUNTIME)
+@JsonQualifier
+annotation class UpperCase(val foo: Array<Foo>)
+
+enum class Foo { BAR }
+
+@JsonClass(generateAdapter = true)
+data class ClassWithQualifier(
+  @UpperCase(foo = [Foo.BAR])
+  val a: Int
+)
+
+// Regression for https://github.com/ZacSweers/MoshiX/issues/120
+@JsonClass(generateAdapter = true)
+data class DataClassInModuleB(
+  val id: String
+) : AbstractClassInModuleA()
