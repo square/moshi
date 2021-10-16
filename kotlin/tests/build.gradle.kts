@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("jvm")
   kotlin("kapt") apply false
-  alias(libs.plugins.ksp) apply false
+  id("com.google.devtools.ksp") apply false
 }
 
 val useKsp = hasProperty("useKsp")
