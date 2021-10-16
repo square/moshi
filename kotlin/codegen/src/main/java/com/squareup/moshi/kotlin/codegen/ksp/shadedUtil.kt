@@ -171,7 +171,11 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
     .invoke(
       null,
       // Change from upstream KSP - https://github.com/google/ksp/pull/685
-      (this as KSType).declaration.simpleName.getShortName()
+      if (this is KSType) {
+        (this as KSType).declaration.simpleName.getShortName()
+      } else {
+        this.toString()
+      }
     ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
