@@ -83,11 +83,13 @@ internal fun TargetProperty.generator(
           )
         }
       }
-      annotationElement.findAnnotationWithType<Target>()?.let {
-        if (AnnotationTarget.FIELD !in it.allowedTargets) {
-          logger.error(
-            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-          )
+      if (!instantiateAnnotations) {
+        annotationElement.findAnnotationWithType<Target>()?.let {
+          if (AnnotationTarget.FIELD !in it.allowedTargets) {
+            logger.error(
+              "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+            )
+          }
         }
       }
     }
