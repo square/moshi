@@ -172,7 +172,7 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
       null,
       // Change from upstream KSP - https://github.com/google/ksp/pull/685
       if (this is KSType) {
-        (this as KSType).declaration.simpleName.getShortName()
+        this.declaration.simpleName.getShortName()
       } else {
         this.toString()
       }
