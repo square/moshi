@@ -12,9 +12,16 @@ jobs:
       matrix:
         use-ksp: [ true, false ]
         kotlin-version: [ '1.5.31', '1.6.0-RC' ]
+        ksp-version: [ '1.5.31-1.0.0', '1.6.0-RC-1.0.0' ]
+        exclude:
+          - kotlin-version: '1.5.31'
+            ksp-version: '1.6.0-RC-1.0.0'
+          - kotlin-version: '1.6.0-RC'
+            ksp-version: '1.5.31-1.0.0'
 
     env:
       MOSHI_KOTLIN_VERSION: '${{ matrix.kotlin-version }}'
+      MOSHI_KSP_VERSION: '${{ matrix.ksp-version }}'
 
     steps:
       - name: Checkout
