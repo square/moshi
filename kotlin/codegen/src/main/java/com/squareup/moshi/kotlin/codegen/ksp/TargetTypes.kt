@@ -41,6 +41,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toKModifier
 import com.squareup.kotlinpoet.ksp.toTypeName
 import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toTypeVariableName
@@ -132,7 +133,7 @@ internal fun targetType(
       properties.putIfAbsent(name, property)
     }
   }
-  val visibility = type.getVisibility().asKModifier()
+  val visibility = type.getVisibility().toKModifier() ?: KModifier.PUBLIC
   // If any class in the enclosing class hierarchy is internal, they must all have internal
   // generated adapters.
   val resolvedVisibility = if (visibility == KModifier.INTERNAL) {
@@ -191,7 +192,8 @@ internal fun primaryConstructor(
       return null
     }
   return TargetConstructor(
-    parameters, primaryConstructor.getVisibility().asKModifier(),
+    parameters,
+    primaryConstructor.getVisibility().toKModifier() ?: KModifier.PUBLIC,
     kmConstructorSignature
   )
 }
@@ -233,7 +235,7 @@ private fun declaredProperties(
     result[name] = TargetProperty(
       propertySpec = propertySpec,
       parameter = parameter,
-      visibility = property.modifiers.map { KModifier.valueOf(it.name) }.visibility(),
+      visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
       jsonName = parameter?.jsonName ?: property.jsonName()
         ?: name.escapeDollarSigns()
     )

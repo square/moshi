@@ -27,17 +27,9 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Origin.KOTLIN
 import com.google.devtools.ksp.symbol.Origin.KOTLIN_LIB
-import com.google.devtools.ksp.symbol.Visibility
-import com.google.devtools.ksp.symbol.Visibility.INTERNAL
-import com.google.devtools.ksp.symbol.Visibility.JAVA_PACKAGE
-import com.google.devtools.ksp.symbol.Visibility.LOCAL
-import com.google.devtools.ksp.symbol.Visibility.PRIVATE
-import com.google.devtools.ksp.symbol.Visibility.PROTECTED
-import com.google.devtools.ksp.symbol.Visibility.PUBLIC
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ksp.toClassName
 
 internal fun KSClassDeclaration.asType() = asType(emptyList())
@@ -57,17 +49,6 @@ internal fun KSType.unwrapTypeAlias(): KSType {
     (this.declaration as KSTypeAlias).type.resolve()
   } else {
     this
-  }
-}
-
-internal fun Visibility.asKModifier(): KModifier {
-  return when (this) {
-    PUBLIC -> KModifier.PUBLIC
-    PRIVATE -> KModifier.PRIVATE
-    PROTECTED -> KModifier.PROTECTED
-    INTERNAL -> KModifier.INTERNAL
-    JAVA_PACKAGE -> KModifier.PUBLIC
-    LOCAL -> error("Local is unsupported")
   }
 }
 
