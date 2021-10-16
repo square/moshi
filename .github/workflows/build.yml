@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: 'Java ${{ matrix.java-version }} | KSP ${{ matrix.use-ksp }}'
+    name: 'Java ${{ matrix.java-version }} | Kotlin ${{ matrix.kotlin-version }} | KSP ${{ matrix.use-ksp }}'
     runs-on: ubuntu-latest
 
     strategy:
