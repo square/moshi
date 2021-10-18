@@ -15,14 +15,14 @@
  */
 package com.squareup.moshi
 
+import java.io.EOFException
+import java.io.IOException
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.buffer
-import java.io.EOFException
-import java.io.IOException
-import java.math.BigDecimal
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON.  */
@@ -175,8 +175,7 @@ internal class JsonUtf8Reader : JsonReader {
           buffer.readByte() // Consume '}' or ','.
           when (c) {
             '}' -> {
-              peeked = PEEKED_END_OBJECT
-              return peeked
+              return setPeeked(PEEKED_END_OBJECT)
             }
             ',' -> Unit /*no op*/
             ';' -> checkLenient()
@@ -195,7 +194,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           '}' -> if (peekStack != JsonScope.NONEMPTY_OBJECT) {
             buffer.readByte() // consume the '}'.
-            PEEKED_END_OBJECT
+            setPeeked(PEEKED_END_OBJECT)
           } else {
             throw syntaxError("Expected name")
           }
@@ -256,8 +255,7 @@ internal class JsonUtf8Reader : JsonReader {
         return when (peekStack) {
           JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
             checkLenient()
-            peeked = PEEKED_NULL
-            peeked
+            setPeeked(PEEKED_NULL)
           }
           else -> throw syntaxError("Unexpected value")
         }
@@ -266,31 +264,26 @@ internal class JsonUtf8Reader : JsonReader {
       ';', ',' -> return when (peekStack) {
         JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
           checkLenient()
-          peeked = PEEKED_NULL
-          peeked
+          setPeeked(PEEKED_NULL)
         }
         else -> throw syntaxError("Unexpected value")
       }
       '\'' -> {
         checkLenient()
         buffer.readByte() // Consume '\''.
-        peeked = PEEKED_SINGLE_QUOTED
-        return peeked
+        return setPeeked(PEEKED_SINGLE_QUOTED)
       }
       '"' -> {
         buffer.readByte() // Consume '\"'.
-        peeked = PEEKED_DOUBLE_QUOTED
-        return peeked
+        return setPeeked(PEEKED_DOUBLE_QUOTED)
       }
       '[' -> {
         buffer.readByte() // Consume '['.
-        peeked = PEEKED_BEGIN_ARRAY
-        return peeked
+        return setPeeked(PEEKED_BEGIN_ARRAY)
       }
       '{' -> {
         buffer.readByte() // Consume '{'.
-        peeked = PEEKED_BEGIN_OBJECT
-        return peeked
+        return setPeeked(PEEKED_BEGIN_OBJECT)
       }
       else -> Unit /* no-op */
     }
@@ -306,8 +299,7 @@ internal class JsonUtf8Reader : JsonReader {
       throw syntaxError("Expected value")
     }
     checkLenient()
-    peeked = PEEKED_UNQUOTED
-    return peeked
+    return setPeeked(PEEKED_UNQUOTED)
   }
 
   @Throws(IOException::class)
@@ -354,8 +346,7 @@ internal class JsonUtf8Reader : JsonReader {
 
     // We've found the keyword followed either by EOF or by a non-literal character.
     buffer.skip(length.toLong())
-    peeked = peeking
-    return peeked
+    return setPeeked(peeking)
   }
 
   @Throws(IOException::class)
@@ -449,15 +440,13 @@ internal class JsonUtf8Reader : JsonReader {
         && (value != 0L || !negative) -> {
         peekedLong = if (negative) value else -value
         buffer.skip(i)
-        peeked = PEEKED_LONG
-        peeked
+        setPeeked(PEEKED_LONG)
       }
       last == NUMBER_CHAR_DIGIT ||
         last == NUMBER_CHAR_FRACTION_DIGIT
         || last == NUMBER_CHAR_EXP_DIGIT -> {
         peekedNumberLength = i.toInt()
-        peeked = PEEKED_NUMBER
-        peeked
+        setPeeked(PEEKED_NUMBER)
       }
       else -> PEEKED_NONE
     }
@@ -1073,6 +1062,11 @@ internal class JsonUtf8Reader : JsonReader {
   private inline fun peekIfNone(): Int {
     val p = peeked
     return if (p == PEEKED_NONE) doPeek() else p
+  }
+
+  private inline fun setPeeked(peekedType: Int): Int {
+    peeked = peekedType
+    return peekedType
   }
 
   companion object {
