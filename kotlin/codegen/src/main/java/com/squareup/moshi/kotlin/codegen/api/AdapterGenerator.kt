@@ -643,13 +643,13 @@ internal class AdapterGenerator(
         continue // Property already handled.
       }
       if (property.hasLocalIsPresentName) {
-        result.addStatement(
-          "%1N.%2N = if (%3N) %4N else %1N.%2N",
+        result.beginControlFlow("if (%N)", property.localIsPresentName)
+        result.addStatement("%N.%N = %N",
           resultName,
           property.name,
-          property.localIsPresentName,
           property.localName
         )
+        result.endControlFlow()
       } else {
         result.addStatement(
           "%1N.%2N = %3N ?: %1N.%2N",
