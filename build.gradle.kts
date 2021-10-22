@@ -130,6 +130,7 @@ subprojects {
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
       kotlinOptions {
+        // TODO re-enable when no longer supporting multiple kotlin versions
 //        @Suppress("SuspiciousCollectionReassignment")
 //        freeCompilerArgs += listOf("-progressive")
         jvmTarget = libs.versions.jvmTarget.get()
