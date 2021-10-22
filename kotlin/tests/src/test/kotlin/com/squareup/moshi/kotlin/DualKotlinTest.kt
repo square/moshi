@@ -38,47 +38,13 @@ import org.junit.runners.Parameterized.Parameters
 import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
-/**
- * Parameterized tests that test serialization with both [KotlinJsonAdapterFactory] and code gen.
- */
-@RunWith(Parameterized::class)
-class DualKotlinTest(useReflection: Boolean) {
-
-  companion object {
-    @Parameters(name = "reflective={0}")
-    @JvmStatic
-    fun parameters(): List<Array<*>> {
-      return listOf(
-        arrayOf(true),
-        arrayOf(false)
-      )
-    }
-  }
+class DualKotlinTest {
 
   @Suppress("UNCHECKED_CAST")
   private val moshi = Moshi.Builder()
-    .apply {
-      if (useReflection) {
-        add(KotlinJsonAdapterFactory())
-        add(
-          object : Factory {
-            override fun create(
-              type: Type,
-              annotations: MutableSet<out Annotation>,
-              moshi: Moshi
-            ): JsonAdapter<*>? {
-              // Prevent falling back to generated adapter lookup
-              val rawType = Types.getRawType(type)
-              val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
-              check(rawType.isEnum || !rawType.isAnnotationPresent(metadataClass)) {
-                "Unhandled Kotlin type in reflective test! $rawType"
-              }
-              return moshi.nextAdapter<Any>(this, type, annotations)
-            }
-          }
-        )
-      }
-    }
+    // If code gen ran, the generated adapter will be tried first. If it can't find it, it will
+    // gracefully fall back to the KotlinJsonAdapter. This allows us to easily test both.
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 
   @Test fun requiredValueAbsent() {
