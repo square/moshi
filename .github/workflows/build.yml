@@ -4,13 +4,24 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: 'Java ${{ matrix.java-version }} | KSP ${{ matrix.use-ksp }}'
+    name: 'Java ${{ matrix.java-version }} | Kotlin ${{ matrix.kotlin-version }} | KSP ${{ matrix.use-ksp }}'
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
         use-ksp: [ true, false ]
+        kotlin-version: [ '1.5.31', '1.6.0-RC' ]
+        ksp-version: [ '1.5.31-1.0.0', '1.6.0-RC-1.0.0' ]
+        exclude:
+          - kotlin-version: '1.5.31'
+            ksp-version: '1.6.0-RC-1.0.0'
+          - kotlin-version: '1.6.0-RC'
+            ksp-version: '1.5.31-1.0.0'
+
+    env:
+      MOSHI_KOTLIN_VERSION: '${{ matrix.kotlin-version }}'
+      MOSHI_KSP_VERSION: '${{ matrix.ksp-version }}'
 
     steps:
       - name: Checkout
@@ -36,8 +47,8 @@ jobs:
           java-version: '17'
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }}
+        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }} -PkotlinVersion=${{ matrix.kotlin-version }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.use-ksp == 'false'
         run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }} --stacktrace

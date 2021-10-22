@@ -23,6 +23,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_INSTANTIATE_ANNOTATIONS
 import com.squareup.moshi.kotlin.codegen.api.Options.POSSIBLE_GENERATED_NAMES
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
@@ -59,6 +60,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
   private val annotation = JsonClass::class.java
   private var generatedType: ClassName? = null
   private var generateProguardRules: Boolean = true
+  private var instantiateAnnotations: Boolean = true
 
   override fun getSupportedAnnotationTypes(): Set<String> = setOf(annotation.canonicalName)
 
@@ -76,6 +78,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
     }
 
     generateProguardRules = processingEnv.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
+    instantiateAnnotations = processingEnv.options[OPTION_INSTANTIATE_ANNOTATIONS]?.toBooleanStrictOrNull() ?: true
 
     this.types = processingEnv.typeUtils
     this.elements = processingEnv.elementUtils
@@ -135,11 +138,18 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
     element: TypeElement,
     cachedClassInspector: MoshiCachedClassInspector
   ): AdapterGenerator? {
-    val type = targetType(messager, elements, types, element, cachedClassInspector) ?: return null
+    val type = targetType(
+      messager,
+      elements,
+      types,
+      element,
+      cachedClassInspector,
+      instantiateAnnotations
+    ) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
-      val generator = property.generator(messager, element, elements)
+      val generator = property.generator(messager, element, elements, type.instantiateAnnotations)
       if (generator != null) {
         properties[property.name] = generator
       }

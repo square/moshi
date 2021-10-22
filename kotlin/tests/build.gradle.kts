@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("jvm")
   kotlin("kapt") apply false
-  alias(libs.plugins.ksp) apply false
+  id("com.google.devtools.ksp") apply false
 }
 
 val useKsp = hasProperty("useKsp")
@@ -34,11 +34,14 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 
+val useWError = findProperty("kotlinLanguageVersion")?.toString()
+  ?.startsWith("1.5")
+  ?: false
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
+    allWarningsAsErrors = useWError
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
-      "-Werror",
       "-Xopt-in=kotlin.ExperimentalStdlibApi"
     )
   }

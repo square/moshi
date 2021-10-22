@@ -36,6 +36,14 @@ internal object Options {
    */
   const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
 
+  /**
+   * This boolean processing option controls whether or not Moshi will directly instantiate
+   * JsonQualifier annotations in Kotlin 1.6+. Note that this is enabled by default in Kotlin 1.6
+   * but can be disabled to restore the legacy behavior of storing annotations on generated adapter
+   * fields and looking them up reflectively.
+   */
+  const val OPTION_INSTANTIATE_ANNOTATIONS: String = "moshi.instantiateAnnotations"
+
   val POSSIBLE_GENERATED_NAMES = arrayOf(
     ClassName("javax.annotation.processing", "Generated"),
     ClassName("javax.annotation", "Generated")

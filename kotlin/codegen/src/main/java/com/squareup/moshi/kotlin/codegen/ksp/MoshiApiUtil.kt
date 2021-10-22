@@ -28,17 +28,6 @@ import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.rawType
 
-private val VISIBILITY_MODIFIERS = setOf(
-  KModifier.INTERNAL,
-  KModifier.PRIVATE,
-  KModifier.PROTECTED,
-  KModifier.PUBLIC
-)
-
-internal fun Collection<KModifier>.visibility(): KModifier {
-  return find { it in VISIBILITY_MODIFIERS } ?: KModifier.PUBLIC
-}
-
 private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.typeName == Transient::class.asClassName() }
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
@@ -55,7 +44,8 @@ private val TargetProperty.isVisible: Boolean
 internal fun TargetProperty.generator(
   logger: KSPLogger,
   resolver: Resolver,
-  originalType: KSDeclaration
+  originalType: KSDeclaration,
+  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
@@ -65,7 +55,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
   }
 
   if (!isVisible) {
@@ -93,11 +83,13 @@ internal fun TargetProperty.generator(
           )
         }
       }
-      annotationElement.findAnnotationWithType<Target>()?.let {
-        if (AnnotationTarget.FIELD !in it.allowedTargets) {
-          logger.error(
-            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-          )
+      if (!instantiateAnnotations) {
+        annotationElement.findAnnotationWithType<Target>()?.let {
+          if (AnnotationTarget.FIELD !in it.allowedTargets) {
+            logger.error(
+              "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+            )
+          }
         }
       }
     }
@@ -111,7 +103,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
   )
 }
 

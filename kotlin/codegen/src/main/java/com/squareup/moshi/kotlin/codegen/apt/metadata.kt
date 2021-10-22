@@ -71,6 +71,7 @@ private val VISIBILITY_MODIFIERS = setOf(
   KModifier.PROTECTED,
   KModifier.PUBLIC
 )
+private val ANNOTATION_INSTANTIATION_MIN_VERSION = KotlinVersion(1, 6, 0)
 
 private fun Collection<KModifier>.visibility(): KModifier {
   return find { it in VISIBILITY_MODIFIERS } ?: KModifier.PUBLIC
@@ -122,7 +123,8 @@ internal fun targetType(
   elements: Elements,
   types: Types,
   element: TypeElement,
-  cachedClassInspector: MoshiCachedClassInspector
+  cachedClassInspector: MoshiCachedClassInspector,
+  instantiateAnnotationsEnabled: Boolean
 ): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
@@ -204,6 +206,11 @@ internal fun targetType(
     }
   }
 
+  val instantiateAnnotations = instantiateAnnotationsEnabled && run {
+    val (major, minor, patch) = typeMetadata.metadataVersion
+    val languageVersion = KotlinVersion(major, minor, patch)
+    languageVersion >= ANNOTATION_INSTANTIATION_MIN_VERSION
+  }
   val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
@@ -319,7 +326,8 @@ internal fun targetType(
     properties = properties,
     typeVariables = typeVariables,
     isDataClass = KModifier.DATA in kotlinApi.modifiers,
-    visibility = resolvedVisibility
+    visibility = resolvedVisibility,
+    instantiateAnnotations = instantiateAnnotations
   )
 }
 
@@ -418,7 +426,8 @@ private val TargetProperty.isVisible: Boolean
 internal fun TargetProperty.generator(
   messager: Messager,
   sourceElement: TypeElement,
-  elements: Elements
+  elements: Elements,
+  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
@@ -429,7 +438,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
   }
 
   if (!isVisible) {
@@ -452,6 +461,7 @@ internal fun TargetProperty.generator(
     // Check Java types since that covers both Java and Kotlin annotations.
     val annotationElement = elements.getTypeElement(qualifierRawType.canonicalName)
       ?: continue
+
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(
@@ -460,12 +470,14 @@ internal fun TargetProperty.generator(
         )
       }
     }
-    annotationElement.getAnnotation(Target::class.java)?.let {
-      if (ElementType.FIELD !in it.value) {
-        messager.printMessage(
-          ERROR,
-          "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-        )
+    if (!instantiateAnnotations) {
+      annotationElement.getAnnotation(Target::class.java)?.let {
+        if (ElementType.FIELD !in it.value) {
+          messager.printMessage(
+            ERROR,
+            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+          )
+        }
       }
     }
   }
@@ -478,7 +490,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
   )
 }
 

@@ -26,7 +26,8 @@ internal data class TargetType(
   val properties: Map<String, TargetProperty>,
   val typeVariables: List<TypeVariableName>,
   val isDataClass: Boolean,
-  val visibility: KModifier
+  val visibility: KModifier,
+  val instantiateAnnotations: Boolean
 ) {
 
   init {

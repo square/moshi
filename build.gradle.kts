@@ -23,7 +23,12 @@ import java.net.URL
 
 buildscript {
   dependencies {
-    classpath(kotlin("gradle-plugin", version = libs.versions.kotlin.get()))
+    val kotlinVersion = System.getenv("MOSHI_KOTLIN_VERSION")
+      ?: libs.versions.kotlin.get()
+    val kspVersion = System.getenv("MOSHI_KSP_VERSION")
+      ?: libs.versions.ksp.get()
+    classpath(kotlin("gradle-plugin", version = kotlinVersion))
+    classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
     classpath("com.google.guava:guava:28.2-jre")
   }
@@ -125,8 +130,9 @@ subprojects {
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
       kotlinOptions {
-        @Suppress("SuspiciousCollectionReassignment")
-        freeCompilerArgs += listOf("-progressive")
+        // TODO re-enable when no longer supporting multiple kotlin versions
+//        @Suppress("SuspiciousCollectionReassignment")
+//        freeCompilerArgs += listOf("-progressive")
         jvmTarget = libs.versions.jvmTarget.get()
       }
     }
