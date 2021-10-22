@@ -21,16 +21,19 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.generatedAdapter
 import com.squareup.moshi.internal.Util.resolve
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
 import kotlin.reflect.KProperty1
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -257,7 +260,31 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
 
       val name = jsonAnnotation?.name ?: property.name
-      val resolvedPropertyType = resolve(type, rawType, property.returnType.javaType)
+      val propertyType = when (val propertyTypeClassifier = property.returnType.classifier) {
+        is KClass<*> -> {
+          if (propertyTypeClassifier.isValue) {
+            // When it's a value class, we need to resolve the type ourselves because the javaType
+            // function will return its inlined type
+            val rawClassifierType = propertyTypeClassifier.java
+            if (property.returnType.arguments.isEmpty()) {
+              rawClassifierType
+            } else {
+              Types.newParameterizedType(
+                rawClassifierType,
+                *property.returnType.arguments.mapNotNull { it.type?.javaType }.toTypedArray()
+              )
+            }
+          } else {
+            // This is safe when it's not a value class!
+            property.returnType.javaType
+          }
+        }
+        is KTypeParameter -> {
+          property.returnType.javaType
+        }
+        else -> error("Not possible!")
+      }
+      val resolvedPropertyType = resolve(type, rawType, propertyType)
       val adapter = moshi.adapter<Any>(
         resolvedPropertyType,
         Util.jsonAnnotations(allAnnotations.toTypedArray()),
