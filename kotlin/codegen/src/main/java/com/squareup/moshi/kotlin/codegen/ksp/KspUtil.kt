@@ -69,12 +69,12 @@ private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Bu
   when (value) {
     is List<*> -> {
       // Array type
-      member.add("[⇥⇥")
+      member.add("arrayOf(⇥⇥")
       value.forEachIndexed { index, innerValue ->
         if (index > 0) member.add(", ")
         addValueToBlock(innerValue!!, resolver, member)
       }
-      member.add("⇤⇤]")
+      member.add("⇤⇤)")
     }
     is KSType -> {
       val unwrapped = value.unwrapTypeAlias()
