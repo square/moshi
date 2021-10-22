@@ -51,4 +51,7 @@ jobs:
 
       - name: Publish (default branch only)
         if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.use-ksp == 'false'
-        run: ./gradlew publish -PmavenCentralUsername=${{ secrets.SONATYPE_NEXUS_USERNAME }} -PmavenCentralPassword=${{ secrets.SONATYPE_NEXUS_PASSWORD }} --stacktrace
+        run: ./gradlew publish
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: '${{ secrets.SONATYPE_NEXUS_USERNAME }}'
+          ORG_GRADLE_PROJECT_mavenCentralPassword: '${{ secrets.SONATYPE_NEXUS_PASSWORD }}'
