@@ -25,6 +25,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
+import com.squareup.moshi.internal.Util
 import com.squareup.moshi.kotlin.codegen.test.extra.AbstractClassInModuleA
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.intellij.lang.annotations.Language
@@ -326,19 +327,22 @@ class DualKotlinTest {
         }
       }
     }
+
     assertThat(adapter.toJson(data))
       //language=JSON
       .isEqualTo(
         """
-        {"text":"root","t":{"text":"child 1"},"r":{"number":0,"t":{"number":1},"r":{"text":"grand child 1"}}}
+        {"text":"root","r":{"number":0,"r":{"text":"grand child 1"},"t":{"number":1}},"t":{"text":"child 1"}}
         """.trimIndent()
       )
   }
 
   @JsonClass(generateAdapter = true)
   open class Node<T : Node<T, R>, R : Node<R, T>> {
-    var t: T? = null
+    // kotlin-reflect doesn't preserve ordering, so put these in alphabetical order so that
+    // both reflective and code gen tests work the same
     var r: R? = null
+    var t: T? = null
   }
 
   @JsonClass(generateAdapter = true)
