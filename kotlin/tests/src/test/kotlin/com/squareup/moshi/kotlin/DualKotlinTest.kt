@@ -18,8 +18,6 @@ package com.squareup.moshi.kotlin
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonAdapter.Factory
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonQualifier
@@ -32,10 +30,6 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 class DualKotlinTest {
