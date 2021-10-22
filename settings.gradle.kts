@@ -31,6 +31,7 @@ include(":examples")
 include(":kotlin:reflect")
 include(":kotlin:codegen")
 include(":kotlin:tests")
+include(":kotlin:tests:codegen-only")
 include(":kotlin:tests:extra-moshi-test-module")
 
 enableFeaturePreview("VERSION_CATALOGS")
