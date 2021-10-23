@@ -350,7 +350,7 @@ class EventJsonAdapter {
   @FromJson fun eventFromJson(eventJson: EventJson): Event {
     val event = Event()
     event.title = eventJson.title
-    event.beginDateAndTime = "${eventJson.begin_date}  ${eventJson.begin_time}"
+    event.beginDateAndTime = "${eventJson.begin_date} ${eventJson.begin_time}"
     return event
   }
 
