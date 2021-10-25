@@ -4,15 +4,15 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: 'Java ${{ matrix.java-version }} | Kotlin ${{ matrix.kotlin-version }} | KSP ${{ matrix.use-ksp }}'
+    name: 'Kotlin ${{ matrix.kotlin-version }} | Test Mode ${{ matrix.kotlin-test-mode }}'
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        use-ksp: [ true, false ]
         kotlin-version: [ '1.5.31', '1.6.0-RC' ]
         ksp-version: [ '1.5.31-1.0.0', '1.6.0-RC-1.0.0' ]
+        kotlin-test-mode: [ 'REFLECT', 'KSP', 'KAPT' ]
         exclude:
           - kotlin-version: '1.5.31'
             ksp-version: '1.6.0-RC-1.0.0'
@@ -47,10 +47,10 @@ jobs:
           java-version: '17'
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PuseKsp=${{ matrix.use-ksp }} -PkotlinVersion=${{ matrix.kotlin-version }}
+        run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }} -PkotlinVersion=${{ matrix.kotlin-version }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.use-ksp == 'false'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.kotlin-test-mode == 'reflect'
         run: ./gradlew publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: '${{ secrets.SONATYPE_NEXUS_USERNAME }}'

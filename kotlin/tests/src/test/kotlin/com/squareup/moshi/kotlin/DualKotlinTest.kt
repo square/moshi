@@ -18,8 +18,6 @@ package com.squareup.moshi.kotlin
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonAdapter.Factory
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonQualifier
@@ -32,53 +30,15 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
-import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
-/**
- * Parameterized tests that test serialization with both [KotlinJsonAdapterFactory] and code gen.
- */
-@RunWith(Parameterized::class)
-class DualKotlinTest(useReflection: Boolean) {
-
-  companion object {
-    @Parameters(name = "reflective={0}")
-    @JvmStatic
-    fun parameters(): List<Array<*>> {
-      return listOf(
-        arrayOf(true),
-        arrayOf(false)
-      )
-    }
-  }
+class DualKotlinTest {
 
   @Suppress("UNCHECKED_CAST")
   private val moshi = Moshi.Builder()
-    .apply {
-      if (useReflection) {
-        add(KotlinJsonAdapterFactory())
-        add(
-          object : Factory {
-            override fun create(
-              type: Type,
-              annotations: MutableSet<out Annotation>,
-              moshi: Moshi
-            ): JsonAdapter<*>? {
-              // Prevent falling back to generated adapter lookup
-              val rawType = Types.getRawType(type)
-              val metadataClass = Class.forName("kotlin.Metadata") as Class<out Annotation>
-              check(rawType.isEnum || !rawType.isAnnotationPresent(metadataClass)) {
-                "Unhandled Kotlin type in reflective test! $rawType"
-              }
-              return moshi.nextAdapter<Any>(this, type, annotations)
-            }
-          }
-        )
-      }
-    }
+    // If code gen ran, the generated adapter will be tried first. If it can't find it, it will
+    // gracefully fall back to the KotlinJsonAdapter. This allows us to easily test both.
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 
   @Test fun requiredValueAbsent() {
@@ -366,19 +326,22 @@ class DualKotlinTest(useReflection: Boolean) {
         }
       }
     }
+
     assertThat(adapter.toJson(data))
       //language=JSON
       .isEqualTo(
         """
-        {"text":"root","t":{"text":"child 1"},"r":{"number":0,"t":{"number":1},"r":{"text":"grand child 1"}}}
+        {"text":"root","r":{"number":0,"r":{"text":"grand child 1"},"t":{"number":1}},"t":{"text":"child 1"}}
         """.trimIndent()
       )
   }
 
   @JsonClass(generateAdapter = true)
   open class Node<T : Node<T, R>, R : Node<R, T>> {
-    var t: T? = null
+    // kotlin-reflect doesn't preserve ordering, so put these in alphabetical order so that
+    // both reflective and code gen tests work the same
     var r: R? = null
+    var t: T? = null
   }
 
   @JsonClass(generateAdapter = true)

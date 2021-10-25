@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.kotlin
+package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
@@ -64,14 +64,6 @@ data class TestClass(
   val dynamicSelfReferenceOptional: String = required,
   val dynamicOptional: Int = createInt(),
   val dynamicInlineOptional: Int = createInlineInt()
-)
-
-// Regression test for https://github.com/square/moshi/issues/905
-// Just needs to compile
-@JsonClass(generateAdapter = true)
-data class GenericTestClassWithDefaults<T>(
-  val input: String = "",
-  val genericInput: T
 )
 
 private fun createInt(): Int {
