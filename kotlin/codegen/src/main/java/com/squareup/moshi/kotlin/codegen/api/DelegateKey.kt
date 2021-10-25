@@ -36,15 +36,16 @@ import com.squareup.moshi.Types
 import java.util.Locale
 
 /** A JsonAdapter that can be used to encode and decode a particular field. */
-internal data class DelegateKey(
+@InternalMoshiCodegenApi
+public data class DelegateKey(
   private val type: TypeName,
   private val jsonQualifiers: List<AnnotationSpec>,
   private val instantiateAnnotations: Boolean
 ) {
-  val nullable get() = type.isNullable
+  public val nullable: Boolean get() = type.isNullable
 
   /** Returns an adapter to use when encoding and decoding this property. */
-  fun generateProperty(
+  internal fun generateProperty(
     nameAllocator: NameAllocator,
     typeRenderer: TypeRenderer,
     moshiParameter: ParameterSpec,

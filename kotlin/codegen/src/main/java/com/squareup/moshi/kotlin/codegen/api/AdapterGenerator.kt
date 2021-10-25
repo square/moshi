@@ -52,12 +52,13 @@ private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
 private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the closing paren
 
 /** Generates a JSON adapter for a target type. */
-internal class AdapterGenerator(
+@InternalMoshiCodegenApi
+public class AdapterGenerator(
   private val target: TargetType,
   private val propertyList: List<PropertyGenerator>
 ) {
 
-  companion object {
+  private companion object {
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
       "%T.DEFAULT_CONSTRUCTOR_MARKER",
@@ -166,7 +167,7 @@ internal class AdapterGenerator(
     .initializer("null")
     .build()
 
-  fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
+  public fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
     val reservedSimpleNames = mutableSetOf<String>()
     for (property in nonTransientProperties) {
       // Allocate names for simple property types first to avoid collisions
@@ -727,7 +728,8 @@ private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator,
 }
 
 /** Represents a prepared adapter with its [spec] and optional associated [proguardConfig]. */
-internal data class PreparedAdapter(val spec: FileSpec, val proguardConfig: ProguardConfig?)
+@InternalMoshiCodegenApi
+public data class PreparedAdapter(val spec: FileSpec, val proguardConfig: ProguardConfig?)
 
 private fun AsmType.toReflectionString(): String {
   return when (this) {

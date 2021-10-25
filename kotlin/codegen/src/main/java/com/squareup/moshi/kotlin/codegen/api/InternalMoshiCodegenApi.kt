@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Square, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,11 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeVariableName
-
-/** A user type that should be decoded and encoded by generated code. */
-@InternalMoshiCodegenApi
-public data class TargetType(
-  val typeName: TypeName,
-  val constructor: TargetConstructor,
-  val properties: Map<String, TargetProperty>,
-  val typeVariables: List<TypeVariableName>,
-  val isDataClass: Boolean,
-  val visibility: KModifier,
-  val instantiateAnnotations: Boolean
-) {
-
-  init {
-    visibility.checkIsVisibility()
-  }
-}
+/** Internal Moshi code gen APIs. */
+@MustBeDocumented
+@Retention(value = AnnotationRetention.BINARY)
+@RequiresOptIn(
+  level = RequiresOptIn.Level.WARNING,
+  message = "This is an internal API and may change at any time."
+)
+public annotation class InternalMoshiCodegenApi

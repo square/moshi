@@ -29,9 +29,11 @@ import com.squareup.kotlinpoet.ClassName
  * conditioned on usage of the original target type.
  *
  * To keep this processor as an ISOLATING incremental processor, we generate one file per target
- * class with a deterministic name (see [outputFile]) with an appropriate originating element.
+ * class with a deterministic name (see [outputFilePathWithoutExtension]) with an appropriate
+ * originating element.
  */
-internal data class ProguardConfig(
+@InternalMoshiCodegenApi
+public data class ProguardConfig(
   val targetClass: ClassName,
   val adapterName: String,
   val adapterConstructorParams: List<String>,
@@ -39,11 +41,11 @@ internal data class ProguardConfig(
   val targetConstructorParams: List<String>,
   val qualifierProperties: Set<QualifierAdapterProperty>
 ) {
-  fun outputFilePathWithoutExtension(canonicalName: String): String {
+  public fun outputFilePathWithoutExtension(canonicalName: String): String {
     return "META-INF/proguard/moshi-$canonicalName"
   }
 
-  fun writeTo(out: Appendable): Unit = out.run {
+  public fun writeTo(out: Appendable): Unit = out.run {
     //
     // -if class {the target class}
     // -keepnames class {the target class}
@@ -112,4 +114,5 @@ internal data class ProguardConfig(
  * Represents a qualified property with its [name] in the adapter fields and list of [qualifiers]
  * associated with it.
  */
-internal data class QualifierAdapterProperty(val name: String, val qualifiers: Set<ClassName>)
+@InternalMoshiCodegenApi
+public data class QualifierAdapterProperty(val name: String, val qualifiers: Set<ClassName>)
