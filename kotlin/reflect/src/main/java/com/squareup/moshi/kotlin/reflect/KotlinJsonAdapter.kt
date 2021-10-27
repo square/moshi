@@ -27,6 +27,7 @@ import com.squareup.moshi.internal.Util.resolve
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import java.util.TreeMap
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KParameter
@@ -227,7 +228,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     val parametersByName = constructor.parameters.associateBy { it.name }
     constructor.isAccessible = true
 
-    val bindingsByName = LinkedHashMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
+    val bindingsByName = TreeMap<String, KotlinJsonAdapter.Binding<Any, Any?>>()
 
     for (property in rawTypeKotlin.memberProperties) {
       val parameter = parametersByName[property.name]
