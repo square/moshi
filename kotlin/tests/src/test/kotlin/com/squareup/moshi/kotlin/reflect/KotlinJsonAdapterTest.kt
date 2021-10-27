@@ -886,28 +886,6 @@ class KotlinJsonAdapterTest {
     assertThat(adapter.toJson(value)).isEqualTo(json)
   }
 
-  @Test fun mixingReflectionAndCodegen() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
-    val generatedAdapter = moshi.adapter<UsesGeneratedAdapter>()
-    val reflectionAdapter = moshi.adapter<UsesReflectionAdapter>()
-
-    assertThat(generatedAdapter.toString())
-      .isEqualTo("GeneratedJsonAdapter(KotlinJsonAdapterTest.UsesGeneratedAdapter).nullSafe()")
-    assertThat(reflectionAdapter.toString())
-      .isEqualTo(
-        "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest" +
-          ".UsesReflectionAdapter).nullSafe()"
-      )
-  }
-
-  @JsonClass(generateAdapter = true)
-  class UsesGeneratedAdapter(var a: Int, var b: Int)
-
-  @JsonClass(generateAdapter = false)
-  class UsesReflectionAdapter(var a: Int, var b: Int)
-
   @Retention(RUNTIME)
   @JsonQualifier
   annotation class Uppercase

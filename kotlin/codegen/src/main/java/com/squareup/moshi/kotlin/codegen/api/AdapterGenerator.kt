@@ -185,26 +185,31 @@ internal class AdapterGenerator(
     result.addAnnotation(COMMON_SUPPRESS)
     result.addType(generatedAdapter)
     val proguardConfig = if (generateProguardRules) {
-      generatedAdapter.createProguardRule()
+      generatedAdapter.createProguardRule(target.instantiateAnnotations)
     } else {
       null
     }
     return PreparedAdapter(result.build(), proguardConfig)
   }
 
-  private fun TypeSpec.createProguardRule(): ProguardConfig {
-    val adapterProperties = propertySpecs
-      .asSequence()
-      .filter { prop ->
-        prop.type.rawType() == JsonAdapter::class.asClassName()
-      }
-      .filter { prop -> prop.annotations.isNotEmpty() }
-      .mapTo(mutableSetOf()) { prop ->
-        QualifierAdapterProperty(
-          name = prop.name,
-          qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
-        )
-      }
+  private fun TypeSpec.createProguardRule(instantiateAnnotations: Boolean): ProguardConfig {
+    val adapterProperties = if (instantiateAnnotations) {
+      // Don't need to do anything special if we instantiate them directly!
+      emptySet()
+    } else {
+      propertySpecs
+        .asSequence()
+        .filter { prop ->
+          prop.type.rawType() == JsonAdapter::class.asClassName()
+        }
+        .filter { prop -> prop.annotations.isNotEmpty() }
+        .mapTo(mutableSetOf()) { prop ->
+          QualifierAdapterProperty(
+            name = prop.name,
+            qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
+          )
+        }
+    }
 
     val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
       1 -> listOf(CN_MOSHI.reflectionName())
@@ -643,13 +648,14 @@ internal class AdapterGenerator(
         continue // Property already handled.
       }
       if (property.hasLocalIsPresentName) {
+        result.beginControlFlow("if (%N)", property.localIsPresentName)
         result.addStatement(
-          "%1N.%2N = if (%3N) %4N else %1N.%2N",
+          "%N.%N = %N",
           resultName,
           property.name,
-          property.localIsPresentName,
           property.localName
         )
+        result.endControlFlow()
       } else {
         result.addStatement(
           "%1N.%2N = %3N ?: %1N.%2N",

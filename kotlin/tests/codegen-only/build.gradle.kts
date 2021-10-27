@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,12 @@ enum class TestMode {
 
 val testMode = findProperty("kotlinTestMode")?.toString()
   ?.let(TestMode::valueOf)
-  ?: REFLECT
+  ?: KSP
 
 when (testMode) {
   REFLECT -> {
-    // Do nothing!
+    // Default to KSP. This is a CI-only thing
+    apply(plugin = "com.google.devtools.ksp")
   }
   KAPT -> {
     apply(plugin = "org.jetbrains.kotlin.kapt")
@@ -66,7 +67,8 @@ tasks.withType<KotlinCompile>().configureEach {
 dependencies {
   when (testMode) {
     REFLECT -> {
-      // Do nothing
+      // Default to KSP in this case, this is a CI-only thing
+      "kspTest"(project(":kotlin:codegen"))
     }
     KAPT -> {
       "kaptTest"(project(":kotlin:codegen"))

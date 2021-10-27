@@ -29,9 +29,10 @@ val java16 by sourceSets.creating {
 }
 
 tasks.named<JavaCompile>("compileJava16Java") {
+  // We use JDK 17 for latest but target 16 for maximum compatibility
   javaCompiler.set(
     javaToolchains.compilerFor {
-      languageVersion.set(JavaLanguageVersion.of(16))
+      languageVersion.set(JavaLanguageVersion.of(17))
     }
   )
   options.release.set(16)

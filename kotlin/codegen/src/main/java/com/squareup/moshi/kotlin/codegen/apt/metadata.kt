@@ -19,12 +19,10 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DelicateKotlinPoetApi
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview
@@ -37,7 +35,6 @@ import com.squareup.kotlinpoet.metadata.isLocal
 import com.squareup.kotlinpoet.metadata.isPublic
 import com.squareup.kotlinpoet.metadata.isSealed
 import com.squareup.kotlinpoet.tag
-import com.squareup.kotlinpoet.tags.TypeAliasTag
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
@@ -46,15 +43,14 @@ import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
 import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
-import com.squareup.moshi.kotlin.codegen.api.deepCopy
 import com.squareup.moshi.kotlin.codegen.api.rawType
+import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.jvm.signature
 import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
-import java.util.TreeSet
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -75,6 +71,7 @@ private val VISIBILITY_MODIFIERS = setOf(
   KModifier.PROTECTED,
   KModifier.PUBLIC
 )
+private val ANNOTATION_INSTANTIATION_MIN_VERSION = KotlinVersion(1, 6, 0)
 
 private fun Collection<KModifier>.visibility(): KModifier {
   return find { it in VISIBILITY_MODIFIERS } ?: KModifier.PUBLIC
@@ -126,7 +123,8 @@ internal fun targetType(
   elements: Elements,
   types: Types,
   element: TypeElement,
-  cachedClassInspector: MoshiCachedClassInspector
+  cachedClassInspector: MoshiCachedClassInspector,
+  instantiateAnnotationsEnabled: Boolean
 ): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
@@ -208,6 +206,11 @@ internal fun targetType(
     }
   }
 
+  val instantiateAnnotations = instantiateAnnotationsEnabled && run {
+    val (major, minor, patch) = typeMetadata.metadataVersion
+    val languageVersion = KotlinVersion(major, minor, patch)
+    languageVersion >= ANNOTATION_INSTANTIATION_MIN_VERSION
+  }
   val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
@@ -323,7 +326,8 @@ internal fun targetType(
     properties = properties,
     typeVariables = typeVariables,
     isDataClass = KModifier.DATA in kotlinApi.modifiers,
-    visibility = resolvedVisibility
+    visibility = resolvedVisibility,
+    instantiateAnnotations = instantiateAnnotations
   )
 }
 
@@ -422,7 +426,8 @@ private val TargetProperty.isVisible: Boolean
 internal fun TargetProperty.generator(
   messager: Messager,
   sourceElement: TypeElement,
-  elements: Elements
+  elements: Elements,
+  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (isTransient) {
     if (!hasDefault) {
@@ -433,7 +438,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
   }
 
   if (!isVisible) {
@@ -456,6 +461,7 @@ internal fun TargetProperty.generator(
     // Check Java types since that covers both Java and Kotlin annotations.
     val annotationElement = elements.getTypeElement(qualifierRawType.canonicalName)
       ?: continue
+
     annotationElement.getAnnotation(Retention::class.java)?.let {
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(
@@ -464,12 +470,14 @@ internal fun TargetProperty.generator(
         )
       }
     }
-    annotationElement.getAnnotation(Target::class.java)?.let {
-      if (ElementType.FIELD !in it.value) {
-        messager.printMessage(
-          ERROR,
-          "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-        )
+    if (!instantiateAnnotations) {
+      annotationElement.getAnnotation(Target::class.java)?.let {
+        if (ElementType.FIELD !in it.value) {
+          messager.printMessage(
+            ERROR,
+            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
+          )
+        }
       }
     }
   }
@@ -482,7 +490,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
   )
 }
 
@@ -514,30 +522,6 @@ private fun List<AnnotationSpec>?.jsonName(): String? {
 
 private fun String.escapeDollarSigns(): String {
   return replace("\$", "\${\'\$\'}")
-}
-
-internal fun TypeName.unwrapTypeAlias(): TypeName {
-  return when (this) {
-    is ClassName -> {
-      tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
-        // If any type is nullable, then the whole thing is nullable
-        var isAnyNullable = isNullable
-        // Keep track of all annotations across type levels. Sort them too for consistency.
-        val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
-          addAll(annotations)
-        }
-        val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
-        runningAnnotations.addAll(nestedUnwrappedType.annotations)
-        isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
-        nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
-      } ?: this
-    }
-    is ParameterizedTypeName -> deepCopy(TypeName::unwrapTypeAlias)
-    is TypeVariableName -> deepCopy(transform = TypeName::unwrapTypeAlias)
-    is WildcardTypeName -> deepCopy(TypeName::unwrapTypeAlias)
-    is LambdaTypeName -> deepCopy(TypeName::unwrapTypeAlias)
-    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
-  }
 }
 
 internal val TypeElement.metadata: Metadata
