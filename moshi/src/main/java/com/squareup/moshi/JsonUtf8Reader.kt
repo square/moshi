@@ -15,14 +15,14 @@
  */
 package com.squareup.moshi
 
-import java.io.EOFException
-import java.io.IOException
-import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.buffer
+import java.io.EOFException
+import java.io.IOException
+import java.math.BigDecimal
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON.  */
