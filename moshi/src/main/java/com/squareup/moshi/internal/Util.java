@@ -43,14 +43,17 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 public final class Util {
   public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
   public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
+  public static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[] {};
   @Nullable public static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
   @Nullable private static final Class<? extends Annotation> METADATA;
+  public static final boolean SUPPORTS_OPTIONAL;
 
   /** A map from primitive types to their corresponding wrapper types. */
   private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
@@ -86,6 +89,15 @@ public final class Util {
     primToWrap.put(void.class, Void.class);
 
     PRIMITIVE_TO_WRAPPER_TYPE = Collections.unmodifiableMap(primToWrap);
+
+    boolean localSupportsOptional;
+    try {
+      Class.forName("java.util.Optional");
+      localSupportsOptional = true;
+    } catch (ClassNotFoundException ignored) {
+      localSupportsOptional = false;
+    }
+    SUPPORTS_OPTIONAL = localSupportsOptional;
   }
 
   // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metada
@@ -147,6 +159,10 @@ public final class Util {
         || name.startsWith("kotlin.")
         || name.startsWith("kotlinx.")
         || name.startsWith("scala.");
+  }
+
+  public static boolean isOptionalType(Type type) {
+    return SUPPORTS_OPTIONAL && Optional.class.isAssignableFrom(Types.getRawType(type));
   }
 
   /** Throws the cause of {@code e}, wrapping it if it is checked. */
