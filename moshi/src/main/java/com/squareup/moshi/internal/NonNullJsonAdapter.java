@@ -37,7 +37,7 @@ public final class NonNullJsonAdapter<T> extends JsonAdapter<T> {
   @Nullable
   @Override
   public T fromJson(JsonReader reader) throws IOException {
-    if (reader.peek() == JsonReader.Token.NULL) {
+    if (reader.peek() == JsonReader.Token.NULL && !(delegate instanceof OptionalJsonAdapter)) {
       throw new JsonDataException("Unexpected null at " + reader.getPath());
     } else {
       return delegate.fromJson(reader);

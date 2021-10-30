@@ -28,6 +28,7 @@ import com.squareup.moshi.internal.Util.resolve
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import java.util.Optional
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KMutableProperty1
@@ -100,6 +101,9 @@ internal class KotlinJsonAdapter<T>(
     for (i in 0 until constructorSize) {
       if (values[i] === ABSENT_VALUE) {
         when {
+          Util.isOptionalType(constructor.parameters[i].type.javaType) -> {
+            values[i] = Optional.empty<Any>()
+          }
           constructor.parameters[i].isOptional -> isFullInitialized = false
           constructor.parameters[i].type.isMarkedNullable -> values[i] = null // Replace absent with null.
           else -> throw Util.missingProperty(
@@ -122,7 +126,11 @@ internal class KotlinJsonAdapter<T>(
     for (i in constructorSize until allBindings.size) {
       val binding = allBindings[i]!!
       val value = values[i]
-      binding.set(result, value)
+      if (value === ABSENT_VALUE && Util.isOptionalType(binding.property.returnType.javaType)) {
+        binding.set(result, Optional.empty<Any>())
+      } else {
+        binding.set(result, value)
+      }
     }
 
     return result

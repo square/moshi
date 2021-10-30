@@ -18,20 +18,51 @@ package com.squareup.moshi.kotlin.reflect
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapter
 import org.junit.Test
+import java.util.Optional
 
+@OptIn(ExperimentalStdlibApi::class)
 class KotlinJsonAdapterTest {
+
+  private val moshi = Moshi.Builder()
+    .add(KotlinJsonAdapterFactory())
+    .build()
+
   @JsonClass(generateAdapter = true)
   class Data
 
   @Test
   fun fallsBackToReflectiveAdapterWithoutCodegen() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
     val adapter = moshi.adapter(Data::class.java)
     assertThat(adapter.toString()).isEqualTo(
       "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
     )
   }
+
+  @Test
+  fun adapterBehavior() {
+    val adapter = moshi.adapter<Optional<String>>()
+    assertThat(adapter.fromJson("\"foo\"")).isEqualTo(Optional.of("foo"))
+    assertThat(adapter.fromJson("null")).isEqualTo(Optional.empty<Any>())
+  }
+
+  @Test
+  fun smokeTest() {
+    val adapter = moshi.adapter<TestClass>()
+    assertThat(adapter.fromJson("{\"optionalString\":\"foo\",\"regular\":\"bar\"}"))
+      .isEqualTo(TestClass(Optional.of("foo"), "bar"))
+    assertThat(adapter.fromJson("{\"optionalString\":null,\"regular\":\"bar\"}"))
+      .isEqualTo(TestClass(Optional.empty<String>(), "bar"))
+    assertThat(adapter.fromJson("{\"regular\":\"bar\"}"))
+      .isEqualTo(TestClass(Optional.empty<String>(), "bar"))
+    assertThat(adapter.toJson(TestClass(Optional.of("foo"), "bar")))
+      .isEqualTo("{\"optionalString\":\"foo\",\"regular\":\"bar\"}")
+    assertThat(adapter.toJson(TestClass(Optional.empty<String>(), "bar")))
+      .isEqualTo("{\"regular\":\"bar\"}")
+    assertThat(adapter.toJson(TestClass(Optional.empty<String>(), "bar")))
+      .isEqualTo("{\"regular\":\"bar\"}")
+  }
+
+  data class TestClass(val optionalString: Optional<String>, val regular: String)
 }
