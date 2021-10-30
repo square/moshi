@@ -107,17 +107,17 @@ enum Suit {
     <summary>Kotlin</summary>
 
 ```kotlin
-class BlackjackHand {
+class BlackjackHand(
   val hidden_card: Card,
   val visible_cards: List<Card>,
   ...
-}
+)
 
-class Card {
-  val rank: Char
+class Card(
+  val rank: Char,
   val suit: Suit
   ...
-}
+)
 
 enum class Suit {
   CLUBS, DIAMONDS, HEARTS, SPADES;
@@ -280,10 +280,10 @@ class Event {
     <summary>Kotlin</summary>
 
 ```kotlin
-class Event {
-  val title: String
+class Event(
+  val title: String,
   val beginDateAndTime: String
-}
+)
 ```
 </details>
 
@@ -307,11 +307,11 @@ class EventJson {
     <summary>Kotlin</summary>
 
 ```kotlin
-class EventJson {
-  val title: String
-  val begin_date: String
+class EventJson(
+  val title: String,
+  val begin_date: String,
   val begin_time: String
-}
+)
 ```
 </details>
 
@@ -631,12 +631,12 @@ class Rectangle {
 <details>
     <summary>Kotlin</summary>
 
-```java
-class Rectangle {
-  val width: Int
-  val height: Int
+```kotlin
+class Rectangle(
+  val width: Int,
+  val height: Int,
   val color: Int
-}
+)
 ```
 </details>
 
@@ -692,11 +692,11 @@ class Rectangle {
     <summary>Kotlin</summary>
 
 ```kotlin
-class Rectangle {
-  val width: Int
-  val height: Int
+class Rectangle(
+  val width: Int,
+  val height: Int,
   @HexColor val color: Int
-}
+)
 ```
 </details>
 
@@ -760,11 +760,11 @@ public final class BlackjackHand {
     <summary>Kotlin</summary>
 
 ```kotlin
-class BlackjackHand {
-  private val total: Int
+class BlackjackHand(
+  private val total: Int,
   
   ...
-}
+)
 ```
 </details>
 
@@ -787,11 +787,11 @@ public final class BlackjackHand {
     <summary>Kotlin</summary>
 
 ```kotlin
-class BlackjackHand {
-  @Transient private val total: Int
+class BlackjackHand(
+  @Transient private val total: Int,
   
   ...
-}
+)
 ```
 </details>
 
@@ -806,10 +806,9 @@ the field’s value. Which value it uses depends on whether the class has a no-a
 
 If the class has a no-arguments constructor, Moshi will call that constructor and whatever value
 it assigns will be used. For example, because this class has a no-arguments constructor the `total`
-field is initialized to `-1`.
+field is initialized to `-1`. 
 
-<details open>
-    <summary>Java</summary>
+Note: This section only applies to Java reflections.
 
 ```java
 public final class BlackjackHand {
@@ -824,34 +823,12 @@ public final class BlackjackHand {
   }
 }
 ```
-</details>
-
-<details>
-    <summary>Kotlin</summary>
-
-```kotlin
-class BlackjackHand {
-  private val total = -1
-  ...
-
-  private constructor() {
-    
-  }
-  
-  constructor(hidden_card: Card?, visible_cards: List<Card?>?) {
-    ...
-  }
-}
-```
-</details>
 
 If the class doesn’t have a no-arguments constructor, Moshi can’t assign the field’s default value,
 **even if it’s specified in the field declaration**. Instead, the field’s default is always `0` for
 numbers, `false` for booleans, and `null` for references. In this example, the default value of
 `total` is `0`!
 
-<details open>
-    <summary>Java</summary>
 
 ```java
 public final class BlackjackHand {
@@ -863,25 +840,11 @@ public final class BlackjackHand {
   }
 }
 ```
-</details>
-
-<details>
-    <summary>Kotlin</summary>
-
-```kotlin
-class BlackjackHand(hidden_card: Card?, visible_cards: List<Card>?) {
-  private val total = -1
-  ...
-}
-```
-</details>
 
 This is surprising and is a potential source of bugs! For this reason consider defining a
-no-arguments constructor in classes that you use with Moshi, using `@SuppressWarnings("unused")` for
-Java and `Suppress("unused")` for Kotlin to prevent it from being inadvertently deleted later:
+no-arguments constructor in classes that you use with Moshi, using `@SuppressWarnings("unused")` to
+prevent it from being inadvertently deleted later:
 
-<details open>
-    <summary>Java</summary>
 
 ```java
 public final class BlackjackHand {
@@ -897,27 +860,6 @@ public final class BlackjackHand {
   }
 }
 ```
-</details>
-
-<details>
-    <summary>Kotlin</summary>
-
-```kotlin
-class BlackjackHand {
-  private val total = -1
-  ...
-  
-  @Suppress("unused") // Moshi uses this!
-  private constructor() {
-    
-  }
-  
-  constructor(hidden_card: Card?, visible_cards: List<Card?>?) {
-    ...
-  }
-}
-```
-</details>
 
 ### Composing Adapters
 
@@ -1011,11 +953,11 @@ static class Car {
 
 ```kotlin
 @AlwaysSerializeNulls
-class Car {
-  val make: String
-  val model: String
-  val color: String
-}
+class Car(
+  val make: String?,
+  val model: String?,
+  val color: String?
+)
 ```
 </details>
 
