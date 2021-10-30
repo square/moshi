@@ -32,6 +32,7 @@ tasks.withType<KotlinCompile>().configureEach {
       "-Xopt-in=kotlin.RequiresOptIn",
       "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
       "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview",
+      "-Xopt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
   }
 }

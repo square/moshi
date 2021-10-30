@@ -18,7 +18,8 @@ package com.squareup.moshi.kotlin.codegen.api
 import com.squareup.kotlinpoet.KModifier
 
 /** A constructor in user code that should be called by generated code. */
-internal data class TargetConstructor(
+@InternalMoshiCodegenApi
+public data class TargetConstructor(
   val parameters: LinkedHashMap<String, TargetParameter>,
   val visibility: KModifier,
   val signature: String?

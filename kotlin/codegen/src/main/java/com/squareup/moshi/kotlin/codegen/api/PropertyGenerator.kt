@@ -20,21 +20,22 @@ import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.PropertySpec
 
 /** Generates functions to encode and decode a property as JSON. */
-internal class PropertyGenerator(
-  val target: TargetProperty,
-  val delegateKey: DelegateKey,
-  val isTransient: Boolean = false
+@InternalMoshiCodegenApi
+public class PropertyGenerator(
+  public val target: TargetProperty,
+  public val delegateKey: DelegateKey,
+  public val isTransient: Boolean = false
 ) {
-  val name = target.name
-  val jsonName = target.jsonName ?: target.name
-  val hasDefault = target.hasDefault
+  public val name: String = target.name
+  public val jsonName: String = target.jsonName ?: target.name
+  public val hasDefault: Boolean = target.hasDefault
 
-  lateinit var localName: String
-  lateinit var localIsPresentName: String
+  public lateinit var localName: String
+  public lateinit var localIsPresentName: String
 
-  val isRequired get() = !delegateKey.nullable && !hasDefault
+  public val isRequired: Boolean get() = !delegateKey.nullable && !hasDefault
 
-  val hasConstructorParameter get() = target.parameterIndex != -1
+  public val hasConstructorParameter: Boolean get() = target.parameterIndex != -1
 
   /**
    * IsPresent is required if the following conditions are met:
@@ -46,15 +47,15 @@ internal class PropertyGenerator(
    * This is used to indicate that presence should be checked first before possible assigning null
    * to an absent value
    */
-  val hasLocalIsPresentName = !isTransient && hasDefault && !hasConstructorParameter && delegateKey.nullable
-  val hasConstructorDefault = hasDefault && hasConstructorParameter
+  public val hasLocalIsPresentName: Boolean = !isTransient && hasDefault && !hasConstructorParameter && delegateKey.nullable
+  public val hasConstructorDefault: Boolean = hasDefault && hasConstructorParameter
 
-  fun allocateNames(nameAllocator: NameAllocator) {
+  internal fun allocateNames(nameAllocator: NameAllocator) {
     localName = nameAllocator.newName(name)
     localIsPresentName = nameAllocator.newName("${name}Set")
   }
 
-  fun generateLocalProperty(): PropertySpec {
+  internal fun generateLocalProperty(): PropertySpec {
     return PropertySpec.builder(localName, target.type.copy(nullable = true))
       .mutable(true)
       .apply {
@@ -70,7 +71,7 @@ internal class PropertyGenerator(
       .build()
   }
 
-  fun generateLocalIsPresentProperty(): PropertySpec {
+  internal fun generateLocalIsPresentProperty(): PropertySpec {
     return PropertySpec.builder(localIsPresentName, BOOLEAN)
       .mutable(true)
       .initializer("false")

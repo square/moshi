@@ -17,7 +17,8 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.ClassName
 
-internal object Options {
+@InternalMoshiCodegenApi
+public object Options {
   /**
    * This processing option can be specified to have a `@Generated` annotation
    * included in the generated code. It is not encouraged unless you need it for static analysis
@@ -27,14 +28,14 @@ internal object Options {
    *   * `"javax.annotation.processing.Generated"` (JRE 9+)
    *   * `"javax.annotation.Generated"` (JRE <9)
    */
-  const val OPTION_GENERATED: String = "moshi.generated"
+  public const val OPTION_GENERATED: String = "moshi.generated"
 
   /**
    * This boolean processing option can disable proguard rule generation.
    * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
    * This is enabled by default.
    */
-  const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
+  public const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
 
   /**
    * This boolean processing option controls whether or not Moshi will directly instantiate
@@ -42,9 +43,9 @@ internal object Options {
    * but can be disabled to restore the legacy behavior of storing annotations on generated adapter
    * fields and looking them up reflectively.
    */
-  const val OPTION_INSTANTIATE_ANNOTATIONS: String = "moshi.instantiateAnnotations"
+  public const val OPTION_INSTANTIATE_ANNOTATIONS: String = "moshi.instantiateAnnotations"
 
-  val POSSIBLE_GENERATED_NAMES = arrayOf(
+  public val POSSIBLE_GENERATED_NAMES: Map<String, ClassName> = arrayOf(
     ClassName("javax.annotation.processing", "Generated"),
     ClassName("javax.annotation", "Generated")
   ).associateBy { it.canonicalName }
