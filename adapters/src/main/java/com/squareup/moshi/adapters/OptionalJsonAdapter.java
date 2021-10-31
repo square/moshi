@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.AbsenceHandler;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
@@ -32,11 +31,9 @@ import javax.annotation.Nullable;
 /**
  * A {@link JsonAdapter} that serializes and deserializes {@link Optional}s.
  *
- * <p>This is one of two sides to supporting {@link Optional}s in Moshi and focuses solely on
- * handling explicit null values. The other side is reflective support for setting absent values.
+ * <p>This works by coercing absent keys and null values to {@link Optional#empty()}.
  */
-public final class OptionalJsonAdapter<T> extends JsonAdapter<Optional<T>>
-    implements AbsenceHandler<Optional<T>> {
+public final class OptionalJsonAdapter<T> extends JsonAdapter<Optional<T>> {
 
   public static final Factory FACTORY =
       new JsonAdapter.Factory() {
