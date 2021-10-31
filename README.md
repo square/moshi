@@ -1,8 +1,13 @@
 Moshi
 =====
 
-Moshi is a modern JSON library for Android and Java. It makes it easy to parse JSON into Java
-objects:
+Moshi is a modern JSON library for Android, Java and Kotlin. It makes it easy to parse JSON into Java and Kotlin
+classes:
+
+_Note: The Kotlin examples of this README assume use of either Kotlin code gen or `KotlinJsonAdapterFactory` for reflection. Plain Java-based reflection is unsupported on Kotlin classes._
+
+<details open>
+  <summary>Java</summary>
 
 ```java
 String json = ...;
@@ -13,8 +18,26 @@ JsonAdapter<BlackjackHand> jsonAdapter = moshi.adapter(BlackjackHand.class);
 BlackjackHand blackjackHand = jsonAdapter.fromJson(json);
 System.out.println(blackjackHand);
 ```
+</details>
 
-And it can just as easily serialize Java objects as JSON:
+<details>
+  <summary>Kotlin</summary>
+
+```kotlin
+val json: String = ...
+
+val moshi: Moshi = Moshi.Builder().build()
+val jsonAdapter: JsonAdapter<BlackjackHand> = moshi.adapter<BlackjackHand>()
+
+val blackjackHand = jsonAdapter.fromJson(json)
+println(blackjackHand)
+```
+</details>
+
+And it can just as easily serialize Java or Kotlin objects as JSON:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 BlackjackHand blackjackHand = new BlackjackHand(
@@ -27,6 +50,24 @@ JsonAdapter<BlackjackHand> jsonAdapter = moshi.adapter(BlackjackHand.class);
 String json = jsonAdapter.toJson(blackjackHand);
 System.out.println(json);
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val blackjackHand = BlackjackHand(
+    Card('6', SPADES),
+    listOf(Card('4', CLUBS), Card('A', HEARTS))
+  )
+
+val moshi: Moshi = Moshi.Builder().build()
+val jsonAdapter: JsonAdapter<BlackjackHand> = moshi.adapter<BlackjackHand>()
+
+val json: String = jsonAdapter.toJson(blackjackHand)
+println(json)
+```
+</details>
 
 ### Built-in Type Adapters
 
@@ -39,6 +80,9 @@ Moshi has built-in support for reading and writing Java’s core data types:
 
 It supports your model classes by writing them out field-by-field. In the example above Moshi uses
 these classes:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 class BlackjackHand {
@@ -57,6 +101,30 @@ enum Suit {
   CLUBS, DIAMONDS, HEARTS, SPADES;
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class BlackjackHand(
+  val hidden_card: Card,
+  val visible_cards: List<Card>,
+  ...
+)
+
+class Card(
+  val rank: Char,
+  val suit: Suit
+  ...
+)
+
+enum class Suit {
+  CLUBS, DIAMONDS, HEARTS, SPADES;
+}
+```
+</details>
+
 
 to read and write this JSON:
 
@@ -91,6 +159,9 @@ suit in separate fields: `{"rank":"A","suit":"HEARTS"}`. With a type adapter, we
 encoding to something more compact: `"4H"` for the four of hearts or `"JD"` for the jack of
 diamonds:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 class CardAdapter {
   @ToJson String toJson(Card card) {
@@ -111,14 +182,54 @@ class CardAdapter {
   }
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class CardAdapter {
+  @ToJson fun toJson(card: Card): String {
+    return card.rank + card.suit.name.substring(0, 1)
+  }
+
+  @FromJson fun fromJson(card: String): Card {
+    if (card.length != 2) throw JsonDataException("Unknown card: $card")
+
+    val rank = card[0]
+    return when (card[1]) {
+      'C' -> Card(rank, Suit.CLUBS)
+      'D' -> Card(rank, Suit.DIAMONDS)
+      'H' -> Card(rank, Suit.HEARTS)
+      'S' -> Card(rank, Suit.SPADES)
+      else -> throw JsonDataException("unknown suit: $card")
+    }
+  }
+}
+```
+</details>
 
 Register the type adapter with the `Moshi.Builder` and we’re good to go.
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 Moshi moshi = new Moshi.Builder()
     .add(new CardAdapter())
     .build();
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val moshi = Moshi.Builder()
+    .add(CardAdapter())
+    .build()
+```
+</details>
 
 Voilà:
 
@@ -154,16 +265,34 @@ We would like to combine these two fields into one string to facilitate the date
 later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event`
 class we want Moshi to produce like this:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 class Event {
   String title;
   String beginDateAndTime;
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class Event(
+  val title: String,
+  val beginDateAndTime: String
+)
+```
+</details>
 
 Instead of manually parsing the JSON line per line (which we could also do) we can have Moshi do the
 transformation automatically. We simply define another class `EventJson` that directly corresponds
 to the JSON structure:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 class EventJson {
@@ -172,12 +301,28 @@ class EventJson {
   String begin_time;
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class EventJson(
+  val title: String,
+  val begin_date: String,
+  val begin_time: String
+)
+```
+</details>
 
 And another class with the appropriate `@FromJson` and `@ToJson` methods that are telling Moshi how
 to convert an `EventJson` to an `Event` and back. Now, whenever we are asking Moshi to parse a JSON
 to an `Event` it will first parse it to an `EventJson` as an intermediate step. Conversely, to
 serialize an `Event` Moshi will first create an `EventJson` object and then serialize that object as
 usual.
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 class EventJsonAdapter {
@@ -197,21 +342,72 @@ class EventJsonAdapter {
   }
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class EventJsonAdapter {
+  @FromJson fun eventFromJson(eventJson: EventJson): Event {
+    val event = Event()
+    event.title = eventJson.title
+    event.beginDateAndTime = "${eventJson.begin_date} ${eventJson.begin_time}"
+    return event
+  }
+
+  @ToJson fun eventToJson(event: Event): EventJson {
+    val json = EventJson()
+    json.title = event.title
+    json.begin_date = event.beginDateAndTime.substring(0, 8)
+    json.begin_time = event.beginDateAndTime.substring(9, 14)
+    return json
+  }
+}
+```
+</details>
 
 Again we register the adapter with Moshi.
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 Moshi moshi = new Moshi.Builder()
     .add(new EventJsonAdapter())
     .build();
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val moshi = Moshi.Builder()
+    .add(EventJsonAdapter())
+    .builder
+```
+</details>
 
 We can now use Moshi to parse the JSON directly to an `Event`.
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 JsonAdapter<Event> jsonAdapter = moshi.adapter(Event.class);
 Event event = jsonAdapter.fromJson(json);
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val jsonAdapter = moshi.adapter<Event>()
+val event = jsonAdapter.fromJson(json)
+```
+</details>
 
 ### Adapter convenience methods
 
@@ -225,6 +421,9 @@ Moshi provides a number of convenience methods for `JsonAdapter` objects:
 
 These factory methods wrap an existing `JsonAdapter` into additional functionality.
 For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 String dateJson = "\"2018-11-26T11:04:19.342668Z\"";
@@ -242,6 +441,28 @@ Date nullDate = adapter.fromJson(nullDateJson);
 Date nullDate = adapter.nullSafe().fromJson(nullDateJson);
 System.out.println(nullDate); // null
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val dateJson = "\"2018-11-26T11:04:19.342668Z\""
+val nullDateJson = "null"
+
+// Hypothetical IsoDateDapter, doesn't support null by default
+val adapter: JsonAdapter<Date> = IsoDateDapter()
+
+val date = adapter.fromJson(dateJson)
+println(date) // Mon Nov 26 12:04:19 CET 2018
+
+val nullDate = adapter.fromJson(nullDateJson)
+// Exception, com.squareup.moshi.JsonDataException: Expected a string but was NULL at path $
+
+val nullDate = adapter.nullSafe().fromJson(nullDateJson)
+println(nullDate) // null
+```
+</details>
 
 In contrast to `nullSafe()` there is `nonNull()` to make an adapter refuse null values. Refer to the Moshi JavaDoc for details on the various methods.
 
@@ -264,12 +485,27 @@ Say we have a JSON string of this structure:
 
 We can now use Moshi to parse the JSON string into a `List<Card>`.
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 String cardsJsonResponse = ...;
 Type type = Types.newParameterizedType(List.class, Card.class);
 JsonAdapter<List<Card>> adapter = moshi.adapter(type);
 List<Card> cards = adapter.fromJson(cardsJsonResponse);
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+val cardsJsonResponse: String = ...
+// We can just use a reified extension!
+val adapter = moshi.adapter<List<Card>>()
+val cards: List<Card> = adapter.fromJson(cardsJsonResponse)
+```
+</details>
 
 ### Fails Gracefully
 
@@ -317,11 +553,11 @@ But the two libraries have a few important differences:
 
 ### Custom field names with @Json
 
-Moshi works best when your JSON objects and Java objects have the same structure. But when they
+Moshi works best when your JSON objects and Java or Kotlin classes have the same structure. But when they
 don't, Moshi has annotations to customize data binding.
 
-Use `@Json` to specify how Java fields map to JSON names. This is necessary when the JSON name
-contains spaces or other characters that aren’t permitted in Java field names. For example, this
+Use `@Json` to specify how Java fields or Kotlin properties map to JSON names. This is necessary when the JSON name
+contains spaces or other characters that aren’t permitted in Java field or Kotlin property names. For example, this
 JSON has a field name containing a space:
 
 ```json
@@ -331,7 +567,10 @@ JSON has a field name containing a space:
 }
 ```
 
-With `@Json` its corresponding Java class is easy:
+With `@Json` its corresponding Java or Kotlin class is easy:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 class Player {
@@ -341,9 +580,23 @@ class Player {
   ...
 }
 ```
+</details>
 
-Because JSON field names are always defined with their Java fields, Moshi makes it easy to find
-fields when navigating between Java and JSON.
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class Player {
+  val username: String
+  @Json(name = "lucky number") val luckyNumber: Int
+
+  ...
+}
+```
+</details>
+
+Because JSON field names are always defined with their Java or Kotlin fields, Moshi makes it easy to find
+fields when navigating between Java or Koltin and JSON.
 
 ### Alternate type adapters with @JsonQualifier
 
@@ -363,6 +616,9 @@ Here’s a JSON message with two integers and a color:
 
 By convention, Android programs also use `int` for colors:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 class Rectangle {
   int width;
@@ -370,8 +626,21 @@ class Rectangle {
   int color;
 }
 ```
+</details>
 
-But if we encoded the above Java class as JSON, the color isn't encoded properly!
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class Rectangle(
+  val width: Int,
+  val height: Int,
+  val color: Int
+)
+```
+</details>
+
+But if we encoded the above Java or Kotlin class as JSON, the color isn't encoded properly!
 
 ```json
 {
@@ -383,14 +652,32 @@ But if we encoded the above Java class as JSON, the color isn't encoded properly
 
 The fix is to define a qualifier annotation, itself annotated `@JsonQualifier`:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 @Retention(RUNTIME)
 @JsonQualifier
 public @interface HexColor {
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+@Retention(RUNTIME)
+@JsonQualifier
+annotation class HexColor
+```
+</details>
+
 
 Next apply this `@HexColor` annotation to the appropriate field:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 class Rectangle {
@@ -399,8 +686,24 @@ class Rectangle {
   @HexColor int color;
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class Rectangle(
+  val width: Int,
+  val height: Int,
+  @HexColor val color: Int
+)
+```
+</details>
 
 And finally define a type adapter to handle it:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 /** Converts strings like #ff0000 to the corresponding color ints. */
@@ -414,6 +717,24 @@ class ColorAdapter {
   }
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+/** Converts strings like #ff0000 to the corresponding color ints.  */
+class ColorAdapter {
+  @ToJson fun toJson(@HexColor rgb: Int): String {
+    return "#%06x".format(rgb)
+  }
+
+  @FromJson @HexColor fun fromJson(rgb: String): Int {
+    return rgb.substring(1).toInt(16)
+  }
+}
+```
+</details>
 
 Use `@JsonQualifier` when you need different JSON encodings for the same type. Most programs
 shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
@@ -423,6 +744,9 @@ shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
 hand has a `total` field with the sum of the cards:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 public final class BlackjackHand {
   private int total;
@@ -430,9 +754,25 @@ public final class BlackjackHand {
   ...
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class BlackjackHand(
+  private val total: Int,
+
+  ...
+)
+```
+</details>
 
 By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
-JSON. Prevent a field from being included by adding Java’s `transient` keyword:
+JSON. Prevent a field from being included by adding Java’s `transient` keyword or Kotlin's `@Transient` annotation:
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 public final class BlackjackHand {
@@ -441,6 +781,19 @@ public final class BlackjackHand {
   ...
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class BlackjackHand(...) {
+  @Transient var total: Int
+
+  ...
+}
+```
+</details>
 
 Transient fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
 JSON contains a value for the field. Instead, it will get a default value.
@@ -448,12 +801,14 @@ JSON contains a value for the field. Instead, it will get a default value.
 
 ### Default Values & Constructors
 
-When reading JSON that is missing a field, Moshi relies on the Java or Android runtime to assign
+When reading JSON that is missing a field, Moshi relies on the Java or Kotlin or Android runtime to assign
 the field’s value. Which value it uses depends on whether the class has a no-arguments constructor.
 
 If the class has a no-arguments constructor, Moshi will call that constructor and whatever value
 it assigns will be used. For example, because this class has a no-arguments constructor the `total`
 field is initialized to `-1`.
+
+Note: This section only applies to Java reflections.
 
 ```java
 public final class BlackjackHand {
@@ -474,6 +829,7 @@ If the class doesn’t have a no-arguments constructor, Moshi can’t assign the
 numbers, `false` for booleans, and `null` for references. In this example, the default value of
 `total` is `0`!
 
+
 ```java
 public final class BlackjackHand {
   private int total = -1;
@@ -488,6 +844,7 @@ public final class BlackjackHand {
 This is surprising and is a potential source of bugs! For this reason consider defining a
 no-arguments constructor in classes that you use with Moshi, using `@SuppressWarnings("unused")` to
 prevent it from being inadvertently deleted later:
+
 
 ```java
 public final class BlackjackHand {
@@ -511,6 +868,9 @@ adapters to build upon the standard conversion.
 
 In this example, we turn serialize nulls, then delegate to the built-in adapter:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 class TournamentWithNullsAdapter {
   @ToJson void toJson(JsonWriter writer, Tournament tournament,
@@ -525,6 +885,27 @@ class TournamentWithNullsAdapter {
   }
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class TournamentWithNullsAdapter {
+  @ToJson fun toJson(writer: JsonWriter, tournament: Tournament?,
+    delegate: JsonAdapter<Tournament?>) {
+    val wasSerializeNulls: Boolean = writer.getSerializeNulls()
+    writer.setSerializeNulls(true)
+    try {
+      delegate.toJson(writer, tournament)
+    } finally {
+      writer.setLenient(wasSerializeNulls)
+    }
+  }
+}
+```
+</details>
+
 
 When we use this to serialize a tournament, nulls are written! But nulls elsewhere in our JSON
 document are skipped as usual.
@@ -534,11 +915,28 @@ the encoding and decoding process for any type, even without knowing about the t
 this example, we customize types annotated `@AlwaysSerializeNulls`, which an annotation we create,
 not built-in to Moshi:
 
+<details open>
+    <summary>Java</summary>
+
 ```java
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface AlwaysSerializeNulls {}
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+@Target(TYPE)
+@Retention(RUNTIME)
+annotation class AlwaysSerializeNulls
+```
+</details>
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 @AlwaysSerializeNulls
@@ -548,10 +946,27 @@ static class Car {
   String color;
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+@AlwaysSerializeNulls
+class Car(
+  val make: String?,
+  val model: String?,
+  val color: String?
+)
+```
+</details>
 
 Each `JsonAdapter.Factory` interface is invoked by `Moshi` when it needs to build an adapter for a
 user's type. The factory either returns an adapter to use, or null if it doesn't apply to the
 requested type. In our case we match all classes that have our annotation.
+
+<details open>
+    <summary>Java</summary>
 
 ```java
 static class AlwaysSerializeNullsFactory implements JsonAdapter.Factory {
@@ -567,6 +982,24 @@ static class AlwaysSerializeNullsFactory implements JsonAdapter.Factory {
   }
 }
 ```
+</details>
+
+<details>
+    <summary>Kotlin</summary>
+
+```kotlin
+class AlwaysSerializeNullsFactory : JsonAdapter.Factory {
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+    val rawType: Class<*> = type.rawType
+    if (!rawType.isAnnotationPresent(AlwaysSerializeNulls::class.java)) {
+      return null
+    }
+    val delegate: JsonAdapter<Any> = moshi.nextAdapter(this, type, annotations)
+    return delegate.serializeNulls()
+  }
+}
+```
+</details>
 
 After determining that it applies, the factory looks up Moshi's built-in adapter by calling
 `Moshi.nextAdapter()`. This is key to the composition mechanism: adapters delegate to each other!
@@ -643,8 +1076,8 @@ encode as JSON:
 ```kotlin
 @JsonClass(generateAdapter = true)
 data class BlackjackHand(
-        val hidden_card: Card,
-        val visible_cards: List<Card>
+  val hidden_card: Card,
+  val visible_cards: List<Card>
 )
 ```
 
