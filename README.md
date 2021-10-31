@@ -37,7 +37,7 @@ println(blackjackHand)
 And it can just as easily serialize Java or Kotlin objects as JSON:
 
 <details open>
-    <summary>Java</summary>    
+    <summary>Java</summary>
 
 ```java
 BlackjackHand blackjackHand = new BlackjackHand(
@@ -82,7 +82,7 @@ It supports your model classes by writing them out field-by-field. In the exampl
 these classes:
 
 <details open>
-    <summary>Java</summary>    
+    <summary>Java</summary>
 
 ```java
 class BlackjackHand {
@@ -195,7 +195,7 @@ class CardAdapter {
 
   @FromJson fun fromJson(card: String): Card {
     if (card.length != 2) throw JsonDataException("Unknown card: $card")
-    
+
     val rank = card[0]
     return when (card[1]) {
       'C' -> Card(rank, Suit.CLUBS)
@@ -589,7 +589,7 @@ class Player {
 class Player {
   val username: String
   @Json(name = "lucky number") val luckyNumber: Int
-    
+
   ...
 }
 ```
@@ -732,7 +732,7 @@ class ColorAdapter {
   @FromJson @HexColor fun fromJson(rgb: String): Int {
     return rgb.substring(1).toInt(16)
   }
-} 
+}
 ```
 </details>
 
@@ -762,7 +762,7 @@ public final class BlackjackHand {
 ```kotlin
 class BlackjackHand(
   private val total: Int,
-  
+
   ...
 )
 ```
@@ -789,7 +789,7 @@ public final class BlackjackHand {
 ```kotlin
 class BlackjackHand(...) {
   @Transient var total: Int
-  
+
   ...
 }
 ```
@@ -806,7 +806,7 @@ the field’s value. Which value it uses depends on whether the class has a no-a
 
 If the class has a no-arguments constructor, Moshi will call that constructor and whatever value
 it assigns will be used. For example, because this class has a no-arguments constructor the `total`
-field is initialized to `-1`. 
+field is initialized to `-1`.
 
 Note: This section only applies to Java reflections.
 
