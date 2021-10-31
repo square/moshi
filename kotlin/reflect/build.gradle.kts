@@ -24,6 +24,7 @@ dependencies {
   api(kotlin("reflect"))
 
   testImplementation(kotlin("test"))
+  testImplementation(project(":adapters"))
   testImplementation(libs.junit)
   testImplementation(libs.truth)
 }

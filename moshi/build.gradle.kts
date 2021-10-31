@@ -77,6 +77,7 @@ dependencies {
   api(libs.okio)
 
   testCompileOnly(libs.jsr305)
+  testImplementation(project(":adapters"))
   testImplementation(libs.junit)
   testImplementation(libs.truth)
 }

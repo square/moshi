@@ -13,13 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.internal;
+package com.squareup.moshi.adapters;
 
+import com.squareup.moshi.AbsenceHandler;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -28,11 +35,31 @@ import javax.annotation.Nullable;
  * <p>This is one of two sides to supporting {@link Optional}s in Moshi and focuses solely on
  * handling explicit null values. The other side is reflective support for setting absent values.
  */
-public final class OptionalJsonAdapter<T> extends JsonAdapter<Optional<T>> {
+public final class OptionalJsonAdapter<T> extends JsonAdapter<Optional<T>>
+    implements AbsenceHandler<Optional<T>> {
+
+  public static final Factory FACTORY =
+      new JsonAdapter.Factory() {
+        @Nullable
+        @Override
+        public JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          if (type instanceof ParameterizedType && Types.getRawType(type) == Optional.class) {
+            return new OptionalJsonAdapter<>(
+                moshi.adapter(((ParameterizedType) type).getActualTypeArguments()[0]));
+          }
+          return null;
+        }
+
+        @Override
+        public String toString() {
+          return "OptionalJsonAdapterFactory";
+        }
+      };
 
   private final JsonAdapter<T> delegate;
 
-  public OptionalJsonAdapter(JsonAdapter<T> delegate) {
+  private OptionalJsonAdapter(JsonAdapter<T> delegate) {
     this.delegate = delegate;
   }
 
@@ -53,5 +80,15 @@ public final class OptionalJsonAdapter<T> extends JsonAdapter<Optional<T>> {
     } else {
       writer.nullValue();
     }
+  }
+
+  @Override
+  public boolean handlesAbsence() {
+    return true;
+  }
+
+  @Override
+  public Optional<T> onAbsence(String key) {
+    return Optional.empty();
   }
 }

@@ -36,7 +36,12 @@ import okio.BufferedSource;
  *
  * <p>Custom JsonAdapter implementations should be designed to be thread-safe.
  */
-public abstract class JsonAdapter<T> {
+public abstract class JsonAdapter<T> implements AbsenceHandler<T> {
+
+  @Override
+  public boolean handlesAbsence() {
+    return false;
+  }
 
   /**
    * Decodes a nullable instance of type {@link T} from the given {@code reader}.
@@ -138,6 +143,16 @@ public abstract class JsonAdapter<T> {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override
+      public boolean handlesAbsence() {
+        return delegate.handlesAbsence();
+      }
+
+      @Override
+      public T onAbsence(String key) {
+        return delegate.onAbsence(key);
+      }
+
+      @Override
       public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);
       }
@@ -198,6 +213,16 @@ public abstract class JsonAdapter<T> {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override
+      public boolean handlesAbsence() {
+        return delegate.handlesAbsence();
+      }
+
+      @Override
+      public T onAbsence(String key) {
+        return delegate.onAbsence(key);
+      }
+
+      @Override
       public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean lenient = reader.isLenient();
         reader.setLenient(true);
@@ -242,6 +267,16 @@ public abstract class JsonAdapter<T> {
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
       @Override
+      public boolean handlesAbsence() {
+        return delegate.handlesAbsence();
+      }
+
+      @Override
+      public T onAbsence(String key) {
+        return delegate.onAbsence(key);
+      }
+
+      @Override
       public @Nullable T fromJson(JsonReader reader) throws IOException {
         boolean skipForbidden = reader.failOnUnknown();
         reader.setFailOnUnknown(true);
@@ -284,6 +319,16 @@ public abstract class JsonAdapter<T> {
     }
     final JsonAdapter<T> delegate = this;
     return new JsonAdapter<T>() {
+      @Override
+      public boolean handlesAbsence() {
+        return delegate.handlesAbsence();
+      }
+
+      @Override
+      public T onAbsence(String key) {
+        return delegate.onAbsence(key);
+      }
+
       @Override
       public @Nullable T fromJson(JsonReader reader) throws IOException {
         return delegate.fromJson(reader);

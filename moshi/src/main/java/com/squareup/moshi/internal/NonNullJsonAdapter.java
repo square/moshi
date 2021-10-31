@@ -34,10 +34,20 @@ public final class NonNullJsonAdapter<T> extends JsonAdapter<T> {
     return delegate;
   }
 
+  @Override
+  public boolean handlesAbsence() {
+    return delegate.handlesAbsence();
+  }
+
+  @Override
+  public T onAbsence(String key) {
+    return delegate.onAbsence(key);
+  }
+
   @Nullable
   @Override
   public T fromJson(JsonReader reader) throws IOException {
-    if (reader.peek() == JsonReader.Token.NULL && !(delegate instanceof OptionalJsonAdapter)) {
+    if (reader.peek() == JsonReader.Token.NULL && !delegate.handlesAbsence()) {
       throw new JsonDataException("Unexpected null at " + reader.getPath());
     } else {
       return delegate.fromJson(reader);

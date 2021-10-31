@@ -52,7 +52,6 @@ public final class Moshi {
     BUILT_IN_FACTORIES.add(MapJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(ArrayJsonAdapter.FACTORY);
     BUILT_IN_FACTORIES.add(RecordJsonAdapter.FACTORY);
-    BUILT_IN_FACTORIES.add(OptionalJsonAdapterFactory.INSTANCE);
     BUILT_IN_FACTORIES.add(ClassJsonAdapter.FACTORY);
   }
 

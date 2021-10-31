@@ -17,6 +17,7 @@ package com.squareup.moshi;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.squareup.moshi.adapters.OptionalJsonAdapter;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,7 +25,7 @@ import org.junit.Test;
 
 public final class OptionalTest {
 
-  private final Moshi moshi = new Moshi.Builder().build();
+  private final Moshi moshi = new Moshi.Builder().add(OptionalJsonAdapter.FACTORY).build();
 
   @Test
   public void adapterBehavior() throws IOException {

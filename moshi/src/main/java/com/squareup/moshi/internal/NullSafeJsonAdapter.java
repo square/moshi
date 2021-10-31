@@ -34,6 +34,16 @@ public final class NullSafeJsonAdapter<T> extends JsonAdapter<T> {
   }
 
   @Override
+  public boolean handlesAbsence() {
+    return delegate.handlesAbsence();
+  }
+
+  @Override
+  public T onAbsence(String key) {
+    return delegate.onAbsence(key);
+  }
+
+  @Override
   public @Nullable T fromJson(JsonReader reader) throws IOException {
     if (reader.peek() == JsonReader.Token.NULL) {
       return reader.nextNull();

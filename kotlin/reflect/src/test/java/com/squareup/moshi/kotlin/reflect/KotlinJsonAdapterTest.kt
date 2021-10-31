@@ -19,6 +19,7 @@ import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
+import com.squareup.moshi.adapters.OptionalJsonAdapter
 import org.junit.Test
 import java.util.Optional
 
@@ -26,7 +27,8 @@ import java.util.Optional
 class KotlinJsonAdapterTest {
 
   private val moshi = Moshi.Builder()
-    .add(KotlinJsonAdapterFactory())
+    .add(OptionalJsonAdapter.FACTORY)
+    .addLast(KotlinJsonAdapterFactory())
     .build()
 
   @JsonClass(generateAdapter = true)

@@ -28,7 +28,6 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
@@ -138,7 +137,6 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
             // Look up a type adapter for this type.
             Type fieldType = resolve(type, rawType, field.getGenericType());
-            boolean isOptional = Util.isOptionalType(fieldType);
             Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
             String fieldName = field.getName();
             JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations, fieldName);
@@ -149,8 +147,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
             // Store it using the field's name. If there was already a field with this name, fail!
             Json jsonAnnotation = field.getAnnotation(Json.class);
             String name = jsonAnnotation != null ? jsonAnnotation.name() : fieldName;
-            FieldBinding<Object> fieldBinding =
-                new FieldBinding<>(name, field, adapter, isOptional);
+            FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
             FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
             if (replaced != null) {
               throw new IllegalArgumentException(
@@ -183,10 +180,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
   @Override
   public T fromJson(JsonReader reader) throws IOException {
-    // TODO optimize by using empty array if optional isn't supported
-    boolean checkOptionals = Util.SUPPORTS_OPTIONAL;
-    boolean[] setOptionalFields =
-        checkOptionals ? new boolean[fieldsArray.length] : Util.EMPTY_BOOLEAN_ARRAY;
+    boolean[] setOptionalFields = new boolean[fieldsArray.length];
     T result;
     try {
       result = classFactory.newInstance();
@@ -207,24 +201,19 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
           reader.skipValue();
           continue;
         }
-        if (checkOptionals) {
-          setOptionalFields[index] = true;
-        }
+        setOptionalFields[index] = true;
         fieldsArray[index].read(reader, result);
       }
       reader.endObject();
-      if (checkOptionals) {
-        for (int i = 0; i < setOptionalFields.length; i++) {
-          if (setOptionalFields[i]) continue;
-          // Unset. If it's optional, set it to empty. Note that we bypass the adapter from the
-          // field
-          // even if it's OptionalJsonAdapter in case it was short-circuited by another adapter, we
-          // only
-          // trust ours. Our OptionalJsonAdapter may be wrapped by NullSafeJsonAdapter too.
-          FieldBinding<?> fieldBinding = fieldsArray[i];
-          if (fieldBinding.isOptional) {
-            fieldBinding.field.set(result, Optional.empty());
-          }
+      for (int i = 0; i < setOptionalFields.length; i++) {
+        if (setOptionalFields[i]) continue;
+        // Unset. If it's optional, set it to empty. Note that we bypass the adapter from the
+        // field even if it's OptionalJsonAdapter in case it was short-circuited by another adapter,
+        // we
+        // only trust ours. Our OptionalJsonAdapter may be wrapped by NullSafeJsonAdapter too.
+        FieldBinding<?> fieldBinding = fieldsArray[i];
+        if (fieldBinding.adapter.handlesAbsence()) {
+          fieldBinding.field.set(result, fieldBinding.adapter.onAbsence(fieldBinding.name));
         }
       }
       return result;
@@ -256,13 +245,11 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
     final String name;
     final Field field;
     final JsonAdapter<T> adapter;
-    final boolean isOptional;
 
-    FieldBinding(String name, Field field, JsonAdapter<T> adapter, boolean isOptional) {
+    FieldBinding(String name, Field field, JsonAdapter<T> adapter) {
       this.name = name;
       this.field = field;
       this.adapter = adapter;
-      this.isOptional = isOptional;
     }
 
     void read(JsonReader reader, Object value) throws IOException, IllegalAccessException {
