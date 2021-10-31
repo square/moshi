@@ -787,11 +787,11 @@ public final class BlackjackHand {
     <summary>Kotlin</summary>
 
 ```kotlin
-class BlackjackHand(
-  @Transient private val total: Int,
+class BlackjackHand(...) {
+  @Transient var total: Int
   
   ...
-)
+}
 ```
 </details>
 
@@ -1076,8 +1076,8 @@ encode as JSON:
 ```kotlin
 @JsonClass(generateAdapter = true)
 data class BlackjackHand(
-        val hidden_card: Card,
-        val visible_cards: List<Card>
+  val hidden_card: Card,
+  val visible_cards: List<Card>
 )
 ```
 
