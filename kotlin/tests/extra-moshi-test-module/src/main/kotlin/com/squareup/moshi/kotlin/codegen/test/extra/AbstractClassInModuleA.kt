@@ -16,11 +16,9 @@
 package com.squareup.moshi.kotlin.codegen.test.extra
 
 public abstract class AbstractClassInModuleA {
-  // Transients to ensure compiler sees them across module boundaries since @Transient is
+  // Transients to ensure processor sees them across module boundaries since @Transient is
   // SOURCE-only
-  @Transient
-  private lateinit var stringId: String
-
-  @Transient
-  private var alreadySet: String = "alreadySet"
+  // TODO uncomment these when https://github.com/google/ksp/issues/710 is fixed
+//  @Transient private lateinit var lateinitTransient: String
+//  @Transient private var regularTransient: String = "regularTransient"
 }
