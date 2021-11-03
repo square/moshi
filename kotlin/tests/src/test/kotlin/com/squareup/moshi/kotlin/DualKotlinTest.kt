@@ -648,23 +648,3 @@ typealias NullableB = B?
 typealias C = NullableA
 typealias D = C
 typealias E = D
-
-// Regression test for enum constants in annotations and array types
-// https://github.com/ZacSweers/MoshiX/issues/103
-@Retention(RUNTIME)
-@JsonQualifier
-annotation class UpperCase(val foo: Array<Foo>)
-
-enum class Foo { BAR }
-
-@JsonClass(generateAdapter = true)
-data class ClassWithQualifier(
-  @UpperCase(foo = [Foo.BAR])
-  val a: Int
-)
-
-// Regression for https://github.com/ZacSweers/MoshiX/issues/120
-@JsonClass(generateAdapter = true)
-data class DataClassInModuleB(
-  val id: String
-) : AbstractClassInModuleA()
