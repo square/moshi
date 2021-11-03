@@ -20,12 +20,10 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
-import com.squareup.moshi.kotlin.codegen.test.extra.AbstractClassInModuleA
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.fail
@@ -648,23 +646,3 @@ typealias NullableB = B?
 typealias C = NullableA
 typealias D = C
 typealias E = D
-
-// Regression test for enum constants in annotations and array types
-// https://github.com/ZacSweers/MoshiX/issues/103
-@Retention(RUNTIME)
-@JsonQualifier
-annotation class UpperCase(val foo: Array<Foo>)
-
-enum class Foo { BAR }
-
-@JsonClass(generateAdapter = true)
-data class ClassWithQualifier(
-  @UpperCase(foo = [Foo.BAR])
-  val a: Int
-)
-
-// Regression for https://github.com/ZacSweers/MoshiX/issues/120
-@JsonClass(generateAdapter = true)
-data class DataClassInModuleB(
-  val id: String
-) : AbstractClassInModuleA()

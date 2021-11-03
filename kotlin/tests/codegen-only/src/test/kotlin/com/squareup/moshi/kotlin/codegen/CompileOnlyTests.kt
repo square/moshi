@@ -17,6 +17,9 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonQualifier
+import com.squareup.moshi.kotlin.codegen.test.extra.AbstractClassInModuleA
+import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.TYPE
 
 /*
@@ -117,3 +120,23 @@ data class SmokeTestType(
 
 typealias TypeAliasName = String
 typealias GenericTypeAlias = List<String>
+
+// Regression test for enum constants in annotations and array types
+// https://github.com/ZacSweers/MoshiX/issues/103
+@Retention(RUNTIME)
+@JsonQualifier
+annotation class UpperCase(val foo: Array<Foo>)
+
+enum class Foo { BAR }
+
+@JsonClass(generateAdapter = true)
+data class ClassWithQualifier(
+  @UpperCase(foo = [Foo.BAR])
+  val a: Int
+)
+
+// Regression for https://github.com/ZacSweers/MoshiX/issues/120
+@JsonClass(generateAdapter = true)
+data class DataClassInModuleB(
+  val id: String
+) : AbstractClassInModuleA()
