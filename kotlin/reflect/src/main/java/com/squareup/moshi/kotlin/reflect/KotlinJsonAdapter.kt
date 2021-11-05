@@ -259,7 +259,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         }
       }
 
-      val name = jsonAnnotation?.name ?: property.name
+      val name = jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: property.name
       val propertyType = when (val propertyTypeClassifier = property.returnType.classifier) {
         is KClass<*> -> {
           if (propertyTypeClassifier.isValue) {
@@ -294,7 +294,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(
         name,
-        jsonAnnotation?.name ?: name,
+        jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: name,
         adapter,
         property as KProperty1<Any, Any?>,
         parameter,

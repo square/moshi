@@ -146,7 +146,10 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
             // Store it using the field's name. If there was already a field with this name, fail!
             Json jsonAnnotation = field.getAnnotation(Json.class);
-            String name = jsonAnnotation != null ? jsonAnnotation.name() : fieldName;
+            String name =
+                jsonAnnotation != null && !Json.UNSET_NAME.equals(jsonAnnotation.name())
+                    ? jsonAnnotation.name()
+                    : fieldName;
             FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
             FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
             if (replaced != null) {

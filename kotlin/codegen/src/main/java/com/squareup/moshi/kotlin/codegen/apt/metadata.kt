@@ -510,7 +510,7 @@ private fun List<AnnotationSpec>?.qualifiers(
 
 private fun List<AnnotationSpec>?.jsonName(): String? {
   if (this == null) return null
-  return find { it.typeName == JSON }?.let { annotation ->
+  val name = find { it.typeName == JSON }?.let { annotation ->
     val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
       "Could not get the annotation mirror from the annotation spec"
     }
@@ -518,6 +518,7 @@ private fun List<AnnotationSpec>?.jsonName(): String? {
       it.key.simpleName.contentEquals("name")
     }.value.value as String
   }
+  return name?.takeUnless { it == Json.UNSET_NAME }
 }
 
 private fun String.escapeDollarSigns(): String {

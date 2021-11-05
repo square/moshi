@@ -91,7 +91,10 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
           Set<Annotation> qualifiers = null;
           for (var annotation : component.getDeclaredAnnotations()) {
             if (annotation instanceof Json jsonAnnotation) {
-              jsonName = jsonAnnotation.name();
+              var annotationName = jsonAnnotation.name();
+              if (!Json.UNSET_NAME.equals(annotationName)) {
+                jsonName = jsonAnnotation.name();
+              }
             } else {
               if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
                 if (qualifiers == null) {
