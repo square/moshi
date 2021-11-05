@@ -655,7 +655,6 @@ class DualKotlinTest {
 
   class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
 
-
   @Test fun transientProperty() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<TransientProperty>()
@@ -675,6 +674,67 @@ class DualKotlinTest {
   class TransientProperty {
     @Transient var a: Int = -1
     @Transient private var b: Int = -1
+    var c: Int = -1
+
+    fun getB() = b
+
+    fun setB(b: Int) {
+      this.b = b
+    }
+  }
+
+  @Test fun ignoredConstructorParameter() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<IgnoredConstructorParameter>()
+
+    val encoded = IgnoredConstructorParameter(3, 5)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
+  }
+
+  class IgnoredConstructorParameter(@Json(ignore = true) var a: Int = -1, var b: Int = -1)
+
+  @Test fun multipleIgnoredConstructorParameters() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter(MultipleIgnoredConstructorParameters::class.java)
+
+    val encoded = MultipleIgnoredConstructorParameters(3, 5, 7)
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.b).isEqualTo(6)
+    assertThat(decoded.c).isEqualTo(-1)
+  }
+
+  class MultipleIgnoredConstructorParameters(
+    @Json(ignore = true) var a: Int = -1,
+    var b: Int = -1,
+    @Json(ignore = true) var c: Int = -1
+  )
+
+  @Test fun ignoredProperty() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<IgnoredProperty>()
+
+    val encoded = IgnoredProperty()
+    encoded.a = 3
+    encoded.setB(4)
+    encoded.c = 5
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
+
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
+    assertThat(decoded.a).isEqualTo(-1)
+    assertThat(decoded.getB()).isEqualTo(-1)
+    assertThat(decoded.c).isEqualTo(6)
+  }
+
+  class IgnoredProperty {
+    @Json(ignore = true) var a: Int = -1
+    @Json(ignore = true) private var b: Int = -1
     var c: Int = -1
 
     fun getB() = b

@@ -294,6 +294,22 @@ class KotlinJsonAdapterTest {
 
   class RequiredTransientConstructorParameter(@Transient var a: Int)
 
+  @Test fun requiredIgnoredConstructorParameterFails() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    try {
+      moshi.adapter<RequiredIgnoredConstructorParameter>()
+      fail()
+    } catch (expected: IllegalArgumentException) {
+      assertThat(expected).hasMessageThat().isEqualTo(
+        "No default value for ignored constructor parameter #0 " +
+          "a of fun <init>(kotlin.Int): " +
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter"
+      )
+    }
+  }
+
+  class RequiredIgnoredConstructorParameter(@Json(ignore = true) var a: Int)
+
   @Test fun constructorParametersAndPropertiesWithSameNamesMustHaveSameTypes() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
