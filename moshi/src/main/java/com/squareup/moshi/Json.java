@@ -49,6 +49,8 @@ public @interface Json {
   /**
    * If true, this field/property will be ignored. This is semantically similar to use of {@code
    * transient} on the JVM.
+   *
+   * <p><strong>Note:</strong> this has no effect in enums or record classes.
    */
   boolean ignore() default false;
 }
