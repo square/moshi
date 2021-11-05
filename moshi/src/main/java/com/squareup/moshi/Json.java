@@ -45,4 +45,10 @@ public @interface Json {
 
   /** The name of the field when encoded as JSON. */
   String name() default UNSET_NAME;
+
+  /**
+   * If true, this field/property will be ignored. This is semantically similar to use of {@code
+   * transient} on the JVM.
+   */
+  boolean ignore() default false;
 }
