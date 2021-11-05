@@ -334,7 +334,27 @@ class JsonClassCodegenProcessorTest(
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: No default value for transient property a"
+      "error: No default value for transient/ignored property a"
+    )
+  }
+
+  @Test
+  fun requiredIgnoredConstructorParameterFails() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          import com.squareup.moshi.Json
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          class RequiredIgnoredConstructorParameter(@Json(ignore = true) var a: Int)
+          """
+      )
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains(
+      "error: No default value for transient/ignored property a"
     )
   }
 
