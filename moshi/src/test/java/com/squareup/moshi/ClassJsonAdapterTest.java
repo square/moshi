@@ -153,6 +153,26 @@ public final class ClassJsonAdapterTest {
     assertThat(fromJson.b).isEqualTo(12);
   }
 
+  static class IgnoredFields {
+    @Json(ignore = true)
+    int a;
+
+    int b;
+  }
+
+  @Test
+  public void ignoredFieldsOmitted() throws Exception {
+    IgnoredFields value = new IgnoredFields();
+    value.a = 11;
+    value.b = 12;
+    String toJson = toJson(IgnoredFields.class, value);
+    assertThat(toJson).isEqualTo("{\"b\":12}");
+
+    IgnoredFields fromJson = fromJson(IgnoredFields.class, "{\"a\":13,\"b\":12}");
+    assertThat(fromJson.a).isEqualTo(0); // Not assigned.
+    assertThat(fromJson.b).isEqualTo(12);
+  }
+
   static class BaseA {
     int a;
   }

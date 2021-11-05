@@ -134,6 +134,8 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
           boolean platformType = Util.isPlatformType(rawType);
           for (Field field : rawType.getDeclaredFields()) {
             if (!includeField(platformType, field.getModifiers())) continue;
+            Json jsonAnnotation = field.getAnnotation(Json.class);
+            if (jsonAnnotation != null && jsonAnnotation.ignore()) continue;
 
             // Look up a type adapter for this type.
             Type fieldType = resolve(type, rawType, field.getGenericType());
@@ -145,7 +147,6 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
             field.setAccessible(true);
 
             // Store it using the field's name. If there was already a field with this name, fail!
-            Json jsonAnnotation = field.getAnnotation(Json.class);
             String name =
                 jsonAnnotation != null && !Json.UNSET_NAME.equals(jsonAnnotation.name())
                     ? jsonAnnotation.name()
