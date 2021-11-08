@@ -278,35 +278,6 @@ class KotlinJsonAdapterTest {
     var b: Int = -1
   }
 
-  @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter<TransientConstructorParameter>()
-
-    val encoded = TransientConstructorParameter(3, 5)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
-  }
-
-  class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
-
-  @Test fun multipleTransientConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
-
-    val encoded = MultipleTransientConstructorParameters(3, 5, 7)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.b).isEqualTo(6)
-    assertThat(decoded.c).isEqualTo(-1)
-  }
-
-  class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
-
   @Test fun requiredTransientConstructorParameterFails() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     try {
@@ -323,33 +294,21 @@ class KotlinJsonAdapterTest {
 
   class RequiredTransientConstructorParameter(@Transient var a: Int)
 
-  @Test fun transientProperty() {
+  @Test fun requiredIgnoredConstructorParameterFails() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter<TransientProperty>()
-
-    val encoded = TransientProperty()
-    encoded.a = 3
-    encoded.setB(4)
-    encoded.c = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
-    assertThat(decoded.a).isEqualTo(-1)
-    assertThat(decoded.getB()).isEqualTo(-1)
-    assertThat(decoded.c).isEqualTo(6)
-  }
-
-  class TransientProperty {
-    @Transient var a: Int = -1
-    @Transient private var b: Int = -1
-    var c: Int = -1
-
-    fun getB() = b
-
-    fun setB(b: Int) {
-      this.b = b
+    try {
+      moshi.adapter<RequiredIgnoredConstructorParameter>()
+      fail()
+    } catch (expected: IllegalArgumentException) {
+      assertThat(expected).hasMessageThat().isEqualTo(
+        "No default value for ignored constructor parameter #0 " +
+          "a of fun <init>(kotlin.Int): " +
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter"
+      )
     }
   }
+
+  class RequiredIgnoredConstructorParameter(@Json(ignore = true) var a: Int)
 
   @Test fun constructorParametersAndPropertiesWithSameNamesMustHaveSameTypes() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()

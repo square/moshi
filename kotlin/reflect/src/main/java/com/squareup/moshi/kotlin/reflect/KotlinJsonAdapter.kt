@@ -57,7 +57,7 @@ private val ABSENT_VALUE = Any()
 internal class KotlinJsonAdapter<T>(
   val constructor: KFunction<T>,
   val allBindings: List<Binding<T, Any?>?>,
-  val nonTransientBindings: List<Binding<T, Any?>>,
+  val nonIgnoredBindings: List<Binding<T, Any?>>,
   val options: JsonReader.Options
 ) : JsonAdapter<T>() {
 
@@ -74,7 +74,7 @@ internal class KotlinJsonAdapter<T>(
         reader.skipValue()
         continue
       }
-      val binding = nonTransientBindings[index]
+      val binding = nonIgnoredBindings[index]
 
       val propertyIndex = binding.propertyIndex
       if (values[propertyIndex] !== ABSENT_VALUE) {
@@ -235,9 +235,25 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     for (property in rawTypeKotlin.memberProperties) {
       val parameter = parametersByName[property.name]
 
+      property.isAccessible = true
+      var jsonAnnotation = property.findAnnotation<Json>()
+      val allAnnotations = property.annotations.toMutableList()
+
+      if (parameter != null) {
+        allAnnotations += parameter.annotations
+        if (jsonAnnotation == null) {
+          jsonAnnotation = parameter.findAnnotation()
+        }
+      }
+
       if (Modifier.isTransient(property.javaField?.modifiers ?: 0)) {
         require(parameter == null || parameter.isOptional) {
           "No default value for transient constructor $parameter"
+        }
+        continue
+      } else if (jsonAnnotation?.ignore == true) {
+        require(parameter == null || parameter.isOptional) {
+          "No default value for ignored constructor $parameter"
         }
         continue
       }
@@ -248,18 +264,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       if (property !is KMutableProperty1 && parameter == null) continue
 
-      property.isAccessible = true
-      val allAnnotations = property.annotations.toMutableList()
-      var jsonAnnotation = property.findAnnotation<Json>()
-
-      if (parameter != null) {
-        allAnnotations += parameter.annotations
-        if (jsonAnnotation == null) {
-          jsonAnnotation = parameter.findAnnotation()
-        }
-      }
-
-      val name = jsonAnnotation?.name ?: property.name
+      val name = jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: property.name
       val propertyType = when (val propertyTypeClassifier = property.returnType.classifier) {
         is KClass<*> -> {
           if (propertyTypeClassifier.isValue) {
@@ -294,7 +299,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(
         name,
-        jsonAnnotation?.name ?: name,
+        jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: name,
         adapter,
         property as KProperty1<Any, Any?>,
         parameter,
@@ -317,8 +322,8 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       bindings += bindingByName.value.copy(propertyIndex = index++)
     }
 
-    val nonTransientBindings = bindings.filterNotNull()
-    val options = JsonReader.Options.of(*nonTransientBindings.map { it.name }.toTypedArray())
-    return KotlinJsonAdapter(constructor, bindings, nonTransientBindings, options).nullSafe()
+    val nonIgnoredBindings = bindings.filterNotNull()
+    val options = JsonReader.Options.of(*nonIgnoredBindings.map { it.name }.toTypedArray())
+    return KotlinJsonAdapter(constructor, bindings, nonIgnoredBindings, options).nullSafe()
   }
 }

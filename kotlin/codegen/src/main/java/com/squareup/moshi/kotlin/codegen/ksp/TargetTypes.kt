@@ -213,7 +213,11 @@ private fun KSAnnotated?.qualifiers(resolver: Resolver): Set<AnnotationSpec> {
 }
 
 private fun KSAnnotated?.jsonName(): String? {
-  return this?.findAnnotationWithType<Json>()?.name
+  return this?.findAnnotationWithType<Json>()?.name?.takeUnless { it == Json.UNSET_NAME }
+}
+
+private fun KSAnnotated?.jsonIgnore(): Boolean {
+  return this?.findAnnotationWithType<Json>()?.ignore ?: false
 }
 
 private fun declaredProperties(
@@ -223,7 +227,6 @@ private fun declaredProperties(
   resolver: Resolver,
   typeParameterResolver: TypeParameterResolver,
 ): Map<String, TargetProperty> {
-
   val result = mutableMapOf<String, TargetProperty>()
   for (property in classDecl.getDeclaredProperties()) {
     val initialType = property.type.resolve()
@@ -235,12 +238,14 @@ private fun declaredProperties(
     val propertySpec = property.toPropertySpec(resolver, resolvedType, typeParameterResolver)
     val name = propertySpec.name
     val parameter = constructor.parameters[name]
+    val isTransient = property.isAnnotationPresent(Transient::class)
     result[name] = TargetProperty(
       propertySpec = propertySpec,
       parameter = parameter,
       visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
       jsonName = parameter?.jsonName ?: property.jsonName()
-        ?: name.escapeDollarSigns()
+        ?: name.escapeDollarSigns(),
+      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore()
     )
   }
 

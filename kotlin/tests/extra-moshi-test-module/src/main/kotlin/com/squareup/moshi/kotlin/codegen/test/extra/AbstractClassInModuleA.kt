@@ -15,10 +15,14 @@
  */
 package com.squareup.moshi.kotlin.codegen.test.extra
 
+import com.squareup.moshi.Json
+
 public abstract class AbstractClassInModuleA {
-  // Transients to ensure processor sees them across module boundaries since @Transient is
-  // SOURCE-only
-  // TODO uncomment these when https://github.com/google/ksp/issues/710 is fixed
-//  @Transient private lateinit var lateinitTransient: String
-//  @Transient private var regularTransient: String = "regularTransient"
+  // Ignored to ensure processor sees them across module boundaries.
+  // @Transient doesn't work for this case because it's source-only and jvm modifiers aren't currently visible in KSP.
+
+  // Note that we target the field because otherwise it is stored on the synthetic holder method for
+  // annotations, which isn't visible from kapt
+  @field:Json(ignore = true) private lateinit var lateinitIgnored: String
+  @field:Json(ignore = true) private var regularIgnored: String = "regularIgnored"
 }

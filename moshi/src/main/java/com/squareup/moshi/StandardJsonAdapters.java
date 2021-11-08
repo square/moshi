@@ -275,7 +275,10 @@ final class StandardJsonAdapters {
         for (int i = 0; i < constants.length; i++) {
           T constant = constants[i];
           Json annotation = enumType.getField(constant.name()).getAnnotation(Json.class);
-          String name = annotation != null ? annotation.name() : constant.name();
+          String name =
+              annotation != null && !Json.UNSET_NAME.equals(annotation.name())
+                  ? annotation.name()
+                  : constant.name();
           nameStrings[i] = name;
         }
         options = JsonReader.Options.of(nameStrings);

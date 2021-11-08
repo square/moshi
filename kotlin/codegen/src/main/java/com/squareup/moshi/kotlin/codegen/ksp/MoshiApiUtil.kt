@@ -21,14 +21,12 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.kotlin.codegen.api.DelegateKey
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.rawType
 
-private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.typeName == Transient::class.asClassName() }
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
@@ -47,10 +45,10 @@ internal fun TargetProperty.generator(
   originalType: KSDeclaration,
   instantiateAnnotations: Boolean
 ): PropertyGenerator? {
-  if (isTransient) {
+  if (jsonIgnore) {
     if (!hasDefault) {
       logger.error(
-        "No default value for transient property $name",
+        "No default value for transient/ignored property $name",
         originalType
       )
       return null

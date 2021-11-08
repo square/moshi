@@ -26,5 +26,6 @@ public data class TargetParameter(
   val type: TypeName,
   val hasDefault: Boolean,
   val jsonName: String? = null,
+  val jsonIgnore: Boolean = false,
   val qualifiers: Set<AnnotationSpec>? = null
 )

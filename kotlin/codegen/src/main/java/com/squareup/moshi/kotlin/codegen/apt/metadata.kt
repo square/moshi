@@ -64,6 +64,7 @@ import javax.tools.Diagnostic.Kind.WARNING
 
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
+private val TRANSIENT = Transient::class.asClassName()
 private val OBJECT_CLASS = ClassName("java.lang", "Object")
 private val VISIBILITY_MODIFIERS = setOf(
   KModifier.INTERNAL,
@@ -95,7 +96,8 @@ internal fun primaryConstructor(
       type = parameter.type,
       hasDefault = parameter.defaultValue != null,
       qualifiers = parameter.annotations.qualifiers(messager, elements),
-      jsonName = parameter.annotations.jsonName()
+      jsonName = parameter.annotations.jsonName(),
+      jsonIgnore = parameter.annotations.jsonIgnore(),
     )
   }
 
@@ -386,7 +388,6 @@ private fun declaredProperties(
   currentClass: ClassName,
   resolvedTypes: List<ResolvedTypeMapping>
 ): Map<String, TargetProperty> {
-
   val result = mutableMapOf<String, TargetProperty>()
   for (initialProperty in kotlinApi.propertySpecs) {
     val resolvedType = resolveTypeArgs(
@@ -398,19 +399,22 @@ private fun declaredProperties(
     val property = initialProperty.toBuilder(type = resolvedType).build()
     val name = property.name
     val parameter = constructor.parameters[name]
+    val isIgnored = property.annotations.any { it.typeName == TRANSIENT } ||
+      parameter?.jsonIgnore == true ||
+      property.annotations.jsonIgnore()
     result[name] = TargetProperty(
       propertySpec = property,
       parameter = parameter,
       visibility = property.modifiers.visibility(),
       jsonName = parameter?.jsonName ?: property.annotations.jsonName()
-        ?: name.escapeDollarSigns()
+        ?: name.escapeDollarSigns(),
+      jsonIgnore = isIgnored
     )
   }
 
   return result
 }
 
-private val TargetProperty.isTransient get() = propertySpec.annotations.any { it.typeName == Transient::class.asClassName() }
 private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
@@ -429,11 +433,11 @@ internal fun TargetProperty.generator(
   elements: Elements,
   instantiateAnnotations: Boolean
 ): PropertyGenerator? {
-  if (isTransient) {
+  if (jsonIgnore) {
     if (!hasDefault) {
       messager.printMessage(
         ERROR,
-        "No default value for transient property $name",
+        "No default value for transient/ignored property $name",
         sourceElement
       )
       return null
@@ -510,14 +514,34 @@ private fun List<AnnotationSpec>?.qualifiers(
 
 private fun List<AnnotationSpec>?.jsonName(): String? {
   if (this == null) return null
-  return find { it.typeName == JSON }?.let { annotation ->
-    val mirror = requireNotNull(annotation.tag<AnnotationMirror>()) {
-      "Could not get the annotation mirror from the annotation spec"
-    }
-    mirror.elementValues.entries.single {
-      it.key.simpleName.contentEquals("name")
-    }.value.value as String
+  return filter { it.typeName == JSON }.firstNotNullOfOrNull { annotation ->
+    annotation.jsonName()
   }
+}
+
+private fun List<AnnotationSpec>?.jsonIgnore(): Boolean {
+  if (this == null) return false
+  return filter { it.typeName == JSON }.firstNotNullOfOrNull { annotation ->
+    annotation.jsonIgnore()
+  } ?: false
+}
+
+private fun AnnotationSpec.jsonName(): String? {
+  return elementValue<String>("name").takeUnless { it == Json.UNSET_NAME }
+}
+
+private fun AnnotationSpec.jsonIgnore(): Boolean {
+  return elementValue<Boolean>("ignore") ?: false
+}
+
+private fun <T> AnnotationSpec.elementValue(name: String): T? {
+  val mirror = requireNotNull(tag<AnnotationMirror>()) {
+    "Could not get the annotation mirror from the annotation spec"
+  }
+  @Suppress("UNCHECKED_CAST")
+  return mirror.elementValues.entries.firstOrNull {
+    it.key.simpleName.contentEquals(name)
+  }?.value?.value as? T
 }
 
 private fun String.escapeDollarSigns(): String {

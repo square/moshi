@@ -29,8 +29,9 @@ import java.lang.annotation.Target;
  *
  * <ul>
  *   <li><strong>Java class fields</strong>
- *   <li><strong>Kotlin properties</strong> for use with {@code moshi-kotlin}. This includes both
- *       properties declared in the constructor and properties declared as members.
+ *   <li><strong>Kotlin properties</strong> for use with {@code moshi-kotlin} or {@code
+ *       moshi-kotlin-codegen}. This includes both properties declared in the constructor and
+ *       properties declared as members.
  * </ul>
  *
  * <p>Users of the <a href="https://github.com/rharter/auto-value-moshi">AutoValue: Moshi
@@ -39,5 +40,17 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Documented
 public @interface Json {
-  String name();
+  /** The default value of {@link #name()}. Should only be used to check if it's been set. */
+  String UNSET_NAME = "\u0000";
+
+  /** The name of the field when encoded as JSON. */
+  String name() default UNSET_NAME;
+
+  /**
+   * If true, this field/property will be ignored. This is semantically similar to use of {@code
+   * transient} on the JVM.
+   *
+   * <p><strong>Note:</strong> this has no effect in enums or record classes.
+   */
+  boolean ignore() default false;
 }
