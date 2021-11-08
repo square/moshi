@@ -746,9 +746,8 @@ internal class JsonUtf8Reader : JsonReader {
 
   override fun nextInt(): Int {
     val p = peekIfNone()
-    var result: Int
     if (p == PEEKED_LONG) {
-      result = peekedLong.toInt()
+      val result = peekedLong.toInt()
       if (peekedLong != result.toLong()) { // Make sure no precision was lost casting to 'int'.
         throw JsonDataException("Expected an int but was $peekedLong at path $path")
       }
@@ -761,7 +760,7 @@ internal class JsonUtf8Reader : JsonReader {
       PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
         val next = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
         try {
-          result = next.toInt()
+          val result = next.toInt()
           peekedString = next
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
@@ -778,7 +777,7 @@ internal class JsonUtf8Reader : JsonReader {
     } catch (e: NumberFormatException) {
       throw JsonDataException("Expected an int but was $peekedString at path $path")
     }
-    result = asDouble.toInt()
+    val result = asDouble.toInt()
     if (result.toDouble() != asDouble) { // Make sure no precision was lost casting to 'int'.
       throw JsonDataException("Expected an int but was $peekedString at path $path")
     }
