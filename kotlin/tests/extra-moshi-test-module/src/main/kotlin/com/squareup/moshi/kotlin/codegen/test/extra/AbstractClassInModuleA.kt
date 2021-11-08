@@ -20,6 +20,9 @@ import com.squareup.moshi.Json
 public abstract class AbstractClassInModuleA {
   // Ignored to ensure processor sees them across module boundaries.
   // @Transient doesn't work for this case because it's source-only and jvm modifiers aren't currently visible in KSP.
-  @Json(ignore = true) private lateinit var lateinitIgnored: String
+
+  // Note that we target the field for lateinit var because otherwise it is stored on the synthetic holder method for
+  // annotations, which isn't visible from kapt
+  @field:Json(ignore = true) private lateinit var lateinitIgnored: String
   @Json(ignore = true) private var regularIgnored: String = "regularIgnored"
 }
