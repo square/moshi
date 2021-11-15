@@ -82,8 +82,10 @@ dependencies {
   compileOnly(libs.kotlin.compilerEmbeddable)
   // Always force the latest KSP version to match the one we're compiling against
   testImplementation(libs.ksp)
+  testImplementation(libs.ksp.api)
   testImplementation(libs.kotlin.compilerEmbeddable)
-  testImplementation(libs.kotlinCompileTesting.ksp)
+  // TODO reenable when it supports KSP 1.0.1+
+//  testImplementation(libs.kotlinCompileTesting.ksp)
 
   // Copy these again as they're not automatically included since they're shaded
   testImplementation(project(":moshi"))
