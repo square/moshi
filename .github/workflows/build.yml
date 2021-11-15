@@ -11,11 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         kotlin-version: [ '1.5.31', '1.6.0-RC' ]
-        ksp-version: [ '1.5.31-1.0.1', '1.6.0-RC-1.0.1-RC' ]
+        # TODO add back KSP 1.6.0-1.0.1 once it's out
+        ksp-version: [ '1.5.31-1.0.1' ]
         kotlin-test-mode: [ 'REFLECT', 'KSP', 'KAPT' ]
         exclude:
-          - kotlin-version: '1.5.31'
-            ksp-version: '1.6.0-RC-1.0.1-RC'
+#          - kotlin-version: '1.5.31'
+#            ksp-version: '1.6.0-RC-1.0.1-RC'
           - kotlin-version: '1.6.0-RC'
             ksp-version: '1.5.31-1.0.1'
 
