@@ -39,7 +39,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.jvm.transient
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
@@ -220,6 +219,7 @@ private fun KSAnnotated?.jsonIgnore(): Boolean {
   return this?.findAnnotationWithType<Json>()?.ignore ?: false
 }
 
+@OptIn(KspExperimental::class)
 private fun declaredProperties(
   constructor: TargetConstructor,
   originalType: KSClassDeclaration,
@@ -238,7 +238,9 @@ private fun declaredProperties(
     val propertySpec = property.toPropertySpec(resolver, resolvedType, typeParameterResolver)
     val name = propertySpec.name
     val parameter = constructor.parameters[name]
-    val isTransient = property.isAnnotationPresent(Transient::class)
+    val isTransient = Modifier.JAVA_TRANSIENT in property.modifiers ||
+      property.isAnnotationPresent(Transient::class) ||
+      Modifier.JAVA_TRANSIENT in resolver.effectiveJavaModifiers(property)
     result[name] = TargetProperty(
       propertySpec = propertySpec,
       parameter = parameter,
@@ -255,7 +257,7 @@ private fun declaredProperties(
 private fun KSPropertyDeclaration.toPropertySpec(
   resolver: Resolver,
   resolvedType: KSType,
-  typeParameterResolver: TypeParameterResolver,
+  typeParameterResolver: TypeParameterResolver
 ): PropertySpec {
   return PropertySpec.builder(
     name = simpleName.getShortName(),
@@ -264,13 +266,6 @@ private fun KSPropertyDeclaration.toPropertySpec(
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
     .apply {
-      // Check modifiers and annotation since annotation is source-only
-      // Note that this won't work properly until https://github.com/google/ksp/issues/710 is fixed
-      val isTransient = Modifier.JAVA_TRANSIENT in this@toPropertySpec.modifiers ||
-        isAnnotationPresent(Transient::class)
-      if (isTransient) {
-        transient()
-      }
       addAnnotations(
         this@toPropertySpec.annotations
           .mapNotNull {
