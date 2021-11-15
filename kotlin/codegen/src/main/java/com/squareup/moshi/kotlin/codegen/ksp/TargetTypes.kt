@@ -252,6 +252,7 @@ private fun declaredProperties(
   return result
 }
 
+@OptIn(KspExperimental::class)
 private fun KSPropertyDeclaration.toPropertySpec(
   resolver: Resolver,
   resolvedType: KSType,
@@ -264,10 +265,9 @@ private fun KSPropertyDeclaration.toPropertySpec(
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
     .apply {
-      // Check modifiers and annotation since annotation is source-only
-      // Note that this won't work properly until https://github.com/google/ksp/issues/710 is fixed
       val isTransient = Modifier.JAVA_TRANSIENT in this@toPropertySpec.modifiers ||
-        isAnnotationPresent(Transient::class)
+        isAnnotationPresent(Transient::class) ||
+        Modifier.JAVA_TRANSIENT in resolver.effectiveJavaModifiers(this@toPropertySpec)
       if (isTransient) {
         transient()
       }
