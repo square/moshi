@@ -37,6 +37,7 @@ tasks.withType<KotlinCompile>().configureEach {
   }
 }
 
+// --add-opens for kapt to work. KGP covers this for us but local JVMs in tests do not
 tasks.withType<Test>().configureEach {
   jvmArgs(
     "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
