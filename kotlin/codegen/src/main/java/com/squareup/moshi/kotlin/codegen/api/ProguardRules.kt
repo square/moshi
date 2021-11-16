@@ -39,7 +39,6 @@ public data class ProguardConfig(
   val adapterConstructorParams: List<String>,
   val targetConstructorHasDefaults: Boolean,
   val targetConstructorParams: List<String>,
-  val qualifierProperties: Set<QualifierAdapterProperty>
 ) {
   public fun outputFilePathWithoutExtension(canonicalName: String): String {
     return "META-INF/proguard/moshi-$canonicalName"
@@ -66,20 +65,7 @@ public data class ProguardConfig(
     // Keep the constructor for Moshi's reflective lookup
     val constructorArgs = adapterConstructorParams.joinToString(",")
     appendLine("    public <init>($constructorArgs);")
-    // Keep any qualifier properties
-    for (qualifierProperty in qualifierProperties) {
-      appendLine("    private com.squareup.moshi.JsonAdapter ${qualifierProperty.name};")
-    }
     appendLine("}")
-
-    qualifierProperties.asSequence()
-      .flatMap { it.qualifiers.asSequence() }
-      .map(ClassName::reflectionName)
-      .sorted()
-      .forEach { qualifier ->
-        appendLine("-if class $targetName")
-        appendLine("-keep @interface $qualifier")
-      }
 
     if (targetConstructorHasDefaults) {
       // If the target class has default parameter values, keep its synthetic constructor

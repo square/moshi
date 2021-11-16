@@ -20,7 +20,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
-import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_INSTANTIATE_ANNOTATIONS
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
@@ -28,8 +27,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import kotlin.reflect.KClass
 import kotlin.reflect.KClassifier
 import kotlin.reflect.KType
@@ -40,23 +37,7 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-@RunWith(Parameterized::class)
-class JsonClassCodegenProcessorTest(
-  private val languageVersion: String,
-  private val instantiateAnnotations: Boolean
-) {
-
-  companion object {
-    @JvmStatic
-    @Parameterized.Parameters(name = "languageVersion={0},instantiateAnnotations={1}")
-    fun data(): Collection<Array<Any>> {
-      return listOf(
-        arrayOf("1.5", true),
-        arrayOf("1.6", true),
-        arrayOf("1.6", false)
-      )
-    }
-  }
+class JsonClassCodegenProcessorTest {
 
   @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
 
@@ -494,13 +475,8 @@ class JsonClassCodegenProcessorTest(
           """
       )
     )
-    if (languageVersion == "1.5" || !instantiateAnnotations) {
-      assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-      assertThat(result.messages).contains("JsonQualifier @UpperCase must support FIELD target")
-    } else {
-      // We instantiate directly!
-      assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-    }
+    // We instantiate directly so doesn't need to be FIELD
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
   @Test
@@ -710,32 +686,16 @@ class JsonClassCodegenProcessorTest(
           """.trimIndent()
         )
         "moshi-testPackage.UsingQualifiers" -> {
-          if (languageVersion == "1.5" || !instantiateAnnotations) {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.UsingQualifiers
-              -keepnames class testPackage.UsingQualifiers
-              -if class testPackage.UsingQualifiers
-              -keep class testPackage.UsingQualifiersJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi);
-                  private com.squareup.moshi.JsonAdapter stringAtMyQualifierAdapter;
-              }
-              -if class testPackage.UsingQualifiers
-              -keep @interface testPackage.MyQualifier
-              """.trimIndent()
-            )
-          } else {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.UsingQualifiers
-              -keepnames class testPackage.UsingQualifiers
-              -if class testPackage.UsingQualifiers
-              -keep class testPackage.UsingQualifiersJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi);
-              }
-              """.trimIndent()
-            )
-          }
+          assertThat(generatedFile.readText()).contains(
+            """
+            -if class testPackage.UsingQualifiers
+            -keepnames class testPackage.UsingQualifiers
+            -if class testPackage.UsingQualifiers
+            -keep class testPackage.UsingQualifiersJsonAdapter {
+                public <init>(com.squareup.moshi.Moshi);
+            }
+            """.trimIndent()
+          )
         }
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
@@ -764,44 +724,22 @@ class JsonClassCodegenProcessorTest(
           """.trimIndent()
         )
         "moshi-testPackage.Complex" -> {
-          if (languageVersion == "1.5" || !instantiateAnnotations) {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.Complex
-              -keepnames class testPackage.Complex
-              -if class testPackage.Complex
-              -keep class testPackage.ComplexJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-                  private com.squareup.moshi.JsonAdapter mutableListOfStringAtMyQualifierAdapter;
-              }
-              -if class testPackage.Complex
-              -keep @interface testPackage.MyQualifier
-              -if class testPackage.Complex
-              -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-              -if class testPackage.Complex
-              -keepclassmembers class testPackage.Complex {
-                  public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
-              }
-              """.trimIndent()
-            )
-          } else {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.Complex
-              -keepnames class testPackage.Complex
-              -if class testPackage.Complex
-              -keep class testPackage.ComplexJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-              }
-              -if class testPackage.Complex
-              -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-              -if class testPackage.Complex
-              -keepclassmembers class testPackage.Complex {
-                  public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
-              }
-              """.trimIndent()
-            )
-          }
+          assertThat(generatedFile.readText()).contains(
+            """
+            -if class testPackage.Complex
+            -keepnames class testPackage.Complex
+            -if class testPackage.Complex
+            -keep class testPackage.ComplexJsonAdapter {
+                public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
+            }
+            -if class testPackage.Complex
+            -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+            -if class testPackage.Complex
+            -keepclassmembers class testPackage.Complex {
+                public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
+            }
+            """.trimIndent()
+          )
         }
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
@@ -820,32 +758,16 @@ class JsonClassCodegenProcessorTest(
           """.trimIndent()
         )
         "moshi-testPackage.NestedType.NestedSimple" -> {
-          if (languageVersion == "1.5" || !instantiateAnnotations) {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.NestedType${'$'}NestedSimple
-              -keepnames class testPackage.NestedType${'$'}NestedSimple
-              -if class testPackage.NestedType${'$'}NestedSimple
-              -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi);
-                  private com.squareup.moshi.JsonAdapter stringAtNestedQualifierAdapter;
-              }
-              -if class testPackage.NestedType${'$'}NestedSimple
-              -keep @interface testPackage.NestedType${'$'}NestedQualifier
-              """.trimIndent()
-            )
-          } else {
-            assertThat(generatedFile.readText()).contains(
-              """
-              -if class testPackage.NestedType${'$'}NestedSimple
-              -keepnames class testPackage.NestedType${'$'}NestedSimple
-              -if class testPackage.NestedType${'$'}NestedSimple
-              -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
-                  public <init>(com.squareup.moshi.Moshi);
-              }
-              """.trimIndent()
-            )
-          }
+          assertThat(generatedFile.readText()).contains(
+            """
+            -if class testPackage.NestedType${'$'}NestedSimple
+            -keepnames class testPackage.NestedType${'$'}NestedSimple
+            -if class testPackage.NestedType${'$'}NestedSimple
+            -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
+                public <init>(com.squareup.moshi.Moshi);
+            }
+            """.trimIndent()
+          )
         }
         else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
@@ -860,8 +782,6 @@ class JsonClassCodegenProcessorTest(
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
-        kotlincArguments = listOf("-language-version", languageVersion)
-        kaptArgs[OPTION_INSTANTIATE_ANNOTATIONS] = "$instantiateAnnotations"
       }
   }
 

@@ -28,7 +28,6 @@ public data class TargetType(
   val typeVariables: List<TypeVariableName>,
   val isDataClass: Boolean,
   val visibility: KModifier,
-  val instantiateAnnotations: Boolean
 ) {
 
   init {

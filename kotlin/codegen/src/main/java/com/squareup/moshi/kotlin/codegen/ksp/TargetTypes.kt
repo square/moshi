@@ -58,7 +58,6 @@ internal fun targetType(
   type: KSDeclaration,
   resolver: Resolver,
   logger: KSPLogger,
-  instantiateAnnotations: Boolean
 ): TargetType? {
   if (type !is KSClassDeclaration) {
     logger.error("@JsonClass can't be applied to ${type.qualifiedName?.asString()}: must be a Kotlin class", type)
@@ -154,7 +153,6 @@ internal fun targetType(
     typeVariables = typeVariables,
     isDataClass = Modifier.DATA in type.modifiers,
     visibility = resolvedVisibility,
-    instantiateAnnotations = instantiateAnnotations
   )
 }
 

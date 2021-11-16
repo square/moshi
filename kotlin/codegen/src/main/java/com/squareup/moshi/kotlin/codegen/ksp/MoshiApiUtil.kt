@@ -43,7 +43,6 @@ internal fun TargetProperty.generator(
   logger: KSPLogger,
   resolver: Resolver,
   originalType: KSDeclaration,
-  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (jsonIgnore) {
     if (!hasDefault) {
@@ -53,7 +52,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
@@ -81,15 +80,6 @@ internal fun TargetProperty.generator(
           )
         }
       }
-      if (!instantiateAnnotations) {
-        annotationElement.findAnnotationWithType<Target>()?.let {
-          if (AnnotationTarget.FIELD !in it.allowedTargets) {
-            logger.error(
-              "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-            )
-          }
-        }
-      }
     }
   }
 
@@ -101,7 +91,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
+    DelegateKey(type, jsonQualifierSpecs)
   )
 }
 

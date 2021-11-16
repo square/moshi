@@ -47,10 +47,8 @@ import com.squareup.moshi.kotlin.codegen.api.rawType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.jvm.signature
-import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
 import javax.annotation.processing.Messager
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.Element
@@ -72,7 +70,6 @@ private val VISIBILITY_MODIFIERS = setOf(
   KModifier.PROTECTED,
   KModifier.PUBLIC
 )
-private val ANNOTATION_INSTANTIATION_MIN_VERSION = KotlinVersion(1, 6, 0)
 
 private fun Collection<KModifier>.visibility(): KModifier {
   return find { it in VISIBILITY_MODIFIERS } ?: KModifier.PUBLIC
@@ -126,7 +123,6 @@ internal fun targetType(
   types: Types,
   element: TypeElement,
   cachedClassInspector: MoshiCachedClassInspector,
-  instantiateAnnotationsEnabled: Boolean
 ): TargetType? {
   val typeMetadata = element.getAnnotation(Metadata::class.java)
   if (typeMetadata == null) {
@@ -208,11 +204,6 @@ internal fun targetType(
     }
   }
 
-  val instantiateAnnotations = instantiateAnnotationsEnabled && run {
-    val (major, minor, patch) = typeMetadata.metadataVersion
-    val languageVersion = KotlinVersion(major, minor, patch)
-    languageVersion >= ANNOTATION_INSTANTIATION_MIN_VERSION
-  }
   val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
   val appliedType = AppliedType.get(element)
@@ -329,7 +320,6 @@ internal fun targetType(
     typeVariables = typeVariables,
     isDataClass = KModifier.DATA in kotlinApi.modifiers,
     visibility = resolvedVisibility,
-    instantiateAnnotations = instantiateAnnotations
   )
 }
 
@@ -431,7 +421,6 @@ internal fun TargetProperty.generator(
   messager: Messager,
   sourceElement: TypeElement,
   elements: Elements,
-  instantiateAnnotations: Boolean
 ): PropertyGenerator? {
   if (jsonIgnore) {
     if (!hasDefault) {
@@ -442,7 +431,7 @@ internal fun TargetProperty.generator(
       )
       return null
     }
-    return PropertyGenerator(this, DelegateKey(type, emptyList(), instantiateAnnotations), true)
+    return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
@@ -474,16 +463,6 @@ internal fun TargetProperty.generator(
         )
       }
     }
-    if (!instantiateAnnotations) {
-      annotationElement.getAnnotation(Target::class.java)?.let {
-        if (ElementType.FIELD !in it.value) {
-          messager.printMessage(
-            ERROR,
-            "JsonQualifier @${qualifierRawType.simpleName} must support FIELD target"
-          )
-        }
-      }
-    }
   }
 
   val jsonQualifierSpecs = qualifiers.map {
@@ -494,7 +473,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs, instantiateAnnotations)
+    DelegateKey(type, jsonQualifierSpecs)
   )
 }
 

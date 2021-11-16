@@ -29,10 +29,8 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.joinToCode
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Types
 import java.util.Locale
 
 /** A JsonAdapter that can be used to encode and decode a particular field. */
@@ -40,7 +38,6 @@ import java.util.Locale
 public data class DelegateKey(
   private val type: TypeName,
   private val jsonQualifiers: List<AnnotationSpec>,
-  private val instantiateAnnotations: Boolean
 ) {
   public val nullable: Boolean get() = type.isNullable
 
@@ -67,22 +64,13 @@ public data class DelegateKey(
 
     val (initializerString, args) = when {
       jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
-      instantiateAnnotations -> {
-        ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
-      }
       else -> {
-        ", %T.getFieldJsonQualifierAnnotations(javaClass, " +
-          "%S)" to arrayOf(Types::class.asTypeName(), adapterName)
+        ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
       }
     }
     val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-      .apply {
-        if (!instantiateAnnotations) {
-          addAnnotations(jsonQualifiers)
-        }
-      }
       .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
       .build()
   }

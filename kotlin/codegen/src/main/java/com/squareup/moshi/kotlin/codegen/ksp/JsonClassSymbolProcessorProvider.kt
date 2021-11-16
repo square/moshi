@@ -34,7 +34,6 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
-import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_INSTANTIATE_ANNOTATIONS
 import com.squareup.moshi.kotlin.codegen.api.Options.POSSIBLE_GENERATED_NAMES
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
@@ -64,8 +63,6 @@ private class JsonClassSymbolProcessor(
     }
   }
   private val generateProguardRules = environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
-  private val instantiateAnnotations = (environment.options[OPTION_INSTANTIATE_ANNOTATIONS]?.toBooleanStrictOrNull() ?: true) &&
-    environment.kotlinVersion.isAtLeast(1, 6)
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
     val generatedAnnotation = generatedOption?.let {
@@ -125,11 +122,11 @@ private class JsonClassSymbolProcessor(
     resolver: Resolver,
     originalType: KSDeclaration,
   ): AdapterGenerator? {
-    val type = targetType(originalType, resolver, logger, instantiateAnnotations) ?: return null
+    val type = targetType(originalType, resolver, logger) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
-      val generator = property.generator(logger, resolver, originalType, type.instantiateAnnotations)
+      val generator = property.generator(logger, resolver, originalType)
       if (generator != null) {
         properties[property.name] = generator
       }

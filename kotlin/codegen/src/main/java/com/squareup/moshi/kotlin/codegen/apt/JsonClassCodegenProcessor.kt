@@ -144,12 +144,11 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
       types,
       element,
       cachedClassInspector,
-      instantiateAnnotations
     ) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
-      val generator = property.generator(messager, element, elements, type.instantiateAnnotations)
+      val generator = property.generator(messager, element, elements)
       if (generator != null) {
         properties[property.name] = generator
       }
