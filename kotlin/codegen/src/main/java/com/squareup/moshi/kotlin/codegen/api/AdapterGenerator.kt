@@ -186,32 +186,14 @@ public class AdapterGenerator(
     result.addAnnotation(COMMON_SUPPRESS)
     result.addType(generatedAdapter)
     val proguardConfig = if (generateProguardRules) {
-      generatedAdapter.createProguardRule(target.instantiateAnnotations)
+      generatedAdapter.createProguardRule()
     } else {
       null
     }
     return PreparedAdapter(result.build(), proguardConfig)
   }
 
-  private fun TypeSpec.createProguardRule(instantiateAnnotations: Boolean): ProguardConfig {
-    val adapterProperties = if (instantiateAnnotations) {
-      // Don't need to do anything special if we instantiate them directly!
-      emptySet()
-    } else {
-      propertySpecs
-        .asSequence()
-        .filter { prop ->
-          prop.type.rawType() == JsonAdapter::class.asClassName()
-        }
-        .filter { prop -> prop.annotations.isNotEmpty() }
-        .mapTo(mutableSetOf()) { prop ->
-          QualifierAdapterProperty(
-            name = prop.name,
-            qualifiers = prop.annotations.mapTo(mutableSetOf()) { it.typeName.rawType() }
-          )
-        }
-    }
-
+  private fun TypeSpec.createProguardRule(): ProguardConfig {
     val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
       1 -> listOf(CN_MOSHI.reflectionName())
       2 -> listOf(CN_MOSHI.reflectionName(), "${CN_TYPE.reflectionName()}[]")
@@ -237,7 +219,6 @@ public class AdapterGenerator(
       adapterConstructorParams = adapterConstructorParams,
       targetConstructorHasDefaults = hasDefaultProperties,
       targetConstructorParams = parameterTypes,
-      qualifierProperties = adapterProperties
     )
   }
 

@@ -10,19 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        kotlin-version: [ '1.5.31', '1.6.0-RC' ]
-        # TODO add back KSP 1.6.0-1.0.1 once it's out
-        ksp-version: [ '1.5.31-1.0.1' ]
         kotlin-test-mode: [ 'REFLECT', 'KSP', 'KAPT' ]
-        exclude:
-#          - kotlin-version: '1.5.31'
-#            ksp-version: '1.6.0-RC-1.0.1-RC'
-          - kotlin-version: '1.6.0-RC'
-            ksp-version: '1.5.31-1.0.1'
-
-    env:
-      MOSHI_KOTLIN_VERSION: '${{ matrix.kotlin-version }}'
-      MOSHI_KSP_VERSION: '${{ matrix.ksp-version }}'
 
     steps:
       - name: Checkout
@@ -48,10 +36,10 @@ jobs:
           java-version: '17'
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }} -PkotlinVersion=${{ matrix.kotlin-version }}
+        run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
 
       - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-version == '1.5.31' && matrix.kotlin-test-mode == 'reflect'
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-test-mode == 'reflect'
         run: ./gradlew publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: '${{ secrets.SONATYPE_NEXUS_USERNAME }}'
