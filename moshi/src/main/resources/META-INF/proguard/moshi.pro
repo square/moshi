@@ -5,7 +5,7 @@
     @com.squareup.moshi.* <methods>;
 }
 
--keep @com.squareup.moshi.JsonQualifier interface *
+-keep @com.squareup.moshi.JsonQualifier @interface *
 
 # Enum field names are used by the integrated EnumJsonAdapter.
 # values() is synthesized by the Kotlin compiler and is used by EnumJsonAdapter indirectly
