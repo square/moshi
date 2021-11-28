@@ -67,6 +67,7 @@ internal class KotlinJsonAdapter<T>(
     // Read each value into its slot in the array.
     val values = Array<Any?>(allBindings.size) { ABSENT_VALUE }
     reader.beginObject()
+    val objectPath = reader.path
     while (reader.hasNext()) {
       val index = reader.selectName(options)
       if (index == -1) {
@@ -102,10 +103,10 @@ internal class KotlinJsonAdapter<T>(
         when {
           constructor.parameters[i].isOptional -> isFullInitialized = false
           constructor.parameters[i].type.isMarkedNullable -> values[i] = null // Replace absent with null.
-          else -> throw Util.missingProperty(
+          else -> throw Util.missingPropertyAtPath(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,
-            reader
+            objectPath
           )
         }
       }
