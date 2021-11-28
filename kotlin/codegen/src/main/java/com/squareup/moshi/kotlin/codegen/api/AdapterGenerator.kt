@@ -371,6 +371,8 @@ public class AdapterGenerator(
       }
     }
     result.addStatement("%N.beginObject()", readerParam)
+    val objectPath = nameAllocator.newName("objectPath")
+    result.addStatement("val %N = %N.path", objectPath, readerParam)
     result.beginControlFlow("while (%N.hasNext())", readerParam)
     result.beginControlFlow("when (%N.selectName(%N))", readerParam, optionsProperty)
 
@@ -524,7 +526,7 @@ public class AdapterGenerator(
         val property = input.property
         result.addCode("%N = %N", property.name, property.localName)
         if (property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
+          result.addMissingPropertyAtPathCheck(property, objectPath)
         } else if (!input.type.isNullable) {
           // Unfortunately incurs an intrinsic null-check even though we know it's set, but
           // maybe in the future we can use contracts to omit them.
@@ -606,7 +608,7 @@ public class AdapterGenerator(
       if (input is PropertyComponent) {
         val property = input.property
         if (!property.isTransient && property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
+          result.addMissingPropertyAtPathCheck(property, objectPath)
         }
       }
       separator = ",\n"
@@ -704,6 +706,18 @@ private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator,
       property.localName,
       property.jsonName,
       readerParam
+    )
+  addCode(" ?: throw·%L", missingPropertyBlock)
+}
+
+private fun FunSpec.Builder.addMissingPropertyAtPathCheck(property: PropertyGenerator, pathParam: String) {
+  val missingPropertyBlock =
+    CodeBlock.of(
+      "%T.missingPropertyAtPath(%S, %S, %N)",
+      MOSHI_UTIL,
+      property.localName,
+      property.jsonName,
+      pathParam
     )
   addCode(" ?: throw·%L", missingPropertyBlock)
 }
