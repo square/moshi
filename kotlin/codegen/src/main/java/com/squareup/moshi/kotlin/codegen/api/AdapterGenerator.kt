@@ -372,7 +372,14 @@ public class AdapterGenerator(
     }
     result.addStatement("%N.beginObject()", readerParam)
     val objectPath = nameAllocator.newName("objectPath")
-    result.addStatement("val %N = %N.path", objectPath, readerParam)
+    val objectPathPredicate: (PropertyGenerator) -> Boolean = { !it.isTransient && it.isRequired }
+    val objectPathForProperty = components.filterIsInstance<PropertyComponent>()
+      .any { objectPathPredicate(it.property) }
+    val objectPathForParameter = useDefaultsConstructor && components.filterIsInstance<ParameterProperty>()
+      .any { objectPathPredicate(it.property) }
+    if (objectPathForProperty || objectPathForParameter) {
+      result.addStatement("val %N = %N.path", objectPath, readerParam)
+    }
     result.beginControlFlow("while (%N.hasNext())", readerParam)
     result.beginControlFlow("when (%N.selectName(%N))", readerParam, optionsProperty)
 
