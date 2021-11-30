@@ -45,8 +45,7 @@ public data class DelegateKey(
   internal fun generateProperty(
     nameAllocator: NameAllocator,
     typeRenderer: TypeRenderer,
-    moshiParameter: ParameterSpec,
-    propertyName: String
+    moshiParameter: ParameterSpec
   ): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
       "At${it.typeName.rawType().simpleName}"
@@ -68,10 +67,10 @@ public data class DelegateKey(
         ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
       }
     }
-    val finalArgs = arrayOf(*standardArgs, *args, propertyName)
+    val finalArgs = arrayOf(*standardArgs, *args)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
-      .initializer("%N.adapter(%L$initializerString, %S)", *finalArgs)
+      .initializer("%N.adapter(%L$initializerString)", *finalArgs)
       .build()
   }
 }
