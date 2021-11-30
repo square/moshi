@@ -472,7 +472,7 @@ public class AdapterGenerator(
         }
       }
       if (property.hasConstructorParameter) {
-        constructorPropertyTypes += property.target.type.asTypeBlock()
+        constructorPropertyTypes += property.target.type.asTypeBlock(unwrapTypeAlias = true)
       }
       propertyIndex++
       updateMaskIndexes()

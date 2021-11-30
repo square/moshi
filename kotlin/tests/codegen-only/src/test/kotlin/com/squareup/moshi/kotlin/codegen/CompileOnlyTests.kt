@@ -140,3 +140,11 @@ data class ClassWithQualifier(
 data class DataClassInModuleB(
   val id: String
 ) : AbstractClassInModuleA()
+
+
+// Regression for https://github.com/square/moshi/issues/1418
+typealias GenericAlias = List<String>
+typealias NestedGenericAlias = GenericAlias
+
+@JsonClass(generateAdapter = true)
+data class GenericTypeAliases(val prop1: GenericAlias = emptyList(), val prop2: NestedGenericAlias = emptyList())

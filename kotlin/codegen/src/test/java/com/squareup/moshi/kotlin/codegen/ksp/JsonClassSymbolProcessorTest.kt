@@ -391,6 +391,26 @@ class JsonClassSymbolProcessorTest {
   }
 
   @Test
+  fun repro() {
+    val result = prepareCompilation(
+      kotlin(
+        "source.kt",
+        """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          // Regression for https://github.com/square/moshi/issues/1418
+          typealias GenericAlias = List<String>
+          typealias NestedGenericAlias = GenericAlias
+
+          @JsonClass(generateAdapter = true)
+          data class GenericTypeAliases(val prop1: GenericAlias = emptyList(), val prop2: NestedGenericAlias = emptyList())
+          """
+      )
+    ).compile()
+  }
+
+  @Test
   fun disableProguardGeneration() {
     val compilation = prepareCompilation(
       kotlin(

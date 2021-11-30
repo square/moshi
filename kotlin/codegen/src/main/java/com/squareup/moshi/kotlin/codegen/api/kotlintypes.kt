@@ -40,7 +40,10 @@ import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.tag
+import com.squareup.kotlinpoet.tags.TypeAliasTag
 import java.lang.reflect.Array
+import org.jetbrains.kotlin.metadata.ProtoBuf.TypeAlias
 
 internal fun TypeName.rawType(): ClassName {
   return findRawType() ?: throw IllegalArgumentException("Cannot get raw type from $this")
@@ -81,7 +84,7 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
   }
 
 @OptIn(DelicateKotlinPoetApi::class)
-internal fun TypeName.asTypeBlock(): CodeBlock {
+internal fun TypeName.asTypeBlock(unwrapTypeAlias: Boolean = false): CodeBlock {
   if (annotations.isNotEmpty()) {
     return copy(annotations = emptyList()).asTypeBlock()
   }
@@ -122,7 +125,13 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
           }
         }
         UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
-        else -> CodeBlock.of("%T::class.java", copy(nullable = false))
+        else -> {
+          if (unwrapTypeAlias) {
+            unwrapTypeAlias().asTypeBlock()
+          } else {
+            CodeBlock.of("%T::class.java", copy(nullable = false))
+          }
+        }
       }
     }
     else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
