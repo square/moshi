@@ -85,8 +85,7 @@ dependencies {
   testImplementation(libs.ksp)
   testImplementation(libs.ksp.api)
   testImplementation(libs.kotlin.compilerEmbeddable)
-  // TODO reenable when it supports KSP 1.0.1+
-//  testImplementation(libs.kotlinCompileTesting.ksp)
+  testImplementation(libs.kotlinCompileTesting.ksp)
 
   // Copy these again as they're not automatically included since they're shaded
   testImplementation(project(":moshi"))
