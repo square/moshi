@@ -276,7 +276,10 @@ public final class Types {
    * @param fieldName the target field name on {@code clazz}.
    * @return a set of {@link JsonQualifier}-annotated {@link Annotation} instances retrieved from
    *     the targeted field. Can be empty if none are found.
+   * @deprecated this is no longer needed in Kotlin 1.6.0 (which has direct annotation
+   *     instantiation) and is obsolete.
    */
+  @Deprecated
   public static Set<? extends Annotation> getFieldJsonQualifierAnnotations(
       Class<?> clazz, String fieldName) {
     try {
