@@ -270,7 +270,8 @@ public class AdapterGenerator(
         uniqueAdapter.delegateKey.generateProperty(
           nameAllocator,
           typeRenderer,
-          moshiParam
+          moshiParam,
+          uniqueAdapter.name
         )
       )
     }
