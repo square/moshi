@@ -927,6 +927,7 @@ final class JsonUtf8Reader extends JsonReader {
       }
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return result;
     }
 
@@ -941,6 +942,7 @@ final class JsonUtf8Reader extends JsonReader {
         result = Integer.parseInt(peekedString);
         peeked = PEEKED_NONE;
         pathIndices[stackSize - 1]++;
+        pathNames[stackSize - 1] = null;
         return result;
       } catch (NumberFormatException ignored) {
         // Fall back to parse as a double below.
@@ -965,6 +967,7 @@ final class JsonUtf8Reader extends JsonReader {
     peekedString = null;
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = null;
     return result;
   }
 

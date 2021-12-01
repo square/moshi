@@ -93,7 +93,6 @@ internal class KotlinJsonAdapter<T>(
         )
       }
     }
-    reader.endObject()
 
     // Confirm all parameters are present, optional, or nullable.
     var isFullInitialized = allBindings.size == constructorSize
@@ -110,6 +109,8 @@ internal class KotlinJsonAdapter<T>(
         }
       }
     }
+
+    reader.endObject()
 
     // Call the constructor using a Map so that absent optionals get defaults.
     val result = if (isFullInitialized) {
