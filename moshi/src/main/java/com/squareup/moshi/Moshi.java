@@ -109,10 +109,7 @@ public final class Moshi {
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
    *     hint for better adapter lookup error messages for nested structures.
-   * @deprecated this is no longer needed in Kotlin 1.6.0 (which has direct annotation
-   *     instantiation) and should no longer be used.
    */
-  @Deprecated
   @CheckReturnValue
   @SuppressWarnings("unchecked") // Factories are required to return only matching JsonAdapters.
   public <T> JsonAdapter<T> adapter(
