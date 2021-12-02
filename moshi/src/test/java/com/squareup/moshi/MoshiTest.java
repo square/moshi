@@ -1297,7 +1297,7 @@ public final class MoshiTest {
     } catch (JsonDataException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Map key 'diameter' has multiple values at path $.diameter: 5.0 and 5.0");
+          .isEqualTo("Map key 'diameter' has multiple values at path $.: 5.0 and 5.0");
     }
   }
 

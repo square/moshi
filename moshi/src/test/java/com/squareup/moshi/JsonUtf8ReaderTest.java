@@ -1079,7 +1079,7 @@ public final class JsonUtf8ReaderTest {
       reader.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $.null[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $.[1]");
     }
   }
 
@@ -1475,7 +1475,7 @@ public final class JsonUtf8ReaderTest {
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.getPath()).isEqualTo("$.a");
     assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     assertThat(reader.nextName()).isEqualTo("b");
     try (BufferedSource valueSource = reader.nextSource()) {
@@ -1487,7 +1487,7 @@ public final class JsonUtf8ReaderTest {
     assertThat(reader.nextName()).isEqualTo("c");
     assertThat(reader.getPath()).isEqualTo("$.c");
     assertThat(reader.nextBoolean()).isFalse();
-    assertThat(reader.getPath()).isEqualTo("$.c");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
   }
 }

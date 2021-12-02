@@ -717,27 +717,27 @@ public final class JsonReaderTest {
     assertEquals(0, reader.selectName(abc));
     assertEquals("$.a", reader.getPath());
     assertEquals(5, reader.nextInt());
-    assertEquals("$.a", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     assertEquals(1, reader.selectName(abc));
     assertEquals("$.b", reader.getPath());
     assertEquals(5, reader.nextInt());
-    assertEquals("$.b", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     assertEquals(2, reader.selectName(abc));
     assertEquals("$.c", reader.getPath());
     assertEquals(5, reader.nextInt());
-    assertEquals("$.c", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     // A missed selectName() doesn't advance anything, not even the path.
     assertEquals(-1, reader.selectName(abc));
-    assertEquals("$.c", reader.getPath());
+    assertEquals("$.", reader.getPath());
     assertEquals(JsonReader.Token.NAME, reader.peek());
 
     assertEquals("d", reader.nextName());
     assertEquals("$.d", reader.getPath());
     assertEquals(5, reader.nextInt());
-    assertEquals("$.d", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     reader.endObject();
   }
@@ -750,14 +750,17 @@ public final class JsonReaderTest {
     JsonReader reader = newReader("{\"\\n\": 5,\"\\u0000\": 5, \"\\\"\": 5}");
     reader.beginObject();
     assertEquals(0, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
     assertEquals("$.\n", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.", reader.getPath());
     assertEquals(1, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
     assertEquals("$.\u0000", reader.getPath());
-    assertEquals(2, reader.selectName(options));
     assertEquals(5, reader.nextInt());
+    assertEquals("$.", reader.getPath());
+    assertEquals(2, reader.selectName(options));
     assertEquals("$.\"", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.", reader.getPath());
     reader.endObject();
   }
 
@@ -769,16 +772,18 @@ public final class JsonReaderTest {
     JsonReader reader = newReader("{\"cof\\u0066ee\":5, \"\\u0074e\\u0061\":4, \"water\":3}");
     reader.beginObject();
     assertEquals(0, reader.selectName(options));
-    assertEquals(5, reader.nextInt());
     assertEquals("$.coffee", reader.getPath());
+    assertEquals(5, reader.nextInt());
+    assertEquals("$.", reader.getPath());
     assertEquals(1, reader.selectName(options));
-    assertEquals(4, reader.nextInt());
     assertEquals("$.tea", reader.getPath());
+    assertEquals(4, reader.nextInt());
+    assertEquals("$.", reader.getPath());
 
     // Ensure select name doesn't advance the stack in case there are no matches.
     assertEquals(-1, reader.selectName(options));
     assertEquals(JsonReader.Token.NAME, reader.peek());
-    assertEquals("$.tea", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     // Consume the last token.
     assertEquals("water", reader.nextName());
@@ -797,7 +802,7 @@ public final class JsonReaderTest {
     assertEquals(0, reader.selectName(options));
     assertEquals("$.a", reader.getPath());
     assertEquals(2, reader.nextInt());
-    assertEquals("$.a", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     reader.endObject();
   }
@@ -813,7 +818,7 @@ public final class JsonReaderTest {
     assertEquals(0, reader.selectName(abc));
     assertEquals("$.a", reader.getPath());
     assertEquals(5, reader.nextInt());
-    assertEquals("$.a", reader.getPath());
+    assertEquals("$.", reader.getPath());
 
     reader.endObject();
   }
@@ -1193,7 +1198,7 @@ public final class JsonReaderTest {
       case 5:
         if (until == 5) break;
         assertThat(reader.nextInt()).isEqualTo(56);
-        assertThat(reader.getPath()).isEqualTo("$[2].a");
+        assertThat(reader.getPath()).isEqualTo("$[2].");
       case 6:
         if (until == 6) break;
         assertThat(reader.nextName()).isEqualTo("b");
@@ -1201,7 +1206,7 @@ public final class JsonReaderTest {
       case 7:
         if (until == 7) break;
         assertThat(reader.nextInt()).isEqualTo(78);
-        assertThat(reader.getPath()).isEqualTo("$[2].b");
+        assertThat(reader.getPath()).isEqualTo("$[2].");
       case 8:
         if (until == 8) break;
         reader.endObject();
