@@ -47,7 +47,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $.")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $")
     }
   }
 
@@ -62,42 +62,12 @@ class DualKotlinTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$.")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$")
     }
   }
 
   @JsonClass(generateAdapter = true)
   class RequiredValueWithDifferentJsonNameAbsent(var a: Int = 3, @Json(name = "bPrime") var b: Int)
-
-  @Test fun requiredValueAbsentInArray() {
-    val jsonAdapter = moshi.adapter<RequiredValueAbsentArray>()
-
-    try {
-      //language=JSON
-      jsonAdapter.fromJson("""{"values":[{"a":4,"b":10},{"a":2}]}""")
-      fail()
-    } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $.values[1].")
-    }
-  }
-
-  @JsonClass(generateAdapter = true)
-  class RequiredValueAbsentArray(var values: List<RequiredValueAbsent>)
-
-  @Test fun requiredValueWithDifferentJsonNameAbsentInArray() {
-    val jsonAdapter = moshi.adapter<RequiredValueWithDifferentJsonNameAbsentArray>()
-
-    try {
-      //language=JSON
-      jsonAdapter.fromJson("""{"values":[{"a":4,"bPrime":10},{"a":2}]}""")
-      fail()
-    } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at $.values[1].")
-    }
-  }
-
-  @JsonClass(generateAdapter = true)
-  class RequiredValueWithDifferentJsonNameAbsentArray(var values: List<RequiredValueWithDifferentJsonNameAbsent>)
 
   @Test fun nonNullPropertySetToNullFailsWithJsonDataException() {
     val jsonAdapter = moshi.adapter<HasNonNullProperty>()

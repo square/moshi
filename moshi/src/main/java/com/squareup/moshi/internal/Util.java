@@ -638,11 +638,6 @@ public final class Util {
   public static JsonDataException missingProperty(
       String propertyName, String jsonName, JsonReader reader) {
     String path = reader.getPath();
-    return missingPropertyAtPath(propertyName, jsonName, path);
-  }
-
-  public static JsonDataException missingPropertyAtPath(
-      String propertyName, String jsonName, String path) {
     String message;
     if (jsonName.equals(propertyName)) {
       message = String.format("Required value '%s' missing at %s", propertyName, path);
