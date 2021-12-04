@@ -17,10 +17,13 @@ package com.squareup.moshi.records;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.fail;
 
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonQualifier;
+import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.ToJson;
 import com.squareup.moshi.Types;
@@ -31,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import okio.Buffer;
 import org.junit.Test;
 
 public final class RecordsTest {
@@ -207,4 +211,41 @@ public final class RecordsTest {
   }
 
   public static record JsonName(@Json(name = "actualValue") int value) {}
+
+  /**
+   * We had a bug where we were incorrectly wrapping exceptions thrown when delegating to the
+   * JsonAdapters of component fields.
+   */
+  @Test
+  public void memberEncodeDecodeThrowsExceptionException() throws IOException {
+    var throwingAdapter =
+        new Object() {
+          @ToJson
+          void booleanToJson(JsonWriter writer, boolean value) throws IOException {
+            throw new IOException("boom!");
+          }
+
+          @FromJson
+          boolean booleanFromJson(JsonReader reader) throws IOException {
+            throw new IOException("boom!");
+          }
+        };
+    var json = "{\"value\":true}";
+    Moshi throwingMoshi = this.moshi.newBuilder().add(throwingAdapter).build();
+    var adapter = throwingMoshi.adapter(BooleanRecord.class);
+    try {
+      adapter.fromJson(json);
+      fail();
+    } catch (IOException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+    }
+    try {
+      adapter.toJson(new Buffer(), new BooleanRecord(true));
+      fail();
+    } catch (IOException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+    }
+  }
+
+  public static record BooleanRecord(boolean value) {}
 }
