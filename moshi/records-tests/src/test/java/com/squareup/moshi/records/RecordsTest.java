@@ -157,6 +157,21 @@ public final class RecordsTest {
   }
 
   @Test
+  public void indirectGenerics() throws IOException {
+    var value =
+        new HasIndirectGenerics(
+            new IndirectGenerics<>(1L, List.of(2L, 3L, 4L), Map.of("five", 5L)));
+    var jsonAdapter = moshi.adapter(HasIndirectGenerics.class);
+    var json = "{\"value\":{\"single\":1,\"list\":[2,3,4],\"map\":{\"five\":5}}}";
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json);
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value);
+  }
+
+  public static record IndirectGenerics<T>(T single, List<T> list, Map<String, T> map) {}
+
+  public static record HasIndirectGenerics(IndirectGenerics<Long> value) {}
+
+  @Test
   public void qualifiedValues() throws IOException {
     var adapter = moshi.newBuilder().add(new ColorAdapter()).build().adapter(QualifiedValues.class);
     assertThat(adapter.fromJson("{\"value\":\"#ff0000\"}"))
