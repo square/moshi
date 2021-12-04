@@ -197,8 +197,9 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
 
     for (var binding : componentBindingsArray) {
       writer.name(binding.jsonName);
+      Object componentValue;
       try {
-        binding.adapter.toJson(writer, binding.accessor.invoke(value));
+        componentValue = binding.accessor.invoke(value);
       } catch (Throwable e) {
         if (e instanceof InvocationTargetException ite) {
           Throwable cause = ite.getCause();
@@ -209,6 +210,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
           throw new AssertionError(e);
         }
       }
+      binding.adapter.toJson(writer, componentValue);
     }
 
     writer.endObject();
