@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.internal.Util.rethrowCause;
 import static java.lang.invoke.MethodType.methodType;
 
 import com.squareup.moshi.internal.Util;
@@ -25,9 +26,8 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
-import java.util.Collections;
+import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,80 +39,81 @@ import java.util.Set;
 final class RecordJsonAdapter<T> extends JsonAdapter<T> {
 
   static final JsonAdapter.Factory FACTORY =
-      (type, annotations, moshi) -> {
-        if (!annotations.isEmpty()) {
-          return null;
-        }
+      new Factory() {
+        @Override
+        public JsonAdapter<?> create(
+            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
+          if (!annotations.isEmpty()) {
+            return null;
+          }
 
-        if (!(type instanceof Class) && !(type instanceof ParameterizedType)) {
-          return null;
-        }
+          if (!(type instanceof Class) && !(type instanceof ParameterizedType)) {
+            return null;
+          }
 
-        var rawType = Types.getRawType(type);
-        if (!rawType.isRecord()) {
-          return null;
-        }
+          var rawType = Types.getRawType(type);
+          if (!rawType.isRecord()) {
+            return null;
+          }
 
-        var components = rawType.getRecordComponents();
-        var bindings = new LinkedHashMap<String, ComponentBinding<?>>();
-        var componentRawTypes = new Class<?>[components.length];
-        var lookup = MethodHandles.lookup();
-        for (int i = 0, componentsLength = components.length; i < componentsLength; i++) {
-          RecordComponent component = components[i];
-          componentRawTypes[i] = component.getType();
-          var name = component.getName();
-          var componentType = Util.resolve(type, rawType, component.getGenericType());
-          var jsonName = name;
-          Set<Annotation> qualifiers = null;
-          for (var annotation : component.getDeclaredAnnotations()) {
-            if (annotation instanceof Json jsonAnnotation) {
-              var annotationName = jsonAnnotation.name();
-              if (!Json.UNSET_NAME.equals(annotationName)) {
-                jsonName = jsonAnnotation.name();
-              }
-            } else {
-              if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
-                if (qualifiers == null) {
-                  qualifiers = new LinkedHashSet<>();
-                }
-                qualifiers.add(annotation);
-              }
+          var components = rawType.getRecordComponents();
+          var bindings = new LinkedHashMap<String, ComponentBinding<?>>();
+          var componentRawTypes = new Class<?>[components.length];
+          var lookup = MethodHandles.lookup();
+          for (int i = 0, componentsLength = components.length; i < componentsLength; i++) {
+            RecordComponent component = components[i];
+            componentRawTypes[i] = component.getType();
+            ComponentBinding<Object> componentBinding =
+                createComponentBinding(type, rawType, moshi, lookup, component);
+            var replaced = bindings.put(componentBinding.jsonName, componentBinding);
+            if (replaced != null) {
+              throw new IllegalArgumentException(
+                  "Conflicting components:\n"
+                      + "    "
+                      + replaced.componentName
+                      + "\n"
+                      + "    "
+                      + componentBinding.componentName);
             }
           }
-          if (qualifiers == null) {
-            qualifiers = Collections.emptySet();
+
+          MethodHandle constructor;
+          try {
+            constructor =
+                lookup.findConstructor(rawType, methodType(void.class, componentRawTypes));
+          } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new AssertionError(e);
           }
+
+          return new RecordJsonAdapter<>(constructor, rawType.getSimpleName(), bindings).nullSafe();
+        }
+
+        private static ComponentBinding<Object> createComponentBinding(
+            Type type,
+            Class<?> rawType,
+            Moshi moshi,
+            MethodHandles.Lookup lookup,
+            RecordComponent component) {
+          var componentName = component.getName();
+          var jsonName = Util.jsonName(componentName, component);
+
+          var componentType = Util.resolve(type, rawType, component.getGenericType());
+          Set<? extends Annotation> qualifiers = Util.jsonAnnotations(component);
           var adapter = moshi.adapter(componentType, qualifiers);
+
           MethodHandle accessor;
           try {
             accessor = lookup.unreflect(component.getAccessor());
           } catch (IllegalAccessException e) {
             throw new AssertionError(e);
           }
-          var componentBinding = new ComponentBinding<>(name, jsonName, adapter, accessor);
-          var replaced = bindings.put(jsonName, componentBinding);
-          if (replaced != null) {
-            throw new IllegalArgumentException(
-                "Conflicting components:\n"
-                    + "    "
-                    + replaced.name
-                    + "\n"
-                    + "    "
-                    + componentBinding.name);
-          }
-        }
 
-        MethodHandle constructor;
-        try {
-          constructor = lookup.findConstructor(rawType, methodType(void.class, componentRawTypes));
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-          throw new AssertionError(e);
+          return new ComponentBinding<>(componentName, jsonName, adapter, accessor);
         }
-        return new RecordJsonAdapter<>(constructor, rawType.getSimpleName(), bindings).nullSafe();
       };
 
   private static record ComponentBinding<T>(
-      String name, String jsonName, JsonAdapter<T> adapter, MethodHandle accessor) {}
+      String componentName, String jsonName, JsonAdapter<T> adapter, MethodHandle accessor) {}
 
   private final String targetClass;
   private final MethodHandle constructor;
@@ -146,23 +147,17 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
         reader.skipValue();
         continue;
       }
-      var result = componentBindingsArray[index].adapter.fromJson(reader);
-      resultsArray[index] = result;
+      resultsArray[index] = componentBindingsArray[index].adapter.fromJson(reader);
     }
     reader.endObject();
 
     try {
       //noinspection unchecked
       return (T) constructor.invokeWithArguments(resultsArray);
+    } catch (InvocationTargetException e) {
+      throw rethrowCause(e);
     } catch (Throwable e) {
-      if (e instanceof InvocationTargetException ite) {
-        Throwable cause = ite.getCause();
-        if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-        if (cause instanceof Error) throw (Error) cause;
-        throw new RuntimeException(cause);
-      } else {
-        throw new AssertionError(e);
-      }
+      throw new AssertionError(e);
     }
   }
 
@@ -175,15 +170,10 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
       Object componentValue;
       try {
         componentValue = binding.accessor.invoke(value);
+      } catch (InvocationTargetException e) {
+        throw Util.rethrowCause(e);
       } catch (Throwable e) {
-        if (e instanceof InvocationTargetException ite) {
-          Throwable cause = ite.getCause();
-          if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-          if (cause instanceof Error) throw (Error) cause;
-          throw new RuntimeException(cause);
-        } else {
-          throw new AssertionError(e);
-        }
+        throw new AssertionError(e);
       }
       binding.adapter.toJson(writer, componentValue);
     }

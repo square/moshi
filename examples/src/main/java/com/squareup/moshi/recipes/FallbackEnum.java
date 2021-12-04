@@ -17,13 +17,13 @@ package com.squareup.moshi.recipes;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Types;
+import com.squareup.moshi.internal.Util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -77,13 +77,8 @@ final class FallbackEnum {
         constants = enumType.getEnumConstants();
         nameStrings = new String[constants.length];
         for (int i = 0; i < constants.length; i++) {
-          T constant = constants[i];
-          Json annotation = enumType.getField(constant.name()).getAnnotation(Json.class);
-          String name =
-              annotation != null && !Json.UNSET_NAME.equals(annotation.name())
-                  ? annotation.name()
-                  : constant.name();
-          nameStrings[i] = name;
+          String constantName = constants[i].name();
+          nameStrings[i] = Util.jsonName(constantName, enumType.getField(constantName));
         }
         options = JsonReader.Options.of(nameStrings);
       } catch (NoSuchFieldException e) {
