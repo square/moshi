@@ -19,6 +19,7 @@ import static com.squareup.moshi.Types.arrayOf;
 import static com.squareup.moshi.Types.subtypeOf;
 import static com.squareup.moshi.Types.supertypeOf;
 
+import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonClass;
 import com.squareup.moshi.JsonDataException;
@@ -94,6 +95,16 @@ public final class Util {
   }
 
   private Util() {}
+
+  public static String jsonName(String declaredName, AnnotatedElement element) {
+    return jsonName(declaredName, element.getAnnotation(Json.class));
+  }
+
+  public static String jsonName(String declaredName, @Nullable Json annotation) {
+    if (annotation == null) return declaredName;
+    String annotationName = annotation.name();
+    return Json.UNSET_NAME.equals(annotationName) ? declaredName : annotationName;
+  }
 
   public static boolean typesMatch(Type pattern, Type candidate) {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
