@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
@@ -248,4 +249,46 @@ public final class RecordsTest {
   }
 
   public static record BooleanRecord(boolean value) {}
+
+  @Test
+  public void absentPrimitiveFails() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    try {
+      adapter.fromJson("{\"s\":\"\"}");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'i' missing at $");
+    }
+  }
+
+  @Test
+  public void nullPrimitiveFails() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    try {
+      adapter.fromJson("{\"s\":\"\",\"i\":null}");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $.i");
+    }
+  }
+
+  @Test
+  public void absentObjectIsNull() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    String json = "{\"i\":5}";
+    AbsentValues value = new AbsentValues(null, 5);
+    assertThat(adapter.fromJson(json)).isEqualTo(value);
+    assertThat(adapter.toJson(value)).isEqualTo(json);
+  }
+
+  @Test
+  public void nullObjectIsNull() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    String json = "{\"i\":5,\"s\":null}";
+    AbsentValues value = new AbsentValues(null, 5);
+    assertThat(adapter.fromJson(json)).isEqualTo(value);
+    assertThat(adapter.toJson(value)).isEqualTo("{\"i\":5}");
+  }
+
+  public static record AbsentValues(String s, int i) {}
 }

@@ -157,6 +157,14 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
     } catch (InvocationTargetException e) {
       throw rethrowCause(e);
     } catch (Throwable e) {
+      // Don't throw a fatal error if it's just an absent primitive.
+      for (int i = 0, limit = componentBindingsArray.length; i < limit; i++) {
+        if (resultsArray[i] == null
+            && componentBindingsArray[i].accessor.type().returnType().isPrimitive()) {
+          throw Util.missingProperty(
+              componentBindingsArray[i].componentName, componentBindingsArray[i].jsonName, reader);
+        }
+      }
       throw new AssertionError(e);
     }
   }
