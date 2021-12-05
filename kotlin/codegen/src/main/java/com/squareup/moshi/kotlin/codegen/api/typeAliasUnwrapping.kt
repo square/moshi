@@ -28,15 +28,14 @@ import java.util.TreeSet
 
 private fun TypeName.unwrapTypeAliasInternal(): TypeName? {
   return tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
-    // If any type is nullable, then the whole thing is nullable
-    var isAnyNullable = isNullable
     // Keep track of all annotations across type levels. Sort them too for consistency.
     val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
       addAll(annotations)
     }
     val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
     runningAnnotations.addAll(nestedUnwrappedType.annotations)
-    isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
+    // If any type is nullable, then the whole thing is nullable
+    val isAnyNullable = isNullable || nestedUnwrappedType.isNullable
     nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
   }
 }
