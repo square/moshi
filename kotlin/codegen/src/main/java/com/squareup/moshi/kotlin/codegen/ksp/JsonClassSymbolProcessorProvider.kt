@@ -73,22 +73,20 @@ private class JsonClassSymbolProcessor(
         .build()
     }
 
-    resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)
-      .asSequence()
-      .forEach { type ->
+    for (type in resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)) {
         // For the smart cast
         if (type !is KSDeclaration) {
           logger.error("@JsonClass can't be applied to $type: must be a Kotlin class", type)
-          return@forEach
+          continue
         }
 
-        val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: return@forEach
+        val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: continue
 
         val generator = jsonClassAnnotation.generator
 
-        if (generator.isNotEmpty()) return@forEach
+        if (generator.isNotEmpty()) continue
 
-        if (!jsonClassAnnotation.generateAdapter) return@forEach
+        if (!jsonClassAnnotation.generateAdapter) continue
 
         val originatingFile = type.containingFile!!
         val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
