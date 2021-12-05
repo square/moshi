@@ -743,6 +743,22 @@ class DualKotlinTest {
       this.b = b
     }
   }
+
+  @Test fun propertyNameHasDollarSign() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<PropertyWithDollarSign>()
+
+    val value = PropertyWithDollarSign("apple", "banana")
+    val json = """{"${'$'}a":"apple","${'$'}b":"banana"}"""
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json)
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class PropertyWithDollarSign(
+    val `$a`: String,
+    @Json(name = "\$b") val b: String
+  )
 }
 
 typealias TypeAlias = Int
