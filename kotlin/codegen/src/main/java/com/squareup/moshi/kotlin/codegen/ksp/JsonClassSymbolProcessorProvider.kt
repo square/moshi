@@ -27,6 +27,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
@@ -66,12 +67,7 @@ private class JsonClassSymbolProcessor(
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
     val generatedAnnotation = generatedOption?.let {
-      val annotationType = resolver.getClassDeclarationByName(resolver.getKSNameFromString(it))
-        ?: run {
-          logger.error("Generated annotation type doesn't exist: $it")
-          return emptyList()
-        }
-      AnnotationSpec.builder(annotationType.toClassName())
+      AnnotationSpec.builder(ClassName.bestGuess(it))
         .addMember("value = [%S]", JsonClassSymbolProcessor::class.java.canonicalName)
         .addMember("comments = %S", "https://github.com/square/moshi")
         .build()
