@@ -89,7 +89,7 @@ internal fun targetType(
     sourceTypeHint = type.qualifiedName!!.asString()
   )
   val typeVariables = type.typeParameters.map { it.toTypeVariableName(classTypeParamsResolver) }
-  val appliedType = AppliedType.get(type)
+  val appliedType = AppliedType(type)
 
   val constructor = primaryConstructor(resolver, type, classTypeParamsResolver, logger)
     ?: run {

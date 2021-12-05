@@ -63,7 +63,7 @@ internal class AppliedType private constructor(
   override fun toString() = type.qualifiedName!!.asString()
 
   companion object {
-    fun get(type: KSClassDeclaration): AppliedType {
+    operator fun invoke(type: KSClassDeclaration): AppliedType {
       return AppliedType(type)
     }
   }

@@ -49,7 +49,7 @@ internal class AppliedType private constructor(
   override fun toString() = mirror.toString()
 
   companion object {
-    fun get(typeElement: TypeElement): AppliedType {
+    operator fun invoke(typeElement: TypeElement): AppliedType {
       return AppliedType(typeElement, typeElement.asType() as DeclaredType)
     }
   }

@@ -206,7 +206,7 @@ internal fun targetType(
 
   val kotlinApi = cachedClassInspector.toTypeSpec(kmClass)
   val typeVariables = kotlinApi.typeVariables
-  val appliedType = AppliedType.get(element)
+  val appliedType = AppliedType(element)
 
   val constructor = primaryConstructor(element, kotlinApi, elements, messager)
   if (constructor == null) {
