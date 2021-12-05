@@ -63,7 +63,6 @@ import javax.tools.Diagnostic.Kind.WARNING
 private val JSON_QUALIFIER = JsonQualifier::class.java
 private val JSON = Json::class.asClassName()
 private val TRANSIENT = Transient::class.asClassName()
-private val OBJECT_CLASS = ClassName("java.lang", "Object")
 private val VISIBILITY_MODIFIERS = setOf(
   KModifier.INTERNAL,
   KModifier.PRIVATE,
@@ -230,28 +229,24 @@ internal fun targetType(
   val properties = mutableMapOf<String, TargetProperty>()
 
   val resolvedTypes = mutableListOf<ResolvedTypeMapping>()
-  val superTypes = appliedType.supertypes(types)
-    .filterNot { supertype ->
-      supertype.element.asClassName() == OBJECT_CLASS || // Don't load properties for java.lang.Object.
-        supertype.element.kind != ElementKind.CLASS // Don't load properties for interface types.
-    }
-    .onEach { supertype ->
-      if (supertype.element.getAnnotation(Metadata::class.java) == null) {
+  val superclass = appliedType.superclasses(types)
+    .onEach { superclass ->
+      if (superclass.element.getAnnotation(Metadata::class.java) == null) {
         messager.printMessage(
           ERROR,
-          "@JsonClass can't be applied to $element: supertype $supertype is not a Kotlin type",
+          "@JsonClass can't be applied to $element: supertype $superclass is not a Kotlin type",
           element
         )
         return null
       }
     }
-    .associateWithTo(LinkedHashMap()) { supertype ->
+    .associateWithTo(LinkedHashMap()) { superclass ->
       // Load the kotlin API cache into memory eagerly so we can reuse the parsed APIs
-      val api = if (supertype.element == element) {
+      val api = if (superclass.element == element) {
         // We've already parsed this api above, reuse it
         kotlinApi
       } else {
-        cachedClassInspector.toTypeSpec(supertype.element)
+        cachedClassInspector.toTypeSpec(superclass.element)
       }
 
       val apiSuperClass = api.superclass
@@ -268,7 +263,7 @@ internal fun targetType(
         // Then when we look at Bar<T> later, we'll look up to the descendent Foo and extract its
         // materialized type from there.
         //
-        val superSuperClass = supertype.element.superclass as DeclaredType
+        val superSuperClass = superclass.element.superclass as DeclaredType
 
         // Convert to an element and back to wipe the typed generics off of this
         val untyped = superSuperClass.asElement().asType().asTypeName() as ParameterizedTypeName
@@ -285,7 +280,7 @@ internal fun targetType(
       return@associateWithTo api
     }
 
-  for ((localAppliedType, supertypeApi) in superTypes.entries) {
+  for ((localAppliedType, supertypeApi) in superclass.entries) {
     val appliedClassName = localAppliedType.element.asClassName()
     val supertypeProperties = declaredProperties(
       constructor = constructor,
