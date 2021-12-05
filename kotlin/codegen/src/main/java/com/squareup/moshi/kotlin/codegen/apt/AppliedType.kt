@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen.apt
 
+import javax.lang.model.element.ElementKind.CLASS
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Types
@@ -27,7 +28,7 @@ internal class AppliedType private constructor(
   val element: TypeElement,
   private val mirror: DeclaredType
 ) {
-  /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
+  /** Returns all supertypes of this, recursively. Only [CLASS] is used as we can't really use other types. */
   fun supertypes(
     types: Types,
     result: LinkedHashSet<AppliedType> = LinkedHashSet()
@@ -36,6 +37,9 @@ internal class AppliedType private constructor(
     for (supertype in types.directSupertypes(mirror)) {
       val supertypeDeclaredType = supertype as DeclaredType
       val supertypeElement = supertypeDeclaredType.asElement() as TypeElement
+      if (supertypeElement.kind != CLASS) {
+        continue
+      }
       val appliedSupertype = AppliedType(supertypeElement, supertypeDeclaredType)
       appliedSupertype.supertypes(types, result)
     }

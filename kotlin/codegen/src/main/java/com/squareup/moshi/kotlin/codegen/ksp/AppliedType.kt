@@ -35,7 +35,7 @@ internal class AppliedType private constructor(
   val typeName: TypeName = type.toClassName()
 ) {
 
-  /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
+  /** Returns all supertypes of this, recursively. Only [CLASS] is used as we can't really use other types. */
   fun supertypes(
     resolver: Resolver,
   ): LinkedHashSet<AppliedType> {
