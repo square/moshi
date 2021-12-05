@@ -29,7 +29,6 @@ import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
-import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
@@ -74,40 +73,40 @@ private class JsonClassSymbolProcessor(
     }
 
     for (type in resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)) {
-        // For the smart cast
-        if (type !is KSDeclaration) {
-          logger.error("@JsonClass can't be applied to $type: must be a Kotlin class", type)
-          continue
-        }
-
-        val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: continue
-
-        val generator = jsonClassAnnotation.generator
-
-        if (generator.isNotEmpty()) continue
-
-        if (!jsonClassAnnotation.generateAdapter) continue
-
-        val originatingFile = type.containingFile!!
-        val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
-        try {
-          val preparedAdapter = adapterGenerator
-            .prepare(generateProguardRules) { spec ->
-              spec.toBuilder()
-                .apply {
-                  generatedAnnotation?.let(::addAnnotation)
-                }
-                .addOriginatingKSFile(originatingFile)
-                .build()
-            }
-          preparedAdapter.spec.writeTo(codeGenerator, aggregating = false)
-          preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
-        } catch (e: Exception) {
-          logger.error(
-            "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}"
-          )
-        }
+      // For the smart cast
+      if (type !is KSDeclaration) {
+        logger.error("@JsonClass can't be applied to $type: must be a Kotlin class", type)
+        continue
       }
+
+      val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: continue
+
+      val generator = jsonClassAnnotation.generator
+
+      if (generator.isNotEmpty()) continue
+
+      if (!jsonClassAnnotation.generateAdapter) continue
+
+      val originatingFile = type.containingFile!!
+      val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
+      try {
+        val preparedAdapter = adapterGenerator
+          .prepare(generateProguardRules) { spec ->
+            spec.toBuilder()
+              .apply {
+                generatedAnnotation?.let(::addAnnotation)
+              }
+              .addOriginatingKSFile(originatingFile)
+              .build()
+          }
+        preparedAdapter.spec.writeTo(codeGenerator, aggregating = false)
+        preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
+      } catch (e: Exception) {
+        logger.error(
+          "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}"
+        )
+      }
+    }
     return emptyList()
   }
 
