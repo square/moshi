@@ -53,7 +53,7 @@ import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 
-/** Returns a target type for `element`, or null if it cannot be used with code gen. */
+/** Returns a target type for [type] or null if it cannot be used with code gen. */
 internal fun targetType(
   type: KSDeclaration,
   resolver: Resolver,
