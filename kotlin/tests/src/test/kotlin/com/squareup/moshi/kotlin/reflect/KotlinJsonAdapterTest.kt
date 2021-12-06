@@ -353,7 +353,7 @@ class KotlinJsonAdapterTest {
     val encoded = SubtypeProperties()
     encoded.a = 3
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5,"a":3}""")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"b":5}""")
 
     val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(4)
