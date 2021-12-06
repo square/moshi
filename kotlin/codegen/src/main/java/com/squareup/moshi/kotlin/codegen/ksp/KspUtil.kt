@@ -37,11 +37,25 @@ internal fun KSClassDeclaration.asType() = asType(emptyList())
 internal fun KSClassDeclaration.isKotlinClass(): Boolean {
   return origin == KOTLIN ||
     origin == KOTLIN_LIB ||
-    isAnnotationPresent(Metadata::class)
+    isAnnotationPresent<Metadata>()
 }
 
-internal inline fun <reified T : Annotation> KSAnnotated.findAnnotationWithType(): T? {
-  return getAnnotationsByType(T::class).firstOrNull()
+internal inline fun <reified K> KSAnnotated.findAnnotation(): KSAnnotation? {
+  val qualifiedName = K::class.qualifiedName
+  return annotations.firstOrNull {
+    it.annotationType.resolve().declaration.qualifiedName?.asString() == qualifiedName
+  }
+}
+
+internal inline fun <reified K> KSAnnotated.isAnnotationPresent(): Boolean =
+  findAnnotation<K>() != null
+
+internal operator fun KSAnnotation.get(name: String): Any? =
+  arguments.firstOrNull { it.name?.getShortName() == name }?.value
+
+internal fun KSAnnotation.getEnumConstant(name: String): String? {
+  val ksType = get(name) ?: return null
+  return (ksType as KSType).declaration.simpleName.asString()
 }
 
 internal fun KSType.unwrapTypeAlias(): KSType {

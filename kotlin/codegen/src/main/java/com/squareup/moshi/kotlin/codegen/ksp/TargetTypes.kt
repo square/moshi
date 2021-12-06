@@ -182,7 +182,7 @@ internal fun primaryConstructor(
       type = parameter.type.toTypeName(typeParameterResolver),
       hasDefault = parameter.hasDefault,
       qualifiers = parameter.qualifiers(resolver),
-      jsonName = parameter.jsonName()
+      jsonName = parameter.jsonName
     )
   }
 
@@ -202,20 +202,23 @@ private fun KSAnnotated?.qualifiers(resolver: Resolver): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return annotations
     .filter {
-      it.annotationType.resolve().declaration.isAnnotationPresent(JsonQualifier::class)
+      it.annotationType.resolve().declaration.isAnnotationPresent<JsonQualifier>()
     }
     .mapTo(mutableSetOf()) {
       it.toAnnotationSpec(resolver)
     }
 }
 
-private fun KSAnnotated?.jsonName(): String? {
-  return this?.findAnnotationWithType<Json>()?.name?.takeUnless { it == Json.UNSET_NAME }
-}
+/** Returns [Json.name]. */
+private val KSAnnotated.jsonName: String?
+  get() {
+    val name = findAnnotation<Json>()?.get("name") as? String ?: return null
+    return name.takeUnless { it == Json.UNSET_NAME }
+  }
 
-private fun KSAnnotated?.jsonIgnore(): Boolean {
-  return this?.findAnnotationWithType<Json>()?.ignore ?: false
-}
+/** Returns [Json.ignore]. */
+private val KSAnnotated.jsonIgnore: Boolean
+  get() = findAnnotation<Json>()?.get("ignore") as? Boolean ?: false
 
 @OptIn(KspExperimental::class)
 private fun declaredProperties(
@@ -237,15 +240,15 @@ private fun declaredProperties(
     val name = propertySpec.name
     val parameter = constructor.parameters[name]
     val isTransient = Modifier.JAVA_TRANSIENT in property.modifiers ||
-      property.isAnnotationPresent(Transient::class) ||
+      property.isAnnotationPresent<Transient>() ||
       Modifier.JAVA_TRANSIENT in resolver.effectiveJavaModifiers(property)
     result[name] = TargetProperty(
       propertySpec = propertySpec,
       parameter = parameter,
       visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
-      jsonName = parameter?.jsonName ?: property.jsonName()
+      jsonName = parameter?.jsonName ?: property.jsonName
         ?: name.escapeDollarSigns(),
-      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore()
+      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore
     )
   }
 

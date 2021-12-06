@@ -72,14 +72,14 @@ internal fun TargetProperty.generator(
   for (jsonQualifier in qualifiers) {
     val qualifierRawType = jsonQualifier.typeName.rawType()
     // Check Java types since that covers both Java and Kotlin annotations.
-    resolver.getClassDeclarationByName(qualifierRawType.canonicalName)?.let { annotationElement ->
-      annotationElement.findAnnotationWithType<Retention>()?.let {
-        if (it.value != AnnotationRetention.RUNTIME) {
-          logger.error(
-            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
-          )
-        }
-      }
+    val classDeclarationByName = resolver.getClassDeclarationByName(qualifierRawType.canonicalName)
+      ?: continue
+    val retention = classDeclarationByName.findAnnotation<Retention>() ?: continue
+    val retentionValue = retention.getEnumConstant("value") ?: continue
+    if (AnnotationRetention.valueOf(retentionValue) != AnnotationRetention.RUNTIME) {
+      logger.error(
+        "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
+      )
     }
   }
 
@@ -96,4 +96,4 @@ internal fun TargetProperty.generator(
 }
 
 internal val KSClassDeclaration.isJsonQualifier: Boolean
-  get() = isAnnotationPresent(JsonQualifier::class)
+  get() = isAnnotationPresent<JsonQualifier>()

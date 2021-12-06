@@ -79,13 +79,13 @@ private class JsonClassSymbolProcessor(
         continue
       }
 
-      val jsonClassAnnotation = type.findAnnotationWithType<JsonClass>() ?: continue
+      val jsonClassAnnotation = type.findAnnotation<JsonClass>() ?: continue
 
-      val generator = jsonClassAnnotation.generator
+      val generator = jsonClassAnnotation["generator"] as? String ?: ""
 
       if (generator.isNotEmpty()) continue
 
-      if (!jsonClassAnnotation.generateAdapter) continue
+      if (jsonClassAnnotation["generateAdapter"] != true) continue
 
       val originatingFile = type.containingFile!!
       val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
