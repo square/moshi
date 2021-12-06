@@ -17,10 +17,14 @@ package com.squareup.moshi.records;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.fail;
 
 import com.squareup.moshi.FromJson;
 import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonQualifier;
+import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.ToJson;
 import com.squareup.moshi.Types;
@@ -31,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import okio.Buffer;
 import org.junit.Test;
 
 public final class RecordsTest {
@@ -157,6 +162,21 @@ public final class RecordsTest {
   }
 
   @Test
+  public void indirectGenerics() throws IOException {
+    var value =
+        new HasIndirectGenerics(
+            new IndirectGenerics<>(1L, List.of(2L, 3L, 4L), Map.of("five", 5L)));
+    var jsonAdapter = moshi.adapter(HasIndirectGenerics.class);
+    var json = "{\"value\":{\"single\":1,\"list\":[2,3,4],\"map\":{\"five\":5}}}";
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json);
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value);
+  }
+
+  public static record IndirectGenerics<T>(T single, List<T> list, Map<String, T> map) {}
+
+  public static record HasIndirectGenerics(IndirectGenerics<Long> value) {}
+
+  @Test
   public void qualifiedValues() throws IOException {
     var adapter = moshi.newBuilder().add(new ColorAdapter()).build().adapter(QualifiedValues.class);
     assertThat(adapter.fromJson("{\"value\":\"#ff0000\"}"))
@@ -192,4 +212,83 @@ public final class RecordsTest {
   }
 
   public static record JsonName(@Json(name = "actualValue") int value) {}
+
+  /**
+   * We had a bug where we were incorrectly wrapping exceptions thrown when delegating to the
+   * JsonAdapters of component fields.
+   */
+  @Test
+  public void memberEncodeDecodeThrowsExceptionException() throws IOException {
+    var throwingAdapter =
+        new Object() {
+          @ToJson
+          void booleanToJson(JsonWriter writer, boolean value) throws IOException {
+            throw new IOException("boom!");
+          }
+
+          @FromJson
+          boolean booleanFromJson(JsonReader reader) throws IOException {
+            throw new IOException("boom!");
+          }
+        };
+    var json = "{\"value\":true}";
+    Moshi throwingMoshi = this.moshi.newBuilder().add(throwingAdapter).build();
+    var adapter = throwingMoshi.adapter(BooleanRecord.class);
+    try {
+      adapter.fromJson(json);
+      fail();
+    } catch (IOException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+    }
+    try {
+      adapter.toJson(new Buffer(), new BooleanRecord(true));
+      fail();
+    } catch (IOException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+    }
+  }
+
+  public static record BooleanRecord(boolean value) {}
+
+  @Test
+  public void absentPrimitiveFails() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    try {
+      adapter.fromJson("{\"s\":\"\"}");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'i' missing at $");
+    }
+  }
+
+  @Test
+  public void nullPrimitiveFails() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    try {
+      adapter.fromJson("{\"s\":\"\",\"i\":null}");
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $.i");
+    }
+  }
+
+  @Test
+  public void absentObjectIsNull() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    String json = "{\"i\":5}";
+    AbsentValues value = new AbsentValues(null, 5);
+    assertThat(adapter.fromJson(json)).isEqualTo(value);
+    assertThat(adapter.toJson(value)).isEqualTo(json);
+  }
+
+  @Test
+  public void nullObjectIsNull() throws IOException {
+    var adapter = moshi.adapter(AbsentValues.class);
+    String json = "{\"i\":5,\"s\":null}";
+    AbsentValues value = new AbsentValues(null, 5);
+    assertThat(adapter.fromJson(json)).isEqualTo(value);
+    assertThat(adapter.toJson(value)).isEqualTo("{\"i\":5}");
+  }
+
+  public static record AbsentValues(String s, int i) {}
 }

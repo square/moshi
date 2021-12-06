@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.codegen.api
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
@@ -26,52 +27,35 @@ import com.squareup.kotlinpoet.tag
 import com.squareup.kotlinpoet.tags.TypeAliasTag
 import java.util.TreeSet
 
-internal fun TypeName.unwrapTypeAliasReal(): TypeName {
+private fun TypeName.unwrapTypeAliasInternal(): TypeName? {
   return tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
-    // If any type is nullable, then the whole thing is nullable
-    var isAnyNullable = isNullable
     // Keep track of all annotations across type levels. Sort them too for consistency.
     val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
       addAll(annotations)
     }
     val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
     runningAnnotations.addAll(nestedUnwrappedType.annotations)
-    isAnyNullable = isAnyNullable || nestedUnwrappedType.isNullable
+    // If any type is nullable, then the whole thing is nullable
+    val isAnyNullable = isNullable || nestedUnwrappedType.isNullable
     nestedUnwrappedType.copy(nullable = isAnyNullable, annotations = runningAnnotations.toList())
-  } ?: this
+  }
 }
 
 internal fun TypeName.unwrapTypeAlias(): TypeName {
   return when (this) {
-    is ClassName -> unwrapTypeAliasReal()
+    is ClassName -> unwrapTypeAliasInternal() ?: this
     is ParameterizedTypeName -> {
-      if (TypeAliasTag::class in tags) {
-        unwrapTypeAliasReal()
-      } else {
-        deepCopy(TypeName::unwrapTypeAlias)
-      }
+      unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
     is TypeVariableName -> {
-      if (TypeAliasTag::class in tags) {
-        unwrapTypeAliasReal()
-      } else {
-        deepCopy(transform = TypeName::unwrapTypeAlias)
-      }
+      unwrapTypeAliasInternal() ?: deepCopy(transform = TypeName::unwrapTypeAlias)
     }
     is WildcardTypeName -> {
-      if (TypeAliasTag::class in tags) {
-        unwrapTypeAliasReal()
-      } else {
-        deepCopy(TypeName::unwrapTypeAlias)
-      }
+      unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
     is LambdaTypeName -> {
-      if (TypeAliasTag::class in tags) {
-        unwrapTypeAliasReal()
-      } else {
-        deepCopy(TypeName::unwrapTypeAlias)
-      }
+      unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
-    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+    Dynamic -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }

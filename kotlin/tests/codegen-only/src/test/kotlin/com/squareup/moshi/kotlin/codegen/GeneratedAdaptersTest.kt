@@ -436,7 +436,10 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class ImmutableProperties(val a: Int, val b: Int)
+  class ImmutableProperties(a: Int, b: Int) {
+    val a = a
+    val b = b
+  }
 
   @Test fun constructorDefaults() {
     val moshi = Moshi.Builder().build()

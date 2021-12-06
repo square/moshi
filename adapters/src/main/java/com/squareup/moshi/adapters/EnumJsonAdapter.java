@@ -15,7 +15,8 @@
  */
 package com.squareup.moshi.adapters;
 
-import com.squareup.moshi.Json;
+import static com.squareup.moshi.internal.Util.jsonName;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
@@ -67,12 +68,7 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
       nameStrings = new String[constants.length];
       for (int i = 0; i < constants.length; i++) {
         String constantName = constants[i].name();
-        Json annotation = enumType.getField(constantName).getAnnotation(Json.class);
-        String name =
-            annotation != null && !Json.UNSET_NAME.equals(annotation.name())
-                ? annotation.name()
-                : constantName;
-        nameStrings[i] = name;
+        nameStrings[i] = jsonName(constantName, enumType.getField(constantName));
       }
       options = JsonReader.Options.of(nameStrings);
     } catch (NoSuchFieldException e) {

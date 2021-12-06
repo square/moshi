@@ -136,7 +136,7 @@ internal class KotlinJsonAdapter<T>(
     for (binding in allBindings) {
       if (binding == null) continue // Skip constructor parameters that aren't properties.
 
-      writer.name(binding.name)
+      writer.name(binding.jsonName)
       binding.adapter.toJson(writer, binding.get(value))
     }
     writer.endObject()
@@ -145,8 +145,7 @@ internal class KotlinJsonAdapter<T>(
   override fun toString() = "KotlinJsonAdapter(${constructor.returnType})"
 
   data class Binding<K, P>(
-    val name: String,
-    val jsonName: String?,
+    val jsonName: String,
     val adapter: JsonAdapter<P>,
     val property: KProperty1<K, P>,
     val parameter: KParameter?,
@@ -265,7 +264,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       if (property !is KMutableProperty1 && parameter == null) continue
 
-      val name = jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: property.name
+      val jsonName = jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: property.name
       val propertyType = when (val propertyTypeClassifier = property.returnType.classifier) {
         is KClass<*> -> {
           if (propertyTypeClassifier.isValue) {
@@ -299,8 +298,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
       @Suppress("UNCHECKED_CAST")
       bindingsByName[property.name] = KotlinJsonAdapter.Binding(
-        name,
-        jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: name,
+        jsonName,
         adapter,
         property as KProperty1<Any, Any?>,
         parameter,
@@ -324,7 +322,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     }
 
     val nonIgnoredBindings = bindings.filterNotNull()
-    val options = JsonReader.Options.of(*nonIgnoredBindings.map { it.name }.toTypedArray())
+    val options = JsonReader.Options.of(*nonIgnoredBindings.map { it.jsonName }.toTypedArray())
     return KotlinJsonAdapter(constructor, bindings, nonIgnoredBindings, options).nullSafe()
   }
 }

@@ -430,8 +430,7 @@ class JsonClassSymbolProcessorTest {
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
-    // TODO we throw eagerly currently and don't collect
-//    assertThat(result.messages).contains("property c is not visible")
+    assertThat(result.messages).contains("property c is not visible")
   }
 
   @Test

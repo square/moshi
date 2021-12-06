@@ -115,7 +115,10 @@ class KotlinJsonAdapterTest {
     assertThat(decoded.b).isEqualTo(5)
   }
 
-  class ImmutableProperties(val a: Int, val b: Int)
+  class ImmutableProperties(a: Int, b: Int) {
+    val a = a
+    val b = b
+  }
 
   @Test fun constructorDefaults() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()

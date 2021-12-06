@@ -15,9 +15,15 @@
  */
 package com.squareup.moshi.kotlin.codegen.apt
 
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DelicateKotlinPoetApi
+import com.squareup.kotlinpoet.asClassName
+import javax.lang.model.element.ElementKind.CLASS
 import javax.lang.model.element.TypeElement
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.util.Types
+
+private val OBJECT_CLASS = ClassName("java.lang", "Object")
 
 /**
  * A concrete type like `List<String>` with enough information to know how to resolve its type
@@ -27,8 +33,9 @@ internal class AppliedType private constructor(
   val element: TypeElement,
   private val mirror: DeclaredType
 ) {
-  /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
-  fun supertypes(
+  /** Returns all supertypes of this, recursively. Only [CLASS] is used as we can't really use other types. */
+  @OptIn(DelicateKotlinPoetApi::class)
+  fun superclasses(
     types: Types,
     result: LinkedHashSet<AppliedType> = LinkedHashSet()
   ): LinkedHashSet<AppliedType> {
@@ -36,8 +43,14 @@ internal class AppliedType private constructor(
     for (supertype in types.directSupertypes(mirror)) {
       val supertypeDeclaredType = supertype as DeclaredType
       val supertypeElement = supertypeDeclaredType.asElement() as TypeElement
-      val appliedSupertype = AppliedType(supertypeElement, supertypeDeclaredType)
-      appliedSupertype.supertypes(types, result)
+      if (supertypeElement.kind != CLASS) {
+        continue
+      } else if (supertypeElement.asClassName() == OBJECT_CLASS) {
+        // Don't load properties for java.lang.Object.
+        continue
+      }
+      val appliedSuperclass = AppliedType(supertypeElement, supertypeDeclaredType)
+      appliedSuperclass.superclasses(types, result)
     }
     return result
   }
@@ -45,7 +58,7 @@ internal class AppliedType private constructor(
   override fun toString() = mirror.toString()
 
   companion object {
-    fun get(typeElement: TypeElement): AppliedType {
+    operator fun invoke(typeElement: TypeElement): AppliedType {
       return AppliedType(typeElement, typeElement.asType() as DeclaredType)
     }
   }

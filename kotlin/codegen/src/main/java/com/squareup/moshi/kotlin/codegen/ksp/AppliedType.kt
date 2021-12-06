@@ -35,8 +35,8 @@ internal class AppliedType private constructor(
   val typeName: TypeName = type.toClassName()
 ) {
 
-  /** Returns all supertypes of this, recursively. Includes both interface and class supertypes. */
-  fun supertypes(
+  /** Returns all super classes of this, recursively. Only [CLASS] is used as we can't really use other types. */
+  fun superclasses(
     resolver: Resolver,
   ): LinkedHashSet<AppliedType> {
     val result: LinkedHashSet<AppliedType> = LinkedHashSet()
@@ -63,7 +63,7 @@ internal class AppliedType private constructor(
   override fun toString() = type.qualifiedName!!.asString()
 
   companion object {
-    fun get(type: KSClassDeclaration): AppliedType {
+    operator fun invoke(type: KSClassDeclaration): AppliedType {
       return AppliedType(type)
     }
   }

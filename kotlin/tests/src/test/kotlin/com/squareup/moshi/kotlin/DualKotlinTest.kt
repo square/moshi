@@ -257,7 +257,7 @@ class DualKotlinTest {
     val result = adapter.fromJson(testJson)!!
     assertThat(result.i).isEqualTo(6)
 
-    // TODO doesn't work yet.
+    // TODO doesn't work yet. https://github.com/square/moshi/issues/1170
     //  need to invoke the constructor_impl$default static method, invoke constructor with result
 //    val testEmptyJson =
 //      """{}"""
@@ -773,6 +773,22 @@ class DualKotlinTest {
 
   @JsonClass(generateAdapter = true)
   class RequiredValueWithDifferentJsonNameAbsentArray(var values: List<RequiredValueWithDifferentJsonNameAbsent>)
+
+  @Test fun propertyNameHasDollarSign() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<PropertyWithDollarSign>()
+
+    val value = PropertyWithDollarSign("apple", "banana")
+    val json = """{"${'$'}a":"apple","${'$'}b":"banana"}"""
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json)
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class PropertyWithDollarSign(
+    val `$a`: String,
+    @Json(name = "\$b") val b: String
+  )
 }
 
 typealias TypeAlias = Int

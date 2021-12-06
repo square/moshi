@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.internal.Util.jsonName;
 import static com.squareup.moshi.internal.Util.resolve;
 
 import com.squareup.moshi.internal.Util;
@@ -147,12 +148,9 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
             field.setAccessible(true);
 
             // Store it using the field's name. If there was already a field with this name, fail!
-            String name =
-                jsonAnnotation != null && !Json.UNSET_NAME.equals(jsonAnnotation.name())
-                    ? jsonAnnotation.name()
-                    : fieldName;
-            FieldBinding<Object> fieldBinding = new FieldBinding<>(name, field, adapter);
-            FieldBinding<?> replaced = fieldBindings.put(name, fieldBinding);
+            String jsonName = jsonName(fieldName, jsonAnnotation);
+            FieldBinding<Object> fieldBinding = new FieldBinding<>(jsonName, field, adapter);
+            FieldBinding<?> replaced = fieldBindings.put(jsonName, fieldBinding);
             if (replaced != null) {
               throw new IllegalArgumentException(
                   "Conflicting fields:\n"
