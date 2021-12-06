@@ -677,7 +677,7 @@ final class JsonUtf8Reader extends JsonReader {
     }
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = null;
+    pathNames[stackSize - 1] = p == PEEKED_BUFFERED ? result : null;
     return result;
   }
 
@@ -806,10 +806,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonEncodingException(
           "JSON forbids NaN and infinities: " + result + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = null;
     return result;
   }
 
@@ -856,10 +856,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException(
           "Expected a long but was " + peekedString + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = null;
     return result;
   }
 
@@ -977,10 +977,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException(
           "Expected an int but was " + peekedString + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = null;
     return result;
   }
 
