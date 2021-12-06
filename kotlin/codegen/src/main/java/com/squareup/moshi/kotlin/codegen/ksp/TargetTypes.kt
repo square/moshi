@@ -243,8 +243,7 @@ private fun declaredProperties(
       propertySpec = propertySpec,
       parameter = parameter,
       visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
-      jsonName = parameter?.jsonName ?: property.jsonName()
-        ?: name.escapeDollarSigns(),
+      jsonName = parameter?.jsonName ?: property.jsonName() ?: name,
       jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore()
     )
   }
@@ -278,8 +277,4 @@ private fun KSPropertyDeclaration.toPropertySpec(
       )
     }
     .build()
-}
-
-private fun String.escapeDollarSigns(): String {
-  return replace("\$", "\${\'\$\'}")
 }

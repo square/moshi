@@ -390,8 +390,7 @@ private fun declaredProperties(
       propertySpec = property,
       parameter = parameter,
       visibility = property.modifiers.visibility(),
-      jsonName = parameter?.jsonName ?: property.annotations.jsonName()
-        ?: name.escapeDollarSigns(),
+      jsonName = parameter?.jsonName ?: property.annotations.jsonName() ?: name,
       jsonIgnore = isIgnored
     )
   }
@@ -515,10 +514,6 @@ private fun <T> AnnotationSpec.elementValue(name: String): T? {
   return mirror.elementValues.entries.firstOrNull {
     it.key.simpleName.contentEquals(name)
   }?.value?.value as? T
-}
-
-private fun String.escapeDollarSigns(): String {
-  return replace("\$", "\${\'\$\'}")
 }
 
 internal val TypeElement.metadata: Metadata
