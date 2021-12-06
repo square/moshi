@@ -77,7 +77,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -98,7 +98,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -115,7 +115,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.")
     }
   }
 
@@ -136,7 +136,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.")
     }
   }
 
@@ -153,7 +153,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -174,7 +174,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
