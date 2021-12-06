@@ -257,7 +257,7 @@ class DualKotlinTest {
     val result = adapter.fromJson(testJson)!!
     assertThat(result.i).isEqualTo(6)
 
-    // TODO doesn't work yet.
+    // TODO doesn't work yet. https://github.com/square/moshi/issues/1170
     //  need to invoke the constructor_impl$default static method, invoke constructor with result
 //    val testEmptyJson =
 //      """{}"""

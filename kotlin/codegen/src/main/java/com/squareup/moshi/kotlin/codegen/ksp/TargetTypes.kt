@@ -53,7 +53,7 @@ import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 
-/** Returns a target type for `element`, or null if it cannot be used with code gen. */
+/** Returns a target type for [type] or null if it cannot be used with code gen. */
 internal fun targetType(
   type: KSDeclaration,
   resolver: Resolver,
@@ -89,7 +89,7 @@ internal fun targetType(
     sourceTypeHint = type.qualifiedName!!.asString()
   )
   val typeVariables = type.typeParameters.map { it.toTypeVariableName(classTypeParamsResolver) }
-  val appliedType = AppliedType.get(type)
+  val appliedType = AppliedType(type)
 
   val constructor = primaryConstructor(resolver, type, classTypeParamsResolver, logger)
     ?: run {
@@ -108,12 +108,12 @@ internal fun targetType(
   val properties = mutableMapOf<String, TargetProperty>()
 
   val originalType = appliedType.type
-  for (supertype in appliedType.supertypes(resolver)) {
-    val classDecl = supertype.type
+  for (superclass in appliedType.superclasses(resolver)) {
+    val classDecl = superclass.type
     if (!classDecl.isKotlinClass()) {
       logger.error(
         """
-        @JsonClass can't be applied to $type: supertype $supertype is not a Kotlin type.
+        @JsonClass can't be applied to $type: supertype $superclass is not a Kotlin type.
         Origin=${classDecl.origin}
         Annotations=${classDecl.annotations.joinToString(prefix = "[", postfix = "]") { it.shortName.getShortName() }}
         """.trimIndent(),
