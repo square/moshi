@@ -20,8 +20,8 @@ plugins {
 }
 
 dependencies {
-  kapt(project(":kotlin:codegen"))
+  kapt(project(":kotlin:moshi-kotlin-codegen"))
   compileOnly(libs.jsr305)
   implementation(project(":moshi"))
-  implementation(project(":adapters"))
+  implementation(project(":moshi-adapters"))
 }
