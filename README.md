@@ -1069,9 +1069,9 @@ Note that the reflection adapter transitively depends on the `kotlin-reflect` li
 
 #### Codegen
 
-Moshi’s Kotlin codegen support is an annotation processor. It generates a small and fast adapter for
-each of your Kotlin classes at compile time. Enable it by annotating each class that you want to
-encode as JSON:
+Moshi’s Kotlin codegen support can be used as an annotation processor (via [kapt][kapt]) or Kotlin SymbolProcessor ([KSP][ksp]).
+It generates a small and fast adapter for each of your Kotlin classes at compile-time. Enable it by annotating
+each class that you want to encode as JSON:
 
 ```kotlin
 @JsonClass(generateAdapter = true)
@@ -1084,8 +1084,26 @@ data class BlackjackHand(
 The codegen adapter requires that your Kotlin types and their properties be either `internal` or
 `public` (this is Kotlin’s default visibility).
 
-Kotlin codegen has no additional runtime dependency. You’ll need to [enable kapt][kapt] and then
+Kotlin codegen has no additional runtime dependency. You’ll need to enable kapt or KSP and then
 add the following to your build to enable the annotation processor:
+
+<details open>
+    <summary>KSP</summary>
+
+```kotlin
+plugins {
+  id("com.google.devtools.ksp").version("1.6.0-1.0.1")
+}
+
+dependencies {
+  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
+}
+
+```
+</details>
+
+<details>
+    <summary>Kapt</summary>
 
 ```xml
 <dependency>
@@ -1099,9 +1117,7 @@ add the following to your build to enable the annotation processor:
 ```kotlin
 kapt("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
 ```
-
-You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
-the compiled code to have the required metadata annotations that Moshi's processor looks for.
+</details>
 
 #### Limitations
 
@@ -1168,3 +1184,4 @@ License
  [gson]: https://github.com/google/gson/
  [javadoc]: https://square.github.io/moshi/1.x/moshi/
  [kapt]: https://kotlinlang.org/docs/reference/kapt.html
+ [ksp]: https://github.com/google/ksp
