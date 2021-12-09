@@ -739,7 +739,7 @@ class ColorAdapter {
 Use `@JsonQualifier` when you need different JSON encodings for the same type. Most programs
 shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 
-### Omit fields with `transient`
+### Omitting fields
 
 Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
 hand has a `total` field with the sum of the cards:
@@ -769,14 +769,15 @@ class BlackjackHand(
 </details>
 
 By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
-JSON. Prevent a field from being included by adding Java’s `transient` keyword or Kotlin's `@Transient` annotation:
+JSON. Prevent a field from being included by annotating them with `@Json(ignore = true)`.
 
 <details open>
     <summary>Java</summary>
 
 ```java
 public final class BlackjackHand {
-  private transient int total;
+  @Json(ignore = true)
+  private int total;
 
   ...
 }
@@ -788,16 +789,20 @@ public final class BlackjackHand {
 
 ```kotlin
 class BlackjackHand(...) {
-  @Transient var total: Int
+  @Json(ignore = true)
+  var total: Int = 0
 
   ...
 }
 ```
 </details>
 
-Transient fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
-JSON contains a value for the field. Instead, it will get a default value.
+These fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
+JSON contains a value for the field. Instead, it will get a default value. In Kotlin, these fields
+_must_ have a default value if they are in the primary constructor.
 
+Note that you can also use Java’s `transient` keyword or Kotlin's `@Transient` annotation on these fields
+for the same effect.
 
 ### Default Values & Constructors
 
