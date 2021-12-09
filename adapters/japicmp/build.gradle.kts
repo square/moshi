@@ -29,7 +29,7 @@ dependencies {
     isTransitive = false
     isForce = true
   }
-  latest(project(":adapters"))
+  latest(project(":moshi-adapters"))
 }
 
 val japicmp = tasks.register<JapicmpTask>("japicmp") {

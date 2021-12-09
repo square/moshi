@@ -26,7 +26,7 @@ ktlint = "0.41.0"
 dokka = { id = "org.jetbrains.dokka", version = "1.5.31" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.17.0" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.0.0" }
 spotless = { id = "com.diffplug.spotless", version = "5.14.2" }
 

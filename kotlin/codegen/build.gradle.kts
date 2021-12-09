@@ -16,12 +16,15 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import com.vanniktech.maven.publish.JavadocJar.None
+import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
   id("com.google.devtools.ksp")
-  id("com.vanniktech.maven.publish")
+  id("com.vanniktech.maven.publish.base")
   alias(libs.plugins.mavenShadow)
 }
 
@@ -119,4 +122,8 @@ val shadowJar = tasks.shadowJar.apply {
 artifacts {
   runtimeOnly(shadowJar)
   archives(shadowJar)
+}
+
+configure<MavenPublishBaseExtension> {
+  configure(KotlinJvm(javadocJar = None()))
 }
