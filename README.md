@@ -1070,7 +1070,7 @@ Note that the reflection adapter transitively depends on the `kotlin-reflect` li
 #### Codegen
 
 Moshi’s Kotlin codegen support can be used as an annotation processor (via [kapt][kapt]) or Kotlin SymbolProcessor ([KSP][ksp]).
-It generates a small and fast adapter for each of your Kotlin classes at compile-time. Enable it by annotating 
+It generates a small and fast adapter for each of your Kotlin classes at compile-time. Enable it by annotating
 each class that you want to encode as JSON:
 
 ```kotlin
