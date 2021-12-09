@@ -1087,7 +1087,7 @@ The codegen adapter requires that your Kotlin types and their properties be eith
 Kotlin codegen has no additional runtime dependency. You’ll need to enable kapt or KSP and then
 add the following to your build to enable the annotation processor:
 
-<details>
+<details open>
     <summary>KSP</summary>
 
 ```kotlin
