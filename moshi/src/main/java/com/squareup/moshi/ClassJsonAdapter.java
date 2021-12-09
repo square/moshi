@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
  *
- * <h3>Platform Types</h3>
+ * <h1>Platform Types</h1>
  *
  * Fields from platform classes are omitted from both serialization and deserialization unless they
  * are either public or protected. This includes the following packages and their subpackages:
