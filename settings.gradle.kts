@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2020 Square, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 pluginManagement {
   repositories {
     mavenCentral()
@@ -25,16 +9,13 @@ rootProject.name = "moshi-root"
 include(":moshi")
 include(":moshi:japicmp")
 include(":moshi:records-tests")
-include(":adapters")
-project(":adapters").name = "moshi-adapters"
-include(":adapters:japicmp")
+include(":moshi-adapters")
+include(":moshi-adapters:japicmp")
 include(":examples")
-include(":kotlin:reflect")
-project(":kotlin:reflect").name = "moshi-kotlin"
-include(":kotlin:codegen")
-project(":kotlin:codegen").name = "moshi-kotlin-codegen"
-include(":kotlin:tests")
-include(":kotlin:tests:codegen-only")
-include(":kotlin:tests:extra-moshi-test-module")
+include(":moshi-kotlin")
+include(":moshi-kotlin-codegen")
+include(":moshi-kotlin-tests")
+include(":moshi-kotlin-tests:codegen-only")
+include(":moshi-kotlin-tests:extra-moshi-test-module")
 
 enableFeaturePreview("VERSION_CATALOGS")
