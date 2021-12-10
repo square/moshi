@@ -1,6 +1,45 @@
 Change Log
 ==========
 
+## Version 1.13.0
+
+_2021-12-08_
+
+ * New: Support for [Kotlin Symbol Processing (KSP)][ksp]. KSP is an alternative to annotation
+   processing code gen. It's builds faster and better supports Kotlin language features.
+
+   To use KSP in your application you must enable the KSP Gradle plugin and add a KSP dependency
+   on Moshi codegen.
+
+    ```
+    plugins {
+      id("com.google.devtools.ksp").version("1.6.0-1.0.1")
+    }
+
+    dependencies {
+      ksp("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
+    }
+    ```
+
+   If you're switching from annotation processing (kapt) to KSP, you should remove the kapt plugin
+   and the kapt Moshi dependency.
+
+ * New: `@Json(ignore = true)` is a Moshi-specific way to exclude properties from JSON encoding
+   and decoding.
+ * New: Support Java 16 records. (Moshi still requires Java 8 only; we're shipping a [multi-release
+   jar][mrjar] to better support modern JVMs.)
+ * New: Option to disable generating R8/ProGuard files. These files prevent code shrinkers from
+   removing files that support JSON processing. If you're not using ProGuard or R8, you can skip
+   this step.
+
+    ```
+    ksp {
+      arg("moshi.generateProguardRules", "false")
+    }
+    ```
+
+ * Upgrade: [Kotlin 1.6.0][kotlin_1_6_0].
+
 ## Version 1.12.0
 
 _2021-04-01_
@@ -495,8 +534,11 @@ _2015-06-16_
  [jackson]: http://wiki.fasterxml.com/JacksonHome
  [kotlin_1_4_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.10
  [kotlin_1_4_31]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.31
+ [kotlin_1_6_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.6.0
+ [ksp]: https://github.com/google/ksp
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
  [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
+ [mrjar]: https://openjdk.java.net/jeps/238
  [okio_1_7_5]: https://square.github.io/okio/changelog/#version-1175
  [okio_2_10_0]: https://square.github.io/okio/changelog/#version-2100
  [rfc_7159]: https://tools.ietf.org/html/rfc7159

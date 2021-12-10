@@ -739,7 +739,7 @@ class ColorAdapter {
 Use `@JsonQualifier` when you need different JSON encodings for the same type. Most programs
 shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 
-### Omit fields with `transient`
+### Omitting fields
 
 Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
 hand has a `total` field with the sum of the cards:
@@ -769,14 +769,15 @@ class BlackjackHand(
 </details>
 
 By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
-JSON. Prevent a field from being included by adding Java’s `transient` keyword or Kotlin's `@Transient` annotation:
+JSON. Prevent a field from being included by annotating them with `@Json(ignore = true)`.
 
 <details open>
     <summary>Java</summary>
 
 ```java
 public final class BlackjackHand {
-  private transient int total;
+  @Json(ignore = true)
+  private int total;
 
   ...
 }
@@ -788,16 +789,20 @@ public final class BlackjackHand {
 
 ```kotlin
 class BlackjackHand(...) {
-  @Transient var total: Int
+  @Json(ignore = true)
+  var total: Int = 0
 
   ...
 }
 ```
 </details>
 
-Transient fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
-JSON contains a value for the field. Instead, it will get a default value.
+These fields are omitted when writing JSON. When reading JSON, the field is skipped even if the
+JSON contains a value for the field. Instead, it will get a default value. In Kotlin, these fields
+_must_ have a default value if they are in the primary constructor.
 
+Note that you can also use Java’s `transient` keyword or Kotlin's `@Transient` annotation on these fields
+for the same effect.
 
 ### Default Values & Constructors
 
@@ -1061,7 +1066,7 @@ The reflection adapter requires the following additional dependency:
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.12.0")
+implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -1069,9 +1074,9 @@ Note that the reflection adapter transitively depends on the `kotlin-reflect` li
 
 #### Codegen
 
-Moshi’s Kotlin codegen support is an annotation processor. It generates a small and fast adapter for
-each of your Kotlin classes at compile time. Enable it by annotating each class that you want to
-encode as JSON:
+Moshi’s Kotlin codegen support can be used as an annotation processor (via [kapt][kapt]) or Kotlin SymbolProcessor ([KSP][ksp]).
+It generates a small and fast adapter for each of your Kotlin classes at compile-time. Enable it by annotating
+each class that you want to encode as JSON:
 
 ```kotlin
 @JsonClass(generateAdapter = true)
@@ -1084,8 +1089,26 @@ data class BlackjackHand(
 The codegen adapter requires that your Kotlin types and their properties be either `internal` or
 `public` (this is Kotlin’s default visibility).
 
-Kotlin codegen has no additional runtime dependency. You’ll need to [enable kapt][kapt] and then
+Kotlin codegen has no additional runtime dependency. You’ll need to enable kapt or KSP and then
 add the following to your build to enable the annotation processor:
+
+<details open>
+    <summary>KSP</summary>
+
+```kotlin
+plugins {
+  id("com.google.devtools.ksp").version("1.6.0-1.0.1")
+}
+
+dependencies {
+  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
+}
+
+```
+</details>
+
+<details>
+    <summary>Kapt</summary>
 
 ```xml
 <dependency>
@@ -1097,11 +1120,9 @@ add the following to your build to enable the annotation processor:
 ```
 
 ```kotlin
-kapt("com.squareup.moshi:moshi-kotlin-codegen:1.12.0")
+kapt("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
 ```
-
-You must also have the `kotlin-stdlib` dependency on the classpath during compilation in order for
-the compiled code to have the required metadata annotations that Moshi's processor looks for.
+</details>
 
 #### Limitations
 
@@ -1128,7 +1149,7 @@ Download [the latest JAR][dl] or depend via Maven:
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.12.0")
+implementation("com.squareup.moshi:moshi:1.13.0")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -1168,3 +1189,4 @@ License
  [gson]: https://github.com/google/gson/
  [javadoc]: https://square.github.io/moshi/1.x/moshi/
  [kapt]: https://kotlinlang.org/docs/reference/kapt.html
+ [ksp]: https://github.com/google/ksp

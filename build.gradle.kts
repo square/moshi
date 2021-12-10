@@ -1,21 +1,6 @@
-/*
- * Copyright (C) 2020 Square, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import com.diffplug.gradle.spotless.JavaExtension
-import org.gradle.jvm.tasks.Jar
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -35,10 +20,19 @@ buildscript {
 }
 
 plugins {
-  alias(libs.plugins.mavenPublish) apply false
+  alias(libs.plugins.mavenPublish)
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.spotless)
   alias(libs.plugins.japicmp) apply false
+}
+
+allprojects {
+  group = "com.squareup.moshi"
+  version = "1.14.0-SNAPSHOT"
+
+  repositories {
+    mavenCentral()
+  }
 }
 
 spotless {
@@ -72,10 +66,6 @@ spotless {
 }
 
 subprojects {
-  repositories {
-    mavenCentral()
-  }
-
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
@@ -106,30 +96,54 @@ subprojects {
       }
     }
   }
+}
 
-  // Configure publishing
-  pluginManager.withPlugin("com.vanniktech.maven.publish") {
-    // Configure automatic-module-name, but only for published modules
-    @Suppress("UnstableApiUsage")
-    val automaticModuleName = providers.gradleProperty("AUTOMATIC_MODULE_NAME")
-      .forUseAtConfigurationTime()
-    if (automaticModuleName.isPresent) {
-      val name = automaticModuleName.get()
-      tasks.withType<Jar>().configureEach {
-        manifest {
-          attributes("Automatic-Module-Name" to name)
+allprojects {
+  tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+      reportUndocumented.set(false)
+      skipDeprecated.set(true)
+      jdkVersion.set(8)
+      perPackageOption {
+        matchingRegex.set("com\\.squareup.moshi\\.internal.*")
+        suppress.set(true)
+      }
+    }
+    if (name == "dokkaHtml") {
+      outputDirectory.set(rootDir.resolve("docs/1.x"))
+      dokkaSourceSets.configureEach {
+        skipDeprecated.set(true)
+        externalDocumentationLink {
+          url.set(URL("https://square.github.io/okio/2.x/okio/"))
         }
       }
     }
+  }
 
-    if (name != "codegen" && pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
-      apply(plugin = "org.jetbrains.dokka")
-      tasks.named<DokkaTask>("dokkaHtml") {
-        outputDirectory.set(rootDir.resolve("docs/1.x"))
-        dokkaSourceSets.configureEach {
-          skipDeprecated.set(true)
-          externalDocumentationLink {
-            url.set(URL("https://square.github.io/okio/2.x/okio/"))
+  plugins.withId("com.vanniktech.maven.publish.base") {
+    configure<MavenPublishBaseExtension> {
+      publishToMavenCentral(SonatypeHost.DEFAULT)
+      signAllPublications()
+      pom {
+        description.set("A modern JSON API for Android and Java")
+        name.set(project.name)
+        url.set("https://github.com/square/moshi/")
+        licenses {
+          license {
+            name.set("The Apache Software License, Version 2.0")
+            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+            distribution.set("repo")
+          }
+        }
+        scm {
+          url.set("https://github.com/square/moshi/")
+          connection.set("scm:git:git://github.com/square/moshi.git")
+          developerConnection.set("scm:git:ssh://git@github.com/square/moshi.git")
+        }
+        developers {
+          developer {
+            id.set("square")
+            name.set("Square, Inc.")
           }
         }
       }
