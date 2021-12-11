@@ -26,8 +26,8 @@ import com.squareup.moshi.Moshi;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import javax.annotation.Nullable;
 import okio.Buffer;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
 @SuppressWarnings("CheckReturnValue")
