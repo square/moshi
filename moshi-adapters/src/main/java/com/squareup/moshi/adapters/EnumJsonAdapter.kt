@@ -105,7 +105,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
   public companion object {
     @JvmStatic
     public fun <T : Enum<T>> create(enumType: Class<T>): EnumJsonAdapter<T> {
-      return EnumJsonAdapter(enumType, null, false)
+      return EnumJsonAdapter(enumType, fallbackValue = null, useFallbackValue = false)
     }
   }
 }

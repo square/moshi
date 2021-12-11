@@ -25,7 +25,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
 import java.io.IOException
 import java.lang.reflect.Type
-import java.util.ArrayList
 import javax.annotation.CheckReturnValue
 
 /**
@@ -72,8 +71,8 @@ import javax.annotation.CheckReturnValue
  * ```
  * Moshi moshi = new Moshi.Builder()
  *   .add(PolymorphicJsonAdapterFactory.of(HandOfCards.class, "hand_type")
- *   .withSubtype(BlackjackHand.class, "blackjack")
- *   .withSubtype(HoldemHand.class, "holdem"))
+ *     .withSubtype(BlackjackHand.class, "blackjack")
+ *     .withSubtype(HoldemHand.class, "holdem"))
  *   .build();
  * ```
  *
@@ -109,14 +108,14 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
     require(!labels.contains(label)) { "Labels must be unique." }
-    val newLabels: MutableList<String> = ArrayList(
-      labels
-    )
-    newLabels.add(label)
-    val newSubtypes: MutableList<Type> = ArrayList(
-      subtypes
-    )
-    newSubtypes.add(subtype)
+    val newLabels = buildList {
+      addAll(labels)
+      add(label)
+    }
+    val newSubtypes = buildList {
+      addAll(subtypes)
+      add(subtype)
+    }
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
       labelKey = labelKey,
@@ -134,7 +133,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
    * it within your implementation of [JsonAdapter.fromJson]
    */
   public fun withFallbackJsonAdapter(
-    fallbackJsonAdapter: JsonAdapter<Any>
+    fallbackJsonAdapter: JsonAdapter<Any>?
   ): PolymorphicJsonAdapterFactory<T> {
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
@@ -236,7 +235,6 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         requireNotNull(fallbackJsonAdapter) {
           "Expected one of $subtypes but found $value, a ${value.javaClass}. Register this subtype."
         }
-        fallbackJsonAdapter
       } else {
         jsonAdapters[labelIndex]
       }
