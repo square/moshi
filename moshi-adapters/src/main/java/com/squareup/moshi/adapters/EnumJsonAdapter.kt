@@ -83,7 +83,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
     }
     if (reader.peek() != STRING) {
       throw JsonDataException(
-        "Expected a string but was " + reader.peek() + " at path " + path
+        "Expected a string but was ${reader.peek()} at path $path"
       )
     }
     reader.skipValue()
