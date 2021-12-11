@@ -13,46 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.internal;
+package com.squareup.moshi.internal
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import java.io.IOException;
-import javax.annotation.Nullable;
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
 
-public final class NullSafeJsonAdapter<T> extends JsonAdapter<T> {
-
-  private final JsonAdapter<T> delegate;
-
-  public NullSafeJsonAdapter(JsonAdapter<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  public JsonAdapter<T> delegate() {
-    return delegate;
-  }
-
-  @Override
-  public @Nullable T fromJson(JsonReader reader) throws IOException {
-    if (reader.peek() == JsonReader.Token.NULL) {
-      return reader.nextNull();
+public class NullSafeJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T>() {
+  override fun fromJson(reader: JsonReader): T? {
+    return if (reader.peek() == JsonReader.Token.NULL) {
+      reader.nextNull()
     } else {
-      return delegate.fromJson(reader);
+      delegate.fromJson(reader)
     }
   }
 
-  @Override
-  public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+  override fun toJson(writer: JsonWriter, value: T?) {
     if (value == null) {
-      writer.nullValue();
+      writer.nullValue()
     } else {
-      delegate.toJson(writer, value);
+      delegate.toJson(writer, value)
     }
   }
 
-  @Override
-  public String toString() {
-    return delegate + ".nullSafe()";
-  }
+  override fun toString(): String = "$delegate.nullSafe()"
 }
