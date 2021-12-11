@@ -13,470 +13,579 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.internal;
+package com.squareup.moshi.internal
 
-import static com.squareup.moshi.Types.arrayOf;
-import static com.squareup.moshi.Types.subtypeOf;
-import static com.squareup.moshi.Types.supertypeOf;
+import java.lang.ClassNotFoundException
+import java.lang.Void
+import java.lang.reflect.AnnotatedElement
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonQualifier
+import java.lang.reflect.InvocationTargetException
+import java.lang.RuntimeException
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.GenericArrayType
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonClass
+import java.lang.NoSuchMethodException
+import java.lang.IllegalAccessException
+import java.lang.InstantiationException
+import java.lang.IllegalStateException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.Types
+import com.squareup.moshi.asArrayType
+import com.squareup.moshi.rawType
+import java.lang.Error
+import java.lang.StringBuilder
+import java.lang.reflect.Constructor
+import java.lang.reflect.Type
+import java.lang.reflect.TypeVariable
+import java.lang.reflect.WildcardType
+import java.util.Collections
+import java.util.LinkedHashSet
 
-import com.squareup.moshi.Json;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonClass;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonQualifier;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import javax.annotation.Nullable;
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+public object Util {
+  @JvmField public val NO_ANNOTATIONS: Set<Annotation> = emptySet()
+  @JvmField public val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
 
-public final class Util {
-  public static final Set<Annotation> NO_ANNOTATIONS = Collections.emptySet();
-  public static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
-  @Nullable public static final Class<?> DEFAULT_CONSTRUCTOR_MARKER;
-  @Nullable private static final Class<? extends Annotation> METADATA;
+  @Suppress("UNCHECKED_CAST")
+  private val METADATA: Class<out Annotation>? = try {
+    Class.forName(kotlinMetadataClassName) as Class<out Annotation>
+  } catch (ignored: ClassNotFoundException) {
+    null
+  }
+
+  // We look up the constructor marker separately because Metadata might be (justifiably)
+  // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
+  public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
+    Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
+  } catch (ignored: ClassNotFoundException) {
+    null
+  }
 
   /** A map from primitive types to their corresponding wrapper types. */
-  private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_WRAPPER_TYPE;
-
-  static {
-    Class<? extends Annotation> metadata = null;
-    try {
-      //noinspection unchecked
-      metadata = (Class<? extends Annotation>) Class.forName(getKotlinMetadataClassName());
-    } catch (ClassNotFoundException ignored) {
-    }
-    METADATA = metadata;
-
-    // We look up the constructor marker separately because Metadata might be (justifiably)
-    // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
-    Class<?> defaultConstructorMarker = null;
-    try {
-      defaultConstructorMarker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker");
-    } catch (ClassNotFoundException ignored) {
-    }
-    DEFAULT_CONSTRUCTOR_MARKER = defaultConstructorMarker;
-
-    Map<Class<?>, Class<?>> primToWrap = new LinkedHashMap<>(16);
-
-    primToWrap.put(boolean.class, Boolean.class);
-    primToWrap.put(byte.class, Byte.class);
-    primToWrap.put(char.class, Character.class);
-    primToWrap.put(double.class, Double.class);
-    primToWrap.put(float.class, Float.class);
-    primToWrap.put(int.class, Integer.class);
-    primToWrap.put(long.class, Long.class);
-    primToWrap.put(short.class, Short.class);
-    primToWrap.put(void.class, Void.class);
-
-    PRIMITIVE_TO_WRAPPER_TYPE = Collections.unmodifiableMap(primToWrap);
+  private val PRIMITIVE_TO_WRAPPER_TYPE: Map<Class<*>, Class<*>> = buildMap(16) {
+    put(Boolean::class.javaPrimitiveType!!, Boolean::class.java)
+    put(Byte::class.javaPrimitiveType!!, Byte::class.java)
+    put(Char::class.javaPrimitiveType!!, Char::class.java)
+    put(Double::class.javaPrimitiveType!!, Double::class.java)
+    put(Float::class.javaPrimitiveType!!, Float::class.java)
+    put(Int::class.javaPrimitiveType!!, Int::class.java)
+    put(Long::class.javaPrimitiveType!!, Long::class.java)
+    put(Short::class.javaPrimitiveType!!, Short::class.java)
+    put(Void.TYPE, Void::class.java)
   }
 
-  // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metada
-  private static String getKotlinMetadataClassName() {
-    return "kotlin.Metadata";
+  // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metadata
+  private val kotlinMetadataClassName: String
+    get() = "kotlin.Metadata"
+
+  @JvmStatic
+  public fun jsonName(declaredName: String, element: AnnotatedElement): String {
+    return jsonName(declaredName, element.getAnnotation(Json::class.java))
   }
 
-  private Util() {}
-
-  public static String jsonName(String declaredName, AnnotatedElement element) {
-    return jsonName(declaredName, element.getAnnotation(Json.class));
+  @JvmStatic
+  public fun jsonName(declaredName: String, annotation: Json?): String {
+    if (annotation == null) return declaredName
+    val annotationName: String = annotation.name
+    return if (Json.UNSET_NAME == annotationName) declaredName else annotationName
   }
 
-  public static String jsonName(String declaredName, @Nullable Json annotation) {
-    if (annotation == null) return declaredName;
-    String annotationName = annotation.name();
-    return Json.UNSET_NAME.equals(annotationName) ? declaredName : annotationName;
-  }
-
-  public static boolean typesMatch(Type pattern, Type candidate) {
+  @JvmStatic
+  public fun typesMatch(pattern: Type, candidate: Type): Boolean {
     // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
-    return Types.equals(pattern, candidate);
+    return Types.equals(pattern, candidate)
   }
 
-  public static Set<? extends Annotation> jsonAnnotations(AnnotatedElement annotatedElement) {
-    return jsonAnnotations(annotatedElement.getAnnotations());
+  @JvmStatic
+  public fun jsonAnnotations(annotatedElement: AnnotatedElement): Set<Annotation> {
+    return jsonAnnotations(annotatedElement.annotations)
   }
 
-  public static Set<? extends Annotation> jsonAnnotations(Annotation[] annotations) {
-    Set<Annotation> result = null;
-    for (Annotation annotation : annotations) {
-      if (annotation.annotationType().isAnnotationPresent(JsonQualifier.class)) {
-        if (result == null) result = new LinkedHashSet<>();
-        result.add(annotation);
+  @JvmStatic
+  public fun jsonAnnotations(annotations: Array<Annotation>): Set<Annotation> {
+    var result: MutableSet<Annotation>? = null
+    for (annotation in annotations) {
+      @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+      if ((annotation as java.lang.annotation.Annotation).annotationType().isAnnotationPresent(JsonQualifier::class.java)) {
+        if (result == null) result = LinkedHashSet()
+        result.add(annotation)
       }
     }
-    return result != null ? Collections.unmodifiableSet(result) : Util.NO_ANNOTATIONS;
+    return if (result != null) Collections.unmodifiableSet(result) else NO_ANNOTATIONS
   }
 
-  public static boolean isAnnotationPresent(
-      Set<? extends Annotation> annotations, Class<? extends Annotation> annotationClass) {
-    if (annotations.isEmpty()) return false; // Save an iterator in the common case.
-    for (Annotation annotation : annotations) {
-      if (annotation.annotationType() == annotationClass) return true;
+  @JvmStatic
+  public fun isAnnotationPresent(
+    annotations: Set<Annotation>,
+    annotationClass: Class<out Annotation>
+  ): Boolean {
+    if (annotations.isEmpty()) return false // Save an iterator in the common case.
+    for (annotation in annotations) {
+      @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+      if ((annotation as java.lang.annotation.Annotation).annotationType() == annotationClass) return true
     }
-    return false;
+    return false
   }
 
-  /** Returns true if {@code annotations} has any annotation whose simple name is Nullable. */
-  public static boolean hasNullable(Annotation[] annotations) {
-    for (Annotation annotation : annotations) {
-      if (annotation.annotationType().getSimpleName().equals("Nullable")) {
-        return true;
+  /** Returns true if `annotations` has any annotation whose simple name is Nullable. */
+  @JvmStatic
+  public fun hasNullable(annotations: Array<Annotation>): Boolean {
+    for (annotation in annotations) {
+      @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+      if ((annotation as java.lang.annotation.Annotation).annotationType().simpleName == "Nullable") {
+        return true
       }
     }
-    return false;
+    return false
   }
 
   /**
-   * Returns true if {@code rawType} is built in. We don't reflect on private fields of platform
+   * Returns true if `rawType` is built in. We don't reflect on private fields of platform
    * types because they're unspecified and likely to be different on Java vs. Android.
    */
-  public static boolean isPlatformType(Class<?> rawType) {
-    String name = rawType.getName();
-    return name.startsWith("android.")
-        || name.startsWith("androidx.")
-        || name.startsWith("java.")
-        || name.startsWith("javax.")
-        || name.startsWith("kotlin.")
-        || name.startsWith("kotlinx.")
-        || name.startsWith("scala.");
+  @JvmStatic
+  public fun isPlatformType(rawType: Class<*>): Boolean {
+    val name = rawType.name
+    return (name.startsWith("android.")
+      || name.startsWith("androidx.")
+      || name.startsWith("java.")
+      || name.startsWith("javax.")
+      || name.startsWith("kotlin.")
+      || name.startsWith("kotlinx.")
+      || name.startsWith("scala."))
   }
 
-  /** Throws the cause of {@code e}, wrapping it if it is checked. */
-  public static RuntimeException rethrowCause(InvocationTargetException e) {
-    Throwable cause = e.getTargetException();
-    if (cause instanceof RuntimeException) throw (RuntimeException) cause;
-    if (cause instanceof Error) throw (Error) cause;
-    throw new RuntimeException(cause);
+  /** Throws the cause of `e`, wrapping it if it is checked. */
+  @JvmStatic
+  public fun rethrowCause(e: InvocationTargetException): RuntimeException {
+    val cause = e.targetException
+    if (cause is RuntimeException) throw cause
+    if (cause is Error) throw cause
+    throw RuntimeException(cause)
   }
 
   /**
-   * Returns a type that is functionally equal but not necessarily equal according to {@link
-   * Object#equals(Object) Object.equals()}.
+   * Returns a type that is functionally equal but not necessarily equal according to [[Object.equals()]][Object.equals].
    */
-  public static Type canonicalize(Type type) {
-    if (type instanceof Class) {
-      Class<?> c = (Class<?>) type;
-      return c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
-
-    } else if (type instanceof ParameterizedType) {
-      if (type instanceof ParameterizedTypeImpl) return type;
-      ParameterizedType p = (ParameterizedType) type;
-      return new ParameterizedTypeImpl(
-          p.getOwnerType(), p.getRawType(), p.getActualTypeArguments());
-
-    } else if (type instanceof GenericArrayType) {
-      if (type instanceof GenericArrayTypeImpl) return type;
-      GenericArrayType g = (GenericArrayType) type;
-      return new GenericArrayTypeImpl(g.getGenericComponentType());
-
-    } else if (type instanceof WildcardType) {
-      if (type instanceof WildcardTypeImpl) return type;
-      WildcardType w = (WildcardType) type;
-      return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
-
-    } else {
-      return type; // This type is unsupported!
+  @JvmStatic
+  public fun canonicalize(type: Type): Type {
+    return when (type) {
+      is Class<*> -> {
+        if (type.isArray) GenericArrayTypeImpl(canonicalize(type.componentType)) else type
+      }
+      is ParameterizedType -> {
+        if (type is ParameterizedTypeImpl) return type
+        ParameterizedTypeImpl(type.ownerType, type.rawType, *type.actualTypeArguments)
+      }
+      is GenericArrayType -> {
+        if (type is GenericArrayTypeImpl) return type
+        GenericArrayTypeImpl(type.genericComponentType)
+      }
+      is WildcardType -> {
+        if (type is WildcardTypeImpl) return type
+        WildcardTypeImpl(type.upperBounds, type.lowerBounds)
+      }
+      else -> {
+        type // This type is unsupported!
+      }
     }
   }
 
   /** If type is a "? extends X" wildcard, returns X; otherwise returns type unchanged. */
-  public static Type removeSubtypeWildcard(Type type) {
-    if (!(type instanceof WildcardType)) return type;
-
-    Type[] lowerBounds = ((WildcardType) type).getLowerBounds();
-    if (lowerBounds.length != 0) return type;
-
-    Type[] upperBounds = ((WildcardType) type).getUpperBounds();
-    if (upperBounds.length != 1) throw new IllegalArgumentException();
-
-    return upperBounds[0];
+  @JvmStatic
+  public fun removeSubtypeWildcard(type: Type): Type {
+    if (type !is WildcardType) return type
+    val lowerBounds = type.lowerBounds
+    if (lowerBounds.isNotEmpty()) return type
+    val upperBounds = type.upperBounds
+    require(upperBounds.size == 1)
+    return upperBounds[0]
   }
 
-  public static Type resolve(Type context, Class<?> contextRawType, Type toResolve) {
-    return resolve(context, contextRawType, toResolve, new LinkedHashSet<TypeVariable<?>>());
+  @JvmStatic
+  public fun resolve(context: Type, contextRawType: Class<*>, toResolve: Type): Type {
+    return resolve(context, contextRawType, toResolve, LinkedHashSet())
   }
 
-  private static Type resolve(
-      Type context,
-      Class<?> contextRawType,
-      Type toResolve,
-      Collection<TypeVariable<?>> visitedTypeVariables) {
+  private fun resolve(
+    context: Type,
+    contextRawType: Class<*>,
+    toResolveInitial: Type,
+    visitedTypeVariables: MutableCollection<TypeVariable<*>>
+  ): Type {
     // This implementation is made a little more complicated in an attempt to avoid object-creation.
+    var toResolve = toResolveInitial
     while (true) {
-      if (toResolve instanceof TypeVariable) {
-        TypeVariable<?> typeVariable = (TypeVariable<?>) toResolve;
-        if (visitedTypeVariables.contains(typeVariable)) {
-          // cannot reduce due to infinite recursion
-          return toResolve;
-        } else {
-          visitedTypeVariables.add(typeVariable);
+      when {
+        toResolve is TypeVariable<*> -> {
+          val typeVariable = toResolve
+          if (typeVariable in visitedTypeVariables) {
+            // cannot reduce due to infinite recursion
+            return toResolve
+          } else {
+            visitedTypeVariables += typeVariable
+          }
+          toResolve = resolveTypeVariable(context, contextRawType, typeVariable)
+          if (toResolve === typeVariable) return toResolve
         }
-        toResolve = resolveTypeVariable(context, contextRawType, typeVariable);
-        if (toResolve == typeVariable) return toResolve;
-
-      } else if (toResolve instanceof Class && ((Class<?>) toResolve).isArray()) {
-        Class<?> original = (Class<?>) toResolve;
-        Type componentType = original.getComponentType();
-        Type newComponentType =
-            resolve(context, contextRawType, componentType, visitedTypeVariables);
-        return componentType == newComponentType ? original : arrayOf(newComponentType);
-
-      } else if (toResolve instanceof GenericArrayType) {
-        GenericArrayType original = (GenericArrayType) toResolve;
-        Type componentType = original.getGenericComponentType();
-        Type newComponentType =
-            resolve(context, contextRawType, componentType, visitedTypeVariables);
-        return componentType == newComponentType ? original : arrayOf(newComponentType);
-
-      } else if (toResolve instanceof ParameterizedType) {
-        ParameterizedType original = (ParameterizedType) toResolve;
-        Type ownerType = original.getOwnerType();
-        Type newOwnerType = resolve(context, contextRawType, ownerType, visitedTypeVariables);
-        boolean changed = newOwnerType != ownerType;
-
-        Type[] args = original.getActualTypeArguments();
-        for (int t = 0, length = args.length; t < length; t++) {
-          Type resolvedTypeArgument =
-              resolve(context, contextRawType, args[t], visitedTypeVariables);
-          if (resolvedTypeArgument != args[t]) {
-            if (!changed) {
-              args = args.clone();
-              changed = true;
+        toResolve is Class<*> && toResolve.isArray -> {
+          val original = toResolve
+          val componentType: Type = original.componentType
+          val newComponentType = resolve(context, contextRawType, componentType, visitedTypeVariables)
+          return if (componentType === newComponentType) original else newComponentType.asArrayType()
+        }
+        toResolve is GenericArrayType -> {
+          val original = toResolve
+          val componentType = original.genericComponentType
+          val newComponentType = resolve(context, contextRawType, componentType, visitedTypeVariables)
+          return if (componentType === newComponentType) original else newComponentType.asArrayType()
+        }
+        toResolve is ParameterizedType -> {
+          val original = toResolve
+          val ownerType: Type? = original.ownerType
+          val newOwnerType = ownerType?.let {
+            resolve(context, contextRawType, ownerType, visitedTypeVariables)
+          }
+          var changed = newOwnerType !== ownerType
+          var args = original.actualTypeArguments
+          var t = 0
+          val length = args.size
+          while (t < length) {
+            val resolvedTypeArgument = resolve(context, contextRawType, args[t], visitedTypeVariables)
+            if (resolvedTypeArgument !== args[t]) {
+              if (!changed) {
+                args = args.clone()
+                changed = true
+              }
+              args[t] = resolvedTypeArgument
             }
-            args[t] = resolvedTypeArgument;
+            t++
           }
+          return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, *args) else original
         }
-
-        return changed
-            ? new ParameterizedTypeImpl(newOwnerType, original.getRawType(), args)
-            : original;
-
-      } else if (toResolve instanceof WildcardType) {
-        WildcardType original = (WildcardType) toResolve;
-        Type[] originalLowerBound = original.getLowerBounds();
-        Type[] originalUpperBound = original.getUpperBounds();
-
-        if (originalLowerBound.length == 1) {
-          Type lowerBound =
-              resolve(context, contextRawType, originalLowerBound[0], visitedTypeVariables);
-          if (lowerBound != originalLowerBound[0]) {
-            return supertypeOf(lowerBound);
+        toResolve is WildcardType -> {
+          val original = toResolve
+          val originalLowerBound = original.lowerBounds
+          val originalUpperBound = original.upperBounds
+          if (originalLowerBound.size == 1) {
+            val lowerBound = resolve(context, contextRawType, originalLowerBound[0], visitedTypeVariables)
+            if (lowerBound !== originalLowerBound[0]) {
+              return Types.supertypeOf(lowerBound)
+            }
+          } else if (originalUpperBound.size == 1) {
+            val upperBound = resolve(context, contextRawType, originalUpperBound[0], visitedTypeVariables)
+            if (upperBound !== originalUpperBound[0]) {
+              return Types.subtypeOf(upperBound)
+            }
           }
-        } else if (originalUpperBound.length == 1) {
-          Type upperBound =
-              resolve(context, contextRawType, originalUpperBound[0], visitedTypeVariables);
-          if (upperBound != originalUpperBound[0]) {
-            return subtypeOf(upperBound);
-          }
+          return original
         }
-        return original;
-
-      } else {
-        return toResolve;
+        else -> return toResolve
       }
     }
   }
 
-  static Type resolveTypeVariable(Type context, Class<?> contextRawType, TypeVariable<?> unknown) {
-    Class<?> declaredByRaw = declaringClassOf(unknown);
+  @JvmStatic
+  public fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown: TypeVariable<*>): Type {
+    val declaredByRaw = declaringClassOf(unknown) ?: return unknown
 
     // We can't reduce this further.
-    if (declaredByRaw == null) return unknown;
-
-    Type declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw);
-    if (declaredBy instanceof ParameterizedType) {
-      int index = indexOf(declaredByRaw.getTypeParameters(), unknown);
-      return ((ParameterizedType) declaredBy).getActualTypeArguments()[index];
+    val declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw)
+    if (declaredBy is ParameterizedType) {
+      val index = declaredByRaw.typeParameters.indexOf(unknown)
+      return declaredBy.actualTypeArguments[index]
     }
-
-    return unknown;
+    return unknown
   }
 
   /**
-   * Returns the generic supertype for {@code supertype}. For example, given a class {@code
-   * IntegerSet}, the result for when supertype is {@code Set.class} is {@code Set<Integer>} and the
-   * result when the supertype is {@code Collection.class} is {@code Collection<Integer>}.
+   * Returns the generic supertype for `supertype`. For example, given a class `IntegerSet`, the result for when supertype is `Set.class` is `Set<Integer>` and the
+   * result when the supertype is `Collection.class` is `Collection<Integer>`.
    */
-  public static Type getGenericSupertype(Type context, Class<?> rawType, Class<?> toResolve) {
+  @JvmStatic
+  public fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolve: Class<*>): Type {
+    var rawType = rawTypeInitial
     if (toResolve == rawType) {
-      return context;
+      return context
     }
 
     // we skip searching through interfaces if unknown is an interface
-    if (toResolve.isInterface()) {
-      Class<?>[] interfaces = rawType.getInterfaces();
-      for (int i = 0, length = interfaces.length; i < length; i++) {
+    if (toResolve.isInterface) {
+      val interfaces = rawType.interfaces
+      var i = 0
+      val length = interfaces.size
+      while (i < length) {
         if (interfaces[i] == toResolve) {
-          return rawType.getGenericInterfaces()[i];
+          return rawType.genericInterfaces[i]
         } else if (toResolve.isAssignableFrom(interfaces[i])) {
-          return getGenericSupertype(rawType.getGenericInterfaces()[i], interfaces[i], toResolve);
+          return getGenericSupertype(rawType.genericInterfaces[i], interfaces[i], toResolve)
         }
+        i++
       }
     }
 
     // check our supertypes
-    if (!rawType.isInterface()) {
-      while (rawType != Object.class) {
-        Class<?> rawSupertype = rawType.getSuperclass();
+    if (!rawType.isInterface) {
+      while (rawType != Any::class.java) {
+        val rawSupertype = rawType.superclass
         if (rawSupertype == toResolve) {
-          return rawType.getGenericSuperclass();
+          return rawType.genericSuperclass
         } else if (toResolve.isAssignableFrom(rawSupertype)) {
-          return getGenericSupertype(rawType.getGenericSuperclass(), rawSupertype, toResolve);
+          return getGenericSupertype(rawType.genericSuperclass, rawSupertype, toResolve)
         }
-        rawType = rawSupertype;
+        rawType = rawSupertype
       }
     }
 
     // we can't resolve this further
-    return toResolve;
+    return toResolve
   }
 
-  static int hashCodeOrZero(@Nullable Object o) {
-    return o != null ? o.hashCode() : 0;
-  }
-
-  static String typeToString(Type type) {
-    return type instanceof Class ? ((Class<?>) type).getName() : type.toString();
-  }
-
-  static int indexOf(Object[] array, Object toFind) {
-    for (int i = 0; i < array.length; i++) {
-      if (toFind.equals(array[i])) return i;
+  @JvmStatic
+  public val Any?.hashCodeOrZero: Int
+    get() {
+      return this?.hashCode() ?: 0
     }
-    throw new NoSuchElementException();
+
+  @JvmStatic
+  public fun typeToString(type: Type): String {
+    return if (type is Class<*>) type.name else type.toString()
   }
 
   /**
-   * Returns the declaring class of {@code typeVariable}, or {@code null} if it was not declared by
+   * Returns the declaring class of `typeVariable`, or `null` if it was not declared by
    * a class.
    */
-  static @Nullable Class<?> declaringClassOf(TypeVariable<?> typeVariable) {
-    GenericDeclaration genericDeclaration = typeVariable.getGenericDeclaration();
-    return genericDeclaration instanceof Class ? (Class<?>) genericDeclaration : null;
+  @JvmStatic
+  public fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
+    val genericDeclaration = typeVariable.genericDeclaration
+    return if (genericDeclaration is Class<*>) genericDeclaration else null
   }
 
-  static void checkNotPrimitive(Type type) {
-    if ((type instanceof Class<?>) && ((Class<?>) type).isPrimitive()) {
-      throw new IllegalArgumentException("Unexpected primitive " + type + ". Use the boxed type.");
+  @JvmStatic
+  public fun checkNotPrimitive(type: Type) {
+    require(!(type is Class<*> && type.isPrimitive)) { "Unexpected primitive $type. Use the boxed type." }
+  }
+
+  @JvmStatic
+  public fun typeAnnotatedWithAnnotations(
+    type: Type,
+    annotations: Set<Annotation>
+  ): String {
+    return type.toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
+  }
+
+  /**
+   * Loads the generated JsonAdapter for classes annotated [JsonClass]. This works because it
+   * uses the same naming conventions as `JsonClassCodeGenProcessor`.
+   */
+  @JvmStatic
+  public fun generatedAdapter(
+    moshi: Moshi,
+    type: Type,
+    rawType: Class<*>
+  ): JsonAdapter<*>? {
+    val jsonClass = rawType.getAnnotation(JsonClass::class.java)
+    if (jsonClass == null || !jsonClass.generateAdapter) {
+      return null
     }
-  }
-
-  public static final class ParameterizedTypeImpl implements ParameterizedType {
-    private final @Nullable Type ownerType;
-    private final Type rawType;
-    public final Type[] typeArguments;
-
-    public ParameterizedTypeImpl(@Nullable Type ownerType, Type rawType, Type... typeArguments) {
-      // Require an owner type if the raw type needs it.
-      if (rawType instanceof Class<?>) {
-        Class<?> enclosingClass = ((Class<?>) rawType).getEnclosingClass();
-        if (ownerType != null) {
-          if (enclosingClass == null || Types.getRawType(ownerType) != enclosingClass) {
-            throw new IllegalArgumentException(
-                "unexpected owner type for " + rawType + ": " + ownerType);
-          }
-        } else if (enclosingClass != null) {
-          throw new IllegalArgumentException("unexpected owner type for " + rawType + ": null");
+    val adapterClassName = Types.generatedJsonAdapterName(rawType.name)
+    var possiblyFoundAdapter: Class<out JsonAdapter<*>>? = null
+    return try {
+      @Suppress("UNCHECKED_CAST")
+      val adapterClass = Class.forName(adapterClassName, true, rawType.classLoader) as Class<out JsonAdapter<*>>
+      possiblyFoundAdapter = adapterClass
+      var constructor: Constructor<out JsonAdapter<*>>
+      var args: Array<Any>
+      if (type is ParameterizedType) {
+        val typeArgs = type.actualTypeArguments
+        try {
+          // Common case first
+          constructor = adapterClass.getDeclaredConstructor(Moshi::class.java, Array<Type>::class.java)
+          args = arrayOf(moshi, typeArgs)
+        } catch (e: NoSuchMethodException) {
+          constructor = adapterClass.getDeclaredConstructor(Array<Type>::class.java)
+          args = arrayOf(typeArgs)
+        }
+      } else {
+        try {
+          // Common case first
+          constructor = adapterClass.getDeclaredConstructor(Moshi::class.java)
+          args = arrayOf(moshi)
+        } catch (e: NoSuchMethodException) {
+          constructor = adapterClass.getDeclaredConstructor()
+          args = emptyArray()
         }
       }
-
-      this.ownerType = ownerType == null ? null : canonicalize(ownerType);
-      this.rawType = canonicalize(rawType);
-      this.typeArguments = typeArguments.clone();
-      for (int t = 0; t < this.typeArguments.length; t++) {
-        if (this.typeArguments[t] == null) throw new NullPointerException();
-        checkNotPrimitive(this.typeArguments[t]);
-        this.typeArguments[t] = canonicalize(this.typeArguments[t]);
+      constructor.isAccessible = true
+      constructor.newInstance(*args).nullSafe()
+    } catch (e: ClassNotFoundException) {
+      throw RuntimeException("Failed to find the generated JsonAdapter class for $type", e)
+    } catch (e: NoSuchMethodException) {
+      if (possiblyFoundAdapter != null && type !is ParameterizedType && possiblyFoundAdapter.typeParameters.isNotEmpty()) {
+        throw RuntimeException(
+          "Failed to find the generated JsonAdapter constructor for '"
+            + type
+            + "'. Suspiciously, the type was not parameterized but the target class '"
+            + possiblyFoundAdapter.canonicalName
+            + "' is generic. Consider using "
+            + "Types#newParameterizedType() to define these missing type variables.",
+          e
+        )
+      } else {
+        throw RuntimeException(
+          "Failed to find the generated JsonAdapter constructor for $type", e
+        )
       }
-    }
-
-    @Override
-    public Type[] getActualTypeArguments() {
-      return typeArguments.clone();
-    }
-
-    @Override
-    public Type getRawType() {
-      return rawType;
-    }
-
-    @Override
-    public @Nullable Type getOwnerType() {
-      return ownerType;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof ParameterizedType && Types.equals(this, (ParameterizedType) other);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(typeArguments) ^ rawType.hashCode() ^ hashCodeOrZero(ownerType);
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder result = new StringBuilder(30 * (typeArguments.length + 1));
-      result.append(typeToString(rawType));
-
-      if (typeArguments.length == 0) {
-        return result.toString();
-      }
-
-      result.append("<").append(typeToString(typeArguments[0]));
-      for (int i = 1; i < typeArguments.length; i++) {
-        result.append(", ").append(typeToString(typeArguments[i]));
-      }
-      return result.append(">").toString();
+    } catch (e: IllegalAccessException) {
+      throw RuntimeException("Failed to access the generated JsonAdapter for $type", e)
+    } catch (e: InstantiationException) {
+      throw RuntimeException("Failed to instantiate the generated JsonAdapter for $type", e)
+    } catch (e: InvocationTargetException) {
+      throw rethrowCause(e)
     }
   }
 
-  public static final class GenericArrayTypeImpl implements GenericArrayType {
-    private final Type componentType;
+  @JvmStatic
+  public fun isKotlin(targetClass: Class<*>): Boolean {
+    return METADATA != null && targetClass.isAnnotationPresent(METADATA)
+  }
 
-    public GenericArrayTypeImpl(Type componentType) {
-      this.componentType = canonicalize(componentType);
+  /**
+   * Reflectively looks up the defaults constructor of a kotlin class.
+   *
+   * @param targetClass the target kotlin class to instantiate.
+   * @param T the type of `targetClass`.
+   * @return the instantiated `targetClass` instance.
+   */
+  @JvmStatic
+  public fun <T> lookupDefaultsConstructor(targetClass: Class<T>): Constructor<T> {
+    checkNotNull(DEFAULT_CONSTRUCTOR_MARKER) {
+      "DefaultConstructorMarker not on classpath. Make sure the Kotlin stdlib is on the classpath."
+    }
+    val defaultConstructor = findConstructor(targetClass)
+    defaultConstructor.isAccessible = true
+    return defaultConstructor
+  }
+
+  private fun <T> findConstructor(targetClass: Class<T>): Constructor<T> {
+    for (constructor in targetClass.declaredConstructors) {
+      val paramTypes = constructor.parameterTypes
+      if (paramTypes.isNotEmpty() && paramTypes[paramTypes.size - 1] == DEFAULT_CONSTRUCTOR_MARKER) {
+        @Suppress("UNCHECKED_CAST")
+        return constructor as Constructor<T>
+      }
+    }
+    throw IllegalStateException("No defaults constructor found for $targetClass")
+  }
+
+  @JvmStatic
+  public fun missingProperty(
+    propertyName: String, jsonName: String, reader: JsonReader
+  ): JsonDataException {
+    val path = reader.path
+    val message = if (jsonName == propertyName) {
+      "Required value '$propertyName' missing at $path"
+    } else {
+      "Required value '$propertyName' (JSON name '$jsonName') missing at $path"
+    }
+    return JsonDataException(message)
+  }
+
+  @JvmStatic
+  public fun unexpectedNull(
+    propertyName: String, jsonName: String, reader: JsonReader
+  ): JsonDataException {
+    val path = reader.path
+    val message: String = if (jsonName == propertyName) {
+      "Non-null value '$propertyName' was null at $path"
+    } else {
+      "Non-null value '$propertyName' (JSON name '$jsonName') was null at $path"
+    }
+    return JsonDataException(message)
+  }
+
+  // Public due to inline access in MoshiKotlinTypesExtensions
+  @JvmStatic
+  public fun <T> boxIfPrimitive(type: Class<T>): Class<T> {
+    // cast is safe: long.class and Long.class are both of type Class<Long>
+    @Suppress("UNCHECKED_CAST")
+    val wrapped = PRIMITIVE_TO_WRAPPER_TYPE[type] as Class<T>?
+    return wrapped ?: type
+  }
+
+  internal class ParameterizedTypeImpl(
+    ownerType: Type?,
+    rawType: Type,
+    vararg typeArguments: Type
+  ) : ParameterizedType {
+    private val ownerType: Type?
+    private val rawType: Type
+    @JvmField
+    val typeArguments: Array<Type>
+
+    init {
+      // Require an owner type if the raw type needs it.
+      if (rawType is Class<*>) {
+        val enclosingClass = rawType.enclosingClass
+        if (ownerType != null) {
+          require(!(enclosingClass == null || ownerType.rawType != enclosingClass)) { "unexpected owner type for $rawType: $ownerType" }
+        } else require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
+      }
+      this.ownerType = if (ownerType == null) null else canonicalize(ownerType)
+      this.rawType = canonicalize(rawType)
+      @Suppress("UNCHECKED_CAST")
+      this.typeArguments = typeArguments.clone() as Array<Type>
+      for (t in this.typeArguments.indices) {
+        checkNotPrimitive(this.typeArguments[t])
+        this.typeArguments[t] = canonicalize(this.typeArguments[t])
+      }
     }
 
-    @Override
-    public Type getGenericComponentType() {
-      return componentType;
+    override fun getActualTypeArguments() = typeArguments.clone()
+
+    override fun getRawType() = rawType
+
+    override fun getOwnerType() = ownerType
+
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    override fun equals(other: Any?) =
+      other is ParameterizedType && Types.equals(this, other as ParameterizedType?)
+
+    override fun hashCode(): Int {
+      return typeArguments.contentHashCode() xor rawType.hashCode() xor ownerType.hashCodeOrZero
     }
 
-    @Override
-    public boolean equals(Object o) {
-      return o instanceof GenericArrayType && Types.equals(this, (GenericArrayType) o);
+    override fun toString(): String {
+      val result = StringBuilder(30 * (typeArguments.size + 1))
+      result.append(typeToString(rawType))
+      if (typeArguments.isEmpty()) {
+        return result.toString()
+      }
+      result.append("<").append(typeToString(typeArguments[0]))
+      for (i in 1 until typeArguments.size) {
+        result.append(", ").append(typeToString(typeArguments[i]))
+      }
+      return result.append(">").toString()
     }
+  }
 
-    @Override
-    public int hashCode() {
-      return componentType.hashCode();
-    }
+  internal class GenericArrayTypeImpl(componentType: Type) : GenericArrayType {
+    private val componentType: Type = canonicalize(componentType)
 
-    @Override
-    public String toString() {
-      return typeToString(componentType) + "[]";
-    }
+    override fun getGenericComponentType() = componentType
+
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    override fun equals(other: Any?) =
+      other is GenericArrayType && Types.equals(this, other as GenericArrayType?)
+
+    override fun hashCode() = componentType.hashCode()
+
+    override fun toString() = typeToString(componentType) + "[]"
   }
 
   /**
@@ -484,201 +593,43 @@ public final class Util {
    * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
    * bound must be Object.class.
    */
-  public static final class WildcardTypeImpl implements WildcardType {
-    private final Type upperBound;
-    private final @Nullable Type lowerBound;
+  internal class WildcardTypeImpl(upperBounds: Array<Type>, lowerBounds: Array<Type>) : WildcardType {
+    private val upperBound: Type
+    private val lowerBound: Type?
 
-    public WildcardTypeImpl(Type[] upperBounds, Type[] lowerBounds) {
-      if (lowerBounds.length > 1) throw new IllegalArgumentException();
-      if (upperBounds.length != 1) throw new IllegalArgumentException();
-
-      if (lowerBounds.length == 1) {
-        if (lowerBounds[0] == null) throw new NullPointerException();
-        checkNotPrimitive(lowerBounds[0]);
-        if (upperBounds[0] != Object.class) throw new IllegalArgumentException();
-        this.lowerBound = canonicalize(lowerBounds[0]);
-        this.upperBound = Object.class;
-
+    init {
+      require(lowerBounds.size <= 1)
+      require(upperBounds.size == 1)
+      if (lowerBounds.size == 1) {
+        checkNotPrimitive(lowerBounds[0])
+        require(!(upperBounds[0] !== Any::class.java))
+        lowerBound = canonicalize(lowerBounds[0])
+        upperBound = Any::class.java
       } else {
-        if (upperBounds[0] == null) throw new NullPointerException();
-        checkNotPrimitive(upperBounds[0]);
-        this.lowerBound = null;
-        this.upperBound = canonicalize(upperBounds[0]);
+        checkNotPrimitive(upperBounds[0])
+        lowerBound = null
+        upperBound = canonicalize(upperBounds[0])
       }
     }
 
-    @Override
-    public Type[] getUpperBounds() {
-      return new Type[] {upperBound};
-    }
+    override fun getUpperBounds() = arrayOf(upperBound)
 
-    @Override
-    public Type[] getLowerBounds() {
-      return lowerBound != null ? new Type[] {lowerBound} : EMPTY_TYPE_ARRAY;
-    }
+    override fun getLowerBounds() = lowerBound?.let { arrayOf(it) } ?: EMPTY_TYPE_ARRAY
 
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof WildcardType && Types.equals(this, (WildcardType) other);
-    }
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    override fun equals(other: Any?) = other is WildcardType && Types.equals(this, other as WildcardType?)
 
-    @Override
-    public int hashCode() {
+    override fun hashCode(): Int {
       // This equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds()).
-      return (lowerBound != null ? 31 + lowerBound.hashCode() : 1) ^ (31 + upperBound.hashCode());
+      return (if (lowerBound != null) 31 + lowerBound.hashCode() else 1) xor 31 + upperBound.hashCode()
     }
 
-    @Override
-    public String toString() {
-      if (lowerBound != null) {
-        return "? super " + typeToString(lowerBound);
-      } else if (upperBound == Object.class) {
-        return "?";
-      } else {
-        return "? extends " + typeToString(upperBound);
+    override fun toString(): String {
+      return when {
+        lowerBound != null -> "? super ${typeToString(lowerBound)}"
+        upperBound === Any::class.java -> "?"
+        else -> "? extends ${typeToString(upperBound)}"
       }
     }
-  }
-
-  public static String typeAnnotatedWithAnnotations(
-      Type type, Set<? extends Annotation> annotations) {
-    return type + (annotations.isEmpty() ? " (with no annotations)" : " annotated " + annotations);
-  }
-
-  /**
-   * Loads the generated JsonAdapter for classes annotated {@link JsonClass}. This works because it
-   * uses the same naming conventions as {@code JsonClassCodeGenProcessor}.
-   */
-  public static @Nullable JsonAdapter<?> generatedAdapter(
-      Moshi moshi, Type type, Class<?> rawType) {
-    JsonClass jsonClass = rawType.getAnnotation(JsonClass.class);
-    if (jsonClass == null || !jsonClass.generateAdapter()) {
-      return null;
-    }
-    String adapterClassName = Types.generatedJsonAdapterName(rawType.getName());
-    Class<? extends JsonAdapter<?>> adapterClass = null;
-    try {
-      //noinspection unchecked - We generate types to match.
-      adapterClass =
-          (Class<? extends JsonAdapter<?>>)
-              Class.forName(adapterClassName, true, rawType.getClassLoader());
-      Constructor<? extends JsonAdapter<?>> constructor;
-      Object[] args;
-      if (type instanceof ParameterizedType) {
-        Type[] typeArgs = ((ParameterizedType) type).getActualTypeArguments();
-        try {
-          // Common case first
-          constructor = adapterClass.getDeclaredConstructor(Moshi.class, Type[].class);
-          args = new Object[] {moshi, typeArgs};
-        } catch (NoSuchMethodException e) {
-          constructor = adapterClass.getDeclaredConstructor(Type[].class);
-          args = new Object[] {typeArgs};
-        }
-      } else {
-        try {
-          // Common case first
-          constructor = adapterClass.getDeclaredConstructor(Moshi.class);
-          args = new Object[] {moshi};
-        } catch (NoSuchMethodException e) {
-          constructor = adapterClass.getDeclaredConstructor();
-          args = new Object[0];
-        }
-      }
-      constructor.setAccessible(true);
-      return constructor.newInstance(args).nullSafe();
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Failed to find the generated JsonAdapter class for " + type, e);
-    } catch (NoSuchMethodException e) {
-      if (!(type instanceof ParameterizedType) && adapterClass.getTypeParameters().length != 0) {
-        throw new RuntimeException(
-            "Failed to find the generated JsonAdapter constructor for '"
-                + type
-                + "'. Suspiciously, the type was not parameterized but the target class '"
-                + adapterClass.getCanonicalName()
-                + "' is generic. Consider using "
-                + "Types#newParameterizedType() to define these missing type variables.",
-            e);
-      } else {
-        throw new RuntimeException(
-            "Failed to find the generated JsonAdapter constructor for " + type, e);
-      }
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException("Failed to access the generated JsonAdapter for " + type, e);
-    } catch (InstantiationException e) {
-      throw new RuntimeException("Failed to instantiate the generated JsonAdapter for " + type, e);
-    } catch (InvocationTargetException e) {
-      throw rethrowCause(e);
-    }
-  }
-
-  public static boolean isKotlin(Class<?> targetClass) {
-    return METADATA != null && targetClass.isAnnotationPresent(METADATA);
-  }
-
-  /**
-   * Reflectively looks up the defaults constructor of a kotlin class.
-   *
-   * @param targetClass the target kotlin class to instantiate.
-   * @param <T> the type of {@code targetClass}.
-   * @return the instantiated {@code targetClass} instance.
-   */
-  public static <T> Constructor<T> lookupDefaultsConstructor(Class<T> targetClass) {
-    if (DEFAULT_CONSTRUCTOR_MARKER == null) {
-      throw new IllegalStateException(
-          "DefaultConstructorMarker not on classpath. Make sure the "
-              + "Kotlin stdlib is on the classpath.");
-    }
-    Constructor<T> defaultConstructor = findConstructor(targetClass);
-    defaultConstructor.setAccessible(true);
-    return defaultConstructor;
-  }
-
-  private static <T> Constructor<T> findConstructor(Class<T> targetClass) {
-    for (Constructor<?> constructor : targetClass.getDeclaredConstructors()) {
-      Class<?>[] paramTypes = constructor.getParameterTypes();
-      if (paramTypes.length != 0
-          && paramTypes[paramTypes.length - 1].equals(DEFAULT_CONSTRUCTOR_MARKER)) {
-        //noinspection unchecked
-        return (Constructor<T>) constructor;
-      }
-    }
-
-    throw new IllegalStateException("No defaults constructor found for " + targetClass);
-  }
-
-  public static JsonDataException missingProperty(
-      String propertyName, String jsonName, JsonReader reader) {
-    String path = reader.getPath();
-    String message;
-    if (jsonName.equals(propertyName)) {
-      message = String.format("Required value '%s' missing at %s", propertyName, path);
-    } else {
-      message =
-          String.format(
-              "Required value '%s' (JSON name '%s') missing at %s", propertyName, jsonName, path);
-    }
-    return new JsonDataException(message);
-  }
-
-  public static JsonDataException unexpectedNull(
-      String propertyName, String jsonName, JsonReader reader) {
-    String path = reader.getPath();
-    String message;
-    if (jsonName.equals(propertyName)) {
-      message = String.format("Non-null value '%s' was null at %s", propertyName, path);
-    } else {
-      message =
-          String.format(
-              "Non-null value '%s' (JSON name '%s') was null at %s", propertyName, jsonName, path);
-    }
-    return new JsonDataException(message);
-  }
-
-  // Public due to inline access in MoshiKotlinTypesExtensions
-  public static <T> Class<T> boxIfPrimitive(Class<T> type) {
-    // cast is safe: long.class and Long.class are both of type Class<Long>
-    @SuppressWarnings("unchecked")
-    Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(type);
-    return (wrapped == null) ? type : wrapped;
   }
 }
