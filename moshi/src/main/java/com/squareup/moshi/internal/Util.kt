@@ -17,30 +17,30 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 package com.squareup.moshi.internal
 
-import java.lang.ClassNotFoundException
-import java.lang.Void
-import java.lang.reflect.AnnotatedElement
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonQualifier
-import java.lang.reflect.InvocationTargetException
-import java.lang.RuntimeException
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.GenericArrayType
-import com.squareup.moshi.Moshi
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
-import java.lang.NoSuchMethodException
-import java.lang.IllegalAccessException
-import java.lang.InstantiationException
-import java.lang.IllegalStateException
-import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonQualifier
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.asArrayType
 import com.squareup.moshi.rawType
+import java.lang.ClassNotFoundException
 import java.lang.Error
+import java.lang.IllegalAccessException
+import java.lang.IllegalStateException
+import java.lang.InstantiationException
+import java.lang.NoSuchMethodException
+import java.lang.RuntimeException
 import java.lang.StringBuilder
+import java.lang.Void
+import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
+import java.lang.reflect.GenericArrayType
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
@@ -108,7 +108,7 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
       if ((annotation as java.lang.annotation.Annotation).annotationType()
-          .isAnnotationPresent(JsonQualifier::class.java)
+        .isAnnotationPresent(JsonQualifier::class.java)
       ) {
         if (result == null) result = LinkedHashSet()
         result.add(annotation)
@@ -147,13 +147,15 @@ public val Array<Annotation>.hasNullable: Boolean
 public val Class<*>.isPlatformType: Boolean
   get() {
     val name = name
-    return (name.startsWith("android.")
-      || name.startsWith("androidx.")
-      || name.startsWith("java.")
-      || name.startsWith("javax.")
-      || name.startsWith("kotlin.")
-      || name.startsWith("kotlinx.")
-      || name.startsWith("scala."))
+    return (
+      name.startsWith("android.") ||
+        name.startsWith("androidx.") ||
+        name.startsWith("java.") ||
+        name.startsWith("javax.") ||
+        name.startsWith("kotlin.") ||
+        name.startsWith("kotlinx.") ||
+        name.startsWith("scala.")
+      )
   }
 
 /** Throws the cause of `e`, wrapping it if it is checked. */
@@ -353,7 +355,7 @@ public fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
 }
 
 public fun Type.checkNotPrimitive() {
-  require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive ${this}. Use the boxed type." }
+  require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive $this. Use the boxed type." }
 }
 
 public fun Type.typeAnnotatedWithAnnotations(annotations: Set<Annotation>): String {
@@ -407,12 +409,12 @@ public fun Moshi.generatedAdapter(
   } catch (e: NoSuchMethodException) {
     if (possiblyFoundAdapter != null && type !is ParameterizedType && possiblyFoundAdapter.typeParameters.isNotEmpty()) {
       throw RuntimeException(
-        "Failed to find the generated JsonAdapter constructor for '"
-          + type
-          + "'. Suspiciously, the type was not parameterized but the target class '"
-          + possiblyFoundAdapter.canonicalName
-          + "' is generic. Consider using "
-          + "Types#newParameterizedType() to define these missing type variables.",
+        "Failed to find the generated JsonAdapter constructor for '" +
+          type +
+          "'. Suspiciously, the type was not parameterized but the target class '" +
+          possiblyFoundAdapter.canonicalName +
+          "' is generic. Consider using " +
+          "Types#newParameterizedType() to define these missing type variables.",
         e
       )
     } else {
@@ -456,7 +458,7 @@ private fun <T> Class<T>.findConstructor(): Constructor<T> {
       return constructor as Constructor<T>
     }
   }
-  throw IllegalStateException("No defaults constructor found for ${this}")
+  throw IllegalStateException("No defaults constructor found for $this")
 }
 
 public fun missingProperty(
