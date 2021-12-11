@@ -13,48 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi.internal;
+package com.squareup.moshi.internal
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonDataException;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import java.io.IOException;
-import javax.annotation.Nullable;
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonWriter
 
-public final class NonNullJsonAdapter<T> extends JsonAdapter<T> {
-
-  private final JsonAdapter<T> delegate;
-
-  public NonNullJsonAdapter(JsonAdapter<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  public JsonAdapter<T> delegate() {
-    return delegate;
-  }
-
-  @Nullable
-  @Override
-  public T fromJson(JsonReader reader) throws IOException {
-    if (reader.peek() == JsonReader.Token.NULL) {
-      throw new JsonDataException("Unexpected null at " + reader.getPath());
+public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T>() {
+  override fun fromJson(reader: JsonReader): T {
+    return if (reader.peek() == JsonReader.Token.NULL) {
+      throw JsonDataException("Unexpected null at " + reader.path)
     } else {
-      return delegate.fromJson(reader);
+      delegate.fromJson(reader)
     }
   }
 
-  @Override
-  public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
+  override fun toJson(writer: JsonWriter, value: T?) {
     if (value == null) {
-      throw new JsonDataException("Unexpected null at " + writer.getPath());
+      throw JsonDataException("Unexpected null at " + writer.path)
     } else {
-      delegate.toJson(writer, value);
+      delegate.toJson(writer, value)
     }
   }
 
-  @Override
-  public String toString() {
-    return delegate + ".nonNull()";
-  }
+  override fun toString(): String = "$delegate.nonNull()"
 }
