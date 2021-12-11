@@ -95,10 +95,10 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
             MethodHandles.Lookup lookup,
             RecordComponent component) {
           var componentName = component.getName();
-          var jsonName = Util.jsonName(componentName, component);
+          var jsonName = Util.jsonName(component, componentName);
 
           var componentType = Util.resolve(type, rawType, component.getGenericType());
-          Set<? extends Annotation> qualifiers = Util.jsonAnnotations(component);
+          Set<? extends Annotation> qualifiers = Util.getJsonAnnotations(component);
           var adapter = moshi.adapter(componentType, qualifiers);
 
           MethodHandle accessor;

@@ -140,7 +140,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
 
             // Look up a type adapter for this type.
             Type fieldType = resolve(type, rawType, field.getGenericType());
-            Set<? extends Annotation> annotations = Util.jsonAnnotations(field);
+            Set<? extends Annotation> annotations = Util.getJsonAnnotations(field);
             String fieldName = field.getName();
             JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations, fieldName);
 
@@ -148,7 +148,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
             field.setAccessible(true);
 
             // Store it using the field's name. If there was already a field with this name, fail!
-            String jsonName = jsonName(fieldName, jsonAnnotation);
+            String jsonName = jsonName(jsonAnnotation, fieldName);
             FieldBinding<Object> fieldBinding = new FieldBinding<>(jsonName, field, adapter);
             FieldBinding<?> replaced = fieldBindings.put(jsonName, fieldBinding);
             if (replaced != null) {

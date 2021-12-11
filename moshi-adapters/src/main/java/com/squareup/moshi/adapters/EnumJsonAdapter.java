@@ -68,7 +68,7 @@ public final class EnumJsonAdapter<T extends Enum<T>> extends JsonAdapter<T> {
       nameStrings = new String[constants.length];
       for (int i = 0; i < constants.length; i++) {
         String constantName = constants[i].name();
-        nameStrings[i] = jsonName(constantName, enumType.getField(constantName));
+        nameStrings[i] = jsonName(enumType.getField(constantName), constantName);
       }
       options = JsonReader.Options.of(nameStrings);
     } catch (NoSuchFieldException e) {

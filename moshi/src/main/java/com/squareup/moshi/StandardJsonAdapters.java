@@ -275,7 +275,7 @@ final class StandardJsonAdapters {
         for (int i = 0; i < constants.length; i++) {
           T constant = constants[i];
           String constantName = constant.name();
-          nameStrings[i] = Util.jsonName(constantName, enumType.getField(constantName));
+          nameStrings[i] = Util.jsonName(enumType.getField(constantName), constantName);
         }
         options = JsonReader.Options.of(nameStrings);
       } catch (NoSuchFieldException e) {

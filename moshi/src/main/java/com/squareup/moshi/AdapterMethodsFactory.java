@@ -16,7 +16,7 @@
 package com.squareup.moshi;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
-import static com.squareup.moshi.internal.Util.jsonAnnotations;
+import static com.squareup.moshi.internal.Util.getJsonAnnotations;
 import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
 
 import com.squareup.moshi.internal.Util;
@@ -172,7 +172,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         && parametersAreJsonAdapters(2, parameterTypes)) {
       // void pointToJson(JsonWriter jsonWriter, Point point) {
       // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
-      Set<? extends Annotation> qualifierAnnotations = jsonAnnotations(parameterAnnotations[1]);
+      Set<? extends Annotation> qualifierAnnotations = getJsonAnnotations(parameterAnnotations[1]);
       return new AdapterMethod(
           parameterTypes[1],
           qualifierAnnotations,
@@ -190,10 +190,10 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
 
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // List<Integer> pointToJson(Point point) {
-      final Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
+      final Set<? extends Annotation> returnTypeAnnotations = Util.getJsonAnnotations(method);
       final Set<? extends Annotation> qualifierAnnotations =
-          jsonAnnotations(parameterAnnotations[0]);
-      boolean nullable = Util.hasNullable(parameterAnnotations[0]);
+          getJsonAnnotations(parameterAnnotations[0]);
+      boolean nullable = Util.getHasNullable(parameterAnnotations[0]);
       return new AdapterMethod(
           parameterTypes[0],
           qualifierAnnotations,
@@ -251,7 +251,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
   static AdapterMethod fromAdapter(Object adapter, Method method) {
     method.setAccessible(true);
     final Type returnType = method.getGenericReturnType();
-    final Set<? extends Annotation> returnTypeAnnotations = jsonAnnotations(method);
+    final Set<? extends Annotation> returnTypeAnnotations = Util.getJsonAnnotations(method);
     final Type[] parameterTypes = method.getGenericParameterTypes();
     Annotation[][] parameterAnnotations = method.getParameterAnnotations();
 
@@ -273,8 +273,8 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
     } else if (parameterTypes.length == 1 && returnType != void.class) {
       // Point pointFromJson(List<Integer> o) {
       final Set<? extends Annotation> qualifierAnnotations =
-          jsonAnnotations(parameterAnnotations[0]);
-      boolean nullable = Util.hasNullable(parameterAnnotations[0]);
+          getJsonAnnotations(parameterAnnotations[0]);
+      boolean nullable = Util.getHasNullable(parameterAnnotations[0]);
       return new AdapterMethod(
           returnType, returnTypeAnnotations, adapter, method, parameterTypes.length, 1, nullable) {
         JsonAdapter<Object> delegate;
@@ -354,7 +354,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = adaptersOffset, size = parameterTypes.length; i < size; i++) {
           Type type = ((ParameterizedType) parameterTypes[i]).getActualTypeArguments()[0];
-          Set<? extends Annotation> jsonAnnotations = jsonAnnotations(parameterAnnotations[i]);
+          Set<? extends Annotation> jsonAnnotations = getJsonAnnotations(parameterAnnotations[i]);
           jsonAdapters[i - adaptersOffset] =
               Types.equals(this.type, type) && annotations.equals(jsonAnnotations)
                   ? moshi.nextAdapter(factory, type, jsonAnnotations)
