@@ -27,12 +27,13 @@ import java.lang.NoSuchFieldException
 
 /**
  * A JsonAdapter for enums that allows having a fallback enum value when a deserialized string does
- * not match any enum value. To use, add this as an adapter for your enum type on your [ ]:
+ * not match any enum value. To use, add this as an adapter for your enum type on your
+ * [Moshi.Builder][com.squareup.moshi.Moshi.Builder]:
  *
  * ```
  * Moshi moshi = new Moshi.Builder()
  *   .add(CurrencyCode.class, EnumJsonAdapter.create(CurrencyCode.class)
- *   .withUnknownFallback(CurrencyCode.USD))
+ *     .withUnknownFallback(CurrencyCode.USD))
  *   .build();
  * ```
  */
@@ -66,7 +67,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
    * value will be used even on case mismatches.
    */
   public fun withUnknownFallback(fallbackValue: T?): EnumJsonAdapter<T> {
-    return EnumJsonAdapter(enumType, fallbackValue, true)
+    return EnumJsonAdapter(enumType, fallbackValue, useFallbackValue = true)
   }
 
   @Throws(IOException::class)
