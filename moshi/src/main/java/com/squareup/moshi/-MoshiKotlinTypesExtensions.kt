@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.Util
+import com.squareup.moshi.internal.boxIfPrimitive
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
@@ -42,7 +42,7 @@ public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Se
 public inline fun <reified T> subtypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
-    type = Util.boxIfPrimitive(type)
+    type = boxIfPrimitive(type)
   }
   return Types.subtypeOf(type)
 }
@@ -55,7 +55,7 @@ public inline fun <reified T> subtypeOf(): WildcardType {
 public inline fun <reified T> supertypeOf(): WildcardType {
   var type = typeOf<T>().javaType
   if (type is Class<*>) {
-    type = Util.boxIfPrimitive(type)
+    type = boxIfPrimitive(type)
   }
   return Types.supertypeOf(type)
 }

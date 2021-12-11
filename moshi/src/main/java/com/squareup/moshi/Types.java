@@ -19,9 +19,9 @@ import static com.squareup.moshi.internal.Util.EMPTY_TYPE_ARRAY;
 import static com.squareup.moshi.internal.Util.getGenericSupertype;
 import static com.squareup.moshi.internal.Util.resolve;
 
-import com.squareup.moshi.internal.Util.GenericArrayTypeImpl;
-import com.squareup.moshi.internal.Util.ParameterizedTypeImpl;
-import com.squareup.moshi.internal.Util.WildcardTypeImpl;
+import com.squareup.moshi.internal.GenericArrayTypeImpl;
+import com.squareup.moshi.internal.ParameterizedTypeImpl;
+import com.squareup.moshi.internal.WildcardTypeImpl;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
