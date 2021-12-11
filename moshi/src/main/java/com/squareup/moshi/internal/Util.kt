@@ -46,6 +46,8 @@ import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.LinkedHashSet
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 @JvmField public val NO_ANNOTATIONS: Set<Annotation> = emptySet()
 @JvmField public val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
@@ -483,6 +485,16 @@ public fun unexpectedNull(
     "Non-null value '$propertyName' (JSON name '$jsonName') was null at $path"
   }
   return JsonDataException(message)
+}
+
+// A sneaky way to mark value as known to be not null, allowing smart casts and skipping the null-check intrinsic
+// Safe to use here because it's already compiled and not being used externally
+@Suppress("NOTHING_TO_INLINE")
+@OptIn(ExperimentalContracts::class)
+public inline fun <T : Any> knownNotNull(value: T?) {
+  contract {
+    returns() implies (value != null)
+  }
 }
 
 // Public due to inline access in MoshiKotlinTypesExtensions

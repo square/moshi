@@ -25,7 +25,9 @@ public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAd
     return if (reader.peek() == JsonReader.Token.NULL) {
       throw JsonDataException("Unexpected null at " + reader.path)
     } else {
-      delegate.fromJson(reader)!!
+      val result = delegate.fromJson(reader)
+      knownNotNull(result)
+      result
     }
   }
 

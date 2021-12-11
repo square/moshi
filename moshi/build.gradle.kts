@@ -52,10 +52,12 @@ tasks.withType<Test>().configureEach {
 tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
+      val toAdd = mutableListOf("-Xopt-in=kotlin.RequiresOptIn")
       if (name.contains("test", true)) {
-        @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-        freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+        toAdd += "-Xopt-in=kotlin.ExperimentalStdlibApi"
       }
+      @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
+      freeCompilerArgs += toAdd
     }
   }
 
