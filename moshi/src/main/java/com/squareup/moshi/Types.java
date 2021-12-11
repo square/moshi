@@ -110,7 +110,7 @@ public final class Types {
     if (typeArguments.length == 0) {
       throw new IllegalArgumentException("Missing type arguments for " + rawType);
     }
-    return new ParameterizedTypeImpl(null, rawType, typeArguments);
+    return ParameterizedTypeImpl.create(null, rawType, typeArguments);
   }
 
   /**
@@ -122,12 +122,12 @@ public final class Types {
     if (typeArguments.length == 0) {
       throw new IllegalArgumentException("Missing type arguments for " + rawType);
     }
-    return new ParameterizedTypeImpl(ownerType, rawType, typeArguments);
+    return ParameterizedTypeImpl.create(ownerType, rawType, typeArguments);
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
   public static GenericArrayType arrayOf(Type componentType) {
-    return new GenericArrayTypeImpl(componentType);
+    return GenericArrayTypeImpl.create(componentType);
   }
 
   /**
@@ -143,7 +143,7 @@ public final class Types {
     } else {
       upperBounds = new Type[] {bound};
     }
-    return new WildcardTypeImpl(upperBounds, EMPTY_TYPE_ARRAY);
+    return WildcardTypeImpl.create(upperBounds, EMPTY_TYPE_ARRAY);
   }
 
   /**
@@ -157,7 +157,7 @@ public final class Types {
     } else {
       lowerBounds = new Type[] {bound};
     }
-    return new WildcardTypeImpl(new Type[] {Object.class}, lowerBounds);
+    return WildcardTypeImpl.create(new Type[] {Object.class}, lowerBounds);
   }
 
   public static Class<?> getRawType(Type type) {

@@ -437,7 +437,7 @@ public val Class<*>.isKotlin: Boolean
 /**
  * Reflectively looks up the defaults constructor of a kotlin class.
  *
- * @param this@lookupDefaultsConstructor the target kotlin class to instantiate.
+ * @receiver the target kotlin class to instantiate.
  * @param T the type of `targetClass`.
  * @return the instantiated `targetClass` instance.
  */
@@ -507,34 +507,12 @@ public fun <T> Class<T>.boxIfPrimitive(): Class<T> {
   return wrapped ?: this
 }
 
-internal class ParameterizedTypeImpl(
-  ownerType: Type?,
-  rawType: Type,
-  vararg typeArguments: Type
-) : ParameterizedType {
-  private val ownerType: Type?
-  private val rawType: Type
+internal class ParameterizedTypeImpl private constructor(
+  private val ownerType: Type?,
+  private val rawType: Type,
   @JvmField
   val typeArguments: Array<Type>
-
-  init {
-    // Require an owner type if the raw type needs it.
-    if (rawType is Class<*>) {
-      val enclosingClass = rawType.enclosingClass
-      if (ownerType != null) {
-        require(!(enclosingClass == null || ownerType.rawType != enclosingClass)) { "unexpected owner type for $rawType: $ownerType" }
-      } else require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
-    }
-    this.ownerType = ownerType?.canonicalize()
-    this.rawType = rawType.canonicalize()
-    @Suppress("UNCHECKED_CAST")
-    this.typeArguments = typeArguments.clone() as Array<Type>
-    for (t in this.typeArguments.indices) {
-      this.typeArguments[t].checkNotPrimitive()
-      this.typeArguments[t] = this.typeArguments[t].canonicalize()
-    }
-  }
-
+) : ParameterizedType {
   override fun getActualTypeArguments() = typeArguments.clone()
 
   override fun getRawType() = rawType
@@ -561,11 +539,34 @@ internal class ParameterizedTypeImpl(
     }
     return result.append(">").toString()
   }
+
+  companion object {
+    @JvmName("create")
+    @JvmStatic
+    operator fun invoke(
+      ownerType: Type?,
+      rawType: Type,
+      vararg typeArguments: Type
+    ): ParameterizedTypeImpl {
+      // Require an owner type if the raw type needs it.
+      if (rawType is Class<*>) {
+        val enclosingClass = rawType.enclosingClass
+        if (ownerType != null) {
+          require(!(enclosingClass == null || ownerType.rawType != enclosingClass)) { "unexpected owner type for $rawType: $ownerType" }
+        } else require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
+      }
+      @Suppress("UNCHECKED_CAST")
+      val finalTypeArgs = typeArguments.clone() as Array<Type>
+      for (t in finalTypeArgs.indices) {
+        finalTypeArgs[t].checkNotPrimitive()
+        finalTypeArgs[t] = finalTypeArgs[t].canonicalize()
+      }
+      return ParameterizedTypeImpl(ownerType?.canonicalize(), rawType.canonicalize(), finalTypeArgs)
+    }
+  }
 }
 
-internal class GenericArrayTypeImpl(componentType: Type) : GenericArrayType {
-  private val componentType: Type = componentType.canonicalize()
-
+internal class GenericArrayTypeImpl private constructor(private val componentType: Type) : GenericArrayType {
   override fun getGenericComponentType() = componentType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -575,6 +576,14 @@ internal class GenericArrayTypeImpl(componentType: Type) : GenericArrayType {
   override fun hashCode() = componentType.hashCode()
 
   override fun toString() = componentType.typeToString() + "[]"
+
+  companion object {
+    @JvmName("create")
+    @JvmStatic
+    operator fun invoke(componentType: Type): GenericArrayTypeImpl {
+      return GenericArrayTypeImpl(componentType.canonicalize())
+    }
+  }
 }
 
 /**
@@ -582,24 +591,10 @@ internal class GenericArrayTypeImpl(componentType: Type) : GenericArrayType {
  * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
  * bound must be Object.class.
  */
-internal class WildcardTypeImpl(upperBounds: Array<Type>, lowerBounds: Array<Type>) : WildcardType {
-  private val upperBound: Type
+internal class WildcardTypeImpl private constructor(
+  private val upperBound: Type,
   private val lowerBound: Type?
-
-  init {
-    require(lowerBounds.size <= 1)
-    require(upperBounds.size == 1)
-    if (lowerBounds.size == 1) {
-      lowerBounds[0].checkNotPrimitive()
-      require(!(upperBounds[0] !== Any::class.java))
-      lowerBound = lowerBounds[0].canonicalize()
-      upperBound = Any::class.java
-    } else {
-      upperBounds[0].checkNotPrimitive()
-      lowerBound = null
-      upperBound = upperBounds[0].canonicalize()
-    }
-  }
+) : WildcardType {
 
   override fun getUpperBounds() = arrayOf(upperBound)
 
@@ -618,6 +613,32 @@ internal class WildcardTypeImpl(upperBounds: Array<Type>, lowerBounds: Array<Typ
       lowerBound != null -> "? super ${lowerBound.typeToString()}"
       upperBound === Any::class.java -> "?"
       else -> "? extends ${upperBound.typeToString()}"
+    }
+  }
+
+  companion object {
+    @JvmStatic
+    @JvmName("create")
+    operator fun invoke(
+      upperBounds: Array<Type>,
+      lowerBounds: Array<Type>
+    ): WildcardTypeImpl {
+      require(lowerBounds.size <= 1)
+      require(upperBounds.size == 1)
+      return if (lowerBounds.size == 1) {
+        lowerBounds[0].checkNotPrimitive()
+        require(!(upperBounds[0] !== Any::class.java))
+        WildcardTypeImpl(
+          lowerBound = lowerBounds[0].canonicalize(),
+          upperBound = Any::class.java
+        )
+      } else {
+        upperBounds[0].checkNotPrimitive()
+        WildcardTypeImpl(
+          lowerBound = null,
+          upperBound = upperBounds[0].canonicalize()
+        )
+      }
     }
   }
 }
