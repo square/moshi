@@ -39,7 +39,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.internal.Util
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterOnly
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterProperty
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.PropertyOnly
@@ -47,7 +46,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Type
 import org.objectweb.asm.Type as AsmType
 
-private val MOSHI_UTIL = Util::class.asClassName()
+private const val MOSHI_UTIL_PACKAGE = "com.squareup.moshi.internal"
 private const val TO_STRING_PREFIX = "GeneratedJsonAdapter("
 private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the closing paren
 
@@ -61,8 +60,8 @@ public class AdapterGenerator(
   private companion object {
     private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
-      "%T.DEFAULT_CONSTRUCTOR_MARKER",
-      Util::class
+      "%M",
+      MemberName(MOSHI_UTIL_PACKAGE, "DEFAULT_CONSTRUCTOR_MARKER")
     )
     private val CN_MOSHI = Moshi::class.asClassName()
     private val CN_TYPE = Type::class.asClassName()
@@ -656,8 +655,8 @@ public class AdapterGenerator(
 
   private fun unexpectedNull(property: PropertyGenerator, reader: ParameterSpec): CodeBlock {
     return CodeBlock.of(
-      "%T.unexpectedNull(%S, %S, %N)",
-      MOSHI_UTIL,
+      "%M(%S, %S, %N)",
+      MemberName(MOSHI_UTIL_PACKAGE, "unexpectedNull"),
       property.localName,
       property.jsonName,
       reader
@@ -699,8 +698,8 @@ public class AdapterGenerator(
 private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator, readerParam: ParameterSpec) {
   val missingPropertyBlock =
     CodeBlock.of(
-      "%T.missingProperty(%S, %S, %N)",
-      MOSHI_UTIL,
+      "%M(%S, %S, %N)",
+      MemberName(MOSHI_UTIL_PACKAGE, "missingProperty"),
       property.localName,
       property.jsonName,
       readerParam
