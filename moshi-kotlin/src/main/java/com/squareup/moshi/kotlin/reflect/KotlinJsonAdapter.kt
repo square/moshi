@@ -289,7 +289,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         else -> error("Not possible!")
       }
       val resolvedPropertyType = resolve(type, rawType, propertyType)
-      val adapter = moshi.adapter<Any>(
+      val adapter = moshi.adapter<Any?>(
         resolvedPropertyType,
         Util.jsonAnnotations(allAnnotations.toTypedArray()),
         property.name
