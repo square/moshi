@@ -139,7 +139,7 @@ final class ClassJsonAdapter<T> extends JsonAdapter<T> {
             if (jsonAnnotation != null && jsonAnnotation.ignore()) continue;
 
             // Look up a type adapter for this type.
-            Type fieldType = resolve(type, rawType, field.getGenericType());
+            Type fieldType = resolve(field.getGenericType(), type, rawType);
             Set<? extends Annotation> annotations = Util.getJsonAnnotations(field);
             String fieldName = field.getName();
             JsonAdapter<Object> adapter = moshi.adapter(fieldType, annotations, fieldName);

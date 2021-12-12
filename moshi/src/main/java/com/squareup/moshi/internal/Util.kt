@@ -200,18 +200,17 @@ public fun Type.removeSubtypeWildcard(): Type {
   return upperBounds[0]
 }
 
-public fun resolve(context: Type, contextRawType: Class<*>, toResolve: Type): Type {
-  return resolve(context, contextRawType, toResolve, LinkedHashSet())
+public fun Type.resolve(context: Type, contextRawType: Class<*>): Type {
+  return this.resolve(context, contextRawType, LinkedHashSet())
 }
 
-private fun resolve(
+private fun Type.resolve(
   context: Type,
   contextRawType: Class<*>,
-  toResolveInitial: Type,
   visitedTypeVariables: MutableCollection<TypeVariable<*>>
 ): Type {
   // This implementation is made a little more complicated in an attempt to avoid object-creation.
-  var toResolve = toResolveInitial
+  var toResolve = this
   while (true) {
     when {
       toResolve is TypeVariable<*> -> {
@@ -228,27 +227,27 @@ private fun resolve(
       toResolve is Class<*> && toResolve.isArray -> {
         val original = toResolve
         val componentType: Type = original.componentType
-        val newComponentType = resolve(context, contextRawType, componentType, visitedTypeVariables)
+        val newComponentType = componentType.resolve(context, contextRawType, visitedTypeVariables)
         return if (componentType === newComponentType) original else newComponentType.asArrayType()
       }
       toResolve is GenericArrayType -> {
         val original = toResolve
         val componentType = original.genericComponentType
-        val newComponentType = resolve(context, contextRawType, componentType, visitedTypeVariables)
+        val newComponentType = componentType.resolve(context, contextRawType, visitedTypeVariables)
         return if (componentType === newComponentType) original else newComponentType.asArrayType()
       }
       toResolve is ParameterizedType -> {
         val original = toResolve
         val ownerType: Type? = original.ownerType
         val newOwnerType = ownerType?.let {
-          resolve(context, contextRawType, ownerType, visitedTypeVariables)
+          ownerType.resolve(context, contextRawType, visitedTypeVariables)
         }
         var changed = newOwnerType !== ownerType
         var args = original.actualTypeArguments
         var t = 0
         val length = args.size
         while (t < length) {
-          val resolvedTypeArgument = resolve(context, contextRawType, args[t], visitedTypeVariables)
+          val resolvedTypeArgument = args[t].resolve(context, contextRawType, visitedTypeVariables)
           if (resolvedTypeArgument !== args[t]) {
             if (!changed) {
               args = args.clone()
@@ -265,12 +264,12 @@ private fun resolve(
         val originalLowerBound = original.lowerBounds
         val originalUpperBound = original.upperBounds
         if (originalLowerBound.size == 1) {
-          val lowerBound = resolve(context, contextRawType, originalLowerBound[0], visitedTypeVariables)
+          val lowerBound = originalLowerBound[0].resolve(context, contextRawType, visitedTypeVariables)
           if (lowerBound !== originalLowerBound[0]) {
             return Types.supertypeOf(lowerBound)
           }
         } else if (originalUpperBound.size == 1) {
-          val upperBound = resolve(context, contextRawType, originalUpperBound[0], visitedTypeVariables)
+          val upperBound = originalUpperBound[0].resolve(context, contextRawType, visitedTypeVariables)
           if (upperBound !== originalUpperBound[0]) {
             return Types.subtypeOf(upperBound)
           }
@@ -462,8 +461,8 @@ private fun <T> Class<T>.findConstructor(): Constructor<T> {
 }
 
 public fun missingProperty(
-  propertyName: String,
-  jsonName: String,
+  propertyName: String?,
+  jsonName: String?,
   reader: JsonReader
 ): JsonDataException {
   val path = reader.path

@@ -23,8 +23,7 @@ import com.squareup.moshi.internal.Util;
 import org.junit.Test;
 
 /**
- * Test fixes for infinite recursion on {@link Util#resolve(java.lang.reflect.Type, Class,
- * java.lang.reflect.Type)}, described at <a href="https://github.com/google/gson/issues/440">Issue
+ * Test fixes for infinite recursion on {@link Util#resolve(java.lang.reflect.Type, java.lang.reflect.Type, Class)}, described at <a href="https://github.com/google/gson/issues/440">Issue
  * #440</a> and similar issues.
  *
  * <p>These tests originally caused {@link StackOverflowError} because of infinite recursion on

@@ -362,12 +362,12 @@ public final class Types {
   static Type getSupertype(Type context, Class<?> contextRawType, Class<?> supertype) {
     if (!supertype.isAssignableFrom(contextRawType)) throw new IllegalArgumentException();
     return resolve(
-        context, contextRawType, getGenericSupertype(context, contextRawType, supertype));
+      getGenericSupertype(context, contextRawType, supertype), context, contextRawType);
   }
 
   static Type getGenericSuperclass(Type type) {
     Class<?> rawType = Types.getRawType(type);
-    return resolve(type, rawType, rawType.getGenericSuperclass());
+    return resolve(rawType.getGenericSuperclass(), type, rawType);
   }
 
   /**

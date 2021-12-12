@@ -1270,7 +1270,7 @@ class GeneratedAdaptersTest {
   @Test fun customGenerator_withClassPresent() {
     val moshi = Moshi.Builder().build()
     val adapter = moshi.adapter<CustomGeneratedClass>()
-    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate()
+    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate
     assertThat(unwrapped).isInstanceOf(
       GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter::class.java
     )
