@@ -112,7 +112,7 @@ final class RecordJsonAdapter<T> extends JsonAdapter<T> {
         }
       };
 
-  private static record ComponentBinding<T>(
+  private record ComponentBinding<T>(
       String componentName, String jsonName, JsonAdapter<T> adapter, MethodHandle accessor) {}
 
   private final String targetClass;
