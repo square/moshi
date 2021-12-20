@@ -76,7 +76,7 @@ public final class RecordsTest {
     assertThat(deserialized).isEqualTo(instance);
   }
 
-  public static record SmokeTestType(
+  public record SmokeTestType(
       @Json(name = "first_name") String firstName,
       @Json(name = "last_name") String lastName,
       int age,
@@ -150,7 +150,7 @@ public final class RecordsTest {
     assertThat(adapter.fromJson("{\"value\":\"Okay!\"}")).isEqualTo(new GenericRecord<>("Okay!"));
   }
 
-  public static record GenericRecord<T>(T value) {}
+  public record GenericRecord<T>(T value) {}
 
   @Test
   public void genericBoundedRecord() throws IOException {
@@ -172,9 +172,9 @@ public final class RecordsTest {
     assertThat(jsonAdapter.fromJson(json)).isEqualTo(value);
   }
 
-  public static record IndirectGenerics<T>(T single, List<T> list, Map<String, T> map) {}
+  public record IndirectGenerics<T>(T single, List<T> list, Map<String, T> map) {}
 
-  public static record HasIndirectGenerics(IndirectGenerics<Long> value) {}
+  public record HasIndirectGenerics(IndirectGenerics<Long> value) {}
 
   @Test
   public void qualifiedValues() throws IOException {
@@ -183,7 +183,7 @@ public final class RecordsTest {
         .isEqualTo(new QualifiedValues(16711680));
   }
 
-  public static record QualifiedValues(@HexColor int value) {}
+  public record QualifiedValues(@HexColor int value) {}
 
   @Retention(RUNTIME)
   @JsonQualifier
@@ -203,7 +203,7 @@ public final class RecordsTest {
     }
   }
 
-  public static record GenericBoundedRecord<T extends Number>(T value) {}
+  public record GenericBoundedRecord<T extends Number>(T value) {}
 
   @Test
   public void jsonName() throws IOException {
@@ -211,7 +211,7 @@ public final class RecordsTest {
     assertThat(adapter.fromJson("{\"actualValue\":3}")).isEqualTo(new JsonName(3));
   }
 
-  public static record JsonName(@Json(name = "actualValue") int value) {}
+  public record JsonName(@Json(name = "actualValue") int value) {}
 
   /**
    * We had a bug where we were incorrectly wrapping exceptions thrown when delegating to the
@@ -248,7 +248,7 @@ public final class RecordsTest {
     }
   }
 
-  public static record BooleanRecord(boolean value) {}
+  public record BooleanRecord(boolean value) {}
 
   @Test
   public void absentPrimitiveFails() throws IOException {
@@ -290,5 +290,5 @@ public final class RecordsTest {
     assertThat(adapter.toJson(value)).isEqualTo("{\"i\":5}");
   }
 
-  public static record AbsentValues(String s, int i) {}
+  public record AbsentValues(String s, int i) {}
 }
