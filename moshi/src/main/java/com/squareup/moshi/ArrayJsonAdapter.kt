@@ -13,70 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import kotlin.Throws
+import java.lang.reflect.Array
+import java.lang.reflect.Type
+import okio.IOException
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
  * and object arrays.
  */
-final class ArrayJsonAdapter extends JsonAdapter<Object> {
-  public static final Factory FACTORY =
-      new Factory() {
-        @Override
-        public @Nullable JsonAdapter<?> create(
-            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-          Type elementType = Types.arrayComponentType(type);
-          if (elementType == null) return null;
-          if (!annotations.isEmpty()) return null;
-          Class<?> elementClass = Types.getRawType(elementType);
-          JsonAdapter<Object> elementAdapter = moshi.adapter(elementType);
-          return new ArrayJsonAdapter(elementClass, elementAdapter).nullSafe();
-        }
-      };
-
-  private final Class<?> elementClass;
-  private final JsonAdapter<Object> elementAdapter;
-
-  ArrayJsonAdapter(Class<?> elementClass, JsonAdapter<Object> elementAdapter) {
-    this.elementClass = elementClass;
-    this.elementAdapter = elementAdapter;
-  }
-
-  @Override
-  public Object fromJson(JsonReader reader) throws IOException {
-    List<Object> list = new ArrayList<>();
-    reader.beginArray();
+internal class ArrayJsonAdapter(private val elementClass: Class<*>, private val elementAdapter: JsonAdapter<Any>
+) : JsonAdapter<Any?>() {
+  @Throws(IOException::class)
+  override fun fromJson(reader: JsonReader): Any {
+    val list = mutableListOf<Any?>()
+    reader.beginArray()
     while (reader.hasNext()) {
-      list.add(elementAdapter.fromJson(reader));
+      list.add(elementAdapter.fromJson(reader))
     }
-    reader.endArray();
-    Object array = Array.newInstance(elementClass, list.size());
-    for (int i = 0; i < list.size(); i++) {
-      Array.set(array, i, list.get(i));
+    reader.endArray()
+    val array = Array.newInstance(elementClass, list.size)
+    list.forEachIndexed { i, item ->
+      Array.set(array, i, item)
     }
-    return array;
+    return array
   }
 
-  @Override
-  public void toJson(JsonWriter writer, Object value) throws IOException {
-    writer.beginArray();
-    for (int i = 0, size = Array.getLength(value); i < size; i++) {
-      elementAdapter.toJson(writer, Array.get(value, i));
+  @Throws(IOException::class)
+  override fun toJson(writer: JsonWriter, value: Any?) {
+    writer.beginArray()
+    var i = 0
+    val size = Array.getLength(value)
+    while (i < size) {
+      elementAdapter.toJson(writer, Array.get(value, i))
+      i++
     }
-    writer.endArray();
+    writer.endArray()
   }
 
-  @Override
-  public String toString() {
-    return elementAdapter + ".array()";
+  override fun toString(): String {
+    return "$elementAdapter.array()"
+  }
+
+  companion object {
+    @JvmField
+    val FACTORY = object : Factory {
+      override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+        val elementType = Types.arrayComponentType(type) ?: return null
+        if (annotations.isNotEmpty()) return null
+        val elementClass = Types.getRawType(elementType)
+        val elementAdapter = moshi.adapter<Any>(elementType)
+        return ArrayJsonAdapter(elementClass, elementAdapter).nullSafe()
+      }
+    }
   }
 }
