@@ -102,7 +102,7 @@ internal class AdapterMethodsFactory(
 
       var c: Class<*> = adapter.javaClass
       while (c != Any::class.java) {
-        for (m in c.declaredMethods) {
+        c.declaredMethods.forEach { m ->
           if (m.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, m)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
