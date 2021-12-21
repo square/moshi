@@ -15,10 +15,8 @@
  */
 package com.squareup.moshi
 
-import kotlin.Throws
 import java.lang.reflect.Array
 import java.lang.reflect.Type
-import okio.IOException
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
@@ -26,7 +24,6 @@ import okio.IOException
  */
 internal class ArrayJsonAdapter(private val elementClass: Class<*>, private val elementAdapter: JsonAdapter<Any>
 ) : JsonAdapter<Any?>() {
-  @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): Any {
     val list = mutableListOf<Any?>()
     reader.beginArray()
@@ -41,7 +38,6 @@ internal class ArrayJsonAdapter(private val elementClass: Class<*>, private val 
     return array
   }
 
-  @Throws(IOException::class)
   override fun toJson(writer: JsonWriter, value: Any?) {
     writer.beginArray()
     var i = 0
@@ -63,7 +59,7 @@ internal class ArrayJsonAdapter(private val elementClass: Class<*>, private val 
       override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
         val elementType = Types.arrayComponentType(type) ?: return null
         if (annotations.isNotEmpty()) return null
-        val elementClass = Types.getRawType(elementType)
+        val elementClass = elementType.rawType
         val elementAdapter = moshi.adapter<Any>(elementType)
         return ArrayJsonAdapter(elementClass, elementAdapter).nullSafe()
       }
