@@ -13,14 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import javax.annotation.Nullable;
+import okio.IOException
 
-/** Thrown when the data being parsed is not encoded as valid JSON. */
-public final class JsonEncodingException extends IOException {
-  public JsonEncodingException(@Nullable String message) {
-    super(message);
-  }
-}
+/** Thrown when the data being parsed is not encoded as valid JSON.  */
+public class JsonEncodingException(message: String?) : IOException(message)

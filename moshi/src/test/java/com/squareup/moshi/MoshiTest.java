@@ -179,7 +179,7 @@ public final class MoshiTest {
           s = "\\r";
           break;
         case '\f':
-          s = "\\f";
+          s = "\\u000c";
           break;
         case '\u2028':
           s = "\\u2028";

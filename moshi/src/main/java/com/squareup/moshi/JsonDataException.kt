@@ -13,34 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import javax.annotation.Nullable;
+import kotlin.RuntimeException
 
 /**
  * Thrown when the data in a JSON document doesn't match the data expected by the caller. For
  * example, suppose the application expects a boolean but the JSON document contains a string. When
- * the call to {@link JsonReader#nextBoolean} is made, a {@code JsonDataException} is thrown.
+ * the call to [JsonReader.nextBoolean] is made, a `JsonDataException` is thrown.
  *
- * <p>Exceptions of this type should be fixed by either changing the application code to accept the
+ * Exceptions of this type should be fixed by either changing the application code to accept the
  * unexpected JSON, or by changing the JSON to conform to the application's expectations.
  *
- * <p>This exception may also be triggered if a document's nesting exceeds 31 levels. This depth is
+ * This exception may also be triggered if a document's nesting exceeds 31 levels. This depth is
  * sufficient for all practical applications, but shallow enough to avoid uglier failures like
- * {@link StackOverflowError}.
+ * [StackOverflowError].
  */
-public final class JsonDataException extends RuntimeException {
-  public JsonDataException() {}
+public class JsonDataException : RuntimeException {
+  public constructor() {}
 
-  public JsonDataException(@Nullable String message) {
-    super(message);
-  }
+  public constructor(message: String?) : super(message) {}
 
-  public JsonDataException(@Nullable Throwable cause) {
-    super(cause);
-  }
+  public constructor(cause: Throwable?) : super(cause) {}
 
-  public JsonDataException(@Nullable String message, @Nullable Throwable cause) {
-    super(message, cause);
-  }
+  public constructor(message: String?, cause: Throwable?) : super(message, cause) {}
 }

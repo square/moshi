@@ -13,88 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import javax.annotation.Nullable;
+import kotlin.Throws
+import java.lang.reflect.Type
+import okio.IOException
 
-/** Converts collection types to JSON arrays containing their converted contents. */
-abstract class CollectionJsonAdapter<C extends Collection<T>, T> extends JsonAdapter<C> {
-  public static final JsonAdapter.Factory FACTORY =
-      new JsonAdapter.Factory() {
-        @Override
-        public @Nullable JsonAdapter<?> create(
-            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-          Class<?> rawType = Types.getRawType(type);
-          if (!annotations.isEmpty()) return null;
-          if (rawType == List.class || rawType == Collection.class) {
-            return newArrayListAdapter(type, moshi).nullSafe();
-          } else if (rawType == Set.class) {
-            return newLinkedHashSetAdapter(type, moshi).nullSafe();
-          }
-          return null;
-        }
-      };
+/** Converts collection types to JSON arrays containing their converted contents.  */
+internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> private constructor(
+  private val elementAdapter: JsonAdapter<T>
+) : JsonAdapter<C>() {
+  abstract fun newCollection(): C
 
-  private final JsonAdapter<T> elementAdapter;
-
-  private CollectionJsonAdapter(JsonAdapter<T> elementAdapter) {
-    this.elementAdapter = elementAdapter;
-  }
-
-  static <T> JsonAdapter<Collection<T>> newArrayListAdapter(Type type, Moshi moshi) {
-    Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
-    return new CollectionJsonAdapter<Collection<T>, T>(elementAdapter) {
-      @Override
-      Collection<T> newCollection() {
-        return new ArrayList<>();
-      }
-    };
-  }
-
-  static <T> JsonAdapter<Set<T>> newLinkedHashSetAdapter(Type type, Moshi moshi) {
-    Type elementType = Types.collectionElementType(type, Collection.class);
-    JsonAdapter<T> elementAdapter = moshi.adapter(elementType);
-    return new CollectionJsonAdapter<Set<T>, T>(elementAdapter) {
-      @Override
-      Set<T> newCollection() {
-        return new LinkedHashSet<>();
-      }
-    };
-  }
-
-  abstract C newCollection();
-
-  @Override
-  public C fromJson(JsonReader reader) throws IOException {
-    C result = newCollection();
-    reader.beginArray();
+  @Throws(IOException::class)
+  override fun fromJson(reader: JsonReader): C {
+    val result = newCollection()
+    reader.beginArray()
     while (reader.hasNext()) {
-      result.add(elementAdapter.fromJson(reader));
+      result.add(elementAdapter.fromJson(reader))
     }
-    reader.endArray();
-    return result;
+    reader.endArray()
+    return result
   }
 
-  @Override
-  public void toJson(JsonWriter writer, C value) throws IOException {
-    writer.beginArray();
-    for (T element : value) {
-      elementAdapter.toJson(writer, element);
+  @Throws(IOException::class)
+  override fun toJson(writer: JsonWriter, value: C?) {
+    value?.let {
+      writer.beginArray()
+      for (element in value) {
+        elementAdapter.toJson(writer, element)
+      }
+      writer.endArray()
     }
-    writer.endArray();
   }
 
-  @Override
-  public String toString() {
-    return elementAdapter + ".collection()";
+  override fun toString(): String {
+    return "$elementAdapter.collection()"
+  }
+
+  companion object {
+    @JvmField
+    val FACTORY = object : Factory {
+      override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+        val rawType = Types.getRawType(type)
+        if (annotations.isNotEmpty()) return null
+        if (rawType == MutableList::class.java || rawType == MutableCollection::class.java) {
+          return newArrayListAdapter<Any>(type, moshi).nullSafe()
+        } else if (rawType == MutableSet::class.java) {
+          return newLinkedHashSetAdapter<Any>(type, moshi).nullSafe()
+        }
+        return null
+      }
+    }
+
+    private fun <T> newArrayListAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableCollection<T?>> {
+      val elementType = Types.collectionElementType(type, MutableCollection::class.java)
+      val elementAdapter = moshi.adapter<T>(elementType)
+      return object : CollectionJsonAdapter<MutableCollection<T?>, T>(elementAdapter) {
+        override fun newCollection(): MutableCollection<T?> {
+          return mutableListOf()
+        }
+      }
+    }
+
+    private fun <T> newLinkedHashSetAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableSet<T?>> {
+      val elementType = Types.collectionElementType(type, MutableCollection::class.java)
+      val elementAdapter = moshi.adapter<T>(elementType)
+      return object : CollectionJsonAdapter<MutableSet<T?>, T>(elementAdapter) {
+        override fun newCollection(): MutableSet<T?> {
+          return LinkedHashSet()
+        }
+      }
+    }
   }
 }

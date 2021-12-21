@@ -13,222 +13,208 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
-import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
-import static com.squareup.moshi.JsonScope.NONEMPTY_ARRAY;
-import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
+import com.squareup.moshi.JsonScope.EMPTY_ARRAY
+import com.squareup.moshi.JsonScope.EMPTY_OBJECT
+import com.squareup.moshi.JsonScope.NONEMPTY_ARRAY
+import com.squareup.moshi.JsonScope.NONEMPTY_OBJECT
+import java.io.Flushable
 
-import java.io.Closeable;
-import java.io.Flushable;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
-import okio.BufferedSink;
-import okio.BufferedSource;
+import kotlin.Throws
+import java.lang.IllegalArgumentException
+import okio.BufferedSink
+import okio.BufferedSource
+import javax.annotation.CheckReturnValue
+import okio.Closeable
+import okio.IOException
 
 /**
- * Writes a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>) encoded value to a
+ * Writes a JSON ([RFC 7159](http://www.ietf.org/rfc/rfc7159.txt)) encoded value to a
  * stream, one token at a time. The stream includes both literal values (strings, numbers, booleans
  * and nulls) as well as the begin and end delimiters of objects and arrays.
  *
  * <h1>Encoding JSON</h1>
  *
- * To encode your data as JSON, create a new {@code JsonWriter}. Each JSON document must contain one
+ * To encode your data as JSON, create a new `JsonWriter`. Each JSON document must contain one
  * top-level array or object. Call methods on the writer as you walk the structure's contents,
  * nesting arrays and objects as necessary:
  *
- * <ul>
- *   <li>To write <strong>arrays</strong>, first call {@link #beginArray()}. Write each of the
- *       array's elements with the appropriate {@link #value} methods or by nesting other arrays and
- *       objects. Finally close the array using {@link #endArray()}.
- *   <li>To write <strong>objects</strong>, first call {@link #beginObject()}. Write each of the
- *       object's properties by alternating calls to {@link #name} with the property's value. Write
- *       property values with the appropriate {@link #value} method or by nesting other objects or
- *       arrays. Finally close the object using {@link #endObject()}.
- * </ul>
+ *  * To write **arrays**, first call [.beginArray]. Write each of the
+ * array's elements with the appropriate [.value] methods or by nesting other arrays and
+ * objects. Finally close the array using [.endArray].
+ *  * To write **objects**, first call [.beginObject]. Write each of the
+ * object's properties by alternating calls to [.name] with the property's value. Write
+ * property values with the appropriate [.value] method or by nesting other objects or
+ * arrays. Finally close the object using [.endObject].
  *
  * <h1>Example</h1>
  *
  * Suppose we'd like to encode a stream of messages such as the following:
  *
- * <pre>{@code
- * [
- *   {
- *     "id": 912345678901,
- *     "text": "How do I stream JSON in Java?",
- *     "geo": null,
- *     "user": {
- *       "name": "json_newb",
- *       "followers_count": 41
- *      }
- *   },
- *   {
- *     "id": 912345678902,
- *     "text": "@json_newb just use JsonWriter!",
- *     "geo": [50.454722, -104.606667],
- *     "user": {
- *       "name": "jesse",
- *       "followers_count": 2
- *     }
- *   }
+ * <pre>`[
+ * {
+ * "id": 912345678901,
+ * "text": "How do I stream JSON in Java?",
+ * "geo": null,
+ * "user": {
+ * "name": "json_newb",
+ * "followers_count": 41
+ * }
+ * },
+ * {
+ * "id": 912345678902,
+ * "text": "@json_newb just use JsonWriter!",
+ * "geo": [50.454722, -104.606667],
+ * "user": {
+ * "name": "jesse",
+ * "followers_count": 2
+ * }
+ * }
  * ]
- * }</pre>
+`</pre> *
  *
  * This code encodes the above structure:
  *
- * <pre>{@code
- * public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
- *   JsonWriter writer = JsonWriter.of(sink);
- *   writer.setIndent("  ");
- *   writeMessagesArray(writer, messages);
- *   writer.close();
+ * <pre>`public void writeJsonStream(BufferedSink sink, List<Message> messages) throws IOException {
+ * JsonWriter writer = JsonWriter.of(sink);
+ * writer.setIndent("  ");
+ * writeMessagesArray(writer, messages);
+ * writer.close();
  * }
  *
  * public void writeMessagesArray(JsonWriter writer, List<Message> messages) throws IOException {
- *   writer.beginArray();
- *   for (Message message : messages) {
- *     writeMessage(writer, message);
- *   }
- *   writer.endArray();
+ * writer.beginArray();
+ * for (Message message : messages) {
+ * writeMessage(writer, message);
+ * }
+ * writer.endArray();
  * }
  *
  * public void writeMessage(JsonWriter writer, Message message) throws IOException {
- *   writer.beginObject();
- *   writer.name("id").value(message.getId());
- *   writer.name("text").value(message.getText());
- *   if (message.getGeo() != null) {
- *     writer.name("geo");
- *     writeDoublesArray(writer, message.getGeo());
- *   } else {
- *     writer.name("geo").nullValue();
- *   }
- *   writer.name("user");
- *   writeUser(writer, message.getUser());
- *   writer.endObject();
+ * writer.beginObject();
+ * writer.name("id").value(message.getId());
+ * writer.name("text").value(message.getText());
+ * if (message.getGeo() != null) {
+ * writer.name("geo");
+ * writeDoublesArray(writer, message.getGeo());
+ * } else {
+ * writer.name("geo").nullValue();
+ * }
+ * writer.name("user");
+ * writeUser(writer, message.getUser());
+ * writer.endObject();
  * }
  *
  * public void writeUser(JsonWriter writer, User user) throws IOException {
- *   writer.beginObject();
- *   writer.name("name").value(user.getName());
- *   writer.name("followers_count").value(user.getFollowersCount());
- *   writer.endObject();
+ * writer.beginObject();
+ * writer.name("name").value(user.getName());
+ * writer.name("followers_count").value(user.getFollowersCount());
+ * writer.endObject();
  * }
  *
  * public void writeDoublesArray(JsonWriter writer, List<Double> doubles) throws IOException {
- *   writer.beginArray();
- *   for (Double value : doubles) {
- *     writer.value(value);
- *   }
- *   writer.endArray();
+ * writer.beginArray();
+ * for (Double value : doubles) {
+ * writer.value(value);
  * }
- * }</pre>
+ * writer.endArray();
+ * }
+`</pre> *
  *
- * <p>Each {@code JsonWriter} may be used to write a single JSON stream. Instances of this class are
- * not thread safe. Calls that would result in a malformed JSON string will fail with an {@link
- * IllegalStateException}.
+ * Each `JsonWriter` may be used to write a single JSON stream. Instances of this class are
+ * not thread safe. Calls that would result in a malformed JSON string will fail with an [ ].
  */
-public abstract class JsonWriter implements Closeable, Flushable {
+public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack will
   // grow itself up to 256 levels of nesting including the top-level document. Deeper nesting is
   // prone to trigger StackOverflowErrors.
-  int stackSize = 0;
-  int[] scopes = new int[32];
-  String[] pathNames = new String[32];
-  int[] pathIndices = new int[32];
+  @JvmField
+  public var stackSize: Int = 0
+  @JvmField
+  public var scopes: IntArray = IntArray(32)
+  @JvmField
+  public var pathNames: Array<String?> = arrayOfNulls<String>(32)
+  @JvmField
+  public var pathIndices: IntArray = IntArray(32)
 
   /**
    * A string containing a full set of spaces for a single level of indentation, or null for no
    * pretty printing.
    */
-  String indent;
+  private var indent: String? = null
 
-  boolean lenient;
-  boolean serializeNulls;
-  boolean promoteValueToName;
+  private var lenient = false
+  private var serializeNulls = false
+  @JvmField
+  protected var promoteValueToName: Boolean = false
 
   /**
    * Controls the deepest stack size that has begin/end pairs flattened:
    *
-   * <ul>
-   *   <li>If -1, no begin/end pairs are being suppressed.
-   *   <li>If positive, this is the deepest stack size whose begin/end pairs are eligible to be
-   *       flattened.
-   *   <li>If negative, it is the bitwise inverse (~) of the deepest stack size whose begin/end
-   *       pairs have been flattened.
-   * </ul>
+   *  * If -1, no begin/end pairs are being suppressed.
+   *  * If positive, this is the deepest stack size whose begin/end pairs are eligible to be
+   * flattened.
+   *  * If negative, it is the bitwise inverse (~) of the deepest stack size whose begin/end
+   * pairs have been flattened.
    *
-   * <p>We differentiate between what layer would be flattened (positive) from what layer is being
+   *
+   * We differentiate between what layer would be flattened (positive) from what layer is being
    * flattened (negative) so that we don't double-flatten.
    *
-   * <p>To accommodate nested flattening we require callers to track the previous state when they
-   * provide a new state. The previous state is returned from {@link #beginFlatten} and restored
-   * with {@link #endFlatten}.
+   * To accommodate nested flattening we require callers to track the previous state when they
+   * provide a new state. The previous state is returned from [.beginFlatten] and restored
+   * with [.endFlatten].
    */
-  int flattenStackSize = -1;
+  @JvmField
+  public var flattenStackSize: Int = -1
 
-  private Map<Class<?>, Object> tags;
+  private var tags: MutableMap<Class<*>, Any>? = null
 
-  /** Returns a new instance that writes UTF-8 encoded JSON to {@code sink}. */
-  @CheckReturnValue
-  public static JsonWriter of(BufferedSink sink) {
-    return new JsonUtf8Writer(sink);
-  }
-
-  JsonWriter() {
-    // Package-private to control subclasses.
-  }
-
-  /** Returns the scope on the top of the stack. */
-  final int peekScope() {
+  /** Returns the scope on the top of the stack.  */
+  protected fun peekScope(): Int {
     if (stackSize == 0) {
-      throw new IllegalStateException("JsonWriter is closed.");
+      throw IllegalStateException("JsonWriter is closed.")
     }
-    return scopes[stackSize - 1];
+    return scopes[stackSize - 1]
   }
 
-  /** Before pushing a value on the stack this confirms that the stack has capacity. */
-  final boolean checkStack() {
-    if (stackSize != scopes.length) return false;
+  /** Before pushing a value on the stack this confirms that the stack has capacity.  */
+  protected fun checkStack(): Boolean {
+    if (stackSize != scopes.size) return false
 
     if (stackSize == 256) {
-      throw new JsonDataException("Nesting too deep at " + getPath() + ": circular reference?");
+      throw JsonDataException("Nesting too deep at ${getPath()}: circular reference?")
     }
 
-    scopes = Arrays.copyOf(scopes, scopes.length * 2);
-    pathNames = Arrays.copyOf(pathNames, pathNames.length * 2);
-    pathIndices = Arrays.copyOf(pathIndices, pathIndices.length * 2);
-    if (this instanceof JsonValueWriter) {
-      ((JsonValueWriter) this).stack =
-          Arrays.copyOf(((JsonValueWriter) this).stack, ((JsonValueWriter) this).stack.length * 2);
+    scopes = scopes.copyOf(scopes.size * 2)
+    pathNames = pathNames.copyOf(pathNames.size * 2)
+    pathIndices = pathIndices.copyOf(pathIndices.size * 2)
+    if (this is JsonValueWriter) {
+      this.stack = this.stack.copyOf(this.stack.size * 2)
     }
 
-    return true;
+    return true
   }
 
-  final void pushScope(int newTop) {
-    scopes[stackSize++] = newTop;
+  protected fun pushScope(newTop: Int) {
+    scopes[stackSize++] = newTop
   }
 
-  /** Replace the value on the top of the stack with the given value. */
-  final void replaceTop(int topOfStack) {
-    scopes[stackSize - 1] = topOfStack;
+  /** Replace the value on the top of the stack with the given value.  */
+  protected fun replaceTop(topOfStack: Int) {
+    scopes[stackSize - 1] = topOfStack
   }
 
   /**
    * Sets the indentation string to be repeated for each level of indentation in the encoded
-   * document. If {@code indent.isEmpty()} the encoded document will be compact. Otherwise the
+   * document. If `indent.isEmpty()` the encoded document will be compact. Otherwise the
    * encoded document will be more human-readable.
    *
    * @param indent a string containing only whitespace.
    */
-  public void setIndent(String indent) {
-    this.indent = !indent.isEmpty() ? indent : null;
+  public open fun setIndent(indent: String) {
+    this.indent = indent.ifEmpty { null }
   }
 
   /**
@@ -236,38 +222,36 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * encoded document will be compact.
    */
   @CheckReturnValue
-  public final String getIndent() {
-    return indent != null ? indent : "";
+  public fun getIndent(): String {
+    return indent ?: ""
   }
 
   /**
    * Configure this writer to relax its syntax rules. By default, this writer only emits well-formed
-   * JSON as specified by <a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>. Setting the
+   * JSON as specified by [RFC 7159](http://www.ietf.org/rfc/rfc7159.txt). Setting the
    * writer to lenient permits the following:
    *
-   * <ul>
-   *   <li>Top-level values of any type. With strict writing, the top-level value must be an object
-   *       or an array.
-   *   <li>Numbers may be {@linkplain Double#isNaN() NaNs} or {@linkplain Double#isInfinite()
-   *       infinities}.
-   * </ul>
+   *
+   *  * Top-level values of any type. With strict writing, the top-level value must be an object
+   * or an array.
+   *  * Numbers may be [NaNs][Double.isNaN] or [       infinities][Double.isInfinite].
    */
-  public final void setLenient(boolean lenient) {
-    this.lenient = lenient;
+  public fun setLenient(lenient: Boolean) {
+    this.lenient = lenient
   }
 
-  /** Returns true if this writer has relaxed syntax rules. */
+  /** Returns true if this writer has relaxed syntax rules.  */
   @CheckReturnValue
-  public final boolean isLenient() {
-    return lenient;
+  public fun isLenient(): Boolean {
+    return lenient
   }
 
   /**
    * Sets whether object members are serialized when their value is null. This has no impact on
    * array elements. The default is false.
    */
-  public final void setSerializeNulls(boolean serializeNulls) {
-    this.serializeNulls = serializeNulls;
+  public fun setSerializeNulls(serializeNulls: Boolean) {
+    this.serializeNulls = serializeNulls
   }
 
   /**
@@ -275,39 +259,41 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * array elements. The default is false.
    */
   @CheckReturnValue
-  public final boolean getSerializeNulls() {
-    return serializeNulls;
+  public fun getSerializeNulls(): Boolean {
+    return serializeNulls
   }
 
   /**
-   * Begins encoding a new array. Each call to this method must be paired with a call to {@link
-   * #endArray}.
+   * Begins encoding a new array. Each call to this method must be paired with a call to [ ][.endArray].
    *
    * @return this writer.
    */
-  public abstract JsonWriter beginArray() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun beginArray(): JsonWriter
 
   /**
    * Ends encoding the current array.
    *
    * @return this writer.
    */
-  public abstract JsonWriter endArray() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun endArray(): JsonWriter
 
   /**
-   * Begins encoding a new object. Each call to this method must be paired with a call to {@link
-   * #endObject}.
+   * Begins encoding a new object. Each call to this method must be paired with a call to [ ][.endObject].
    *
    * @return this writer.
    */
-  public abstract JsonWriter beginObject() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun beginObject(): JsonWriter
 
   /**
    * Ends encoding the current object.
    *
    * @return this writer.
    */
-  public abstract JsonWriter endObject() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun endObject(): JsonWriter
 
   /**
    * Encodes the property name.
@@ -315,274 +301,279 @@ public abstract class JsonWriter implements Closeable, Flushable {
    * @param name the name of the forthcoming value. Must not be null.
    * @return this writer.
    */
-  public abstract JsonWriter name(String name) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun name(name: String): JsonWriter
 
   /**
-   * Encodes {@code value}.
+   * Encodes `value`.
    *
    * @param value the literal string value, or null to encode a null literal.
    * @return this writer.
    */
-  public abstract JsonWriter value(@Nullable String value) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun value(value: String?): JsonWriter
 
   /**
-   * Encodes {@code null}.
+   * Encodes `null`.
    *
    * @return this writer.
    */
-  public abstract JsonWriter nullValue() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nullValue(): JsonWriter
+
+  //  /**
+  //   * Encodes {@code value}.
+  //   *
+  //   * @return this writer.
+  //   */
+  //  public abstract JsonWriter value(boolean value) throws IOException;
 
   /**
-   * Encodes {@code value}.
+   * Encodes `value`.
    *
    * @return this writer.
    */
-  public abstract JsonWriter value(boolean value) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun value(value: Boolean?): JsonWriter
 
   /**
-   * Encodes {@code value}.
+   * Encodes `value`.
+   *
+   * @param value a finite value. May not be [NaNs][Double.isNaN] or [     ][Double.isInfinite].
+   * @return this writer.
+   */
+  @Throws(IOException::class)
+  public abstract fun value(value: Double): JsonWriter
+
+  /**
+   * Encodes `value`.
    *
    * @return this writer.
    */
-  public abstract JsonWriter value(@Nullable Boolean value) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun value(value: Long): JsonWriter
 
   /**
-   * Encodes {@code value}.
+   * Encodes `value`.
    *
-   * @param value a finite value. May not be {@linkplain Double#isNaN() NaNs} or {@linkplain
-   *     Double#isInfinite() infinities}.
+   * @param value a finite value. May not be [NaNs][Double.isNaN] or [     ][Double.isInfinite].
    * @return this writer.
    */
-  public abstract JsonWriter value(double value) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun value(value: Number?): JsonWriter
 
   /**
-   * Encodes {@code value}.
+   * Writes `source` directly without encoding its contents. Equivalent to `try
+   * (BufferedSink sink = writer.valueSink()) { source.readAll(sink): }`
    *
-   * @return this writer.
+   * @see .valueSink
    */
-  public abstract JsonWriter value(long value) throws IOException;
-
-  /**
-   * Encodes {@code value}.
-   *
-   * @param value a finite value. May not be {@linkplain Double#isNaN() NaNs} or {@linkplain
-   *     Double#isInfinite() infinities}.
-   * @return this writer.
-   */
-  public abstract JsonWriter value(@Nullable Number value) throws IOException;
-
-  /**
-   * Writes {@code source} directly without encoding its contents. Equivalent to {@code try
-   * (BufferedSink sink = writer.valueSink()) { source.readAll(sink): }}
-   *
-   * @see #valueSink()
-   */
-  public final JsonWriter value(BufferedSource source) throws IOException {
+  @Throws(IOException::class)
+  public fun value(source: BufferedSource): JsonWriter {
     if (promoteValueToName) {
-      throw new IllegalStateException(
-          "BufferedSource cannot be used as a map key in JSON at path " + getPath());
+      throw IllegalStateException("BufferedSource cannot be used as a map key in JSON at path ${getPath()}")
     }
-    try (BufferedSink sink = valueSink()) {
-      source.readAll(sink);
-    }
-    return this;
+    valueSink().use { sink -> source.readAll(sink) }
+    return this
   }
 
   /**
-   * Returns a {@link BufferedSink} into which arbitrary data can be written without any additional
-   * encoding. You <b>must</b> call {@link BufferedSink#close()} before interacting with this {@code
-   * JsonWriter} instance again.
+   * Returns a [BufferedSink] into which arbitrary data can be written without any additional
+   * encoding. You **must** call [BufferedSink.close] before interacting with this `JsonWriter` instance again.
    *
-   * <p>Since no validation is performed, options like {@link #setSerializeNulls} and other writer
+   * Since no validation is performed, options like [.setSerializeNulls] and other writer
    * configurations are not respected.
    */
   @CheckReturnValue
-  public abstract BufferedSink valueSink() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun valueSink(): BufferedSink
 
   /**
    * Encodes the value which may be a string, number, boolean, null, map, or list.
    *
    * @return this writer.
-   * @see JsonReader#readJsonValue()
+   * @see JsonReader.readJsonValue
    */
-  public final JsonWriter jsonValue(@Nullable Object value) throws IOException {
-    if (value instanceof Map<?, ?>) {
-      beginObject();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-        Object key = entry.getKey();
-        if (!(key instanceof String)) {
-          throw new IllegalArgumentException(
-              key == null
-                  ? "Map keys must be non-null"
-                  : "Map keys must be of type String: " + key.getClass().getName());
+  @Throws(IOException::class)
+  public fun jsonValue(value: Any?): JsonWriter {
+    when (value) {
+      is Map<*, *> -> {
+        beginObject()
+        for ((key, value1) in value) {
+          if (key !is String) {
+            throw IllegalArgumentException(
+              if (key == null) "Map keys must be non-null" else "Map keys must be of type String: " + key.javaClass.name)
+          }
+          name(key)
+          jsonValue(value1)
         }
-        name(((String) key));
-        jsonValue(entry.getValue());
+        endObject()
       }
-      endObject();
-
-    } else if (value instanceof List<?>) {
-      beginArray();
-      for (Object element : ((List<?>) value)) {
-        jsonValue(element);
+      is List<*> -> {
+        beginArray()
+        for (element in value) {
+          jsonValue(element)
+        }
+        endArray()
       }
-      endArray();
-
-    } else if (value instanceof String) {
-      value(((String) value));
-
-    } else if (value instanceof Boolean) {
-      value(((Boolean) value).booleanValue());
-
-    } else if (value instanceof Double) {
-      value(((Double) value).doubleValue());
-
-    } else if (value instanceof Long) {
-      value(((Long) value).longValue());
-
-    } else if (value instanceof Number) {
-      value(((Number) value));
-
-    } else if (value == null) {
-      nullValue();
-
-    } else {
-      throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
+      is String -> {
+        value(value)
+      }
+      is Boolean -> {
+        value(value)
+      }
+      is Double -> {
+        value(value)
+      }
+      is Long -> {
+        value(value)
+      }
+      is Number -> {
+        value(value)
+      }
+      null -> {
+        nullValue()
+      }
+      else -> {
+        throw IllegalArgumentException("Unsupported type: " + value.javaClass.name)
+      }
     }
-    return this;
+    return this
   }
 
   /**
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so
-   * that arbitrary type adapters can use {@link #value} to write a name value.
+   * that arbitrary type adapters can use [.value] to write a name value.
    *
-   * <p>In this example, calling this method allows two sequential calls to {@link #value(String)}
-   * to produce the object, {@code {"a": "b"}}.
+   * In this example, calling this method allows two sequential calls to [.value]
+   * to produce the object, `{"a": "b"}`.
    *
-   * <pre>{@code
-   * JsonWriter writer = JsonWriter.of(...);
+   * <pre>`JsonWriter writer = JsonWriter.of(...);
    * writer.beginObject();
    * writer.promoteValueToName();
    * writer.value("a");
    * writer.value("b");
    * writer.endObject();
-   * }</pre>
+  `</pre> *
    */
-  public final void promoteValueToName() throws IOException {
-    int context = peekScope();
-    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
-      throw new IllegalStateException("Nesting problem.");
+  @Throws(IOException::class)
+  public fun promoteValueToName() {
+    val context = peekScope()
+    if ((context != NONEMPTY_OBJECT && context != EMPTY_OBJECT)) {
+      throw IllegalStateException("Nesting problem.")
     }
-    promoteValueToName = true;
+    promoteValueToName = true
   }
 
   /**
-   * Cancels immediately-nested calls to {@link #beginArray()} or {@link #beginObject()} and their
-   * matching calls to {@link #endArray} or {@link #endObject()}. Use this to compose JSON adapters
+   * Cancels immediately-nested calls to [.beginArray] or [.beginObject] and their
+   * matching calls to [.endArray] or [.endObject]. Use this to compose JSON adapters
    * without nesting.
    *
-   * <p>For example, the following creates JSON with nested arrays: {@code [1,[2,3,4],5]}.
+   * For example, the following creates JSON with nested arrays: `[1,[2,3,4],5]`.
    *
-   * <pre>{@code
-   * JsonAdapter<List<Integer>> integersAdapter = ...
-   *
-   * public void writeNumbers(JsonWriter writer) {
-   *   writer.beginArray();
-   *   writer.value(1);
-   *   integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
-   *   writer.value(5);
-   *   writer.endArray();
-   * }
-   * }</pre>
-   *
-   * <p>With flattening we can create JSON with a single array {@code [1,2,3,4,5]}:
-   *
-   * <pre>{@code
-   * JsonAdapter<List<Integer>> integersAdapter = ...
+   * <pre>`JsonAdapter<List<Integer>> integersAdapter = ...
    *
    * public void writeNumbers(JsonWriter writer) {
-   *   writer.beginArray();
-   *   int token = writer.beginFlatten();
-   *   writer.value(1);
-   *   integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
-   *   writer.value(5);
-   *   writer.endFlatten(token);
-   *   writer.endArray();
+   * writer.beginArray();
+   * writer.value(1);
+   * integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
+   * writer.value(5);
+   * writer.endArray();
    * }
-   * }</pre>
+  `</pre> *
    *
-   * <p>This method flattens arrays within arrays:
+   * With flattening we can create JSON with a single array `[1,2,3,4,5]`:
    *
-   * <pre>{@code
-   * Emit:       [1, [2, 3, 4], 5]
+   * <pre>`JsonAdapter<List<Integer>> integersAdapter = ...
+   *
+   * public void writeNumbers(JsonWriter writer) {
+   * writer.beginArray();
+   * int token = writer.beginFlatten();
+   * writer.value(1);
+   * integersAdapter.toJson(writer, Arrays.asList(2, 3, 4));
+   * writer.value(5);
+   * writer.endFlatten(token);
+   * writer.endArray();
+   * }
+  `</pre> *
+   *
+   * This method flattens arrays within arrays:
+   *
+   * <pre>`Emit:       [1, [2, 3, 4], 5]
    * To produce: [1, 2, 3, 4, 5]
-   * }</pre>
+  `</pre> *
    *
-   * It also flattens objects within objects. Do not call {@link #name} before writing a flattened
+   * It also flattens objects within objects. Do not call [.name] before writing a flattened
    * object.
    *
-   * <pre>{@code
-   * Emit:       {"a": 1, {"b": 2}, "c": 3}
+   * <pre>`Emit:       {"a": 1, {"b": 2}, "c": 3}
    * To Produce: {"a": 1, "b": 2, "c": 3}
-   * }</pre>
+  `</pre> *
    *
    * Other combinations are permitted but do not perform flattening. For example, objects inside of
    * arrays are not flattened:
    *
-   * <pre>{@code
-   * Emit:       [1, {"b": 2}, 3, [4, 5], 6]
+   * <pre>`Emit:       [1, {"b": 2}, 3, [4, 5], 6]
    * To Produce: [1, {"b": 2}, 3, 4, 5, 6]
-   * }</pre>
+  `</pre> *
    *
-   * <p>This method returns an opaque token. Callers must match all calls to this method with a call
-   * to {@link #endFlatten} with the matching token.
+   *
+   * This method returns an opaque token. Callers must match all calls to this method with a call
+   * to [.endFlatten] with the matching token.
    */
   @CheckReturnValue
-  public final int beginFlatten() {
-    int context = peekScope();
+  public fun beginFlatten(): Int {
+    val context = peekScope()
     if (context != NONEMPTY_OBJECT
-        && context != EMPTY_OBJECT
-        && context != NONEMPTY_ARRAY
-        && context != EMPTY_ARRAY) {
-      throw new IllegalStateException("Nesting problem.");
-    }
-    int token = flattenStackSize;
-    flattenStackSize = stackSize;
-    return token;
+      && context != EMPTY_OBJECT
+      && context != NONEMPTY_ARRAY
+      && context != EMPTY_ARRAY) { throw IllegalStateException("Nesting problem.") }
+    val token = flattenStackSize
+    flattenStackSize = stackSize
+    return token
   }
 
-  /** Ends nested call flattening created by {@link #beginFlatten}. */
-  public final void endFlatten(int token) {
-    flattenStackSize = token;
+  /** Ends nested call flattening created by [.beginFlatten].  */
+  public fun endFlatten(token: Int) {
+    flattenStackSize = token
   }
 
   /**
-   * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to the current location
+   * Returns a [JsonPath](http://goessner.net/articles/JsonPath/) to the current location
    * in the JSON value.
    */
   @CheckReturnValue
-  public final String getPath() {
-    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  public fun getPath(): String {
+    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices)
   }
 
-  /** Returns the tag value for the given class key. */
-  @SuppressWarnings("unchecked")
+  /** Returns the tag value for the given class key.  */
+  @Suppress("UNCHECKED_CAST")
   @CheckReturnValue
-  public final @Nullable <T> T tag(Class<T> clazz) {
-    if (tags == null) {
-      return null;
-    }
-    return (T) tags.get(clazz);
+  public fun <T> tag(clazz: Class<T>): T? {
+    return if (tags == null) {
+      null
+    } else tags!![clazz] as T?
   }
 
-  /** Assigns the tag value using the given class key and value. */
-  public final <T> void setTag(Class<T> clazz, T value) {
-    if (!clazz.isAssignableFrom(value.getClass())) {
-      throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
+  /** Assigns the tag value using the given class key and value.  */
+  public fun <T> setTag(clazz: Class<T>, value: T) {
+    if (!clazz.isAssignableFrom(value!!.javaClass)) {
+      throw IllegalArgumentException("Tag value must be of type " + clazz.name)
     }
     if (tags == null) {
-      tags = new LinkedHashMap<>();
+      tags = LinkedHashMap()
     }
-    tags.put(clazz, value);
+    tags!![clazz] = value
+  }
+
+  public companion object {
+    /** Returns a new instance that writes UTF-8 encoded JSON to `sink`.  */
+    @JvmStatic
+    @CheckReturnValue
+    public fun of(sink: BufferedSink): JsonWriter {
+      return JsonUtf8Writer(sink)
+    }
   }
 }

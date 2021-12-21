@@ -13,25 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import static java.util.Collections.unmodifiableList;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.ByteString;
+import kotlin.Throws
+import javax.annotation.CheckReturnValue
+import okio.Buffer
+import okio.BufferedSource
+import okio.ByteString
+import okio.Closeable
+import okio.IOException
 
 /**
- * Reads a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>) encoded value as a
+ * Reads a JSON ([RFC 7159](http://www.ietf.org/rfc/rfc7159.txt)) encoded value as a
  * stream of tokens. This stream includes both literal values (strings, numbers, booleans, and
  * nulls) as well as the begin and end delimiters of objects and arrays. The tokens are traversed in
  * depth-first order, the same order that they appear in the JSON document. Within JSON objects,
@@ -40,352 +33,357 @@ import okio.ByteString;
  * <h1>Parsing JSON</h1>
  *
  * To create a recursive descent parser for your own JSON streams, first create an entry point
- * method that creates a {@code JsonReader}.
+ * method that creates a `JsonReader`.
  *
- * <p>Next, create handler methods for each structure in your JSON text. You'll need a method for
+ * Next, create handler methods for each structure in your JSON text. You'll need a method for
  * each object type and for each array type.
  *
- * <ul>
- *   <li>Within <strong>array handling</strong> methods, first call {@link #beginArray} to consume
- *       the array's opening bracket. Then create a while loop that accumulates values, terminating
- *       when {@link #hasNext} is false. Finally, read the array's closing bracket by calling {@link
- *       #endArray}.
- *   <li>Within <strong>object handling</strong> methods, first call {@link #beginObject} to consume
- *       the object's opening brace. Then create a while loop that assigns values to local variables
- *       based on their name. This loop should terminate when {@link #hasNext} is false. Finally,
- *       read the object's closing brace by calling {@link #endObject}.
- * </ul>
+ *  * Within **array handling** methods, first call [.beginArray] to consume
+ * the array's opening bracket. Then create a while loop that accumulates values, terminating
+ * when [.hasNext] is false. Finally, read the array's closing bracket by calling [       ][.endArray].
+ *  * Within **object handling** methods, first call [.beginObject] to consume
+ * the object's opening brace. Then create a while loop that assigns values to local variables
+ * based on their name. This loop should terminate when [.hasNext] is false. Finally,
+ * read the object's closing brace by calling [.endObject].
  *
- * <p>When a nested object or array is encountered, delegate to the corresponding handler method.
+ * When a nested object or array is encountered, delegate to the corresponding handler method.
  *
- * <p>When an unknown name is encountered, strict parsers should fail with an exception. Lenient
- * parsers should call {@link #skipValue()} to recursively skip the value's nested tokens, which may
+ * When an unknown name is encountered, strict parsers should fail with an exception. Lenient
+ * parsers should call [.skipValue] to recursively skip the value's nested tokens, which may
  * otherwise conflict.
  *
- * <p>If a value may be null, you should first check using {@link #peek()}. Null literals can be
- * consumed using either {@link #nextNull()} or {@link #skipValue()}.
+ * If a value may be null, you should first check using [.peek]. Null literals can be
+ * consumed using either [.nextNull] or [.skipValue].
  *
  * <h1>Example</h1>
  *
  * Suppose we'd like to parse a stream of messages such as the following:
  *
- * <pre>{@code
- * [
- *   {
- *     "id": 912345678901,
- *     "text": "How do I read a JSON stream in Java?",
- *     "geo": null,
- *     "user": {
- *       "name": "json_newb",
- *       "followers_count": 41
- *      }
- *   },
- *   {
- *     "id": 912345678902,
- *     "text": "@json_newb just use JsonReader!",
- *     "geo": [50.454722, -104.606667],
- *     "user": {
- *       "name": "jesse",
- *       "followers_count": 2
- *     }
- *   }
+ * <pre>`[
+ * {
+ * "id": 912345678901,
+ * "text": "How do I read a JSON stream in Java?",
+ * "geo": null,
+ * "user": {
+ * "name": "json_newb",
+ * "followers_count": 41
+ * }
+ * },
+ * {
+ * "id": 912345678902,
+ * "text": "@json_newb just use JsonReader!",
+ * "geo": [50.454722, -104.606667],
+ * "user": {
+ * "name": "jesse",
+ * "followers_count": 2
+ * }
+ * }
  * ]
- * }</pre>
+`</pre> *
  *
  * This code implements the parser for the above structure:
  *
- * <pre>{@code
- * public List<Message> readJsonStream(BufferedSource source) throws IOException {
- *   JsonReader reader = JsonReader.of(source);
- *   try {
- *     return readMessagesArray(reader);
- *   } finally {
- *     reader.close();
- *   }
+ * <pre>`public List<Message> readJsonStream(BufferedSource source) throws IOException {
+ * JsonReader reader = JsonReader.of(source);
+ * try {
+ * return readMessagesArray(reader);
+ * } finally {
+ * reader.close();
+ * }
  * }
  *
  * public List<Message> readMessagesArray(JsonReader reader) throws IOException {
- *   List<Message> messages = new ArrayList<Message>();
+ * List<Message> messages = new ArrayList<Message>();
  *
- *   reader.beginArray();
- *   while (reader.hasNext()) {
- *     messages.add(readMessage(reader));
- *   }
- *   reader.endArray();
- *   return messages;
+ * reader.beginArray();
+ * while (reader.hasNext()) {
+ * messages.add(readMessage(reader));
+ * }
+ * reader.endArray();
+ * return messages;
  * }
  *
  * public Message readMessage(JsonReader reader) throws IOException {
- *   long id = -1;
- *   String text = null;
- *   User user = null;
- *   List<Double> geo = null;
+ * long id = -1;
+ * String text = null;
+ * User user = null;
+ * List<Double> geo = null;
  *
- *   reader.beginObject();
- *   while (reader.hasNext()) {
- *     String name = reader.nextName();
- *     if (name.equals("id")) {
- *       id = reader.nextLong();
- *     } else if (name.equals("text")) {
- *       text = reader.nextString();
- *     } else if (name.equals("geo") && reader.peek() != Token.NULL) {
- *       geo = readDoublesArray(reader);
- *     } else if (name.equals("user")) {
- *       user = readUser(reader);
- *     } else {
- *       reader.skipValue();
- *     }
- *   }
- *   reader.endObject();
- *   return new Message(id, text, user, geo);
+ * reader.beginObject();
+ * while (reader.hasNext()) {
+ * String name = reader.nextName();
+ * if (name.equals("id")) {
+ * id = reader.nextLong();
+ * } else if (name.equals("text")) {
+ * text = reader.nextString();
+ * } else if (name.equals("geo") && reader.peek() != Token.NULL) {
+ * geo = readDoublesArray(reader);
+ * } else if (name.equals("user")) {
+ * user = readUser(reader);
+ * } else {
+ * reader.skipValue();
+ * }
+ * }
+ * reader.endObject();
+ * return new Message(id, text, user, geo);
  * }
  *
  * public List<Double> readDoublesArray(JsonReader reader) throws IOException {
- *   List<Double> doubles = new ArrayList<Double>();
+ * List<Double> doubles = new ArrayList<Double>();
  *
- *   reader.beginArray();
- *   while (reader.hasNext()) {
- *     doubles.add(reader.nextDouble());
- *   }
- *   reader.endArray();
- *   return doubles;
+ * reader.beginArray();
+ * while (reader.hasNext()) {
+ * doubles.add(reader.nextDouble());
+ * }
+ * reader.endArray();
+ * return doubles;
  * }
  *
  * public User readUser(JsonReader reader) throws IOException {
- *   String username = null;
- *   int followersCount = -1;
+ * String username = null;
+ * int followersCount = -1;
  *
- *   reader.beginObject();
- *   while (reader.hasNext()) {
- *     String name = reader.nextName();
- *     if (name.equals("name")) {
- *       username = reader.nextString();
- *     } else if (name.equals("followers_count")) {
- *       followersCount = reader.nextInt();
- *     } else {
- *       reader.skipValue();
- *     }
- *   }
- *   reader.endObject();
- *   return new User(username, followersCount);
+ * reader.beginObject();
+ * while (reader.hasNext()) {
+ * String name = reader.nextName();
+ * if (name.equals("name")) {
+ * username = reader.nextString();
+ * } else if (name.equals("followers_count")) {
+ * followersCount = reader.nextInt();
+ * } else {
+ * reader.skipValue();
  * }
- * }</pre>
+ * }
+ * reader.endObject();
+ * return new User(username, followersCount);
+ * }
+`</pre> *
  *
  * <h1>Number Handling</h1>
  *
  * This reader permits numeric values to be read as strings and string values to be read as numbers.
- * For example, both elements of the JSON array {@code [1, "1"]} may be read using either {@link
- * #nextInt} or {@link #nextString}. This behavior is intended to prevent lossy numeric conversions:
- * double is JavaScript's only numeric type and very large values like {@code 9007199254740993}
+ * For example, both elements of the JSON array `[1, "1"]` may be read using either [ ][.nextInt] or [.nextString]. This behavior is intended to prevent lossy numeric conversions:
+ * double is JavaScript's only numeric type and very large values like `9007199254740993`
  * cannot be represented exactly on that platform. To minimize precision loss, extremely large
  * values should be written and read as strings in JSON.
  *
- * <p>Each {@code JsonReader} may be used to read a single JSON stream. Instances of this class are
+ * Each `JsonReader` may be used to read a single JSON stream. Instances of this class are
  * not thread safe.
  */
-public abstract class JsonReader implements Closeable {
+public abstract class JsonReader : Closeable {
   // The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack will
   // grow itself up to 256 levels of nesting including the top-level document. Deeper nesting is
   // prone to trigger StackOverflowErrors.
-  int stackSize;
-  int[] scopes;
-  String[] pathNames;
-  int[] pathIndices;
+  @JvmField
+  public var stackSize: Int = 0
+  @JvmField
+  public var scopes: IntArray
+  @JvmField
+  public var pathNames: Array<String?>
+  @JvmField
+  public var pathIndices: IntArray
 
-  /** True to accept non-spec compliant JSON. */
-  boolean lenient;
+  /** True to accept non-spec compliant JSON.  */
+  @JvmField
+  protected var lenient: Boolean = false
 
-  /** True to throw a {@link JsonDataException} on any attempt to call {@link #skipValue()}. */
-  boolean failOnUnknown;
+  /** True to throw a [JsonDataException] on any attempt to call [.skipValue].  */
+  @JvmField
+  protected var failOnUnknown: Boolean = false
 
-  private Map<Class<?>, Object> tags;
+  private var tags: MutableMap<Class<*>, Any>? = null
 
-  /** Returns a new instance that reads UTF-8 encoded JSON from {@code source}. */
-  @CheckReturnValue
-  public static JsonReader of(BufferedSource source) {
-    return new JsonUtf8Reader(source);
+  // Package-private to control subclasses.
+  internal constructor() {
+    scopes = IntArray(32)
+    pathNames = arrayOfNulls(32)
+    pathIndices = IntArray(32)
   }
 
   // Package-private to control subclasses.
-  JsonReader() {
-    scopes = new int[32];
-    pathNames = new String[32];
-    pathIndices = new int[32];
+  internal constructor(copyFrom: JsonReader) {
+    this.stackSize = copyFrom.stackSize
+    this.scopes = copyFrom.scopes.clone()
+    this.pathNames = copyFrom.pathNames.clone()
+    this.pathIndices = copyFrom.pathIndices.clone()
+    this.lenient = copyFrom.lenient
+    this.failOnUnknown = copyFrom.failOnUnknown
   }
 
-  // Package-private to control subclasses.
-  JsonReader(JsonReader copyFrom) {
-    this.stackSize = copyFrom.stackSize;
-    this.scopes = copyFrom.scopes.clone();
-    this.pathNames = copyFrom.pathNames.clone();
-    this.pathIndices = copyFrom.pathIndices.clone();
-    this.lenient = copyFrom.lenient;
-    this.failOnUnknown = copyFrom.failOnUnknown;
-  }
-
-  final void pushScope(int newTop) {
-    if (stackSize == scopes.length) {
+  public fun pushScope(newTop: Int) {
+    if (stackSize == scopes.size) {
       if (stackSize == 256) {
-        throw new JsonDataException("Nesting too deep at " + getPath());
+        throw JsonDataException("Nesting too deep at ${getPath()}")
       }
-      scopes = Arrays.copyOf(scopes, scopes.length * 2);
-      pathNames = Arrays.copyOf(pathNames, pathNames.length * 2);
-      pathIndices = Arrays.copyOf(pathIndices, pathIndices.length * 2);
+      scopes = scopes.copyOf(scopes.size * 2)
+      pathNames = pathNames.copyOf(pathNames.size * 2)
+      pathIndices = pathIndices.copyOf(pathIndices.size * 2)
     }
-    scopes[stackSize++] = newTop;
+    scopes[stackSize++] = newTop
   }
 
   /**
    * Throws a new IO exception with the given message and a context snippet with this reader's
    * content.
    */
-  final JsonEncodingException syntaxError(String message) throws JsonEncodingException {
-    throw new JsonEncodingException(message + " at path " + getPath());
+  @Throws(JsonEncodingException::class)
+  protected fun syntaxError(message: String): JsonEncodingException {
+    throw JsonEncodingException("$message at path ${getPath()}")
   }
 
-  final JsonDataException typeMismatch(@Nullable Object value, Object expected) {
-    if (value == null) {
-      return new JsonDataException("Expected " + expected + " but was null at path " + getPath());
+  protected fun typeMismatch(value: Any?, expected: Any): JsonDataException {
+    return if (value == null) {
+      JsonDataException("Expected $expected but was null at path ${getPath()}")
     } else {
-      return new JsonDataException(
-          "Expected "
-              + expected
-              + " but was "
-              + value
-              + ", a "
-              + value.getClass().getName()
-              + ", at path "
-              + getPath());
+      JsonDataException(
+        "Expected "
+          + expected
+          + " but was "
+          + value
+          + ", a "
+          + value.javaClass.name
+          + ", at path "
+          + getPath()
+      )
     }
   }
 
   /**
    * Configure this parser to be liberal in what it accepts. By default this parser is strict and
-   * only accepts JSON as specified by <a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>.
+   * only accepts JSON as specified by [RFC 7159](http://www.ietf.org/rfc/rfc7159.txt).
    * Setting the parser to lenient causes it to ignore the following syntax errors:
    *
-   * <ul>
-   *   <li>Streams that include multiple top-level values. With strict parsing, each stream must
-   *       contain exactly one top-level value.
-   *   <li>Numbers may be {@linkplain Double#isNaN() NaNs} or {@link Double#isInfinite()
-   *       infinities}.
-   *   <li>End of line comments starting with {@code //} or {@code #} and ending with a newline
-   *       character.
-   *   <li>C-style comments starting with {@code /*} and ending with {@code *}{@code /}. Such
-   *       comments may not be nested.
-   *   <li>Names that are unquoted or {@code 'single quoted'}.
-   *   <li>Strings that are unquoted or {@code 'single quoted'}.
-   *   <li>Array elements separated by {@code ;} instead of {@code ,}.
-   *   <li>Unnecessary array separators. These are interpreted as if null was the omitted value.
-   *   <li>Names and values separated by {@code =} or {@code =>} instead of {@code :}.
-   *   <li>Name/value pairs separated by {@code ;} instead of {@code ,}.
-   * </ul>
+   *  * Streams that include multiple top-level values. With strict parsing, each stream must
+   * contain exactly one top-level value.
+   *  * Numbers may be [NaNs][Double.isNaN] or [       infinities][Double.isInfinite].
+   *  * End of line comments starting with `//` or `#` and ending with a newline
+   * character.
+   *  * C-style comments starting with `/ *` and ending with `*``/`. Such
+   * comments may not be nested.
+   *  * Names that are unquoted or `'single quoted'`.
+   *  * Strings that are unquoted or `'single quoted'`.
+   *  * Array elements separated by `;` instead of `,`.
+   *  * Unnecessary array separators. These are interpreted as if null was the omitted value.
+   *  * Names and values separated by `=` or `=>` instead of `:`.
+   *  * Name/value pairs separated by `;` instead of `,`.
+   *
    */
-  public final void setLenient(boolean lenient) {
-    this.lenient = lenient;
+  public fun setLenient(lenient: Boolean) {
+    this.lenient = lenient
   }
 
-  /** Returns true if this parser is liberal in what it accepts. */
+  /** Returns true if this parser is liberal in what it accepts.  */
   @CheckReturnValue
-  public final boolean isLenient() {
-    return lenient;
+  public fun isLenient(): Boolean {
+    return lenient
   }
 
   /**
-   * Configure whether this parser throws a {@link JsonDataException} when {@link #skipValue} is
+   * Configure whether this parser throws a [JsonDataException] when [.skipValue] is
    * called. By default this parser permits values to be skipped.
    *
-   * <p>Forbid skipping to prevent unrecognized values from being silently ignored. This option is
+   * Forbid skipping to prevent unrecognized values from being silently ignored. This option is
    * useful in development and debugging because it means a typo like "locatiom" will be detected
    * early. It's potentially harmful in production because it complicates revising a JSON schema.
    */
-  public final void setFailOnUnknown(boolean failOnUnknown) {
-    this.failOnUnknown = failOnUnknown;
+  public fun setFailOnUnknown(failOnUnknown: Boolean) {
+    this.failOnUnknown = failOnUnknown
   }
 
-  /** Returns true if this parser forbids skipping names and values. */
+  /** Returns true if this parser forbids skipping names and values.  */
   @CheckReturnValue
-  public final boolean failOnUnknown() {
-    return failOnUnknown;
+  public fun failOnUnknown(): Boolean {
+    return failOnUnknown
   }
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is the beginning of a new
    * array.
    */
-  public abstract void beginArray() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun beginArray()
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is the end of the current
    * array.
    */
-  public abstract void endArray() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun endArray()
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is the beginning of a new
    * object.
    */
-  public abstract void beginObject() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun beginObject()
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is the end of the current
    * object.
    */
-  public abstract void endObject() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun endObject()
 
-  /** Returns true if the current array or object has another element. */
+  /** Returns true if the current array or object has another element.  */
   @CheckReturnValue
-  public abstract boolean hasNext() throws IOException;
+  @Throws(IOException::class)
+  public abstract operator fun hasNext(): Boolean
 
-  /** Returns the type of the next token without consuming it. */
+  /** Returns the type of the next token without consuming it.  */
   @CheckReturnValue
-  public abstract Token peek() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun peek(): Token
 
   /**
-   * Returns the next token, a {@linkplain Token#NAME property name}, and consumes it.
+   * Returns the next token, a [property name][Token.NAME], and consumes it.
    *
    * @throws JsonDataException if the next token in the stream is not a property name.
    */
   @CheckReturnValue
-  public abstract String nextName() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextName(): String
 
   /**
-   * If the next token is a {@linkplain Token#NAME property name} that's in {@code options}, this
+   * If the next token is a [property name][Token.NAME] that's in `options`, this
    * consumes it and returns its index. Otherwise this returns -1 and no name is consumed.
    */
   @CheckReturnValue
-  public abstract int selectName(Options options) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun selectName(options: Options): Int
 
   /**
    * Skips the next token, consuming it. This method is intended for use when the JSON token stream
    * contains unrecognized or unhandled names.
    *
-   * <p>This throws a {@link JsonDataException} if this parser has been configured to {@linkplain
-   * #failOnUnknown fail on unknown} names.
+   * This throws a [JsonDataException] if this parser has been configured to [ ][.failOnUnknown] names.
    */
-  public abstract void skipName() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun skipName()
 
   /**
-   * Returns the {@linkplain Token#STRING string} value of the next token, consuming it. If the next
+   * Returns the [string][Token.STRING] value of the next token, consuming it. If the next
    * token is a number, this method will return its string form.
    *
    * @throws JsonDataException if the next token is not a string or if this reader is closed.
    */
-  public abstract String nextString() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextString(): String?
 
   /**
-   * If the next token is a {@linkplain Token#STRING string} that's in {@code options}, this
+   * If the next token is a [string][Token.STRING] that's in `options`, this
    * consumes it and returns its index. Otherwise this returns -1 and no string is consumed.
    */
   @CheckReturnValue
-  public abstract int selectString(Options options) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun selectString(options: Options): Int
 
   /**
-   * Returns the {@linkplain Token#BOOLEAN boolean} value of the next token, consuming it.
+   * Returns the [boolean][Token.BOOLEAN] value of the next token, consuming it.
    *
    * @throws JsonDataException if the next token is not a boolean or if this reader is closed.
    */
-  public abstract boolean nextBoolean() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextBoolean(): Boolean
 
   /**
    * Consumes the next token from the JSON stream and asserts that it is a literal null. Returns
@@ -393,159 +391,154 @@ public abstract class JsonReader implements Closeable {
    *
    * @throws JsonDataException if the next token is not null or if this reader is closed.
    */
-  public abstract @Nullable <T> T nextNull() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun <T> nextNull(): T?
 
   /**
-   * Returns the {@linkplain Token#NUMBER double} value of the next token, consuming it. If the next
-   * token is a string, this method will attempt to parse it as a double using {@link
-   * Double#parseDouble(String)}.
+   * Returns the [double][Token.NUMBER] value of the next token, consuming it. If the next
+   * token is a string, this method will attempt to parse it as a double using [ ][Double.parseDouble].
    *
    * @throws JsonDataException if the next token is not a literal value, or if the next literal
-   *     value cannot be parsed as a double, or is non-finite.
+   * value cannot be parsed as a double, or is non-finite.
    */
-  public abstract double nextDouble() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextDouble(): Double
 
   /**
-   * Returns the {@linkplain Token#NUMBER long} value of the next token, consuming it. If the next
+   * Returns the [long][Token.NUMBER] value of the next token, consuming it. If the next
    * token is a string, this method will attempt to parse it as a long. If the next token's numeric
-   * value cannot be exactly represented by a Java {@code long}, this method throws.
+   * value cannot be exactly represented by a Java `long`, this method throws.
    *
    * @throws JsonDataException if the next token is not a literal value, if the next literal value
-   *     cannot be parsed as a number, or exactly represented as a long.
+   * cannot be parsed as a number, or exactly represented as a long.
    */
-  public abstract long nextLong() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextLong(): Long
 
   /**
-   * Returns the {@linkplain Token#NUMBER int} value of the next token, consuming it. If the next
+   * Returns the [int][Token.NUMBER] value of the next token, consuming it. If the next
    * token is a string, this method will attempt to parse it as an int. If the next token's numeric
-   * value cannot be exactly represented by a Java {@code int}, this method throws.
+   * value cannot be exactly represented by a Java `int`, this method throws.
    *
    * @throws JsonDataException if the next token is not a literal value, if the next literal value
-   *     cannot be parsed as a number, or exactly represented as an int.
+   * cannot be parsed as a number, or exactly represented as an int.
    */
-  public abstract int nextInt() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextInt(): Int
 
   /**
    * Returns the next value as a stream of UTF-8 bytes and consumes it.
    *
-   * <p>The following program demonstrates how JSON bytes are returned from an enclosing stream as
+   * The following program demonstrates how JSON bytes are returned from an enclosing stream as
    * their original bytes, including their original whitespace:
    *
-   * <pre>{@code
-   * String json = "{\"a\": [4,  5  ,6.0, {\"x\":7}, 8], \"b\": 9}";
+   * <pre>`String json = "{\"a\": [4,  5  ,6.0, {\"x\":7}, 8], \"b\": 9}";
    * JsonReader reader = JsonReader.of(new Buffer().writeUtf8(json));
    * reader.beginObject();
    * assertThat(reader.nextName()).isEqualTo("a");
    * try (BufferedSource bufferedSource = reader.nextSource()) {
-   *   assertThat(bufferedSource.readUtf8()).isEqualTo("[4,  5  ,6.0, {\"x\":7}, 8]");
+   * assertThat(bufferedSource.readUtf8()).isEqualTo("[4,  5  ,6.0, {\"x\":7}, 8]");
    * }
    * assertThat(reader.nextName()).isEqualTo("b");
    * assertThat(reader.nextInt()).isEqualTo(9);
    * reader.endObject();
-   * }</pre>
+  `</pre> *
    *
-   * <p>This reads an entire value: composite objects like arrays and objects are returned in their
-   * entirety. The stream starts with the first character of the value (typically {@code [}, <code>{
-   * </code>, or {@code "}) and ends with the last character of the object (typically {@code ]},
-   * <code>}</code>, or {@code "}).
+   * This reads an entire value: composite objects like arrays and objects are returned in their
+   * entirety. The stream starts with the first character of the value (typically `[`, `{
+  ` * , or `"`) and ends with the last character of the object (typically `]`,
+   * `}`, or `"`).
    *
-   * <p>The returned source may not be used after any other method on this {@code JsonReader} is
+   * The returned source may not be used after any other method on this `JsonReader` is
    * called. For example, the following code crashes with an exception:
    *
-   * <pre>{@code
-   * JsonReader reader = ...
+   * <pre>`JsonReader reader = ...
    * reader.beginArray();
    * BufferedSource source = reader.nextSource();
    * reader.endArray();
    * source.readUtf8(); // Crash!
-   * }</pre>
+  `</pre> *
    *
-   * <p>The returned bytes are not validated. This method assumes the stream is well-formed JSON and
+   * The returned bytes are not validated. This method assumes the stream is well-formed JSON and
    * only attempts to find the value's boundary in the byte stream. It is the caller's
    * responsibility to check that the returned byte stream is a valid JSON value.
    *
-   * <p>Closing the returned source <strong>does not</strong> close this reader.
+   * Closing the returned source **does not** close this reader.
    */
-  public abstract BufferedSource nextSource() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun nextSource(): BufferedSource?
 
   /**
    * Skips the next value recursively. If it is an object or array, all nested elements are skipped.
    * This method is intended for use when the JSON token stream contains unrecognized or unhandled
    * values.
    *
-   * <p>This throws a {@link JsonDataException} if this parser has been configured to {@linkplain
-   * #failOnUnknown fail on unknown} values.
+   * This throws a [JsonDataException] if this parser has been configured to [ ][.failOnUnknown] values.
    */
-  public abstract void skipValue() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun skipValue()
 
   /**
    * Returns the value of the next token, consuming it. The result may be a string, number, boolean,
    * null, map, or list, according to the JSON structure.
    *
    * @throws JsonDataException if the next token is not a literal value, if a JSON object has a
-   *     duplicate key.
-   * @see JsonWriter#jsonValue(Object)
+   * duplicate key.
+   * @see JsonWriter.jsonValue
    */
-  public final @Nullable Object readJsonValue() throws IOException {
-    switch (peek()) {
-      case BEGIN_ARRAY:
-        List<Object> list = new ArrayList<>();
-        beginArray();
+  @Throws(IOException::class)
+  public fun readJsonValue(): Any? {
+    return when (peek()) {
+      Token.BEGIN_ARRAY -> {
+        val list = mutableListOf<Any?>()
+        beginArray()
         while (hasNext()) {
-          list.add(readJsonValue());
+          list.add(readJsonValue())
         }
-        endArray();
-        return list;
-
-      case BEGIN_OBJECT:
-        Map<String, Object> map = new LinkedHashTreeMap<>();
-        beginObject();
+        endArray()
+        list
+      }
+      Token.BEGIN_OBJECT -> {
+        val map: MutableMap<String, Any?> = LinkedHashTreeMap()
+        beginObject()
         while (hasNext()) {
-          String name = nextName();
-          Object value = readJsonValue();
-          Object replaced = map.put(name, value);
+          val name = nextName()
+          val value = readJsonValue()
+          val replaced = map.put(name, value)
           if (replaced != null) {
-            throw new JsonDataException(
-                "Map key '"
-                    + name
-                    + "' has multiple values at path "
-                    + getPath()
-                    + ": "
-                    + replaced
-                    + " and "
-                    + value);
+            throw JsonDataException(
+              "Map key '"
+                + name
+                + "' has multiple values at path "
+                + getPath()
+                + ": "
+                + replaced
+                + " and "
+                + value
+            )
           }
         }
-        endObject();
-        return map;
-
-      case STRING:
-        return nextString();
-
-      case NUMBER:
-        return nextDouble();
-
-      case BOOLEAN:
-        return nextBoolean();
-
-      case NULL:
-        return nextNull();
-
-      default:
-        throw new IllegalStateException(
-            "Expected a value but was " + peek() + " at path " + getPath());
+        endObject()
+        map
+      }
+      Token.STRING -> nextString()
+      Token.NUMBER -> nextDouble()
+      Token.BOOLEAN -> nextBoolean()
+      Token.NULL -> nextNull<Any>()
+      else -> throw IllegalStateException(
+        "Expected a value but was " + peek() + " at path " + getPath()
+      )
     }
   }
 
   /**
-   * Returns a new {@code JsonReader} that can read data from this {@code JsonReader} without
+   * Returns a new `JsonReader` that can read data from this `JsonReader` without
    * consuming it. The returned reader becomes invalid once this one is next read or closed.
    *
-   * <p>For example, we can use {@code peekJson()} to lookahead and read the same data multiple
+   * For example, we can use `peekJson()` to lookahead and read the same data multiple
    * times.
    *
-   * <pre>{@code
-   * Buffer buffer = new Buffer();
+   * <pre>`Buffer buffer = new Buffer();
    * buffer.writeUtf8("[123, 456, 789]")
    *
    * JsonReader jsonReader = JsonReader.of(buffer);
@@ -558,144 +551,146 @@ public abstract class JsonReader implements Closeable {
    * peek.endArray()
    *
    * jsonReader.nextInt() // Returns 456, reader contains 789 and ].
-   * }</pre>
+  `</pre> *
    */
   @CheckReturnValue
-  public abstract JsonReader peekJson();
+  public abstract fun peekJson(): JsonReader
 
   /**
-   * Returns a <a href="http://goessner.net/articles/JsonPath/">JsonPath</a> to the current location
+   * Returns a [JsonPath](http://goessner.net/articles/JsonPath/) to the current location
    * in the JSON value.
    */
   @CheckReturnValue
-  public final String getPath() {
-    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices);
+  public fun getPath(): String {
+    return JsonScope.getPath(stackSize, scopes, pathNames, pathIndices)
   }
 
-  /** Returns the tag value for the given class key. */
-  @SuppressWarnings("unchecked")
+  /** Returns the tag value for the given class key.  */
+  @Suppress("UNCHECKED_CAST")
   @CheckReturnValue
-  public final @Nullable <T> T tag(Class<T> clazz) {
+  public fun <T> tag(clazz: Class<T>): T? {
     if (tags == null) {
-      return null;
+      return null
     }
-    return (T) tags.get(clazz);
+    return tags!![clazz] as T?
   }
 
-  /** Assigns the tag value using the given class key and value. */
-  public final <T> void setTag(Class<T> clazz, T value) {
-    if (!clazz.isAssignableFrom(value.getClass())) {
-      throw new IllegalArgumentException("Tag value must be of type " + clazz.getName());
+  /** Assigns the tag value using the given class key and value.  */
+  public fun <T> setTag(clazz: Class<T>, value: T) {
+    if (!clazz.isAssignableFrom(value!!.javaClass)) {
+      throw IllegalArgumentException("Tag value must be of type " + clazz.name)
     }
     if (tags == null) {
-      tags = new LinkedHashMap<>();
+      tags = LinkedHashMap()
     }
-    tags.put(clazz, value);
+    tags!![clazz] = value
   }
 
   /**
    * Changes the reader to treat the next name as a string value. This is useful for map adapters so
-   * that arbitrary type adapters can use {@link #nextString} to read a name value.
+   * that arbitrary type adapters can use [.nextString] to read a name value.
    *
-   * <p>In this example, calling this method allows two sequential calls to {@link #nextString()}:
+   * In this example, calling this method allows two sequential calls to [.nextString]:
    *
-   * <pre>{@code
-   * JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"a\":\"b\"}"));
+   * <pre>`JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"a\":\"b\"}"));
    * reader.beginObject();
    * reader.promoteNameToValue();
    * assertEquals("a", reader.nextString());
    * assertEquals("b", reader.nextString());
    * reader.endObject();
-   * }</pre>
+  `</pre> *
    */
-  public abstract void promoteNameToValue() throws IOException;
+  @Throws(IOException::class)
+  public abstract fun promoteNameToValue()
 
   /**
-   * A set of strings to be chosen with {@link #selectName} or {@link #selectString}. This prepares
+   * A set of strings to be chosen with [.selectName] or [.selectString]. This prepares
    * the encoded values of the strings so they can be read directly from the input source.
    */
-  public static final class Options {
-    final String[] strings;
-    final okio.Options doubleQuoteSuffix;
-
-    private Options(String[] strings, okio.Options doubleQuoteSuffix) {
-      this.strings = strings;
-      this.doubleQuoteSuffix = doubleQuoteSuffix;
+  public class Options private constructor(@JvmField public val strings: Array<String>, @JvmField public val doubleQuoteSuffix: okio.Options) {
+    /** Returns a copy of this [Option&#39;s][Options] strings.  */
+    public fun strings(): List<String> {
+      return strings.asList()
     }
 
-    /** Returns a copy of this {@link Options Option's} strings. */
-    public List<String> strings() {
-      return unmodifiableList(Arrays.asList(strings));
-    }
-
-    @CheckReturnValue
-    public static Options of(String... strings) {
-      try {
-        ByteString[] result = new ByteString[strings.length];
-        Buffer buffer = new Buffer();
-        for (int i = 0; i < strings.length; i++) {
-          JsonUtf8Writer.string(buffer, strings[i]);
-          buffer.readByte(); // Skip the leading double quote (but leave the trailing one).
-          result[i] = buffer.readByteString();
+    public companion object {
+      @JvmStatic
+      @CheckReturnValue
+      public fun of(vararg strings: String): Options {
+        try {
+          val result = arrayOfNulls<ByteString>(strings.size)
+          val buffer = Buffer()
+          for (i in strings.indices) {
+            JsonUtf8Writer.string(buffer, strings[i])
+            buffer.readByte() // Skip the leading double quote (but leave the trailing one).
+            result[i] = buffer.readByteString()
+          }
+          return Options(arrayOf(*strings).clone(), okio.Options.of(*result.filterNotNull().toTypedArray()))
+        } catch (e: IOException) {
+          throw AssertionError(e)
         }
-        return new Options(strings.clone(), okio.Options.of(result));
-      } catch (IOException e) {
-        throw new AssertionError(e);
       }
     }
   }
 
-  /** A structure, name, or value type in a JSON-encoded string. */
-  public enum Token {
-
+  /** A structure, name, or value type in a JSON-encoded string.  */
+  public enum class Token {
     /**
-     * The opening of a JSON array. Written using {@link JsonWriter#beginArray} and read using
-     * {@link JsonReader#beginArray}.
+     * The opening of a JSON array. Written using [JsonWriter.beginArray] and read using
+     * [JsonReader.beginArray].
      */
     BEGIN_ARRAY,
 
     /**
-     * The closing of a JSON array. Written using {@link JsonWriter#endArray} and read using {@link
-     * JsonReader#endArray}.
+     * The closing of a JSON array. Written using [JsonWriter.endArray] and read using [ ][JsonReader.endArray].
      */
     END_ARRAY,
 
     /**
-     * The opening of a JSON object. Written using {@link JsonWriter#beginObject} and read using
-     * {@link JsonReader#beginObject}.
+     * The opening of a JSON object. Written using [JsonWriter.beginObject] and read using
+     * [JsonReader.beginObject].
      */
     BEGIN_OBJECT,
 
     /**
-     * The closing of a JSON object. Written using {@link JsonWriter#endObject} and read using
-     * {@link JsonReader#endObject}.
+     * The closing of a JSON object. Written using [JsonWriter.endObject] and read using
+     * [JsonReader.endObject].
      */
     END_OBJECT,
 
     /**
      * A JSON property name. Within objects, tokens alternate between names and their values.
-     * Written using {@link JsonWriter#name} and read using {@link JsonReader#nextName}
+     * Written using [JsonWriter.name] and read using [JsonReader.nextName]
      */
     NAME,
 
-    /** A JSON string. */
+    /** A JSON string.  */
     STRING,
 
     /**
-     * A JSON number represented in this API by a Java {@code double}, {@code long}, or {@code int}.
+     * A JSON number represented in this API by a Java `double`, `long`, or `int`.
      */
     NUMBER,
 
-    /** A JSON {@code true} or {@code false}. */
+    /** A JSON `true` or `false`.  */
     BOOLEAN,
 
-    /** A JSON {@code null}. */
+    /** A JSON `null`.  */
     NULL,
 
     /**
-     * The end of the JSON stream. This sentinel value is returned by {@link JsonReader#peek()} to
+     * The end of the JSON stream. This sentinel value is returned by [JsonReader.peek] to
      * signal that the JSON-encoded value has no more tokens.
      */
     END_DOCUMENT
+  }
+
+  public companion object {
+    /** Returns a new instance that reads UTF-8 encoded JSON from `source`.  */
+    @JvmStatic
+    @CheckReturnValue
+    public fun of(source: BufferedSource): JsonReader {
+      return JsonUtf8Reader(source)
+    }
   }
 }
