@@ -19,7 +19,6 @@ import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.toStringWithAnnotations
-import kotlin.Throws
 import java.lang.reflect.InvocationTargetException
 import java.lang.IllegalAccessException
 import java.lang.reflect.Method
@@ -44,10 +43,7 @@ internal class AdapterMethodsFactory(
       } catch (e: IllegalArgumentException) {
         val missingAnnotation = if (toAdapter == null) "@ToJson" else "@FromJson"
         throw IllegalArgumentException(
-          "No "
-            + missingAnnotation
-            + " adapter for "
-            + type.toStringWithAnnotations(annotations),
+          "No $missingAnnotation adapter for ${type.toStringWithAnnotations(annotations)}",
           e
         )
       }
@@ -75,7 +71,6 @@ internal class AdapterMethodsFactory(
         }
       }
 
-      @Throws(IOException::class)
       override fun fromJson(reader: JsonReader): Any? {
         return if (fromAdapter == null) {
           delegate!!.fromJson(reader)
@@ -131,7 +126,9 @@ internal class AdapterMethodsFactory(
         }
         c = c.superclass
       }
-      require(!(toAdapters.isEmpty() && fromAdapters.isEmpty())) { "Expected at least one @ToJson or @FromJson method on ${adapter.javaClass.name}" }
+      if (toAdapters.isEmpty() && fromAdapters.isEmpty()) {
+        throw IllegalArgumentException("Expected at least one @ToJson or @FromJson method on ${adapter.javaClass.name}")
+      }
       return AdapterMethodsFactory(toAdapters, fromAdapters)
     }
 
@@ -161,7 +158,6 @@ internal class AdapterMethodsFactory(
           2,
           true
         ) {
-          @Throws(IOException::class, InvocationTargetException::class)
           override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
             invoke(writer, value)
           }
@@ -189,7 +185,6 @@ internal class AdapterMethodsFactory(
             else moshi.adapter(returnType, returnTypeAnnotations)
           }
 
-          @Throws(IOException::class, InvocationTargetException::class)
           override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
             val intermediate = invoke(value)
             delegate!!.toJson(writer, intermediate)
@@ -238,7 +233,6 @@ internal class AdapterMethodsFactory(
         // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
         object : AdapterMethod(
           returnType, returnTypeAnnotations, adapter, method, parameterTypes.size, 1, true) {
-          @Throws(IOException::class, InvocationTargetException::class)
           override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
             return invoke(reader)
           }
@@ -259,7 +253,6 @@ internal class AdapterMethodsFactory(
             else moshi.adapter(parameterTypes[0], qualifierAnnotations)
           }
 
-          @Throws(IOException::class, InvocationTargetException::class)
           override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
             val intermediate = delegate!!.fromJson(reader)
             return invoke(intermediate)
@@ -305,8 +298,8 @@ internal class AdapterMethodsFactory(
     val nullable: Boolean
   ) {
     val type: Type
-    val adaptersOffset: Int
-    val jsonAdapters: Array<JsonAdapter<*>?>
+    private val adaptersOffset: Int
+    private val jsonAdapters: Array<JsonAdapter<*>?>
 
     init {
       this.type = type.canonicalize()
@@ -335,19 +328,16 @@ internal class AdapterMethodsFactory(
       }
     }
 
-    @Throws(IOException::class, InvocationTargetException::class)
     open fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
       throw AssertionError()
     }
 
-    @Throws(IOException::class, InvocationTargetException::class)
     open fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
       throw AssertionError()
     }
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments.  */
-    @Throws(InvocationTargetException::class)
-    protected operator fun invoke(a1: Any?): Any? {
+    protected fun invoke(a1: Any?): Any? {
       val args = arrayOfNulls<Any>(1 + jsonAdapters.size)
       args[0] = a1
       System.arraycopy(jsonAdapters, 0, args, 1, jsonAdapters.size)
@@ -360,8 +350,7 @@ internal class AdapterMethodsFactory(
     }
 
     /** Invoke the method with two fixed arguments, plus any number of JSON adapter arguments.  */
-    @Throws(InvocationTargetException::class)
-    protected operator fun invoke(a1: Any?, a2: Any?): Any? {
+    protected fun invoke(a1: Any?, a2: Any?): Any? {
       val args = arrayOfNulls<Any>(2 + jsonAdapters.size)
       args[0] = a1
       args[1] = a2
