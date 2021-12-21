@@ -40,6 +40,7 @@ internal abstract class ClassFactory<T> {
         val constructor = rawType.getDeclaredConstructor()
         constructor.isAccessible = true
         return object : ClassFactory<T>() {
+          @Suppress("UNCHECKED_CAST")
           override fun newInstance(): T {
             return constructor.newInstance() as T
           }
@@ -63,6 +64,7 @@ internal abstract class ClassFactory<T> {
         val unsafe = f[null]
         val allocateInstance = unsafeClass.getMethod("allocateInstance", Class::class.java)
         return object : ClassFactory<T>() {
+          @Suppress("UNCHECKED_CAST")
           override fun newInstance(): T {
             return allocateInstance.invoke(unsafe, rawType) as T
           }
@@ -99,6 +101,7 @@ internal abstract class ClassFactory<T> {
         )
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
+          @Suppress("UNCHECKED_CAST")
           override fun newInstance(): T {
             return newInstance.invoke(null, rawType, constructorId) as T
           }
@@ -125,6 +128,7 @@ internal abstract class ClassFactory<T> {
           ObjectInputStream::class.java.getDeclaredMethod("newInstance", Class::class.java, Class::class.java)
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
+          @Suppress("UNCHECKED_CAST")
           override fun newInstance(): T {
             return newInstance.invoke(null, rawType, Any::class.java) as T
           }
