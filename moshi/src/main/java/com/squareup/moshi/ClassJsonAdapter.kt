@@ -48,15 +48,9 @@ import java.lang.reflect.Type
  */
 internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fieldsMap: Map<String, FieldBinding<*>>
 ) : JsonAdapter<T>() {
-  private val fieldsArray: Array<FieldBinding<*>>
-  private val options: JsonReader.Options
+  private val fieldsArray = fieldsMap.values.toTypedArray()
+  private val options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
 
-  init {
-    fieldsArray = fieldsMap.values.toTypedArray()
-    options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
-  }
-
-  @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): T {
     val result: T = try {
       classFactory.newInstance()
@@ -86,7 +80,6 @@ internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fi
     }
   }
 
-  @Throws(IOException::class)
   override fun toJson(writer: JsonWriter, value: T?) {
     try {
       writer.beginObject()
@@ -105,13 +98,11 @@ internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fi
   }
 
   internal open class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
-    @Throws(IOException::class, IllegalAccessException::class)
     open fun read(reader: JsonReader, value: Any) {
       val fieldValue = adapter.fromJson(reader)
       field[value] = fieldValue
     }
 
-    @Throws(IllegalAccessException::class, IOException::class)
     @Suppress("UNCHECKED_CAST") // We require that field's values are of type T.
     open fun write(writer: JsonWriter, value: Any) {
       val fieldValue = field[value] as T
