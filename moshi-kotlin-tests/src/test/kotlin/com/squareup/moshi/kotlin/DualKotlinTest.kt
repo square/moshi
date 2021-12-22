@@ -47,7 +47,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $.")
     }
   }
 
@@ -62,7 +62,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$")
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$.")
     }
   }
 
@@ -77,7 +77,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -98,7 +98,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -115,7 +115,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.")
     }
   }
 
@@ -136,7 +136,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.")
     }
   }
 
@@ -153,7 +153,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -174,7 +174,7 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"a\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.a")
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' was null at \$.")
     }
   }
 
@@ -743,6 +743,36 @@ class DualKotlinTest {
       this.b = b
     }
   }
+
+  @Test fun requiredValueAbsentInArray() {
+    val jsonAdapter = moshi.adapter<RequiredValueAbsentArray>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("""{"values":[{"a":4,"b":10},{"a":2}]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' missing at $.values[1].")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  class RequiredValueAbsentArray(var values: List<RequiredValueAbsent>)
+
+  @Test fun requiredValueWithDifferentJsonNameAbsentInArray() {
+    val jsonAdapter = moshi.adapter<RequiredValueWithDifferentJsonNameAbsentArray>()
+
+    try {
+      //language=JSON
+      jsonAdapter.fromJson("""{"values":[{"a":4,"bPrime":10},{"a":2}]}""")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at $.values[1].")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  class RequiredValueWithDifferentJsonNameAbsentArray(var values: List<RequiredValueWithDifferentJsonNameAbsent>)
 
   @Test fun propertyNameHasDollarSign() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()

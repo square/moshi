@@ -379,17 +379,17 @@ public final class JsonValueReaderTest {
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.getPath()).isEqualTo("$.a");
     assertThat(reader.nextString()).isEqualTo("s");
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     reader.skipValue();
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
     assertThat(reader.nextDouble()).isEqualTo(1.5d);
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     assertThat(reader.nextName()).isEqualTo("c");
     assertThat(reader.getPath()).isEqualTo("$.c");
     assertThat(reader.nextBoolean()).isEqualTo(true);
-    assertThat(reader.getPath()).isEqualTo("$.c");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     reader.endObject();
   }
@@ -407,17 +407,17 @@ public final class JsonValueReaderTest {
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.getPath()).isEqualTo("$.a");
     assertThat(reader.nextString()).isEqualTo("s");
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     assertThat(reader.nextName()).isEqualTo("b");
     assertThat(reader.getPath()).isEqualTo("$.b");
     reader.skipValue();
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     assertThat(reader.nextName()).isEqualTo("c");
     assertThat(reader.getPath()).isEqualTo("$.c");
     assertThat(reader.nextBoolean()).isEqualTo(true);
-    assertThat(reader.getPath()).isEqualTo("$.c");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     reader.endObject();
   }

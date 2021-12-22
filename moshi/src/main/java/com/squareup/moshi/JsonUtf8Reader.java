@@ -152,6 +152,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_END_ARRAY) {
       stackSize--;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       peeked = PEEKED_NONE;
     } else {
       throw new JsonDataException("Expected END_ARRAY but was " + peek() + " at path " + getPath());
@@ -183,6 +184,7 @@ final class JsonUtf8Reader extends JsonReader {
       stackSize--;
       pathNames[stackSize] = null; // Free the last path name so that it can be garbage collected!
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       peeked = PEEKED_NONE;
     } else {
       throw new JsonDataException(
@@ -631,7 +633,7 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException("Expected a name but was " + peek() + " at path " + getPath());
     }
     peeked = PEEKED_NONE;
-    pathNames[stackSize - 1] = "null";
+    pathNames[stackSize - 1] = null;
   }
 
   /**
@@ -675,6 +677,7 @@ final class JsonUtf8Reader extends JsonReader {
     }
     peeked = PEEKED_NONE;
     pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = p == PEEKED_BUFFERED ? result : null;
     return result;
   }
 
@@ -695,6 +698,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (result != -1) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
 
       return result;
     }
@@ -720,6 +724,7 @@ final class JsonUtf8Reader extends JsonReader {
       if (string.equals(options.strings[i])) {
         peeked = PEEKED_NONE;
         pathIndices[stackSize - 1]++;
+        pathNames[stackSize - 1] = null;
 
         return i;
       }
@@ -736,10 +741,12 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_TRUE) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return true;
     } else if (p == PEEKED_FALSE) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return false;
     }
     throw new JsonDataException("Expected a boolean but was " + peek() + " at path " + getPath());
@@ -754,6 +761,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_NULL) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return null;
     } else {
       throw new JsonDataException("Expected null but was " + peek() + " at path " + getPath());
@@ -770,6 +778,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_LONG) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return (double) peekedLong;
     }
 
@@ -797,9 +806,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonEncodingException(
           "JSON forbids NaN and infinities: " + result + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
     return result;
   }
 
@@ -813,6 +823,7 @@ final class JsonUtf8Reader extends JsonReader {
     if (p == PEEKED_LONG) {
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return peekedLong;
     }
 
@@ -827,6 +838,7 @@ final class JsonUtf8Reader extends JsonReader {
         long result = Long.parseLong(peekedString);
         peeked = PEEKED_NONE;
         pathIndices[stackSize - 1]++;
+        pathNames[stackSize - 1] = null;
         return result;
       } catch (NumberFormatException ignored) {
         // Fall back to parse as a BigDecimal below.
@@ -844,9 +856,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException(
           "Expected a long but was " + peekedString + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
     return result;
   }
 
@@ -927,6 +940,7 @@ final class JsonUtf8Reader extends JsonReader {
       }
       peeked = PEEKED_NONE;
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
       return result;
     }
 
@@ -941,6 +955,7 @@ final class JsonUtf8Reader extends JsonReader {
         result = Integer.parseInt(peekedString);
         peeked = PEEKED_NONE;
         pathIndices[stackSize - 1]++;
+        pathNames[stackSize - 1] = null;
         return result;
       } catch (NumberFormatException ignored) {
         // Fall back to parse as a double below.
@@ -962,9 +977,10 @@ final class JsonUtf8Reader extends JsonReader {
       throw new JsonDataException(
           "Expected an int but was " + peekedString + " at path " + getPath());
     }
+    pathIndices[stackSize - 1]++;
+    pathNames[stackSize - 1] = peekedString;
     peekedString = null;
     peeked = PEEKED_NONE;
-    pathIndices[stackSize - 1]++;
     return result;
   }
 
@@ -1024,7 +1040,7 @@ final class JsonUtf8Reader extends JsonReader {
     } while (count != 0);
 
     pathIndices[stackSize - 1]++;
-    pathNames[stackSize - 1] = "null";
+    pathNames[stackSize - 1] = null;
   }
 
   @Override

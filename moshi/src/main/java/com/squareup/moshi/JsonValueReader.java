@@ -188,7 +188,7 @@ final class JsonValueReader extends JsonReader {
 
     // Swap the Map.Entry for its value on the stack.
     stack[stackSize - 1] = peeked.getValue();
-    pathNames[stackSize - 2] = "null";
+    pathNames[stackSize - 2] = null;
   }
 
   @Override
@@ -325,7 +325,7 @@ final class JsonValueReader extends JsonReader {
 
     // If this element is in an object clear out the key.
     if (stackSize > 1) {
-      pathNames[stackSize - 2] = "null";
+      pathNames[stackSize - 2] = null;
     }
 
     Object skipped = stackSize != 0 ? stack[stackSize - 1] : null;
@@ -426,6 +426,7 @@ final class JsonValueReader extends JsonReader {
     // If we're iterating an array or an object push its next element on to the stack.
     if (stackSize > 0) {
       pathIndices[stackSize - 1]++;
+      pathNames[stackSize - 1] = null;
 
       Object parent = stack[stackSize - 1];
       if (parent instanceof Iterator && ((Iterator<?>) parent).hasNext()) {

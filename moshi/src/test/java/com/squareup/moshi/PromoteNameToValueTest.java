@@ -45,7 +45,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextString()).isEqualTo("a");
     assertThat(reader.getPath()).isEqualTo("$.a");
     assertThat(reader.nextInt()).isEqualTo(1);
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -60,7 +60,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextInt()).isEqualTo(5);
     assertThat(reader.getPath()).isEqualTo("$.5");
     assertThat(reader.nextInt()).isEqualTo(1);
-    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -75,7 +75,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextDouble()).isEqualTo(5.5d);
     assertThat(reader.getPath()).isEqualTo("$.5.5");
     assertThat(reader.nextInt()).isEqualTo(1);
-    assertThat(reader.getPath()).isEqualTo("$.5.5");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -115,7 +115,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextLong()).isEqualTo(5L);
     assertThat(reader.getPath()).isEqualTo("$.5");
     assertThat(reader.nextInt()).isEqualTo(1);
-    assertThat(reader.getPath()).isEqualTo("$.5");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -140,7 +140,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextString()).isEqualTo("null");
     assertThat(reader.getPath()).isEqualTo("$.null");
     assertThat(reader.nextInt()).isEqualTo(1);
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -157,7 +157,7 @@ public final class PromoteNameToValueTest {
     assertThat(reader.nextString()).isEqualTo("b");
     assertThat(reader.getPath()).isEqualTo("$.b");
     assertThat(reader.nextInt()).isEqualTo(2);
-    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }

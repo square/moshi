@@ -137,7 +137,7 @@ public final class MapJsonAdapterTest {
     } catch (JsonDataException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Map key 'c' has multiple values at path $.c: 1 and 2");
+          .isEqualTo("Map key 'c' has multiple values at path $.: 1 and 2");
     }
   }
 

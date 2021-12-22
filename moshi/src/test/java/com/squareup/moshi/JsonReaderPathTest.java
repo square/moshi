@@ -61,7 +61,7 @@ public final class JsonReaderPathTest {
     reader.nextName();
     assertThat(reader.getPath()).isEqualTo("$.a[5].c");
     reader.nextString();
-    assertThat(reader.getPath()).isEqualTo("$.a[5].c");
+    assertThat(reader.getPath()).isEqualTo("$.a[5].");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$.a[6]");
     reader.beginArray();
@@ -71,7 +71,7 @@ public final class JsonReaderPathTest {
     reader.endArray();
     assertThat(reader.getPath()).isEqualTo("$.a[7]");
     reader.endArray();
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
   }
@@ -137,20 +137,20 @@ public final class JsonReaderPathTest {
     reader.peek();
     assertThat(reader.getPath()).isEqualTo("$.a");
     reader.nextInt();
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     reader.peek();
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.nextName();
     assertThat(reader.getPath()).isEqualTo("$.b");
 
     reader.peek();
     assertThat(reader.getPath()).isEqualTo("$.b");
     reader.nextInt();
-    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertThat(reader.getPath()).isEqualTo("$.");
 
     reader.peek();
-    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.endObject();
     assertThat(reader.getPath()).isEqualTo("$");
 
@@ -220,7 +220,7 @@ public final class JsonReaderPathTest {
     JsonReader reader = factory.newReader("{\"a\":1}");
     reader.beginObject();
     reader.skipValue();
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
   }
 
   @SuppressWarnings("CheckReturnValue")
@@ -230,7 +230,7 @@ public final class JsonReaderPathTest {
     reader.beginObject();
     reader.nextName();
     reader.skipValue();
-    assertThat(reader.getPath()).isEqualTo("$.null");
+    assertThat(reader.getPath()).isEqualTo("$.");
     reader.nextName();
     assertThat(reader.getPath()).isEqualTo("$.b");
   }
