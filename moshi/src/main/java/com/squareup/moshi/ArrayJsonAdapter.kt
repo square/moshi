@@ -22,7 +22,9 @@ import java.lang.reflect.Type
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
  * and object arrays.
  */
-internal class ArrayJsonAdapter(private val elementClass: Class<*>, private val elementAdapter: JsonAdapter<Any>
+internal class ArrayJsonAdapter(
+  private val elementClass: Class<*>,
+  private val elementAdapter: JsonAdapter<Any>
 ) : JsonAdapter<Any?>() {
   override fun fromJson(reader: JsonReader): Any {
     val list = mutableListOf<Any?>()
