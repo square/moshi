@@ -42,11 +42,9 @@ internal class ArrayJsonAdapter(
 
   override fun toJson(writer: JsonWriter, value: Any?) {
     writer.beginArray()
-    var i = 0
     val size = Array.getLength(value)
-    while (i < size) {
+    for (i in 0 until size) {
       elementAdapter.toJson(writer, Array.get(value, i))
-      i++
     }
     writer.endArray()
   }
