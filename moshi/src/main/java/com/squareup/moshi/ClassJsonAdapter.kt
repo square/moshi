@@ -83,7 +83,7 @@ internal class ClassJsonAdapter<T>(
   override fun toJson(writer: JsonWriter, value: T?) {
     try {
       writer.beginObject()
-      for (fieldBinding in fieldsArray) {
+      fieldsArray.forEach { fieldBinding ->
         writer.name(fieldBinding.name)
         fieldBinding.write(writer, value as Any)
       }
@@ -112,7 +112,7 @@ internal class ClassJsonAdapter<T>(
 
   companion object {
     @JvmField
-    val FACTORY: Factory = object : Factory {
+    val FACTORY = object : Factory {
       override fun create(
         type: Type,
         annotations: Set<Annotation>,
@@ -121,7 +121,7 @@ internal class ClassJsonAdapter<T>(
         if (type !is Class<*> && type !is ParameterizedType) {
           return null
         }
-        val rawType = Types.getRawType(type)
+        val rawType = type.rawType
         if (rawType.isInterface || rawType.isEnum) return null
         if (annotations.isNotEmpty()) return null
         if (rawType.isPlatformType) {
@@ -139,16 +139,18 @@ internal class ClassJsonAdapter<T>(
           )
         }
 
-        if (rawType.isAnonymousClass) { throw IllegalArgumentException("Cannot serialize anonymous class " + rawType.name) }
-        if (rawType.isLocalClass) { throw IllegalArgumentException("Cannot serialize local class " + rawType.name) }
-        if (rawType.enclosingClass != null && !Modifier.isStatic(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize non-static nested class " + rawType.name) }
-        if (Modifier.isAbstract(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize abstract class " + rawType.name) }
+        if (rawType.isAnonymousClass) { throw IllegalArgumentException("Cannot serialize anonymous class ${rawType.name}") }
+        if (rawType.isLocalClass) { throw IllegalArgumentException("Cannot serialize local class ${rawType.name}") }
+        if (rawType.enclosingClass != null && !Modifier.isStatic(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize non-static nested class ${rawType.name}") }
+        if (Modifier.isAbstract(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}") }
         if (rawType.isKotlin) {
-          throw IllegalArgumentException("Cannot serialize Kotlin type "
-            + rawType.name
-            + ". Reflective serialization of Kotlin classes without using kotlin-reflect has "
-            + "undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the "
-            + "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact.")
+          throw IllegalArgumentException(
+            "Cannot serialize Kotlin type " +
+              rawType.name +
+              ". Reflective serialization of Kotlin classes without using kotlin-reflect has " +
+              "undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the " +
+              "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
+          )
         }
         val classFactory = ClassFactory.get<Any>(rawType)
         val fields = sortedMapOf<String, FieldBinding<*>>()
@@ -165,7 +167,7 @@ internal class ClassJsonAdapter<T>(
        * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
        */
       private fun throwIfIsCollectionClass(type: Type, collectionInterface: Class<*>) {
-        val rawClass = Types.getRawType(type)
+        val rawClass = type.rawType
         if (collectionInterface.isAssignableFrom(rawClass)) {
           throw IllegalArgumentException(
             "No JsonAdapter for " +
@@ -186,7 +188,7 @@ internal class ClassJsonAdapter<T>(
         type: Type,
         fieldBindings: MutableMap<String, FieldBinding<*>>
       ) {
-        val rawType = Types.getRawType(type)
+        val rawType = type.rawType
         val platformType = rawType.isPlatformType
         for (field in rawType.declaredFields) {
           if (!includeField(platformType, field.modifiers)) continue
