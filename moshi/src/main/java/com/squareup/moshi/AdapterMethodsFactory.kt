@@ -19,9 +19,9 @@ import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.toStringWithAnnotations
-import java.lang.reflect.InvocationTargetException
-import java.lang.IllegalAccessException
 import okio.IOException
+import java.lang.IllegalAccessException
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -96,9 +96,9 @@ internal class AdapterMethodsFactory(
     }
   }
 
-  public companion object {
+  companion object {
     @JvmStatic
-    public fun get(adapter: Any): AdapterMethodsFactory {
+    fun get(adapter: Any): AdapterMethodsFactory {
       val toAdapters = mutableListOf<AdapterMethod>()
       val fromAdapters = mutableListOf<AdapterMethod>()
 
