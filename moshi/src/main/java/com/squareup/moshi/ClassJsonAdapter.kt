@@ -21,13 +21,11 @@ import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.jsonName
 import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.rethrowCause
-import java.io.IOException
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-
 
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
@@ -46,7 +44,9 @@ import java.lang.reflect.Type
  *  * scala.*
  *
  */
-internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fieldsMap: Map<String, FieldBinding<*>>
+internal class ClassJsonAdapter<T>(
+  private val classFactory: ClassFactory<T>,
+  fieldsMap: Map<String, FieldBinding<*>>
 ) : JsonAdapter<T>() {
   private val fieldsArray = fieldsMap.values.toTypedArray()
   private val options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
@@ -114,7 +114,10 @@ internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fi
     @JvmField
     val FACTORY: Factory = object : Factory {
       override fun create(
-        type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+        type: Type,
+        annotations: Set<Annotation>,
+        moshi: Moshi
+      ): JsonAdapter<*>? {
         if (type !is Class<*> && type !is ParameterizedType) {
           return null
         }
@@ -164,20 +167,24 @@ internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fi
       private fun throwIfIsCollectionClass(type: Type, collectionInterface: Class<*>) {
         val rawClass = Types.getRawType(type)
         if (collectionInterface.isAssignableFrom(rawClass)) {
-          throw IllegalArgumentException("No JsonAdapter for "
-            + type
-            + ", you should probably use "
-            + collectionInterface.simpleName
-            + " instead of "
-            + rawClass.simpleName
-            + " (Moshi only supports the collection interfaces by default)"
-            + " or else register a custom JsonAdapter.")
+          throw IllegalArgumentException(
+            "No JsonAdapter for " +
+              type +
+              ", you should probably use " +
+              collectionInterface.simpleName +
+              " instead of " +
+              rawClass.simpleName +
+              " (Moshi only supports the collection interfaces by default)" +
+              " or else register a custom JsonAdapter."
+          )
         }
       }
 
       /** Creates a field binding for each of declared field of `type`.  */
       private fun createFieldBindings(
-        moshi: Moshi, type: Type, fieldBindings: MutableMap<String, FieldBinding<*>>
+        moshi: Moshi,
+        type: Type,
+        fieldBindings: MutableMap<String, FieldBinding<*>>
       ) {
         val rawType = Types.getRawType(type)
         val platformType = rawType.isPlatformType
@@ -204,9 +211,11 @@ internal class ClassJsonAdapter<T>(private val classFactory: ClassFactory<T>, fi
           val fieldBinding = FieldBinding(jsonName, field, adapter)
           val replaced = fieldBindings.put(jsonName, fieldBinding)
           if (replaced != null) {
-            throw IllegalArgumentException("""Conflicting fields:
+            throw IllegalArgumentException(
+              """Conflicting fields:
     ${replaced.field}
-    ${fieldBinding.field}""")
+    ${fieldBinding.field}"""
+            )
           }
         }
       }
