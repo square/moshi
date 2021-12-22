@@ -21,17 +21,19 @@ import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.toStringWithAnnotations
 import java.lang.reflect.InvocationTargetException
 import java.lang.IllegalAccessException
+import okio.IOException
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import okio.IOException
 
 internal class AdapterMethodsFactory(
   private val toAdapters: List<AdapterMethod>,
   private val fromAdapters: List<AdapterMethod>
 ) : JsonAdapter.Factory {
   override fun create(
-    type: Type, annotations: Set<Annotation>, moshi: Moshi
+    type: Type,
+    annotations: Set<Annotation>,
+    moshi: Moshi
   ): JsonAdapter<*>? {
     val toAdapter = get(toAdapters, type, annotations)
     val fromAdapter = get(fromAdapters, type, annotations)
@@ -107,9 +109,11 @@ internal class AdapterMethodsFactory(
             val toAdapter = toAdapter(adapter, m)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
             if (conflicting != null) {
-              throw IllegalArgumentException("""Conflicting @ToJson methods:
+              throw IllegalArgumentException(
+                """Conflicting @ToJson methods:
     ${conflicting.method}
-    ${toAdapter.method}""")
+    ${toAdapter.method}"""
+              )
             }
             toAdapters.add(toAdapter)
           }
@@ -117,9 +121,11 @@ internal class AdapterMethodsFactory(
             val fromAdapter = fromAdapter(adapter, m)
             val conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations)
             if (conflicting != null) {
-              throw IllegalArgumentException("""Conflicting @FromJson methods:
+              throw IllegalArgumentException(
+                """Conflicting @FromJson methods:
     ${conflicting.method}
-    ${fromAdapter.method}""")
+    ${fromAdapter.method}"""
+              )
             }
             fromAdapters.add(fromAdapter)
           }
@@ -141,10 +147,10 @@ internal class AdapterMethodsFactory(
       val returnType = method.genericReturnType
       val parameterTypes = method.genericParameterTypes
       val parameterAnnotations = method.parameterAnnotations
-      return if (parameterTypes.size >= 2
-        && parameterTypes[0] == JsonWriter::class.java
-        && returnType == Void.TYPE
-        && parametersAreJsonAdapters(2, parameterTypes)
+      return if (parameterTypes.size >= 2 &&
+        parameterTypes[0] == JsonWriter::class.java &&
+        returnType == Void.TYPE &&
+        parametersAreJsonAdapters(2, parameterTypes)
       ) {
         // void pointToJson(JsonWriter jsonWriter, Point point) {
         // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
@@ -179,8 +185,9 @@ internal class AdapterMethodsFactory(
           private var delegate: JsonAdapter<Any>? = null
           override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
             super.bind(moshi, factory)
-            delegate = if (Types.equals(parameterTypes[0], returnType)
-              && qualifierAnnotations == returnTypeAnnotations)
+            delegate = if (Types.equals(parameterTypes[0], returnType) &&
+              qualifierAnnotations == returnTypeAnnotations
+            )
               moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
             else moshi.adapter(returnType, returnTypeAnnotations)
           }
@@ -224,15 +231,16 @@ internal class AdapterMethodsFactory(
       val returnTypeAnnotations = method.jsonAnnotations
       val parameterTypes = method.genericParameterTypes
       val parameterAnnotations = method.parameterAnnotations
-      return if (parameterTypes.isNotEmpty()
-        && parameterTypes[0] == JsonReader::class.java
-        && returnType != Void.TYPE
-        && parametersAreJsonAdapters(  1, parameterTypes)
+      return if (parameterTypes.isNotEmpty() &&
+        parameterTypes[0] == JsonReader::class.java &&
+        returnType != Void.TYPE &&
+        parametersAreJsonAdapters(1, parameterTypes)
       ) {
         // Point pointFromJson(JsonReader jsonReader) {
         // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
         object : AdapterMethod(
-          returnType, returnTypeAnnotations, adapter, method, parameterTypes.size, 1, true) {
+          returnType, returnTypeAnnotations, adapter, method, parameterTypes.size, 1, true
+        ) {
           override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
             return invoke(reader)
           }
@@ -242,13 +250,14 @@ internal class AdapterMethodsFactory(
         val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
         val nullable = parameterAnnotations[0].hasNullable
         object : AdapterMethod(
-          returnType, returnTypeAnnotations, adapter, method, parameterTypes.size, 1, nullable) {
+          returnType, returnTypeAnnotations, adapter, method, parameterTypes.size, 1, nullable
+        ) {
           var delegate: JsonAdapter<Any>? = null
 
           override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
             super.bind(moshi, factory)
-            delegate = if (Types.equals(parameterTypes[0], returnType)
-              && qualifierAnnotations == returnTypeAnnotations
+            delegate = if (Types.equals(parameterTypes[0], returnType) &&
+              qualifierAnnotations == returnTypeAnnotations
             ) moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
             else moshi.adapter(parameterTypes[0], qualifierAnnotations)
           }
@@ -272,7 +281,9 @@ internal class AdapterMethodsFactory(
 
     /** Returns the matching adapter method from the list.  */
     private fun get(
-      adapterMethods: List<AdapterMethod>, type: Type, annotations: Set<Annotation>
+      adapterMethods: List<AdapterMethod>,
+      type: Type,
+      annotations: Set<Annotation>
     ): AdapterMethod? {
       var i = 0
       val size = adapterMethods.size
@@ -286,7 +297,6 @@ internal class AdapterMethodsFactory(
       return null
     }
   }
-
 
   internal abstract class AdapterMethod(
     type: Type,
@@ -318,7 +328,8 @@ internal class AdapterMethodsFactory(
           val jsonAnnotations = parameterAnnotations[i].jsonAnnotations
           jsonAdapters[i - adaptersOffset] =
             if (Types.equals(this.type, type) && annotations == jsonAnnotations) {
-              moshi.nextAdapter(factory, type, jsonAnnotations
+              moshi.nextAdapter(
+                factory, type, jsonAnnotations
               )
             } else {
               moshi.adapter<Any>(type, jsonAnnotations)
