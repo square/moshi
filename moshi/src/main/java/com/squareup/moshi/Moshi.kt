@@ -78,7 +78,7 @@ public class Moshi internal constructor(builder: Builder) {
    * @param fieldName An optional field name associated with this type. The field name is used as a
    * hint for better adapter lookup error messages for nested structures.
    */
-  @CheckReturnValue // Factories are required to return only matching JsonAdapters.
+  @CheckReturnValue
   public fun <T> adapter(
     type: Type,
     annotations: Set<Annotation>,
@@ -105,7 +105,7 @@ public class Moshi internal constructor(builder: Builder) {
 
       // Ask each factory to create the JSON adapter.
       for (i in factories.indices) {
-        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
         val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>? ?: continue
 
         // Success! Notify the LookupChain so it is cached and can be used by re-entrant calls.
@@ -121,7 +121,7 @@ public class Moshi internal constructor(builder: Builder) {
     }
   }
 
-  @CheckReturnValue // Factories are required to return only matching JsonAdapters.
+  @CheckReturnValue
   public fun <T> nextAdapter(
     skipPast: JsonAdapter.Factory,
     type: Type,
@@ -131,7 +131,7 @@ public class Moshi internal constructor(builder: Builder) {
     val skipPastIndex = factories.indexOf(skipPast)
     require(skipPastIndex != -1) { "Unable to skip past unknown factory $skipPast" }
     for (i in (skipPastIndex + 1) until factories.size) {
-      @Suppress("UNCHECKED_CAST")
+      @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
       val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>?
       if (result != null) return result
     }
