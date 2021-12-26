@@ -168,12 +168,7 @@ public class Moshi internal constructor(builder: Builder) {
     internal var lastOffset = 0
 
     public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
-      add(
-        newAdapterFactory(
-          type,
-          jsonAdapter
-        )
-      )
+      add(newAdapterFactory(type, jsonAdapter))
     }
 
     public fun <T> add(
@@ -194,12 +189,7 @@ public class Moshi internal constructor(builder: Builder) {
 
     @Suppress("unused")
     public fun <T> addLast(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
-      addLast(
-        newAdapterFactory(
-          type,
-          jsonAdapter
-        )
-      )
+      addLast(newAdapterFactory(type, jsonAdapter))
     }
 
     @Suppress("unused")
@@ -351,7 +341,7 @@ public class Moshi internal constructor(builder: Builder) {
 
   internal companion object {
     @JvmField
-    val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> = buildList(5) {
+    val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> = buildList(6) {
       add(StandardJsonAdapters.FACTORY)
       add(CollectionJsonAdapter.FACTORY)
       add(MapJsonAdapter.FACTORY)
