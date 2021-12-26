@@ -761,31 +761,44 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return result
     }
-    when (p) {
-      PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
+    val next: String = when (p) {
+      PEEKED_NUMBER -> {
+        buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+      }
       PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
-        val next = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        val next = if (p == PEEKED_DOUBLE_QUOTED) {
+          nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+        } else {
+          nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        }
+        peekedString = next
         try {
           val result = next.toInt()
-          peekedString = next
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
           return result
         } catch (ignored: NumberFormatException) {
           // Fall back to parse as a double below.
+          next
         }
       }
-      else -> if (p != PEEKED_BUFFERED) throw JsonDataException("Expected an int but was ${peek()} at path $path")
+      PEEKED_BUFFERED -> {
+        // PEEKED_BUFFERED means the value's been stored in peekedString
+        val nextNested = peekedString
+        markNotNull(nextNested)
+        nextNested
+      }
+      else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
     val asDouble = try {
-      peekedString!!.toDouble()
+      next.toDouble()
     } catch (e: NumberFormatException) {
-      throw JsonDataException("Expected an int but was $peekedString at path $path")
+      throw JsonDataException("Expected an int but was $next at path $path")
     }
     val result = asDouble.toInt()
     if (result.toDouble() != asDouble) { // Make sure no precision was lost casting to 'int'.
-      throw JsonDataException("Expected an int but was $peekedString at path $path")
+      throw JsonDataException("Expected an int but was $next at path $path")
     }
     peekedString = null
     peeked = PEEKED_NONE
