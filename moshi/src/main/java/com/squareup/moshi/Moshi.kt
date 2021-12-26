@@ -20,7 +20,7 @@ import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard
-import com.squareup.moshi.internal.typeAnnotatedWithAnnotations
+import com.squareup.moshi.internal.toStringWithAnnotations
 import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
@@ -107,7 +107,7 @@ public class Moshi internal constructor(builder: Builder) {
         success = true
         return result
       }
-      throw IllegalArgumentException("No JsonAdapter for ${type.typeAnnotatedWithAnnotations(annotations)}")
+      throw IllegalArgumentException("No JsonAdapter for ${type.toStringWithAnnotations(annotations)}")
     } catch (e: IllegalArgumentException) {
       throw lookupChain.exceptionWithLookupStack(e)
     } finally {
@@ -129,7 +129,7 @@ public class Moshi internal constructor(builder: Builder) {
       val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>?
       if (result != null) return result
     }
-    throw IllegalArgumentException("No next JsonAdapter for ${cleanedType.typeAnnotatedWithAnnotations(annotations)}")
+    throw IllegalArgumentException("No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}")
   }
 
   /** Returns a new builder containing all custom factories used by the current instance. */

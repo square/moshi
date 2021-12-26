@@ -17,7 +17,7 @@ package com.squareup.moshi;
 
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static com.squareup.moshi.internal.Util.getJsonAnnotations;
-import static com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations;
+import static com.squareup.moshi.internal.Util.toStringWithAnnotations;
 
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
@@ -57,7 +57,7 @@ final class AdapterMethodsFactory implements JsonAdapter.Factory {
             "No "
                 + missingAnnotation
                 + " adapter for "
-                + typeAnnotatedWithAnnotations(type, annotations),
+                + toStringWithAnnotations(type, annotations),
             e);
       }
     } else {

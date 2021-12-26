@@ -357,7 +357,7 @@ public fun Type.checkNotPrimitive() {
   require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive $this. Use the boxed type." }
 }
 
-public fun Type.typeAnnotatedWithAnnotations(annotations: Set<Annotation>): String {
+public fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
   return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
 }
 
