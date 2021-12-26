@@ -238,13 +238,13 @@ internal class JsonUtf8Reader : JsonReader {
     // "fallthrough" from previous `when`
     when (nextNonWhitespace(true).toChar()) {
       ']' -> {
-        if (peekStack == JsonScope.EMPTY_ARRAY) {
-          buffer.readByte() // Consume ']'.
-          return setPeeked(PEEKED_END_ARRAY)
-        }
-        // In lenient mode, a 0-length literal in an array means 'null'.
         return when (peekStack) {
-          JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
+          JsonScope.EMPTY_ARRAY -> {
+            buffer.readByte() // Consume ']'.
+            setPeeked(PEEKED_END_ARRAY)
+          }
+          JsonScope.NONEMPTY_ARRAY -> {
+            // In lenient mode, a 0-length literal in an array means 'null'.
             checkLenient()
             setPeeked(PEEKED_NULL)
           }
@@ -321,11 +321,11 @@ internal class JsonUtf8Reader : JsonReader {
     // Confirm that chars [1..length) match the keyword.
     val length = keyword.length
     for (i in 1 until length) {
-      val i_long = i.toLong()
-      if (!source.request(i_long + 1)) {
+      val iAsLong = i.toLong()
+      if (!source.request(iAsLong + 1)) {
         return PEEKED_NONE
       }
-      c = buffer[i_long].asChar()
+      c = buffer[iAsLong].asChar()
       if (c != keyword[i] && c != keywordUpper[i]) {
         return PEEKED_NONE
       }
@@ -1045,11 +1045,13 @@ internal class JsonUtf8Reader : JsonReader {
     }
   }
 
+  @Suppress("NOTHING_TO_INLINE")
   private inline fun peekIfNone(): Int {
     val p = peeked
     return if (p == PEEKED_NONE) doPeek() else p
   }
 
+  @Suppress("NOTHING_TO_INLINE")
   private inline fun setPeeked(peekedType: Int): Int {
     peeked = peekedType
     return peekedType
