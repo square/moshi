@@ -1104,7 +1104,7 @@ internal class JsonUtf8Reader : JsonReader {
 private inline fun Byte.asChar(): Char = toInt().toChar()
 
 // Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
-// Safe to use (unstable) contracts since they're gone in the final runtime
+// Safe to use (unstable) contracts since they're gone in the final bytecode
 // TODO move this to Util.kt after it's migrated to kotlin
 @Suppress("NOTHING_TO_INLINE")
 private inline fun <T> markNotNull(value: T?) {
