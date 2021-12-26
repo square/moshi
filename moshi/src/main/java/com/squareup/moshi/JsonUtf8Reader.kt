@@ -23,6 +23,7 @@ import okio.buffer
 import java.io.EOFException
 import java.io.IOException
 import java.math.BigDecimal
+import kotlin.contracts.contract
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON. */
@@ -622,19 +623,24 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return peekedLong.toDouble()
     }
-    val next = when {
-      p == PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
-      p == PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-      p == PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
-      p == PEEKED_UNQUOTED -> nextUnquotedValue()
-      p != PEEKED_BUFFERED -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
+    val next = when (p) {
+      PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+      PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH).also { peekedString = it }
+      PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH).also { peekedString = it }
+      PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
+      PEEKED_BUFFERED -> {
+        // PEEKED_BUFFERED means the value's been stored in peekedString
+        val nextNested = peekedString
+        markNotNull(nextNested)
+        nextNested
+      }
+      else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
-    peekedString = next
     peeked = PEEKED_BUFFERED
     val result = try {
       next.toDouble()
     } catch (e: NumberFormatException) {
-      throw JsonDataException("Expected a double but was $peekedString at path $path")
+      throw JsonDataException("Expected a double but was $next at path $path")
     }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
@@ -1079,4 +1085,15 @@ internal class JsonUtf8Reader : JsonReader {
   }
 }
 
+@Suppress("NOTHING_TO_INLINE")
 private inline fun Byte.asChar(): Char = toInt().toChar()
+
+// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
+// Safe to use (unstable) contracts since they're gone in the final runtime
+// TODO move this to Util.kt after it's migrated to kotlin
+@Suppress("NOTHING_TO_INLINE")
+private inline fun <T> markNotNull(value: T?) {
+  contract {
+    returns() implies (value != null)
+  }
+}

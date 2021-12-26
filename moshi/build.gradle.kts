@@ -52,10 +52,12 @@ tasks.withType<Test>().configureEach {
 tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
+      val args = mutableListOf("-Xopt-in=kotlin.contracts.ExperimentalContracts")
       if (name.contains("test", true)) {
-        @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-        freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+        args += "-Xopt-in=kotlin.ExperimentalStdlibApi"
       }
+      @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
+      freeCompilerArgs += args
     }
   }
 
