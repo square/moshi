@@ -630,9 +630,7 @@ internal class JsonUtf8Reader : JsonReader {
       PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
       PEEKED_BUFFERED -> {
         // PEEKED_BUFFERED means the value's been stored in peekedString
-        val nextNested = peekedString
-        markNotNull(nextNested)
-        nextNested
+        knownNotNull(peekedString)
       }
       else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
@@ -784,9 +782,7 @@ internal class JsonUtf8Reader : JsonReader {
       }
       PEEKED_BUFFERED -> {
         // PEEKED_BUFFERED means the value's been stored in peekedString
-        val nextNested = peekedString
-        markNotNull(nextNested)
-        nextNested
+        knownNotNull(peekedString)
       }
       else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
@@ -1111,4 +1107,10 @@ private inline fun <T> markNotNull(value: T?) {
   contract {
     returns() implies (value != null)
   }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun <T> knownNotNull(value: T?): T {
+  markNotNull(value)
+  return value
 }
