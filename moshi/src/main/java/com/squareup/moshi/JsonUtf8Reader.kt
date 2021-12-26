@@ -23,6 +23,7 @@ import okio.buffer
 import java.io.EOFException
 import java.io.IOException
 import java.math.BigDecimal
+import kotlin.contracts.contract
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON. */
@@ -237,13 +238,13 @@ internal class JsonUtf8Reader : JsonReader {
     // "fallthrough" from previous `when`
     when (nextNonWhitespace(true).toChar()) {
       ']' -> {
-        if (peekStack == JsonScope.EMPTY_ARRAY) {
-          buffer.readByte() // Consume ']'.
-          return setPeeked(PEEKED_END_ARRAY)
-        }
-        // In lenient mode, a 0-length literal in an array means 'null'.
         return when (peekStack) {
-          JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
+          JsonScope.EMPTY_ARRAY -> {
+            buffer.readByte() // Consume ']'.
+            setPeeked(PEEKED_END_ARRAY)
+          }
+          JsonScope.NONEMPTY_ARRAY -> {
+            // In lenient mode, a 0-length literal in an array means 'null'.
             checkLenient()
             setPeeked(PEEKED_NULL)
           }
@@ -320,11 +321,11 @@ internal class JsonUtf8Reader : JsonReader {
     // Confirm that chars [1..length) match the keyword.
     val length = keyword.length
     for (i in 1 until length) {
-      val i_long = i.toLong()
-      if (!source.request(i_long + 1)) {
+      val iAsLong = i.toLong()
+      if (!source.request(iAsLong + 1)) {
         return PEEKED_NONE
       }
-      c = buffer[i_long].asChar()
+      c = buffer[iAsLong].asChar()
       if (c != keyword[i] && c != keywordUpper[i]) {
         return PEEKED_NONE
       }
@@ -622,19 +623,22 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return peekedLong.toDouble()
     }
-    val next = when {
-      p == PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
-      p == PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-      p == PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
-      p == PEEKED_UNQUOTED -> nextUnquotedValue()
-      p != PEEKED_BUFFERED -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
+    val next = when (p) {
+      PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+      PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH).also { peekedString = it }
+      PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH).also { peekedString = it }
+      PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
+      PEEKED_BUFFERED -> {
+        // PEEKED_BUFFERED means the value's been stored in peekedString
+        knownNotNull(peekedString)
+      }
+      else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
-    peekedString = next
     peeked = PEEKED_BUFFERED
     val result = try {
       next.toDouble()
     } catch (e: NumberFormatException) {
-      throw JsonDataException("Expected a double but was $peekedString at path $path")
+      throw JsonDataException("Expected a double but was $next at path $path")
     }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
@@ -755,31 +759,42 @@ internal class JsonUtf8Reader : JsonReader {
       pathIndices[stackSize - 1]++
       return result
     }
-    when (p) {
-      PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
+    val next: String = when (p) {
+      PEEKED_NUMBER -> {
+        buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+      }
       PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
-        val next = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        val next = if (p == PEEKED_DOUBLE_QUOTED) {
+          nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+        } else {
+          nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        }
+        peekedString = next
         try {
           val result = next.toInt()
-          peekedString = next
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
           return result
         } catch (ignored: NumberFormatException) {
           // Fall back to parse as a double below.
+          next
         }
       }
-      else -> if (p != PEEKED_BUFFERED) throw JsonDataException("Expected an int but was ${peek()} at path $path")
+      PEEKED_BUFFERED -> {
+        // PEEKED_BUFFERED means the value's been stored in peekedString
+        knownNotNull(peekedString)
+      }
+      else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
     val asDouble = try {
-      peekedString!!.toDouble()
+      next.toDouble()
     } catch (e: NumberFormatException) {
-      throw JsonDataException("Expected an int but was $peekedString at path $path")
+      throw JsonDataException("Expected an int but was $next at path $path")
     }
     val result = asDouble.toInt()
     if (result.toDouble() != asDouble) { // Make sure no precision was lost casting to 'int'.
-      throw JsonDataException("Expected an int but was $peekedString at path $path")
+      throw JsonDataException("Expected an int but was $next at path $path")
     }
     peekedString = null
     peeked = PEEKED_NONE
@@ -1026,11 +1041,13 @@ internal class JsonUtf8Reader : JsonReader {
     }
   }
 
+  @Suppress("NOTHING_TO_INLINE")
   private inline fun peekIfNone(): Int {
     val p = peeked
     return if (p == PEEKED_NONE) doPeek() else p
   }
 
+  @Suppress("NOTHING_TO_INLINE")
   private inline fun setPeeked(peekedType: Int): Int {
     peeked = peekedType
     return peekedType
@@ -1079,4 +1096,21 @@ internal class JsonUtf8Reader : JsonReader {
   }
 }
 
+@Suppress("NOTHING_TO_INLINE")
 private inline fun Byte.asChar(): Char = toInt().toChar()
+
+// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
+// Safe to use (unstable) contracts since they're gone in the final bytecode
+// TODO move this to Util.kt after it's migrated to kotlin
+@Suppress("NOTHING_TO_INLINE")
+private inline fun <T> markNotNull(value: T?) {
+  contract {
+    returns() implies (value != null)
+  }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun <T> knownNotNull(value: T?): T {
+  markNotNull(value)
+  return value
+}
