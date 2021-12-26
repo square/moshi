@@ -32,29 +32,24 @@ import javax.annotation.CheckReturnValue
  * concurrently.
  */
 public class Moshi internal constructor(builder: Builder) {
-  private val factories: List<JsonAdapter.Factory> = buildList {
+  private val factories = buildList {
     addAll(builder.factories)
     addAll(BUILT_IN_FACTORIES)
   }
-  private val lastOffset: Int = builder.lastOffset
+  private val lastOffset = builder.lastOffset
   private val lookupChainThreadLocal = ThreadLocal<LookupChain>()
-  private val adapterCache: MutableMap<Any?, JsonAdapter<*>?> = LinkedHashMap()
+  private val adapterCache = LinkedHashMap<Any?, JsonAdapter<*>?>()
 
   /** Returns a JSON adapter for `type`, creating it if necessary. */
   @CheckReturnValue
-  public fun <T> adapter(type: Type): JsonAdapter<T> {
-    return adapter(type, Util.NO_ANNOTATIONS)
-  }
+  public fun <T> adapter(type: Type): JsonAdapter<T> = adapter(type, Util.NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Class<T>): JsonAdapter<T> {
-    return adapter(type, Util.NO_ANNOTATIONS)
-  }
+  public fun <T> adapter(type: Class<T>): JsonAdapter<T> = adapter(type, Util.NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> {
-    return adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
-  }
+  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> =
+    adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
 
   @CheckReturnValue
   public fun <T> adapter(type: Type, vararg annotationTypes: Class<out Annotation>): JsonAdapter<T> {
@@ -70,9 +65,8 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> {
-    return adapter(type, annotations, fieldName = null)
-  }
+  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
+    adapter(type, annotations, fieldName = null)
 
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
@@ -164,7 +158,7 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   public class Builder {
-    internal val factories: MutableList<JsonAdapter.Factory> = ArrayList()
+    internal val factories = mutableListOf<JsonAdapter.Factory>()
     internal var lastOffset = 0
 
     public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
@@ -233,7 +227,7 @@ public class Moshi internal constructor(builder: Builder) {
    * adapters that may transitively depend on incomplete stubs.
    */
   internal inner class LookupChain {
-    private val callLookups: MutableList<Lookup<*>> = ArrayList()
+    private val callLookups = mutableListOf<Lookup<*>>()
     private val stack = ArrayDeque<Lookup<*>>()
     private var exceptionAnnotated = false
 
@@ -321,22 +315,15 @@ public class Moshi internal constructor(builder: Builder) {
   internal class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
-    override fun fromJson(reader: JsonReader): T? {
-      return withAdapter { fromJson(reader) }
-    }
+    override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
 
-    override fun toJson(writer: JsonWriter, value: T?) {
-      @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS") // TODO remove after JsonAdapter is migrated
-      withAdapter { toJson(writer, value) }
-    }
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS") // TODO remove after JsonAdapter is migrated
+    override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
-    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R {
-      return checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
-    }
+    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R =
+      checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
 
-    override fun toString(): String {
-      return adapter?.toString() ?: super.toString()
-    }
+    override fun toString() = adapter?.toString() ?: super.toString()
   }
 
   internal companion object {
