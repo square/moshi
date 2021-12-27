@@ -13,119 +13,117 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import com.squareup.moshi.internal.NonNullJsonAdapter;
-import com.squareup.moshi.internal.NullSafeJsonAdapter;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.util.Set;
-import javax.annotation.CheckReturnValue;
-import javax.annotation.Nullable;
-import okio.Buffer;
-import okio.BufferedSink;
-import okio.BufferedSource;
+import com.squareup.moshi.internal.NonNullJsonAdapter
+import com.squareup.moshi.internal.NullSafeJsonAdapter
+import okio.Buffer
+import okio.BufferedSink
+import okio.BufferedSource
+import okio.IOException
+import java.lang.reflect.Type
+import javax.annotation.CheckReturnValue
+import kotlin.Throws
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
  *
- * <p>JsonAdapter instances provided by Moshi are thread-safe, meaning multiple threads can safely
+ * JsonAdapter instances provided by Moshi are thread-safe, meaning multiple threads can safely
  * use a single instance concurrently.
  *
- * <p>Custom JsonAdapter implementations should be designed to be thread-safe.
+ * Custom JsonAdapter implementations should be designed to be thread-safe.
  */
 public abstract class JsonAdapter<T> {
-
   /**
-   * Decodes a nullable instance of type {@link T} from the given {@code reader}.
+   * Decodes a nullable instance of type [T] from the given [reader].
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *     the caller.
+   * the caller.
    */
   @CheckReturnValue
-  public abstract @Nullable T fromJson(JsonReader reader) throws IOException;
+  @Throws(IOException::class)
+  public abstract fun fromJson(reader: JsonReader): T?
 
   /**
-   * Decodes a nullable instance of type {@link T} from the given {@code source}.
+   * Decodes a nullable instance of type [T] from the given [source].
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *     the caller.
+   * the caller.
    */
   @CheckReturnValue
-  public final @Nullable T fromJson(BufferedSource source) throws IOException {
-    return fromJson(JsonReader.of(source));
-  }
+  @Throws(IOException::class)
+  public fun fromJson(source: BufferedSource): T? = fromJson(JsonReader.of(source))
 
   /**
-   * Decodes a nullable instance of type {@link T} from the given {@code string}.
+   * Decodes a nullable instance of type [T] from the given `string`.
    *
    * @throws JsonDataException when the data in a JSON document doesn't match the data expected by
-   *     the caller.
+   * the caller.
    */
   @CheckReturnValue
-  public final @Nullable T fromJson(String string) throws IOException {
-    JsonReader reader = JsonReader.of(new Buffer().writeUtf8(string));
-    T result = fromJson(reader);
-    if (!isLenient() && reader.peek() != JsonReader.Token.END_DOCUMENT) {
-      throw new JsonDataException("JSON document was not fully consumed.");
+  @Throws(IOException::class)
+  public fun fromJson(string: String): T? {
+    val reader = JsonReader.of(Buffer().writeUtf8(string))
+    val result = fromJson(reader)
+    if (!isLenient && reader.peek() != JsonReader.Token.END_DOCUMENT) {
+      throw JsonDataException("JSON document was not fully consumed.")
     }
-    return result;
+    return result
   }
 
-  /** Encodes the given {@code value} with the given {@code writer}. */
-  public abstract void toJson(JsonWriter writer, @Nullable T value) throws IOException;
+  /** Encodes the given [value] with the given [writer]. */
+  @Throws(IOException::class)
+  public abstract fun toJson(writer: JsonWriter, value: T?)
 
-  public final void toJson(BufferedSink sink, @Nullable T value) throws IOException {
-    JsonWriter writer = JsonWriter.of(sink);
-    toJson(writer, value);
+  @Throws(IOException::class)
+  public fun toJson(sink: BufferedSink, value: T?) {
+    val writer = JsonWriter.of(sink)
+    toJson(writer, value)
   }
 
-  /** Encodes the given {@code value} into a String and returns it. */
+  /** Encodes the given [value] into a String and returns it. */
   @CheckReturnValue
-  public final String toJson(@Nullable T value) {
-    Buffer buffer = new Buffer();
+  public fun toJson(value: T?): String {
+    val buffer = Buffer()
     try {
-      toJson(buffer, value);
-    } catch (IOException e) {
-      throw new AssertionError(e); // No I/O writing to a Buffer.
+      toJson(buffer, value)
+    } catch (e: IOException) {
+      throw AssertionError(e) // No I/O writing to a Buffer.
     }
-    return buffer.readUtf8();
+    return buffer.readUtf8()
   }
 
   /**
-   * Encodes {@code value} as a Java value object comprised of maps, lists, strings, numbers,
+   * Encodes [value] as a Java value object comprised of maps, lists, strings, numbers,
    * booleans, and nulls.
    *
-   * <p>Values encoded using {@code value(double)} or {@code value(long)} are modeled with the
-   * corresponding boxed type. Values encoded using {@code value(Number)} are modeled as a {@link
-   * Long} for boxed integer types ({@link Byte}, {@link Short}, {@link Integer}, and {@link Long}),
-   * as a {@link Double} for boxed floating point types ({@link Float} and {@link Double}), and as a
-   * {@link BigDecimal} for all other types.
+   * Values encoded using `value(double)` or `value(long)` are modeled with the
+   * corresponding boxed type. Values encoded using `value(Number)` are modeled as a [Long] for boxed integer types
+   * ([Byte], [Short], [Integer], and [Long]), as a [Double] for boxed floating point types ([Float] and [Double]),
+   * and as a [java.math.BigDecimal] for all other types.
    */
   @CheckReturnValue
-  public final @Nullable Object toJsonValue(@Nullable T value) {
-    JsonValueWriter writer = new JsonValueWriter();
-    try {
-      toJson(writer, value);
-      return writer.root();
-    } catch (IOException e) {
-      throw new AssertionError(e); // No I/O writing to an object.
+  public fun toJsonValue(value: T?): Any? {
+    val writer = JsonValueWriter()
+    return try {
+      toJson(writer, value)
+      writer.root()
+    } catch (e: IOException) {
+      throw AssertionError(e) // No I/O writing to an object.
     }
   }
 
   /**
-   * Decodes a Java value object from {@code value}, which must be comprised of maps, lists,
+   * Decodes a Java value object from [value], which must be comprised of maps, lists,
    * strings, numbers, booleans and nulls.
    */
   @CheckReturnValue
-  public final @Nullable T fromJsonValue(@Nullable Object value) {
-    JsonValueReader reader = new JsonValueReader(value);
-    try {
-      return fromJson(reader);
-    } catch (IOException e) {
-      throw new AssertionError(e); // No I/O reading from an object.
+  public fun fromJsonValue(value: Any): T? {
+    val reader = JsonValueReader(value)
+    return try {
+      fromJson(reader)
+    } catch (e: IOException) {
+      throw AssertionError(e) // No I/O reading from an object.
     }
   }
 
@@ -134,35 +132,26 @@ public abstract class JsonAdapter<T> {
    * JSON.
    */
   @CheckReturnValue
-  public final JsonAdapter<T> serializeNulls() {
-    final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
-      @Override
-      public @Nullable T fromJson(JsonReader reader) throws IOException {
-        return delegate.fromJson(reader);
-      }
+  public fun serializeNulls(): JsonAdapter<T> {
+    val delegate: JsonAdapter<T> = this
+    return object : JsonAdapter<T>() {
+      override fun fromJson(reader: JsonReader) = delegate.fromJson(reader)
 
-      @Override
-      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
-        boolean serializeNulls = writer.getSerializeNulls();
-        writer.setSerializeNulls(true);
+      override fun toJson(writer: JsonWriter, value: T?) {
+        val serializeNulls = writer.getSerializeNulls()
+        writer.setSerializeNulls(true)
         try {
-          delegate.toJson(writer, value);
+          delegate.toJson(writer, value)
         } finally {
-          writer.setSerializeNulls(serializeNulls);
+          writer.setSerializeNulls(serializeNulls)
         }
       }
 
-      @Override
-      boolean isLenient() {
-        return delegate.isLenient();
-      }
+      override val isLenient: Boolean
+        get() = delegate.isLenient
 
-      @Override
-      public String toString() {
-        return delegate + ".serializeNulls()";
-      }
-    };
+      override fun toString() = "$delegate.serializeNulls()"
+    }
   }
 
   /**
@@ -170,163 +159,139 @@ public abstract class JsonAdapter<T> {
    * nulls.
    */
   @CheckReturnValue
-  public final JsonAdapter<T> nullSafe() {
-    if (this instanceof NullSafeJsonAdapter) {
-      return this;
+  public fun nullSafe(): JsonAdapter<T> {
+    return if (this is NullSafeJsonAdapter<*>) {
+      this
+    } else {
+      NullSafeJsonAdapter(this)
     }
-    return new NullSafeJsonAdapter<>(this);
   }
 
   /**
    * Returns a JSON adapter equal to this JSON adapter, but that refuses null values. If null is
-   * read or written this will throw a {@link JsonDataException}.
+   * read or written this will throw a [JsonDataException].
    *
-   * <p>Note that this adapter will not usually be invoked for absent values and so those must be
+   * Note that this adapter will not usually be invoked for absent values and so those must be
    * handled elsewhere. This should only be used to fail on explicit nulls.
    */
   @CheckReturnValue
-  public final JsonAdapter<T> nonNull() {
-    if (this instanceof NonNullJsonAdapter) {
-      return this;
+  public fun nonNull(): JsonAdapter<T> {
+    return if (this is NonNullJsonAdapter<*>) {
+      this
+    } else {
+      NonNullJsonAdapter(this)
     }
-    return new NonNullJsonAdapter<>(this);
   }
 
   /** Returns a JSON adapter equal to this, but is lenient when reading and writing. */
   @CheckReturnValue
-  public final JsonAdapter<T> lenient() {
-    final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
-      @Override
-      public @Nullable T fromJson(JsonReader reader) throws IOException {
-        boolean lenient = reader.isLenient();
-        reader.setLenient(true);
-        try {
-          return delegate.fromJson(reader);
+  public fun lenient(): JsonAdapter<T> {
+    val delegate: JsonAdapter<T> = this
+    return object : JsonAdapter<T>() {
+      override fun fromJson(reader: JsonReader): T? {
+        val lenient = reader.isLenient
+        reader.isLenient = true
+        return try {
+          delegate.fromJson(reader)
         } finally {
-          reader.setLenient(lenient);
+          reader.isLenient = lenient
         }
       }
 
-      @Override
-      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
-        boolean lenient = writer.isLenient();
-        writer.setLenient(true);
+      override fun toJson(writer: JsonWriter, value: T?) {
+        val lenient = writer.isLenient
+        writer.isLenient = true
         try {
-          delegate.toJson(writer, value);
+          delegate.toJson(writer, value)
         } finally {
-          writer.setLenient(lenient);
+          writer.isLenient = lenient
         }
       }
 
-      @Override
-      boolean isLenient() {
-        return true;
-      }
+      override val isLenient: Boolean
+        get() = true
 
-      @Override
-      public String toString() {
-        return delegate + ".lenient()";
-      }
-    };
+      override fun toString() = "$delegate.lenient()"
+    }
   }
 
   /**
-   * Returns a JSON adapter equal to this, but that throws a {@link JsonDataException} when
-   * {@linkplain JsonReader#setFailOnUnknown(boolean) unknown names and values} are encountered.
+   * Returns a JSON adapter equal to this, but that throws a [JsonDataException] when
+   * [unknown names and values][JsonReader.setFailOnUnknown] are encountered.
    * This constraint applies to both the top-level message handled by this type adapter as well as
    * to nested messages.
    */
   @CheckReturnValue
-  public final JsonAdapter<T> failOnUnknown() {
-    final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
-      @Override
-      public @Nullable T fromJson(JsonReader reader) throws IOException {
-        boolean skipForbidden = reader.failOnUnknown();
-        reader.setFailOnUnknown(true);
-        try {
-          return delegate.fromJson(reader);
+  public fun failOnUnknown(): JsonAdapter<T> {
+    val delegate: JsonAdapter<T> = this
+    return object : JsonAdapter<T>() {
+      override fun fromJson(reader: JsonReader): T? {
+        val skipForbidden = reader.failOnUnknown()
+        reader.setFailOnUnknown(true)
+        return try {
+          delegate.fromJson(reader)
         } finally {
-          reader.setFailOnUnknown(skipForbidden);
+          reader.setFailOnUnknown(skipForbidden)
         }
       }
 
-      @Override
-      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
-        delegate.toJson(writer, value);
+      override fun toJson(writer: JsonWriter, value: T?) {
+        delegate.toJson(writer, value)
       }
 
-      @Override
-      boolean isLenient() {
-        return delegate.isLenient();
-      }
+      override val isLenient: Boolean
+        get() = delegate.isLenient
 
-      @Override
-      public String toString() {
-        return delegate + ".failOnUnknown()";
-      }
-    };
+      override fun toString() = "$delegate.failOnUnknown()"
+    }
   }
 
   /**
-   * Return a JSON adapter equal to this, but using {@code indent} to control how the result is
-   * formatted. The {@code indent} string to be repeated for each level of indentation in the
-   * encoded document. If {@code indent.isEmpty()} the encoded document will be compact. Otherwise
+   * Return a JSON adapter equal to this, but using `indent` to control how the result is
+   * formatted. The `indent` string to be repeated for each level of indentation in the
+   * encoded document. If `indent.isEmpty()` the encoded document will be compact. Otherwise
    * the encoded document will be more human-readable.
    *
    * @param indent a string containing only whitespace.
    */
   @CheckReturnValue
-  public JsonAdapter<T> indent(final String indent) {
-    if (indent == null) {
-      throw new NullPointerException("indent == null");
-    }
-    final JsonAdapter<T> delegate = this;
-    return new JsonAdapter<T>() {
-      @Override
-      public @Nullable T fromJson(JsonReader reader) throws IOException {
-        return delegate.fromJson(reader);
+  public fun indent(indent: String): JsonAdapter<T> {
+    val delegate: JsonAdapter<T> = this
+    return object : JsonAdapter<T>() {
+      override fun fromJson(reader: JsonReader): T? {
+        return delegate.fromJson(reader)
       }
 
-      @Override
-      public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
-        String originalIndent = writer.getIndent();
-        writer.setIndent(indent);
+      override fun toJson(writer: JsonWriter, value: T?) {
+        val originalIndent = writer.getIndent()
+        writer.setIndent(indent)
         try {
-          delegate.toJson(writer, value);
+          delegate.toJson(writer, value)
         } finally {
-          writer.setIndent(originalIndent);
+          writer.setIndent(originalIndent)
         }
       }
 
-      @Override
-      boolean isLenient() {
-        return delegate.isLenient();
-      }
+      override val isLenient: Boolean
+        get() = delegate.isLenient
 
-      @Override
-      public String toString() {
-        return delegate + ".indent(\"" + indent + "\")";
-      }
-    };
+      override fun toString() = "$delegate.indent(\"$indent\")"
+    }
   }
 
-  boolean isLenient() {
-    return false;
-  }
+  public open val isLenient: Boolean
+    get() = false
 
-  public interface Factory {
+  public fun interface Factory {
     /**
-     * Attempts to create an adapter for {@code type} annotated with {@code annotations}. This
+     * Attempts to create an adapter for `type` annotated with `annotations`. This
      * returns the adapter if one was created, or null if this factory isn't capable of creating
      * such an adapter.
      *
-     * <p>Implementations may use {@link Moshi#adapter} to compose adapters of other types, or
-     * {@link Moshi#nextAdapter} to delegate to the underlying adapter of the same type.
+     * Implementations may use [Moshi.adapter] to compose adapters of other types, or
+     * [Moshi.nextAdapter] to delegate to the underlying adapter of the same type.
      */
     @CheckReturnValue
-    @Nullable
-    JsonAdapter<?> create(Type type, Set<? extends Annotation> annotations, Moshi moshi);
+    public fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>?
   }
 }
