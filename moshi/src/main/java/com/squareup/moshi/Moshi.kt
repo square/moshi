@@ -16,6 +16,8 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.Types.createJsonQualifierImplementation
+import com.squareup.moshi.internal.NonNullJsonAdapter
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.Util
 import com.squareup.moshi.internal.Util.canonicalize
 import com.squareup.moshi.internal.Util.isAnnotationPresent
@@ -24,6 +26,9 @@ import com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations
 import com.squareup.moshi.internal.Util.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
+import kotlin.reflect.KType
+import kotlin.reflect.javaType
+import kotlin.reflect.typeOf
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -115,6 +120,30 @@ public class Moshi internal constructor(builder: Builder) {
     }
   }
 
+  /**
+   * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
+   *         itself is handled, nested types (such as in generics) are not resolved.
+   */
+  @ExperimentalStdlibApi
+  public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
+
+  /**
+   * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
+   *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
+   */
+  @ExperimentalStdlibApi
+  public fun <T> adapter(ktype: KType): JsonAdapter<T> {
+    val adapter = adapter<T>(ktype.javaType)
+    return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
+      // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
+      adapter
+    } else if (ktype.isMarkedNullable) {
+      adapter.nullSafe()
+    } else {
+      adapter.nonNull()
+    }
+  }
+
   @CheckReturnValue
   public fun <T> nextAdapter(
     skipPast: JsonAdapter.Factory,
@@ -203,6 +232,9 @@ public class Moshi internal constructor(builder: Builder) {
     public fun addLast(adapter: Any): Builder = apply {
       addLast(AdapterMethodsFactory.get(adapter))
     }
+
+    @ExperimentalStdlibApi
+    public inline fun <reified T> add(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
 
     @CheckReturnValue
     public fun build(): Moshi = Moshi(this)

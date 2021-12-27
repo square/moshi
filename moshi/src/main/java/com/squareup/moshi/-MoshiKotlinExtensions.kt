@@ -21,22 +21,23 @@ import kotlin.reflect.KType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
-/**
- * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
- *         itself is handled, nested types (such as in generics) are not resolved.
- */
+@Deprecated("Use the function directly on the Moshi instance", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
-public inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
+@JvmName("adapter")
+public inline fun <reified T> Moshi.deprecatedAdapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
+@Deprecated(
+  "Use the function directly on the Builder instance",
+  ReplaceWith("add<T>(adapter)"),
+  level = DeprecationLevel.ERROR
+)
 @ExperimentalStdlibApi
 public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().javaType, adapter)
 
-/**
- * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
- *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
- */
+@Deprecated("Use the function directly on the Moshi instance", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
-public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
+@JvmName("adapter")
+public fun <T> Moshi.deprecatedAdapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.javaType)
   return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
     // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?

@@ -26,7 +26,6 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.adapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackage
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackageJsonAdapter

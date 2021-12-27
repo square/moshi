@@ -71,7 +71,7 @@ class KotlinExtensionsTest {
       }
     }
     val moshi = Moshi.Builder()
-      .addAdapter(customIntdapter)
+      .add(customIntdapter)
       .build()
 
     assertEquals(-1, moshi.adapter<Int>().fromJson("5"))
@@ -91,7 +91,7 @@ class KotlinExtensionsTest {
       }
     }
     val moshi = Moshi.Builder()
-      .addAdapter(customIntListAdapter)
+      .add(customIntListAdapter)
       .build()
 
     assertEquals(listOf(-1), moshi.adapter<List<Int>>().fromJson("[5]"))
