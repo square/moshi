@@ -26,6 +26,7 @@ import com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations
 import com.squareup.moshi.internal.Util.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
@@ -124,6 +125,7 @@ public class Moshi internal constructor(builder: Builder) {
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
+  @CheckReturnValue
   @ExperimentalStdlibApi
   public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
@@ -131,6 +133,7 @@ public class Moshi internal constructor(builder: Builder) {
    * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
+  @CheckReturnValue
   @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType)
@@ -143,6 +146,9 @@ public class Moshi internal constructor(builder: Builder) {
       adapter.nonNull()
     }
   }
+
+  @CheckReturnValue
+  public fun <T : Any> adapter(kClass: KClass<T>): JsonAdapter<T> = adapter(kClass.java)
 
   @CheckReturnValue
   public fun <T> nextAdapter(
