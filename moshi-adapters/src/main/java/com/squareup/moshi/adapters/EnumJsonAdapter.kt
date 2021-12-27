@@ -44,7 +44,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
 ) : JsonAdapter<T>() {
 
   private val constants: Array<T>
-  private var options: Options
+  private val options: Options
   private val nameStrings: Array<String>
 
   init {
@@ -56,7 +56,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
       }
       options = Options.of(*nameStrings)
     } catch (e: NoSuchFieldException) {
-      throw AssertionError("Missing field in " + enumType.name, e)
+      throw AssertionError("Missing field in ${enumType.name}", e)
     }
   }
 
@@ -100,7 +100,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
     writer.value(nameStrings[value.ordinal])
   }
 
-  override fun toString(): String = "EnumJsonAdapter(" + enumType.name + ")"
+  override fun toString(): String = "EnumJsonAdapter(${enumType.name})"
 
   public companion object {
     @JvmStatic
