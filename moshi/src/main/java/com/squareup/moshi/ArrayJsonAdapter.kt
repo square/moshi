@@ -27,10 +27,11 @@ internal class ArrayJsonAdapter(
   private val elementAdapter: JsonAdapter<Any>
 ) : JsonAdapter<Any?>() {
   override fun fromJson(reader: JsonReader): Any {
-    val list = mutableListOf<Any?>()
     reader.beginArray()
-    while (reader.hasNext()) {
-      list.add(elementAdapter.fromJson(reader))
+    val list = buildList<Any?> {
+      while (reader.hasNext()) {
+        add(elementAdapter.fromJson(reader))
+      }
     }
     reader.endArray()
     val array = Array.newInstance(elementClass, list.size)
