@@ -42,7 +42,6 @@ internal class ArrayJsonAdapter(
 
   override fun toJson(writer: JsonWriter, value: Any?) {
     writer.beginArray()
-    @Suppress("UNCHECKED_CAST")
     when (value) {
       is BooleanArray -> {
         val size = value.size
