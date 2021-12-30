@@ -189,7 +189,7 @@ final class JsonValueWriter extends JsonWriter {
 
   @Override
   public JsonWriter value(double value) throws IOException {
-    if (!lenient
+    if (!isLenient()
         && (Double.isNaN(value) || value == NEGATIVE_INFINITY || value == POSITIVE_INFINITY)) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
@@ -266,12 +266,12 @@ final class JsonValueWriter extends JsonWriter {
             stackSize--; // Remove STREAMING_VALUE from the stack.
 
             Object value = JsonReader.of(buffer).readJsonValue();
-            boolean serializeNulls = JsonValueWriter.this.serializeNulls;
-            JsonValueWriter.this.serializeNulls = true;
+            boolean serializeNulls = JsonValueWriter.this.getSerializeNulls();
+            JsonValueWriter.this.setSerializeNulls(true);
             try {
               add(value);
             } finally {
-              JsonValueWriter.this.serializeNulls = serializeNulls;
+              JsonValueWriter.this.setSerializeNulls(serializeNulls);
             }
             pathIndices[stackSize - 1]++;
           }
@@ -305,7 +305,7 @@ final class JsonValueWriter extends JsonWriter {
       stack[stackSize - 1] = newTop;
 
     } else if (scope == EMPTY_OBJECT && deferredName != null) {
-      if (newTop != null || serializeNulls) {
+      if (newTop != null || getSerializeNulls()) {
         @SuppressWarnings("unchecked") // Our maps always have string keys and object values.
         Map<String, Object> map = (Map<String, Object>) stack[stackSize - 1];
         Object replaced = map.put(deferredName, newTop);

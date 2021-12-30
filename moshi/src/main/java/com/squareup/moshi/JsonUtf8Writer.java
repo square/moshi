@@ -204,7 +204,7 @@ final class JsonUtf8Writer extends JsonWriter {
           "null cannot be used as a map key in JSON at path " + getPath());
     }
     if (deferredName != null) {
-      if (serializeNulls) {
+      if (getSerializeNulls()) {
         writeDeferredName();
       } else {
         deferredName = null;
@@ -240,7 +240,7 @@ final class JsonUtf8Writer extends JsonWriter {
 
   @Override
   public JsonWriter value(double value) throws IOException {
-    if (!lenient && (Double.isNaN(value) || Double.isInfinite(value))) {
+    if (!isLenient() && (Double.isNaN(value) || Double.isInfinite(value))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
     if (promoteValueToName) {
@@ -274,7 +274,7 @@ final class JsonUtf8Writer extends JsonWriter {
     }
 
     String string = value.toString();
-    if (!lenient
+    if (!isLenient()
         && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
       throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
     }
@@ -424,7 +424,7 @@ final class JsonUtf8Writer extends JsonWriter {
     int nextTop;
     switch (peekScope()) {
       case NONEMPTY_DOCUMENT:
-        if (!lenient) {
+        if (!isLenient()) {
           throw new IllegalStateException("JSON must have only one top-level value.");
         }
         // fall-through
