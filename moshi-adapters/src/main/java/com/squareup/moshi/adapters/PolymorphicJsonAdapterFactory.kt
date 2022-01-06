@@ -171,9 +171,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     if (type.rawType != baseType || annotations.isNotEmpty()) {
       return null
     }
-    val jsonAdapters: List<JsonAdapter<Any>> = List(subtypes.size) { i ->
-      moshi.adapter(subtypes[i])
-    }
+    val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
     return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
       .nullSafe()
   }
