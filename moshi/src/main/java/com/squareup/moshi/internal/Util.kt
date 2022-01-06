@@ -402,12 +402,7 @@ public fun Moshi.generatedAdapter(
   } catch (e: NoSuchMethodException) {
     if (possiblyFoundAdapter != null && type !is ParameterizedType && possiblyFoundAdapter.typeParameters.isNotEmpty()) {
       throw RuntimeException(
-        "Failed to find the generated JsonAdapter constructor for '" +
-          type +
-          "'. Suspiciously, the type was not parameterized but the target class '" +
-          possiblyFoundAdapter.canonicalName +
-          "' is generic. Consider using " +
-          "Types#newParameterizedType() to define these missing type variables.",
+        "Failed to find the generated JsonAdapter constructor for '$type'. Suspiciously, the type was not parameterized but the target class '${possiblyFoundAdapter.canonicalName}' is generic. Consider using Types#newParameterizedType() to define these missing type variables.",
         e
       )
     } else {
