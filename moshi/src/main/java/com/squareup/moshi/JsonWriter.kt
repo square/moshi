@@ -248,7 +248,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    */
   @CheckReturnValue
   public fun getIndent(): String {
-    return if (indent != null) indent!! else ""
+    return indent.orEmpty()
   }
 
   /**
@@ -257,7 +257,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun beginArray(): JsonWriter?
+  public abstract fun beginArray(): JsonWriter
 
   /**
    * Ends encoding the current array.
@@ -265,7 +265,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun endArray(): JsonWriter?
+  public abstract fun endArray(): JsonWriter
 
   /**
    * Begins encoding a new object. Each call to this method must be paired with a call to [endObject].
@@ -273,7 +273,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun beginObject(): JsonWriter?
+  public abstract fun beginObject(): JsonWriter
 
   /**
    * Ends encoding the current object.
@@ -281,7 +281,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun endObject(): JsonWriter?
+  public abstract fun endObject(): JsonWriter
 
   /**
    * Encodes the property name.
@@ -290,7 +290,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun name(name: String?): JsonWriter?
+  public abstract fun name(name: String?): JsonWriter
 
   /**
    * Encodes `value`.
@@ -299,7 +299,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun value(value: String?): JsonWriter?
+  public abstract fun value(value: String?): JsonWriter
 
   /**
    * Encodes `null`.
@@ -307,7 +307,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun nullValue(): JsonWriter?
+  public abstract fun nullValue(): JsonWriter
 
   /**
    * Encodes `value`.
@@ -315,7 +315,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun value(value: Boolean): JsonWriter?
+  public abstract fun value(value: Boolean): JsonWriter
 
   /**
    * Encodes `value`.
@@ -323,24 +323,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun value(value: Boolean?): JsonWriter?
-
-  /**
-   * Encodes `value`.
-   *
-   * @param value a finite value. May not be [NaNs][Double.isNaN] or [infinities][Double.isInfinite].
-   * @return this writer.
-   */
-  @Throws(IOException::class)
-  public abstract fun value(value: Double): JsonWriter?
-
-  /**
-   * Encodes `value`.
-   *
-   * @return this writer.
-   */
-  @Throws(IOException::class)
-  public abstract fun value(value: Long): JsonWriter?
+  public abstract fun value(value: Boolean?): JsonWriter
 
   /**
    * Encodes `value`.
@@ -349,7 +332,24 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun value(value: Number?): JsonWriter?
+  public abstract fun value(value: Double): JsonWriter
+
+  /**
+   * Encodes `value`.
+   *
+   * @return this writer.
+   */
+  @Throws(IOException::class)
+  public abstract fun value(value: Long): JsonWriter
+
+  /**
+   * Encodes `value`.
+   *
+   * @param value a finite value. May not be [NaNs][Double.isNaN] or [infinities][Double.isInfinite].
+   * @return this writer.
+   */
+  @Throws(IOException::class)
+  public abstract fun value(value: Number?): JsonWriter
 
   /**
    * Writes `source` directly without encoding its contents. Equivalent to
