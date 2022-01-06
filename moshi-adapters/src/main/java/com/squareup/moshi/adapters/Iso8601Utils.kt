@@ -164,10 +164,7 @@ internal fun String.parseIsoDate(): Date {
           val cleaned = act.replace(":", "")
           if (cleaned != timezoneId) {
             throw IndexOutOfBoundsException(
-              "Mismatching time zone indicator: " +
-                timezoneId +
-                " given, resolves to " +
-                timezone.id
+              "Mismatching time zone indicator: $timezoneId given, resolves to ${timezone.id}"
             )
           }
         }
