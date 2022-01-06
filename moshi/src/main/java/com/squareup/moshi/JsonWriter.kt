@@ -40,7 +40,6 @@ import kotlin.Throws
  * top-level array or object. Call methods on the writer as you walk the structure's contents,
  * nesting arrays and objects as necessary:
  *
- *
  *  * To write **arrays**, first call [beginArray]. Write each of the
  * array's elements with the appropriate [value] methods or by nesting other arrays and
  * objects. Finally close the array using [endArray].
@@ -161,10 +160,9 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * JSON as specified by [RFC 7159](http://www.ietf.org/rfc/rfc7159.txt). Setting the
    * writer to lenient permits the following:
    *
-   *
-   *  * Top-level values of any type. With strict writing, the top-level value must be an object
+   * - Top-level values of any type. With strict writing, the top-level value must be an object
    * or an array.
-   *  * Numbers may be [NaNs][Double.isNaN] or [infinities][Double.isInfinite].
+   * - Numbers may be [NaNs][Double.isNaN] or [infinities][Double.isInfinite].
    *
    *  Returns true if this writer has relaxed syntax rules.
    */
@@ -187,14 +185,12 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   /**
    * Controls the deepest stack size that has begin/end pairs flattened:
    *
-   *  - If -1, no begin/end pairs are being suppressed.
-   *  - If positive, this is the deepest stack size whose begin/end pairs are eligible to be flattened.
-   *  - If negative, it is the bitwise inverse (~) of the deepest stack size whose begin/end pairs have been flattened.
-   *
+   * - If -1, no begin/end pairs are being suppressed.
+   * - If positive, this is the deepest stack size whose begin/end pairs are eligible to be flattened.
+   * - If negative, it is the bitwise inverse (~) of the deepest stack size whose begin/end pairs have been flattened.
    *
    * We differentiate between what layer would be flattened (positive) from what layer is being
    * flattened (negative) so that we don't double-flatten.
-   *
    *
    * To accommodate nested flattening we require callers to track the previous state when they
    * provide a new state. The previous state is returned from [beginFlatten] and restored
@@ -376,7 +372,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * Returns a [BufferedSink] into which arbitrary data can be written without any additional
    * encoding. You **must** call [BufferedSink.close] before interacting with this `JsonWriter` instance again.
    *
-   *
    * Since no validation is performed, options like [serializeNulls] and other writer
    * configurations are not respected.
    */
@@ -429,7 +424,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * Changes the writer to treat the next value as a string name. This is useful for map adapters so
    * that arbitrary type adapters can use [value] to write a name value.
    *
-   *
    * In this example, calling this method allows two sequential calls to [value]
    * to produce the object, `{"a": "b"}`.
    *
@@ -456,7 +450,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * matching calls to [endArray] or [endObject]. Use this to compose JSON adapters
    * without nesting.
    *
-   *
    * For example, the following creates JSON with nested arrays: `[1,[2,3,4],5]`.
    *
    * ```java
@@ -469,7 +462,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    *   writer.endArray();
    * }
    * ```
-   *
    *
    * With flattening we can create JSON with a single array `[1,2,3,4,5]`:
    *
@@ -487,7 +479,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * }
    * ```
    *
-   *
    * This method flattens arrays within arrays:
    *
    * Emit:       `[1, [2, 3, 4], 5]`
@@ -499,13 +490,11 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * Emit:       `{"a": 1, {"b": 2}, "c": 3}`
    * To Produce: `{"a": 1, "b": 2, "c": 3}`
    *
-   *
    * Other combinations are permitted but do not perform flattening. For example, objects inside of
    * arrays are not flattened:
    *
    * Emit:      ` [1, {"b": 2}, 3, [4, 5], 6]`
    * To Produce: `[1, {"b": 2}, 3, 4, 5, 6]`
-   *
    *
    * This method returns an opaque token. Callers must match all calls to this method with a call
    * to [endFlatten] with the matching token.
