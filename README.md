@@ -385,7 +385,7 @@ Moshi moshi = new Moshi.Builder()
 ```kotlin
 val moshi = Moshi.Builder()
     .add(EventJsonAdapter())
-    .builder
+    .build()
 ```
 </details>
 
