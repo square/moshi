@@ -21,7 +21,7 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonReader.Token.STRING
 import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.internal.Util.jsonName
+import com.squareup.moshi.internal.jsonName
 import java.io.IOException
 import java.lang.NoSuchFieldException
 
@@ -52,7 +52,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
       constants = enumType.enumConstants
       nameStrings = Array(constants.size) { i ->
         val constantName = constants[i].name
-        jsonName(constantName, enumType.getField(constantName))
+        enumType.getField(constantName).jsonName(constantName)
       }
       options = Options.of(*nameStrings)
     } catch (e: NoSuchFieldException) {

@@ -819,7 +819,7 @@ public final class MoshiTest {
     Moshi moshi = new Moshi.Builder().add(new UppercaseAdapterFactory()).build();
 
     Field uppercaseString = MoshiTest.class.getDeclaredField("uppercaseString");
-    Set<? extends Annotation> annotations = Util.jsonAnnotations(uppercaseString);
+    Set<? extends Annotation> annotations = Util.getJsonAnnotations(uppercaseString);
     JsonAdapter<String> adapter = moshi.<String>adapter(String.class, annotations).lenient();
     assertThat(adapter.toJson("a")).isEqualTo("\"A\"");
     assertThat(adapter.fromJson("\"b\"")).isEqualTo("B");
@@ -869,7 +869,7 @@ public final class MoshiTest {
     Field uppercaseStringsField = MoshiTest.class.getDeclaredField("uppercaseStrings");
     try {
       moshi.adapter(
-          uppercaseStringsField.getGenericType(), Util.jsonAnnotations(uppercaseStringsField));
+          uppercaseStringsField.getGenericType(), Util.getJsonAnnotations(uppercaseStringsField));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -886,7 +886,7 @@ public final class MoshiTest {
     Field uppercaseStringField = MoshiTest.class.getDeclaredField("uppercaseString");
     try {
       moshi.adapter(
-          uppercaseStringField.getGenericType(), Util.jsonAnnotations(uppercaseStringField));
+          uppercaseStringField.getGenericType(), Util.getJsonAnnotations(uppercaseStringField));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)

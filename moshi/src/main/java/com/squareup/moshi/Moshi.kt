@@ -16,12 +16,12 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.Types.createJsonQualifierImplementation
-import com.squareup.moshi.internal.Util
-import com.squareup.moshi.internal.Util.canonicalize
-import com.squareup.moshi.internal.Util.isAnnotationPresent
-import com.squareup.moshi.internal.Util.removeSubtypeWildcard
-import com.squareup.moshi.internal.Util.typeAnnotatedWithAnnotations
-import com.squareup.moshi.internal.Util.typesMatch
+import com.squareup.moshi.internal.NO_ANNOTATIONS
+import com.squareup.moshi.internal.canonicalize
+import com.squareup.moshi.internal.isAnnotationPresent
+import com.squareup.moshi.internal.removeSubtypeWildcard
+import com.squareup.moshi.internal.toStringWithAnnotations
+import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 
@@ -42,10 +42,10 @@ public class Moshi internal constructor(builder: Builder) {
 
   /** Returns a JSON adapter for `type`, creating it if necessary. */
   @CheckReturnValue
-  public fun <T> adapter(type: Type): JsonAdapter<T> = adapter(type, Util.NO_ANNOTATIONS)
+  public fun <T> adapter(type: Type): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Class<T>): JsonAdapter<T> = adapter(type, Util.NO_ANNOTATIONS)
+  public fun <T> adapter(type: Class<T>): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
 
   @CheckReturnValue
   public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> =
@@ -78,7 +78,7 @@ public class Moshi internal constructor(builder: Builder) {
     annotations: Set<Annotation>,
     fieldName: String?
   ): JsonAdapter<T> {
-    val cleanedType = removeSubtypeWildcard(canonicalize(type))
+    val cleanedType = type.canonicalize().removeSubtypeWildcard()
 
     // If there's an equivalent adapter in the cache, we're done!
     val cacheKey = cacheKey(cleanedType, annotations)
@@ -107,7 +107,7 @@ public class Moshi internal constructor(builder: Builder) {
         success = true
         return result
       }
-      throw IllegalArgumentException("No JsonAdapter for ${typeAnnotatedWithAnnotations(type, annotations)}")
+      throw IllegalArgumentException("No JsonAdapter for ${type.toStringWithAnnotations(annotations)}")
     } catch (e: IllegalArgumentException) {
       throw lookupChain.exceptionWithLookupStack(e)
     } finally {
@@ -121,7 +121,7 @@ public class Moshi internal constructor(builder: Builder) {
     type: Type,
     annotations: Set<Annotation>
   ): JsonAdapter<T> {
-    val cleanedType = removeSubtypeWildcard(canonicalize(type))
+    val cleanedType = type.canonicalize().removeSubtypeWildcard()
     val skipPastIndex = factories.indexOf(skipPast)
     require(skipPastIndex != -1) { "Unable to skip past unknown factory $skipPast" }
     for (i in (skipPastIndex + 1) until factories.size) {
@@ -129,7 +129,7 @@ public class Moshi internal constructor(builder: Builder) {
       val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>?
       if (result != null) return result
     }
-    throw IllegalArgumentException("No next JsonAdapter for ${typeAnnotatedWithAnnotations(cleanedType, annotations)}")
+    throw IllegalArgumentException("No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}")
   }
 
   /** Returns a new builder containing all custom factories used by the current instance. */
@@ -354,7 +354,7 @@ public class Moshi internal constructor(builder: Builder) {
       require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
       require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (typesMatch(type, targetType) && annotations.size == 1 && isAnnotationPresent(annotations, annotation)) {
+        if (typesMatch(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
           jsonAdapter
         } else {
           null
