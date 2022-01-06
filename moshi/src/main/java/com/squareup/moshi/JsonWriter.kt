@@ -397,7 +397,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
             else
               "Map keys must be of type String: ${key.javaClass.name}"
           }
-          name(key as String?)
+          name(key)
           jsonValue(value1)
         }
         endObject()
@@ -440,7 +440,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   public fun promoteValueToName() {
     val context = peekScope()
     if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
-      throw  IllegalStateException("Nesting problem.")
+      throw IllegalStateException("Nesting problem.")
     }
     promoteValueToName = true
   }
@@ -550,6 +550,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     /** Returns a new instance that writes UTF-8 encoded JSON to `sink`.  */
     @JvmStatic
     @CheckReturnValue
-    public fun of(sink: BufferedSink?): JsonWriter = JsonUtf8Writer(sink)
+    public fun of(sink: BufferedSink): JsonWriter = JsonUtf8Writer(sink)
   }
 }
