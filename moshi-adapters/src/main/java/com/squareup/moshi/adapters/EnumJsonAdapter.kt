@@ -78,7 +78,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
     if (!useFallbackValue) {
       val name = reader.nextString()
       throw JsonDataException(
-        "Expected one of ${nameStrings.toList()} but was $name at path $path"
+        "Expected one of $nameStrings but was $name at path $path"
       )
     }
     if (reader.peek() != STRING) {
