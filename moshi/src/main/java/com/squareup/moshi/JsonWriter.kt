@@ -15,6 +15,10 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.JsonScope.EMPTY_ARRAY
+import com.squareup.moshi.JsonScope.EMPTY_OBJECT
+import com.squareup.moshi.JsonScope.NONEMPTY_ARRAY
+import com.squareup.moshi.JsonScope.NONEMPTY_OBJECT
 import okio.BufferedSink
 import okio.BufferedSource
 import java.io.Closeable
@@ -436,7 +440,9 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @Throws(IOException::class)
   public fun promoteValueToName() {
     val context = peekScope()
-    check(!(context != JsonScope.NONEMPTY_OBJECT && context != JsonScope.EMPTY_OBJECT)) { "Nesting problem." }
+    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
+      throw  IllegalStateException("Nesting problem.")
+    }
     promoteValueToName = true
   }
 
@@ -502,7 +508,14 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @CheckReturnValue
   public fun beginFlatten(): Int {
     val context = peekScope()
-    check(!(context != JsonScope.NONEMPTY_OBJECT && context != JsonScope.EMPTY_OBJECT && context != JsonScope.NONEMPTY_ARRAY && context != JsonScope.EMPTY_ARRAY)) { "Nesting problem." }
+    if (
+      context != NONEMPTY_OBJECT &&
+      context != EMPTY_OBJECT &&
+      context != NONEMPTY_ARRAY &&
+      context != EMPTY_ARRAY
+    ) {
+      throw IllegalStateException("Nesting problem.")
+    }
     val token = flattenStackSize
     flattenStackSize = stackSize
     return token
