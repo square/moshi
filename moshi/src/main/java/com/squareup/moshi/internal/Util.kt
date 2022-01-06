@@ -244,9 +244,7 @@ private fun Type.resolve(
         }
         var changed = newOwnerType !== ownerType
         var args = original.actualTypeArguments
-        var t = 0
-        val length = args.size
-        while (t < length) {
+        for (t in args.indices) {
           val resolvedTypeArgument = args[t].resolve(context, contextRawType, visitedTypeVariables)
           if (resolvedTypeArgument !== args[t]) {
             if (!changed) {
@@ -255,7 +253,6 @@ private fun Type.resolve(
             }
             args[t] = resolvedTypeArgument
           }
-          t++
         }
         return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, *args) else original
       }
