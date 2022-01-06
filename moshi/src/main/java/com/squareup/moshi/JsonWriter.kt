@@ -536,8 +536,8 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   }
 
   /** Assigns the tag value using the given class key and value.  */
-  public fun <T> setTag(clazz: Class<T>, value: T) {
-    require(clazz.isAssignableFrom(value!!::class.java)) {
+  public fun <T : Any> setTag(clazz: Class<T>, value: T) {
+    require(clazz.isAssignableFrom(value::class.java)) {
       "Tag value must be of type ${clazz.name}"
     }
     if (tags == null) {
