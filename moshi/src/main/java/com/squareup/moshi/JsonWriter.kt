@@ -45,7 +45,6 @@ import kotlin.Throws
  * property values with the appropriate [value] method or by nesting other objects or
  * arrays. Finally close the object using [endObject].
  *
- *
  * ## Example
  *
  * Suppose we'd like to encode a stream of messages such as the following:
@@ -124,7 +123,6 @@ import kotlin.Throws
  *   writer.endArray();
  * }
  * ```
- *
  *
  * Each `JsonWriter` may be used to write a single JSON stream. Instances of this class are
  * not thread safe. Calls that would result in a malformed JSON string will fail with an [IllegalStateException].
