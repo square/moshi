@@ -22,9 +22,12 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.squareup.moshi.internal.Util
-import com.squareup.moshi.internal.Util.generatedAdapter
-import com.squareup.moshi.internal.Util.resolve
+import com.squareup.moshi.internal.generatedAdapter
+import com.squareup.moshi.internal.isPlatformType
+import com.squareup.moshi.internal.jsonAnnotations
+import com.squareup.moshi.internal.missingProperty
+import com.squareup.moshi.internal.resolve
+import com.squareup.moshi.internal.unexpectedNull
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
@@ -86,7 +89,7 @@ internal class KotlinJsonAdapter<T>(
       values[propertyIndex] = binding.adapter.fromJson(reader)
 
       if (values[propertyIndex] == null && !binding.property.returnType.isMarkedNullable) {
-        throw Util.unexpectedNull(
+        throw unexpectedNull(
           binding.property.name,
           binding.jsonName,
           reader
@@ -102,7 +105,7 @@ internal class KotlinJsonAdapter<T>(
         when {
           constructor.parameters[i].isOptional -> isFullInitialized = false
           constructor.parameters[i].type.isMarkedNullable -> values[i] = null // Replace absent with null.
-          else -> throw Util.missingProperty(
+          else -> throw missingProperty(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,
             reader
@@ -195,9 +198,9 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (rawType.isInterface) return null
     if (rawType.isEnum) return null
     if (!rawType.isAnnotationPresent(KOTLIN_METADATA)) return null
-    if (Util.isPlatformType(rawType)) return null
+    if (rawType.isPlatformType) return null
     try {
-      val generatedAdapter = generatedAdapter(moshi, type, rawType)
+      val generatedAdapter = moshi.generatedAdapter(type, rawType)
       if (generatedAdapter != null) {
         return generatedAdapter
       }
@@ -288,10 +291,10 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         }
         else -> error("Not possible!")
       }
-      val resolvedPropertyType = resolve(type, rawType, propertyType)
+      val resolvedPropertyType = propertyType.resolve(type, rawType)
       val adapter = moshi.adapter<Any?>(
         resolvedPropertyType,
-        Util.jsonAnnotations(allAnnotations.toTypedArray()),
+        allAnnotations.toTypedArray().jsonAnnotations,
         property.name
       )
 
