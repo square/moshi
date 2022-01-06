@@ -137,7 +137,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * prone to trigger StackOverflowErrors.
    */
   @JvmField
-  public var stackSize: Int = 0
+  protected var stackSize: Int = 0
 
   @JvmField
   public var scopes: IntArray = IntArray(32)
