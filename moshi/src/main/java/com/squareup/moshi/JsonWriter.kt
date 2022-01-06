@@ -396,7 +396,12 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
       is Map<*, *> -> {
         beginObject()
         for ((key, value1) in value) {
-          require(key is String) { if (key == null) "Map keys must be non-null" else "Map keys must be of type String: " + key.javaClass.name }
+          require(key is String) {
+            if (key == null)
+              "Map keys must be non-null"
+            else
+              "Map keys must be of type String: ${key.javaClass.name}"
+          }
           name(key as String?)
           jsonValue(value1)
         }
@@ -415,7 +420,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
       is Long -> value(value)
       is Number -> value(value)
       null -> nullValue()
-      else -> throw IllegalArgumentException("Unsupported type: " + value.javaClass.name)
+      else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass.name}")
     }
     return this
   }
@@ -543,7 +548,9 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
 
   /** Assigns the tag value using the given class key and value.  */
   public fun <T> setTag(clazz: Class<T>, value: T) {
-    require(clazz.isAssignableFrom(value!!::class.java)) { "Tag value must be of type " + clazz.name }
+    require(clazz.isAssignableFrom(value!!::class.java)) {
+      "Tag value must be of type ${clazz.name}"
+    }
     if (tags == null) {
       tags = LinkedHashMap()
     }
