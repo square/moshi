@@ -13,7 +13,6 @@ dependencies {
   compileOnly(libs.jsr305)
   api(project(":moshi"))
 
-  testCompileOnly(libs.jsr305)
   testImplementation(libs.junit)
   testImplementation(libs.truth)
 }
