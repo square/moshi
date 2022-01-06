@@ -211,13 +211,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         val labelIndex = reader.selectString(labelOptions)
         if (labelIndex == -1 && fallbackJsonAdapter == null) {
           throw JsonDataException(
-            "Expected one of " +
-              labels +
-              " for key '" +
-              labelKey +
-              "' but found '" +
-              reader.nextString() +
-              "'. Register a subtype for this label."
+            "Expected one of $labels for key '$labelKey' but found '${reader.nextString()}'. Register a subtype for this label."
           )
         }
         return labelIndex
