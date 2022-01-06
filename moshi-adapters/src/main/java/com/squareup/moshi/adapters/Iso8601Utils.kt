@@ -104,8 +104,7 @@ internal fun String.parseIsoDate(): Date {
     // if the value has no time component (and no time zone), we are done
     val hasT = checkOffset(this, offset, 'T')
     if (!hasT && this.length <= offset) {
-      val calendar: Calendar = GregorianCalendar(year, month - 1, day)
-      return calendar.time
+      return GregorianCalendar(year, month - 1, day).time
     }
     if (hasT) {
 
