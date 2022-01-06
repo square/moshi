@@ -52,7 +52,7 @@ tasks.withType<Test>().configureEach {
 tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
-      val toAdd = mutableListOf("-Xopt-in=kotlin.RequiresOptIn")
+      val toAdd = mutableListOf("-Xopt-in=kotlin.RequiresOptIn", "-Xopt-in=kotlin.contracts.ExperimentalContracts")
       if (name.contains("test", true)) {
         toAdd += "-Xopt-in=kotlin.ExperimentalStdlibApi"
       }
