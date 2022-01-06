@@ -303,15 +303,12 @@ public fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolv
   // we skip searching through interfaces if unknown is an interface
   if (toResolve.isInterface) {
     val interfaces = rawType.interfaces
-    var i = 0
-    val length = interfaces.size
-    while (i < length) {
+    for (i in interfaces.indices) {
       if (interfaces[i] == toResolve) {
         return rawType.genericInterfaces[i]
       } else if (toResolve.isAssignableFrom(interfaces[i])) {
         return getGenericSupertype(rawType.genericInterfaces[i], interfaces[i], toResolve)
       }
-      i++
     }
   }
 
