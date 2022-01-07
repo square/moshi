@@ -13,390 +13,280 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import static com.squareup.moshi.JsonScope.DANGLING_NAME;
-import static com.squareup.moshi.JsonScope.EMPTY_ARRAY;
-import static com.squareup.moshi.JsonScope.EMPTY_DOCUMENT;
-import static com.squareup.moshi.JsonScope.EMPTY_OBJECT;
-import static com.squareup.moshi.JsonScope.NONEMPTY_ARRAY;
-import static com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT;
-import static com.squareup.moshi.JsonScope.NONEMPTY_OBJECT;
-import static com.squareup.moshi.JsonScope.STREAMING_VALUE;
+import okio.Buffer
+import okio.BufferedSink
+import okio.Sink
+import okio.Timeout
+import okio.buffer
+import java.io.IOException
+import java.lang.Double
+import kotlin.Array
+import kotlin.AssertionError
+import kotlin.Boolean
+import kotlin.Char
+import kotlin.IllegalStateException
+import kotlin.Int
+import kotlin.Long
+import kotlin.Number
+import kotlin.String
+import kotlin.arrayOfNulls
+import kotlin.check
+import kotlin.code
+import kotlin.require
 
-import java.io.IOException;
-import javax.annotation.Nullable;
-import okio.Buffer;
-import okio.BufferedSink;
-import okio.Okio;
-import okio.Sink;
-import okio.Timeout;
-
-final class JsonUtf8Writer extends JsonWriter {
-
-  /*
-   * From RFC 7159, "All Unicode characters may be placed within the
-   * quotation marks except for the characters that must be escaped:
-   * quotation mark, reverse solidus, and the control characters
-   * (U+0000 through U+001F)."
-   *
-   * We also escape '\u2028' and '\u2029', which JavaScript interprets as
-   * newline characters. This prevents eval() from failing with a syntax
-   * error. http://code.google.com/p/google-gson/issues/detail?id=341
-   */
-  private static final String[] REPLACEMENT_CHARS;
-
-  static {
-    REPLACEMENT_CHARS = new String[128];
-    for (int i = 0; i <= 0x1f; i++) {
-      REPLACEMENT_CHARS[i] = String.format("\\u%04x", i);
-    }
-    REPLACEMENT_CHARS['"'] = "\\\"";
-    REPLACEMENT_CHARS['\\'] = "\\\\";
-    REPLACEMENT_CHARS['\t'] = "\\t";
-    REPLACEMENT_CHARS['\b'] = "\\b";
-    REPLACEMENT_CHARS['\n'] = "\\n";
-    REPLACEMENT_CHARS['\r'] = "\\r";
-    REPLACEMENT_CHARS['\f'] = "\\f";
-  }
-
+internal class JsonUtf8Writer(
   /** The output data, containing at most one top-level array or object. */
-  private final BufferedSink sink;
+  private val sink: BufferedSink
+) : JsonWriter() {
 
   /** The name/value separator; either ":" or ": ". */
-  private String separator = ":";
+  private var separator = ":"
+  private var deferredName: String? = null
 
-  private String deferredName;
-
-  JsonUtf8Writer(BufferedSink sink) {
-    if (sink == null) {
-      throw new NullPointerException("sink == null");
-    }
-    this.sink = sink;
-    pushScope(EMPTY_DOCUMENT);
+  init {
+    pushScope(JsonScope.EMPTY_DOCUMENT)
   }
 
-  @Override
-  public void setIndent(String indent) {
-    super.setIndent(indent);
-    this.separator = !indent.isEmpty() ? ": " : ":";
+  override fun setIndent(indent: String) {
+    super.setIndent(indent)
+    separator = if (indent.isNotEmpty()) ": " else ":"
   }
 
-  @Override
-  public JsonWriter beginArray() throws IOException {
-    if (promoteValueToName) {
-      throw new IllegalStateException(
-          "Array cannot be used as a map key in JSON at path " + getPath());
-    }
-    writeDeferredName();
-    return open(EMPTY_ARRAY, NONEMPTY_ARRAY, '[');
+  override fun beginArray(): JsonWriter {
+    check(!promoteValueToName) { "Array cannot be used as a map key in JSON at path $path" }
+    writeDeferredName()
+    return open(JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY, '[')
   }
 
-  @Override
-  public JsonWriter endArray() throws IOException {
-    return close(EMPTY_ARRAY, NONEMPTY_ARRAY, ']');
+  override fun endArray(): JsonWriter {
+    return close(JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY, ']')
   }
 
-  @Override
-  public JsonWriter beginObject() throws IOException {
-    if (promoteValueToName) {
-      throw new IllegalStateException(
-          "Object cannot be used as a map key in JSON at path " + getPath());
-    }
-    writeDeferredName();
-    return open(EMPTY_OBJECT, NONEMPTY_OBJECT, '{');
+  override fun beginObject(): JsonWriter {
+    check(!promoteValueToName) { "Object cannot be used as a map key in JSON at path $path" }
+    writeDeferredName()
+    return open(JsonScope.EMPTY_OBJECT, JsonScope.NONEMPTY_OBJECT, '{')
   }
 
-  @Override
-  public JsonWriter endObject() throws IOException {
-    promoteValueToName = false;
-    return close(EMPTY_OBJECT, NONEMPTY_OBJECT, '}');
+  override fun endObject(): JsonWriter {
+    promoteValueToName = false
+    return close(JsonScope.EMPTY_OBJECT, JsonScope.NONEMPTY_OBJECT, '}')
   }
 
   /** Enters a new scope by appending any necessary whitespace and the given bracket. */
-  private JsonWriter open(int empty, int nonempty, char openBracket) throws IOException {
-    if (stackSize == flattenStackSize
-        && (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)) {
+  private fun open(empty: Int, nonempty: Int, openBracket: Char): JsonWriter {
+    if (stackSize == flattenStackSize &&
+      (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)
+    ) {
       // Cancel this open. Invert the flatten stack size until this is closed.
-      flattenStackSize = ~flattenStackSize;
-      return this;
+      flattenStackSize = flattenStackSize.inv()
+      return this
     }
-    beforeValue();
-    checkStack();
-    pushScope(empty);
-    pathIndices[stackSize - 1] = 0;
-    sink.writeByte(openBracket);
-    return this;
+    beforeValue()
+    checkStack()
+    pushScope(empty)
+    pathIndices[stackSize - 1] = 0
+    sink.writeByte(openBracket.code)
+    return this
   }
 
   /** Closes the current scope by appending any necessary whitespace and the given bracket. */
-  private JsonWriter close(int empty, int nonempty, char closeBracket) throws IOException {
-    int context = peekScope();
-    if (context != nonempty && context != empty) {
-      throw new IllegalStateException("Nesting problem.");
-    }
-    if (deferredName != null) {
-      throw new IllegalStateException("Dangling name: " + deferredName);
-    }
-    if (stackSize == ~flattenStackSize) {
+  private fun close(empty: Int, nonempty: Int, closeBracket: Char): JsonWriter {
+    val context = peekScope()
+    check(!(context != nonempty && context != empty)) { "Nesting problem." }
+    check(deferredName == null) { "Dangling name: $deferredName" }
+    if (stackSize == flattenStackSize.inv()) {
       // Cancel this close. Restore the flattenStackSize so we're ready to flatten again!
-      flattenStackSize = ~flattenStackSize;
-      return this;
+      flattenStackSize = flattenStackSize.inv()
+      return this
     }
-
-    stackSize--;
-    pathNames[stackSize] = null; // Free the last path name so that it can be garbage collected!
-    pathIndices[stackSize - 1]++;
+    stackSize--
+    pathNames[stackSize] = null // Free the last path name so that it can be garbage collected!
+    pathIndices[stackSize - 1]++
     if (context == nonempty) {
-      newline();
+      newline()
     }
-    sink.writeByte(closeBracket);
-    return this;
+    sink.writeByte(closeBracket.code)
+    return this
   }
 
-  @Override
-  public JsonWriter name(String name) throws IOException {
-    if (name == null) {
-      throw new NullPointerException("name == null");
-    }
-    if (stackSize == 0) {
-      throw new IllegalStateException("JsonWriter is closed.");
-    }
-    int context = peekScope();
-    if ((context != EMPTY_OBJECT && context != NONEMPTY_OBJECT)
-        || deferredName != null
-        || promoteValueToName) {
-      throw new IllegalStateException("Nesting problem.");
-    }
-    deferredName = name;
-    pathNames[stackSize - 1] = name;
-    return this;
+  override fun name(name: String): JsonWriter {
+    check(stackSize != 0) { "JsonWriter is closed." }
+    val context = peekScope()
+    check(
+      !(
+        context != JsonScope.EMPTY_OBJECT && context != JsonScope.NONEMPTY_OBJECT ||
+          deferredName != null || promoteValueToName
+        )
+    ) { "Nesting problem." }
+    deferredName = name
+    pathNames[stackSize - 1] = name
+    return this
   }
 
-  private void writeDeferredName() throws IOException {
+  private fun writeDeferredName() {
     if (deferredName != null) {
-      beforeName();
-      string(sink, deferredName);
-      deferredName = null;
+      beforeName()
+      string(sink, deferredName!!)
+      deferredName = null
     }
   }
 
-  @Override
-  public JsonWriter value(String value) throws IOException {
+  override fun value(value: String?): JsonWriter {
     if (value == null) {
-      return nullValue();
+      return nullValue()
     }
     if (promoteValueToName) {
-      promoteValueToName = false;
-      return name(value);
+      promoteValueToName = false
+      return name(value)
     }
-    writeDeferredName();
-    beforeValue();
-    string(sink, value);
-    pathIndices[stackSize - 1]++;
-    return this;
+    writeDeferredName()
+    beforeValue()
+    string(sink, value)
+    pathIndices[stackSize - 1]++
+    return this
   }
 
-  @Override
-  public JsonWriter nullValue() throws IOException {
-    if (promoteValueToName) {
-      throw new IllegalStateException(
-          "null cannot be used as a map key in JSON at path " + getPath());
-    }
+  override fun nullValue(): JsonWriter {
+    check(!promoteValueToName) { "null cannot be used as a map key in JSON at path $path" }
     if (deferredName != null) {
       if (serializeNulls) {
-        writeDeferredName();
+        writeDeferredName()
       } else {
-        deferredName = null;
-        return this; // skip the name and the value
+        deferredName = null
+        return this // skip the name and the value
       }
     }
-    beforeValue();
-    sink.writeUtf8("null");
-    pathIndices[stackSize - 1]++;
-    return this;
+    beforeValue()
+    sink.writeUtf8("null")
+    pathIndices[stackSize - 1]++
+    return this
   }
 
-  @Override
-  public JsonWriter value(boolean value) throws IOException {
-    if (promoteValueToName) {
-      throw new IllegalStateException(
-          "Boolean cannot be used as a map key in JSON at path " + getPath());
+  override fun value(value: Boolean): JsonWriter {
+    check(!promoteValueToName) { "Boolean cannot be used as a map key in JSON at path $path" }
+    writeDeferredName()
+    beforeValue()
+    sink.writeUtf8(if (value) "true" else "false")
+    pathIndices[stackSize - 1]++
+    return this
+  }
+
+  override fun value(value: Boolean?): JsonWriter {
+    return value?.let(::value) ?: nullValue()
+  }
+
+  override fun value(value: kotlin.Double): JsonWriter {
+    require(!(!lenient && (Double.isNaN(value) || Double.isInfinite(value)))) {
+      "Numeric values must be finite, but was $value"
     }
-    writeDeferredName();
-    beforeValue();
-    sink.writeUtf8(value ? "true" : "false");
-    pathIndices[stackSize - 1]++;
-    return this;
+    if (promoteValueToName) {
+      promoteValueToName = false
+      return name(value.toString())
+    }
+    writeDeferredName()
+    beforeValue()
+    sink.writeUtf8(value.toString())
+    pathIndices[stackSize - 1]++
+    return this
   }
 
-  @Override
-  public JsonWriter value(Boolean value) throws IOException {
+  override fun value(value: Long): JsonWriter {
+    if (promoteValueToName) {
+      promoteValueToName = false
+      return name(value.toString())
+    }
+    writeDeferredName()
+    beforeValue()
+    sink.writeUtf8(value.toString())
+    pathIndices[stackSize - 1]++
+    return this
+  }
+
+  override fun value(value: Number?): JsonWriter {
     if (value == null) {
-      return nullValue();
+      return nullValue()
     }
-    return value(value.booleanValue());
+    val string = value.toString()
+    require(
+      !(
+        !lenient &&
+          (string == "-Infinity" || string == "Infinity" || string == "NaN")
+        )
+    ) { "Numeric values must be finite, but was $value" }
+    if (promoteValueToName) {
+      promoteValueToName = false
+      return name(string)
+    }
+    writeDeferredName()
+    beforeValue()
+    sink.writeUtf8(string)
+    pathIndices[stackSize - 1]++
+    return this
   }
 
-  @Override
-  public JsonWriter value(double value) throws IOException {
-    if (!lenient && (Double.isNaN(value) || Double.isInfinite(value))) {
-      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
-    }
-    if (promoteValueToName) {
-      promoteValueToName = false;
-      return name(Double.toString(value));
-    }
-    writeDeferredName();
-    beforeValue();
-    sink.writeUtf8(Double.toString(value));
-    pathIndices[stackSize - 1]++;
-    return this;
-  }
+  override fun valueSink(): BufferedSink {
+    check(!promoteValueToName) { "BufferedSink cannot be used as a map key in JSON at path $path" }
+    writeDeferredName()
+    beforeValue()
+    pushScope(JsonScope.STREAMING_VALUE)
+    return object : Sink {
+      override fun write(source: Buffer, byteCount: Long) {
+        sink.write(source, byteCount)
+      }
 
-  @Override
-  public JsonWriter value(long value) throws IOException {
-    if (promoteValueToName) {
-      promoteValueToName = false;
-      return name(Long.toString(value));
-    }
-    writeDeferredName();
-    beforeValue();
-    sink.writeUtf8(Long.toString(value));
-    pathIndices[stackSize - 1]++;
-    return this;
-  }
+      override fun close() {
+        if (peekScope() != JsonScope.STREAMING_VALUE) {
+          throw AssertionError()
+        }
+        stackSize-- // Remove STREAMING_VALUE from the stack.
+        pathIndices[stackSize - 1]++
+      }
 
-  @Override
-  public JsonWriter value(@Nullable Number value) throws IOException {
-    if (value == null) {
-      return nullValue();
-    }
+      override fun flush() {
+        sink.flush()
+      }
 
-    String string = value.toString();
-    if (!lenient
-        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
-      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
-    }
-    if (promoteValueToName) {
-      promoteValueToName = false;
-      return name(string);
-    }
-    writeDeferredName();
-    beforeValue();
-    sink.writeUtf8(string);
-    pathIndices[stackSize - 1]++;
-    return this;
-  }
-
-  @Override
-  public BufferedSink valueSink() throws IOException {
-    if (promoteValueToName) {
-      throw new IllegalStateException(
-          "BufferedSink cannot be used as a map key in JSON at path " + getPath());
-    }
-    writeDeferredName();
-    beforeValue();
-    pushScope(STREAMING_VALUE);
-    return Okio.buffer(
-        new Sink() {
-          @Override
-          public void write(Buffer source, long byteCount) throws IOException {
-            sink.write(source, byteCount);
-          }
-
-          @Override
-          public void close() {
-            if (peekScope() != STREAMING_VALUE) {
-              throw new AssertionError();
-            }
-            stackSize--; // Remove STREAMING_VALUE from the stack.
-            pathIndices[stackSize - 1]++;
-          }
-
-          @Override
-          public void flush() throws IOException {
-            sink.flush();
-          }
-
-          @Override
-          public Timeout timeout() {
-            return Timeout.NONE;
-          }
-        });
+      override fun timeout(): Timeout {
+        return Timeout.NONE
+      }
+    }.buffer()
   }
 
   /**
-   * Ensures all buffered data is written to the underlying {@link Sink} and flushes that writer.
+   * Ensures all buffered data is written to the underlying [Sink] and flushes that writer.
    */
-  @Override
-  public void flush() throws IOException {
-    if (stackSize == 0) {
-      throw new IllegalStateException("JsonWriter is closed.");
-    }
-    sink.flush();
+  override fun flush() {
+    check(stackSize != 0) { "JsonWriter is closed." }
+    sink.flush()
   }
 
   /**
-   * Flushes and closes this writer and the underlying {@link Sink}.
+   * Flushes and closes this writer and the underlying [Sink].
    *
    * @throws JsonDataException if the JSON document is incomplete.
    */
-  @Override
-  public void close() throws IOException {
-    sink.close();
-
-    int size = stackSize;
-    if (size > 1 || size == 1 && scopes[size - 1] != NONEMPTY_DOCUMENT) {
-      throw new IOException("Incomplete document");
+  override fun close() {
+    sink.close()
+    val size = stackSize
+    if (size > 1 || size == 1 && scopes[size - 1] != JsonScope.NONEMPTY_DOCUMENT) {
+      throw IOException("Incomplete document")
     }
-    stackSize = 0;
+    stackSize = 0
   }
 
-  /**
-   * Writes {@code value} as a string literal to {@code sink}. This wraps the value in double quotes
-   * and escapes those characters that require it.
-   */
-  static void string(BufferedSink sink, String value) throws IOException {
-    String[] replacements = REPLACEMENT_CHARS;
-    sink.writeByte('"');
-    int last = 0;
-    int length = value.length();
-    for (int i = 0; i < length; i++) {
-      char c = value.charAt(i);
-      String replacement;
-      if (c < 128) {
-        replacement = replacements[c];
-        if (replacement == null) {
-          continue;
-        }
-      } else if (c == '\u2028') {
-        replacement = "\\u2028";
-      } else if (c == '\u2029') {
-        replacement = "\\u2029";
-      } else {
-        continue;
-      }
-      if (last < i) {
-        sink.writeUtf8(value, last, i);
-      }
-      sink.writeUtf8(replacement);
-      last = i + 1;
-    }
-    if (last < length) {
-      sink.writeUtf8(value, last, length);
-    }
-    sink.writeByte('"');
-  }
-
-  private void newline() throws IOException {
+  private fun newline() {
     if (indent == null) {
-      return;
+      return
     }
-
-    sink.writeByte('\n');
-    for (int i = 1, size = stackSize; i < size; i++) {
-      sink.writeUtf8(indent);
+    sink.writeByte('\n'.code)
+    var i = 1
+    val size = stackSize
+    while (i < size) {
+      sink.writeUtf8(indent)
+      i++
     }
   }
 
@@ -404,53 +294,113 @@ final class JsonUtf8Writer extends JsonWriter {
    * Inserts any necessary separators and whitespace before a name. Also adjusts the stack to expect
    * the name's value.
    */
-  private void beforeName() throws IOException {
-    int context = peekScope();
-    if (context == NONEMPTY_OBJECT) { // first in object
-      sink.writeByte(',');
-    } else if (context != EMPTY_OBJECT) { // not in an object!
-      throw new IllegalStateException("Nesting problem.");
+  private fun beforeName() {
+    val context = peekScope()
+    if (context == JsonScope.NONEMPTY_OBJECT) { // first in object
+      sink.writeByte(','.code)
+    } else check(context == JsonScope.EMPTY_OBJECT) { // not in an object!
+      "Nesting problem."
     }
-    newline();
-    replaceTop(DANGLING_NAME);
+    newline()
+    replaceTop(JsonScope.DANGLING_NAME)
   }
 
   /**
    * Inserts any necessary separators and whitespace before a literal value, inline array, or inline
    * object. Also adjusts the stack to expect either a closing bracket or another element.
    */
-  @SuppressWarnings("fallthrough")
-  private void beforeValue() throws IOException {
-    int nextTop;
-    switch (peekScope()) {
-      case NONEMPTY_DOCUMENT:
+  private fun beforeValue() {
+    val nextTop: Int
+    when (peekScope()) {
+      JsonScope.NONEMPTY_DOCUMENT -> {
         if (!lenient) {
-          throw new IllegalStateException("JSON must have only one top-level value.");
+          throw IllegalStateException("JSON must have only one top-level value.")
         }
-        // fall-through
-      case EMPTY_DOCUMENT: // first in document
-        nextTop = NONEMPTY_DOCUMENT;
-        break;
-
-      case NONEMPTY_ARRAY: // another in array
-        sink.writeByte(',');
-        // fall-through
-      case EMPTY_ARRAY: // first in array
-        newline();
-        nextTop = NONEMPTY_ARRAY;
-        break;
-
-      case DANGLING_NAME: // value for name
-        nextTop = NONEMPTY_OBJECT;
-        sink.writeUtf8(separator);
-        break;
-
-      case STREAMING_VALUE:
-        throw new IllegalStateException("Sink from valueSink() was not closed");
-
-      default:
-        throw new IllegalStateException("Nesting problem.");
+        nextTop = JsonScope.NONEMPTY_DOCUMENT
+      }
+      JsonScope.EMPTY_DOCUMENT -> nextTop = JsonScope.NONEMPTY_DOCUMENT
+      JsonScope.NONEMPTY_ARRAY -> {
+        sink.writeByte(','.code)
+        newline()
+        nextTop = JsonScope.NONEMPTY_ARRAY
+      }
+      JsonScope.EMPTY_ARRAY -> {
+        newline()
+        nextTop = JsonScope.NONEMPTY_ARRAY
+      }
+      JsonScope.DANGLING_NAME -> {
+        nextTop = JsonScope.NONEMPTY_OBJECT
+        sink.writeUtf8(separator)
+      }
+      JsonScope.STREAMING_VALUE -> throw IllegalStateException("Sink from valueSink() was not closed")
+      else -> throw IllegalStateException("Nesting problem.")
     }
-    replaceTop(nextTop);
+    replaceTop(nextTop)
+  }
+
+  companion object {
+    /**
+     * From RFC 7159, "All Unicode characters may be placed within the
+     * quotation marks except for the characters that must be escaped:
+     * quotation mark, reverse solidus, and the control characters
+     * (U+0000 through U+001F)."
+     *
+     * We also escape '\u2028' and '\u2029', which JavaScript interprets as
+     * newline characters. This prevents eval() from failing with a syntax
+     * error. http://code.google.com/p/google-gson/issues/detail?id=341
+     */
+    private val REPLACEMENT_CHARS: Array<String?>
+
+    init {
+      REPLACEMENT_CHARS = arrayOfNulls(128)
+      for (i in 0..0x1f) {
+        REPLACEMENT_CHARS[i] = String.format("\\u%04x", i)
+      }
+      REPLACEMENT_CHARS['"'.code] = "\\\""
+      REPLACEMENT_CHARS['\\'.code] = "\\\\"
+      REPLACEMENT_CHARS['\t'.code] = "\\t"
+      REPLACEMENT_CHARS['\b'.code] = "\\b"
+      REPLACEMENT_CHARS['\n'.code] = "\\n"
+      REPLACEMENT_CHARS['\r'.code] = "\\r"
+      // Kotlin does not support '\f' so we have to use unicode escape
+      REPLACEMENT_CHARS['\u000C'.code] = "\\f"
+    }
+
+    /**
+     * Writes `value` as a string literal to `sink`. This wraps the value in double quotes
+     * and escapes those characters that require it.
+     */
+    @JvmStatic
+    fun string(sink: BufferedSink, value: String) {
+      val replacements = REPLACEMENT_CHARS
+      sink.writeByte('"'.code)
+      var last = 0
+      val length = value.length
+      for (i in 0 until length) {
+        val c = value[i]
+        var replacement: String?
+        if (c.code < 128) {
+          replacement = replacements[c.code]
+          if (replacement == null) {
+            continue
+          }
+        } else if (c == '\u2028') {
+          replacement = "\\u2028"
+        } else if (c == '\u2029') {
+          replacement = "\\u2029"
+        } else {
+          continue
+        }
+        if (last < i) {
+          sink.writeUtf8(value, last, i)
+        }
+        sink.writeUtf8(replacement)
+        last = i + 1
+      }
+      if (last < length) {
+        sink.writeUtf8(value, last, length)
+      }
+      sink.writeByte('"'.code)
+    }
   }
 }
