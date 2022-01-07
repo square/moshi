@@ -52,14 +52,15 @@ internal class JsonValueReader : JsonReader {
   constructor(copyFrom: JsonValueReader) : super(copyFrom) {
     stack = copyFrom.stack.clone()
     for (i in 0 until stackSize) {
-      if (stack[i] is JsonIterator) {
-        stack[i] = (stack[i] as JsonIterator).clone()
+      val element = stack[i]
+      if (element is JsonIterator) {
+        stack[i] = element.clone()
       }
     }
   }
 
   override fun beginArray() {
-    val peeked = require<List<*>>(Token.BEGIN_ARRAY)!!
+    val peeked = require<List<*>>(Token.BEGIN_ARRAY)
     val iterator = JsonIterator(Token.END_ARRAY, peeked.toTypedArray(), 0)
     stack[stackSize - 1] = iterator
     scopes[stackSize - 1] = JsonScope.EMPTY_ARRAY
@@ -72,7 +73,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun endArray() {
-    val peeked = require<JsonIterator>(Token.END_ARRAY)!!
+    val peeked = require<JsonIterator>(Token.END_ARRAY)
     if (peeked.endToken != Token.END_ARRAY || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_ARRAY)
     }
@@ -80,7 +81,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun beginObject() {
-    val peeked = require<Map<*, *>>(Token.BEGIN_OBJECT)!!
+    val peeked = require<Map<*, *>>(Token.BEGIN_OBJECT)
     val iterator = JsonIterator(Token.END_OBJECT, peeked.entries.toTypedArray(), 0)
     stack[stackSize - 1] = iterator
     scopes[stackSize - 1] = JsonScope.EMPTY_OBJECT
@@ -92,7 +93,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun endObject() {
-    val peeked = require<JsonIterator>(Token.END_OBJECT)!!
+    val peeked = require<JsonIterator>(Token.END_OBJECT)
     if (peeked.endToken != Token.END_OBJECT || peeked.hasNext()) {
       throw typeMismatch(peeked, Token.END_OBJECT)
     }
@@ -119,12 +120,12 @@ internal class JsonValueReader : JsonReader {
     if (peeked is Boolean) return Token.BOOLEAN
     if (peeked is Number) return Token.NUMBER
     if (peeked == null) return Token.NULL
-    check(!(peeked === JSON_READER_CLOSED)) { "JsonReader is closed" }
+    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
     throw typeMismatch(peeked, "a JSON value")
   }
 
   override fun nextName(): String {
-    val peeked = require<Map.Entry<*, *>>(Token.NAME)!!
+    val peeked = require<Map.Entry<*, *>>(Token.NAME)
 
     // Swap the Map.Entry for its value on the stack and return its key.
     val result = stringKey(peeked)
@@ -134,7 +135,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun selectName(options: Options): Int {
-    val peeked = require(Map.Entry::class.java, Token.NAME)!!
+    val peeked = require<Map.Entry<*, *>>(Token.NAME)
     val name = stringKey(peeked)
     var i = 0
     val length = options.strings.size
@@ -158,7 +159,7 @@ internal class JsonValueReader : JsonReader {
       nextName() // Move the path forward onto the offending name.
       throw JsonDataException("Cannot skip unexpected $peeked at $path")
     }
-    val (_, value) = require(Map.Entry::class.java, Token.NAME)!!
+    val (_, value) = require<Map.Entry<*, *>>(Token.NAME)
 
     // Swap the Map.Entry for its value on the stack.
     stack[stackSize - 1] = value
@@ -175,14 +176,14 @@ internal class JsonValueReader : JsonReader {
       remove()
       return peeked.toString()
     }
-    check(!(peeked === JSON_READER_CLOSED)) { "JsonReader is closed" }
+    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
     throw typeMismatch(peeked, Token.STRING)
   }
 
   override fun selectString(options: Options): Int {
     val peeked = if (stackSize != 0) stack[stackSize - 1] else null
     if (peeked !is String) {
-      check(!(peeked === JSON_READER_CLOSED)) { "JsonReader is closed" }
+      check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
       return -1
     }
     var i = 0
@@ -198,19 +199,19 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun nextBoolean(): Boolean {
-    val peeked = require<Boolean>(Token.BOOLEAN)!!
+    val peeked = require<Boolean>(Token.BOOLEAN)
     remove()
     return peeked
   }
 
   override fun <T> nextNull(): T? {
-    require<Void>(Token.NULL)
+    requireNull()
     remove()
     return null
   }
 
   override fun nextDouble(): Double {
-    val result = when (val peeked = require<Any>(Token.NUMBER)!!) {
+    val result = when (val peeked = require<Any>(Token.NUMBER)) {
       is Number -> peeked.toDouble()
       is String -> {
         try {
@@ -223,7 +224,7 @@ internal class JsonValueReader : JsonReader {
         throw typeMismatch(peeked, Token.NUMBER)
       }
     }
-    if (!lenient && (java.lang.Double.isNaN(result) || java.lang.Double.isInfinite(result))) {
+    if (!lenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException(
         "JSON forbids NaN and infinities: $result at path $path"
       )
@@ -233,7 +234,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun nextLong(): Long {
-    val peeked = require<Any>(Token.NUMBER)!!
+    val peeked = require<Any>(Token.NUMBER)
     val result: Long
     when (peeked) {
       is Number -> {
@@ -260,7 +261,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun nextInt(): Int {
-    val peeked = require<Any>(Token.NUMBER)!!
+    val peeked = require<Any>(Token.NUMBER)
     val result: Int
     when (peeked) {
       is Number -> {
@@ -288,7 +289,7 @@ internal class JsonValueReader : JsonReader {
 
   override fun skipValue() {
     if (failOnUnknown) {
-      throw JsonDataException("Cannot skip unexpected " + peek() + " at " + path)
+      throw JsonDataException("Cannot skip unexpected ${peek()} at $path")
     }
 
     // If this element is in an object clear out the key.
@@ -297,17 +298,17 @@ internal class JsonValueReader : JsonReader {
     }
     val skipped = if (stackSize != 0) stack[stackSize - 1] else null
     if (skipped is JsonIterator) {
-      throw JsonDataException("Expected a value but was " + peek() + " at path " + path)
+      throw JsonDataException("Expected a value but was ${peek()} at path $path")
     }
     if (skipped is Map.Entry<*, *>) {
       // We're skipping a name. Promote the map entry's value.
-      val entry = stack[stackSize - 1] as Map.Entry<*, *>?
-      stack[stackSize - 1] = entry!!.value
+      val entry = stack[stackSize - 1] as Map.Entry<*, *>
+      stack[stackSize - 1] = entry.value
     } else if (stackSize > 0) {
       // We're skipping a value.
       remove()
     } else {
-      throw JsonDataException("Expected a value but was " + peek() + " at path " + path)
+      throw JsonDataException("Expected a value but was ${peek()} at path $path")
     }
   }
 
@@ -318,9 +319,7 @@ internal class JsonValueReader : JsonReader {
     return result
   }
 
-  override fun peekJson(): JsonReader {
-    return JsonValueReader(this)
-  }
+  override fun peekJson(): JsonReader = JsonValueReader(this)
 
   override fun promoteNameToValue() {
     if (hasNext()) {
@@ -330,7 +329,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun close() {
-    Arrays.fill(stack, 0, stackSize, null)
+    stack.fill(null, 0, stackSize)
     stack[0] = JSON_READER_CLOSED
     scopes[0] = JsonScope.CLOSED
     stackSize = 1
@@ -349,14 +348,16 @@ internal class JsonValueReader : JsonReader {
     stack[stackSize++] = newTop
   }
 
+
+  // TODO use knownNotNull() after https://github.com/square/moshi/pull/1485
+  private inline fun <reified T> require(expected: Token): T = require(T::class.java, expected)!!
+
+  private fun requireNull() = require<Void>(Token.NULL)
+
   /**
    * Returns the top of the stack which is required to be a `type`. Throws if this reader is
    * closed, or if the type isn't what was expected.
    */
-  private inline fun <reified T> require(expected: Token): T? {
-    return require(T::class.java, expected)
-  }
-
   private fun <T> require(type: Class<T>, expected: Token): T? {
     val peeked = if (stackSize != 0) stack[stackSize - 1] else null
     if (type.isInstance(peeked)) {
@@ -365,7 +366,7 @@ internal class JsonValueReader : JsonReader {
     if (peeked == null && expected == Token.NULL) {
       return null
     }
-    check(!(peeked === JSON_READER_CLOSED)) { "JsonReader is closed" }
+    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
     throw typeMismatch(peeked, expected)
   }
 
@@ -394,24 +395,16 @@ internal class JsonValueReader : JsonReader {
     }
   }
 
-  internal class JsonIterator(val endToken: Token, val array: Array<Any?>, var next: Int) :
-    MutableIterator<Any?>,
-    Cloneable {
-    override fun hasNext(): Boolean {
-      return next < array.size
-    }
+  internal class JsonIterator(
+    val endToken: Token,
+    val array: Array<Any?>,
+    var next: Int
+  ) : Iterator<Any?>, Cloneable {
+    override fun hasNext() = next < array.size
 
-    override fun next(): Any? {
-      return array[next++]
-    }
+    override fun next() = array[next++]
 
-    override fun remove() {
-      throw UnsupportedOperationException()
-    }
-
-    public override fun clone(): JsonIterator {
-      // No need to copy the array; it's read-only.
-      return JsonIterator(endToken, array, next)
-    }
+    // No need to copy the array; it's read-only.
+    public override fun clone() = JsonIterator(endToken, array, next)
   }
 }
