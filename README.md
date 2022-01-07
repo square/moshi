@@ -1146,7 +1146,7 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.12.0</version>
+  <version>1.13.0</version>
 </dependency>
 ```
 or Gradle:
