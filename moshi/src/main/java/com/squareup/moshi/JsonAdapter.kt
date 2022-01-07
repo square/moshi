@@ -21,10 +21,10 @@ import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.IOException
+import org.intellij.lang.annotations.Language
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.Throws
-import org.intellij.lang.annotations.Language
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
