@@ -123,10 +123,10 @@ internal class JsonUtf8Writer(
   }
 
   private fun writeDeferredName() {
-    if (deferredName != null) {
+    deferredName?.let { deferredName ->
       beforeName()
-      string(sink, deferredName!!)
-      deferredName = null
+      sink.string(deferredName)
+      this.deferredName = null
     }
   }
 
@@ -140,7 +140,7 @@ internal class JsonUtf8Writer(
     }
     writeDeferredName()
     beforeValue()
-    string(sink, value)
+    sink.string(value)
     pathIndices[stackSize - 1]++
   }
 
@@ -352,9 +352,9 @@ internal class JsonUtf8Writer(
      * and escapes those characters that require it.
      */
     @JvmStatic
-    fun string(sink: BufferedSink, value: String) {
+    fun BufferedSink.string(value: String) {
       val replacements = REPLACEMENT_CHARS
-      sink.writeByte('"'.code)
+      writeByte('"'.code)
       var last = 0
       val length = value.length
       for (i in 0 until length) {
@@ -373,15 +373,15 @@ internal class JsonUtf8Writer(
           continue
         }
         if (last < i) {
-          sink.writeUtf8(value, last, i)
+          writeUtf8(value, last, i)
         }
-        sink.writeUtf8(replacement)
+        writeUtf8(replacement)
         last = i + 1
       }
       if (last < length) {
-        sink.writeUtf8(value, last, length)
+        writeUtf8(value, last, length)
       }
-      sink.writeByte('"'.code)
+      writeByte('"'.code)
     }
   }
 }
