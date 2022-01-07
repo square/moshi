@@ -19,7 +19,6 @@ import com.squareup.moshi.JsonValueReader.JsonIterator
 import okio.Buffer
 import okio.BufferedSource
 import java.math.BigDecimal
-import java.util.Arrays
 
 /** Sentinel object pushed on [JsonValueReader.stack] when the reader is closed. */
 private val JSON_READER_CLOSED = Any()
@@ -120,8 +119,9 @@ internal class JsonValueReader : JsonReader {
     if (peeked is Boolean) return Token.BOOLEAN
     if (peeked is Number) return Token.NUMBER
     if (peeked == null) return Token.NULL
-    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
-    throw typeMismatch(peeked, "a JSON value")
+    ifNotClosed(peeked) {
+      throw typeMismatch(peeked, "a JSON value")
+    }
   }
 
   override fun nextName(): String {
@@ -137,17 +137,13 @@ internal class JsonValueReader : JsonReader {
   override fun selectName(options: Options): Int {
     val peeked = require<Map.Entry<*, *>>(Token.NAME)
     val name = stringKey(peeked)
-    var i = 0
-    val length = options.strings.size
-    while (i < length) {
-
+    for (i in options.strings.indices) {
       // Swap the Map.Entry for its value on the stack and return its key.
       if (options.strings[i] == name) {
         stack[stackSize - 1] = peeked.value
         pathNames[stackSize - 2] = name
         return i
       }
-      i++
     }
     return -1
   }
@@ -176,24 +172,23 @@ internal class JsonValueReader : JsonReader {
       remove()
       return peeked.toString()
     }
-    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
-    throw typeMismatch(peeked, Token.STRING)
+    ifNotClosed(peeked) {
+      throw typeMismatch(peeked, Token.STRING)
+    }
   }
 
   override fun selectString(options: Options): Int {
     val peeked = if (stackSize != 0) stack[stackSize - 1] else null
     if (peeked !is String) {
-      check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
-      return -1
+      ifNotClosed(peeked) {
+        -1
+      }
     }
-    var i = 0
-    val length = options.strings.size
-    while (i < length) {
+    for (i in options.strings.indices) {
       if (options.strings[i] == peeked) {
         remove()
         return i
       }
-      i++
     }
     return -1
   }
@@ -225,63 +220,43 @@ internal class JsonValueReader : JsonReader {
       }
     }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
-      throw JsonEncodingException(
-        "JSON forbids NaN and infinities: $result at path $path"
-      )
+      throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
     }
     remove()
     return result
   }
 
   override fun nextLong(): Long {
-    val peeked = require<Any>(Token.NUMBER)
-    val result: Long
-    when (peeked) {
-      is Number -> {
-        result = peeked.toLong()
-      }
-      is String -> {
-        result = try {
-          peeked.toLong()
-        } catch (e: NumberFormatException) {
-          try {
-            val asDecimal = BigDecimal(peeked)
-            asDecimal.longValueExact()
-          } catch (e2: NumberFormatException) {
-            throw typeMismatch(peeked, Token.NUMBER)
-          }
+    val result: Long = when (val peeked = require<Any>(Token.NUMBER)) {
+      is Number -> peeked.toLong()
+      is String -> try {
+        peeked.toLong()
+      } catch (e: NumberFormatException) {
+        try {
+          BigDecimal(peeked).longValueExact()
+        } catch (e2: NumberFormatException) {
+          throw typeMismatch(peeked, Token.NUMBER)
         }
       }
-      else -> {
-        throw typeMismatch(peeked, Token.NUMBER)
-      }
+      else -> throw typeMismatch(peeked, Token.NUMBER)
     }
     remove()
     return result
   }
 
   override fun nextInt(): Int {
-    val peeked = require<Any>(Token.NUMBER)
-    val result: Int
-    when (peeked) {
-      is Number -> {
-        result = peeked.toInt()
-      }
-      is String -> {
-        result = try {
-          peeked.toInt()
-        } catch (e: NumberFormatException) {
-          try {
-            val asDecimal = BigDecimal(peeked)
-            asDecimal.intValueExact()
-          } catch (e2: NumberFormatException) {
-            throw typeMismatch(peeked, Token.NUMBER)
-          }
+    val result = when (val peeked = require<Any>(Token.NUMBER)) {
+      is Number -> peeked.toInt()
+      is String -> try {
+        peeked.toInt()
+      } catch (e: NumberFormatException) {
+        try {
+          BigDecimal(peeked).intValueExact()
+        } catch (e2: NumberFormatException) {
+          throw typeMismatch(peeked, Token.NUMBER)
         }
       }
-      else -> {
-        throw typeMismatch(peeked, Token.NUMBER)
-      }
+      else -> throw typeMismatch(peeked, Token.NUMBER)
     }
     remove()
     return result
@@ -296,6 +271,7 @@ internal class JsonValueReader : JsonReader {
     if (stackSize > 1) {
       pathNames[stackSize - 2] = "null"
     }
+
     val skipped = if (stackSize != 0) stack[stackSize - 1] else null
     if (skipped is JsonIterator) {
       throw JsonDataException("Expected a value but was ${peek()} at path $path")
@@ -340,19 +316,18 @@ internal class JsonValueReader : JsonReader {
       if (stackSize == 256) {
         throw JsonDataException("Nesting too deep at $path")
       }
-      scopes = Arrays.copyOf(scopes, scopes.size * 2)
-      pathNames = Arrays.copyOf(pathNames, pathNames.size * 2)
-      pathIndices = Arrays.copyOf(pathIndices, pathIndices.size * 2)
+      scopes = scopes.copyOf(scopes.size * 2)
+      pathNames = pathNames.copyOf(pathNames.size * 2)
+      pathIndices = pathIndices.copyOf(pathIndices.size * 2)
       stack = stack.copyOf(stack.size * 2)
     }
     stack[stackSize++] = newTop
   }
 
-
   // TODO use knownNotNull() after https://github.com/square/moshi/pull/1485
   private inline fun <reified T> require(expected: Token): T = require(T::class.java, expected)!!
 
-  private fun requireNull() = require<Void>(Token.NULL)
+  private fun requireNull() = require(Void::class.java, Token.NULL)
 
   /**
    * Returns the top of the stack which is required to be a `type`. Throws if this reader is
@@ -366,14 +341,20 @@ internal class JsonValueReader : JsonReader {
     if (peeked == null && expected == Token.NULL) {
       return null
     }
-    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
-    throw typeMismatch(peeked, expected)
+    ifNotClosed(peeked) {
+      throw typeMismatch(peeked, expected)
+    }
   }
 
   private fun stringKey(entry: Map.Entry<*, *>): String {
     val name = entry.key
     if (name is String) return name
     throw typeMismatch(name, Token.NAME)
+  }
+
+  private inline fun <T> ifNotClosed(peeked: Any?, body: () -> T): T {
+    check(peeked !== JSON_READER_CLOSED) { "JsonReader is closed" }
+    return body()
   }
 
   /**
