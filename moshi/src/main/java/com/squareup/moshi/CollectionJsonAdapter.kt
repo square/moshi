@@ -46,10 +46,10 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
 
   override fun toString() = "$elementAdapter.collection()"
 
-  companion object {
-    val FACTORY = Factory { type, annotations, moshi ->
-      if (annotations.isNotEmpty()) return@Factory null
-      when (type.rawType) {
+  companion object Factory : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+      if (annotations.isNotEmpty()) return null
+      return when (type.rawType) {
         List::class.java, Collection::class.java -> {
           newArrayListAdapter<Any>(type, moshi).nullSafe()
         }
