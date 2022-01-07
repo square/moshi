@@ -24,6 +24,7 @@ import okio.IOException
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.Throws
+import org.intellij.lang.annotations.Language
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -62,7 +63,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   @Throws(IOException::class)
-  public fun fromJson(string: String): T? {
+  public fun fromJson(@Language("JSON") string: String): T? {
     val reader = JsonReader.of(Buffer().writeUtf8(string))
     val result = fromJson(reader)
     if (!isLenient && reader.peek() != JsonReader.Token.END_DOCUMENT) {
