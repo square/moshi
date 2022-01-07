@@ -21,7 +21,6 @@ import okio.Sink
 import okio.Timeout
 import okio.buffer
 import java.io.IOException
-import java.lang.Double
 import kotlin.Array
 import kotlin.AssertionError
 import kotlin.Boolean
@@ -60,9 +59,7 @@ internal class JsonUtf8Writer(
     return open(JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY, '[')
   }
 
-  override fun endArray(): JsonWriter {
-    return close(JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY, ']')
-  }
+  override fun endArray() = close(JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY, ']')
 
   override fun beginObject(): JsonWriter {
     check(!promoteValueToName) { "Object cannot be used as a map key in JSON at path $path" }
@@ -77,9 +74,9 @@ internal class JsonUtf8Writer(
 
   /** Enters a new scope by appending any necessary whitespace and the given bracket. */
   private fun open(empty: Int, nonempty: Int, openBracket: Char): JsonWriter {
-    if (stackSize == flattenStackSize &&
+    val shouldCancelOpen = stackSize == flattenStackSize &&
       (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)
-    ) {
+    if (shouldCancelOpen) {
       // Cancel this open. Invert the flatten stack size until this is closed.
       flattenStackSize = flattenStackSize.inv()
       return this
@@ -115,12 +112,11 @@ internal class JsonUtf8Writer(
   override fun name(name: String): JsonWriter {
     check(stackSize != 0) { "JsonWriter is closed." }
     val context = peekScope()
-    check(
-      !(
-        context != JsonScope.EMPTY_OBJECT && context != JsonScope.NONEMPTY_OBJECT ||
-          deferredName != null || promoteValueToName
-        )
-    ) { "Nesting problem." }
+    val isWritingObject = !(
+      context != JsonScope.EMPTY_OBJECT && context != JsonScope.NONEMPTY_OBJECT ||
+        deferredName != null || promoteValueToName
+      )
+    check(isWritingObject) { "Nesting problem." }
     deferredName = name
     pathNames[stackSize - 1] = name
     return this
@@ -134,7 +130,7 @@ internal class JsonUtf8Writer(
     }
   }
 
-  override fun value(value: String?): JsonWriter {
+  override fun value(value: String?): JsonWriter = apply {
     if (value == null) {
       return nullValue()
     }
@@ -146,10 +142,9 @@ internal class JsonUtf8Writer(
     beforeValue()
     string(sink, value)
     pathIndices[stackSize - 1]++
-    return this
   }
 
-  override fun nullValue(): JsonWriter {
+  override fun nullValue(): JsonWriter = apply {
     check(!promoteValueToName) { "null cannot be used as a map key in JSON at path $path" }
     if (deferredName != null) {
       if (serializeNulls) {
@@ -162,24 +157,22 @@ internal class JsonUtf8Writer(
     beforeValue()
     sink.writeUtf8("null")
     pathIndices[stackSize - 1]++
-    return this
   }
 
-  override fun value(value: Boolean): JsonWriter {
+  override fun value(value: Boolean): JsonWriter = apply {
     check(!promoteValueToName) { "Boolean cannot be used as a map key in JSON at path $path" }
     writeDeferredName()
     beforeValue()
     sink.writeUtf8(if (value) "true" else "false")
     pathIndices[stackSize - 1]++
-    return this
   }
 
   override fun value(value: Boolean?): JsonWriter {
     return value?.let(::value) ?: nullValue()
   }
 
-  override fun value(value: kotlin.Double): JsonWriter {
-    require(!(!lenient && (Double.isNaN(value) || Double.isInfinite(value)))) {
+  override fun value(value: Double): JsonWriter = apply {
+    require(lenient || !value.isNaN() && !value.isInfinite()) {
       "Numeric values must be finite, but was $value"
     }
     if (promoteValueToName) {
@@ -190,10 +183,9 @@ internal class JsonUtf8Writer(
     beforeValue()
     sink.writeUtf8(value.toString())
     pathIndices[stackSize - 1]++
-    return this
   }
 
-  override fun value(value: Long): JsonWriter {
+  override fun value(value: Long): JsonWriter = apply {
     if (promoteValueToName) {
       promoteValueToName = false
       return name(value.toString())
@@ -202,20 +194,15 @@ internal class JsonUtf8Writer(
     beforeValue()
     sink.writeUtf8(value.toString())
     pathIndices[stackSize - 1]++
-    return this
   }
 
-  override fun value(value: Number?): JsonWriter {
+  override fun value(value: Number?): JsonWriter = apply {
     if (value == null) {
       return nullValue()
     }
     val string = value.toString()
-    require(
-      !(
-        !lenient &&
-          (string == "-Infinity" || string == "Infinity" || string == "NaN")
-        )
-    ) { "Numeric values must be finite, but was $value" }
+    val isFinite = lenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
+    require(isFinite) { "Numeric values must be finite, but was $value" }
     if (promoteValueToName) {
       promoteValueToName = false
       return name(string)
@@ -224,7 +211,6 @@ internal class JsonUtf8Writer(
     beforeValue()
     sink.writeUtf8(string)
     pathIndices[stackSize - 1]++
-    return this
   }
 
   override fun valueSink(): BufferedSink {
@@ -245,19 +231,13 @@ internal class JsonUtf8Writer(
         pathIndices[stackSize - 1]++
       }
 
-      override fun flush() {
-        sink.flush()
-      }
+      override fun flush() = sink.flush()
 
-      override fun timeout(): Timeout {
-        return Timeout.NONE
-      }
+      override fun timeout() = Timeout.NONE
     }.buffer()
   }
 
-  /**
-   * Ensures all buffered data is written to the underlying [Sink] and flushes that writer.
-   */
+  /** Ensures all buffered data is written to the underlying [Sink] and flushes that writer. */
   override fun flush() {
     check(stackSize != 0) { "JsonWriter is closed." }
     sink.flush()
@@ -271,7 +251,7 @@ internal class JsonUtf8Writer(
   override fun close() {
     sink.close()
     val size = stackSize
-    if (size > 1 || size == 1 && scopes[size - 1] != JsonScope.NONEMPTY_DOCUMENT) {
+    if (size > 1 || size == 1 && scopes[0] != JsonScope.NONEMPTY_DOCUMENT) {
       throw IOException("Incomplete document")
     }
     stackSize = 0
@@ -298,8 +278,10 @@ internal class JsonUtf8Writer(
     val context = peekScope()
     if (context == JsonScope.NONEMPTY_OBJECT) { // first in object
       sink.writeByte(','.code)
-    } else check(context == JsonScope.EMPTY_OBJECT) { // not in an object!
-      "Nesting problem."
+    } else {
+      check(context == JsonScope.EMPTY_OBJECT) { // not in an object!
+        "Nesting problem."
+      }
     }
     newline()
     replaceTop(JsonScope.DANGLING_NAME)
@@ -349,10 +331,9 @@ internal class JsonUtf8Writer(
      * newline characters. This prevents eval() from failing with a syntax
      * error. http://code.google.com/p/google-gson/issues/detail?id=341
      */
-    private val REPLACEMENT_CHARS: Array<String?>
+    private val REPLACEMENT_CHARS: Array<String?> = arrayOfNulls(128)
 
     init {
-      REPLACEMENT_CHARS = arrayOfNulls(128)
       for (i in 0..0x1f) {
         REPLACEMENT_CHARS[i] = String.format("\\u%04x", i)
       }
