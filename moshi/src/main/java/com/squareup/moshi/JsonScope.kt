@@ -54,19 +54,20 @@ internal object JsonScope {
    */
   @JvmStatic
   fun getPath(stackSize: Int, stack: IntArray, pathNames: Array<String?>, pathIndices: IntArray): String {
-    val result = StringBuilder().append('$')
-    for (i in 0 until stackSize) {
-      when (stack[i]) {
-        EMPTY_ARRAY, NONEMPTY_ARRAY -> result.append('[').append(pathIndices[i]).append(']')
-        EMPTY_OBJECT, DANGLING_NAME, NONEMPTY_OBJECT -> {
-          result.append('.')
-          if (pathNames[i] != null) {
-            result.append(pathNames[i])
+    return buildString {
+      append('$')
+      for (i in 0 until stackSize) {
+        when (stack[i]) {
+          EMPTY_ARRAY, NONEMPTY_ARRAY -> append('[').append(pathIndices[i]).append(']')
+          EMPTY_OBJECT, DANGLING_NAME, NONEMPTY_OBJECT -> {
+            append('.')
+            if (pathNames[i] != null) {
+              append(pathNames[i])
+            }
           }
+          NONEMPTY_DOCUMENT, EMPTY_DOCUMENT, CLOSED -> {}
         }
-        NONEMPTY_DOCUMENT, EMPTY_DOCUMENT, CLOSED -> {}
       }
     }
-    return result.toString()
   }
 }
