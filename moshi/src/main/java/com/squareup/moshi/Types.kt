@@ -32,6 +32,7 @@ import java.util.Properties
 import javax.annotation.CheckReturnValue
 
 /** Factory methods for types. */
+@CheckReturnValue
 public object Types {
   /**
    * Resolves the generated [JsonAdapter] fully qualified class name for a given [clazz]. This is the same lookup logic
@@ -42,7 +43,6 @@ public object Types {
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
    * Note that this name will always be a top-level class name and not a nested class.
    */
-  @CheckReturnValue
   @JvmStatic
   public fun generatedJsonAdapterName(clazz: Class<*>): String {
     if (clazz.getAnnotation(JsonClass::class.java) == null) {
