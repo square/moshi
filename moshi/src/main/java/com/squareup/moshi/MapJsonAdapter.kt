@@ -61,14 +61,13 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
 
   override fun toString() = "JsonAdapter($keyAdapter=$valueAdapter)"
 
-  companion object {
-    @JvmField
-    val FACTORY = Factory { type, annotations, moshi ->
-      if (annotations.isNotEmpty()) return@Factory null
+  companion object Factory : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+      if (annotations.isNotEmpty()) return null
       val rawType = type.rawType
-      if (rawType != Map::class.java) return@Factory null
+      if (rawType != Map::class.java) return null
       val keyAndValue = Types.mapKeyAndValueTypes(type, rawType)
-      MapJsonAdapter<Any, Any>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe()
+      return MapJsonAdapter<Any, Any>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe()
     }
   }
 }

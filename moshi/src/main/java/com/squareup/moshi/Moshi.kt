@@ -331,7 +331,7 @@ public class Moshi internal constructor(builder: Builder) {
     val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> = buildList(6) {
       add(StandardJsonAdapters.FACTORY)
       add(CollectionJsonAdapter.Factory)
-      add(MapJsonAdapter.FACTORY)
+      add(MapJsonAdapter.Factory)
       add(ArrayJsonAdapter.FACTORY)
       add(RecordJsonAdapter.FACTORY)
       add(ClassJsonAdapter.FACTORY)
