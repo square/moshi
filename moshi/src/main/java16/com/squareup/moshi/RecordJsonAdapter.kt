@@ -106,20 +106,19 @@ internal class RecordJsonAdapter<T>(
 
   override fun toString() = "JsonAdapter($targetClass)"
 
-  companion object {
-    @JvmField
-    val FACTORY = Factory { type, annotations, moshi ->
+  companion object Factory : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
       if (annotations.isNotEmpty()) {
-        return@Factory null
+        return null
       }
 
       if (type !is Class<*> && type !is ParameterizedType) {
-        return@Factory null
+        return null
       }
 
       val rawType = type.rawType
       if (!rawType.isRecord) {
-        return@Factory null
+        return null
       }
 
       val components = rawType.recordComponents
@@ -147,7 +146,7 @@ internal class RecordJsonAdapter<T>(
         throw AssertionError(e)
       }
 
-      return@Factory RecordJsonAdapter<Any>(constructor, rawType.simpleName, bindings).nullSafe()
+      return RecordJsonAdapter<Any>(constructor, rawType.simpleName, bindings).nullSafe()
     }
 
     private fun createComponentBinding(

@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonAdapter.Factory
+import java.lang.reflect.Type
 
 /**
  * This is just a simple shim for linking in [StandardJsonAdapters] and swapped with a real
@@ -26,8 +26,7 @@ internal class RecordJsonAdapter<T> : JsonAdapter<T>() {
 
   override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()
 
-  companion object {
-    @JvmField
-    val FACTORY = Factory { _, _, _ -> null }
+  companion object Factory : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? = null
   }
 }
