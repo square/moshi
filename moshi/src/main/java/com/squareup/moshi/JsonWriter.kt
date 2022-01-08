@@ -21,11 +21,9 @@ import com.squareup.moshi.JsonScope.NONEMPTY_ARRAY
 import com.squareup.moshi.JsonScope.NONEMPTY_OBJECT
 import okio.BufferedSink
 import okio.BufferedSource
-import java.io.Closeable
+import okio.Closeable
+import okio.IOException
 import java.io.Flushable
-import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.util.LinkedHashMap
 import javax.annotation.CheckReturnValue
 import kotlin.Throws
 
