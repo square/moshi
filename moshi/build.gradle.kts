@@ -11,20 +11,20 @@ plugins {
 }
 
 val mainSourceSet by sourceSets.named("main")
-val java16 by sourceSets.creating {
+val java16: SourceSet by sourceSets.creating {
   java {
     srcDir("src/main/java16")
   }
 }
 
-tasks.named<JavaCompile>("compileJava16Java") {
-  // We use JDK 17 for latest but target 16 for maximum compatibility
-  javaCompiler.set(
-    javaToolchains.compilerFor {
-      languageVersion.set(JavaLanguageVersion.of(17))
-    }
-  )
-  options.release.set(16)
+// We use JDK 17 for latest but target 16 for maximum compatibility
+val service = project.extensions.getByType<JavaToolchainService>()
+val customLauncher = service.launcherFor {
+  languageVersion.set(JavaLanguageVersion.of(17))
+}
+tasks.named<KotlinCompile>("compileJava16Kotlin") {
+  kotlinJavaToolchain.toolchain.use(customLauncher)
+  kotlinOptions.jvmTarget = "16"
 }
 
 // Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
