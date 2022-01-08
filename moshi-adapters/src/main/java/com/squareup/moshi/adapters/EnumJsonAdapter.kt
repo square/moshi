@@ -22,7 +22,7 @@ import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonReader.Token.STRING
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.internal.jsonName
-import java.io.IOException
+import okio.IOException
 import java.lang.NoSuchFieldException
 
 /**

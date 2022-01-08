@@ -19,9 +19,9 @@ import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
+import okio.EOFException
+import okio.IOException
 import okio.buffer
-import java.io.EOFException
-import java.io.IOException
 import java.math.BigDecimal
 import kotlin.contracts.contract
 
