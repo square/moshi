@@ -13,83 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.Nullable;
+import com.squareup.moshi.JsonAdapter.Factory
+import java.lang.reflect.Type
 
 /**
  * Converts maps with string keys to JSON objects.
  *
- * <p>TODO: support maps with other key types and convert to/from strings.
+ * TODO: support maps with other key types and convert to/from strings.
  */
-final class MapJsonAdapter<K, V> extends JsonAdapter<Map<K, V>> {
-  public static final Factory FACTORY =
-      new Factory() {
-        @Override
-        public @Nullable JsonAdapter<?> create(
-            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-          if (!annotations.isEmpty()) return null;
-          Class<?> rawType = Types.getRawType(type);
-          if (rawType != Map.class) return null;
-          Type[] keyAndValue = Types.mapKeyAndValueTypes(type, rawType);
-          return new MapJsonAdapter<>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe();
-        }
-      };
+internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type) : JsonAdapter<Map<K, V?>>() {
+  private val keyAdapter: JsonAdapter<K> = moshi.adapter(keyType)
+  private val valueAdapter: JsonAdapter<V> = moshi.adapter(valueType)
 
-  private final JsonAdapter<K> keyAdapter;
-  private final JsonAdapter<V> valueAdapter;
-
-  MapJsonAdapter(Moshi moshi, Type keyType, Type valueType) {
-    this.keyAdapter = moshi.adapter(keyType);
-    this.valueAdapter = moshi.adapter(valueType);
-  }
-
-  @Override
-  public void toJson(JsonWriter writer, Map<K, V> map) throws IOException {
-    writer.beginObject();
-    for (Map.Entry<K, V> entry : map.entrySet()) {
-      if (entry.getKey() == null) {
-        throw new JsonDataException("Map key is null at " + writer.getPath());
+  override fun toJson(writer: JsonWriter, map: Map<K, V?>?) {
+    writer.beginObject()
+    // TODO use knownNotNull() after it's moved to util
+    for ((key, value) in map!!) {
+      if (key == null) {
+        throw JsonDataException("Map key is null at " + writer.path)
       }
-      writer.promoteValueToName();
-      keyAdapter.toJson(writer, entry.getKey());
-      valueAdapter.toJson(writer, entry.getValue());
+      writer.promoteValueToName()
+      keyAdapter.toJson(writer, key)
+      valueAdapter.toJson(writer, value)
     }
-    writer.endObject();
+    writer.endObject()
   }
 
-  @Override
-  public Map<K, V> fromJson(JsonReader reader) throws IOException {
-    LinkedHashTreeMap<K, V> result = new LinkedHashTreeMap<>();
-    reader.beginObject();
+  override fun fromJson(reader: JsonReader): Map<K, V?>? {
+    val result = LinkedHashTreeMap<K, V?>()
+    reader.beginObject()
     while (reader.hasNext()) {
-      reader.promoteNameToValue();
-      K name = keyAdapter.fromJson(reader);
-      V value = valueAdapter.fromJson(reader);
-      V replaced = result.put(name, value);
+      reader.promoteNameToValue()
+      val name = keyAdapter.fromJson(reader) ?: throw JsonDataException("Map key is null at " + reader.path)
+      val value = valueAdapter.fromJson(reader)
+      val replaced = result.put(name, value)
       if (replaced != null) {
-        throw new JsonDataException(
-            "Map key '"
-                + name
-                + "' has multiple values at path "
-                + reader.getPath()
-                + ": "
-                + replaced
-                + " and "
-                + value);
+        throw JsonDataException(
+          "Map key '$name' has multiple values at path ${reader.path}: $replaced and $value"
+        )
       }
     }
-    reader.endObject();
-    return result;
+    reader.endObject()
+    return result
   }
 
-  @Override
-  public String toString() {
-    return "JsonAdapter(" + keyAdapter + "=" + valueAdapter + ")";
+  override fun toString() = "JsonAdapter($keyAdapter=$valueAdapter)"
+
+  companion object {
+    @JvmField
+    val FACTORY = Factory { type, annotations, moshi ->
+      if (annotations.isNotEmpty()) return@Factory null
+      val rawType = type.rawType
+      if (rawType != Map::class.java) return@Factory null
+      val keyAndValue = Types.mapKeyAndValueTypes(type, rawType)
+      MapJsonAdapter<Any, Any>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe()
+    }
   }
 }
