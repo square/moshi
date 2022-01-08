@@ -13,39 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Set;
-import javax.annotation.Nullable;
+import com.squareup.moshi.JsonAdapter.Factory
 
 /**
- * This is just a simple shim for linking in {@link StandardJsonAdapters} and swapped with a real
+ * This is just a simple shim for linking in [StandardJsonAdapters] and swapped with a real
  * implementation in Java 16 via MR Jar.
  */
-final class RecordJsonAdapter<T> extends JsonAdapter<T> {
+internal class RecordJsonAdapter<T> : JsonAdapter<T>() {
+  override fun fromJson(reader: JsonReader) = throw AssertionError()
 
-  static final JsonAdapter.Factory FACTORY =
-      new JsonAdapter.Factory() {
+  override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()
 
-        @Nullable
-        @Override
-        public JsonAdapter<?> create(
-            Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-          return null;
-        }
-      };
-
-  @Nullable
-  @Override
-  public T fromJson(JsonReader reader) throws IOException {
-    throw new AssertionError();
-  }
-
-  @Override
-  public void toJson(JsonWriter writer, @Nullable T value) throws IOException {
-    throw new AssertionError();
+  companion object {
+    @JvmField
+    val FACTORY = Factory { _, _, _ -> null }
   }
 }
