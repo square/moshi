@@ -57,7 +57,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
 
   fun rangeCheckNextInt(reader: JsonReader, typeMessage: String?, min: Int, max: Int): Int {
     val value = reader.nextInt()
-    if (value < min || value > max) {
+    if (value !in min..max) {
       throw JsonDataException(ERROR_FORMAT.format(typeMessage, value, reader.path))
     }
     return value
