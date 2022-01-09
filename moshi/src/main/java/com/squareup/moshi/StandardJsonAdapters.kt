@@ -18,40 +18,42 @@ package com.squareup.moshi
 import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.generatedAdapter
 import com.squareup.moshi.internal.jsonName
+import java.lang.reflect.Type
 
-internal object StandardJsonAdapters {
-  val FACTORY = JsonAdapter.Factory { type, annotations, moshi ->
-    if (annotations.isNotEmpty()) return@Factory null
-    if (type === Boolean::class.javaPrimitiveType) return@Factory BOOLEAN_JSON_ADAPTER
-    if (type === Byte::class.javaPrimitiveType) return@Factory BYTE_JSON_ADAPTER
-    if (type === Char::class.javaPrimitiveType) return@Factory CHARACTER_JSON_ADAPTER
-    if (type === Double::class.javaPrimitiveType) return@Factory DOUBLE_JSON_ADAPTER
-    if (type === Float::class.javaPrimitiveType) return@Factory FLOAT_JSON_ADAPTER
-    if (type === Int::class.javaPrimitiveType) return@Factory INTEGER_JSON_ADAPTER
-    if (type === Long::class.javaPrimitiveType) return@Factory LONG_JSON_ADAPTER
-    if (type === Short::class.javaPrimitiveType) return@Factory SHORT_JSON_ADAPTER
-    if (type === Boolean::class.java) return@Factory BOOLEAN_JSON_ADAPTER.nullSafe()
-    if (type === Byte::class.java) return@Factory BYTE_JSON_ADAPTER.nullSafe()
-    if (type === Char::class.java) return@Factory CHARACTER_JSON_ADAPTER.nullSafe()
-    if (type === Double::class.java) return@Factory DOUBLE_JSON_ADAPTER.nullSafe()
-    if (type === Float::class.java) return@Factory FLOAT_JSON_ADAPTER.nullSafe()
-    if (type === Int::class.java) return@Factory INTEGER_JSON_ADAPTER.nullSafe()
-    if (type === Long::class.java) return@Factory LONG_JSON_ADAPTER.nullSafe()
-    if (type === Short::class.java) return@Factory SHORT_JSON_ADAPTER.nullSafe()
-    if (type === String::class.java) return@Factory STRING_JSON_ADAPTER.nullSafe()
-    if (type === Any::class.java) return@Factory ObjectJsonAdapter(moshi).nullSafe()
+internal object StandardJsonAdapters : JsonAdapter.Factory {
+
+  private const val ERROR_FORMAT = "Expected %s but was %s at path %s"
+
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+    if (annotations.isNotEmpty()) return null
+    if (type === Boolean::class.javaPrimitiveType) return BOOLEAN_JSON_ADAPTER
+    if (type === Byte::class.javaPrimitiveType) return BYTE_JSON_ADAPTER
+    if (type === Char::class.javaPrimitiveType) return CHARACTER_JSON_ADAPTER
+    if (type === Double::class.javaPrimitiveType) return DOUBLE_JSON_ADAPTER
+    if (type === Float::class.javaPrimitiveType) return FLOAT_JSON_ADAPTER
+    if (type === Int::class.javaPrimitiveType) return INTEGER_JSON_ADAPTER
+    if (type === Long::class.javaPrimitiveType) return LONG_JSON_ADAPTER
+    if (type === Short::class.javaPrimitiveType) return SHORT_JSON_ADAPTER
+    if (type === Boolean::class.java) return BOOLEAN_JSON_ADAPTER.nullSafe()
+    if (type === Byte::class.java) return BYTE_JSON_ADAPTER.nullSafe()
+    if (type === Char::class.java) return CHARACTER_JSON_ADAPTER.nullSafe()
+    if (type === Double::class.java) return DOUBLE_JSON_ADAPTER.nullSafe()
+    if (type === Float::class.java) return FLOAT_JSON_ADAPTER.nullSafe()
+    if (type === Int::class.java) return INTEGER_JSON_ADAPTER.nullSafe()
+    if (type === Long::class.java) return LONG_JSON_ADAPTER.nullSafe()
+    if (type === Short::class.java) return SHORT_JSON_ADAPTER.nullSafe()
+    if (type === String::class.java) return STRING_JSON_ADAPTER.nullSafe()
+    if (type === Any::class.java) return ObjectJsonAdapter(moshi).nullSafe()
     val rawType = type.rawType
     val generatedAdapter = moshi.generatedAdapter(type, rawType)
     if (generatedAdapter != null) {
-      return@Factory generatedAdapter
+      return generatedAdapter
     }
-    if (rawType.isEnum) {
+    return if (rawType.isEnum) {
       @Suppress("UNCHECKED_CAST")
       EnumJsonAdapter(rawType as Class<out Enum<*>>).nullSafe()
     } else null
   }
-
-  private const val ERROR_FORMAT = "Expected %s but was %s at path %s"
 
   fun rangeCheckNextInt(reader: JsonReader, typeMessage: String?, min: Int, max: Int): Int {
     val value = reader.nextInt()

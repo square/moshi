@@ -1160,7 +1160,10 @@ public final class MoshiTest {
   public void qualifierWithElementsMayNotBeDirectlyRegistered() throws IOException {
     try {
       new Moshi.Builder()
-          .add(Boolean.class, Localized.class, StandardJsonAdapters.BOOLEAN_JSON_ADAPTER);
+          .add(
+              Boolean.class,
+              Localized.class,
+              StandardJsonAdapters.INSTANCE.getBOOLEAN_JSON_ADAPTER());
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
