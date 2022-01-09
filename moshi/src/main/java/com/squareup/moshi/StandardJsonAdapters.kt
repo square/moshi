@@ -34,14 +34,14 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     if (type === Int::class.javaPrimitiveType) return INTEGER_JSON_ADAPTER
     if (type === Long::class.javaPrimitiveType) return LONG_JSON_ADAPTER
     if (type === Short::class.javaPrimitiveType) return SHORT_JSON_ADAPTER
-    if (type === Boolean::class.java) return BOOLEAN_JSON_ADAPTER.nullSafe()
-    if (type === Byte::class.java) return BYTE_JSON_ADAPTER.nullSafe()
-    if (type === Char::class.java) return CHARACTER_JSON_ADAPTER.nullSafe()
-    if (type === Double::class.java) return DOUBLE_JSON_ADAPTER.nullSafe()
-    if (type === Float::class.java) return FLOAT_JSON_ADAPTER.nullSafe()
-    if (type === Int::class.java) return INTEGER_JSON_ADAPTER.nullSafe()
-    if (type === Long::class.java) return LONG_JSON_ADAPTER.nullSafe()
-    if (type === Short::class.java) return SHORT_JSON_ADAPTER.nullSafe()
+    if (type === Boolean::class.javaObjectType) return BOOLEAN_JSON_ADAPTER.nullSafe()
+    if (type === Byte::class.javaObjectType) return BYTE_JSON_ADAPTER.nullSafe()
+    if (type === Char::class.javaObjectType) return CHARACTER_JSON_ADAPTER.nullSafe()
+    if (type === Double::class.javaObjectType) return DOUBLE_JSON_ADAPTER.nullSafe()
+    if (type === Float::class.javaObjectType) return FLOAT_JSON_ADAPTER.nullSafe()
+    if (type === Int::class.javaObjectType) return INTEGER_JSON_ADAPTER.nullSafe()
+    if (type === Long::class.javaObjectType) return LONG_JSON_ADAPTER.nullSafe()
+    if (type === Short::class.javaObjectType) return SHORT_JSON_ADAPTER.nullSafe()
     if (type === String::class.java) return STRING_JSON_ADAPTER.nullSafe()
     if (type === Any::class.java) return ObjectJsonAdapter(moshi).nullSafe()
     val rawType = type.rawType
@@ -67,7 +67,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader) = reader.nextBoolean()
 
     override fun toJson(writer: JsonWriter, value: Boolean?) {
-      writer.value(value)
+      writer.value(value!!)
     }
 
     override fun toString() = "JsonAdapter(Boolean)"
@@ -95,7 +95,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Char?) {
-      writer.value(value.toString())
+      writer.value(value!!.toString())
     }
 
     override fun toString() = "JsonAdapter(Character)"
