@@ -117,9 +117,9 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader): Float {
       val value = reader.nextDouble().toFloat()
       // Double check for infinity after float conversion; many doubles > Float.MAX
-      if (!reader.isLenient && java.lang.Float.isInfinite(value)) {
+      if (!reader.isLenient && value.isInfinite()) {
         throw JsonDataException(
-          "JSON forbids NaN and infinities: " + value + " at path " + reader.path
+          "JSON forbids NaN and infinities: $value at path ${reader.path}"
         )
       }
       return value
@@ -193,7 +193,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       try {
         enumType.getField(constantName).jsonName(constantName)
       } catch (e: NoSuchFieldException) {
-        throw AssertionError("Missing field in " + enumType.name, e)
+        throw AssertionError("Missing field in ${enumType.name}", e)
       }
     }
     private var options: JsonReader.Options = JsonReader.Options.of(*nameStrings)
@@ -218,7 +218,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
   }
 
   /**
-   * This adapter is used when the declared type is [java.lang.Object]. Typically the runtime
+   * This adapter is used when the declared type is [Any]. Typically the runtime
    * type is something else, and when encoding JSON this delegates to the runtime type's adapter.
    * For decoding (where there is no runtime type to inspect), this uses maps and lists.
    *
@@ -241,7 +241,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
         JsonReader.Token.BOOLEAN -> booleanAdapter.fromJson(reader)
         JsonReader.Token.NULL -> reader.nextNull()
         else -> throw IllegalStateException(
-          "Expected a value but was " + reader.peek() + " at path " + reader.path
+          "Expected a value but was ${reader.peek()} at path ${reader.path}"
         )
       }
     }
