@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonAdapter.Factory
+import com.squareup.moshi.internal.knownNotNull
 import java.lang.reflect.Type
 
 /**
@@ -29,8 +29,8 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
 
   override fun toJson(writer: JsonWriter, map: Map<K, V?>?) {
     writer.beginObject()
-    // TODO use knownNotNull() after it's moved to util
-    for ((key, value) in map!!) {
+    // Never null because we wrap in nullSafe()
+    for ((key, value) in knownNotNull(map)) {
       if (key == null) {
         throw JsonDataException("Map key is null at " + writer.path)
       }
@@ -41,7 +41,7 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
     writer.endObject()
   }
 
-  override fun fromJson(reader: JsonReader): Map<K, V?>? {
+  override fun fromJson(reader: JsonReader): Map<K, V?> {
     val result = LinkedHashTreeMap<K, V?>()
     reader.beginObject()
     while (reader.hasNext()) {
