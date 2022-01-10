@@ -17,6 +17,8 @@ package com.squareup.moshi
 
 import com.squareup.moshi.Types.createJsonQualifierImplementation
 import com.squareup.moshi.internal.NO_ANNOTATIONS
+import com.squareup.moshi.internal.NonNullJsonAdapter
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard
@@ -24,6 +26,9 @@ import com.squareup.moshi.internal.toStringWithAnnotations
 import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
+import kotlin.reflect.KType
+import kotlin.reflect.javaType
+import kotlin.reflect.typeOf
 
 /**
  * Coordinates binding between JSON values and Java objects.
@@ -67,6 +72,32 @@ public class Moshi internal constructor(builder: Builder) {
   @CheckReturnValue
   public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
     adapter(type, annotations, fieldName = null)
+
+  /**
+   * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
+   *         itself is handled, nested types (such as in generics) are not resolved.
+   */
+  @CheckReturnValue
+  @ExperimentalStdlibApi
+  public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
+
+  /**
+   * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
+   *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
+   */
+  @CheckReturnValue
+  @ExperimentalStdlibApi
+  public fun <T> adapter(ktype: KType): JsonAdapter<T> {
+    val adapter = adapter<T>(ktype.javaType)
+    return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
+      // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
+      adapter
+    } else if (ktype.isMarkedNullable) {
+      adapter.nullSafe()
+    } else {
+      adapter.nonNull()
+    }
+  }
 
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
@@ -160,6 +191,10 @@ public class Moshi internal constructor(builder: Builder) {
   public class Builder {
     internal val factories = mutableListOf<JsonAdapter.Factory>()
     internal var lastOffset = 0
+
+    @CheckReturnValue
+    @ExperimentalStdlibApi
+    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
 
     public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
       add(newAdapterFactory(type, jsonAdapter))
