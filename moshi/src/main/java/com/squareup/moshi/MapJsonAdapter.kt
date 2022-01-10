@@ -46,7 +46,7 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
     reader.beginObject()
     while (reader.hasNext()) {
       reader.promoteNameToValue()
-      val name = keyAdapter.fromJson(reader) ?: throw JsonDataException("Map key is null at " + reader.path)
+      val name = keyAdapter.fromJson(reader) ?: throw JsonDataException("Map key is null at ${reader.path}")
       val value = valueAdapter.fromJson(reader)
       val replaced = result.put(name, value)
       if (replaced != null) {
