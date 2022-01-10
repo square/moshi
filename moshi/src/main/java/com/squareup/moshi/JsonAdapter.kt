@@ -161,10 +161,10 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public fun nullSafe(): JsonAdapter<T> {
-    return when(this) {
+    return when (this) {
       is NullSafeJsonAdapter<*> -> this
       else -> NullSafeJsonAdapter(this)
-     }
+    }
   }
 
   /**
