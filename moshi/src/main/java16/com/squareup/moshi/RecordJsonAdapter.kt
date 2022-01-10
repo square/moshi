@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonAdapter.Factory
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.jsonName
+import com.squareup.moshi.internal.knownNotNull
 import com.squareup.moshi.internal.missingProperty
 import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.rethrowCause
@@ -138,8 +138,7 @@ internal class RecordJsonAdapter<T>(
       }
 
       val constructor = try {
-        // TODO use knownNotNull() once it's in Util
-        lookup.findConstructor(rawType, methodType(Void::class.javaPrimitiveType!!, componentRawTypes))
+        lookup.findConstructor(rawType, methodType(knownNotNull(Void::class.javaPrimitiveType), componentRawTypes))
       } catch (e: NoSuchMethodException) {
         throw AssertionError(e)
       } catch (e: IllegalAccessException) {
