@@ -19,7 +19,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.recipes.models.Card
 
-internal class ReadJsonList {
+internal class ReadJsonListKt {
 
   private val jsonString = """
     [{"rank": "4",
@@ -46,5 +46,5 @@ internal class ReadJsonList {
 }
 
 fun main() {
-  ReadJsonList().readJsonList()
+  ReadJsonListKt().readJsonList()
 }
