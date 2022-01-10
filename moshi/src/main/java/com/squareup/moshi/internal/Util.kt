@@ -478,7 +478,6 @@ public fun unexpectedNull(
 
 // Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
 // Safe to use (unstable) contracts since they're gone in the final bytecode
-// TODO move this to Util.kt after it's migrated to kotlin
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun <T> markNotNull(value: T?) {
   contract {
