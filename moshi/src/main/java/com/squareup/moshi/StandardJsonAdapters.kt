@@ -18,6 +18,7 @@ package com.squareup.moshi
 import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.generatedAdapter
 import com.squareup.moshi.internal.jsonName
+import com.squareup.moshi.internal.knownNotNull
 import java.lang.reflect.Type
 
 internal object StandardJsonAdapters : JsonAdapter.Factory {
@@ -67,7 +68,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader) = reader.nextBoolean()
 
     override fun toJson(writer: JsonWriter, value: Boolean?) {
-      writer.value(value!!)
+      writer.value(knownNotNull(value))
     }
 
     override fun toString() = "JsonAdapter(Boolean)"
@@ -79,7 +80,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Byte?) {
-      writer.value((value!!.toInt() and 0xff).toLong())
+      writer.value((knownNotNull(value).toInt() and 0xff).toLong())
     }
 
     override fun toString() = "JsonAdapter(Byte)"
@@ -95,7 +96,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Char?) {
-      writer.value(value!!.toString())
+      writer.value(knownNotNull(value).toString())
     }
 
     override fun toString() = "JsonAdapter(Character)"
@@ -107,7 +108,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Double?) {
-      writer.value(value!!.toDouble())
+      writer.value(knownNotNull(value).toDouble())
     }
 
     override fun toString() = "JsonAdapter(Double)"
@@ -143,7 +144,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Int?) {
-      writer.value(value!!.toInt().toLong())
+      writer.value(knownNotNull(value).toInt().toLong())
     }
 
     override fun toString() = "JsonAdapter(Integer)"
@@ -155,7 +156,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Long?) {
-      writer.value(value!!.toLong())
+      writer.value(knownNotNull(value).toLong())
     }
 
     override fun toString() = "JsonAdapter(Long)"
@@ -167,7 +168,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Short?) {
-      writer.value(value!!.toInt().toLong())
+      writer.value(knownNotNull(value).toInt().toLong())
     }
 
     override fun toString() = "JsonAdapter(Short)"
@@ -211,7 +212,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: T?) {
-      writer.value(nameStrings[value!!.ordinal])
+      writer.value(nameStrings[knownNotNull(value).ordinal])
     }
 
     override fun toString() = "JsonAdapter(${enumType.name})"
@@ -247,7 +248,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Any?) {
-      val valueClass: Class<*> = value!!.javaClass
+      val valueClass: Class<*> = knownNotNull(value).javaClass
       if (valueClass == Any::class.java) {
         // Don't recurse infinitely when the runtime type is also Object.class.
         writer.beginObject()
