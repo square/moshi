@@ -288,7 +288,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * @return this writer.
    */
   @Throws(IOException::class)
-  public abstract fun name(name: String?): JsonWriter
+  public abstract fun name(name: String): JsonWriter
 
   /**
    * Encodes `value`.

@@ -139,12 +139,12 @@ public abstract class JsonAdapter<T> {
       override fun fromJson(reader: JsonReader) = delegate.fromJson(reader)
 
       override fun toJson(writer: JsonWriter, value: T?) {
-        val serializeNulls = writer.getSerializeNulls()
-        writer.setSerializeNulls(true)
+        val serializeNulls = writer.serializeNulls
+        writer.serializeNulls = true
         try {
           delegate.toJson(writer, value)
         } finally {
-          writer.setSerializeNulls(serializeNulls)
+          writer.serializeNulls = serializeNulls
         }
       }
 
