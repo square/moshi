@@ -1,5 +1,3 @@
-package com.squareup.moshi.recipes;
-
 /*
  * Copyright (C) 2015 Square, Inc.
  *
@@ -15,6 +13,7 @@ package com.squareup.moshi.recipes;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.squareup.moshi.recipes;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;

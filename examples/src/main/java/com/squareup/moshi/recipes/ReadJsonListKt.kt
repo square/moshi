@@ -32,7 +32,7 @@ internal class ReadJsonListKt {
      {"rank": "J",
       "suit": "SPADES"
      }]
-  """.trimMargin()
+  """.trimIndent()
 
   fun readJsonList() {
     val moshi = Moshi.Builder().build()
