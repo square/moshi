@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -23,7 +24,6 @@ import okio.EOFException
 import okio.IOException
 import okio.buffer
 import java.math.BigDecimal
-import kotlin.contracts.contract
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON. */
@@ -1098,19 +1098,3 @@ internal class JsonUtf8Reader : JsonReader {
 
 @Suppress("NOTHING_TO_INLINE")
 private inline fun Byte.asChar(): Char = toInt().toChar()
-
-// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
-// Safe to use (unstable) contracts since they're gone in the final bytecode
-// TODO move this to Util.kt after it's migrated to kotlin
-@Suppress("NOTHING_TO_INLINE")
-private inline fun <T> markNotNull(value: T?) {
-  contract {
-    returns() implies (value != null)
-  }
-}
-
-@Suppress("NOTHING_TO_INLINE")
-private inline fun <T> knownNotNull(value: T?): T {
-  markNotNull(value)
-  return value
-}

@@ -46,7 +46,6 @@ import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.LinkedHashSet
-import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 @JvmField public val NO_ANNOTATIONS: Set<Annotation> = emptySet()
@@ -477,14 +476,19 @@ public fun unexpectedNull(
   return JsonDataException(message)
 }
 
-// A sneaky way to mark value as known to be not null, allowing smart casts and skipping the null-check intrinsic
-// Safe to use here because it's already compiled and not being used externally
+// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
+// Safe to use (unstable) contracts since they're gone in the final bytecode
 @Suppress("NOTHING_TO_INLINE")
-@OptIn(ExperimentalContracts::class)
-public inline fun <T : Any> knownNotNull(value: T?) {
+internal inline fun <T> markNotNull(value: T?) {
   contract {
     returns() implies (value != null)
   }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+internal inline fun <T> knownNotNull(value: T?): T {
+  markNotNull(value)
+  return value
 }
 
 // Public due to inline access in MoshiKotlinTypesExtensions
