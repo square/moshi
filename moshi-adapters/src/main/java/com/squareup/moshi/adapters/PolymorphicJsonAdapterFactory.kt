@@ -167,7 +167,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     }
   }
 
-  override fun create(type: Type, annotations: Set<Annotation?>, moshi: Moshi): JsonAdapter<*>? {
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
     if (type.rawType != baseType || annotations.isNotEmpty()) {
       return null
     }
