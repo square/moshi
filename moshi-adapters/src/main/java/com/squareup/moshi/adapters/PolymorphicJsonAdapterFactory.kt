@@ -23,7 +23,7 @@ import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
-import java.io.IOException
+import okio.IOException
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 

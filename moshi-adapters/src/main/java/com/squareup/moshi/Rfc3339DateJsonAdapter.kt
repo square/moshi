@@ -16,7 +16,7 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
-import java.io.IOException
+import okio.IOException
 import java.util.Date
 
 @Deprecated(

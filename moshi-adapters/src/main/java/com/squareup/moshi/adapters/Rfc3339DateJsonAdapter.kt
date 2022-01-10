@@ -19,7 +19,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonReader.Token.NULL
 import com.squareup.moshi.JsonWriter
-import java.io.IOException
+import okio.IOException
 import java.util.Date
 
 /**
