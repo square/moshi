@@ -144,12 +144,9 @@ internal class JsonValueWriter : JsonWriter() {
   }
 
   override fun value(value: Double): JsonWriter {
-    require(
-      !(
-        !lenient &&
-          (java.lang.Double.isNaN(value) || value == Double.NEGATIVE_INFINITY || value == Double.POSITIVE_INFINITY)
-        )
-    ) { "Numeric values must be finite, but was $value" }
+    require(lenient || !value.isNaN() && value != Double.NEGATIVE_INFINITY && value != Double.POSITIVE_INFINITY) {
+      "Numeric values must be finite, but was $value"
+    }
     if (promoteValueToName) {
       promoteValueToName = false
       return name(value.toString())
