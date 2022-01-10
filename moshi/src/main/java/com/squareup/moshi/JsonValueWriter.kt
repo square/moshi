@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonScope.EMPTY_DOCUMENT
 import com.squareup.moshi.JsonScope.EMPTY_OBJECT
 import com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT
 import com.squareup.moshi.JsonScope.STREAMING_VALUE
+import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSink
 import okio.ForwardingSink
@@ -242,8 +243,8 @@ internal class JsonValueWriter : JsonWriter() {
           // Our maps always have string keys and object values.
           @Suppress("UNCHECKED_CAST")
           val map = stack[stackSize - 1] as MutableMap<String, Any?>
-          // TODO replace with knownNotNull from Util
-          val replaced = map.put(deferredName!!, newTop)
+          // Safe to assume not null as this is single-threaded and smartcast just can't handle it
+          val replaced = map.put(knownNotNull(deferredName), newTop)
           require(replaced == null) {
             "Map key '$deferredName' has multiple values at path $path: $replaced and $newTop"
           }
