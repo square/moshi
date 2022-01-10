@@ -176,10 +176,9 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public fun nonNull(): JsonAdapter<T> {
-    return if (this is NonNullJsonAdapter<*>) {
-      this
-    } else {
-      NonNullJsonAdapter(this)
+    return when (this) {
+      is NonNullJsonAdapter<*> -> this
+      else -> NonNullJsonAdapter(this)
     }
   }
 
