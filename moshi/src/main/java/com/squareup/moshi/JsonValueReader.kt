@@ -16,6 +16,7 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.JsonValueReader.JsonIterator
+import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSource
 import java.math.BigDecimal
@@ -324,8 +325,7 @@ internal class JsonValueReader : JsonReader {
     stack[stackSize++] = newTop
   }
 
-  // TODO use knownNotNull() after https://github.com/square/moshi/pull/1485
-  private inline fun <reified T> require(expected: Token): T = require(T::class.java, expected)!!
+  private inline fun <reified T> require(expected: Token): T = knownNotNull(require(T::class.java, expected))
 
   private fun requireNull() = require(Void::class.java, Token.NULL)
 
