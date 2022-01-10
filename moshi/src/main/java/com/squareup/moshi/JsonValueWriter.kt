@@ -170,26 +170,23 @@ internal class JsonValueWriter : JsonWriter() {
   }
 
   override fun value(value: Number?): JsonWriter = apply {
-    return when(value){
-		is Byte, is Short, is Int, is Long -> value(value.toLong())     // If it's trivially converted to a long, do that.
-		is Float, is Double -> value(value.toDouble()) // If it's trivially converted to a double, do that.
-		null -> nullValue()
-		else -> { // Everything else gets converted to a BigDecimal.
-		val bigDecimalValue = if (value is BigDecimal) value else BigDecimal(value.toString())
-		if (promoteValueToName) {
-			promoteValueToName = false
-			return name(bigDecimalValue.toString())
-    	}
-    	add(bigDecimalValue)
-    	pathIndices[stackSize - 1]++
-		}
-	}
-
-
-
-    
-        
-    
+    when (value) {
+      null -> nullValue()
+      // If it's trivially converted to a long, do that.
+      is Byte, is Short, is Int, is Long -> value(value.toLong())
+      // If it's trivially converted to a double, do that.
+      is Float, is Double -> value(value.toDouble())
+      else -> {
+        // Everything else gets converted to a BigDecimal.
+        val bigDecimalValue = if (value is BigDecimal) value else BigDecimal(value.toString())
+        if (promoteValueToName) {
+          promoteValueToName = false
+          return name(bigDecimalValue.toString())
+        }
+        add(bigDecimalValue)
+        pathIndices[stackSize - 1]++
+      }
+    }
   }
 
   override fun valueSink(): BufferedSink {
