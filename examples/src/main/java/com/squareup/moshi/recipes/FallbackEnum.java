@@ -78,7 +78,7 @@ final class FallbackEnum {
         nameStrings = new String[constants.length];
         for (int i = 0; i < constants.length; i++) {
           String constantName = constants[i].name();
-          nameStrings[i] = Util.jsonName(constantName, enumType.getField(constantName));
+          nameStrings[i] = Util.jsonName(enumType.getField(constantName), constantName);
         }
         options = JsonReader.Options.of(nameStrings);
       } catch (NoSuchFieldException e) {

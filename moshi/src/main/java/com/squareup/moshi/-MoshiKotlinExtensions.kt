@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("EXTENSION_SHADOWED_BY_MEMBER")
+
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.NonNullJsonAdapter
@@ -25,9 +27,11 @@ import kotlin.reflect.typeOf
  * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
  *         itself is handled, nested types (such as in generics) are not resolved.
  */
+@Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
 public inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
+@Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
 public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().javaType, adapter)
 
@@ -35,6 +39,7 @@ public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>):
  * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
  *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
  */
+@Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
 public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.javaType)

@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * A map of comparable keys to values. Unlike {@code TreeMap}, this class uses insertion order for
@@ -90,7 +91,7 @@ final class LinkedHashTreeMap<K, V> extends AbstractMap<K, V> implements Seriali
   }
 
   @Override
-  public V put(K key, V value) {
+  public V put(K key, @Nullable V value) {
     if (key == null) {
       throw new NullPointerException("key == null");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Square, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi
 
-import java.io.IOException;
-import javax.annotation.Nullable;
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.annotation.AnnotationTarget.FUNCTION
 
-/** Thrown when the data being parsed is not encoded as valid JSON. */
-public final class JsonEncodingException extends IOException {
-  public JsonEncodingException(@Nullable String message) {
-    super(message);
-  }
-}
+@Retention(RUNTIME)
+@Target(FUNCTION)
+public annotation class FromJson

@@ -28,7 +28,15 @@ val japicmp = tasks.register<JapicmpTask>("japicmp") {
   classExcludes = listOf(
     "com.squareup.moshi.internal.NonNullJsonAdapter", // Internal.
     "com.squareup.moshi.internal.NullSafeJsonAdapter", // Internal.
-    "com.squareup.moshi.internal.Util" // Internal.
+    "com.squareup.moshi.internal.Util", // Internal.
+    "com.squareup.moshi.StandardJsonAdapters" // Package-private
+  )
+  methodExcludes = listOf(
+    "com.squareup.moshi.JsonAdapter#indent(java.lang.String)" // Was unintentionally open before
+  )
+  fieldExcludes = listOf(
+    "com.squareup.moshi.CollectionJsonAdapter#FACTORY", // False-positive, class is not public anyway
+    "com.squareup.moshi.MapJsonAdapter#FACTORY" // Class is not public
   )
 }
 
