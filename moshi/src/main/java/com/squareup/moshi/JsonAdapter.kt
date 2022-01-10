@@ -119,7 +119,7 @@ public abstract class JsonAdapter<T> {
    * strings, numbers, booleans and nulls.
    */
   @CheckReturnValue
-  public fun fromJsonValue(value: Any): T? {
+  public fun fromJsonValue(value: Any?): T? {
     val reader = JsonValueReader(value)
     return try {
       fromJson(reader)
