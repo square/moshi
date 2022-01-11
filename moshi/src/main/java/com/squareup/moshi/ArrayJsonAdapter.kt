@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import java.lang.reflect.Array as JavaArray
 import java.lang.reflect.Type
 
 /**
@@ -33,9 +34,9 @@ internal class ArrayJsonAdapter(
       }
       reader.endArray()
     }
-    val array = java.lang.reflect.Array.newInstance(elementClass, list.size)
+    val array = JavaArray.newInstance(elementClass, list.size)
     list.forEachIndexed { i, item ->
-      java.lang.reflect.Array.set(array, i, item)
+      JavaArray.set(array, i, item)
     }
     return array
   }
@@ -44,57 +45,48 @@ internal class ArrayJsonAdapter(
     writer.beginArray()
     when (value) {
       is BooleanArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is ByteArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is CharArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is DoubleArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is FloatArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is IntArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is LongArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is ShortArray -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
       is Array<*> -> {
-        val size = value.size
-        for (i in 0 until size) {
-          elementAdapter.toJson(writer, value[i])
+        for (element in value) {
+          elementAdapter.toJson(writer, element)
         }
       }
     }
