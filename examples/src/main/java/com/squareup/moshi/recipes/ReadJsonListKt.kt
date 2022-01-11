@@ -16,7 +16,6 @@
 package com.squareup.moshi.recipes
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.squareup.moshi.recipes.models.Card
 
@@ -37,10 +36,7 @@ internal class ReadJsonListKt {
 
   @OptIn(ExperimentalStdlibApi::class)
   fun readJsonList() {
-    val moshi = Moshi.Builder().build()
-    val jsonAdapter = moshi.newBuilder()
-      .add(Types.supertypeOf(Card::class.javaObjectType), moshi.adapter<Card>())
-      .build().adapter<List<Card>>()
+    val jsonAdapter = Moshi.Builder().build().adapter<List<Card>>()
     val cards = jsonAdapter.fromJson(jsonString)
     println(cards)
     println(cards?.first()?.rank)
