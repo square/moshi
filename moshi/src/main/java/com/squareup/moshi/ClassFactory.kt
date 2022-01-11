@@ -41,13 +41,9 @@ internal abstract class ClassFactory<T> {
         constructor.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
-          override fun newInstance(): T {
-            return constructor.newInstance() as T
-          }
+          override fun newInstance() = constructor.newInstance() as T
 
-          override fun toString(): String {
-            return rawType.name
-          }
+          override fun toString() = rawType.name
         }
       } catch (ignored: NoSuchMethodException) {
         // No no-args constructor. Fall back to something more magical...
@@ -65,13 +61,9 @@ internal abstract class ClassFactory<T> {
         val allocateInstance = unsafeClass.getMethod("allocateInstance", Class::class.java)
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
-          override fun newInstance(): T {
-            return allocateInstance.invoke(unsafe, rawType) as T
-          }
+          override fun newInstance() = allocateInstance.invoke(unsafe, rawType) as T
 
-          override fun toString(): String {
-            return rawType.name
-          }
+          override fun toString() = rawType.name
         }
       } catch (e: IllegalAccessException) {
         throw AssertionError()
@@ -102,13 +94,9 @@ internal abstract class ClassFactory<T> {
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
-          override fun newInstance(): T {
-            return newInstance.invoke(null, rawType, constructorId) as T
-          }
+          override fun newInstance() = newInstance.invoke(null, rawType, constructorId) as T
 
-          override fun toString(): String {
-            return rawType.name
-          }
+          override fun toString() = rawType.name
         }
       } catch (e: IllegalAccessException) {
         throw AssertionError()
@@ -129,13 +117,9 @@ internal abstract class ClassFactory<T> {
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
-          override fun newInstance(): T {
-            return newInstance.invoke(null, rawType, Any::class.java) as T
-          }
+          override fun newInstance() = newInstance.invoke(null, rawType, Any::class.java) as T
 
-          override fun toString(): String {
-            return rawType.name
-          }
+          override fun toString() = rawType.name
         }
       } catch (ignored: Exception) {
       }
