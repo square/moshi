@@ -40,7 +40,6 @@ internal class RecordJsonAdapter<T>(
   componentBindings: Map<String, ComponentBinding<Any>>
 ) : JsonAdapter<T>() {
 
-  @JvmRecord
   internal data class ComponentBinding<T>(
     val componentName: String,
     val jsonName: String,
