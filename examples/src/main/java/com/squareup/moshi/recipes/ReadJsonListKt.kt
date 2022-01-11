@@ -39,8 +39,8 @@ internal class ReadJsonListKt {
     val cards = jsonAdapter.fromJson(jsonString)
     println(cards)
     cards!![0].run {
-      println(this.rank)
-      println(this.suit)
+      println(rank)
+      println(suit)
     }
   }
 }
