@@ -90,9 +90,7 @@ internal class AdapterMethodsFactory(
         }
       }
 
-      override fun toString(): String {
-        return "JsonAdapter$annotations($type)"
-      }
+      override fun toString() = "JsonAdapter$annotations($type)"
     }
   }
 
