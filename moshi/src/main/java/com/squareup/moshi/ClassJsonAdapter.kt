@@ -93,9 +93,7 @@ internal class ClassJsonAdapter<T>(
     }
   }
 
-  override fun toString(): String {
-    return "JsonAdapter($classFactory)"
-  }
+  override fun toString() = "JsonAdapter($classFactory)"
 
   internal open class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
     open fun read(reader: JsonReader, value: Any) {
