@@ -92,7 +92,7 @@ internal class JsonUtf8Writer(
   /** Closes the current scope by appending any necessary whitespace and the given bracket. */
   private fun close(empty: Int, nonempty: Int, closeBracket: Char): JsonWriter {
     val context = peekScope()
-    check(!(context != nonempty && context != empty)) { "Nesting problem." }
+    check(context == nonempty || context == empty) { "Nesting problem." }
     check(deferredName == null) { "Dangling name: $deferredName" }
     if (stackSize == flattenStackSize.inv()) {
       // Cancel this close. Restore the flattenStackSize so we're ready to flatten again!
