@@ -165,17 +165,18 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun nextString(): String {
-    val peeked = if (stackSize != 0) stack[stackSize - 1] else null
-    if (peeked is String) {
-      remove()
-      return peeked
-    }
-    if (peeked is Number) {
-      remove()
-      return peeked.toString()
-    }
-    ifNotClosed(peeked) {
-      throw typeMismatch(peeked, Token.STRING)
+    return when (val peeked = if (stackSize != 0) stack[stackSize - 1] else null) {
+      is String -> {
+        remove()
+        peeked
+      }
+      is Number -> {
+        remove()
+        peeked.toString()
+      }
+      else -> ifNotClosed(peeked) {
+        throw typeMismatch(peeked, Token.STRING)
+      }
     }
   }
 
