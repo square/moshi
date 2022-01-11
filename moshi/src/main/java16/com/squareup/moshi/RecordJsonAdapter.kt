@@ -40,7 +40,7 @@ internal class RecordJsonAdapter<T>(
   componentBindings: Map<String, ComponentBinding<Any>>
 ) : JsonAdapter<T>() {
 
-  internal data class ComponentBinding<T>(
+  data class ComponentBinding<T>(
     val componentName: String,
     val jsonName: String,
     val adapter: JsonAdapter<T>,
@@ -106,6 +106,9 @@ internal class RecordJsonAdapter<T>(
   override fun toString() = "JsonAdapter($targetClass)"
 
   companion object Factory : JsonAdapter.Factory {
+
+    private val VOID_CLASS = knownNotNull(Void::class.javaPrimitiveType)
+
     override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
       if (annotations.isNotEmpty()) {
         return null
@@ -137,7 +140,7 @@ internal class RecordJsonAdapter<T>(
       }
 
       val constructor = try {
-        lookup.findConstructor(rawType, methodType(knownNotNull(Void::class.javaPrimitiveType), componentRawTypes))
+        lookup.findConstructor(rawType, methodType(VOID_CLASS, componentRawTypes))
       } catch (e: NoSuchMethodException) {
         throw AssertionError(e)
       } catch (e: IllegalAccessException) {
