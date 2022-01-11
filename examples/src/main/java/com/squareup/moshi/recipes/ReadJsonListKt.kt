@@ -34,13 +34,14 @@ internal class ReadJsonListKt {
      }]
   """.trimIndent()
 
-  @OptIn(ExperimentalStdlibApi::class)
   fun readJsonList() {
     val jsonAdapter = Moshi.Builder().build().adapter<List<Card>>()
     val cards = jsonAdapter.fromJson(jsonString)
     println(cards)
-    println(cards?.first()?.rank)
-    println(cards?.first()?.suit)
+    cards!![0].run {
+      println(this.rank)
+      println(this.suit)
+    }
   }
 }
 
