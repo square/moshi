@@ -111,17 +111,18 @@ internal class JsonValueReader : JsonReader {
     if (stackSize == 0) return Token.END_DOCUMENT
 
     // If the top of the stack is an iterator, take its first element and push it on the stack.
-    val peeked = stack[stackSize - 1]
-    if (peeked is JsonIterator) return peeked.endToken
-    if (peeked is List<*>) return Token.BEGIN_ARRAY
-    if (peeked is Map<*, *>) return Token.BEGIN_OBJECT
-    if (peeked is Map.Entry<*, *>) return Token.NAME
-    if (peeked is String) return Token.STRING
-    if (peeked is Boolean) return Token.BOOLEAN
-    if (peeked is Number) return Token.NUMBER
-    if (peeked == null) return Token.NULL
-    ifNotClosed(peeked) {
-      throw typeMismatch(peeked, "a JSON value")
+    return when (val peeked = stack[stackSize - 1]) {
+      is JsonIterator -> peeked.endToken
+      is List<*> -> Token.BEGIN_ARRAY
+      is Map<*, *> -> Token.BEGIN_OBJECT
+      is Map.Entry<*, *> -> Token.NAME
+      is String -> Token.STRING
+      is Boolean -> Token.BOOLEAN
+      is Number -> Token.NUMBER
+      null -> Token.NULL
+      else -> ifNotClosed(peeked) {
+        throw typeMismatch(peeked, "a JSON value")
+      }
     }
   }
 
