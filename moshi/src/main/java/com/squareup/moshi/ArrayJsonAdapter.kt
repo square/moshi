@@ -93,9 +93,7 @@ internal class ArrayJsonAdapter(
     writer.endArray()
   }
 
-  override fun toString(): String {
-    return "$elementAdapter.array()"
-  }
+  override fun toString() = "$elementAdapter.array()"
 
   companion object {
     @JvmField
