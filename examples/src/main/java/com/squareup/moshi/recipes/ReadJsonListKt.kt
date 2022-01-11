@@ -19,7 +19,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.squareup.moshi.recipes.models.Card
 
-internal class ReadJsonListKt {
+class ReadJsonListKt {
 
   //language=JSON
   private val jsonString = """
