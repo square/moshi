@@ -19,3 +19,9 @@
 -keepclassmembers class com.squareup.moshi.internal.Util {
     private static java.lang.String getKotlinMetadataClassName();
 }
+
+# Keep ToJson/FromJson-annotated methods
+-keepclassmembers class * {
+  @com.squareup.moshi.FromJson <methods>;
+  @com.squareup.moshi.ToJson <methods>;
+}
