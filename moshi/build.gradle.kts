@@ -2,6 +2,7 @@ import com.vanniktech.maven.publish.JavadocJar.Javadoc
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -11,20 +12,27 @@ plugins {
 }
 
 val mainSourceSet by sourceSets.named("main")
-val java16 by sourceSets.creating {
+val java16: SourceSet by sourceSets.creating {
   java {
     srcDir("src/main/java16")
   }
 }
 
-tasks.named<JavaCompile>("compileJava16Java") {
-  // We use JDK 17 for latest but target 16 for maximum compatibility
-  javaCompiler.set(
-    javaToolchains.compilerFor {
-      languageVersion.set(JavaLanguageVersion.of(17))
-    }
-  )
-  options.release.set(16)
+// We use JDK 17 for latest but target 16 for maximum compatibility
+val service = project.extensions.getByType<JavaToolchainService>()
+val customLauncher = service.launcherFor {
+  languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+tasks.named<KotlinCompile>("compileJava16Kotlin") {
+  kotlinJavaToolchain.toolchain.use(customLauncher)
+  kotlinOptions.jvmTarget = "16"
+}
+
+// Grant our java16 sources access to internal APIs in the main source set
+kotlin.target.compilations.run {
+  getByName("java16")
+    .associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
 }
 
 // Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
