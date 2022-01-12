@@ -393,13 +393,8 @@ public sealed class JsonWriter : Closeable, Flushable {
       is Map<*, *> -> {
         beginObject()
         for ((k, v) in value) {
-          require(k is String) {
-            if (k == null) {
-              "Map keys must be non-null"
-            } else {
-              "Map keys must be of type String: ${k.javaClass.name}"
-            }
-          }
+          requireNotNull(k) { "Map keys must be not-null" }
+          require(k is String) { "Map keys must be of type String: ${k.javaClass.name}" }
           name(k)
           jsonValue(v)
         }
