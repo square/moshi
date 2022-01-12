@@ -151,7 +151,23 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * pretty printing.
    */
   @JvmField
-  protected var indent: String? = null
+  protected var _indent: String? = null
+  public open var indent: String
+    /**
+     * Returns a string containing only whitespace, used for each level of indentation. If empty,
+     * the encoded document will be compact.
+     */
+    get() = _indent.orEmpty()
+    /**
+     * Sets the indentation string to be repeated for each level of indentation in the encoded
+     * document. If `indent.isEmpty()` the encoded document will be compact. Otherwise, the
+     * encoded document will be more human-readable.
+     *
+     * @param value a string containing only whitespace.
+     */
+    set(value) {
+      _indent = value.ifEmpty { null }
+    }
 
   /**
    * Configure this writer to relax its syntax rules. By default, this writer only emits well-formed
@@ -235,26 +251,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   /** Replace the value on the top of the stack with the given value. */
   protected fun replaceTop(topOfStack: Int) {
     scopes[stackSize - 1] = topOfStack
-  }
-
-  /**
-   * Sets the indentation string to be repeated for each level of indentation in the encoded
-   * document. If `indent.isEmpty()` the encoded document will be compact. Otherwise the
-   * encoded document will be more human-readable.
-   *
-   * @param indent a string containing only whitespace.
-   */
-  public open fun setIndent(indent: String) {
-    this.indent = indent.ifEmpty { null }
-  }
-
-  /**
-   * Returns a string containing only whitespace, used for each level of indentation. If empty, the
-   * encoded document will be compact.
-   */
-  @CheckReturnValue
-  public fun getIndent(): String {
-    return indent.orEmpty()
   }
 
   /**

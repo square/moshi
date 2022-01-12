@@ -44,13 +44,15 @@ internal class JsonUtf8Writer(
   private var separator = ":"
   private var deferredName: String? = null
 
+  override var indent: String
+    get() = super.indent
+    set(value) {
+      super.indent = value
+      separator = if (value.isNotEmpty()) ": " else ":"
+    }
+
   init {
     pushScope(JsonScope.EMPTY_DOCUMENT)
-  }
-
-  override fun setIndent(indent: String) {
-    super.setIndent(indent)
-    separator = if (indent.isNotEmpty()) ": " else ":"
   }
 
   override fun beginArray(): JsonWriter {
@@ -258,14 +260,14 @@ internal class JsonUtf8Writer(
   }
 
   private fun newline() {
-    if (indent == null) {
+    if (_indent == null) {
       return
     }
     sink.writeByte('\n'.code)
     var i = 1
     val size = stackSize
     while (i < size) {
-      sink.writeUtf8(indent!!)
+      sink.writeUtf8(indent)
       i++
     }
   }

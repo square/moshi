@@ -262,12 +262,12 @@ public abstract class JsonAdapter<T> {
       }
 
       override fun toJson(writer: JsonWriter, value: T?) {
-        val originalIndent = writer.getIndent()
-        writer.setIndent(indent)
+        val originalIndent = writer.indent
+        writer.indent = indent
         try {
           delegate.toJson(writer, value)
         } finally {
-          writer.setIndent(originalIndent)
+          writer.indent = originalIndent
         }
       }
 
