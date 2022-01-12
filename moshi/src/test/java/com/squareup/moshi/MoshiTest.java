@@ -603,44 +603,44 @@ public final class MoshiTest {
     try {
       builder.add((null));
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("factory == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add((Object) null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("adapter == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add(null, null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("type == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add(type, null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("jsonAdapter == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add(null, null, null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("type == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add(type, null, null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("annotation == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       builder.add(type, annotation, null);
       fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("jsonAdapter == null");
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
   }
 
@@ -771,7 +771,7 @@ public final class MoshiTest {
       moshi.adapter(null, Collections.<Annotation>emptySet());
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("type == null");
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
   }
 
@@ -782,13 +782,13 @@ public final class MoshiTest {
       moshi.adapter(String.class, (Class<? extends Annotation>) null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("annotationType == null");
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
       moshi.adapter(String.class, (Set<? extends Annotation>) null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("annotations == null");
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
   }
 
@@ -808,7 +808,7 @@ public final class MoshiTest {
       moshi.adapter(Object.class);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("annotations == null");
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
   }
 
@@ -819,7 +819,7 @@ public final class MoshiTest {
     Moshi moshi = new Moshi.Builder().add(new UppercaseAdapterFactory()).build();
 
     Field uppercaseString = MoshiTest.class.getDeclaredField("uppercaseString");
-    Set<? extends Annotation> annotations = Util.jsonAnnotations(uppercaseString);
+    Set<? extends Annotation> annotations = Util.getJsonAnnotations(uppercaseString);
     JsonAdapter<String> adapter = moshi.<String>adapter(String.class, annotations).lenient();
     assertThat(adapter.toJson("a")).isEqualTo("\"A\"");
     assertThat(adapter.fromJson("\"b\"")).isEqualTo("B");
@@ -869,7 +869,7 @@ public final class MoshiTest {
     Field uppercaseStringsField = MoshiTest.class.getDeclaredField("uppercaseStrings");
     try {
       moshi.adapter(
-          uppercaseStringsField.getGenericType(), Util.jsonAnnotations(uppercaseStringsField));
+          uppercaseStringsField.getGenericType(), Util.getJsonAnnotations(uppercaseStringsField));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -886,7 +886,7 @@ public final class MoshiTest {
     Field uppercaseStringField = MoshiTest.class.getDeclaredField("uppercaseString");
     try {
       moshi.adapter(
-          uppercaseStringField.getGenericType(), Util.jsonAnnotations(uppercaseStringField));
+          uppercaseStringField.getGenericType(), Util.getJsonAnnotations(uppercaseStringField));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -1160,7 +1160,10 @@ public final class MoshiTest {
   public void qualifierWithElementsMayNotBeDirectlyRegistered() throws IOException {
     try {
       new Moshi.Builder()
-          .add(Boolean.class, Localized.class, StandardJsonAdapters.BOOLEAN_JSON_ADAPTER);
+          .add(
+              Boolean.class,
+              Localized.class,
+              StandardJsonAdapters.INSTANCE.getBOOLEAN_JSON_ADAPTER());
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -1235,7 +1238,8 @@ public final class MoshiTest {
     Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
     Moshi.Builder newBuilder = moshi.newBuilder();
     for (JsonAdapter.Factory factory : Moshi.BUILT_IN_FACTORIES) {
-      assertThat(factory).isNotIn(newBuilder.factories);
+      // Awkward but java sources don't know about the internal-ness of this
+      assertThat(factory).isNotIn(newBuilder.getFactories$moshi());
     }
   }
 

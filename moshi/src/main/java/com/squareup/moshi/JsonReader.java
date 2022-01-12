@@ -37,7 +37,7 @@ import okio.ByteString;
  * depth-first order, the same order that they appear in the JSON document. Within JSON objects,
  * name/value pairs are represented by a single token.
  *
- * <h1>Parsing JSON</h1>
+ * <h2>Parsing JSON</h2>
  *
  * To create a recursive descent parser for your own JSON streams, first create an entry point
  * method that creates a {@code JsonReader}.
@@ -65,7 +65,7 @@ import okio.ByteString;
  * <p>If a value may be null, you should first check using {@link #peek()}. Null literals can be
  * consumed using either {@link #nextNull()} or {@link #skipValue()}.
  *
- * <h1>Example</h1>
+ * <h2>Example</h2>
  *
  * Suppose we'd like to parse a stream of messages such as the following:
  *
@@ -171,7 +171,7 @@ import okio.ByteString;
  * }
  * }</pre>
  *
- * <h1>Number Handling</h1>
+ * <h2>Number Handling</h2>
  *
  * This reader permits numeric values to be read as strings and string values to be read as numbers.
  * For example, both elements of the JSON array {@code [1, "1"]} may be read using either {@link

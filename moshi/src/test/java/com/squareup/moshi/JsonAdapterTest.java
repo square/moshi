@@ -219,7 +219,7 @@ public final class JsonAdapterTest {
       adapter.indent(null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("indent == null");
+      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
   }
 

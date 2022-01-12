@@ -26,7 +26,6 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import com.squareup.moshi.adapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackage
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackageJsonAdapter
@@ -1270,7 +1269,7 @@ class GeneratedAdaptersTest {
   @Test fun customGenerator_withClassPresent() {
     val moshi = Moshi.Builder().build()
     val adapter = moshi.adapter<CustomGeneratedClass>()
-    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate()
+    val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate
     assertThat(unwrapped).isInstanceOf(
       GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter::class.java
     )

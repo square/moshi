@@ -262,7 +262,7 @@ public final class MapJsonAdapterTest {
   @SuppressWarnings("unchecked") // It's the caller's responsibility to make sure K and V match.
   private <K, V> JsonAdapter<Map<K, V>> mapAdapter(Type keyType, Type valueType) {
     return (JsonAdapter<Map<K, V>>)
-        MapJsonAdapter.FACTORY.create(
+        MapJsonAdapter.Factory.create(
             Types.newParameterizedType(Map.class, keyType, valueType), NO_ANNOTATIONS, moshi);
   }
 

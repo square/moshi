@@ -2,14 +2,14 @@
 autoService = "1.0"
 gjf = "1.11.0"
 jvmTarget = "1.8"
-kotlin = "1.6.0"
+kotlin = "1.6.10"
 kotlinCompileTesting = "1.4.6"
 kotlinpoet = "1.10.2"
 ksp = "1.6.0-1.0.1"
 ktlint = "0.41.0"
 
 [plugins]
-dokka = { id = "org.jetbrains.dokka", version = "1.5.31" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }

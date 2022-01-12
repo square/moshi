@@ -349,19 +349,21 @@ class EventJsonAdapter {
 
 ```kotlin
 class EventJsonAdapter {
-  @FromJson fun eventFromJson(eventJson: EventJson): Event {
-    val event = Event()
-    event.title = eventJson.title
-    event.beginDateAndTime = "${eventJson.begin_date} ${eventJson.begin_time}"
-    return event
+  @FromJson
+  fun eventFromJson(eventJson: EventJson): Event {
+    return Event(
+      title = eventJson.title,
+      beginDateAndTime = "${eventJson.begin_date} ${eventJson.begin_time}"
+    )
   }
 
-  @ToJson fun eventToJson(event: Event): EventJson {
-    val json = EventJson()
-    json.title = event.title
-    json.begin_date = event.beginDateAndTime.substring(0, 8)
-    json.begin_time = event.beginDateAndTime.substring(9, 14)
-    return json
+  @ToJson
+  fun eventToJson(event: Event): EventJson {
+    return EventJson(
+      title = event.title,
+      begin_date = event.beginDateAndTime.substring(0, 8),
+      begin_time = event.beginDateAndTime.substring(9, 14),
+    )
   }
 }
 ```
@@ -385,7 +387,7 @@ Moshi moshi = new Moshi.Builder()
 ```kotlin
 val moshi = Moshi.Builder()
     .add(EventJsonAdapter())
-    .builder
+    .build()
 ```
 </details>
 
@@ -1144,7 +1146,7 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.12.0</version>
+  <version>1.13.0</version>
 </dependency>
 ```
 or Gradle:

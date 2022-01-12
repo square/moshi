@@ -17,7 +17,6 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapter
 import org.junit.Test
 
 class DefaultConstructorTest {
