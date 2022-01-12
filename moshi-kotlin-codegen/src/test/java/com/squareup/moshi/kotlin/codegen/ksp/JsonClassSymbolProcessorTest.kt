@@ -34,7 +34,7 @@ import org.junit.rules.TemporaryFolder
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassSymbolProcessorTest {
 
-  @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @Rule @JvmField val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun privateConstructor() {
@@ -816,7 +816,6 @@ class JsonClassSymbolProcessorTest {
         sources = sourceFiles.asList()
         verbose = false
         kspIncremental = true // The default now
-        kotlincArguments = listOf("-Xjvm-default=enable")
       }
   }
 
