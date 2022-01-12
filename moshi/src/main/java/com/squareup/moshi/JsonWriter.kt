@@ -224,7 +224,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     scopes[stackSize++] = newTop
   }
 
-  /** Replace the value on the top of the stack with the given value.  */
+  /** Replace the value on the top of the stack with the given value. */
   internal fun replaceTop(topOfStack: Int) {
     scopes[stackSize - 1] = topOfStack
   }
