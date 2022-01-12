@@ -37,7 +37,8 @@ val japicmp = tasks.register<JapicmpTask>("japicmp") {
   )
   fieldExcludes = listOf(
     "com.squareup.moshi.CollectionJsonAdapter#FACTORY", // False-positive, class is not public anyway
-    "com.squareup.moshi.MapJsonAdapter#FACTORY" // Class is not public
+    "com.squareup.moshi.MapJsonAdapter#FACTORY", // Class is not public
+    "com.squareup.moshi.ArrayJsonAdapter#FACTORY" // Class is not public
   )
 }
 
