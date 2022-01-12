@@ -138,20 +138,20 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   protected var stackSize: Int = 0
 
   @JvmField
-  public var scopes: IntArray = IntArray(32)
+  protected var scopes: IntArray = IntArray(32)
 
   @JvmField
-  public var pathNames: Array<String?> = arrayOfNulls(32)
+  protected var pathNames: Array<String?> = arrayOfNulls(32)
 
   @JvmField
-  public var pathIndices: IntArray = IntArray(32)
+  protected var pathIndices: IntArray = IntArray(32)
 
   /**
    * A string containing a full set of spaces for a single level of indentation, or null for no
    * pretty printing.
    */
   @JvmField
-  public var indent: String? = null
+  protected var indent: String? = null
 
   /**
    * Configure this writer to relax its syntax rules. By default, this writer only emits well-formed
@@ -178,7 +178,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   public var serializeNulls: Boolean = false
 
   @JvmField
-  public var promoteValueToName: Boolean = false
+  protected var promoteValueToName: Boolean = false
 
   /**
    * Controls the deepest stack size that has begin/end pairs flattened:
@@ -195,18 +195,18 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
    * with [endFlatten].
    */
   @JvmField
-  public var flattenStackSize: Int = -1
+  protected var flattenStackSize: Int = -1
 
   private var tags: MutableMap<Class<*>, Any>? = null
 
   /** Returns the scope on the top of the stack.  */
-  public fun peekScope(): Int {
+  protected fun peekScope(): Int {
     check(stackSize != 0) { "JsonWriter is closed." }
     return scopes[stackSize - 1]
   }
 
   /** Before pushing a value on the stack this confirms that the stack has capacity.  */
-  public fun checkStack(): Boolean {
+  protected fun checkStack(): Boolean {
     if (stackSize != scopes.size) return false
     if (stackSize == 256) {
       throw JsonDataException("Nesting too deep at $path: circular reference?")
@@ -220,12 +220,12 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     return true
   }
 
-  public fun pushScope(newTop: Int) {
+  protected fun pushScope(newTop: Int) {
     scopes[stackSize++] = newTop
   }
 
   /** Replace the value on the top of the stack with the given value.  */
-  public fun replaceTop(topOfStack: Int) {
+  protected fun replaceTop(topOfStack: Int) {
     scopes[stackSize - 1] = topOfStack
   }
 
