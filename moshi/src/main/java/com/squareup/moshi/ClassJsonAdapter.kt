@@ -121,10 +121,10 @@ internal class ClassJsonAdapter<T>(
       if (rawType.isInterface || rawType.isEnum) return null
       if (annotations.isNotEmpty()) return null
       if (rawType.isPlatformType) {
-        throwIfIsCollectionClass(type, List::class.java)
-        throwIfIsCollectionClass(type, Set::class.java)
-        throwIfIsCollectionClass(type, Map::class.java)
-        throwIfIsCollectionClass(type, Collection::class.java)
+        type.throwIfIsCollectionClass(List::class.java)
+        type.throwIfIsCollectionClass(Set::class.java)
+        type.throwIfIsCollectionClass(Map::class.java)
+        type.throwIfIsCollectionClass(Collection::class.java)
 
         var messagePrefix = "Platform $rawType"
         if (type is ParameterizedType) {
@@ -162,16 +162,11 @@ internal class ClassJsonAdapter<T>(
      * Throw clear error messages for the common beginner mistake of using the concrete
      * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
      */
-    private fun throwIfIsCollectionClass(type: Type, collectionInterface: Class<*>) {
-      val rawClass = type.rawType
-      if (collectionInterface.isAssignableFrom(rawClass)) {
+    private fun Type.throwIfIsCollectionClass(collectionInterface: Class<*>) {
+      if (collectionInterface.isAssignableFrom(rawType)) {
         throw IllegalArgumentException(
-          "No JsonAdapter for " +
-            type +
-            ", you should probably use " +
-            collectionInterface.simpleName +
-            " instead of " +
-            rawClass.simpleName +
+          "No JsonAdapter for $this, you should probably use ${collectionInterface.simpleName}" +
+            " instead of ${rawType.simpleName}" +
             " (Moshi only supports the collection interfaces by default)" +
             " or else register a custom JsonAdapter."
         )
