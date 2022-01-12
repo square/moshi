@@ -44,13 +44,15 @@ internal class JsonUtf8Writer(
   private var separator = ":"
   private var deferredName: String? = null
 
+  override var indent: String
+    get() = super.indent
+    set(value) {
+      super.indent = value
+      separator = if (value.isNotEmpty()) ": " else ":"
+    }
+
   init {
     pushScope(JsonScope.EMPTY_DOCUMENT)
-  }
-
-  override fun setIndent(indent: String) {
-    super.setIndent(indent)
-    separator = if (indent.isNotEmpty()) ": " else ":"
   }
 
   override fun beginArray(): JsonWriter {
@@ -172,7 +174,7 @@ internal class JsonUtf8Writer(
   }
 
   override fun value(value: Double): JsonWriter = apply {
-    require(lenient || !value.isNaN() && !value.isInfinite()) {
+    require(isLenient || !value.isNaN() && !value.isInfinite()) {
       "Numeric values must be finite, but was $value"
     }
     if (promoteValueToName) {
@@ -201,7 +203,7 @@ internal class JsonUtf8Writer(
       return nullValue()
     }
     val string = value.toString()
-    val isFinite = lenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
+    val isFinite = isLenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
     require(isFinite) { "Numeric values must be finite, but was $value" }
     if (promoteValueToName) {
       promoteValueToName = false
@@ -258,7 +260,7 @@ internal class JsonUtf8Writer(
   }
 
   private fun newline() {
-    if (indent == null) {
+    if (_indent == null) {
       return
     }
     sink.writeByte('\n'.code)
@@ -295,7 +297,7 @@ internal class JsonUtf8Writer(
     val nextTop: Int
     when (peekScope()) {
       JsonScope.NONEMPTY_DOCUMENT -> {
-        if (!lenient) {
+        if (!isLenient) {
           throw IllegalStateException("JSON must have only one top-level value.")
         }
         nextTop = JsonScope.NONEMPTY_DOCUMENT

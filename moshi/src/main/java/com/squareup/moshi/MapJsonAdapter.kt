@@ -27,16 +27,16 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
   private val keyAdapter: JsonAdapter<K> = moshi.adapter(keyType)
   private val valueAdapter: JsonAdapter<V> = moshi.adapter(valueType)
 
-  override fun toJson(writer: JsonWriter, map: Map<K, V?>?) {
+  override fun toJson(writer: JsonWriter, value: Map<K, V?>?) {
     writer.beginObject()
     // Never null because we wrap in nullSafe()
-    for ((key, value) in knownNotNull(map)) {
-      if (key == null) {
-        throw JsonDataException("Map key is null at " + writer.path)
+    for ((k, v) in knownNotNull(value)) {
+      if (k == null) {
+        throw JsonDataException("Map key is null at ${writer.path}")
       }
       writer.promoteValueToName()
-      keyAdapter.toJson(writer, key)
-      valueAdapter.toJson(writer, value)
+      keyAdapter.toJson(writer, k)
+      valueAdapter.toJson(writer, v)
     }
     writer.endObject()
   }
