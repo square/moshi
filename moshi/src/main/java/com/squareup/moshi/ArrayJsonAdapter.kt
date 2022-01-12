@@ -15,8 +15,8 @@
  */
 package com.squareup.moshi
 
-import java.lang.reflect.Array as JavaArray
 import java.lang.reflect.Type
+import java.lang.reflect.Array as JavaArray
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
@@ -95,16 +95,13 @@ internal class ArrayJsonAdapter(
 
   override fun toString() = "$elementAdapter.array()"
 
-  companion object {
-    @JvmField
-    val FACTORY = object : Factory {
-      override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
-        val elementType = Types.arrayComponentType(type) ?: return null
-        if (annotations.isNotEmpty()) return null
-        val elementClass = elementType.rawType
-        val elementAdapter = moshi.adapter<Any>(elementType)
-        return ArrayJsonAdapter(elementClass, elementAdapter).nullSafe()
-      }
+  companion object Factory : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+      val elementType = Types.arrayComponentType(type) ?: return null
+      if (annotations.isNotEmpty()) return null
+      val elementClass = elementType.rawType
+      val elementAdapter = moshi.adapter<Any>(elementType)
+      return ArrayJsonAdapter(elementClass, elementAdapter).nullSafe()
     }
   }
 }
