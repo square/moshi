@@ -207,13 +207,13 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   public val path: String
     get() = JsonScope.getPath(stackSize, scopes, pathNames, pathIndices)
 
-  /** Returns the scope on the top of the stack.  */
+  /** Returns the scope on the top of the stack. */
   protected fun peekScope(): Int {
     check(stackSize != 0) { "JsonWriter is closed." }
     return scopes[stackSize - 1]
   }
 
-  /** Before pushing a value on the stack this confirms that the stack has capacity.  */
+  /** Before pushing a value on the stack this confirms that the stack has capacity. */
   protected fun checkStack(): Boolean {
     if (stackSize != scopes.size) return false
     if (stackSize == 256) {
@@ -232,7 +232,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     scopes[stackSize++] = newTop
   }
 
-  /** Replace the value on the top of the stack with the given value.  */
+  /** Replace the value on the top of the stack with the given value. */
   protected fun replaceTop(topOfStack: Int) {
     scopes[stackSize - 1] = topOfStack
   }
@@ -517,19 +517,19 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     return token
   }
 
-  /** Ends nested call flattening created by [beginFlatten].  */
+  /** Ends nested call flattening created by [beginFlatten]. */
   public fun endFlatten(token: Int) {
     flattenStackSize = token
   }
 
-  /** Returns the tag value for the given class key.  */
+  /** Returns the tag value for the given class key. */
   @CheckReturnValue
   public fun <T> tag(clazz: Class<T>): T? {
     @Suppress("UNCHECKED_CAST")
     return tags?.get(clazz) as T?
   }
 
-  /** Assigns the tag value using the given class key and value.  */
+  /** Assigns the tag value using the given class key and value. */
   public fun <T : Any> setTag(clazz: Class<T>, value: T) {
     require(clazz.isAssignableFrom(value::class.java)) {
       "Tag value must be of type ${clazz.name}"
@@ -539,7 +539,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   }
 
   public companion object {
-    /** Returns a new instance that writes UTF-8 encoded JSON to `sink`.  */
+    /** Returns a new instance that writes UTF-8 encoded JSON to `sink`. */
     @JvmStatic
     @CheckReturnValue
     public fun of(sink: BufferedSink): JsonWriter = JsonUtf8Writer(sink)
