@@ -128,7 +128,7 @@ import kotlin.Throws
  * Each `JsonWriter` may be used to write a single JSON stream. Instances of this class are
  * not thread safe. Calls that would result in a malformed JSON string will fail with an [IllegalStateException].
  */
-public abstract class JsonWriter internal constructor() : Closeable, Flushable {
+public sealed class JsonWriter : Closeable, Flushable {
   /**
    * The nesting stack. Using a manual array rather than an ArrayList saves 20%. This stack will
    * grow itself up to 256 levels of nesting including the top-level document. Deeper nesting is
