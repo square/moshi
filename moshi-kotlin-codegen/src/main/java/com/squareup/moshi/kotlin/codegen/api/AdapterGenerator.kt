@@ -132,8 +132,11 @@ public class AdapterGenerator(
     JsonWriter::class
   )
     .build()
+  // Don't use NameAllocator here because it will add `_` to the name since it's a keyword, and that
+  // results in it warning about not matching the overridden function's params.
+  // https://github.com/square/moshi/issues/1502
   private val valueParam = ParameterSpec.builder(
-    nameAllocator.newName("value"),
+    "value",
     originalTypeName.copy(nullable = true)
   )
     .build()
