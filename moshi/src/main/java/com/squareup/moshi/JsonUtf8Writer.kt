@@ -172,7 +172,7 @@ internal class JsonUtf8Writer(
   }
 
   override fun value(value: Double): JsonWriter = apply {
-    require(lenient || !value.isNaN() && !value.isInfinite()) {
+    require(isLenient || !value.isNaN() && !value.isInfinite()) {
       "Numeric values must be finite, but was $value"
     }
     if (promoteValueToName) {
@@ -201,7 +201,7 @@ internal class JsonUtf8Writer(
       return nullValue()
     }
     val string = value.toString()
-    val isFinite = lenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
+    val isFinite = isLenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
     require(isFinite) { "Numeric values must be finite, but was $value" }
     if (promoteValueToName) {
       promoteValueToName = false
@@ -265,7 +265,7 @@ internal class JsonUtf8Writer(
     var i = 1
     val size = stackSize
     while (i < size) {
-      sink.writeUtf8(indent)
+      sink.writeUtf8(indent!!)
       i++
     }
   }
@@ -295,7 +295,7 @@ internal class JsonUtf8Writer(
     val nextTop: Int
     when (peekScope()) {
       JsonScope.NONEMPTY_DOCUMENT -> {
-        if (!lenient) {
+        if (!isLenient) {
           throw IllegalStateException("JSON must have only one top-level value.")
         }
         nextTop = JsonScope.NONEMPTY_DOCUMENT
