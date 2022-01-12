@@ -526,7 +526,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @CheckReturnValue
   public fun <T> tag(clazz: Class<T>): T? {
     @Suppress("UNCHECKED_CAST")
-    return if (tags == null) null else tags!![clazz] as T?
+    return tags?.get(clazz) as T?
   }
 
   /** Assigns the tag value using the given class key and value.  */
@@ -534,10 +534,8 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
     require(clazz.isAssignableFrom(value::class.java)) {
       "Tag value must be of type ${clazz.name}"
     }
-    if (tags == null) {
-      tags = LinkedHashMap()
-    }
-    tags!![clazz] = value
+    val localTags = tags ?: LinkedHashMap<Class<*>, Any>().also { tags = it }
+    localTags[clazz] = value
   }
 
   public companion object {
