@@ -199,6 +199,14 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
 
   private var tags: MutableMap<Class<*>, Any>? = null
 
+  /**
+   * Returns a [JsonPath](http://goessner.net/articles/JsonPath/) to the current location
+   * in the JSON value.
+   */
+  @get:CheckReturnValue
+  public val path: String
+    get() = JsonScope.getPath(stackSize, scopes, pathNames, pathIndices)
+
   /** Returns the scope on the top of the stack.  */
   protected fun peekScope(): Int {
     check(stackSize != 0) { "JsonWriter is closed." }
@@ -390,10 +398,11 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
         beginObject()
         for ((key, value1) in value) {
           require(key is String) {
-            if (key == null)
+            if (key == null) {
               "Map keys must be non-null"
-            else
+            } else {
               "Map keys must be of type String: ${key.javaClass.name}"
+            }
           }
           name(key)
           jsonValue(value1)
@@ -437,8 +446,8 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @Throws(IOException::class)
   public fun promoteValueToName() {
     val context = peekScope()
-    if (context != NONEMPTY_OBJECT && context != EMPTY_OBJECT) {
-      throw IllegalStateException("Nesting problem.")
+    check(!(context != NONEMPTY_OBJECT && context != EMPTY_OBJECT)) {
+      "Nesting problem."
     }
     promoteValueToName = true
   }
@@ -500,13 +509,8 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @CheckReturnValue
   public fun beginFlatten(): Int {
     val context = peekScope()
-    if (
-      context != NONEMPTY_OBJECT &&
-      context != EMPTY_OBJECT &&
-      context != NONEMPTY_ARRAY &&
-      context != EMPTY_ARRAY
-    ) {
-      throw IllegalStateException("Nesting problem.")
+    check(!(context != NONEMPTY_OBJECT && context != EMPTY_OBJECT && context != NONEMPTY_ARRAY && context != EMPTY_ARRAY)) {
+      "Nesting problem."
     }
     val token = flattenStackSize
     flattenStackSize = stackSize
@@ -517,14 +521,6 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   public fun endFlatten(token: Int) {
     flattenStackSize = token
   }
-
-  /**
-   * Returns a [JsonPath](http://goessner.net/articles/JsonPath/) to the current location
-   * in the JSON value.
-   */
-  @get:CheckReturnValue
-  public val path: String
-    get() = JsonScope.getPath(stackSize, scopes, pathNames, pathIndices)
 
   /** Returns the tag value for the given class key.  */
   @CheckReturnValue
