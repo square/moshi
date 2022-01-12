@@ -442,7 +442,7 @@ public sealed class JsonWriter : Closeable, Flushable {
   @Throws(IOException::class)
   public fun promoteValueToName() {
     val context = peekScope()
-    check(!(context != NONEMPTY_OBJECT && context != EMPTY_OBJECT)) {
+    check(context == NONEMPTY_OBJECT || context == EMPTY_OBJECT) {
       "Nesting problem."
     }
     promoteValueToName = true
