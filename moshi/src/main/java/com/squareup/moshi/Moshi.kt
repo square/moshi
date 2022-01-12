@@ -63,7 +63,7 @@ public class Moshi internal constructor(builder: Builder) {
     }
     val annotations = buildSet(annotationTypes.size) {
       for (annotationType in annotationTypes) {
-        add(createJsonQualifierImplementation(annotationType)!!)
+        add(createJsonQualifierImplementation(annotationType))
       }
     }
     return adapter(type, annotations)
