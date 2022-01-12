@@ -39,7 +39,7 @@ import kotlin.reflect.full.declaredMemberProperties
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassCodegenProcessorTest {
 
-  @Rule @JvmField var temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @Rule @JvmField val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun privateConstructor() {

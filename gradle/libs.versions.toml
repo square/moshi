@@ -3,9 +3,9 @@ autoService = "1.0"
 gjf = "1.11.0"
 jvmTarget = "1.8"
 kotlin = "1.6.10"
-kotlinCompileTesting = "1.4.6"
+kotlinCompileTesting = "1.4.7"
 kotlinpoet = "1.10.2"
-ksp = "1.6.0-1.0.1"
+ksp = "1.6.10-1.0.2"
 ktlint = "0.41.0"
 
 [plugins]
@@ -14,7 +14,7 @@ japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.18.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.0.0" }
-spotless = { id = "com.diffplug.spotless", version = "5.14.2" }
+spotless = { id = "com.diffplug.spotless", version = "6.1.0" }
 
 [libraries]
 asm = "org.ow2.asm:asm:9.2"
@@ -31,7 +31,7 @@ kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin
 kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.4.0"
 ksp = { module = "com.google.devtools.ksp:symbol-processing", version.ref = "ksp" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
-okio = "com.squareup.okio:okio:2.10.0"
+okio = "com.squareup.okio:okio:3.0.0"
 
 # Test libs
 assertj = "org.assertj:assertj-core:3.11.1"
