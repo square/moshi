@@ -509,7 +509,7 @@ public abstract class JsonWriter internal constructor() : Closeable, Flushable {
   @CheckReturnValue
   public fun beginFlatten(): Int {
     val context = peekScope()
-    check(!(context != NONEMPTY_OBJECT && context != EMPTY_OBJECT && context != NONEMPTY_ARRAY && context != EMPTY_ARRAY)) {
+    check(context == NONEMPTY_OBJECT || context == EMPTY_OBJECT || context == NONEMPTY_ARRAY || context == EMPTY_ARRAY) {
       "Nesting problem."
     }
     val token = flattenStackSize
