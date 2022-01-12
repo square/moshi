@@ -782,6 +782,7 @@ class JsonClassCodegenProcessorTest {
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
+        kotlincArguments = listOf("-Xjvm-default=enable")
       }
   }
 

@@ -816,6 +816,7 @@ class JsonClassSymbolProcessorTest {
         sources = sourceFiles.asList()
         verbose = false
         kspIncremental = true // The default now
+        kotlincArguments = listOf("-Xjvm-default=enable")
       }
   }
 
