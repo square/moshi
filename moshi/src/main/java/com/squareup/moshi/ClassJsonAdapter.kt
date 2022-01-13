@@ -30,7 +30,7 @@ import java.lang.reflect.Type
 /**
  * Emits a regular class as a JSON object by mapping Java fields to JSON object properties.
  *
- * <h1>Platform Types</h1>
+ * # Platform Types
  *
  * Fields from platform classes are omitted from both serialization and deserialization unless they
  * are either public or protected. This includes the following packages and their subpackages:
