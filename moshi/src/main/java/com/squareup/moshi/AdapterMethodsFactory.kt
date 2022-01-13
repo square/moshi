@@ -113,12 +113,7 @@ internal class AdapterMethodsFactory(
             val toAdapter = toAdapter(adapter, declaredMethod)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
             require(conflicting == null) {
-              "Conflicting @ToJson methods:\n" +
-                "    " +
-                requireNotNull(conflicting).method +
-                "\n" +
-                "    " +
-                toAdapter.method
+              "Conflicting @ToJson methods:\n    ${requireNotNull(conflicting).method}\n    ${toAdapter.method}"
             }
             toAdapters.add(toAdapter)
           }
@@ -126,12 +121,7 @@ internal class AdapterMethodsFactory(
             val fromAdapter = fromAdapter(adapter, declaredMethod)
             val conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations)
             require(conflicting == null) {
-              "Conflicting @FromJson methods:\n" +
-                "    " +
-                requireNotNull(conflicting).method +
-                "\n" +
-                "    " +
-                fromAdapter.method
+              "Conflicting @FromJson methods:\n    ${requireNotNull(conflicting).method}\n    ${fromAdapter.method}"
             }
             fromAdapters.add(fromAdapter)
           }
