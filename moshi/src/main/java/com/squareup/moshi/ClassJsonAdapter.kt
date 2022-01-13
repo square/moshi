@@ -135,18 +135,24 @@ internal class ClassJsonAdapter<T>(
         )
       }
 
-      if (rawType.isAnonymousClass) { throw IllegalArgumentException("Cannot serialize anonymous class ${rawType.name}") }
-      if (rawType.isLocalClass) { throw IllegalArgumentException("Cannot serialize local class ${rawType.name}") }
-      if (rawType.enclosingClass != null && !Modifier.isStatic(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize non-static nested class ${rawType.name}") }
-      if (Modifier.isAbstract(rawType.modifiers)) { throw IllegalArgumentException("Cannot serialize abstract class ${rawType.name}") }
-      if (rawType.isKotlin) {
-        throw IllegalArgumentException(
-          "Cannot serialize Kotlin type " +
+      require(!rawType.isAnonymousClass) {
+        "Cannot serialize anonymous class ${rawType.name}"
+      }
+      require(!rawType.isLocalClass) {
+        "Cannot serialize local class ${rawType.name}"
+      }
+      require(!(rawType.enclosingClass != null && !Modifier.isStatic(rawType.modifiers))) {
+        "Cannot serialize non-static nested class ${rawType.name}"
+      }
+      require(!Modifier.isAbstract(rawType.modifiers)) {
+        "Cannot serialize abstract class ${rawType.name}"
+      }
+      require(!rawType.isKotlin) {
+        "Cannot serialize Kotlin type " +
             rawType.name +
             ". Reflective serialization of Kotlin classes without using kotlin-reflect has " +
             "undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the " +
             "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
-        )
       }
       val classFactory = ClassFactory.get<Any>(rawType)
       val fields = sortedMapOf<String, FieldBinding<*>>()
@@ -203,12 +209,13 @@ internal class ClassJsonAdapter<T>(
         val jsonName = jsonAnnotation.jsonName(fieldName)
         val fieldBinding = FieldBinding(jsonName, field, adapter)
         val replaced = fieldBindings.put(jsonName, fieldBinding)
-        if (replaced != null) {
-          throw IllegalArgumentException(
-            """Conflicting fields:
-    ${replaced.field}
-    ${fieldBinding.field}"""
-          )
+        require(replaced == null) {
+          "Conflicting fields:\n" +
+            "    " +
+            requireNotNull(replaced).field +
+            "\n" +
+            "    " +
+            fieldBinding.field
         }
       }
     }
