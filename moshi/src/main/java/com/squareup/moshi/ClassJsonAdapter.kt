@@ -126,9 +126,11 @@ internal class ClassJsonAdapter<T>(
         type.throwIfIsCollectionClass(Map::class.java)
         type.throwIfIsCollectionClass(Collection::class.java)
 
-        var messagePrefix = "Platform $rawType"
-        if (type is ParameterizedType) {
-          messagePrefix += " in $type"
+        val messagePrefix = buildString {
+          append("Platform $rawType")
+          if (type is ParameterizedType) {
+            append(" in $type")
+          }
         }
         throw IllegalArgumentException(
           "$messagePrefix requires explicit JsonAdapter to be registered"
