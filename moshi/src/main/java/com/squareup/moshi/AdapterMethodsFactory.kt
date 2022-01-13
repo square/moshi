@@ -207,8 +207,9 @@ internal class AdapterMethodsFactory(
     /** Returns true if `parameterTypes[offset]` contains only JsonAdapters. */
     private fun parametersAreJsonAdapters(offset: Int, parameterTypes: Array<Type>): Boolean {
       for (i in offset until parameterTypes.size) {
-        if (parameterTypes[i] !is ParameterizedType) return false
-        if ((parameterTypes[i] as ParameterizedType).rawType != JsonAdapter::class.java) return false
+        val parameterType = parameterTypes[i]
+        if (parameterType !is ParameterizedType) return false
+        if (parameterType.rawType != JsonAdapter::class.java) return false
       }
       return true
     }
