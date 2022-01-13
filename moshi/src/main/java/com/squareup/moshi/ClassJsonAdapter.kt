@@ -154,11 +154,7 @@ internal class ClassJsonAdapter<T>(
         "Cannot serialize abstract class ${rawType.name}"
       }
       require(!rawType.isKotlin) {
-        "Cannot serialize Kotlin type " +
-          rawType.name +
-          ". Reflective serialization of Kotlin classes without using kotlin-reflect has " +
-          "undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the " +
-          "moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
+        "Cannot serialize Kotlin type ${rawType.name}. Reflective serialization of Kotlin classes without using kotlin-reflect has undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
       }
       val classFactory = ClassFactory.get<Any>(rawType)
       val fields = sortedMapOf<String, FieldBinding<*>>()
