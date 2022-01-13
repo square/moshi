@@ -34,7 +34,7 @@ internal abstract class ClassFactory<T> {
 
   companion object {
     @JvmStatic
-    operator fun <T> get(rawType: Class<*>): ClassFactory<T> {
+    fun <T> get(rawType: Class<*>): ClassFactory<T> {
       // Try to find a no-args constructor. May be any visibility including private.
       try {
         val constructor = rawType.getDeclaredConstructor()
@@ -55,9 +55,9 @@ internal abstract class ClassFactory<T> {
       // }
       try {
         val unsafeClass = Class.forName("sun.misc.Unsafe")
-        val f = unsafeClass.getDeclaredField("theUnsafe")
-        f.isAccessible = true
-        val unsafe = f[null]
+        val unsafeField = unsafeClass.getDeclaredField("theUnsafe")
+        unsafeField.isAccessible = true
+        val unsafe = unsafeField[null]
         val allocateInstance = unsafeClass.getMethod("allocateInstance", Class::class.java)
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
