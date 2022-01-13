@@ -32,6 +32,7 @@ val japicmp = tasks.register<JapicmpTask>("japicmp") {
     "com.squareup.moshi.StandardJsonAdapters", // Package-private
     "com.squareup.moshi.RecordJsonAdapter\$ComponentBinding", // Package-private
     "com.squareup.moshi.AdapterMethodsFactory", // Internal.
+    "com.squareup.moshi.ClassJsonAdapter\$FieldBinding", // Internal.
   )
   methodExcludes = listOf(
     "com.squareup.moshi.JsonAdapter#indent(java.lang.String)", // Was unintentionally open before

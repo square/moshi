@@ -99,14 +99,14 @@ internal class ClassJsonAdapter<T>(
 
   override fun toString() = "JsonAdapter($classFactory)"
 
-  internal open class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
-    open fun read(reader: JsonReader, value: Any) {
+  internal class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
+    fun read(reader: JsonReader, value: Any) {
       val fieldValue = adapter.fromJson(reader)
       field[value] = fieldValue
     }
 
     @Suppress("UNCHECKED_CAST") // We require that field's values are of type T.
-    open fun write(writer: JsonWriter, value: Any) {
+    fun write(writer: JsonWriter, value: Any) {
       val fieldValue = field[value] as T
       adapter.toJson(writer, fieldValue)
     }
