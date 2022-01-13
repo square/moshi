@@ -32,149 +32,148 @@ import javax.annotation.CheckReturnValue
  * depth-first order, the same order that they appear in the JSON document. Within JSON objects,
  * name/value pairs are represented by a single token.
  *
- * <h2>Parsing JSON</h2>
+ * ## Parsing JSON
  *
  * To create a recursive descent parser for your own JSON streams, first create an entry point
  * method that creates a `JsonReader`.
  *
- *
  * Next, create handler methods for each structure in your JSON text. You'll need a method for
  * each object type and for each array type.
  *
- *
- *  * Within **array handling** methods, first call [.beginArray] to consume
+ * - Within **array handling** methods, first call [beginArray] to consume
  * the array's opening bracket. Then create a while loop that accumulates values, terminating
- * when [.hasNext] is false. Finally, read the array's closing bracket by calling [       ][.endArray].
- *  * Within **object handling** methods, first call [.beginObject] to consume
+ * when [hasNext] is false. Finally, read the array's closing bracket by calling [endArray].
+ * - Within **object handling** methods, first call [beginObject] to consume
  * the object's opening brace. Then create a while loop that assigns values to local variables
- * based on their name. This loop should terminate when [.hasNext] is false. Finally,
- * read the object's closing brace by calling [.endObject].
- *
- *
+ * based on their name. This loop should terminate when [hasNext] is false. Finally,
+ * read the object's closing brace by calling [endObject].
  *
  * When a nested object or array is encountered, delegate to the corresponding handler method.
  *
- *
  * When an unknown name is encountered, strict parsers should fail with an exception. Lenient
- * parsers should call [.skipValue] to recursively skip the value's nested tokens, which may
+ * parsers should call [skipValue] to recursively skip the value's nested tokens, which may
  * otherwise conflict.
  *
+ * If a value may be null, you should first check using [peek]. Null literals can be
+ * consumed using either [nextNull] or [skipValue].
  *
- * If a value may be null, you should first check using [.peek]. Null literals can be
- * consumed using either [.nextNull] or [.skipValue].
- *
- * <h2>Example</h2>
+ * ## Example
  *
  * Suppose we'd like to parse a stream of messages such as the following:
  *
- * <pre>`[
- * {
- * "id": 912345678901,
- * "text": "How do I read a JSON stream in Java?",
- * "geo": null,
- * "user": {
- * "name": "json_newb",
- * "followers_count": 41
- * }
- * },
- * {
- * "id": 912345678902,
- * "text": "@json_newb just use JsonReader!",
- * "geo": [50.454722, -104.606667],
- * "user": {
- * "name": "jesse",
- * "followers_count": 2
- * }
- * }
+ * ```json
+ * [
+ *   {
+ *     "id": 912345678901,
+ *     "text": "How do I read a JSON stream in Java?",
+ *     "geo": null,
+ *     "user": {
+ *       "name": "json_newb",
+ *       "followers_count": 41
+ *     }
+ *   },
+ *   {
+ *     "id": 912345678902,
+ *     "text": "@json_newb just use JsonReader!",
+ *     "geo": [
+ *       50.454722,
+ *       -104.606667
+ *     ],
+ *     "user": {
+ *       "name": "jesse",
+ *       "followers_count": 2
+ *     }
+ *   }
  * ]
-`</pre> *
+ * ```
  *
  * This code implements the parser for the above structure:
  *
- * <pre>`public List<Message> readJsonStream(BufferedSource source) throws IOException {
- * JsonReader reader = JsonReader.of(source);
- * try {
- * return readMessagesArray(reader);
- * } finally {
- * reader.close();
- * }
+ * ```java
+ * public List<Message> readJsonStream(BufferedSource source) throws IOException {
+ *   JsonReader reader = JsonReader.of(source);
+ *   try {
+ *     return readMessagesArray(reader);
+ *   } finally {
+ *     reader.close();
+ *   }
  * }
  *
  * public List<Message> readMessagesArray(JsonReader reader) throws IOException {
- * List<Message> messages = new ArrayList<Message>();
+ *   List<Message> messages = new ArrayList<Message>();
  *
- * reader.beginArray();
- * while (reader.hasNext()) {
- * messages.add(readMessage(reader));
- * }
- * reader.endArray();
- * return messages;
+ *   reader.beginArray();
+ *   while (reader.hasNext()) {
+ *     messages.add(readMessage(reader));
+ *   }
+ *   reader.endArray();
+ *   return messages;
  * }
  *
  * public Message readMessage(JsonReader reader) throws IOException {
- * long id = -1;
- * String text = null;
- * User user = null;
- * List<Double> geo = null;
+ *   long id = -1;
+ *   String text = null;
+ *   User user = null;
+ *   List<Double> geo = null;
  *
- * reader.beginObject();
- * while (reader.hasNext()) {
- * String name = reader.nextName();
- * if (name.equals("id")) {
- * id = reader.nextLong();
- * } else if (name.equals("text")) {
- * text = reader.nextString();
- * } else if (name.equals("geo") && reader.peek() != Token.NULL) {
- * geo = readDoublesArray(reader);
- * } else if (name.equals("user")) {
- * user = readUser(reader);
- * } else {
- * reader.skipValue();
- * }
- * }
- * reader.endObject();
- * return new Message(id, text, user, geo);
+ *   reader.beginObject();
+ *   while (reader.hasNext()) {
+ *     String name = reader.nextName();
+ *     if (name.equals("id")) {
+ *       id = reader.nextLong();
+ *     } else if (name.equals("text")) {
+ *       text = reader.nextString();
+ *     } else if (name.equals("geo") && reader.peek() != Token.NULL) {
+ *       geo = readDoublesArray(reader);
+ *     } else if (name.equals("user")) {
+ *       user = readUser(reader);
+ *     } else {
+ *       reader.skipValue();
+ *     }
+ *   }
+ *   reader.endObject();
+ *   return new Message(id, text, user, geo);
  * }
  *
  * public List<Double> readDoublesArray(JsonReader reader) throws IOException {
- * List<Double> doubles = new ArrayList<Double>();
+ *   List<Double> doubles = new ArrayList<Double>();
  *
- * reader.beginArray();
- * while (reader.hasNext()) {
- * doubles.add(reader.nextDouble());
- * }
- * reader.endArray();
- * return doubles;
+ *   reader.beginArray();
+ *   while (reader.hasNext()) {
+ *     doubles.add(reader.nextDouble());
+ *   }
+ *   reader.endArray();
+ *   return doubles;
  * }
  *
  * public User readUser(JsonReader reader) throws IOException {
- * String username = null;
- * int followersCount = -1;
+ *   String username = null;
+ *   int followersCount = -1;
  *
- * reader.beginObject();
- * while (reader.hasNext()) {
- * String name = reader.nextName();
- * if (name.equals("name")) {
- * username = reader.nextString();
- * } else if (name.equals("followers_count")) {
- * followersCount = reader.nextInt();
- * } else {
- * reader.skipValue();
+ *   reader.beginObject();
+ *   while (reader.hasNext()) {
+ *     String name = reader.nextName();
+ *     if (name.equals("name")) {
+ *       username = reader.nextString();
+ *     } else if (name.equals("followers_count")) {
+ *       followersCount = reader.nextInt();
+ *     } else {
+ *       reader.skipValue();
+ *     }
+ *   }
+ *   reader.endObject();
+ *   return new User(username, followersCount);
  * }
- * }
- * reader.endObject();
- * return new User(username, followersCount);
- * }
-`</pre> *
+ * ```
  *
- * <h2>Number Handling</h2>
+ * ## Number Handling
  *
  * This reader permits numeric values to be read as strings and string values to be read as numbers.
- * For example, both elements of the JSON array `[1, "1"]` may be read using either [ ][.nextInt] or [.nextString]. This behavior is intended to prevent lossy numeric conversions:
+ * For example, both elements of the JSON array `[1, "1"]` may be read using either [nextInt] or [nextString].
+ * This behavior is intended to prevent lossy numeric conversions:
  * double is JavaScript's only numeric type and very large values like `9007199254740993`
  * cannot be represented exactly on that platform. To minimize precision loss, extremely large
  * values should be written and read as strings in JSON.
- *
  *
  * Each `JsonReader` may be used to read a single JSON stream. Instances of this class are
  * not thread safe.
@@ -187,38 +186,33 @@ public sealed class JsonReader : Closeable {
   protected var scopes: IntArray
   protected var pathNames: Array<String?>
   protected var pathIndices: IntArray
-  /** Returns true if this parser is liberal in what it accepts.  */
   /**
-   * Configure this parser to be liberal in what it accepts. By default this parser is strict and
+   * Configure this parser to be liberal in what it accepts. By default, this parser is strict and
    * only accepts JSON as specified by [RFC 7159](http://www.ietf.org/rfc/rfc7159.txt).
    * Setting the parser to lenient causes it to ignore the following syntax errors:
    *
-   *
-   *  * Streams that include multiple top-level values. With strict parsing, each stream must
+   * - Streams that include multiple top-level values. With strict parsing, each stream must
    * contain exactly one top-level value.
-   *  * Numbers may be [NaNs][Double.isNaN] or [       infinities][Double.isInfinite].
-   *  * End of line comments starting with `//` or `#` and ending with a newline
+   * - Numbers may be [NaNs][Double.isNaN] or [infinities][Double.isInfinite].
+   * - End of line comments starting with `//` or `#` and ending with a newline
    * character.
-   *  * C-style comments starting with `/ *` and ending with `*``/`. Such
+   * - C-style comments starting with `/ *` and ending with `*``/`. Such
    * comments may not be nested.
-   *  * Names that are unquoted or `'single quoted'`.
-   *  * Strings that are unquoted or `'single quoted'`.
-   *  * Array elements separated by `;` instead of `,`.
-   *  * Unnecessary array separators. These are interpreted as if null was the omitted value.
-   *  * Names and values separated by `=` or `=>` instead of `:`.
-   *  * Name/value pairs separated by `;` instead of `,`.
-   *
+   * - Names that are unquoted or `'single quoted'`.
+   * - Strings that are unquoted or `'single quoted'`.
+   * - Array elements separated by `;` instead of `,`.
+   * - Unnecessary array separators. These are interpreted as if null was the omitted value.
+   * - Names and values separated by `=` or `=>` instead of `:`.
+   * - Name/value pairs separated by `;` instead of `,`.
    */
-  /** True to accept non-spec compliant JSON.  */
   @get:CheckReturnValue
   public var isLenient: Boolean = false
 
-  /** True to throw a [JsonDataException] on any attempt to call [.skipValue].  */
+  /** True to throw a [JsonDataException] on any attempt to call [skipValue]. */
   public var failOnUnknown: Boolean = false
     /**
-     * Configure whether this parser throws a [JsonDataException] when [.skipValue] is
-     * called. By default this parser permits values to be skipped.
-     *
+     * Configure whether this parser throws a [JsonDataException] when [skipValue] is
+     * called. By default, this parser permits values to be skipped.
      *
      * Forbid skipping to prevent unrecognized values from being silently ignored. This option is
      * useful in development and debugging because it means a typo like "locatiom" will be detected
@@ -284,7 +278,7 @@ public sealed class JsonReader : Closeable {
     }
   }
 
-  /** Returns true if this parser forbids skipping names and values.  */
+  /** Returns true if this parser forbids skipping names and values. */
   @CheckReturnValue
   public fun failOnUnknown(): Boolean {
     return failOnUnknown
@@ -318,12 +312,12 @@ public sealed class JsonReader : Closeable {
   @Throws(IOException::class)
   public abstract fun endObject()
 
-  /** Returns true if the current array or object has another element.  */
+  /** Returns true if the current array or object has another element. */
   @CheckReturnValue
   @Throws(IOException::class)
   public abstract operator fun hasNext(): Boolean
 
-  /** Returns the type of the next token without consuming it.  */
+  /** Returns the type of the next token without consuming it. */
   @CheckReturnValue
   @Throws(IOException::class)
   public abstract fun peek(): Token
@@ -350,7 +344,7 @@ public sealed class JsonReader : Closeable {
    * contains unrecognized or unhandled names.
    *
    *
-   * This throws a [JsonDataException] if this parser has been configured to [ ][.failOnUnknown] names.
+   * This throws a [JsonDataException] if this parser has been configured to [failOnUnknown] names.
    */
   @Throws(IOException::class)
   public abstract fun skipName()
@@ -391,7 +385,7 @@ public sealed class JsonReader : Closeable {
 
   /**
    * Returns the [double][Token.NUMBER] value of the next token, consuming it. If the next
-   * token is a string, this method will attempt to parse it as a double using [ ][Double.parseDouble].
+   * token is a string, this method will attempt to parse it as a double using [toDouble].
    *
    * @throws JsonDataException if the next token is not a literal value, or if the next literal
    * value cannot be parsed as a double, or is non-finite.
@@ -424,44 +418,41 @@ public sealed class JsonReader : Closeable {
   /**
    * Returns the next value as a stream of UTF-8 bytes and consumes it.
    *
-   *
    * The following program demonstrates how JSON bytes are returned from an enclosing stream as
    * their original bytes, including their original whitespace:
    *
-   * <pre>`String json = "{\"a\": [4,  5  ,6.0, {\"x\":7}, 8], \"b\": 9}";
+   * ```java
+   * String json = "{\"a\": [4,  5  ,6.0, {\"x\":7}, 8], \"b\": 9}";
    * JsonReader reader = JsonReader.of(new Buffer().writeUtf8(json));
    * reader.beginObject();
    * assertThat(reader.nextName()).isEqualTo("a");
    * try (BufferedSource bufferedSource = reader.nextSource()) {
-   * assertThat(bufferedSource.readUtf8()).isEqualTo("[4,  5  ,6.0, {\"x\":7}, 8]");
+   *   assertThat(bufferedSource.readUtf8()).isEqualTo("[4,  5  ,6.0, {\"x\":7}, 8]");
    * }
    * assertThat(reader.nextName()).isEqualTo("b");
    * assertThat(reader.nextInt()).isEqualTo(9);
    * reader.endObject();
-   `</pre> *
-   *
+   * ```
    *
    * This reads an entire value: composite objects like arrays and objects are returned in their
    * entirety. The stream starts with the first character of the value (typically `[`, `{
    ` * , or `"`) and ends with the last character of the object (typically `]`,
    * `}`, or `"`).
    *
-   *
    * The returned source may not be used after any other method on this `JsonReader` is
    * called. For example, the following code crashes with an exception:
    *
-   * <pre>`JsonReader reader = ...
+   * ```java
+   * JsonReader reader = ...
    * reader.beginArray();
    * BufferedSource source = reader.nextSource();
    * reader.endArray();
    * source.readUtf8(); // Crash!
-   `</pre> *
-   *
+   * ```
    *
    * The returned bytes are not validated. This method assumes the stream is well-formed JSON and
    * only attempts to find the value's boundary in the byte stream. It is the caller's
    * responsibility to check that the returned byte stream is a valid JSON value.
-   *
    *
    * Closing the returned source **does not** close this reader.
    */
@@ -473,8 +464,7 @@ public sealed class JsonReader : Closeable {
    * This method is intended for use when the JSON token stream contains unrecognized or unhandled
    * values.
    *
-   *
-   * This throws a [JsonDataException] if this parser has been configured to [ ][.failOnUnknown] values.
+   * This throws a [JsonDataException] if this parser has been configured to [failOnUnknown] values.
    */
   @Throws(IOException::class)
   public abstract fun skipValue()
@@ -525,11 +515,11 @@ public sealed class JsonReader : Closeable {
    * Returns a new `JsonReader` that can read data from this `JsonReader` without
    * consuming it. The returned reader becomes invalid once this one is next read or closed.
    *
-   *
    * For example, we can use `peekJson()` to lookahead and read the same data multiple
    * times.
    *
-   * <pre>`Buffer buffer = new Buffer();
+   * ```java
+   * Buffer buffer = new Buffer();
    * buffer.writeUtf8("[123, 456, 789]")
    *
    * JsonReader jsonReader = JsonReader.of(buffer);
@@ -542,18 +532,18 @@ public sealed class JsonReader : Closeable {
    * peek.endArray()
    *
    * jsonReader.nextInt() // Returns 456, reader contains 789 and ].
-   `</pre> *
+   * ```
    */
   @CheckReturnValue
   public abstract fun peekJson(): JsonReader
 
-  /** Returns the tag value for the given class key.  */
+  /** Returns the tag value for the given class key. */
   @CheckReturnValue
   public fun <T> tag(clazz: Class<T>): T? {
     @Suppress("UNCHECKED_CAST") return tags?.get(clazz) as T?
   }
 
-  /** Assigns the tag value using the given class key and value.  */
+  /** Assigns the tag value using the given class key and value. */
   public fun <T : Any> setTag(clazz: Class<T>, value: T) {
     require(clazz.isAssignableFrom(value::class.java)) {
       "Tag value must be of type ${clazz.name}"
@@ -564,31 +554,31 @@ public sealed class JsonReader : Closeable {
 
   /**
    * Changes the reader to treat the next name as a string value. This is useful for map adapters so
-   * that arbitrary type adapters can use [.nextString] to read a name value.
+   * that arbitrary type adapters can use [nextString] to read a name value.
    *
+   * In this example, calling this method allows two sequential calls to [nextString]:
    *
-   * In this example, calling this method allows two sequential calls to [.nextString]:
-   *
-   * <pre>`JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"a\":\"b\"}"));
+   * ```java
+   * JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"a\":\"b\"}"));
    * reader.beginObject();
    * reader.promoteNameToValue();
    * assertEquals("a", reader.nextString());
    * assertEquals("b", reader.nextString());
    * reader.endObject();
-   `</pre> *
+   * ```
    */
   @Throws(IOException::class)
   public abstract fun promoteNameToValue()
 
   /**
-   * A set of strings to be chosen with [.selectName] or [.selectString]. This prepares
-   * the encoded values of the strings so they can be read directly from the input source.
+   * A set of strings to be chosen with [selectName] or [selectString]. This prepares
+   * the encoded values of the strings, so they can be read directly from the input source.
    */
   public class Options private constructor(
     public val strings: Array<String>,
     public val doubleQuoteSuffix: okio.Options
   ) {
-    /** Returns a copy of this [Option&#39;s][Options] strings.  */
+    /** Returns a copy of this [Option's][Options] strings. */
     public fun strings(): List<String> {
       return Collections.unmodifiableList(strings.toList())
     }
@@ -614,7 +604,7 @@ public sealed class JsonReader : Closeable {
     }
   }
 
-  /** A structure, name, or value type in a JSON-encoded string.  */
+  /** A structure, name, or value type in a JSON-encoded string. */
   public enum class Token {
     /**
      * The opening of a JSON array. Written using [JsonWriter.beginArray] and read using
@@ -623,7 +613,7 @@ public sealed class JsonReader : Closeable {
     BEGIN_ARRAY,
 
     /**
-     * The closing of a JSON array. Written using [JsonWriter.endArray] and read using [ ][JsonReader.endArray].
+     * The closing of a JSON array. Written using [JsonWriter.endArray] and read using [JsonReader.endArray].
      */
     END_ARRAY,
 
@@ -645,7 +635,7 @@ public sealed class JsonReader : Closeable {
      */
     NAME,
 
-    /** A JSON string.  */
+    /** A JSON string. */
     STRING,
 
     /**
@@ -653,10 +643,10 @@ public sealed class JsonReader : Closeable {
      */
     NUMBER,
 
-    /** A JSON `true` or `false`.  */
+    /** A JSON `true` or `false`. */
     BOOLEAN,
 
-    /** A JSON `null`.  */
+    /** A JSON `null`. */
     NULL,
 
     /**
@@ -667,7 +657,7 @@ public sealed class JsonReader : Closeable {
   }
 
   public companion object {
-    /** Returns a new instance that reads UTF-8 encoded JSON from `source`.  */
+    /** Returns a new instance that reads UTF-8 encoded JSON from `source`. */
     @JvmStatic
     @CheckReturnValue
     public fun of(source: BufferedSource): JsonReader {
