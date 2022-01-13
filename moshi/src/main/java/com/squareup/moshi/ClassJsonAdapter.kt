@@ -171,13 +171,11 @@ internal class ClassJsonAdapter<T>(
      * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
      */
     private fun Type.throwIfIsCollectionClass(collectionInterface: Class<*>) {
-      if (collectionInterface.isAssignableFrom(rawType)) {
-        throw IllegalArgumentException(
-          "No JsonAdapter for $this, you should probably use ${collectionInterface.simpleName}" +
+      require(!collectionInterface.isAssignableFrom(rawType)) {
+        "No JsonAdapter for $this, you should probably use ${collectionInterface.simpleName}" +
             " instead of ${rawType.simpleName}" +
             " (Moshi only supports the collection interfaces by default)" +
             " or else register a custom JsonAdapter."
-        )
       }
     }
 
