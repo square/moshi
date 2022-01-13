@@ -335,9 +335,9 @@ internal class AdapterMethodsFactory(
     open fun fromJson(moshi: Moshi, reader: JsonReader): Any? = throw AssertionError()
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments. */
-    protected fun invoke(a1: Any?): Any? {
+    protected fun invoke(fixedArgument1: Any?): Any? {
       val args = arrayOfNulls<Any>(1 + jsonAdapters.size)
-      args[0] = a1
+      args[0] = fixedArgument1
       jsonAdapters.copyInto(args, 1, 0, jsonAdapters.size)
 
       return try {
@@ -348,10 +348,10 @@ internal class AdapterMethodsFactory(
     }
 
     /** Invoke the method with two fixed arguments, plus any number of JSON adapter arguments. */
-    protected fun invoke(a1: Any?, a2: Any?): Any? {
+    protected fun invoke(fixedArgument1: Any?, fixedArgument2: Any?): Any? {
       val args = arrayOfNulls<Any>(2 + jsonAdapters.size)
-      args[0] = a1
-      args[1] = a2
+      args[0] = fixedArgument1
+      args[1] = fixedArgument2
       jsonAdapters.copyInto(args, 2, 0, jsonAdapters.size)
 
       return try {
