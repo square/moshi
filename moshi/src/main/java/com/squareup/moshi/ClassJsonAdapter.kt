@@ -35,13 +35,13 @@ import java.lang.reflect.Type
  * Fields from platform classes are omitted from both serialization and deserialization unless they
  * are either public or protected. This includes the following packages and their subpackages:
  *
- *  * android.*
- *  * androidx.*
- *  * java.*
- *  * javax.*
- *  * kotlin.*
- *  * kotlinx.*
- *  * scala.*
+ *  * `android.*`
+ *  * `androidx.*`
+ *  * `java.*`
+ *  * `javax.*`
+ *  * `kotlin.*`
+ *  * `kotlinx.*`
+ *  * `scala.*`
  *
  */
 internal class ClassJsonAdapter<T>(
