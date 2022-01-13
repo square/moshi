@@ -241,9 +241,7 @@ internal class AdapterMethodsFactory(
             method = method,
             nullable = true
           ) {
-            override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
-              return invoke(reader)
-            }
+            override fun fromJson(moshi: Moshi, reader: JsonReader) = invoke(reader)
           }
         }
         parameterTypes.size == 1 && returnType != Void.TYPE -> {
