@@ -57,18 +57,22 @@ internal class AdapterMethodsFactory(
 
     return object : JsonAdapter<Any>() {
       override fun toJson(writer: JsonWriter, value: Any?) {
-        if (toAdapter == null) {
-          requireNotNull(delegate).toJson(writer, value)
-        } else if (!toAdapter.nullable && value == null) {
-          writer.nullValue()
-        } else {
-          try {
-            toAdapter.toJson(moshi, writer, value)
-          } catch (e: InvocationTargetException) {
-            val cause = e.cause
-            if (cause is IOException) throw cause
-            throw JsonDataException("$cause at ${writer.path}", cause)
-          }
+        when {
+            toAdapter == null -> {
+              requireNotNull(delegate).toJson(writer, value)
+            }
+            !toAdapter.nullable && value == null -> {
+              writer.nullValue()
+            }
+            else -> {
+              try {
+                toAdapter.toJson(moshi, writer, value)
+              } catch (e: InvocationTargetException) {
+                val cause = e.cause
+                if (cause is IOException) throw cause
+                throw JsonDataException("$cause at ${writer.path}", cause)
+              }
+            }
         }
       }
 
