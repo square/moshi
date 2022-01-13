@@ -75,7 +75,7 @@ internal class ClassJsonAdapter<T>(
           reader.skipValue()
           continue
         }
-        fieldsArray[index].read(reader, result as Any)
+        fieldsArray[index].read(reader, requireNotNull(result))
       }
       reader.endObject()
       return result
@@ -89,7 +89,7 @@ internal class ClassJsonAdapter<T>(
       writer.beginObject()
       for (fieldBinding in fieldsArray) {
         writer.name(fieldBinding.name)
-        fieldBinding.write(writer, value as Any)
+        fieldBinding.write(writer, requireNotNull(value))
       }
       writer.endObject()
     } catch (e: IllegalAccessException) {
