@@ -58,42 +58,42 @@ internal class AdapterMethodsFactory(
     return object : JsonAdapter<Any>() {
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
-            toAdapter == null -> {
-              requireNotNull(delegate).toJson(writer, value)
+          toAdapter == null -> {
+            requireNotNull(delegate).toJson(writer, value)
+          }
+          !toAdapter.nullable && value == null -> {
+            writer.nullValue()
+          }
+          else -> {
+            try {
+              toAdapter.toJson(moshi, writer, value)
+            } catch (e: InvocationTargetException) {
+              val cause = e.cause
+              if (cause is IOException) throw cause
+              throw JsonDataException("$cause at ${writer.path}", cause)
             }
-            !toAdapter.nullable && value == null -> {
-              writer.nullValue()
-            }
-            else -> {
-              try {
-                toAdapter.toJson(moshi, writer, value)
-              } catch (e: InvocationTargetException) {
-                val cause = e.cause
-                if (cause is IOException) throw cause
-                throw JsonDataException("$cause at ${writer.path}", cause)
-              }
-            }
+          }
         }
       }
 
       override fun fromJson(reader: JsonReader): Any? {
         return when {
-            fromAdapter == null -> {
-              requireNotNull(delegate).fromJson(reader)
+          fromAdapter == null -> {
+            requireNotNull(delegate).fromJson(reader)
+          }
+          !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> {
+            reader.nextNull<Any>()
+            null
+          }
+          else -> {
+            try {
+              fromAdapter.fromJson(moshi, reader)
+            } catch (e: InvocationTargetException) {
+              val cause = e.cause
+              if (cause is IOException) throw cause
+              throw JsonDataException("$cause at ${reader.path}", cause)
             }
-            !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> {
-              reader.nextNull<Any>()
-              null
-            }
-            else -> {
-              try {
-                fromAdapter.fromJson(moshi, reader)
-              } catch (e: InvocationTargetException) {
-                val cause = e.cause
-                if (cause is IOException) throw cause
-                throw JsonDataException("$cause at ${reader.path}", cause)
-              }
-            }
+          }
         }
       }
 
@@ -108,7 +108,7 @@ internal class AdapterMethodsFactory(
 
       var clazz = adapter.javaClass
       while (clazz != Any::class.java) {
-        clazz.declaredMethods.forEach { declaredMethod ->
+        for (declaredMethod in clazz.declaredMethods) {
           if (declaredMethod.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, declaredMethod)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
