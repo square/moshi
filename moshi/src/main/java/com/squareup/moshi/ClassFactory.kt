@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.Util
+import com.squareup.moshi.internal.rethrowCause
 import java.io.ObjectInputStream
 import java.io.ObjectStreamClass
 import java.lang.reflect.InvocationTargetException
@@ -101,7 +101,7 @@ internal abstract class ClassFactory<T> {
       } catch (e: IllegalAccessException) {
         throw AssertionError()
       } catch (e: InvocationTargetException) {
-        throw Util.rethrowCause(e)
+        throw e.rethrowCause()
       } catch (ignored: NoSuchMethodException) {
         // Not the expected version of Dalvik/libcore!
       }
