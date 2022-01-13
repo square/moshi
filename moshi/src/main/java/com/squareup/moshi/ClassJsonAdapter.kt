@@ -207,12 +207,7 @@ internal class ClassJsonAdapter<T>(
         val fieldBinding = FieldBinding(jsonName, field, adapter)
         val replaced = fieldBindings.put(jsonName, fieldBinding)
         require(replaced == null) {
-          "Conflicting fields:\n" +
-            "    " +
-            requireNotNull(replaced).field +
-            "\n" +
-            "    " +
-            fieldBinding.field
+          "Conflicting fields:\n    ${requireNotNull(replaced).field}\n    ${fieldBinding.field}"
         }
       }
     }
