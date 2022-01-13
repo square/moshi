@@ -75,7 +75,7 @@ internal class ClassJsonAdapter<T>(
           reader.skipValue()
           continue
         }
-        fieldsArray[index].read(reader, requireNotNull(result))
+        fieldsArray[index].read(reader, result)
       }
       reader.endObject()
       return result
@@ -89,7 +89,7 @@ internal class ClassJsonAdapter<T>(
       writer.beginObject()
       for (fieldBinding in fieldsArray) {
         writer.name(fieldBinding.name)
-        fieldBinding.write(writer, requireNotNull(value))
+        fieldBinding.write(writer, value)
       }
       writer.endObject()
     } catch (e: IllegalAccessException) {
@@ -100,13 +100,13 @@ internal class ClassJsonAdapter<T>(
   override fun toString() = "JsonAdapter($classFactory)"
 
   internal class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
-    fun read(reader: JsonReader, value: Any) {
+    fun read(reader: JsonReader, value: Any?) {
       val fieldValue = adapter.fromJson(reader)
       field[value] = fieldValue
     }
 
     @Suppress("UNCHECKED_CAST") // We require that field's values are of type T.
-    fun write(writer: JsonWriter, value: Any) {
+    fun write(writer: JsonWriter, value: Any?) {
       val fieldValue = field[value] as T
       adapter.toJson(writer, fieldValue)
     }
