@@ -158,10 +158,10 @@ internal class ClassJsonAdapter<T>(
       }
       val classFactory = ClassFactory.get<Any>(rawType)
       val fields = sortedMapOf<String, FieldBinding<*>>()
-      var t = type
-      while (t != Any::class.java) {
-        createFieldBindings(moshi, t, fields)
-        t = Types.getGenericSuperclass(t)
+      var parentType = type
+      while (parentType != Any::class.java) {
+        createFieldBindings(moshi, parentType, fields)
+        parentType = Types.getGenericSuperclass(parentType)
       }
       return ClassJsonAdapter(classFactory, fields).nullSafe()
     }
