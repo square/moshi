@@ -83,7 +83,7 @@ internal class ClassJsonAdapter<T>(
   override fun toJson(writer: JsonWriter, value: T?) {
     try {
       writer.beginObject()
-      fieldsArray.forEach { fieldBinding ->
+      for (fieldBinding in fieldsArray) {
         writer.name(fieldBinding.name)
         fieldBinding.write(writer, value as Any)
       }
