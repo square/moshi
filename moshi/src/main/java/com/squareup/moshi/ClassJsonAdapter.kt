@@ -23,7 +23,11 @@ import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.rethrowCause
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Modifier
+import java.lang.reflect.Modifier.isAbstract
+import java.lang.reflect.Modifier.isProtected
+import java.lang.reflect.Modifier.isPublic
+import java.lang.reflect.Modifier.isStatic
+import java.lang.reflect.Modifier.isTransient
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
@@ -143,10 +147,10 @@ internal class ClassJsonAdapter<T>(
       require(!rawType.isLocalClass) {
         "Cannot serialize local class ${rawType.name}"
       }
-      require(!(rawType.enclosingClass != null && !Modifier.isStatic(rawType.modifiers))) {
+      require(!(rawType.enclosingClass != null && !isStatic(rawType.modifiers))) {
         "Cannot serialize non-static nested class ${rawType.name}"
       }
-      require(!Modifier.isAbstract(rawType.modifiers)) {
+      require(!isAbstract(rawType.modifiers)) {
         "Cannot serialize abstract class ${rawType.name}"
       }
       require(!rawType.isKotlin) {
@@ -222,8 +226,8 @@ internal class ClassJsonAdapter<T>(
 
     /** Returns true if fields with `modifiers` are included in the emitted JSON.  */
     private fun includeField(platformType: Boolean, modifiers: Int): Boolean {
-      if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) return false
-      return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || !platformType
+      if (isStatic(modifiers) || isTransient(modifiers)) return false
+      return isPublic(modifiers) || isProtected(modifiers) || !platformType
     }
   }
 }
