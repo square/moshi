@@ -128,7 +128,7 @@ internal class AdapterMethodsFactory(
         }
         clazz = clazz.superclass
       }
-      require(!(toAdapters.isEmpty() && fromAdapters.isEmpty())) {
+      require(toAdapters.isNotEmpty() || fromAdapters.isNotEmpty()) {
         "Expected at least one @ToJson or @FromJson method on ${adapter.javaClass.name}"
       }
       return AdapterMethodsFactory(toAdapters, fromAdapters)
