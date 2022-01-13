@@ -147,7 +147,8 @@ internal class ClassJsonAdapter<T>(
       require(!rawType.isLocalClass) {
         "Cannot serialize local class ${rawType.name}"
       }
-      require(!(rawType.enclosingClass != null && !isStatic(rawType.modifiers))) {
+      val isNonStaticNestedClass = rawType.enclosingClass != null && !isStatic(rawType.modifiers)
+      require(!isNonStaticNestedClass) {
         "Cannot serialize non-static nested class ${rawType.name}"
       }
       require(!isAbstract(rawType.modifiers)) {
