@@ -19,8 +19,7 @@ import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.toStringWithAnnotations
-import okio.IOException
-import java.lang.IllegalAccessException
+import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
@@ -95,14 +94,13 @@ internal class AdapterMethodsFactory(
   }
 
   companion object {
-    @JvmStatic
     fun get(adapter: Any): AdapterMethodsFactory {
       val toAdapters = mutableListOf<AdapterMethod>()
       val fromAdapters = mutableListOf<AdapterMethod>()
 
-      var c: Class<*> = adapter.javaClass
-      while (c != Any::class.java) {
-        c.declaredMethods.forEach { m ->
+      var clazz = adapter.javaClass
+      while (clazz != Any::class.java) {
+        clazz.declaredMethods.forEach { m ->
           if (m.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, m)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
@@ -128,7 +126,7 @@ internal class AdapterMethodsFactory(
             fromAdapters.add(fromAdapter)
           }
         }
-        c = c.superclass
+        clazz = clazz.superclass
       }
       if (toAdapters.isEmpty() && fromAdapters.isEmpty()) {
         throw IllegalArgumentException("Expected at least one @ToJson or @FromJson method on ${adapter.javaClass.name}")
@@ -302,18 +300,11 @@ internal class AdapterMethodsFactory(
     val adapter: Any,
     val method: Method,
     parameterCount: Int,
-    adaptersOffset: Int,
+    private val adaptersOffset: Int,
     val nullable: Boolean
   ) {
-    val type: Type
-    private val adaptersOffset: Int
-    private val jsonAdapters: Array<JsonAdapter<*>?>
-
-    init {
-      this.type = type.canonicalize()
-      this.adaptersOffset = adaptersOffset
-      jsonAdapters = arrayOfNulls(parameterCount - adaptersOffset)
-    }
+    val type = type.canonicalize()
+    private val jsonAdapters: Array<JsonAdapter<*>?> = arrayOfNulls(parameterCount - adaptersOffset)
 
     open fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
       if (jsonAdapters.isNotEmpty()) {
@@ -337,19 +328,15 @@ internal class AdapterMethodsFactory(
       }
     }
 
-    open fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
-      throw AssertionError()
-    }
+    open fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?): Unit = throw AssertionError()
 
-    open fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
-      throw AssertionError()
-    }
+    open fun fromJson(moshi: Moshi, reader: JsonReader): Any? = throw AssertionError()
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments.  */
     protected fun invoke(a1: Any?): Any? {
       val args = arrayOfNulls<Any>(1 + jsonAdapters.size)
       args[0] = a1
-      System.arraycopy(jsonAdapters, 0, args, 1, jsonAdapters.size)
+      jsonAdapters.copyInto(args, 1, 0, jsonAdapters.size)
 
       return try {
         method.invoke(adapter, *args)
@@ -363,7 +350,7 @@ internal class AdapterMethodsFactory(
       val args = arrayOfNulls<Any>(2 + jsonAdapters.size)
       args[0] = a1
       args[1] = a2
-      System.arraycopy(jsonAdapters, 0, args, 2, jsonAdapters.size)
+      jsonAdapters.copyInto(args, 2, 0, jsonAdapters.size)
 
       return try {
         method.invoke(adapter, *args)
