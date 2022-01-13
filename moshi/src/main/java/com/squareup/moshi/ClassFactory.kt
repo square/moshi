@@ -29,7 +29,6 @@ import kotlin.Throws
  * @author Jesse Wilson
  */
 internal abstract class ClassFactory<T> {
-  @Throws(InvocationTargetException::class, IllegalAccessException::class, InstantiationException::class)
   abstract fun newInstance(): T
 
   companion object {
