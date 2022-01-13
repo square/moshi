@@ -150,63 +150,63 @@ internal class AdapterMethodsFactory(
         returnType == Void.TYPE &&
         parametersAreJsonAdapters(2, parameterTypes)
       return when {
-          methodSignatureIncludesJsonWriterAndJsonAdapter -> {
-            // void pointToJson(JsonWriter jsonWriter, Point point) {
-            // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
-            val qualifierAnnotations = parameterAnnotations[1].jsonAnnotations
-            object : AdapterMethod(
-              adaptersOffset = 2,
-              type = parameterTypes[1],
-              parameterCount = parameterTypes.size,
-              annotations = qualifierAnnotations,
-              adapter = adapter,
-              method = method,
-              nullable = true
-            ) {
-              override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
-                invoke(writer, value)
-              }
+        methodSignatureIncludesJsonWriterAndJsonAdapter -> {
+          // void pointToJson(JsonWriter jsonWriter, Point point) {
+          // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
+          val qualifierAnnotations = parameterAnnotations[1].jsonAnnotations
+          object : AdapterMethod(
+            adaptersOffset = 2,
+            type = parameterTypes[1],
+            parameterCount = parameterTypes.size,
+            annotations = qualifierAnnotations,
+            adapter = adapter,
+            method = method,
+            nullable = true
+          ) {
+            override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
+              invoke(writer, value)
             }
           }
-          parameterTypes.size == 1 && returnType != Void.TYPE -> {
-            // List<Integer> pointToJson(Point point) {
-            val returnTypeAnnotations = method.jsonAnnotations
-            val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
-            val nullable = parameterAnnotations[0].hasNullable
-            object : AdapterMethod(
-              adaptersOffset = 1,
-              type = parameterTypes[0],
-              parameterCount = parameterTypes.size,
-              annotations = qualifierAnnotations,
-              adapter = adapter,
-              method = method,
-              nullable = nullable
-            ) {
-              private lateinit var delegate: JsonAdapter<Any>
-              override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
-                super.bind(moshi, factory)
-                delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
-                  moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
-                } else {
-                  moshi.adapter(returnType, returnTypeAnnotations)
-                }
+        }
+        parameterTypes.size == 1 && returnType != Void.TYPE -> {
+          // List<Integer> pointToJson(Point point) {
+          val returnTypeAnnotations = method.jsonAnnotations
+          val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
+          val nullable = parameterAnnotations[0].hasNullable
+          object : AdapterMethod(
+            adaptersOffset = 1,
+            type = parameterTypes[0],
+            parameterCount = parameterTypes.size,
+            annotations = qualifierAnnotations,
+            adapter = adapter,
+            method = method,
+            nullable = nullable
+          ) {
+            private lateinit var delegate: JsonAdapter<Any>
+            override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
+              super.bind(moshi, factory)
+              delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
+                moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
+              } else {
+                moshi.adapter(returnType, returnTypeAnnotations)
               }
+            }
 
-              override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
-                val intermediate = invoke(value)
-                delegate.toJson(writer, intermediate)
-              }
+            override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
+              val intermediate = invoke(value)
+              delegate.toJson(writer, intermediate)
             }
           }
-          else -> {
-            throw IllegalArgumentException(
-              "Unexpected signature for $method.\n" + "" +
-                "@ToJson method signatures may have one of the following structures:\n" +
-                "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n" +
-                "    <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n" +
-                "    <any access modifier> R toJson(T value) throws <any>;\n"
-            )
-          }
+        }
+        else -> {
+          throw IllegalArgumentException(
+            "Unexpected signature for $method.\n" + "" +
+              "@ToJson method signatures may have one of the following structures:\n" +
+              "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n" +
+              "    <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n" +
+              "    <any access modifier> R toJson(T value) throws <any>;\n"
+          )
+        }
       }
     }
 
@@ -234,62 +234,62 @@ internal class AdapterMethodsFactory(
         returnType != Void.TYPE &&
         parametersAreJsonAdapters(1, parameterTypes)
       return when {
-          methodSignatureIncludesJsonReaderAndJsonAdapter -> {
-            // Point pointFromJson(JsonReader jsonReader) {
-            // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
-            object : AdapterMethod(
-              adaptersOffset = 1,
-              type = returnType,
-              parameterCount = parameterTypes.size,
-              annotations = returnTypeAnnotations,
-              adapter = adapter,
-              method = method,
-              nullable = true
-            ) {
-              override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
-                return invoke(reader)
-              }
+        methodSignatureIncludesJsonReaderAndJsonAdapter -> {
+          // Point pointFromJson(JsonReader jsonReader) {
+          // Point pointFromJson(JsonReader jsonReader, JsonAdapter<?> adapter, ...) {
+          object : AdapterMethod(
+            adaptersOffset = 1,
+            type = returnType,
+            parameterCount = parameterTypes.size,
+            annotations = returnTypeAnnotations,
+            adapter = adapter,
+            method = method,
+            nullable = true
+          ) {
+            override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
+              return invoke(reader)
             }
           }
-          parameterTypes.size == 1 && returnType != Void.TYPE -> {
-            // Point pointFromJson(List<Integer> o) {
-            val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
-            val nullable = parameterAnnotations[0].hasNullable
-            object : AdapterMethod(
-              adaptersOffset = 1,
-              type = returnType,
-              parameterCount = parameterTypes.size,
-              annotations = returnTypeAnnotations,
-              adapter = adapter,
-              method = method,
-              nullable = nullable
-            ) {
-              lateinit var delegate: JsonAdapter<Any>
+        }
+        parameterTypes.size == 1 && returnType != Void.TYPE -> {
+          // Point pointFromJson(List<Integer> o) {
+          val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
+          val nullable = parameterAnnotations[0].hasNullable
+          object : AdapterMethod(
+            adaptersOffset = 1,
+            type = returnType,
+            parameterCount = parameterTypes.size,
+            annotations = returnTypeAnnotations,
+            adapter = adapter,
+            method = method,
+            nullable = nullable
+          ) {
+            lateinit var delegate: JsonAdapter<Any>
 
-              override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
-                super.bind(moshi, factory)
-                delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
-                  moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
-                } else {
-                  moshi.adapter(parameterTypes[0], qualifierAnnotations)
-                }
-              }
-
-              override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
-                val intermediate = delegate.fromJson(reader)
-                return invoke(intermediate)
+            override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
+              super.bind(moshi, factory)
+              delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
+                moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
+              } else {
+                moshi.adapter(parameterTypes[0], qualifierAnnotations)
               }
             }
+
+            override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
+              val intermediate = delegate.fromJson(reader)
+              return invoke(intermediate)
+            }
           }
-          else -> {
-            throw IllegalArgumentException(
-              "Unexpected signature for $method.\n" +
-                "@FromJson method signatures may have one of the following structures:\n" +
-                "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n" +
-                "    <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n" +
-                "    <any access modifier> R fromJson(T value) throws <any>;\n"
-            )
-          }
+        }
+        else -> {
+          throw IllegalArgumentException(
+            "Unexpected signature for $method.\n" +
+              "@FromJson method signatures may have one of the following structures:\n" +
+              "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n" +
+              "    <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n" +
+              "    <any access modifier> R fromJson(T value) throws <any>;\n"
+          )
+        }
       }
     }
 
