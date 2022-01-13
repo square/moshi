@@ -195,9 +195,9 @@ internal class ClassJsonAdapter<T>(
         val annotations = field.jsonAnnotations
         val fieldName = field.name
         val adapter = moshi.adapter<Any>(
-          fieldType,
-          annotations,
-          fieldName
+          type = fieldType,
+          annotations = annotations,
+          fieldName = fieldName
         )
 
         // Create the binding between field and JSON.
