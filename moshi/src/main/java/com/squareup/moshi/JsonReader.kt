@@ -209,18 +209,7 @@ public sealed class JsonReader : Closeable {
   public var isLenient: Boolean = false
 
   /** True to throw a [JsonDataException] on any attempt to call [skipValue]. */
-  public var failOnUnknown: Boolean = false
-    /**
-     * Configure whether this parser throws a [JsonDataException] when [skipValue] is
-     * called. By default, this parser permits values to be skipped.
-     *
-     * Forbid skipping to prevent unrecognized values from being silently ignored. This option is
-     * useful in development and debugging because it means a typo like "locatiom" will be detected
-     * early. It's potentially harmful in production because it complicates revising a JSON schema.
-     */
-    set(value) {
-      field = value
-    }
+  protected var _failOnUnknown: Boolean = false
 
   private var tags: MutableMap<Class<*>, Any>? = null
 
@@ -246,7 +235,7 @@ public sealed class JsonReader : Closeable {
     pathNames = copyFrom.pathNames.clone()
     pathIndices = copyFrom.pathIndices.clone()
     isLenient = copyFrom.isLenient
-    failOnUnknown = copyFrom.failOnUnknown
+    _failOnUnknown = copyFrom._failOnUnknown
   }
 
   public fun pushScope(newTop: Int) {
@@ -278,10 +267,23 @@ public sealed class JsonReader : Closeable {
     }
   }
 
+  /**
+   * Configure whether this parser throws a [JsonDataException] when [.skipValue] is
+   * called. By default this parser permits values to be skipped.
+   *
+   *
+   * Forbid skipping to prevent unrecognized values from being silently ignored. This option is
+   * useful in development and debugging because it means a typo like "locatiom" will be detected
+   * early. It's potentially harmful in production because it complicates revising a JSON schema.
+   */
+  public fun setFailOnUnknown(failOnUnknown: Boolean) {
+    _failOnUnknown = failOnUnknown
+  }
+
   /** Returns true if this parser forbids skipping names and values. */
   @CheckReturnValue
   public fun failOnUnknown(): Boolean {
-    return failOnUnknown
+    return _failOnUnknown
   }
 
   /**

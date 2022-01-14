@@ -226,11 +226,11 @@ public abstract class JsonAdapter<T> {
     return object : JsonAdapter<T>() {
       override fun fromJson(reader: JsonReader): T? {
         val skipForbidden = reader.failOnUnknown()
-        reader.failOnUnknown = true
+        reader.setFailOnUnknown(true)
         return try {
           delegate.fromJson(reader)
         } finally {
-          reader.failOnUnknown = skipForbidden
+          reader.setFailOnUnknown(skipForbidden)
         }
       }
 

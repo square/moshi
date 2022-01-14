@@ -151,7 +151,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun skipName() {
-    if (failOnUnknown) {
+    if (_failOnUnknown) {
       // Capture the peeked value before nextName() since it will reset its value.
       val peeked = peek()
       nextName() // Move the path forward onto the offending name.
@@ -266,7 +266,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   override fun skipValue() {
-    if (failOnUnknown) {
+    if (_failOnUnknown) {
       throw JsonDataException("Cannot skip unexpected ${peek()} at $path")
     }
 
