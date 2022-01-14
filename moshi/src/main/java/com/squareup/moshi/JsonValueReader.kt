@@ -316,12 +316,7 @@ internal class JsonValueReader : JsonReader {
 
   private fun push(newTop: Any?) {
     if (stackSize == stack.size) {
-      if (stackSize == 256) {
-        throw JsonDataException("Nesting too deep at $path")
-      }
-      scopes = scopes.copyOf(scopes.size * 2)
-      pathNames = pathNames.copyOf(pathNames.size * 2)
-      pathIndices = pathIndices.copyOf(pathIndices.size * 2)
+      pushScoop()
       stack = stack.copyOf(stack.size * 2)
     }
     stack[stackSize++] = newTop

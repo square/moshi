@@ -240,14 +240,18 @@ public sealed class JsonReader : Closeable {
 
   public fun pushScope(newTop: Int) {
     if (stackSize == scopes.size) {
-      if (stackSize == 256) {
-        throw JsonDataException("Nesting too deep at $path")
-      }
-      scopes = scopes.copyOf(scopes.size * 2)
-      pathNames = pathNames.copyOf(pathNames.size * 2)
-      pathIndices = pathIndices.copyOf(pathIndices.size * 2)
+      pushScoop()
     }
     scopes[stackSize++] = newTop
+  }
+
+  protected fun pushScoop() {
+    if (stackSize == 256) {
+      throw JsonDataException("Nesting too deep at $path")
+    }
+    scopes = scopes.copyOf(scopes.size * 2)
+    pathNames = pathNames.copyOf(pathNames.size * 2)
+    pathIndices = pathIndices.copyOf(pathIndices.size * 2)
   }
 
   /**
