@@ -487,7 +487,7 @@ public sealed class JsonReader : Closeable {
   public fun readJsonValue(): Any? {
     return when (peek()) {
       Token.BEGIN_ARRAY -> {
-        val list: MutableList<Any?> = ArrayList()
+        val list = mutableListOf<Any?>()
         beginArray()
         while (hasNext()) {
           list.add(readJsonValue())
@@ -496,7 +496,7 @@ public sealed class JsonReader : Closeable {
         list
       }
       Token.BEGIN_OBJECT -> {
-        val map: MutableMap<String, Any?> = LinkedHashTreeMap()
+        val map = LinkedHashTreeMap<String, Any?>()
         beginObject()
         while (hasNext()) {
           val name = nextName()
@@ -546,7 +546,8 @@ public sealed class JsonReader : Closeable {
   /** Returns the tag value for the given class key. */
   @CheckReturnValue
   public fun <T> tag(clazz: Class<T>): T? {
-    @Suppress("UNCHECKED_CAST") return tags?.get(clazz) as T?
+    @Suppress("UNCHECKED_CAST")
+    return tags?.get(clazz) as T?
   }
 
   /** Assigns the tag value using the given class key and value. */
