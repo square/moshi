@@ -213,7 +213,7 @@ public sealed class JsonReader : Closeable {
    *  * Name/value pairs separated by `;` instead of `,`.
    */
   @get:CheckReturnValue
-  public var isLenient: Boolean = false
+  public var lenient: Boolean = false
 
   /**
    * True to throw a [JsonDataException] on any attempt to call [skipValue].
@@ -247,7 +247,7 @@ public sealed class JsonReader : Closeable {
     scopes = copyFrom.scopes.clone()
     pathNames = copyFrom.pathNames.clone()
     pathIndices = copyFrom.pathIndices.clone()
-    isLenient = copyFrom.isLenient
+    lenient = copyFrom.lenient
     failOnUnknown = copyFrom.failOnUnknown
   }
 

@@ -118,7 +118,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader): Float {
       val value = reader.nextDouble().toFloat()
       // Double check for infinity after float conversion; many doubles > Float.MAX
-      if (!reader.isLenient && value.isInfinite()) {
+      if (!reader.lenient && value.isInfinite()) {
         throw JsonDataException(
           "JSON forbids NaN and infinities: $value at path ${reader.path}"
         )
