@@ -476,27 +476,27 @@ public sealed class JsonReader : Closeable {
   public fun readJsonValue(): Any? {
     return when (peek()) {
       Token.BEGIN_ARRAY -> {
-        val list: MutableList<Any?> = ArrayList()
-        beginArray()
-        while (hasNext()) {
-          list.add(readJsonValue())
+        return buildList {
+          beginArray()
+          while (hasNext()) {
+            add(readJsonValue())
+          }
+          endArray()
         }
-        endArray()
-        list
       }
       Token.BEGIN_OBJECT -> {
-        val map: MutableMap<String, Any?> = LinkedHashTreeMap()
-        beginObject()
-        while (hasNext()) {
-          val name = nextName()
-          val value = readJsonValue()
-          val replaced = map.put(name, value)
-          if (replaced != null) {
-            throw JsonDataException("Map key '$name' has multiple values at path $path: $replaced and $value")
+        return buildMap {
+          beginObject()
+          while (hasNext()) {
+            val name = nextName()
+            val value = readJsonValue()
+            val replaced = put(name, value)
+            if (replaced != null) {
+              throw JsonDataException("Map key '$name' has multiple values at path $path: $replaced and $value")
+            }
           }
+          endObject()
         }
-        endObject()
-        map
       }
       Token.STRING -> nextString()
       Token.NUMBER -> nextDouble()
