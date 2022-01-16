@@ -213,6 +213,7 @@ public sealed class JsonReader : Closeable {
    *  * Name/value pairs separated by `;` instead of `,`.
    */
   @get:CheckReturnValue
+  @get:JvmName("isLenient")
   public var lenient: Boolean = false
 
   /**
