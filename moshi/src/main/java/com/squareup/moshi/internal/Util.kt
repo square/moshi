@@ -68,14 +68,14 @@ public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
 
 /** A map from primitive types to their corresponding wrapper types. */
 private val PRIMITIVE_TO_WRAPPER_TYPE: Map<Class<*>, Class<*>> = buildMap(16) {
-  put(Boolean::class.javaPrimitiveType!!, Boolean::class.java)
-  put(Byte::class.javaPrimitiveType!!, Byte::class.java)
-  put(Char::class.javaPrimitiveType!!, Char::class.java)
-  put(Double::class.javaPrimitiveType!!, Double::class.java)
-  put(Float::class.javaPrimitiveType!!, Float::class.java)
-  put(Int::class.javaPrimitiveType!!, Int::class.java)
-  put(Long::class.javaPrimitiveType!!, Long::class.java)
-  put(Short::class.javaPrimitiveType!!, Short::class.java)
+  put(knownNotNull(Boolean::class.javaPrimitiveType), Boolean::class.java)
+  put(knownNotNull(Byte::class.javaPrimitiveType), Byte::class.java)
+  put(knownNotNull(Char::class.javaPrimitiveType), Char::class.java)
+  put(knownNotNull(Double::class.javaPrimitiveType), Double::class.java)
+  put(knownNotNull(Float::class.javaPrimitiveType), Float::class.java)
+  put(knownNotNull(Int::class.javaPrimitiveType), Int::class.java)
+  put(knownNotNull(Long::class.javaPrimitiveType), Long::class.java)
+  put(knownNotNull(Short::class.javaPrimitiveType), Short::class.java)
   put(Void.TYPE, Void::class.java)
 }
 
