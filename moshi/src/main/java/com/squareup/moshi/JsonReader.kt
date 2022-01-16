@@ -452,7 +452,7 @@ public sealed class JsonReader : Closeable {
    * Closing the returned source **does not** close this reader.
    */
   @Throws(IOException::class)
-  public abstract fun nextSource(): BufferedSource?
+  public abstract fun nextSource(): BufferedSource
 
   /**
    * Skips the next value recursively. If it is an object or array, all nested elements are skipped.
