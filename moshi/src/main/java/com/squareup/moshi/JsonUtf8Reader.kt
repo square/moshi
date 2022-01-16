@@ -640,7 +640,7 @@ internal class JsonUtf8Reader : JsonReader {
     } catch (e: NumberFormatException) {
       throw JsonDataException("Expected a double but was $next at path $path")
     }
-    if (!lenient && (result.isNaN() || result.isInfinite())) {
+    if (!isLenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
     }
     peekedString = null
@@ -965,7 +965,7 @@ internal class JsonUtf8Reader : JsonReader {
   }
 
   private fun checkLenient() {
-    if (!lenient) {
+    if (!isLenient) {
       throw syntaxError("Use JsonReader.setLenient(true) to accept malformed JSON")
     }
   }
@@ -1028,7 +1028,7 @@ internal class JsonUtf8Reader : JsonReader {
       'f' -> '\u000C' /*\f*/
       '\n', '\'', '"', '\\', '/' -> escaped
       else -> {
-        if (!lenient) throw syntaxError("Invalid escape sequence: \\$escaped")
+        if (!isLenient) throw syntaxError("Invalid escape sequence: \\$escaped")
         escaped
       }
     }

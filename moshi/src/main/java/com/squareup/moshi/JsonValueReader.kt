@@ -222,7 +222,7 @@ internal class JsonValueReader : JsonReader {
         throw typeMismatch(peeked, Token.NUMBER)
       }
     }
-    if (!lenient && (result.isNaN() || result.isInfinite())) {
+    if (!isLenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
     }
     remove()
