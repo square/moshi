@@ -530,7 +530,7 @@ public sealed class JsonReader : Closeable {
    * ```
    */
   @CheckReturnValue
-  public abstract fun peekJson(): JsonReader?
+  public abstract fun peekJson(): JsonReader
 
   /**
    * Returns a [JsonPath](http://goessner.net/articles/JsonPath/) to the current location
