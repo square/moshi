@@ -20,7 +20,7 @@ buildscript {
 }
 
 plugins {
-  alias(libs.plugins.mavenPublish)
+  alias(libs.plugins.mavenPublish) apply false
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.spotless)
   alias(libs.plugins.japicmp) apply false
