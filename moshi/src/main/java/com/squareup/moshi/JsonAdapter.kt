@@ -188,12 +188,12 @@ public abstract class JsonAdapter<T> {
     val delegate: JsonAdapter<T> = this
     return object : JsonAdapter<T>() {
       override fun fromJson(reader: JsonReader): T? {
-        val lenient = reader.isLenient
-        reader.isLenient = true
+        val lenient = reader.lenient
+        reader.lenient = true
         return try {
           delegate.fromJson(reader)
         } finally {
-          reader.isLenient = lenient
+          reader.lenient = lenient
         }
       }
 
@@ -225,12 +225,12 @@ public abstract class JsonAdapter<T> {
     val delegate: JsonAdapter<T> = this
     return object : JsonAdapter<T>() {
       override fun fromJson(reader: JsonReader): T? {
-        val skipForbidden = reader.failOnUnknown()
-        reader.setFailOnUnknown(true)
+        val skipForbidden = reader.failOnUnknown
+        reader.failOnUnknown = true
         return try {
           delegate.fromJson(reader)
         } finally {
-          reader.setFailOnUnknown(skipForbidden)
+          reader.failOnUnknown = skipForbidden
         }
       }
 

@@ -191,7 +191,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
     override fun fromJson(reader: JsonReader): Any? {
       val peeked = reader.peekJson()
-      peeked.setFailOnUnknown(false)
+      peeked.failOnUnknown = false
       val labelIndex = peeked.use(::labelIndex)
       return if (labelIndex == -1) {
         fallbackJsonAdapter?.fromJson(reader)
