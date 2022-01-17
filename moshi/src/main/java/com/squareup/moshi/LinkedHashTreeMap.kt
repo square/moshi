@@ -49,19 +49,11 @@ constructor(
   }
 
   override val entries: MutableSet<MutableMap.MutableEntry<K, V>>
-    get() {
-      val result: EntrySet? = entrySet
-      return result ?: EntrySet().also { entrySet = it }
-    }
+    get() = entrySet ?: EntrySet().also { entrySet = it }
 
-  override fun get(key: K): V? {
-    val node = findByObject(key)
-    return node?.value
-  }
+  override fun get(key: K) = findByObject(key)?.value
 
-  override fun containsKey(key: K): Boolean {
-    return findByObject(key) != null
-  }
+  override fun containsKey(key: K) = findByObject(key) != null
 
   override fun clear() {
     table.fill(null)
