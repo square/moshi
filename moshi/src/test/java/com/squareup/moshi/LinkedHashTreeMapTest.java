@@ -18,14 +18,13 @@ package com.squareup.moshi;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-import com.squareup.moshi.LinkedHashTreeMap.AvlBuilder;
-import com.squareup.moshi.LinkedHashTreeMap.AvlIterator;
 import com.squareup.moshi.LinkedHashTreeMap.Node;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import org.junit.Test;
 
+@SuppressWarnings("KotlinInternalInJava")
 public final class LinkedHashTreeMapTest {
   @Test
   public void iterationOrder() {
@@ -228,7 +227,7 @@ public final class LinkedHashTreeMapTest {
     Node<String, String>[] oldTable = new Node[1];
     oldTable[0] = node(node(node("a"), "b", node("c")), "d", node(node("e"), "f", node("g")));
 
-    Node<String, String>[] newTable = LinkedHashTreeMap.doubleCapacity(oldTable);
+    Node<String, String>[] newTable = LinkedHashTreeMapKt.doubleCapacity(oldTable);
     assertTree("(b d f)", newTable[0]); // Even hash codes!
     assertTree("(a c (. e g))", newTable[1]); // Odd hash codes!
   }
@@ -239,7 +238,7 @@ public final class LinkedHashTreeMapTest {
     Node<String, String>[] oldTable = new Node[1];
     oldTable[0] = node(node("b"), "d", node("f"));
 
-    Node<String, String>[] newTable = LinkedHashTreeMap.doubleCapacity(oldTable);
+    Node<String, String>[] newTable = LinkedHashTreeMapKt.doubleCapacity(oldTable);
     assertTree("(b d f)", newTable[0]); // Even hash codes!
     assertThat(newTable[1]).isNull();
 
@@ -300,9 +299,9 @@ public final class LinkedHashTreeMapTest {
     if (root == null) {
       return ".";
     } else if (root.left == null && root.right == null) {
-      return String.valueOf(root.key);
+      return String.valueOf(root.getKey());
     } else {
-      return String.format("(%s %s %s)", toString(root.left), root.key, toString(root.right));
+      return String.format("(%s %s %s)", toString(root.left), root.getKey(), toString(root.right));
     }
   }
 }
