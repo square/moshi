@@ -31,7 +31,7 @@ constructor(
   val header: Node<K, V> = Node()
   override var size = 0
   var modCount = 0
-  var threshold = table.size / 2 + table.size / 4 // 3/4 capacity
+  private var threshold = table.size / 2 + table.size / 4 // 3/4 capacity
   private var entrySet: EntrySet? = null
   private var keySet: KeySet? = null
 
@@ -66,7 +66,7 @@ constructor(
     while (e !== header) {
       val next = e!!.next
       e.prev = null
-      e.next = e.prev
+      e.next = null
       e = next
     }
     header.prev = header
@@ -183,7 +183,7 @@ constructor(
    *
    * @throws ClassCastException if `key` and the tree's keys aren't mutually comparable.
    */
-  fun findOrCreate(key: K): Node<K, V> {
+  private fun findOrCreate(key: K): Node<K, V> {
     return knownNotNull(find(key, create = true))
   }
 
@@ -232,7 +232,7 @@ constructor(
       if (comparator === NATURAL_ORDER && key !is Comparable<*>) {
         throw ClassCastException("${(key as Any).javaClass.name} is not Comparable")
       }
-      created = Node(nearest, key, hash, header, header.prev!!)
+      created = Node(null, key, hash, header, header.prev!!)
       table[index] = created
     } else {
       created = Node(nearest, key, hash, header, header.prev!!)
@@ -250,8 +250,9 @@ constructor(
     return created
   }
 
-  fun findByObject(key: Any?): Node<K, V>? {
+  private fun findByObject(key: Any?): Node<K, V>? {
     return try {
+      @Suppress("UNCHECKED_CAST")
       if (key != null) find(key as K, false) else null
     } catch (e: ClassCastException) {
       null
@@ -273,6 +274,7 @@ constructor(
   }
 
   private fun equal(a: Any?, b: Any): Boolean {
+    @Suppress("SuspiciousEqualsCombination")
     return a === b || a != null && a == b
   }
 
@@ -298,7 +300,7 @@ constructor(
       node.prev!!.next = node.next
       node.next!!.prev = node.prev
       node.prev = null
-      node.next = node.prev // Help the GC (for performance)
+      node.next = null // Help the GC (for performance)
     }
     var left = node.left
     var right = node.right
@@ -434,8 +436,8 @@ constructor(
   }
 
   /** Rotates the subtree so that its root's right child is the new root.  */
-  private fun rotateLeft(root: Node<K, V>?) {
-    val left = root!!.left
+  private fun rotateLeft(root: Node<K, V>) {
+    val left = root.left
     val pivot = root.right
     val pivotLeft = pivot!!.left
     val pivotRight = pivot.right
@@ -457,8 +459,8 @@ constructor(
   }
 
   /** Rotates the subtree so that its root's left child is the new root.  */
-  private fun rotateRight(root: Node<K, V>?) {
-    val pivot = root!!.left
+  private fun rotateRight(root: Node<K, V>) {
+    val pivot = root.left
     val right = root.right
     val pivotLeft = pivot!!.left
     val pivotRight = pivot.right
@@ -479,10 +481,10 @@ constructor(
     pivot.height = max(root.height, pivotLeft?.height ?: 0) + 1
   }
 
-  internal abstract inner class LinkedTreeMapIterator<T> : MutableIterator<T> {
+  abstract inner class LinkedTreeMapIterator<T> : MutableIterator<T> {
     var next = header.next
-    var lastReturned: Node<K, V>? = null
-    var expectedModCount: Int = modCount
+    private var lastReturned: Node<K, V>? = null
+    private var expectedModCount: Int = modCount
     override fun hasNext(): Boolean = next !== header
 
     fun nextNode(): Node<K, V> {
@@ -504,20 +506,21 @@ constructor(
     }
   }
 
-  internal inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
+  inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
     override val size: Int
       get() = this@LinkedHashTreeMap.size
 
     override fun iterator(): MutableIterator<MutableMap.MutableEntry<K, V>> {
       return object : LinkedTreeMapIterator<MutableMap.MutableEntry<K, V>>() {
         override fun next(): MutableMap.MutableEntry<K, V> {
+          @Suppress("UNCHECKED_CAST")
           return nextNode() as MutableMap.MutableEntry<K, V>
         }
       }
     }
 
     override fun contains(element: MutableMap.MutableEntry<K, V>): Boolean {
-      return element is MutableMap.MutableEntry<*, *> && findByEntry(element) != null
+      return findByEntry(element) != null
     }
 
     override fun remove(element: MutableMap.MutableEntry<K, V>): Boolean {
@@ -538,7 +541,7 @@ constructor(
     }
   }
 
-  internal inner class KeySet : AbstractMutableSet<K>() {
+  inner class KeySet : AbstractMutableSet<K>() {
     override val size: Int
       get() = this@LinkedHashTreeMap.size
 
@@ -695,8 +698,8 @@ internal class AvlBuilder<K, V> {
 
   fun add(node: Node<K, V>) {
     node.right = null
-    node.parent = node.right
-    node.left = node.parent
+    node.parent = null
+    node.left = null
     node.height = 1
 
     // Skip a leaf if necessary.
@@ -718,7 +721,7 @@ internal class AvlBuilder<K, V> {
 
     /*
      * Combine 3 nodes into subtrees whenever the size is one less than a
-     * multiple of 4. For example we combine the nodes A, B, C into a
+     * multiple of 4. For example, we combine the nodes A, B, C into a
      * 3-element tree with B as the root.
      *
      * Combine two subtrees and a spare single value whenever the size is one
@@ -731,31 +734,35 @@ internal class AvlBuilder<K, V> {
      */
     var scale = 4
     while (size and scale - 1 == scale - 1) {
-      if (leavesSkipped == 0) {
-        // Pop right, center and left, then make center the top of the stack.
-        val right = stack
-        val center = right!!.parent
-        val left = center!!.parent
-        center.parent = left!!.parent
-        stack = center
-        // Construct a tree.
-        center.left = left
-        center.right = right
-        center.height = right.height + 1
-        left.parent = center
-        right.parent = center
-      } else if (leavesSkipped == 1) {
-        // Pop right and center, then make center the top of the stack.
-        val right = stack
-        val center = right!!.parent
-        stack = center!!
-        // Construct a tree with no left child.
-        center.right = right
-        center.height = right.height + 1
-        right.parent = center
-        leavesSkipped = 0
-      } else if (leavesSkipped == 2) {
-        leavesSkipped = 0
+      when (leavesSkipped) {
+        0 -> {
+          // Pop right, center and left, then make center the top of the stack.
+          val right = stack
+          val center = right!!.parent
+          val left = center!!.parent
+          center.parent = left!!.parent
+          stack = center
+          // Construct a tree.
+          center.left = left
+          center.right = right
+          center.height = right.height + 1
+          left.parent = center
+          right.parent = center
+        }
+        1 -> {
+          // Pop right and center, then make center the top of the stack.
+          val right = stack
+          val center = right!!.parent
+          stack = center!!
+          // Construct a tree with no left child.
+          center.right = right
+          center.height = right.height + 1
+          right.parent = center
+          leavesSkipped = 0
+        }
+        2 -> {
+          leavesSkipped = 0
+        }
       }
       scale *= 2
     }
