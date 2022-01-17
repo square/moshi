@@ -89,8 +89,11 @@ constructor(
     var next: Node<K, V>?
     @JvmField
     var prev: Node<K, V>?
+
     private var realKey: K? = null
+
     override val key: K get() = knownNotNull(realKey)
+
     @JvmField
     val hash: Int
 
