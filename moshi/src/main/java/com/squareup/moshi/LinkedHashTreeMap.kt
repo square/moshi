@@ -73,10 +73,7 @@ constructor(
     header.next = header.prev
   }
 
-  override fun remove(key: K): V? {
-    val node = removeInternalByKey(key)
-    return node?.value
-  }
+  override fun remove(key: K) = removeInternalByKey(key)?.value
 
   class Node<K, V> : MutableMap.MutableEntry<K, V?> {
     @JvmField
@@ -94,7 +91,7 @@ constructor(
     @JvmField
     var prev: Node<K, V>?
     private var realKey: K? = null
-    override val key: K get() = realKey!!
+    override val key: K get() = knownNotNull(realKey)
     val hash: Int
 
     var mutableValue: V? = null
@@ -206,7 +203,7 @@ constructor(
       val comparableKey =
         if (comparator === NATURAL_ORDER) key as Comparable<Any?> else null
       while (true) {
-        comparison = comparableKey?.compareTo(nearest!!.key) ?: comparator.compare(key, nearest!!.key)
+        comparison = comparableKey?.compareTo(knownNotNull(nearest).key) ?: comparator.compare(key, knownNotNull(nearest).key)
 
         // We found the requested key.
         if (comparison == 0) {
@@ -214,7 +211,7 @@ constructor(
         }
 
         // If it exists, the key is in a subtree. Go deeper.
-        val child = (if (comparison < 0) nearest!!.left else nearest!!.right) ?: break
+        val child = (if (comparison < 0) knownNotNull(nearest).left else knownNotNull(nearest).right) ?: break
         nearest = child
       }
     }
@@ -232,10 +229,10 @@ constructor(
       if (comparator === NATURAL_ORDER && key !is Comparable<*>) {
         throw ClassCastException("${(key as Any).javaClass.name} is not Comparable")
       }
-      created = Node(null, key, hash, header, header.prev!!)
+      created = Node(null, key, hash, header, knownNotNull(header.prev))
       table[index] = created
     } else {
-      created = Node(nearest, key, hash, header, header.prev!!)
+      created = Node(nearest, key, hash, header, knownNotNull(header.prev))
       if (comparison < 0) { // nearest.key is higher
         nearest.left = created
       } else { // comparison > 0, nearest.key is lower
@@ -269,11 +266,11 @@ constructor(
    */
   fun findByEntry(entry: Map.Entry<*, *>): Node<K, V>? {
     val mine = findByObject(entry.key)
-    val valuesEqual = mine != null && equal(mine.value, entry.value!!)
+    val valuesEqual = mine != null && equal(mine.value, entry.value)
     return if (valuesEqual) mine else null
   }
 
-  private fun equal(a: Any?, b: Any): Boolean {
+  private fun equal(a: Any?, b: Any?): Boolean {
     @Suppress("SuspiciousEqualsCombination")
     return a === b || a != null && a == b
   }
@@ -297,8 +294,8 @@ constructor(
    */
   fun removeInternal(node: Node<K, V>, unlink: Boolean) {
     if (unlink) {
-      node.prev!!.next = node.next
-      node.next!!.prev = node.prev
+      knownNotNull(node.prev).next = node.next
+      knownNotNull(node.next).prev = node.prev
       node.prev = null
       node.next = null // Help the GC (for performance)
     }
@@ -358,8 +355,8 @@ constructor(
     return node
   }
 
-  private fun replaceInParent(node: Node<K, V>?, replacement: Node<K, V>?) {
-    val parent = node!!.parent
+  private fun replaceInParent(node: Node<K, V>, replacement: Node<K, V>?) {
+    val parent = node.parent
     node.parent = null
     if (replacement != null) {
       replacement.parent = parent
@@ -548,7 +545,7 @@ constructor(
     override fun iterator(): MutableIterator<K> {
       return object : LinkedTreeMapIterator<K>() {
         override fun next(): K {
-          return nextNode().key!!
+          return nextNode().key ?: throw NoSuchElementException()
         }
       }
     }
@@ -602,7 +599,7 @@ internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, 
     run {
       var node: Node<K, V>?
       while (iterator.next().also { node = it } != null) {
-        if (node!!.hash and oldCapacity == 0) {
+        if (knownNotNull(node).hash and oldCapacity == 0) {
           leftSize++
         } else {
           rightSize++
@@ -616,10 +613,10 @@ internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, 
     iterator.reset(root)
     var node: Node<K, V>?
     while (iterator.next().also { node = it } != null) {
-      if (node!!.hash and oldCapacity == 0) {
-        leftBuilder.add(node!!)
+      if (knownNotNull(node).hash and oldCapacity == 0) {
+        leftBuilder.add(knownNotNull(node))
       } else {
-        rightBuilder.add(node!!)
+        rightBuilder.add(knownNotNull(node))
       }
     }
 
