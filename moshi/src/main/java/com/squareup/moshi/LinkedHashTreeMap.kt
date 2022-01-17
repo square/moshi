@@ -27,10 +27,10 @@ constructor(
 ) : AbstractMutableMap<K, V>(), Serializable {
   @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
-  var table: Array<Node<K, V>?> = arrayOfNulls(16) // TODO: sizing/resizing policies
-  val header: Node<K, V> = Node()
+  private var table: Array<Node<K, V>?> = arrayOfNulls(16) // TODO: sizing/resizing policies
+  private val header: Node<K, V> = Node()
   override var size = 0
-  var modCount = 0
+  private var modCount = 0
   private var threshold = table.size / 2 + table.size / 4 // 3/4 capacity
   private var entrySet: EntrySet? = null
   private var keySet: KeySet? = null
@@ -87,13 +87,14 @@ constructor(
 
     @JvmField
     var next: Node<K, V>?
-
     @JvmField
     var prev: Node<K, V>?
     private var realKey: K? = null
     override val key: K get() = knownNotNull(realKey)
+    @JvmField
     val hash: Int
 
+    @JvmField
     var mutableValue: V? = null
 
     override val value: V?
@@ -143,9 +144,7 @@ constructor(
       return (realKey?.hashCode() ?: 0) xor if (value == null) 0 else value.hashCode()
     }
 
-    override fun toString(): String {
-      return "$key=$value"
-    }
+    override fun toString() = "$key=$value"
 
     /** Returns the first node in this subtree. */
     fun first(): Node<K, V> {
