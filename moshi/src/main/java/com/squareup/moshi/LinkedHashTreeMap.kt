@@ -2,7 +2,6 @@ package com.squareup.moshi
 
 import com.squareup.moshi.LinkedHashTreeMap.Node
 import java.io.Serializable
-import java.util.Arrays
 import kotlin.math.max
 
 @Suppress("UNCHECKED_CAST")
@@ -64,7 +63,7 @@ constructor(
   }
 
   override fun clear() {
-    Arrays.fill(table, null)
+    table.fill(null)
     size = 0
     modCount++
 
@@ -575,8 +574,8 @@ constructor(
 internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, V>?> {
   // TODO: don't do anything if we're already at MAX_CAPACITY
   val oldCapacity = oldTable.size
-  val newTable: // Arrays and generics don't get along.
-    Array<Node<K, V>?> = arrayOfNulls<Node<K, V>?>(oldCapacity * 2)
+  // Arrays and generics don't get along.
+  val newTable: Array<Node<K, V>?> = arrayOfNulls<Node<K, V>?>(oldCapacity * 2)
   val iterator = AvlIterator<K, V>()
   val leftBuilder = AvlBuilder<K, V>()
   val rightBuilder = AvlBuilder<K, V>()
