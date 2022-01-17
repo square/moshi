@@ -1,6 +1,7 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.LinkedHashTreeMap.Node
+import com.squareup.moshi.internal.knownNotNull
 import java.io.Serializable
 import kotlin.math.max
 
@@ -24,7 +25,7 @@ internal class LinkedHashTreeMap<K, V>
 constructor(
   comparator: Comparator<Any?>? = null
 ) : AbstractMutableMap<K, V>(), Serializable {
-
+  @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
   var table: Array<Node<K, V>?> = arrayOfNulls(16) // TODO: sizing/resizing policies
   val header: Node<K, V> = Node()
@@ -41,8 +42,8 @@ constructor(
     }
 
   override fun put(key: K, value: V): V? {
-    val created = find(key, true)
-    val result = created!!.value
+    val created = findOrCreate(key)
+    val result = created.value
     created.mutableValue = value
     return result
   }
@@ -88,12 +89,16 @@ constructor(
   class Node<K, V> : MutableMap.MutableEntry<K, V?> {
     @JvmField
     var parent: Node<K, V>? = null
+
     @JvmField
     var left: Node<K, V>? = null
+
     @JvmField
     var right: Node<K, V>? = null
+
     @JvmField
     var next: Node<K, V>?
+
     @JvmField
     var prev: Node<K, V>?
     private var realKey: K? = null
@@ -186,8 +191,17 @@ constructor(
    *
    * @throws ClassCastException if `key` and the tree's keys aren't mutually comparable.
    */
+  fun findOrCreate(key: K): Node<K, V> {
+    return knownNotNull(find(key, create = true))
+  }
+
+  /**
+   * Returns the node at or adjacent to the given key, creating it if requested.
+   *
+   * @throws ClassCastException if `key` and the tree's keys aren't mutually comparable.
+   */
   fun find(key: K, create: Boolean): Node<K, V>? {
-    val comparator: java.util.Comparator<in K?> = comparator
+    val comparator: Comparator<in K?> = comparator
     val table = table
     val hash = secondaryHash(key.hashCode())
     val index = hash and table.size - 1
@@ -195,7 +209,9 @@ constructor(
     var comparison = 0
     if (nearest != null) {
       // Micro-optimization: avoid polymorphic calls to Comparator.compare().
-      val comparableKey = // Throws a ClassCastException below if there's trouble.
+      // Throws a ClassCastException below if there's trouble.
+      @Suppress("UNCHECKED_CAST")
+      val comparableKey =
         if (comparator === NATURAL_ORDER) key as Comparable<Any?> else null
       while (true) {
         comparison = comparableKey?.compareTo(nearest!!.key) ?: comparator.compare(key, nearest!!.key)
