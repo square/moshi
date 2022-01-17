@@ -242,7 +242,6 @@ public sealed class JsonReader : Closeable {
     pathIndices = IntArray(32)
   }
 
-  // Package-private to control subclasses.
   protected constructor(copyFrom: JsonReader) {
     stackSize = copyFrom.stackSize
     scopes = copyFrom.scopes.clone()
