@@ -1,4 +1,4 @@
-import com.vanniktech.maven.publish.JavadocJar.Javadoc
+import com.vanniktech.maven.publish.JavadocJar.Dokka
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
@@ -24,5 +24,5 @@ tasks.withType<Jar>().configureEach {
 }
 
 configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = Javadoc()))
+  configure(KotlinJvm(javadocJar = Dokka("dokkaGfm")))
 }
