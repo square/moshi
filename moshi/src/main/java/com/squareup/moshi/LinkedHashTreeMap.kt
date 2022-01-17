@@ -534,7 +534,7 @@ constructor(
     }
 
     override fun add(element: MutableMap.MutableEntry<K, V>): Boolean {
-      TODO("Not yet implemented")
+      throw NotImplementedError()
     }
   }
 
@@ -563,7 +563,7 @@ constructor(
     }
 
     override fun add(element: K): Boolean {
-      TODO("Not yet implemented")
+      throw NotImplementedError()
     }
   }
 
