@@ -59,9 +59,7 @@ internal class AdapterMethodsFactory(
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
           toAdapter == null -> knownNotNull(delegate).toJson(writer, value)
-          !toAdapter.nullable && value == null -> {
-            writer.nullValue()
-          }
+          !toAdapter.nullable && value == null -> writer.nullValue()
           else -> {
             try {
               toAdapter.toJson(moshi, writer, value)
