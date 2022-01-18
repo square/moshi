@@ -19,7 +19,7 @@ import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.knownNotNull
-import com.squareup.moshi.internal.requireNull
+import com.squareup.moshi.internal.checkNull
 import com.squareup.moshi.internal.toStringWithAnnotations
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
@@ -106,7 +106,7 @@ internal class AdapterMethodsFactory(
           if (declaredMethod.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, declaredMethod)
             val conflicting = get(toAdapters, toAdapter.type, toAdapter.annotations)
-            requireNull(conflicting) {
+            checkNull(conflicting) {
               "Conflicting @ToJson methods:\n    ${it.method}\n    ${toAdapter.method}"
             }
             toAdapters.add(toAdapter)
@@ -114,7 +114,7 @@ internal class AdapterMethodsFactory(
           if (declaredMethod.isAnnotationPresent(FromJson::class.java)) {
             val fromAdapter = fromAdapter(adapter, declaredMethod)
             val conflicting = get(fromAdapters, fromAdapter.type, fromAdapter.annotations)
-            requireNull(conflicting) {
+            checkNull(conflicting) {
               "Conflicting @FromJson methods:\n    ${it.method}\n    ${fromAdapter.method}"
             }
             fromAdapters.add(fromAdapter)

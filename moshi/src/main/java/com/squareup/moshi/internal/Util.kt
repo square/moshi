@@ -499,14 +499,10 @@ public fun <T> Class<T>.boxIfPrimitive(): Class<T> {
   return wrapped ?: this
 }
 
-internal inline fun <T : Any> requireNull(value: T?, lazyMessage: (T) -> Any) {
-  contract {
-    returns() implies (value == null)
-  }
-
+internal inline fun <T : Any> checkNull(value: T?, lazyMessage: (T) -> Any) {
   if (value != null) {
     val message = lazyMessage(value)
-    throw IllegalArgumentException(message.toString())
+    throw IllegalStateException(message.toString())
   } else {
     return
   }
