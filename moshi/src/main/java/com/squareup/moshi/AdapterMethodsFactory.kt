@@ -75,10 +75,7 @@ internal class AdapterMethodsFactory(
       override fun fromJson(reader: JsonReader): Any? {
         return when {
           fromAdapter == null -> knownNotNull(delegate).fromJson(reader)
-          !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> {
-            reader.nextNull<Any>()
-            null
-          }
+          !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> reader.nextNull<Any>()
           else -> {
             try {
               fromAdapter.fromJson(moshi, reader)
