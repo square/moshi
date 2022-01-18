@@ -326,9 +326,9 @@ internal class AdapterMethodsFactory(
     open fun fromJson(moshi: Moshi, reader: JsonReader): Any? = throw AssertionError()
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments. */
-    protected fun invoke(fixedArgument1: Any?): Any? {
+    protected fun invoke(initialFixedArgumentForAdapterMethod: Any?): Any? {
       val args = arrayOfNulls<Any>(1 + jsonAdapters.size)
-      args[0] = fixedArgument1
+      args[0] = initialFixedArgumentForAdapterMethod
       jsonAdapters.copyInto(args, 1, 0, jsonAdapters.size)
 
       return try {
