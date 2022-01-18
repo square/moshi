@@ -74,9 +74,7 @@ internal class AdapterMethodsFactory(
 
       override fun fromJson(reader: JsonReader): Any? {
         return when {
-          fromAdapter == null -> {
-            requireNotNull(delegate).fromJson(reader)
-          }
+          fromAdapter == null -> knownNotNull(delegate).fromJson(reader)
           !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> {
             reader.nextNull<Any>()
             null
