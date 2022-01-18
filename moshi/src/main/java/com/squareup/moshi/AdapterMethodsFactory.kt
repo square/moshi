@@ -58,9 +58,7 @@ internal class AdapterMethodsFactory(
     return object : JsonAdapter<Any>() {
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
-          toAdapter == null -> {
-            requireNotNull(delegate).toJson(writer, value)
-          }
+          toAdapter == null -> knownNotNull(delegate).toJson(writer, value)
           !toAdapter.nullable && value == null -> {
             writer.nullValue()
           }
