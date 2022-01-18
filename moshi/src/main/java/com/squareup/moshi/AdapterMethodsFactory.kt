@@ -18,6 +18,7 @@ package com.squareup.moshi
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
+import com.squareup.moshi.internal.knownNotNull
 import com.squareup.moshi.internal.toStringWithAnnotations
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
