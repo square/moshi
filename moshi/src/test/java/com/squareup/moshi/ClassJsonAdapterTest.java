@@ -186,7 +186,7 @@ public final class ClassJsonAdapterTest {
     try {
       ClassJsonAdapter.Factory.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
@@ -208,7 +208,7 @@ public final class ClassJsonAdapterTest {
     try {
       ClassJsonAdapter.Factory.create(NameCollision.class, NO_ANNOTATIONS, moshi);
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(

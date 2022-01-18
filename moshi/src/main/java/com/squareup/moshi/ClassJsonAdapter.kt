@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.checkNull
 import com.squareup.moshi.internal.isKotlin
 import com.squareup.moshi.internal.isPlatformType
 import com.squareup.moshi.internal.jsonAnnotations
@@ -207,8 +208,8 @@ internal class ClassJsonAdapter<T>(
         val jsonName = jsonAnnotation.jsonName(fieldName)
         val fieldBinding = FieldBinding(jsonName, field, adapter)
         val replaced = fieldBindings.put(jsonName, fieldBinding)
-        require(replaced == null) {
-          "Conflicting fields:\n    ${requireNotNull(replaced).field}\n    ${fieldBinding.field}"
+        checkNull(replaced) {
+          "Conflicting fields:\n    ${it.field}\n    ${fieldBinding.field}"
         }
       }
     }
