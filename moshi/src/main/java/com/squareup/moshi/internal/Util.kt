@@ -503,8 +503,6 @@ internal inline fun <T : Any> checkNull(value: T?, lazyMessage: (T) -> Any) {
   if (value != null) {
     val message = lazyMessage(value)
     throw IllegalStateException(message.toString())
-  } else {
-    return
   }
 }
 
