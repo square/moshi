@@ -99,8 +99,9 @@ internal class AdapterMethodsFactory(
       val toAdapters = mutableListOf<AdapterMethod>()
       val fromAdapters = mutableListOf<AdapterMethod>()
 
-      var clazz = adapter.javaClass
-      while (clazz != Any::class.java) {
+      val classAndSuperclasses = generateSequence(adapter.javaClass) { it.superclass }.iterator()
+      while (classAndSuperclasses.hasNext()) {
+        val clazz = classAndSuperclasses.next()
         for (declaredMethod in clazz.declaredMethods) {
           if (declaredMethod.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, declaredMethod)
@@ -119,8 +120,8 @@ internal class AdapterMethodsFactory(
             fromAdapters.add(fromAdapter)
           }
         }
-        clazz = clazz.superclass
       }
+
       require(toAdapters.isNotEmpty() || fromAdapters.isNotEmpty()) {
         "Expected at least one @ToJson or @FromJson method on ${adapter.javaClass.name}"
       }
