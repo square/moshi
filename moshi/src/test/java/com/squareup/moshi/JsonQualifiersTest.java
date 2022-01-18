@@ -334,7 +334,7 @@ public final class JsonQualifiersTest {
     try {
       new Moshi.Builder().add(new AnnotationsConflictJsonAdapter());
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected).hasMessageThat().contains("Conflicting @ToJson methods");
     }
   }
