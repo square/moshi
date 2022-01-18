@@ -190,9 +190,12 @@ internal class AdapterMethodsFactory(
           }
         }
         else -> {
-          throw IllegalArgumentException(
-            "Unexpected signature for $method.\n@ToJson method signatures may have one of the following structures:\n    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n    <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n    <any access modifier> R toJson(T value) throws <any>;\n"
-          )
+          throw IllegalArgumentException("""Unexpected signature for $method.
+@ToJson method signatures may have one of the following structures:
+    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;
+    <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
+    <any access modifier> R toJson(T value) throws <any>;
+""")
         }
       }
     }
@@ -268,9 +271,12 @@ internal class AdapterMethodsFactory(
           }
         }
         else -> {
-          throw IllegalArgumentException(
-            "Unexpected signature for $method.\n@FromJson method signatures may have one of the following structures:\n    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n    <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n    <any access modifier> R fromJson(T value) throws <any>;\n"
-          )
+          throw IllegalArgumentException("""Unexpected signature for $method.
+@FromJson method signatures may have one of the following structures:
+    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;
+    <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
+    <any access modifier> R fromJson(T value) throws <any>;
+""")
         }
       }
     }
