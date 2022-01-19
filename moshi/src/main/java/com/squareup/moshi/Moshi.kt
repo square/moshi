@@ -213,7 +213,7 @@ public class Moshi internal constructor(builder: Builder) {
     }
 
     public fun add(adapter: Any): Builder = apply {
-      add(AdapterMethodsFactory.get(adapter))
+      add(AdapterMethodsFactory(adapter))
     }
 
     @Suppress("unused")
@@ -236,7 +236,7 @@ public class Moshi internal constructor(builder: Builder) {
 
     @Suppress("unused")
     public fun addLast(adapter: Any): Builder = apply {
-      addLast(AdapterMethodsFactory.get(adapter))
+      addLast(AdapterMethodsFactory(adapter))
     }
 
     @CheckReturnValue
