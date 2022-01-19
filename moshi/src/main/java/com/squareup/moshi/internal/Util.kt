@@ -101,7 +101,7 @@ internal fun typesMatch(pattern: Type, candidate: Type): Boolean {
 internal val AnnotatedElement.jsonAnnotations: Set<Annotation>
   get() = annotations.jsonAnnotations
 
-internal val Array<Annotation>.jsonAnnotations: Set<Annotation>
+public val Array<Annotation>.jsonAnnotations: Set<Annotation>
   get() {
     var result: MutableSet<Annotation>? = null
     for (annotation in this) {
@@ -143,7 +143,7 @@ internal val Array<Annotation>.hasNullable: Boolean
  * Returns true if `rawType` is built in. We don't reflect on private fields of platform
  * types because they're unspecified and likely to be different on Java vs. Android.
  */
-internal val Class<*>.isPlatformType: Boolean
+public val Class<*>.isPlatformType: Boolean
   get() {
     val name = name
     return (
@@ -199,7 +199,7 @@ internal fun Type.removeSubtypeWildcard(): Type {
   return upperBounds[0]
 }
 
-internal fun Type.resolve(context: Type, contextRawType: Class<*>): Type {
+public fun Type.resolve(context: Type, contextRawType: Class<*>): Type {
   return this.resolve(context, contextRawType, LinkedHashSet())
 }
 
@@ -358,7 +358,7 @@ internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String 
  * Loads the generated JsonAdapter for classes annotated [JsonClass]. This works because it
  * uses the same naming conventions as `JsonClassCodeGenProcessor`.
  */
-internal fun Moshi.generatedAdapter(
+public fun Moshi.generatedAdapter(
   type: Type,
   rawType: Class<*>
 ): JsonAdapter<*>? {
