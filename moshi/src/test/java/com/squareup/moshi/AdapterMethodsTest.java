@@ -267,7 +267,7 @@ public final class AdapterMethodsTest {
     try {
       builder.add(new ConflictingsToJsonAdapter());
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected.getMessage()).contains("Conflicting @ToJson methods:");
       assertThat(expected.getMessage()).contains("pointToJson1");
       assertThat(expected.getMessage()).contains("pointToJson2");
@@ -292,7 +292,7 @@ public final class AdapterMethodsTest {
     try {
       builder.add(new ConflictingsFromJsonAdapter());
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected.getMessage()).contains("Conflicting @FromJson methods:");
       assertThat(expected.getMessage()).contains("pointFromJson1");
       assertThat(expected.getMessage()).contains("pointFromJson2");
