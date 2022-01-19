@@ -184,9 +184,9 @@ public final class ClassJsonAdapterTest {
   @Test
   public void fieldNameCollision() throws Exception {
     try {
-      ClassJsonAdapter.FACTORY.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
@@ -206,9 +206,9 @@ public final class ClassJsonAdapterTest {
   @Test
   public void jsonAnnotationNameCollision() throws Exception {
     try {
-      ClassJsonAdapter.FACTORY.create(NameCollision.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(NameCollision.class, NO_ANNOTATIONS, moshi);
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (IllegalStateException expected) {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
@@ -364,7 +364,7 @@ public final class ClassJsonAdapterTest {
   @Test
   public void nonStaticNestedClassNotSupported() throws Exception {
     try {
-      ClassJsonAdapter.FACTORY.create(NonStatic.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(NonStatic.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -385,7 +385,7 @@ public final class ClassJsonAdapterTest {
           }
         };
     try {
-      ClassJsonAdapter.FACTORY.create(c.getClass(), NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(c.getClass(), NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -398,7 +398,7 @@ public final class ClassJsonAdapterTest {
   public void localClassNotSupported() throws Exception {
     class Local {}
     try {
-      ClassJsonAdapter.FACTORY.create(Local.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(Local.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -412,7 +412,7 @@ public final class ClassJsonAdapterTest {
 
   @Test
   public void interfaceNotSupported() throws Exception {
-    assertThat(ClassJsonAdapter.FACTORY.create(Interface.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertThat(ClassJsonAdapter.Factory.create(Interface.class, NO_ANNOTATIONS, moshi)).isNull();
   }
 
   abstract static class Abstract {}
@@ -420,7 +420,7 @@ public final class ClassJsonAdapterTest {
   @Test
   public void abstractClassNotSupported() throws Exception {
     try {
-      ClassJsonAdapter.FACTORY.create(Abstract.class, NO_ANNOTATIONS, moshi);
+      ClassJsonAdapter.Factory.create(Abstract.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -529,7 +529,7 @@ public final class ClassJsonAdapterTest {
     @SuppressWarnings("unchecked")
     JsonAdapter<Box<Integer>> adapter =
         (JsonAdapter<Box<Integer>>)
-            ClassJsonAdapter.FACTORY.create(
+            ClassJsonAdapter.Factory.create(
                 Types.newParameterizedTypeWithOwner(
                     ClassJsonAdapterTest.class, Box.class, Integer.class),
                 NO_ANNOTATIONS,
@@ -541,7 +541,7 @@ public final class ClassJsonAdapterTest {
   private <T> String toJson(Class<T> type, T value) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
     JsonAdapter<T> jsonAdapter =
-        (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(type, NO_ANNOTATIONS, moshi);
+        (JsonAdapter<T>) ClassJsonAdapter.Factory.create(type, NO_ANNOTATIONS, moshi);
 
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
     Buffer buffer = new Buffer();
@@ -559,7 +559,7 @@ public final class ClassJsonAdapterTest {
   private <T> T fromJson(Class<T> type, String json) throws IOException {
     @SuppressWarnings("unchecked") // Factory.create returns an adapter that matches its argument.
     JsonAdapter<T> jsonAdapter =
-        (JsonAdapter<T>) ClassJsonAdapter.FACTORY.create(type, NO_ANNOTATIONS, moshi);
+        (JsonAdapter<T>) ClassJsonAdapter.Factory.create(type, NO_ANNOTATIONS, moshi);
     // Wrap in an array to avoid top-level object warnings without going completely lenient.
     JsonReader jsonReader = newReader("[" + json + "]");
     jsonReader.beginArray();

@@ -369,7 +369,7 @@ public class Moshi internal constructor(builder: Builder) {
       add(MapJsonAdapter.Factory)
       add(ArrayJsonAdapter.Factory)
       add(RecordJsonAdapter.Factory)
-      add(ClassJsonAdapter.FACTORY)
+      add(ClassJsonAdapter.Factory)
     }
 
     fun <T> newAdapterFactory(

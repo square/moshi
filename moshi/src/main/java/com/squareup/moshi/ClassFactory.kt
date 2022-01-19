@@ -19,7 +19,6 @@ import com.squareup.moshi.internal.rethrowCause
 import java.io.ObjectInputStream
 import java.io.ObjectStreamClass
 import java.lang.reflect.InvocationTargetException
-import kotlin.Throws
 
 /**
  * Magic that creates instances of arbitrary concrete classes. Derived from Gson's UnsafeAllocator
@@ -29,7 +28,6 @@ import kotlin.Throws
  * @author Jesse Wilson
  */
 internal abstract class ClassFactory<T> {
-  @Throws(InvocationTargetException::class, IllegalAccessException::class, InstantiationException::class)
   abstract fun newInstance(): T
 
   companion object {
