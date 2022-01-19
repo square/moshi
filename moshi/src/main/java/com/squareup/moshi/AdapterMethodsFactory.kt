@@ -202,6 +202,7 @@ internal class AdapterMethodsFactory(
                   <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;
                   <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
                   <any access modifier> R toJson(T value) throws <any>;
+
             """.trimIndent()
           )
         }
@@ -286,6 +287,7 @@ internal class AdapterMethodsFactory(
                   <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;
                   <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
                   <any access modifier> R fromJson(T value) throws <any>;
+
             """.trimIndent()
           )
         }
