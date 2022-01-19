@@ -16,10 +16,10 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.canonicalize
+import com.squareup.moshi.internal.checkNull
 import com.squareup.moshi.internal.hasNullable
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.knownNotNull
-import com.squareup.moshi.internal.checkNull
 import com.squareup.moshi.internal.toStringWithAnnotations
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
@@ -191,12 +191,14 @@ internal class AdapterMethodsFactory(
           }
         }
         else -> {
-          throw IllegalArgumentException("""Unexpected signature for $method.
+          throw IllegalArgumentException(
+            """Unexpected signature for $method.
 @ToJson method signatures may have one of the following structures:
     <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;
     <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
     <any access modifier> R toJson(T value) throws <any>;
-""")
+"""
+          )
         }
       }
     }
@@ -272,12 +274,14 @@ internal class AdapterMethodsFactory(
           }
         }
         else -> {
-          throw IllegalArgumentException("""Unexpected signature for $method.
+          throw IllegalArgumentException(
+            """Unexpected signature for $method.
 @FromJson method signatures may have one of the following structures:
     <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;
     <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
     <any access modifier> R fromJson(T value) throws <any>;
-""")
+"""
+          )
         }
       }
     }
