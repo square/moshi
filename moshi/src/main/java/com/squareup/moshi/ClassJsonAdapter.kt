@@ -39,7 +39,6 @@ import java.lang.reflect.Type
  *
  * Fields from platform classes are omitted from both serialization and deserialization unless they
  * are either public or protected. This includes the following packages and their subpackages:
- *
  *  * `android.*`
  *  * `androidx.*`
  *  * `java.*`
@@ -47,7 +46,6 @@ import java.lang.reflect.Type
  *  * `kotlin.*`
  *  * `kotlinx.*`
  *  * `scala.*`
- *
  */
 internal class ClassJsonAdapter<T>(
   private val classFactory: ClassFactory<T>,
@@ -103,12 +101,12 @@ internal class ClassJsonAdapter<T>(
   internal class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
     fun read(reader: JsonReader, value: Any?) {
       val fieldValue = adapter.fromJson(reader)
-      field[value] = fieldValue
+      field.set(value, fieldValue)
     }
 
     @Suppress("UNCHECKED_CAST") // We require that field's values are of type T.
     fun write(writer: JsonWriter, value: Any?) {
-      val fieldValue = field[value] as T
+      val fieldValue = field.get(value) as T
       adapter.toJson(writer, fieldValue)
     }
   }
@@ -145,19 +143,24 @@ internal class ClassJsonAdapter<T>(
       require(!rawType.isAnonymousClass) {
         "Cannot serialize anonymous class ${rawType.name}"
       }
+
       require(!rawType.isLocalClass) {
         "Cannot serialize local class ${rawType.name}"
       }
+
       val isNonStaticNestedClass = rawType.enclosingClass != null && !isStatic(rawType.modifiers)
       require(!isNonStaticNestedClass) {
         "Cannot serialize non-static nested class ${rawType.name}"
       }
+
       require(!isAbstract(rawType.modifiers)) {
         "Cannot serialize abstract class ${rawType.name}"
       }
+
       require(!rawType.isKotlin) {
         "Cannot serialize Kotlin type ${rawType.name}. Reflective serialization of Kotlin classes without using kotlin-reflect has undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
       }
+
       val classFactory = ClassFactory.get<Any>(rawType)
       val fields = sortedMapOf<String, FieldBinding<*>>()
       var parentType = type
@@ -216,8 +219,11 @@ internal class ClassJsonAdapter<T>(
 
     /** Returns true if fields with `modifiers` are included in the emitted JSON.  */
     private fun includeField(platformType: Boolean, modifiers: Int): Boolean {
-      if (isStatic(modifiers) || isTransient(modifiers)) return false
-      return isPublic(modifiers) || isProtected(modifiers) || !platformType
+      return if (isStatic(modifiers) || isTransient(modifiers)) {
+        false
+      } else {
+        isPublic(modifiers) || isProtected(modifiers) || !platformType
+      }
     }
   }
 }

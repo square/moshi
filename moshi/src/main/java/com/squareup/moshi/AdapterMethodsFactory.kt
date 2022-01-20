@@ -95,7 +95,7 @@ internal class AdapterMethodsFactory(
   }
 
   companion object {
-    fun get(adapter: Any): AdapterMethodsFactory {
+    operator fun invoke(adapter: Any): AdapterMethodsFactory {
       val toAdapters = mutableListOf<AdapterMethod>()
       val fromAdapters = mutableListOf<AdapterMethod>()
 
@@ -132,7 +132,7 @@ internal class AdapterMethodsFactory(
      * Returns an object that calls a `method` method on `adapter` in service of
      * converting an object to JSON.
      */
-    fun toAdapter(adapter: Any, method: Method): AdapterMethod {
+    private fun toAdapter(adapter: Any, method: Method): AdapterMethod {
       method.isAccessible = true
       val returnType = method.genericReturnType
       val parameterTypes = method.genericParameterTypes
@@ -142,10 +142,11 @@ internal class AdapterMethodsFactory(
         returnType == Void.TYPE &&
         parametersAreJsonAdapters(2, parameterTypes)
       return when {
+        // void pointToJson(JsonWriter jsonWriter, Point point) {
+        // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
         methodSignatureIncludesJsonWriterAndJsonAdapter -> {
-          // void pointToJson(JsonWriter jsonWriter, Point point) {
-          // void pointToJson(JsonWriter jsonWriter, Point point, JsonAdapter<?> adapter, ...) {
           val qualifierAnnotations = parameterAnnotations[1].jsonAnnotations
+
           object : AdapterMethod(
             adaptersOffset = 2,
             type = parameterTypes[1],
@@ -156,7 +157,7 @@ internal class AdapterMethodsFactory(
             nullable = true
           ) {
             override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
-              invoke(writer, value)
+              invokeMethod(writer, value)
             }
           }
         }
@@ -174,10 +175,14 @@ internal class AdapterMethodsFactory(
             method = method,
             nullable = nullable
           ) {
+
             private lateinit var delegate: JsonAdapter<Any>
+
             override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
               super.bind(moshi, factory)
-              delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
+              val shouldSkip = Types.equals(parameterTypes[0], returnType) &&
+                qualifierAnnotations == returnTypeAnnotations
+              delegate = if (shouldSkip) {
                 moshi.nextAdapter(factory, returnType, returnTypeAnnotations)
               } else {
                 moshi.adapter(returnType, returnTypeAnnotations)
@@ -185,19 +190,20 @@ internal class AdapterMethodsFactory(
             }
 
             override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
-              val intermediate = invoke(value)
-              delegate.toJson(writer, intermediate)
+              delegate.toJson(writer, invokeMethod(value))
             }
           }
         }
         else -> {
           throw IllegalArgumentException(
-            """Unexpected signature for $method.
-@ToJson method signatures may have one of the following structures:
-    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;
-    <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
-    <any access modifier> R toJson(T value) throws <any>;
-"""
+            """
+              Unexpected signature for $method.
+              @ToJson method signatures may have one of the following structures:
+                  <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;
+                  <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
+                  <any access modifier> R toJson(T value) throws <any>;
+
+            """.trimIndent()
           )
         }
       }
@@ -217,7 +223,7 @@ internal class AdapterMethodsFactory(
      * Returns an object that calls a `method` method on `adapter` in service of
      * converting an object from JSON.
      */
-    fun fromAdapter(adapter: Any, method: Method): AdapterMethod {
+    private fun fromAdapter(adapter: Any, method: Method): AdapterMethod {
       method.isAccessible = true
       val returnType = method.genericReturnType
       val returnTypeAnnotations = method.jsonAnnotations
@@ -240,7 +246,7 @@ internal class AdapterMethodsFactory(
             method = method,
             nullable = true
           ) {
-            override fun fromJson(moshi: Moshi, reader: JsonReader) = invoke(reader)
+            override fun fromJson(moshi: Moshi, reader: JsonReader) = invokeMethod(reader)
           }
         }
         parameterTypes.size == 1 && returnType != Void.TYPE -> {
@@ -269,18 +275,20 @@ internal class AdapterMethodsFactory(
 
             override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {
               val intermediate = delegate.fromJson(reader)
-              return invoke(intermediate)
+              return invokeMethod(intermediate)
             }
           }
         }
         else -> {
           throw IllegalArgumentException(
-            """Unexpected signature for $method.
-@FromJson method signatures may have one of the following structures:
-    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;
-    <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
-    <any access modifier> R fromJson(T value) throws <any>;
-"""
+            """
+              Unexpected signature for $method.
+              @FromJson method signatures may have one of the following structures:
+                  <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;
+                  <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
+                  <any access modifier> R fromJson(T value) throws <any>;
+
+            """.trimIndent()
           )
         }
       }
@@ -322,9 +330,7 @@ internal class AdapterMethodsFactory(
           val jsonAnnotations = parameterAnnotations[i].jsonAnnotations
           jsonAdapters[i - adaptersOffset] =
             if (Types.equals(this.type, type) && annotations == jsonAnnotations) {
-              moshi.nextAdapter(
-                factory, type, jsonAnnotations
-              )
+              moshi.nextAdapter(factory, type, jsonAnnotations)
             } else {
               moshi.adapter<Any>(type, jsonAnnotations)
             }
@@ -337,9 +343,9 @@ internal class AdapterMethodsFactory(
     open fun fromJson(moshi: Moshi, reader: JsonReader): Any? = throw AssertionError()
 
     /** Invoke the method with one fixed argument, plus any number of JSON adapter arguments. */
-    protected fun invoke(initialFixedArgumentForAdapterMethod: Any?): Any? {
+    protected fun invokeMethod(arg: Any?): Any? {
       val args = arrayOfNulls<Any>(1 + jsonAdapters.size)
-      args[0] = initialFixedArgumentForAdapterMethod
+      args[0] = arg
       jsonAdapters.copyInto(args, 1, 0, jsonAdapters.size)
 
       return try {
@@ -350,10 +356,10 @@ internal class AdapterMethodsFactory(
     }
 
     /** Invoke the method with two fixed arguments, plus any number of JSON adapter arguments. */
-    protected fun invoke(fixedArgument1: Any?, fixedArgument2: Any?): Any? {
+    protected fun invokeMethod(arg0: Any?, arg1: Any?): Any? {
       val args = arrayOfNulls<Any>(2 + jsonAdapters.size)
-      args[0] = fixedArgument1
-      args[1] = fixedArgument2
+      args[0] = arg0
+      args[1] = arg1
       jsonAdapters.copyInto(args, 2, 0, jsonAdapters.size)
 
       return try {

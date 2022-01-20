@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.EMPTY_TYPE_ARRAY
@@ -30,6 +31,7 @@ import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.Properties
 import javax.annotation.CheckReturnValue
+import java.lang.annotation.Annotation as JavaAnnotation
 
 /** Factory methods for types. */
 @CheckReturnValue
@@ -62,7 +64,7 @@ public object Types {
    */
   @JvmStatic
   public fun generatedJsonAdapterName(className: String): String {
-    return className.replace("$", "_") + "JsonAdapter"
+    return "${className.replace("$", "_")}JsonAdapter"
   }
 
   /**
@@ -81,8 +83,7 @@ public object Types {
       return null
     }
     for (annotation in annotations) {
-      @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-      if ((jsonQualifier == (annotation as java.lang.annotation.Annotation).annotationType())) {
+      if ((jsonQualifier == (annotation as JavaAnnotation).annotationType())) {
         val delegateAnnotations = LinkedHashSet(annotations)
         delegateAnnotations.remove(annotation)
         return Collections.unmodifiableSet(delegateAnnotations)
@@ -178,7 +179,7 @@ public object Types {
       }
       is WildcardType -> getRawType(type.upperBounds[0])
       else -> {
-        val className = if (type == null) "null" else type.javaClass.name
+        val className = type?.javaClass?.name?.toString()
         throw IllegalArgumentException("Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className")
       }
     }
@@ -259,19 +260,18 @@ public object Types {
       val field = clazz.getDeclaredField(fieldName)
       field.isAccessible = true
       val fieldAnnotations = field.declaredAnnotations
-      val annotations: MutableSet<Annotation> = LinkedHashSet(fieldAnnotations.size)
-      for (annotation in fieldAnnotations) {
-        @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-        if ((annotation as java.lang.annotation.Annotation).annotationType()
-          .isAnnotationPresent(JsonQualifier::class.java)
-        ) {
-          annotations.add(annotation)
+      return buildSet(fieldAnnotations.size) {
+        for (annotation in fieldAnnotations) {
+          val hasJsonQualifier = (annotation as JavaAnnotation).annotationType()
+            .isAnnotationPresent(JsonQualifier::class.java)
+          if (hasJsonQualifier) {
+            add(annotation)
+          }
         }
       }
-      return Collections.unmodifiableSet(annotations)
     } catch (e: NoSuchFieldException) {
       throw IllegalArgumentException(
-        "Could not access field " + fieldName + " on class " + clazz.canonicalName, e
+        "Could not access field $fieldName on class ${clazz.canonicalName}", e
       )
     }
   }
@@ -298,7 +298,7 @@ public object Types {
           annotationType.isInstance(o)
         }
         "hashCode" -> 0
-        "toString" -> "@" + annotationType.name + "()"
+        "toString" -> "@${annotationType.name}()"
         else -> method.invoke(proxy, *args)
       }
     } as T
