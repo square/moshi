@@ -48,8 +48,8 @@ import java.util.Collections
 import java.util.LinkedHashSet
 import kotlin.contracts.contract
 
-@JvmField public val NO_ANNOTATIONS: Set<Annotation> = emptySet()
-@JvmField public val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
+@JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
+@JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
 
 @Suppress("UNCHECKED_CAST")
 private val METADATA: Class<out Annotation>? = try {
@@ -87,18 +87,18 @@ public fun AnnotatedElement.jsonName(declaredName: String): String {
   return getAnnotation(Json::class.java).jsonName(declaredName)
 }
 
-public fun Json?.jsonName(declaredName: String): String {
+internal fun Json?.jsonName(declaredName: String): String {
   if (this == null) return declaredName
   val annotationName: String = name
   return if (Json.UNSET_NAME == annotationName) declaredName else annotationName
 }
 
-public fun typesMatch(pattern: Type, candidate: Type): Boolean {
+internal fun typesMatch(pattern: Type, candidate: Type): Boolean {
   // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
   return Types.equals(pattern, candidate)
 }
 
-public val AnnotatedElement.jsonAnnotations: Set<Annotation>
+internal val AnnotatedElement.jsonAnnotations: Set<Annotation>
   get() = annotations.jsonAnnotations
 
 public val Array<Annotation>.jsonAnnotations: Set<Annotation>
@@ -116,7 +116,7 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
     return if (result != null) Collections.unmodifiableSet(result) else NO_ANNOTATIONS
   }
 
-public fun Set<Annotation>.isAnnotationPresent(
+internal fun Set<Annotation>.isAnnotationPresent(
   annotationClass: Class<out Annotation>
 ): Boolean {
   if (isEmpty()) return false // Save an iterator in the common case.
@@ -128,7 +128,7 @@ public fun Set<Annotation>.isAnnotationPresent(
 }
 
 /** Returns true if `annotations` has any annotation whose simple name is Nullable. */
-public val Array<Annotation>.hasNullable: Boolean
+internal val Array<Annotation>.hasNullable: Boolean
   get() {
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -158,7 +158,7 @@ public val Class<*>.isPlatformType: Boolean
   }
 
 /** Throws the cause of `e`, wrapping it if it is checked. */
-public fun InvocationTargetException.rethrowCause(): RuntimeException {
+internal fun InvocationTargetException.rethrowCause(): RuntimeException {
   val cause = targetException
   if (cause is RuntimeException) throw cause
   if (cause is Error) throw cause
@@ -168,7 +168,7 @@ public fun InvocationTargetException.rethrowCause(): RuntimeException {
 /**
  * Returns a type that is functionally equal but not necessarily equal according to [[Object.equals()]][Object.equals].
  */
-public fun Type.canonicalize(): Type {
+internal fun Type.canonicalize(): Type {
   return when (this) {
     is Class<*> -> {
       if (isArray) GenericArrayTypeImpl(this@canonicalize.componentType.canonicalize()) else this
@@ -190,7 +190,7 @@ public fun Type.canonicalize(): Type {
 }
 
 /** If type is a "? extends X" wildcard, returns X; otherwise returns type unchanged. */
-public fun Type.removeSubtypeWildcard(): Type {
+internal fun Type.removeSubtypeWildcard(): Type {
   if (this !is WildcardType) return this
   val lowerBounds = lowerBounds
   if (lowerBounds.isNotEmpty()) return this
@@ -277,7 +277,7 @@ private fun Type.resolve(
   }
 }
 
-public fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown: TypeVariable<*>): Type {
+internal fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown: TypeVariable<*>): Type {
   val declaredByRaw = declaringClassOf(unknown) ?: return unknown
 
   // We can't reduce this further.
@@ -293,7 +293,7 @@ public fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown:
  * Returns the generic supertype for `supertype`. For example, given a class `IntegerSet`, the result for when supertype is `Set.class` is `Set<Integer>` and the
  * result when the supertype is `Collection.class` is `Collection<Integer>`.
  */
-public fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolve: Class<*>): Type {
+internal fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolve: Class<*>): Type {
   var rawType = rawTypeInitial
   if (toResolve == rawType) {
     return context
@@ -328,12 +328,12 @@ public fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolv
   return toResolve
 }
 
-public val Any?.hashCodeOrZero: Int
+internal val Any?.hashCodeOrZero: Int
   get() {
     return this?.hashCode() ?: 0
   }
 
-public fun Type.typeToString(): String {
+internal fun Type.typeToString(): String {
   return if (this is Class<*>) name else toString()
 }
 
@@ -341,16 +341,16 @@ public fun Type.typeToString(): String {
  * Returns the declaring class of `typeVariable`, or `null` if it was not declared by
  * a class.
  */
-public fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
+internal fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
   val genericDeclaration = typeVariable.genericDeclaration
   return if (genericDeclaration is Class<*>) genericDeclaration else null
 }
 
-public fun Type.checkNotPrimitive() {
+internal fun Type.checkNotPrimitive() {
   require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive $this. Use the boxed type." }
 }
 
-public fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
+internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
   return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
 }
 
@@ -418,7 +418,7 @@ public fun Moshi.generatedAdapter(
   }
 }
 
-public val Class<*>.isKotlin: Boolean
+internal val Class<*>.isKotlin: Boolean
   get() = METADATA != null && isAnnotationPresent(METADATA)
 
 /**
@@ -428,7 +428,7 @@ public val Class<*>.isKotlin: Boolean
  * @param T the type of `targetClass`.
  * @return the instantiated `targetClass` instance.
  */
-public fun <T> Class<T>.lookupDefaultsConstructor(): Constructor<T> {
+internal fun <T> Class<T>.lookupDefaultsConstructor(): Constructor<T> {
   checkNotNull(DEFAULT_CONSTRUCTOR_MARKER) {
     "DefaultConstructorMarker not on classpath. Make sure the Kotlin stdlib is on the classpath."
   }
@@ -492,7 +492,8 @@ internal inline fun <T> knownNotNull(value: T?): T {
 }
 
 // Public due to inline access in MoshiKotlinTypesExtensions
-public fun <T> Class<T>.boxIfPrimitive(): Class<T> {
+@PublishedApi
+internal fun <T> Class<T>.boxIfPrimitive(): Class<T> {
   // cast is safe: long.class and Long.class are both of type Class<Long>
   @Suppress("UNCHECKED_CAST")
   val wrapped = PRIMITIVE_TO_WRAPPER_TYPE[this] as Class<T>?
