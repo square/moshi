@@ -60,6 +60,7 @@ private val METADATA: Class<out Annotation>? = try {
 
 // We look up the constructor marker separately because Metadata might be (justifiably)
 // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
+@JvmField
 public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
   Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
 } catch (ignored: ClassNotFoundException) {
