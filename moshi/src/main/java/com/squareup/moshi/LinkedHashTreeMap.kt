@@ -19,8 +19,7 @@ internal class LinkedHashTreeMap<K, V>
 /**
  * Create a tree map ordered by [comparator]. This map's keys may only be null if [comparator] permits.
  *
- * @param comparator the comparator to order elements with, or null to use the natural
- *     ordering.
+ * @param comparator the comparator to order elements with, or null to use the natural ordering.
  */
 constructor(
   comparator: Comparator<Any?>? = null
@@ -36,10 +35,7 @@ constructor(
   private var keySet: KeySet? = null
 
   override val keys: MutableSet<K>
-    get() {
-      val result: KeySet? = keySet
-      return result ?: KeySet().also { keySet = it }
-    }
+    get() = keySet ?: KeySet().also { keySet = it }
 
   override fun put(key: K, value: V): V? {
     val created = findOrCreate(key)
@@ -305,7 +301,6 @@ constructor(
     var right = node.right
     val originalParent = node.parent
     if (left != null && right != null) {
-
       /*
        * To remove a node with both left and right subtrees, move an
        * adjacent node from one of those subtrees into this node's place.
@@ -390,44 +385,49 @@ constructor(
       val leftHeight = left?.height ?: 0
       val rightHeight = right?.height ?: 0
       val delta = leftHeight - rightHeight
-      if (delta == -2) {
-        val rightLeft = right!!.left
-        val rightRight = right.right
-        val rightRightHeight = rightRight?.height ?: 0
-        val rightLeftHeight = rightLeft?.height ?: 0
-        val rightDelta = rightLeftHeight - rightRightHeight
-        if (rightDelta != -1 && (rightDelta != 0 || insert)) {
-          assert(rightDelta == 1)
-          rotateRight(right) // AVL right left
+      when (delta) {
+        -2 -> {
+          val rightLeft = right!!.left
+          val rightRight = right.right
+          val rightRightHeight = rightRight?.height ?: 0
+          val rightLeftHeight = rightLeft?.height ?: 0
+          val rightDelta = rightLeftHeight - rightRightHeight
+          if (rightDelta != -1 && (rightDelta != 0 || insert)) {
+            assert(rightDelta == 1)
+            rotateRight(right) // AVL right left
+          }
+          rotateLeft(node) // AVL right right
+          if (insert) {
+            break // no further rotations will be necessary
+          }
         }
-        rotateLeft(node) // AVL right right
-        if (insert) {
-          break // no further rotations will be necessary
+        2 -> {
+          val leftLeft = left!!.left
+          val leftRight = left.right
+          val leftRightHeight = leftRight?.height ?: 0
+          val leftLeftHeight = leftLeft?.height ?: 0
+          val leftDelta = leftLeftHeight - leftRightHeight
+          if (leftDelta != 1 && (leftDelta != 0 || insert)) {
+            assert(leftDelta == -1)
+            rotateLeft(left) // AVL left right
+          }
+          rotateRight(node) // AVL left left
+          if (insert) {
+            break // no further rotations will be necessary
+          }
         }
-      } else if (delta == 2) {
-        val leftLeft = left!!.left
-        val leftRight = left.right
-        val leftRightHeight = leftRight?.height ?: 0
-        val leftLeftHeight = leftLeft?.height ?: 0
-        val leftDelta = leftLeftHeight - leftRightHeight
-        if (leftDelta != 1 && (leftDelta != 0 || insert)) {
-          assert(leftDelta == -1)
-          rotateLeft(left) // AVL left right
+        0 -> {
+          node.height = leftHeight + 1 // leftHeight == rightHeight
+          if (insert) {
+            break // the insert caused balance, so rebalancing is done!
+          }
         }
-        rotateRight(node) // AVL left left
-        if (insert) {
-          break // no further rotations will be necessary
-        }
-      } else if (delta == 0) {
-        node.height = leftHeight + 1 // leftHeight == rightHeight
-        if (insert) {
-          break // the insert caused balance, so rebalancing is done!
-        }
-      } else {
-        assert(delta == -1 || delta == 1)
-        node.height = max(leftHeight, rightHeight) + 1
-        if (!insert) {
-          break // the height hasn't changed, so rebalancing is done!
+        else -> {
+          assert(delta == -1 || delta == 1)
+          node.height = max(leftHeight, rightHeight) + 1
+          if (!insert) {
+            break // the height hasn't changed, so rebalancing is done!
+          }
         }
       }
       node = node.parent
