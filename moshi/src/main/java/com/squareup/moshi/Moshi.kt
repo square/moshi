@@ -352,7 +352,6 @@ public class Moshi internal constructor(builder: Builder) {
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
 
-    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS") // TODO remove after JsonAdapter is migrated
     override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
     private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R =

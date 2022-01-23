@@ -30,7 +30,6 @@ import java.math.BigDecimal
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 internal class JsonValueWriter : JsonWriter() {
-  @JvmField // TODO remove once JsonWriter is Kotlin
   var stack = arrayOfNulls<Any>(32)
   private var deferredName: String? = null
 
