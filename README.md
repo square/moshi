@@ -1099,7 +1099,7 @@ add the following to your build to enable the annotation processor:
 
 ```kotlin
 plugins {
-  id("com.google.devtools.ksp").version("1.6.0-1.0.1")
+  id("com.google.devtools.ksp").version("1.6.10-1.0.4") // Or latest version of KSP
 }
 
 dependencies {
