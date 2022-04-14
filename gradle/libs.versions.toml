@@ -2,10 +2,10 @@
 autoService = "1.0"
 gjf = "1.11.0"
 jvmTarget = "1.8"
-kotlin = "1.6.10"
+kotlin = "1.6.20"
 kotlinCompileTesting = "1.4.7"
 kotlinpoet = "1.10.2"
-ksp = "1.6.10-1.0.2"
+ksp = "1.6.20-1.0.5"
 ktlint = "0.41.0"
 
 [plugins]

@@ -1387,7 +1387,21 @@ class GeneratedAdaptersTest {
     @Transient
     val arity: (String.(String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> Boolean)? = null,
   )
+
+  // Regression test for https://github.com/square/moshi/issues/1530
+  @Test fun typeAliasWithGenerics() {
+    val adapter = moshi.adapter<ClassWithTypeAliasWithGenerics>()
+    val json = """{"metadata": { "foo": "bar" }}"""
+    assertThat(adapter.fromJson(json)).isEqualTo(ClassWithTypeAliasWithGenerics(mapOf("foo" to "bar")))
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class ClassWithTypeAliasWithGenerics(
+    @Json("metadata") val myMetadata: EventMetadata,
+  )
 }
+
+internal typealias EventMetadata = Map<String, String>
 
 // Has to be outside to avoid Types seeing an owning class
 @JsonClass(generateAdapter = true)
