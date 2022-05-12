@@ -23,9 +23,9 @@ import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
-import okio.IOException
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
+import okio.IOException
 
 /**
  * A JsonAdapter factory for objects that include type information in the JSON. When decoding JSON
@@ -88,12 +88,11 @@ import javax.annotation.CheckReturnValue
  * must reprocess the JSON stream once it knows the object's type.
  *
  * If an unknown subtype is encountered when decoding:
- *  * If [withDefaultValue] is used, then `defaultValue` will be returned.
- *  * If [withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.fromJson(reader)` result will be returned.
+ *  * If [fallbackSubtype] is used, then the `fallbackJsonAdapter.fromJson(reader)` result will be returned.
  *  * Otherwise a [JsonDataException] will be thrown.
  *
  * If an unknown type is encountered when encoding:
- *  * If [withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.toJson(writer, value)` result will be returned.
+ *  * If [fallbackSubtype] is used, then the `JsonAdapter<fallbackSubtype>.toJson(writer, value)` result will be returned.
  *  * Otherwise a [IllegalArgumentException] will be thrown.
  *
  * If the same subtype has multiple labels the first one is used when encoding.
@@ -103,7 +102,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labelKey: String,
   private val labels: List<String>,
   private val subtypes: List<Type>,
-  private val fallbackJsonAdapter: JsonAdapter<Any>?
+  private val fallbackSubtype: Type?
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -121,50 +120,27 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labelKey = labelKey,
       labels = newLabels,
       subtypes = newSubtypes,
-      fallbackJsonAdapter = fallbackJsonAdapter
+      fallbackSubtype = fallbackSubtype
     )
   }
 
   /**
-   * Returns a new factory that with default to `fallbackJsonAdapter.fromJson(reader)` upon
+   * Returns a new factory that with default to `JsonAdapter<fallbackSubtype>.fromJson(reader)` upon
    * decoding of unrecognized labels.
    *
    * The [JsonReader] instance will not be automatically consumed, so make sure to consume
    * it within your implementation of [JsonAdapter.fromJson]
    */
-  public fun withFallbackJsonAdapter(
-    fallbackJsonAdapter: JsonAdapter<Any>?
+  public fun withFallbackSubtype(
+    fallbackSubtype: Class<out T>?
   ): PolymorphicJsonAdapterFactory<T> {
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
       labelKey = labelKey,
       labels = labels,
       subtypes = subtypes,
-      fallbackJsonAdapter = fallbackJsonAdapter
+      fallbackSubtype = fallbackSubtype
     )
-  }
-
-  /**
-   * Returns a new factory that will default to `defaultValue` upon decoding of unrecognized
-   * labels. The default value should be immutable.
-   */
-  public fun withDefaultValue(defaultValue: T?): PolymorphicJsonAdapterFactory<T> {
-    return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
-  }
-
-  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any> {
-    return object : JsonAdapter<Any>() {
-      override fun fromJson(reader: JsonReader): Any? {
-        reader.skipValue()
-        return defaultValue
-      }
-
-      override fun toJson(writer: JsonWriter, value: Any?) {
-        throw IllegalArgumentException(
-          "Expected one of $subtypes but found $value, a ${value?.javaClass}. Register this subtype."
-        )
-      }
-    }
   }
 
   override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
@@ -172,6 +148,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       return null
     }
     val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
+    val fallbackJsonAdapter = fallbackSubtype?.let { moshi.adapter<Any>(fallbackSubtype) }
     return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
       .nullSafe()
   }
@@ -259,7 +236,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         labelKey = labelKey,
         labels = emptyList(),
         subtypes = emptyList(),
-        fallbackJsonAdapter = null
+        fallbackSubtype = null
       )
     }
   }
