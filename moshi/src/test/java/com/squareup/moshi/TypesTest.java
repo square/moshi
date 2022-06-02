@@ -321,7 +321,9 @@ public final class TypesTest {
     }
     Type rawType = Types.getRawType(returningE.getGenericReturnType());
     Truth.assertThat(Types.equals(type, rawType)).isTrue();
+    Truth.assertThat(Types.equals(rawType, type)).isTrue();
   }
+
 
   @Test
   public void parameterizedAndWildcardTypesCannotHavePrimitiveArguments() throws Exception {
