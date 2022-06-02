@@ -212,11 +212,17 @@ public object Types {
       is Class<*> -> {
         return if (b is GenericArrayType) {
           equals(a.componentType, b.genericComponentType)
+        } else if (b is ParameterizedType && a.rawType == b.rawType) {
+          // Class instance with generic info, from method return types
+          return a.typeParameters.map { it.bounds }.toTypedArray().flatten() == b.actualTypeArguments.toList()
         } else {
           a == b // Class already specifies equals().
         }
       }
       is ParameterizedType -> {
+        // Class instance with generic info, from method return types
+        if (b is Class<*> && a.rawType == b.rawType)
+          return b.typeParameters.map { it.bounds }.toTypedArray().flatten() == a.actualTypeArguments.toList()
         if (b !is ParameterizedType) return false
         val aTypeArguments = if (a is ParameterizedTypeImpl) a.typeArguments else a.actualTypeArguments
         val bTypeArguments = if (b is ParameterizedTypeImpl) b.typeArguments else b.actualTypeArguments
