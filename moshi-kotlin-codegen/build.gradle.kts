@@ -16,10 +16,10 @@ tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
-      "-Xopt-in=kotlin.RequiresOptIn",
-      "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-      "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview",
-      "-Xopt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
+      "-opt-in=kotlin.RequiresOptIn",
+      "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
+      "-opt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview",
+      "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
   }
 }
