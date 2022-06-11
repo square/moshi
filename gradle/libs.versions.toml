@@ -23,6 +23,7 @@ autoService = { module = "com.google.auto.service:auto-service-annotations", ver
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.0.0"
 guava = "com.google.guava:guava:31.1-jre"
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
+kotlin-annotationProcessingEmbeddable = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable", version.ref = "kotlin" }
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }

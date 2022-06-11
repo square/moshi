@@ -72,6 +72,7 @@ dependencies {
   testImplementation(libs.ksp)
   testImplementation(libs.ksp.api)
   testImplementation(libs.kotlin.compilerEmbeddable)
+  testImplementation(libs.kotlin.annotationProcessingEmbeddable)
   testImplementation(libs.kotlinCompileTesting.ksp)
 
   // Copy these again as they're not automatically included since they're shaded
