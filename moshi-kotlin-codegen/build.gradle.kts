@@ -18,7 +18,6 @@ tasks.withType<KotlinCompile>().configureEach {
     freeCompilerArgs += listOf(
       "-opt-in=kotlin.RequiresOptIn",
       "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-      "-opt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview",
       "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
   }
