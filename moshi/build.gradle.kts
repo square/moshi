@@ -61,12 +61,12 @@ tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
       val toAdd = mutableListOf(
-        "-Xopt-in=kotlin.RequiresOptIn",
-        "-Xopt-in=kotlin.contracts.ExperimentalContracts",
-        "-Xjvm-default=enable"
+        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=kotlin.contracts.ExperimentalContracts",
+        "-Xjvm-default=all"
       )
       if (name.contains("test", true)) {
-        toAdd += "-Xopt-in=kotlin.ExperimentalStdlibApi"
+        toAdd += "-opt-in=kotlin.ExperimentalStdlibApi"
       }
       @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
       freeCompilerArgs += toAdd

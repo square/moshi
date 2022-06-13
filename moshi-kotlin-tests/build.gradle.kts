@@ -42,7 +42,7 @@ tasks.withType<KotlinCompile>().configureEach {
     allWarningsAsErrors = useWError
     @Suppress("SuspiciousCollectionReassignment")
     freeCompilerArgs += listOf(
-      "-Xopt-in=kotlin.ExperimentalStdlibApi"
+      "-opt-in=kotlin.ExperimentalStdlibApi"
     )
   }
 }

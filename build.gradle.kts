@@ -48,17 +48,17 @@ spotless {
   java {
     configureCommonJavaFormat()
     target("**/*.java")
-    targetExclude("**/build/**",)
+    targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
@@ -70,7 +70,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(18))
       }
     }
     if (project.name != "records-tests") {

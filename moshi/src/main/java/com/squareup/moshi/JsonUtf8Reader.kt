@@ -425,15 +425,15 @@ internal class JsonUtf8Reader : JsonReader {
     return when {
       last == NUMBER_CHAR_DIGIT &&
         fitsInLong &&
-        (value != Long.MIN_VALUE || negative)
-        && (value != 0L || !negative) -> {
+        (value != Long.MIN_VALUE || negative) &&
+        (value != 0L || !negative) -> {
         peekedLong = if (negative) value else -value
         buffer.skip(i)
         setPeeked(PEEKED_LONG)
       }
       last == NUMBER_CHAR_DIGIT ||
-        last == NUMBER_CHAR_FRACTION_DIGIT
-        || last == NUMBER_CHAR_EXP_DIGIT -> {
+        last == NUMBER_CHAR_FRACTION_DIGIT ||
+        last == NUMBER_CHAR_EXP_DIGIT -> {
         peekedNumberLength = i.toInt()
         setPeeked(PEEKED_NUMBER)
       }

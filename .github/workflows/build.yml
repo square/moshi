@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: 'Kotlin ${{ matrix.kotlin-version }} | Test Mode ${{ matrix.kotlin-test-mode }}'
+    name: 'Test Mode ${{ matrix.kotlin-test-mode }}'
     runs-on: ubuntu-latest
 
     strategy:
@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
@@ -30,10 +30,10 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Configure JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '18'
 
       - name: Test
         run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
