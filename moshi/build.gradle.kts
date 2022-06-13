@@ -61,7 +61,6 @@ tasks.withType<KotlinCompile>()
   .configureEach {
     kotlinOptions {
       val toAdd = mutableListOf(
-        "-opt-in=kotlin.RequiresOptIn",
         "-opt-in=kotlin.contracts.ExperimentalContracts",
         "-Xjvm-default=all"
       )
