@@ -44,7 +44,6 @@ val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
   implementation(project(":moshi"))
-  implementation(kotlin("reflect"))
   shade(libs.kotlinxMetadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
