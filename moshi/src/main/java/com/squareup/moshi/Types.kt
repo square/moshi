@@ -214,7 +214,7 @@ public object Types {
           equals(a.componentType, b.genericComponentType)
         } else if (b is ParameterizedType && a.rawType == b.rawType) {
           // Class instance with generic info, from method return types
-          return a.typeParameters.map { it.bounds }.toTypedArray().flatten() == b.actualTypeArguments.toList()
+          return a.typeParameters.flatMap { it.bounds.toList() } == b.actualTypeArguments.toList()
         } else {
           a == b // Class already specifies equals().
         }

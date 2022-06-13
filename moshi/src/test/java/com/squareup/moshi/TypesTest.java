@@ -36,9 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.common.truth.Truth;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import kotlin.NotImplementedError;
 import org.junit.Test;
 
 public final class TypesTest {
@@ -301,7 +299,7 @@ public final class TypesTest {
   }
 
   private E<A, B> methodReturningE() {
-    throw new Error(); // Intentionally not implemented
+    throw new NotImplementedError(); // Intentionally not implemented
   }
 
   @Test
@@ -320,8 +318,8 @@ public final class TypesTest {
       }
     }
     Type rawType = Types.getRawType(returningE.getGenericReturnType());
-    Truth.assertThat(Types.equals(type, rawType)).isTrue();
-    Truth.assertThat(Types.equals(rawType, type)).isTrue();
+    assertThat(Types.equals(type, rawType)).isTrue();
+    assertThat(Types.equals(rawType, type)).isTrue();
   }
 
 
