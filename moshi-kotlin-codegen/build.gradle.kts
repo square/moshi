@@ -54,10 +54,7 @@ dependencies {
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
-  shade(libs.kotlinpoet.ksp) {
-    exclude(group = "org.jetbrains.kotlin")
-    exclude(group = "com.squareup", module = "kotlinpoet")
-  }
+  implementation(libs.kotlinpoet.ksp)
   implementation(libs.guava)
   implementation(libs.asm)
 
