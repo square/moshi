@@ -33,6 +33,7 @@ import java.lang.Error
 import java.lang.IllegalAccessException
 import java.lang.IllegalStateException
 import java.lang.InstantiationException
+import java.lang.NoClassDefFoundError
 import java.lang.NoSuchMethodException
 import java.lang.RuntimeException
 import java.lang.StringBuilder
@@ -64,8 +65,8 @@ private val METADATA: Class<out Annotation>? = try {
 // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
 @JvmField
 public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
-  Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
-} catch (ignored: ClassNotFoundException) {
+  kotlin.jvm.internal.DefaultConstructorMarker::class.java
+} catch (ignored: NoClassDefFoundError) {
   null
 }
 
