@@ -47,6 +47,7 @@ import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.LinkedHashSet
 import kotlin.contracts.contract
+import kotlin.jvm.internal.DefaultConstructorMarker
 
 @JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
 @JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
@@ -61,11 +62,7 @@ private val METADATA: Class<out Annotation>? = try {
 // We look up the constructor marker separately because Metadata might be (justifiably)
 // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
 @JvmField
-public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
-  Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
-} catch (ignored: ClassNotFoundException) {
-  null
-}
+public val DEFAULT_CONSTRUCTOR_MARKER: Class<*> = DefaultConstructorMarker::class.java
 
 /** A map from primitive types to their corresponding wrapper types. */
 private val PRIMITIVE_TO_WRAPPER_TYPE: Map<Class<*>, Class<*>> = buildMap(16) {
