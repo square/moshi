@@ -17,8 +17,6 @@
 
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.NonNullJsonAdapter
-import com.squareup.moshi.internal.NullSafeJsonAdapter
 import kotlin.reflect.KType
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
@@ -42,13 +40,5 @@ public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>):
 @Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
 @ExperimentalStdlibApi
 public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
-  val adapter = adapter<T>(ktype.javaType)
-  return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
-    // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
-    adapter
-  } else if (ktype.isMarkedNullable) {
-    adapter.nullSafe()
-  } else {
-    adapter.nonNull()
-  }
+  return this.adapter(ktype)
 }
