@@ -20,7 +20,12 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 
-public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T>() {
+/**
+ * Surprise! This is typed as `T?` to allow us to use it as a nullable type and give clearer error
+ * messages, but users of this class should always use it as an assumed non-nullable type and is
+ * cast as such in [JsonAdapter.nonNull].
+ */
+public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T?>() {
   override fun fromJson(reader: JsonReader): T {
     return if (reader.peek() == JsonReader.Token.NULL) {
       throw JsonDataException("Unexpected null at " + reader.path)
