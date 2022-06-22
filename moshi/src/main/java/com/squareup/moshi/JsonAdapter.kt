@@ -25,6 +25,7 @@ import org.intellij.lang.annotations.Language
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.Throws
+import kotlin.reflect.KType
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -283,7 +284,7 @@ public abstract class JsonAdapter<T> {
 
   public fun interface Factory {
     /**
-     * Attempts to create an adapter for `type` annotated with `annotations`. This
+     * Attempts to create an adapter for [type] annotated with [annotations]. This
      * returns the adapter if one was created, or null if this factory isn't capable of creating
      * such an adapter.
      *
@@ -293,4 +294,20 @@ public abstract class JsonAdapter<T> {
     @CheckReturnValue
     public fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>?
   }
+
+  public fun interface KFactory {
+    /**
+     * Attempts to create an adapter for [type] annotated with [annotations]. This
+     * returns the adapter if one was created, or null if this factory isn't capable of creating
+     * such an adapter.
+     *
+     * Implementations may use [Moshi.adapter] to compose adapters of other types, or
+     * [Moshi.nextAdapter] to delegate to the underlying adapter of the same type.
+     */
+    @CheckReturnValue
+    public fun create(type: KType, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>?
+  }
 }
+
+/** Returns a new [JsonAdapter.KFactory] wrapper around this [JsonAdapter.Factory]. */
+public fun JsonAdapter.Factory.asKFactory(): JsonAdapter.KFactory = InteropKFactory(this)
