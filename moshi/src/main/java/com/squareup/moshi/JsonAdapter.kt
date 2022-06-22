@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.InteropKFactory
 import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import okio.Buffer
@@ -44,7 +45,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   @Throws(IOException::class)
-  public abstract fun fromJson(reader: JsonReader): T?
+  public abstract fun fromJson(reader: JsonReader): T
 
   /**
    * Decodes a nullable instance of type [T] from the given [source].
@@ -54,7 +55,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   @Throws(IOException::class)
-  public fun fromJson(source: BufferedSource): T? = fromJson(JsonReader.of(source))
+  public fun fromJson(source: BufferedSource): T = fromJson(JsonReader.of(source))
 
   /**
    * Decodes a nullable instance of type [T] from the given `string`.
@@ -64,7 +65,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   @Throws(IOException::class)
-  public fun fromJson(@Language("JSON") string: String): T? {
+  public fun fromJson(@Language("JSON") string: String): T {
     val reader = JsonReader.of(Buffer().writeUtf8(string))
     val result = fromJson(reader)
     if (!isLenient && reader.peek() != JsonReader.Token.END_DOCUMENT) {
@@ -75,17 +76,17 @@ public abstract class JsonAdapter<T> {
 
   /** Encodes the given [value] with the given [writer]. */
   @Throws(IOException::class)
-  public abstract fun toJson(writer: JsonWriter, value: T?)
+  public abstract fun toJson(writer: JsonWriter, value: T)
 
   @Throws(IOException::class)
-  public fun toJson(sink: BufferedSink, value: T?) {
+  public fun toJson(sink: BufferedSink, value: T) {
     val writer = JsonWriter.of(sink)
     toJson(writer, value)
   }
 
   /** Encodes the given [value] into a String and returns it. */
   @CheckReturnValue
-  public fun toJson(value: T?): String {
+  public fun toJson(value: T): String {
     val buffer = Buffer()
     try {
       toJson(buffer, value)
@@ -105,7 +106,7 @@ public abstract class JsonAdapter<T> {
    * and as a [java.math.BigDecimal] for all other types.
    */
   @CheckReturnValue
-  public fun toJsonValue(value: T?): Any? {
+  public fun toJsonValue(value: T): Any? {
     val writer = JsonValueWriter()
     return try {
       toJson(writer, value)
@@ -139,7 +140,7 @@ public abstract class JsonAdapter<T> {
     return object : JsonAdapter<T>() {
       override fun fromJson(reader: JsonReader) = delegate.fromJson(reader)
 
-      override fun toJson(writer: JsonWriter, value: T?) {
+      override fun toJson(writer: JsonWriter, value: T) {
         val serializeNulls = writer.serializeNulls
         writer.serializeNulls = true
         try {
@@ -161,9 +162,10 @@ public abstract class JsonAdapter<T> {
    * nulls.
    */
   @CheckReturnValue
-  public fun nullSafe(): JsonAdapter<T> {
+  public fun nullSafe(): JsonAdapter<T?> {
+    @Suppress("UNCHECKED_CAST")
     return when (this) {
-      is NullSafeJsonAdapter<*> -> this
+      is NullSafeJsonAdapter<*> -> this as JsonAdapter<T?>
       else -> NullSafeJsonAdapter(this)
     }
   }
@@ -176,10 +178,11 @@ public abstract class JsonAdapter<T> {
    * handled elsewhere. This should only be used to fail on explicit nulls.
    */
   @CheckReturnValue
-  public fun nonNull(): JsonAdapter<T> {
+  public fun nonNull(): JsonAdapter<T & Any> {
+    @Suppress("UNCHECKED_CAST")
     return when (this) {
-      is NonNullJsonAdapter<*> -> this
-      else -> NonNullJsonAdapter(this)
+      is NonNullJsonAdapter<*> -> this as JsonAdapter<T & Any>
+      else -> NonNullJsonAdapter(this) as JsonAdapter<T & Any>
     }
   }
 
@@ -188,7 +191,7 @@ public abstract class JsonAdapter<T> {
   public fun lenient(): JsonAdapter<T> {
     val delegate: JsonAdapter<T> = this
     return object : JsonAdapter<T>() {
-      override fun fromJson(reader: JsonReader): T? {
+      override fun fromJson(reader: JsonReader): T {
         val lenient = reader.lenient
         reader.lenient = true
         return try {
@@ -198,7 +201,7 @@ public abstract class JsonAdapter<T> {
         }
       }
 
-      override fun toJson(writer: JsonWriter, value: T?) {
+      override fun toJson(writer: JsonWriter, value: T) {
         val lenient = writer.isLenient
         writer.isLenient = true
         try {
@@ -217,7 +220,7 @@ public abstract class JsonAdapter<T> {
 
   /**
    * Returns a JSON adapter equal to this, but that throws a [JsonDataException] when
-   * [unknown names and values][JsonReader.setFailOnUnknown] are encountered.
+   * [unknown names and values][JsonReader.failOnUnknown] are encountered.
    * This constraint applies to both the top-level message handled by this type adapter as well as
    * to nested messages.
    */
@@ -225,7 +228,7 @@ public abstract class JsonAdapter<T> {
   public fun failOnUnknown(): JsonAdapter<T> {
     val delegate: JsonAdapter<T> = this
     return object : JsonAdapter<T>() {
-      override fun fromJson(reader: JsonReader): T? {
+      override fun fromJson(reader: JsonReader): T {
         val skipForbidden = reader.failOnUnknown
         reader.failOnUnknown = true
         return try {
@@ -235,7 +238,7 @@ public abstract class JsonAdapter<T> {
         }
       }
 
-      override fun toJson(writer: JsonWriter, value: T?) {
+      override fun toJson(writer: JsonWriter, value: T) {
         delegate.toJson(writer, value)
       }
 
@@ -258,11 +261,11 @@ public abstract class JsonAdapter<T> {
   public fun indent(indent: String): JsonAdapter<T> {
     val delegate: JsonAdapter<T> = this
     return object : JsonAdapter<T>() {
-      override fun fromJson(reader: JsonReader): T? {
+      override fun fromJson(reader: JsonReader): T {
         return delegate.fromJson(reader)
       }
 
-      override fun toJson(writer: JsonWriter, value: T?) {
+      override fun toJson(writer: JsonWriter, value: T) {
         val originalIndent = writer.indent
         writer.indent = indent
         try {
