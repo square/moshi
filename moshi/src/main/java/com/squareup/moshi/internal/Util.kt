@@ -40,13 +40,21 @@ import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Modifier.isStatic
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.LinkedHashSet
+import java.util.TreeSet
 import kotlin.contracts.contract
+import kotlin.reflect.KClass
+import kotlin.reflect.KClassifier
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.KVariance
 
 @JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
 @JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
@@ -169,6 +177,37 @@ internal fun InvocationTargetException.rethrowCause(): RuntimeException {
 /**
  * Returns a type that is functionally equal but not necessarily equal according to [[Object.equals()]][Object.equals].
  */
+internal fun KType.canonicalize(): KType {
+  return KTypeImpl(
+    classifier = classifier?.canonicalize(),
+    arguments = arguments.map { it.canonicalize() },
+    isMarkedNullable = isMarkedNullable,
+    annotations = annotations
+  )
+}
+
+private fun KClassifier.canonicalize(): KClassifier {
+  return when (this) {
+    is KClass<*> -> this
+    is KTypeParameter -> {
+      KTypeParameterImpl(
+        isReified = isReified,
+        name = name,
+        upperBounds = upperBounds.map { it.canonicalize() },
+        variance = variance
+      )
+    }
+    else -> this // This type is unsupported!
+  }
+}
+
+private fun KTypeProjection.canonicalize(): KTypeProjection {
+  return copy(variance, type?.canonicalize())
+}
+
+/**
+ * Returns a type that is functionally equal but not necessarily equal according to [[Object.equals()]][Object.equals].
+ */
 internal fun Type.canonicalize(): Type {
   return when (this) {
     is Class<*> -> {
@@ -190,18 +229,95 @@ internal fun Type.canonicalize(): Type {
   }
 }
 
+private fun KTypeParameter.simpleToString(): String {
+  return buildList {
+    if (isReified) add("reified")
+    when (variance) {
+      KVariance.IN -> add("in")
+      KVariance.OUT -> add("out")
+      KVariance.INVARIANT -> {}
+    }
+    if (name.isNotEmpty()) add(name)
+    if (upperBounds.isNotEmpty()) {
+      add(":")
+      addAll(upperBounds.map { it.toString() })
+    }
+  }.joinToString(" ")
+}
+
 /** If type is a "? extends X" wildcard, returns X; otherwise returns type unchanged. */
-internal fun Type.removeSubtypeWildcard(): Type {
+private fun Type.stripWildcards(): Type {
   if (this !is WildcardType) return this
   val lowerBounds = lowerBounds
-  if (lowerBounds.isNotEmpty()) return this
+  if (lowerBounds.isNotEmpty()) return lowerBounds[0]
   val upperBounds = upperBounds
-  require(upperBounds.size == 1)
-  return upperBounds[0]
+  if (upperBounds.isNotEmpty()) return upperBounds[0]
+  error("Wildcard types must have a bound! $this")
+}
+
+private fun KClassifier.simpleToString(): String {
+  return when (this) {
+    is KClass<*> -> qualifiedName ?: "<anonymous>"
+    is KTypeParameter -> simpleToString()
+    else -> error("Unknown type classifier: $this")
+  }
+}
+
+public fun Type.toKType(
+  isMarkedNullable: Boolean = false,
+  annotations: List<Annotation> = emptyList()
+): KType {
+  return when (this) {
+    is Class<*> -> KTypeImpl(kotlin, emptyList(), isMarkedNullable, annotations)
+    is ParameterizedType -> KTypeImpl(
+      classifier = (rawType as Class<*>).kotlin,
+      arguments = actualTypeArguments.map { it.toKTypeProjection() },
+      isMarkedNullable = isMarkedNullable,
+      annotations = annotations
+    )
+    is GenericArrayType -> {
+      KTypeImpl(
+        classifier = rawType.kotlin,
+        arguments = listOf(genericComponentType.toKTypeProjection()),
+        isMarkedNullable = isMarkedNullable,
+        annotations = annotations
+      )
+    }
+    is WildcardType -> stripWildcards().toKType(isMarkedNullable, annotations)
+    is TypeVariable<*> -> KTypeImpl(
+      classifier = KTypeParameterImpl(false, name, bounds.map { it.toKType() }, KVariance.INVARIANT),
+      arguments = emptyList(),
+      isMarkedNullable = isMarkedNullable,
+      annotations = annotations
+    )
+    else -> throw IllegalArgumentException("Unsupported type: $this")
+  }
+}
+
+internal fun Type.toKTypeProjection(): KTypeProjection {
+  return when (this) {
+    is Class<*>, is ParameterizedType, is TypeVariable<*> -> KTypeProjection.invariant(toKType())
+    is WildcardType -> {
+      val lowerBounds = lowerBounds
+      val upperBounds = upperBounds
+      if (lowerBounds.isEmpty() && upperBounds.isEmpty()) {
+        return KTypeProjection.STAR
+      }
+      return if (lowerBounds.isNotEmpty()) {
+        KTypeProjection.contravariant(lowerBounds[0].toKType())
+      } else {
+        KTypeProjection.invariant(upperBounds[0].toKType())
+      }
+    }
+    else -> {
+      TODO("Unsupported type: $this")
+    }
+  }
 }
 
 public fun Type.resolve(context: Type, contextRawType: Class<*>): Type {
-  return this.resolve(context, contextRawType, LinkedHashSet())
+  // TODO Use a plain LinkedHashSet again once https://youtrack.jetbrains.com/issue/KT-39661 is fixed
+  return this.resolve(context, contextRawType, TreeSet { o1, o2 -> if (o1.isFunctionallyEqualTo(o2)) 0 else 1 })
 }
 
 private fun Type.resolve(
@@ -279,12 +395,12 @@ private fun Type.resolve(
 }
 
 internal fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown: TypeVariable<*>): Type {
-  val declaredByRaw = declaringClassOf(unknown) ?: return unknown
+  val declaredByRaw = declaringClassOf(unknown, contextRawType) ?: return unknown
 
   // We can't reduce this further.
   val declaredBy = getGenericSupertype(context, contextRawType, declaredByRaw)
   if (declaredBy is ParameterizedType) {
-    val index = declaredByRaw.typeParameters.indexOf(unknown)
+    val index = declaredByRaw.typeParameters.indexOfFirst { typeVar -> typeVar.isFunctionallyEqualTo(unknown) }
     return declaredBy.actualTypeArguments[index]
   }
   return unknown
@@ -342,13 +458,31 @@ internal fun Type.typeToString(): String {
  * Returns the declaring class of `typeVariable`, or `null` if it was not declared by
  * a class.
  */
-internal fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
-  val genericDeclaration = typeVariable.genericDeclaration
-  return if (genericDeclaration is Class<*>) genericDeclaration else null
+private fun declaringClassOf(typeVariable: TypeVariable<*>, contextRawType: Class<*>): Class<*>? {
+  return try {
+    val genericDeclaration = typeVariable.genericDeclaration
+    return if (genericDeclaration is Class<*>) genericDeclaration else null
+  } catch (_: NotImplementedError) {
+    // Fallback manual search due to https://youtrack.jetbrains.com/issue/KT-39661
+    // TODO remove this once https://youtrack.jetbrains.com/issue/KT-39661 is fixed
+    generateSequence(contextRawType) { clazz -> clazz.enclosingClass?.takeUnless { isStatic(it.modifiers) } }
+      .find { clazz -> clazz.typeParameters.any { it.isFunctionallyEqualTo(typeVariable) } }
+  }
 }
 
-internal fun Type.checkNotPrimitive() {
+// Cover for https://youtrack.jetbrains.com/issue/KT-52903
+// TODO getAnnotatedBounds() is also not implemented
+private fun TypeVariable<*>.isFunctionallyEqualTo(other: TypeVariable<*>): Boolean {
+  return name == other.name &&
+    bounds.contentEquals(other.bounds)
+}
+
+private fun Type.checkNotPrimitive() {
   require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive $this. Use the boxed type." }
+}
+
+internal fun KType.toStringWithAnnotations(annotations: Set<Annotation>): String {
+  return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
 }
 
 internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
@@ -641,5 +775,83 @@ internal class WildcardTypeImpl private constructor(
         )
       }
     }
+  }
+}
+
+internal class KTypeImpl(
+  override val classifier: KClassifier?,
+  override val arguments: List<KTypeProjection>,
+  override val isMarkedNullable: Boolean,
+  override val annotations: List<Annotation>
+) : KType {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as KTypeImpl
+
+    if (classifier != other.classifier) return false
+    if (arguments != other.arguments) return false
+    if (isMarkedNullable != other.isMarkedNullable) return false
+    if (annotations != other.annotations) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = classifier?.hashCode() ?: 0
+    result = 31 * result + arguments.hashCode()
+    result = 31 * result + isMarkedNullable.hashCode()
+    result = 31 * result + annotations.hashCode()
+    return result
+  }
+
+  override fun toString(): String {
+    return buildString {
+      if (annotations.isNotEmpty()) {
+        annotations.joinTo(this, " ") { "@$it" }
+        append(' ')
+      }
+      append(classifier?.simpleToString() ?: "")
+      if (arguments.isNotEmpty()) {
+        append("<")
+        arguments.joinTo(this, ", ") { it.toString() }
+        append(">")
+      }
+      if (isMarkedNullable) append("?")
+    }
+  }
+}
+
+internal class KTypeParameterImpl(
+  override val isReified: Boolean,
+  override val name: String,
+  override val upperBounds: List<KType>,
+  override val variance: KVariance
+) : KTypeParameter {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as KTypeParameterImpl
+
+    if (isReified != other.isReified) return false
+    if (name != other.name) return false
+    if (upperBounds != other.upperBounds) return false
+    if (variance != other.variance) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = isReified.hashCode()
+    result = 31 * result + name.hashCode()
+    result = 31 * result + upperBounds.hashCode()
+    result = 31 * result + variance.hashCode()
+    return result
+  }
+
+  override fun toString(): String {
+    return simpleToString()
   }
 }
