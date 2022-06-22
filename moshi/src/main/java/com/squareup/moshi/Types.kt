@@ -32,6 +32,7 @@ import java.util.Collections
 import java.util.Properties
 import javax.annotation.CheckReturnValue
 import java.lang.annotation.Annotation as JavaAnnotation
+import java.lang.reflect.Array as JavaArray
 
 /** Factory methods for types. */
 @CheckReturnValue
@@ -170,7 +171,7 @@ public object Types {
       }
       is GenericArrayType -> {
         val componentType = type.genericComponentType
-        java.lang.reflect.Array.newInstance(getRawType(componentType), 0).javaClass
+        JavaArray.newInstance(getRawType(componentType), 0).javaClass
       }
       is TypeVariable<*> -> {
         // We could use the variable's bounds, but that won't work if there are multiple. having a raw
