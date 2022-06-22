@@ -31,7 +31,7 @@ class MoshiKspTest {
     //language=JSON
     val json = """{"a":"aValue","b":"bValue"}"""
     val expected = SimpleImpl("aValue", "bValue")
-    val instance = adapter.fromJson(json)!!
+    val instance = adapter.fromJson(json)
     assertThat(instance).isEqualTo(expected)
     val encoded = adapter.toJson(instance)
     assertThat(encoded).isEqualTo(json)

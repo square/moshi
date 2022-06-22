@@ -45,6 +45,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
 import okio.Buffer;
+import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings({"CheckReturnValue", "ResultOfMethodCallIgnored"})
@@ -582,6 +583,7 @@ public final class MoshiTest {
     assertThat(adapter.toJson(null)).isEqualTo("null");
   }
 
+  @Ignore("No longer supported. TODO delete?")
   @Test
   public void lowerBoundedWildcardsAreNotHandled() {
     Moshi moshi = new Moshi.Builder().build();
@@ -591,7 +593,7 @@ public final class MoshiTest {
     } catch (IllegalArgumentException e) {
       assertThat(e)
           .hasMessageThat()
-          .isEqualTo("No JsonAdapter for ? super java.lang.String (with no annotations)");
+          .isEqualTo("No JsonAdapter for in : kotlin.String (with no annotations)");
     }
   }
 
@@ -601,7 +603,7 @@ public final class MoshiTest {
     Class<? extends Annotation> annotation = Annotation.class;
     Moshi.Builder builder = new Moshi.Builder();
     try {
-      builder.add((null));
+      builder.add((JsonAdapter.Factory) null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
@@ -875,8 +877,8 @@ public final class MoshiTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "No JsonAdapter for java.util.List<java.lang.String> "
-                  + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
+              "No JsonAdapter for kotlin.collections.List<kotlin.String> annotated "
+                  + "[@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }
 
@@ -892,8 +894,8 @@ public final class MoshiTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "No JsonAdapter for class java.lang.String "
-                  + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
+              "No JsonAdapter for kotlin.String annotated "
+                  + "[@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }
 
@@ -1097,10 +1099,10 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor class java.util.UUID uuid"
-                  + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
-                  + "\nfor java.util.Map<java.lang.String, "
-                  + "com.squareup.moshi.MoshiTest$HasPlatformType>");
+                  + "\nfor java.util.UUID? uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType"
+                  + "\nfor kotlin.collections.Map<kotlin.String, "
+                  + "com.squareup.moshi.MoshiTest.HasPlatformType>");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()
@@ -1121,9 +1123,9 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor class java.util.UUID uuid"
-                  + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType hasPlatformType"
-                  + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$Wrapper");
+                  + "\nfor java.util.UUID? uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType? hasPlatformType"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.Wrapper");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()
@@ -1144,10 +1146,10 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor class java.util.UUID uuid"
-                  + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType"
-                  + "\nfor java.util.List<com.squareup.moshi.MoshiTest$HasPlatformType> platformTypes"
-                  + "\nfor class com.squareup.moshi.MoshiTest$HasPlatformType$ListWrapper");
+                  + "\nfor java.util.UUID? uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType"
+                  + "\nfor kotlin.collections.List<com.squareup.moshi.MoshiTest.HasPlatformType>? platformTypes"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.ListWrapper");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()
@@ -1237,7 +1239,7 @@ public final class MoshiTest {
   public void newBuilder() throws Exception {
     Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
     Moshi.Builder newBuilder = moshi.newBuilder();
-    for (JsonAdapter.Factory factory : Moshi.BUILT_IN_FACTORIES) {
+    for (JsonAdapter.KFactory factory : Moshi.BUILT_IN_FACTORIES) {
       // Awkward but java sources don't know about the internal-ness of this
       assertThat(factory).isNotIn(newBuilder.getFactories$moshi());
     }

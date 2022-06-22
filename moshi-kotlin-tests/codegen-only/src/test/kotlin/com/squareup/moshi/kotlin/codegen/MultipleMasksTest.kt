@@ -42,7 +42,7 @@ class MultipleMasksTest {
       """{"arg50":500,"arg3":34,"arg11":11,"arg65":67}"""
 
     val instance = Moshi.Builder().build().adapter<MultipleMasks>()
-      .fromJson(json)!!
+      .fromJson(json)
 
     assertEquals(instance.arg2, 2)
     assertEquals(instance.arg3, 34)
