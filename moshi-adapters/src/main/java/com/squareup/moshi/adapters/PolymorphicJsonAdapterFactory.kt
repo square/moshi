@@ -103,7 +103,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labelKey: String,
   private val labels: List<String>,
   private val subtypes: List<Type>,
-  private val fallbackJsonAdapter: JsonAdapter<Any>?
+  private val fallbackJsonAdapter: JsonAdapter<Any?>?
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -133,7 +133,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
    * it within your implementation of [JsonAdapter.fromJson]
    */
   public fun withFallbackJsonAdapter(
-    fallbackJsonAdapter: JsonAdapter<Any>?
+    fallbackJsonAdapter: JsonAdapter<Any?>?
   ): PolymorphicJsonAdapterFactory<T> {
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
@@ -152,8 +152,8 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
   }
 
-  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any> {
-    return object : JsonAdapter<Any>() {
+  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any?> {
+    return object : JsonAdapter<Any?>() {
       override fun fromJson(reader: JsonReader): Any? {
         reader.skipValue()
         return defaultValue
@@ -181,8 +181,8 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val labels: List<String>,
     private val subtypes: List<Type>,
     private val jsonAdapters: List<JsonAdapter<Any>>,
-    private val fallbackJsonAdapter: JsonAdapter<Any>?
-  ) : JsonAdapter<Any>() {
+    private val fallbackJsonAdapter: JsonAdapter<Any?>?
+  ) : JsonAdapter<Any?>() {
     /** Single-element options containing the label's key only.  */
     private val labelKeyOptions: Options = Options.of(labelKey)
 
@@ -223,12 +223,13 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     override fun toJson(writer: JsonWriter, value: Any?) {
       val type: Class<*> = value!!.javaClass
       val labelIndex = subtypes.indexOf(type)
-      val adapter: JsonAdapter<Any> = if (labelIndex == -1) {
+      val adapter: JsonAdapter<Any?> = if (labelIndex == -1) {
         requireNotNull(fallbackJsonAdapter) {
           "Expected one of $subtypes but found $value, a ${value.javaClass}. Register this subtype."
         }
       } else {
-        jsonAdapters[labelIndex]
+        @Suppress("UNCHECKED_CAST")
+        jsonAdapters[labelIndex] as JsonAdapter<Any?>
       }
       writer.beginObject()
       if (adapter !== fallbackJsonAdapter) {

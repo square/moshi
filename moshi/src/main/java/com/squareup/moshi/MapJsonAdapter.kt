@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.knownNotNull
 import java.lang.reflect.Type
 
 /**
@@ -25,12 +24,11 @@ import java.lang.reflect.Type
  */
 internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type) : JsonAdapter<Map<K, V?>>() {
   private val keyAdapter: JsonAdapter<K> = moshi.adapter(keyType)
-  private val valueAdapter: JsonAdapter<V> = moshi.adapter(valueType)
+  private val valueAdapter: JsonAdapter<V?> = moshi.adapter(valueType)
 
-  override fun toJson(writer: JsonWriter, value: Map<K, V?>?) {
+  override fun toJson(writer: JsonWriter, value: Map<K, V?>) {
     writer.beginObject()
-    // Never null because we wrap in nullSafe()
-    for ((k, v) in knownNotNull(value)) {
+    for ((k, v) in value) {
       if (k == null) {
         throw JsonDataException("Map key is null at ${writer.path}")
       }

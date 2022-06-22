@@ -24,7 +24,7 @@ import java.lang.reflect.Type
 internal class RecordJsonAdapter<T> : JsonAdapter<T>() {
   override fun fromJson(reader: JsonReader) = throw AssertionError()
 
-  override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()
+  override fun toJson(writer: JsonWriter, value: T) = throw AssertionError()
 
   companion object Factory : JsonAdapter.Factory {
     override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? = null

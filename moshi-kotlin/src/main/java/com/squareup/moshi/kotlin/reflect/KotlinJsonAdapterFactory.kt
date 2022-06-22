@@ -27,6 +27,7 @@ import com.squareup.moshi.internal.isPlatformType
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.missingProperty
 import com.squareup.moshi.internal.resolve
+import com.squareup.moshi.internal.toKType
 import com.squareup.moshi.internal.unexpectedNull
 import com.squareup.moshi.rawType
 import java.lang.reflect.Modifier
@@ -62,7 +63,7 @@ internal class KotlinJsonAdapter<T>(
   val allBindings: List<Binding<T, Any?>?>,
   val nonIgnoredBindings: List<Binding<T, Any?>>,
   val options: JsonReader.Options
-) : JsonAdapter<T>() {
+) : JsonAdapter<T?>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
@@ -293,7 +294,8 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       }
       val resolvedPropertyType = propertyType.resolve(type, rawType)
       val adapter = moshi.adapter<Any?>(
-        resolvedPropertyType,
+        // TODO can we just use property.returnType directly now?
+        resolvedPropertyType.toKType(isMarkedNullable = property.returnType.isMarkedNullable),
         allAnnotations.toTypedArray().jsonAnnotations,
         property.name
       )

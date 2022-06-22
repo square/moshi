@@ -15,12 +15,11 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.markNotNull
 import java.lang.reflect.Type
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> private constructor(
-  private val elementAdapter: JsonAdapter<T>
+  private val elementAdapter: JsonAdapter<T?>
 ) : JsonAdapter<C>() {
 
   abstract fun newCollection(): C
@@ -35,8 +34,7 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
     return result
   }
 
-  override fun toJson(writer: JsonWriter, value: C?) {
-    markNotNull(value) // Always wrapped in nullSafe()
+  override fun toJson(writer: JsonWriter, value: C) {
     writer.beginArray()
     for (element in value) {
       elementAdapter.toJson(writer, element)
@@ -62,7 +60,7 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
 
     private fun <T> newArrayListAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableCollection<T?>> {
       val elementType = Types.collectionElementType(type, Collection::class.java)
-      val elementAdapter = moshi.adapter<T>(elementType)
+      val elementAdapter = moshi.adapter<T?>(elementType)
       return object : CollectionJsonAdapter<MutableCollection<T?>, T>(elementAdapter) {
         override fun newCollection(): MutableCollection<T?> = ArrayList()
       }
@@ -70,7 +68,7 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
 
     private fun <T> newLinkedHashSetAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableSet<T?>> {
       val elementType = Types.collectionElementType(type, Collection::class.java)
-      val elementAdapter = moshi.adapter<T>(elementType)
+      val elementAdapter = moshi.adapter<T?>(elementType)
       return object : CollectionJsonAdapter<MutableSet<T?>, T>(elementAdapter) {
         override fun newCollection(): MutableSet<T?> = LinkedHashSet()
       }

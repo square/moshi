@@ -25,7 +25,7 @@ import java.util.Date
   replaceWith = ReplaceWith("com.squareup.moshi.adapters.Rfc3339DateJsonAdapter"),
   level = DeprecationLevel.ERROR
 )
-public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
+public class Rfc3339DateJsonAdapter : JsonAdapter<Date?>() {
 
   private val delegate = Rfc3339DateJsonAdapter()
 

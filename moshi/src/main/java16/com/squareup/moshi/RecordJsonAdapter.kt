@@ -43,14 +43,14 @@ internal class RecordJsonAdapter<T>(
   data class ComponentBinding<T>(
     val componentName: String,
     val jsonName: String,
-    val adapter: JsonAdapter<T>,
+    val adapter: JsonAdapter<T?>,
     val accessor: MethodHandle
   )
 
   private val componentBindingsArray = componentBindings.values.toTypedArray()
   private val options = JsonReader.Options.of(*componentBindings.keys.toTypedArray())
 
-  override fun fromJson(reader: JsonReader): T? {
+  override fun fromJson(reader: JsonReader): T {
     val resultsArray = arrayOfNulls<Any>(componentBindingsArray.size)
 
     reader.beginObject()
@@ -85,12 +85,12 @@ internal class RecordJsonAdapter<T>(
     }
   }
 
-  override fun toJson(writer: JsonWriter, value: T?) {
+  override fun toJson(writer: JsonWriter, value: T) {
     writer.beginObject()
 
     for (binding in componentBindingsArray) {
       writer.name(binding.jsonName)
-      val componentValue = try {
+      val componentValue: Any? = try {
         binding.accessor.invoke(value)
       } catch (e: InvocationTargetException) {
         throw e.rethrowCause()
@@ -162,7 +162,7 @@ internal class RecordJsonAdapter<T>(
 
       val componentType = component.genericType.resolve(type, rawType)
       val qualifiers = component.jsonAnnotations
-      val adapter = moshi.adapter<Any>(componentType, qualifiers)
+      val adapter = moshi.adapter<Any?>(componentType, qualifiers)
 
       val accessor = try {
         lookup.unreflect(component.accessor)

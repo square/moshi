@@ -40,13 +40,13 @@ internal class AdapterMethodsFactory(
     val fromAdapter = get(fromAdapters, type, annotations)
     if (toAdapter == null && fromAdapter == null) return null
 
-    val delegate: JsonAdapter<Any>? = if (toAdapter == null || fromAdapter == null) {
+    val delegate: JsonAdapter<Any?>? = if (toAdapter == null || fromAdapter == null) {
       try {
         moshi.nextAdapter(this, type, annotations)
       } catch (e: IllegalArgumentException) {
         val missingAnnotation = if (toAdapter == null) "@ToJson" else "@FromJson"
         throw IllegalArgumentException(
-          "No $missingAnnotation adapter for ${type.toStringWithAnnotations(annotations)}",
+          "No $missingAnnotation adapter for ${type.canonicalize().toStringWithAnnotations(annotations)}",
           e
         )
       }
@@ -57,7 +57,7 @@ internal class AdapterMethodsFactory(
     toAdapter?.bind(moshi, this)
     fromAdapter?.bind(moshi, this)
 
-    return object : JsonAdapter<Any>() {
+    return object : JsonAdapter<Any?>() {
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
           toAdapter == null -> knownNotNull(delegate).toJson(writer, value)
@@ -176,7 +176,7 @@ internal class AdapterMethodsFactory(
             nullable = nullable
           ) {
 
-            private lateinit var delegate: JsonAdapter<Any>
+            private lateinit var delegate: JsonAdapter<Any?>
 
             override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
               super.bind(moshi, factory)

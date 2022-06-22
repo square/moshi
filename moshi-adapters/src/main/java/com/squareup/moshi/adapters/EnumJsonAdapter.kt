@@ -41,7 +41,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
   private val enumType: Class<T>,
   private val fallbackValue: T?,
   private val useFallbackValue: Boolean,
-) : JsonAdapter<T>() {
+) : JsonAdapter<T?>() {
 
   private val constants: Array<T>
   private val options: Options

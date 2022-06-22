@@ -67,8 +67,8 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
   val BOOLEAN_JSON_ADAPTER: JsonAdapter<Boolean> = object : JsonAdapter<Boolean>() {
     override fun fromJson(reader: JsonReader) = reader.nextBoolean()
 
-    override fun toJson(writer: JsonWriter, value: Boolean?) {
-      writer.value(knownNotNull(value))
+    override fun toJson(writer: JsonWriter, value: Boolean) {
+      writer.value(value)
     }
 
     override fun toString() = "JsonAdapter(Boolean)"
@@ -79,7 +79,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return rangeCheckNextInt(reader, "a byte", Byte.MIN_VALUE.toInt(), 0xff).toByte()
     }
 
-    override fun toJson(writer: JsonWriter, value: Byte?) {
+    override fun toJson(writer: JsonWriter, value: Byte) {
       writer.value((knownNotNull(value).toInt() and 0xff).toLong())
     }
 
@@ -95,7 +95,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return value[0]
     }
 
-    override fun toJson(writer: JsonWriter, value: Char?) {
+    override fun toJson(writer: JsonWriter, value: Char) {
       writer.value(knownNotNull(value).toString())
     }
 
@@ -107,7 +107,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return reader.nextDouble()
     }
 
-    override fun toJson(writer: JsonWriter, value: Double?) {
+    override fun toJson(writer: JsonWriter, value: Double) {
       writer.value(knownNotNull(value).toDouble())
     }
 
@@ -126,11 +126,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return value
     }
 
-    override fun toJson(writer: JsonWriter, value: Float?) {
-      // Manual null pointer check for the float.class adapter.
-      if (value == null) {
-        throw NullPointerException()
-      }
+    override fun toJson(writer: JsonWriter, value: Float) {
       // Use the Number overload so we write out float precision instead of double precision.
       writer.value(value)
     }
@@ -143,8 +139,8 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return reader.nextInt()
     }
 
-    override fun toJson(writer: JsonWriter, value: Int?) {
-      writer.value(knownNotNull(value).toInt().toLong())
+    override fun toJson(writer: JsonWriter, value: Int) {
+      writer.value(value.toLong())
     }
 
     override fun toString() = "JsonAdapter(Integer)"
@@ -155,8 +151,8 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return reader.nextLong()
     }
 
-    override fun toJson(writer: JsonWriter, value: Long?) {
-      writer.value(knownNotNull(value).toLong())
+    override fun toJson(writer: JsonWriter, value: Long) {
+      writer.value(value)
     }
 
     override fun toString() = "JsonAdapter(Long)"
@@ -167,19 +163,19 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return rangeCheckNextInt(reader, "a short", Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
     }
 
-    override fun toJson(writer: JsonWriter, value: Short?) {
-      writer.value(knownNotNull(value).toInt().toLong())
+    override fun toJson(writer: JsonWriter, value: Short) {
+      writer.value(value.toInt().toLong())
     }
 
     override fun toString() = "JsonAdapter(Short)"
   }
 
   private val STRING_JSON_ADAPTER: JsonAdapter<String> = object : JsonAdapter<String>() {
-    override fun fromJson(reader: JsonReader): String? {
+    override fun fromJson(reader: JsonReader): String {
       return reader.nextString()
     }
 
-    override fun toJson(writer: JsonWriter, value: String?) {
+    override fun toJson(writer: JsonWriter, value: String) {
       writer.value(value)
     }
 
@@ -211,8 +207,8 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       )
     }
 
-    override fun toJson(writer: JsonWriter, value: T?) {
-      writer.value(nameStrings[knownNotNull(value).ordinal])
+    override fun toJson(writer: JsonWriter, value: T) {
+      writer.value(nameStrings[value.ordinal])
     }
 
     override fun toString() = "JsonAdapter(${enumType.name})"
@@ -226,7 +222,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
    * This adapter needs a Moshi instance to look up the appropriate adapter for runtime types as
    * they are encountered.
    */
-  internal class ObjectJsonAdapter(private val moshi: Moshi) : JsonAdapter<Any>() {
+  internal class ObjectJsonAdapter(private val moshi: Moshi) : JsonAdapter<Any?>() {
     private val listJsonAdapter: JsonAdapter<List<*>> = moshi.adapter(List::class.java)
     private val mapAdapter: JsonAdapter<Map<*, *>> = moshi.adapter(Map::class.java)
     private val stringAdapter: JsonAdapter<String> = moshi.adapter(String::class.java)
@@ -254,7 +250,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
         writer.beginObject()
         writer.endObject()
       } else {
-        moshi.adapter<Any>(toJsonType(valueClass), NO_ANNOTATIONS).toJson(writer, value)
+        moshi.adapter<Any?>(toJsonType(valueClass), NO_ANNOTATIONS).toJson(writer, value)
       }
     }
 

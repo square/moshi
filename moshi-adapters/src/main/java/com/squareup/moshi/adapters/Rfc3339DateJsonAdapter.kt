@@ -33,7 +33,7 @@ import java.util.Date
  *   .build();
  * ```
  */
-public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
+public class Rfc3339DateJsonAdapter : JsonAdapter<Date?>() {
   @Synchronized
   @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): Date? {

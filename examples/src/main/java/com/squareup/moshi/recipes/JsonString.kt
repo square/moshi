@@ -48,8 +48,8 @@ class JsonStringJsonAdapterFactory : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader): String =
       reader.nextSource().use(BufferedSource::readUtf8)
 
-    override fun toJson(writer: JsonWriter, value: String?) {
-      writer.valueSink().use { sink -> sink.writeUtf8(checkNotNull(value)) }
+    override fun toJson(writer: JsonWriter, value: String) {
+      writer.valueSink().use { sink -> sink.writeUtf8(value) }
     }
   }
 }
@@ -62,7 +62,7 @@ fun main() {
     .add(JsonStringJsonAdapterFactory())
     .build()
 
-  val example: ExampleClass = moshi.adapter(ExampleClass::class.java).fromJson(json)!!
+  val example: ExampleClass = moshi.adapter(ExampleClass::class.java).fromJson(json)
 
   check(example.type == 1)
 

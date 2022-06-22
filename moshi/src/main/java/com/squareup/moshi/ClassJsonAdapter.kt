@@ -22,6 +22,7 @@ import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.jsonName
 import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.rethrowCause
+import com.squareup.moshi.internal.toKType
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier.isAbstract
@@ -83,7 +84,7 @@ internal class ClassJsonAdapter<T>(
     }
   }
 
-  override fun toJson(writer: JsonWriter, value: T?) {
+  override fun toJson(writer: JsonWriter, value: T) {
     try {
       writer.beginObject()
       for (fieldBinding in fieldsArray) {
@@ -199,7 +200,7 @@ internal class ClassJsonAdapter<T>(
         val annotations = field.jsonAnnotations
         val fieldName = field.name
         val adapter = moshi.adapter<Any>(
-          type = fieldType,
+          type = fieldType.toKType(isMarkedNullable = true), // TODO check for nullable annotations?
           annotations = annotations,
           fieldName = fieldName
         )
