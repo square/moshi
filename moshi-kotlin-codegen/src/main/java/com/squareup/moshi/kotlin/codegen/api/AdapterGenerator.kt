@@ -137,7 +137,7 @@ public class AdapterGenerator(
   // https://github.com/square/moshi/issues/1502
   private val valueParam = ParameterSpec.builder(
     "value",
-    originalTypeName.copy(nullable = true)
+    originalTypeName
   )
     .build()
   private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(
@@ -419,23 +419,12 @@ public class AdapterGenerator(
       // Proceed as usual
       if (property.hasLocalIsPresentName || property.hasConstructorDefault) {
         result.beginControlFlow("%L ->", propertyIndex)
-        if (property.delegateKey.nullable) {
-          result.addStatement(
-            "%N = %N.fromJson(%N)",
-            property.localName,
-            nameAllocator[property.delegateKey],
-            readerParam
-          )
-        } else {
-          val exception = unexpectedNull(property, readerParam)
-          result.addStatement(
-            "%N = %N.fromJson(%N) ?: throw·%L",
-            property.localName,
-            nameAllocator[property.delegateKey],
-            readerParam,
-            exception
-          )
-        }
+        result.addStatement(
+          "%N = %N.fromJson(%N)",
+          property.localName,
+          nameAllocator[property.delegateKey],
+          readerParam
+        )
         if (property.hasConstructorDefault) {
           val inverted = (1 shl maskIndex).inv()
           if (input is ParameterComponent && input.parameter.hasDefault) {
@@ -453,25 +442,13 @@ public class AdapterGenerator(
         }
         result.endControlFlow()
       } else {
-        if (property.delegateKey.nullable) {
-          result.addStatement(
-            "%L -> %N = %N.fromJson(%N)",
-            propertyIndex,
-            property.localName,
-            nameAllocator[property.delegateKey],
-            readerParam
-          )
-        } else {
-          val exception = unexpectedNull(property, readerParam)
-          result.addStatement(
-            "%L -> %N = %N.fromJson(%N) ?: throw·%L",
-            propertyIndex,
-            property.localName,
-            nameAllocator[property.delegateKey],
-            readerParam,
-            exception
-          )
-        }
+        result.addStatement(
+          "%L -> %N = %N.fromJson(%N)",
+          propertyIndex,
+          property.localName,
+          nameAllocator[property.delegateKey],
+          readerParam
+        )
       }
       if (property.hasConstructorParameter) {
         constructorPropertyTypes += property.target.type.asTypeBlock()
@@ -671,14 +648,6 @@ public class AdapterGenerator(
       .addModifiers(KModifier.OVERRIDE)
       .addParameter(writerParam)
       .addParameter(valueParam)
-
-    result.beginControlFlow("if (%N == null)", valueParam)
-    result.addStatement(
-      "throw·%T(%S)",
-      NullPointerException::class,
-      "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values."
-    )
-    result.endControlFlow()
 
     result.addStatement("%N.beginObject()", writerParam)
     nonTransientProperties.forEach { property ->
