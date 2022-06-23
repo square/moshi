@@ -260,7 +260,8 @@ public class AdapterGenerator(
 
     val typeRenderer: TypeRenderer = object : TypeRenderer() {
       override fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock {
-        val index = typeVariables.indexOfFirst { it == typeVariable }
+        val nonNull = typeVariable.copy(nullable = false)
+        val index = typeVariables.indexOfFirst { it == nonNull }
         check(index != -1) { "Unexpected type variable $typeVariable" }
         return CodeBlock.of("%N[%L]", typesParam, index)
       }
