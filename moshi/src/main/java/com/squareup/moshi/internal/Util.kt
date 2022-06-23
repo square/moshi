@@ -246,7 +246,7 @@ private fun KTypeParameter.simpleToString(): String {
 }
 
 /** If type is a "? extends X" wildcard, returns X; otherwise returns type unchanged. */
-private fun Type.stripWildcards(): Type {
+internal fun Type.stripWildcards(): Type {
   if (this !is WildcardType) return this
   val lowerBounds = lowerBounds
   if (lowerBounds.isNotEmpty()) return lowerBounds[0]
@@ -260,58 +260,6 @@ private fun KClassifier.simpleToString(): String {
     is KClass<*> -> qualifiedName ?: "<anonymous>"
     is KTypeParameter -> simpleToString()
     else -> error("Unknown type classifier: $this")
-  }
-}
-
-public fun Type.toKType(
-  isMarkedNullable: Boolean = false,
-  annotations: List<Annotation> = emptyList()
-): KType {
-  return when (this) {
-    is Class<*> -> KTypeImpl(kotlin, emptyList(), isMarkedNullable, annotations)
-    is ParameterizedType -> KTypeImpl(
-      classifier = (rawType as Class<*>).kotlin,
-      arguments = actualTypeArguments.map { it.toKTypeProjection() },
-      isMarkedNullable = isMarkedNullable,
-      annotations = annotations
-    )
-    is GenericArrayType -> {
-      KTypeImpl(
-        classifier = rawType.kotlin,
-        arguments = listOf(genericComponentType.toKTypeProjection()),
-        isMarkedNullable = isMarkedNullable,
-        annotations = annotations
-      )
-    }
-    is WildcardType -> stripWildcards().toKType(isMarkedNullable, annotations)
-    is TypeVariable<*> -> KTypeImpl(
-      classifier = KTypeParameterImpl(false, name, bounds.map { it.toKType() }, KVariance.INVARIANT),
-      arguments = emptyList(),
-      isMarkedNullable = isMarkedNullable,
-      annotations = annotations
-    )
-    else -> throw IllegalArgumentException("Unsupported type: $this")
-  }
-}
-
-internal fun Type.toKTypeProjection(): KTypeProjection {
-  return when (this) {
-    is Class<*>, is ParameterizedType, is TypeVariable<*> -> KTypeProjection.invariant(toKType())
-    is WildcardType -> {
-      val lowerBounds = lowerBounds
-      val upperBounds = upperBounds
-      if (lowerBounds.isEmpty() && upperBounds.isEmpty()) {
-        return KTypeProjection.STAR
-      }
-      return if (lowerBounds.isNotEmpty()) {
-        KTypeProjection.contravariant(lowerBounds[0].toKType())
-      } else {
-        KTypeProjection.invariant(upperBounds[0].toKType())
-      }
-    }
-    else -> {
-      TODO("Unsupported type: $this")
-    }
   }
 }
 

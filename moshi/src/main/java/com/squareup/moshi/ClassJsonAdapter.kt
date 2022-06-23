@@ -22,7 +22,7 @@ import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.jsonName
 import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.rethrowCause
-import com.squareup.moshi.internal.toKType
+import com.squareup.moshi.toKType
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier.isAbstract
