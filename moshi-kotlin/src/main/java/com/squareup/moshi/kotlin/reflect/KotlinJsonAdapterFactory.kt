@@ -27,9 +27,9 @@ import com.squareup.moshi.internal.isPlatformType
 import com.squareup.moshi.internal.jsonAnnotations
 import com.squareup.moshi.internal.missingProperty
 import com.squareup.moshi.internal.resolve
-import com.squareup.moshi.internal.toKType
 import com.squareup.moshi.internal.unexpectedNull
 import com.squareup.moshi.rawType
+import com.squareup.moshi.toKType
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
 import kotlin.reflect.KClass

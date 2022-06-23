@@ -20,7 +20,6 @@ import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.NullAwareJsonAdapter
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
-import com.squareup.moshi.toKType
 import com.squareup.moshi.internal.toStringWithAnnotations
 import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
