@@ -27,7 +27,7 @@ import com.squareup.kotlinpoet.joinToCode
 import kotlin.reflect.KVariance
 
 /**
- * Renders literals like `Types.newParameterizedType(List::class.java, String::class.java)`.
+ * Renders literals like `List::class.parameterizedBy(String::class.asKTypeProjection(...))`.
  * Rendering is pluggable so that type variables can either be resolved or emitted as other code
  * blocks.
  */
