@@ -9,9 +9,13 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
+import kotlin.reflect.KVariance
 import kotlin.reflect.KVariance.INVARIANT
+import kotlin.reflect.javaType
+import java.lang.reflect.Array as JavaArray
 
 /**
  * Creates a new [KType] representation of this [Type] for use with Moshi serialization. Note that
@@ -68,7 +72,45 @@ public fun Type.toKTypeProjection(): KTypeProjection {
       }
     }
     else -> {
-      TODO("Unsupported type: $this")
+      throw NotImplementedError("Unsupported type: $this")
     }
   }
+}
+
+/** Returns a [KType] representation of this [KClass]. */
+public fun KClass<*>.asKType(isMarkedNullable: Boolean, annotations: List<Annotation> = emptyList()): KType =
+  KTypeImpl(this, emptyList(), isMarkedNullable, annotations)
+
+/** Returns a [KType] representation of this [KClass]. */
+public fun KType.copy(
+  isMarkedNullable: Boolean = this.isMarkedNullable,
+  annotations: List<Annotation> = this.annotations
+): KType = KTypeImpl(this.classifier, this.arguments, isMarkedNullable, annotations)
+
+/** Returns a [KType] of this [KClass] with the given [arguments]. */
+public fun KClass<*>.parameterizedBy(
+  vararg arguments: KTypeProjection,
+): KType = KTypeImpl(this, arguments.toList(), false, emptyList())
+
+/** Returns a [KTypeProjection] representation of this [KClass] with the given [variance]. */
+public fun KClass<*>.asKTypeProjection(variance: KVariance = INVARIANT): KTypeProjection =
+  asKType(false).asKTypeProjection(variance)
+
+/** Returns a [KTypeProjection] representation of this [KType] with the given [variance]. */
+public fun KType.asKTypeProjection(variance: KVariance = INVARIANT): KTypeProjection =
+  KTypeProjection(variance, this)
+
+/** Returns an [Array] [KType] with [this] as its single [argument][KType.arguments]. */
+@OptIn(ExperimentalStdlibApi::class)
+public fun KType.asArrayKType(variance: KVariance): KType {
+  // Unfortunate but necessary for Java
+  val componentType = javaType
+  val classifier = JavaArray.newInstance(Types.getRawType(componentType), 0).javaClass.kotlin
+  val argument = KTypeProjection(variance = variance, type = this)
+  return KTypeImpl(
+    classifier = classifier,
+    arguments = listOf(argument),
+    isMarkedNullable = isMarkedNullable,
+    annotations = annotations
+  )
 }
