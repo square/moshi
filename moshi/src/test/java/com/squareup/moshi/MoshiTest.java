@@ -615,7 +615,7 @@ public final class MoshiTest {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
-      builder.add(null, null);
+      builder.add((Type) null, null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
@@ -627,7 +627,7 @@ public final class MoshiTest {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
-      builder.add(null, null, null);
+      builder.add((Type) null, null, null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");

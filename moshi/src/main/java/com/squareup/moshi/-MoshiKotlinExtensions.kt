@@ -18,7 +18,6 @@
 package com.squareup.moshi
 
 import kotlin.reflect.KType
-import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -26,19 +25,16 @@ import kotlin.reflect.typeOf
  *         itself is handled, nested types (such as in generics) are not resolved.
  */
 @Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
-@ExperimentalStdlibApi
 public inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
 @Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
-@ExperimentalStdlibApi
-public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>().javaType, adapter)
+public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>(), adapter)
 
 /**
  * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
  *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
  */
 @Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
-@ExperimentalStdlibApi
 public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   return this.adapter(ktype)
 }

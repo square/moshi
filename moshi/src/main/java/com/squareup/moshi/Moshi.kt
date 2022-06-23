@@ -25,7 +25,6 @@ import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.reflect.KType
-import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -76,7 +75,6 @@ public class Moshi internal constructor(builder: Builder) {
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
   /**
@@ -84,7 +82,6 @@ public class Moshi internal constructor(builder: Builder) {
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
     return adapter(ktype, emptySet(), null)
   }
@@ -211,15 +208,26 @@ public class Moshi internal constructor(builder: Builder) {
     internal var lastOffset = 0
 
     @CheckReturnValue
-    @ExperimentalStdlibApi
-    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
+    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>(), adapter)
 
     public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
       add(newAdapterFactory(type, jsonAdapter))
     }
 
+    public fun <T> add(type: KType, jsonAdapter: JsonAdapter<T>): Builder = apply {
+      add(newAdapterFactory(type, jsonAdapter))
+    }
+
     public fun <T> add(
       type: Type,
+      annotation: Class<out Annotation>,
+      jsonAdapter: JsonAdapter<T>
+    ): Builder = apply {
+      add(newAdapterFactory(type, annotation, jsonAdapter))
+    }
+
+    public fun <T> add(
+      type: KType,
       annotation: Class<out Annotation>,
       jsonAdapter: JsonAdapter<T>
     ): Builder = apply {
@@ -415,6 +423,33 @@ public class Moshi internal constructor(builder: Builder) {
       require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
       return JsonAdapter.Factory { targetType, annotations, _ ->
         if (typesMatch(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
+          jsonAdapter
+        } else {
+          null
+        }
+      }
+    }
+
+    fun <T> newAdapterFactory(
+      type: KType,
+      jsonAdapter: JsonAdapter<T>
+    ): JsonAdapter.KFactory {
+      val canonicalType = type.canonicalize()
+      return JsonAdapter.KFactory { targetType, annotations, _ ->
+        if (annotations.isEmpty() && canonicalType.isFunctionallyEqualTo(targetType)) jsonAdapter else null
+      }
+    }
+
+    fun <T> newAdapterFactory(
+      type: KType,
+      annotation: Class<out Annotation>,
+      jsonAdapter: JsonAdapter<T>
+    ): JsonAdapter.KFactory {
+      require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
+      require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
+      val canonicalType = type.canonicalize()
+      return JsonAdapter.KFactory { targetType, annotations, _ ->
+        if (canonicalType.isFunctionallyEqualTo(targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
           jsonAdapter
         } else {
           null

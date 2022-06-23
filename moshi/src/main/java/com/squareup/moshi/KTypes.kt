@@ -3,6 +3,7 @@ package com.squareup.moshi
 
 import com.squareup.moshi.internal.KTypeImpl
 import com.squareup.moshi.internal.KTypeParameterImpl
+import com.squareup.moshi.internal.markNotNull
 import com.squareup.moshi.internal.stripWildcards
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
@@ -11,6 +12,7 @@ import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.KTypeParameter
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
 import kotlin.reflect.KVariance.INVARIANT
@@ -113,4 +115,42 @@ public fun KType.asArrayKType(variance: KVariance): KType {
     isMarkedNullable = isMarkedNullable,
     annotations = annotations
   )
+}
+
+/** Returns true if [this] and [other] are equal. */
+public fun KType?.isFunctionallyEqualTo(other: KType?): Boolean {
+  if (this === other) {
+    return true // Also handles (a == null && b == null).
+  }
+
+  markNotNull(this)
+  markNotNull(other)
+
+  if (isMarkedNullable != other.isMarkedNullable) return false
+  if (!arguments.contentEquals(other.arguments) { a, b -> a.type.isFunctionallyEqualTo(b.type) }) return false
+
+  // This isn't a supported type.
+  when (val classifier = classifier) {
+    is KClass<*> -> {
+      return classifier == other.classifier
+    }
+    is KTypeParameter -> {
+      val otherClassifier = other.classifier
+      if (otherClassifier !is KTypeParameter) return false
+      // TODO Use a plain KTypeParameter.equals again once https://youtrack.jetbrains.com/issue/KT-39661 is fixed
+      return (classifier.upperBounds.contentEquals(otherClassifier.upperBounds, KType::isFunctionallyEqualTo) && (classifier.name == otherClassifier.name))
+    }
+    else -> return false // This isn't a supported type.
+  }
+}
+
+private fun <T> List<T>.contentEquals(other: List<T>, comparator: (a: T, b: T) -> Boolean): Boolean {
+  if (size != other.size) return false
+  for (i in indices) {
+    val arg = get(i)
+    val otherArg = other[i]
+    // TODO do we care about variance?
+    if (!comparator(arg, otherArg)) return false
+  }
+  return true
 }
