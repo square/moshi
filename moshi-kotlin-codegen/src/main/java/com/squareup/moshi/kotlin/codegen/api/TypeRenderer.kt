@@ -49,7 +49,7 @@ internal abstract class TypeRenderer {
         if (typeName.rawType == ARRAY) {
           val arg = typeName.typeArguments[0]
           CodeBlock.of(
-            "%L.%M(%L)",
+            "%L.%M(variance·=·%L)",
             render(arg),
             MemberName("com.squareup.moshi", "asArrayKType"),
             arg.kVarianceBlock
@@ -62,7 +62,7 @@ internal abstract class TypeRenderer {
             typeName.typeArguments
               .map {
                 CodeBlock.of(
-                  "%L.%M(%L)",
+                  "%L.%M(variance·=·%L)",
                   render(it),
                   MemberName("com.squareup.moshi", "asKTypeProjection"),
                   it.kVarianceBlock
@@ -95,7 +95,7 @@ internal abstract class TypeRenderer {
 
   private fun renderKType(className: ClassName): CodeBlock {
     return CodeBlock.of(
-      "%T::class.%M(isMarkedNullable = %L)",
+      "%T::class.%M(isMarkedNullable·=·%L)",
       className.copy(nullable = false),
       MemberName("com.squareup.moshi", "asKType"),
       className.isNullable
