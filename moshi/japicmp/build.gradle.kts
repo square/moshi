@@ -45,6 +45,7 @@ val japicmp = tasks.register<JapicmpTask>("japicmp") {
     "com.squareup.moshi.internal.Util#jsonName(java.lang.String, java.lang.reflect.AnnotatedElement)",
     "com.squareup.moshi.internal.Util#resolve(java.lang.reflect.Type, java.lang.Class, java.lang.reflect.Type)",
     "com.squareup.moshi.internal.Util#typeAnnotatedWithAnnotations(java.lang.reflect.Type, java.util.Set)",
+    "com.squareup.moshi.internal.Util#removeSubtypeWildcard(java.lang.reflect.Type)",
   )
   fieldExcludes = listOf(
     "com.squareup.moshi.CollectionJsonAdapter#FACTORY", // False-positive, class is not public anyway
