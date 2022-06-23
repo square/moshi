@@ -125,7 +125,7 @@ public final class JsonAdapterTest {
       toUpperCase.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $[1]");
       assertThat(reader.<Object>nextNull()).isNull();
     }
     assertThat(toUpperCase.fromJson(reader)).isEqualTo("C");
@@ -138,7 +138,7 @@ public final class JsonAdapterTest {
       toUpperCase.toJson(writer, null);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $[1]");
       writer.nullValue();
     }
     toUpperCase.toJson(writer, "c");

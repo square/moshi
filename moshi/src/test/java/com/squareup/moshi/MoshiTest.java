@@ -66,13 +66,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a boolean but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -126,13 +126,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -217,13 +217,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a string but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -275,13 +275,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a double but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
 
     // Non-lenient adapter won't allow values outside of range.
@@ -349,13 +349,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a double but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
 
     // Non-lenient adapter won't allow values outside of range.
@@ -432,13 +432,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -489,13 +489,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected a long but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 
@@ -542,13 +542,13 @@ public final class MoshiTest {
       adapter.fromJson("null");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $");
     }
 
     try {
       adapter.toJson(null);
       fail();
-    } catch (NullPointerException expected) {
+    } catch (JsonDataException expected) {
     }
   }
 

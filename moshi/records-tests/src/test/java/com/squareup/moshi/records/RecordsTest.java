@@ -268,7 +268,7 @@ public final class RecordsTest {
       adapter.fromJson("{\"s\":\"\",\"i\":null}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $.i");
+      assertThat(expected).hasMessageThat().isEqualTo("Non-null value was null at $.i");
     }
   }
 
