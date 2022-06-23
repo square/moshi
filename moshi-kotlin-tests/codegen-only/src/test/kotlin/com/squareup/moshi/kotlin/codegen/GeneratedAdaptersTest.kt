@@ -30,7 +30,6 @@ import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackage
 import com.squareup.moshi.kotlin.codegen.annotation.UppercaseInAnnotationPackageJsonAdapter
 import org.intellij.lang.annotations.Language
-import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
@@ -1091,38 +1090,6 @@ class GeneratedAdaptersTest {
     fun writeA(a: Int) {
       this.a = a
     }
-  }
-
-  @Test fun propertyIsNothing() {
-    val moshi = Moshi.Builder()
-      .add(NothingAdapter())
-      .build()
-    val jsonAdapter = moshi.adapter<HasNothingProperty>().serializeNulls()
-
-    val toJson = HasNothingProperty()
-    toJson.a = "1"
-    assertThat(jsonAdapter.toJson(toJson)).isEqualTo("""{"a":"1","b":null}""")
-
-    val fromJson = jsonAdapter.fromJson("""{"a":"3","b":null}""")
-    assertThat(fromJson.a).isEqualTo("3")
-    assertNull(fromJson.b)
-  }
-
-  class NothingAdapter {
-    @ToJson fun toJson(jsonWriter: JsonWriter, unused: Nothing?) {
-      jsonWriter.nullValue()
-    }
-
-    @FromJson fun fromJson(jsonReader: JsonReader): Nothing? {
-      jsonReader.skipValue()
-      return null
-    }
-  }
-
-  @JsonClass(generateAdapter = true)
-  class HasNothingProperty {
-    var a: String? = null
-    var b: Nothing? = null
   }
 
   @Test fun enclosedParameterizedType() {

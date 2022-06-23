@@ -15,16 +15,14 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
-import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
-import com.squareup.kotlinpoet.joinToCode
-import kotlin.reflect.KVariance
 
 /**
  * Renders literals like `List::class.parameterizedBy(String::class.asKTypeProjection(...))`.
@@ -40,82 +38,15 @@ internal abstract class TypeRenderer {
     }
 
     return when (typeName) {
-      is ClassName -> {
-        renderKType(typeName)
-      }
-
-      is ParameterizedTypeName -> {
-        // If it's an Array type, we shortcut this to return Types.arrayOf()
-        if (typeName.rawType == ARRAY) {
-          val arg = typeName.typeArguments[0]
-          CodeBlock.of(
-            "%L.%M(variance·=·%L)",
-            render(arg),
-            MemberName("com.squareup.moshi", "asArrayKType"),
-            arg.kVarianceBlock
-          )
-        } else {
-          CodeBlock.of(
-            "%T::class.%M(%L)",
-            typeName.rawType,
-            MemberName("com.squareup.moshi", "parameterizedBy"),
-            typeName.typeArguments
-              .map {
-                CodeBlock.of(
-                  "%L.%M(variance·=·%L)",
-                  render(it),
-                  MemberName("com.squareup.moshi", "asKTypeProjection"),
-                  it.kVarianceBlock
-                )
-              }
-              .joinToCode(", ")
-          )
-        }
-      }
-      is WildcardTypeName -> {
-        val target = when {
-          typeName.inTypes.size == 1 -> {
-            typeName.inTypes[0]
-          }
-          typeName.outTypes.size == 1 -> {
-            typeName.outTypes[0]
-          }
-          else -> throw IllegalArgumentException(
-            "Unrepresentable wildcard type. Cannot have more than one bound: $typeName"
-          )
-        }
-        render(target)
-      }
-
       is TypeVariableName -> renderTypeVariable(typeName)
-
+      is ClassName, is LambdaTypeName, is ParameterizedTypeName, is WildcardTypeName -> {
+        CodeBlock.of(
+          "%M<%T>()",
+          MemberName("kotlin.reflect", "typeOf"),
+          typeName
+        )
+      }
       else -> throw IllegalArgumentException("Unrepresentable type: $typeName")
     }
-  }
-
-  private fun renderKType(className: ClassName): CodeBlock {
-    return CodeBlock.of(
-      "%T::class.%M(isMarkedNullable·=·%L)",
-      className.copy(nullable = false),
-      MemberName("com.squareup.moshi", "asKType"),
-      className.isNullable
-    )
-  }
-
-  private val TypeName.kVarianceBlock: CodeBlock get() {
-    val variance = if (this is WildcardTypeName) {
-      if (outTypes.isNotEmpty()) {
-        KVariance.IN
-      } else {
-        KVariance.OUT
-      }
-    } else {
-      KVariance.INVARIANT
-    }
-    return CodeBlock.of(
-      "%T.%L",
-      KVariance::class,
-      variance.name
-    )
   }
 }
