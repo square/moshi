@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.NullAwareJsonAdapter
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.checkNull
 import com.squareup.moshi.internal.hasNullable
@@ -57,7 +58,7 @@ internal class AdapterMethodsFactory(
     toAdapter?.bind(moshi, this)
     fromAdapter?.bind(moshi, this)
 
-    return object : JsonAdapter<Any?>() {
+    return object : NullAwareJsonAdapter<Any?>() {
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
           toAdapter == null -> knownNotNull(delegate).toJson(writer, value)

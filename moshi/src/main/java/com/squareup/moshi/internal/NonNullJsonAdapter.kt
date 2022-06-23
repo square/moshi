@@ -25,7 +25,7 @@ import com.squareup.moshi.JsonWriter
  * messages, but users of this class should always use it as an assumed non-nullable type and is
  * cast as such in [JsonAdapter.nonNull].
  */
-public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T?>() {
+public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : NullAwareJsonAdapter<T?>() {
   override fun fromJson(reader: JsonReader): T {
     return if (reader.peek() == JsonReader.Token.NULL) {
       throw JsonDataException("Non-null value was null at ${reader.path}")

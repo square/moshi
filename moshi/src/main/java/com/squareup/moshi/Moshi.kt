@@ -17,8 +17,7 @@ package com.squareup.moshi
 
 import com.squareup.moshi.Types.createJsonQualifierImplementation
 import com.squareup.moshi.internal.NO_ANNOTATIONS
-import com.squareup.moshi.internal.NonNullJsonAdapter
-import com.squareup.moshi.internal.NullSafeJsonAdapter
+import com.squareup.moshi.internal.NullAwareJsonAdapter
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.toKType
@@ -71,7 +70,7 @@ public class Moshi internal constructor(builder: Builder) {
 
   @CheckReturnValue
   public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
-    adapter(type.toKType(), annotations, fieldName = null)
+    adapter<T>(type.toKType(), annotations, fieldName = null)
 
   /**
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
@@ -133,7 +132,8 @@ public class Moshi internal constructor(builder: Builder) {
       for (i in factories.indices) {
         @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
         val initialResult = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>? ?: continue
-        val result = if (initialResult is NullSafeJsonAdapter<*> || initialResult is NonNullJsonAdapter<*>) {
+        val result = if (initialResult is NullAwareJsonAdapter<*>) {
+          // If it's null-aware already, let it handle things internally
           initialResult
         } else if (type.isMarkedNullable) {
           @Suppress("UNCHECKED_CAST")
