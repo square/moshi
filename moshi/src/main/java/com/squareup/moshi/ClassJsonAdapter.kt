@@ -199,7 +199,7 @@ internal class ClassJsonAdapter<T>(
         val annotations = field.jsonAnnotations
         val fieldName = field.name
         val adapter = moshi.adapter<Any>(
-          type = fieldType.toKType(isMarkedNullable = true), // TODO check for nullable annotations?
+          type = fieldType.toKType(), // TODO check for nullable annotations?
           annotations = annotations,
           fieldName = fieldName
         )

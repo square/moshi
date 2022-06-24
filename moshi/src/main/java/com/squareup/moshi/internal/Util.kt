@@ -182,7 +182,13 @@ internal fun KType.canonicalize(): KType {
     classifier = classifier?.canonicalize(),
     arguments = arguments.map { it.canonicalize() },
     isMarkedNullable = isMarkedNullable,
-    annotations = annotations
+    annotations = annotations,
+    // TODO should we check kotlin.jvm.internal.TypeReference too?
+    isPlatformType = if (this is KTypeImpl) {
+      this.isPlatformType
+    } else {
+      false
+    }
   )
 }
 
@@ -730,29 +736,9 @@ internal class KTypeImpl(
   override val classifier: KClassifier?,
   override val arguments: List<KTypeProjection>,
   override val isMarkedNullable: Boolean,
-  override val annotations: List<Annotation>
+  override val annotations: List<Annotation>,
+  val isPlatformType: Boolean
 ) : KType {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (javaClass != other?.javaClass) return false
-
-    other as KTypeImpl
-
-    if (classifier != other.classifier) return false
-    if (arguments != other.arguments) return false
-    if (isMarkedNullable != other.isMarkedNullable) return false
-    if (annotations != other.annotations) return false
-
-    return true
-  }
-
-  override fun hashCode(): Int {
-    var result = classifier?.hashCode() ?: 0
-    result = 31 * result + arguments.hashCode()
-    result = 31 * result + isMarkedNullable.hashCode()
-    result = 31 * result + annotations.hashCode()
-    return result
-  }
 
   override fun toString(): String {
     return buildString {
@@ -766,8 +752,38 @@ internal class KTypeImpl(
         arguments.joinTo(this, ", ") { it.toString() }
         append(">")
       }
-      if (isMarkedNullable) append("?")
+      if (isMarkedNullable) {
+        if (isPlatformType) {
+          append("!")
+        } else {
+          append("?")
+        }
+      }
     }
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as KTypeImpl
+
+    if (classifier != other.classifier) return false
+    if (arguments != other.arguments) return false
+    if (isMarkedNullable != other.isMarkedNullable) return false
+    if (annotations != other.annotations) return false
+    if (isPlatformType != other.isPlatformType) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = classifier?.hashCode() ?: 0
+    result = 31 * result + arguments.hashCode()
+    result = 31 * result + isMarkedNullable.hashCode()
+    result = 31 * result + annotations.hashCode()
+    result = 31 * result + isPlatformType.hashCode()
+    return result
   }
 }
 

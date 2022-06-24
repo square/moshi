@@ -877,7 +877,7 @@ public final class MoshiTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "No JsonAdapter for kotlin.collections.List<kotlin.String> annotated "
+              "No JsonAdapter for kotlin.collections.List<kotlin.String!>! annotated "
                   + "[@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }
@@ -894,7 +894,7 @@ public final class MoshiTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "No JsonAdapter for kotlin.String annotated "
+              "No JsonAdapter for kotlin.String! annotated "
                   + "[@com.squareup.moshi.MoshiTest$Uppercase()]");
     }
   }
@@ -1099,10 +1099,10 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor java.util.UUID? uuid"
-                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType"
-                  + "\nfor kotlin.collections.Map<kotlin.String, "
-                  + "com.squareup.moshi.MoshiTest.HasPlatformType>");
+                  + "\nfor java.util.UUID! uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType!"
+                  + "\nfor kotlin.collections.Map<kotlin.String!, "
+                  + "com.squareup.moshi.MoshiTest.HasPlatformType!>!");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()
@@ -1123,9 +1123,9 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor java.util.UUID? uuid"
-                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType? hasPlatformType"
-                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.Wrapper");
+                  + "\nfor java.util.UUID! uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType! hasPlatformType"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.Wrapper!");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()
@@ -1146,10 +1146,10 @@ public final class MoshiTest {
           .isEqualTo(
               "Platform class java.util.UUID requires explicit "
                   + "JsonAdapter to be registered"
-                  + "\nfor java.util.UUID? uuid"
-                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType"
-                  + "\nfor kotlin.collections.List<com.squareup.moshi.MoshiTest.HasPlatformType>? platformTypes"
-                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.ListWrapper");
+                  + "\nfor java.util.UUID! uuid"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType!"
+                  + "\nfor kotlin.collections.List<com.squareup.moshi.MoshiTest.HasPlatformType!>! platformTypes"
+                  + "\nfor com.squareup.moshi.MoshiTest.HasPlatformType.ListWrapper!");
       assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(e.getCause())
           .hasMessageThat()

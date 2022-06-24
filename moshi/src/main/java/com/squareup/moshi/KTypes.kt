@@ -25,23 +25,25 @@ import java.lang.reflect.Array as JavaArray
  * not relevant for serialization and are also not standalone [KType] subtypes in Kotlin.
  */
 public fun Type.toKType(
-  isMarkedNullable: Boolean = false,
+  isMarkedNullable: Boolean = true,
   annotations: List<Annotation> = emptyList()
 ): KType {
   return when (this) {
-    is Class<*> -> KTypeImpl(kotlin, emptyList(), isMarkedNullable, annotations)
+    is Class<*> -> KTypeImpl(kotlin, emptyList(), isMarkedNullable, annotations, isPlatformType = true)
     is ParameterizedType -> KTypeImpl(
       classifier = (rawType as Class<*>).kotlin,
       arguments = actualTypeArguments.map { it.toKTypeProjection() },
       isMarkedNullable = isMarkedNullable,
-      annotations = annotations
+      annotations = annotations,
+      isPlatformType = true
     )
     is GenericArrayType -> {
       KTypeImpl(
         classifier = rawType.kotlin,
         arguments = listOf(genericComponentType.toKTypeProjection()),
         isMarkedNullable = isMarkedNullable,
-        annotations = annotations
+        annotations = annotations,
+        isPlatformType = true
       )
     }
     is WildcardType -> stripWildcards().toKType(isMarkedNullable, annotations)
@@ -49,7 +51,8 @@ public fun Type.toKType(
       classifier = KTypeParameterImpl(false, name, bounds.map { it.toKType() }, INVARIANT),
       arguments = emptyList(),
       isMarkedNullable = isMarkedNullable,
-      annotations = annotations
+      annotations = annotations,
+      isPlatformType = true
     )
     else -> throw IllegalArgumentException("Unsupported type: $this")
   }
@@ -81,18 +84,18 @@ public fun Type.toKTypeProjection(): KTypeProjection {
 
 /** Returns a [KType] representation of this [KClass]. */
 public fun KClass<*>.asKType(isMarkedNullable: Boolean, annotations: List<Annotation> = emptyList()): KType =
-  KTypeImpl(this, emptyList(), isMarkedNullable, annotations)
+  KTypeImpl(this, emptyList(), isMarkedNullable, annotations, isPlatformType = false)
 
 /** Returns a [KType] representation of this [KClass]. */
 public fun KType.copy(
   isMarkedNullable: Boolean = this.isMarkedNullable,
   annotations: List<Annotation> = this.annotations
-): KType = KTypeImpl(this.classifier, this.arguments, isMarkedNullable, annotations)
+): KType = KTypeImpl(this.classifier, this.arguments, isMarkedNullable, annotations, isPlatformType = false)
 
 /** Returns a [KType] of this [KClass] with the given [arguments]. */
 public fun KClass<*>.parameterizedBy(
   vararg arguments: KTypeProjection,
-): KType = KTypeImpl(this, arguments.toList(), false, emptyList())
+): KType = KTypeImpl(this, arguments.toList(), false, emptyList(), isPlatformType = false)
 
 /** Returns a [KTypeProjection] representation of this [KClass] with the given [variance]. */
 public fun KClass<*>.asKTypeProjection(variance: KVariance = INVARIANT): KTypeProjection =
@@ -113,7 +116,8 @@ public fun KType.asArrayKType(variance: KVariance): KType {
     classifier = classifier,
     arguments = listOf(argument),
     isMarkedNullable = isMarkedNullable,
-    annotations = annotations
+    annotations = annotations,
+    isPlatformType = false
   )
 }
 
@@ -153,4 +157,16 @@ private fun <T> List<T>.contentEquals(other: List<T>, comparator: (a: T, b: T) -
     if (!comparator(arg, otherArg)) return false
   }
   return true
+}
+
+public val KType.rawType: KClass<*> get() {
+  return when (val classifier = classifier) {
+    is KClass<*> -> classifier
+    is KTypeParameter -> {
+      // We could use the variable's bounds, but that won't work if there are multiple. having a raw
+      // type that's more general than necessary is okay.
+      Any::class
+    }
+    else -> error("Unrecognized KType: $this")
+  }
 }

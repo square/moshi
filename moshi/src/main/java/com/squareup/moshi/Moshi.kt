@@ -68,7 +68,7 @@ public class Moshi internal constructor(builder: Builder) {
 
   @CheckReturnValue
   public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
-    adapter<T>(type.toKType(), annotations, fieldName = null)
+    adapter(type.toKType(isMarkedNullable = !type.rawType.isPrimitive), annotations, fieldName = null)
 
   /**
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]

@@ -515,7 +515,7 @@ public final class AdapterMethodsTest {
       assertThat(e.getCause())
           .hasMessageThat()
           .isEqualTo(
-              "No next JsonAdapter for com.squareup.moshi.AdapterMethodsTest.Shape (with "
+              "No next JsonAdapter for com.squareup.moshi.AdapterMethodsTest.Shape! (with "
                   + "no annotations)");
     }
   }
@@ -544,7 +544,7 @@ public final class AdapterMethodsTest {
       assertThat(e.getCause())
           .hasMessageThat()
           .isEqualTo(
-              "No next JsonAdapter for com.squareup.moshi.AdapterMethodsTest.Shape (with "
+              "No next JsonAdapter for com.squareup.moshi.AdapterMethodsTest.Shape! (with "
                   + "no annotations)");
     }
   }

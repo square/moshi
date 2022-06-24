@@ -365,8 +365,8 @@ public final class JsonQualifiersTest {
           .isEqualTo(
               "No @FromJson adapter for class java.lang.String annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-                  + "\nfor kotlin.String? b"
-                  + "\nfor com.squareup.moshi.JsonQualifiersTest.StringAndFooString");
+                  + "\nfor kotlin.String! b"
+                  + "\nfor com.squareup.moshi.JsonQualifiersTest.StringAndFooString!");
       assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause())
           .hasMessageThat()
@@ -377,7 +377,7 @@ public final class JsonQualifiersTest {
       assertThat(expected.getCause().getCause())
           .hasMessageThat()
           .isEqualTo(
-              "No next JsonAdapter for kotlin.String annotated "
+              "No next JsonAdapter for kotlin.String! annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
@@ -403,8 +403,8 @@ public final class JsonQualifiersTest {
           .isEqualTo(
               "No @ToJson adapter for class java.lang.String annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-                  + "\nfor kotlin.String? b"
-                  + "\nfor com.squareup.moshi.JsonQualifiersTest.StringAndFooString");
+                  + "\nfor kotlin.String! b"
+                  + "\nfor com.squareup.moshi.JsonQualifiersTest.StringAndFooString!");
       assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
       assertThat(expected.getCause())
           .hasMessageThat()
@@ -415,7 +415,7 @@ public final class JsonQualifiersTest {
       assertThat(expected.getCause().getCause())
           .hasMessageThat()
           .isEqualTo(
-              "No next JsonAdapter for kotlin.String annotated "
+              "No next JsonAdapter for kotlin.String! annotated "
                   + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
     }
   }
