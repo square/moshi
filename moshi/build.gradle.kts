@@ -65,7 +65,7 @@ tasks.withType<KotlinCompile>()
     kotlinOptions {
       if (name.contains("test", true)) {
         @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-        freeCompilerArgs += listOf("-Xopt-in=kotlin.ExperimentalStdlibApi")
+        freeCompilerArgs += listOf("-opt-in=kotlin.ExperimentalStdlibApi")
       }
     }
   }
