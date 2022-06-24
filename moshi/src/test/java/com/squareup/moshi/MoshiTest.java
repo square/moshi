@@ -22,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.fail;
 
 import android.util.Pair;
+import com.squareup.moshi.internal.NullSafeJsonAdapter;
 import com.squareup.moshi.internal.Util;
 import java.io.File;
 import java.io.IOException;
@@ -1065,14 +1066,19 @@ public final class MoshiTest {
                   @Override
                   public JsonAdapter<?> create(
                       Type type, Set<? extends Annotation> annotations, Moshi moshi) {
-                    return new MapJsonAdapter<String, String>(moshi, String.class, String.class);
+                    if (Types.getRawType(type) == HashMap.class) {
+                      return new MapJsonAdapter<String, String>(moshi, String.class, String.class);
+                    } else {
+                      return null;
+                    }
                   }
                 })
             .build();
 
     JsonAdapter<HashMap<String, String>> adapter =
         moshi.adapter(Types.newParameterizedType(HashMap.class, String.class, String.class));
-    assertThat(adapter).isInstanceOf(MapJsonAdapter.class);
+    assertThat(adapter).isInstanceOf(NullSafeJsonAdapter.class);
+    assertThat(((NullSafeJsonAdapter) adapter).getDelegate()).isInstanceOf(MapJsonAdapter.class);
   }
 
   static final class HasPlatformType {
