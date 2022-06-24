@@ -289,7 +289,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
         "No default value for transient constructor parameter #0 " +
-          "a of fun <init>(kotlin.Int): " +
+          "a of fun `<init>`(kotlin.Int): " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter"
       )
     }
@@ -305,7 +305,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
         "No default value for ignored constructor parameter #0 " +
-          "a of fun <init>(kotlin.Int): " +
+          "a of fun `<init>`(kotlin.Int): " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter"
       )
     }
@@ -551,7 +551,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No property for required constructor parameter #0 a of fun <init>(" +
+        "No property for required constructor parameter #0 a of fun `<init>`(" +
           "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}"
       )
     }
