@@ -397,7 +397,7 @@ public class Moshi internal constructor(builder: Builder) {
   internal companion object {
     @JvmField
     val BUILT_IN_FACTORIES: List<JsonAdapter.KFactory> = buildList(6) {
-      add(StandardJsonAdapters.Factory.asKFactory())
+      add(StandardJsonAdapters.asKFactory())
       add(CollectionJsonAdapter.Factory.asKFactory())
       add(MapJsonAdapter.Factory.asKFactory())
       add(ArrayJsonAdapter.Factory.asKFactory())
