@@ -38,8 +38,8 @@ jobs:
       - name: Test
         run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
 
-      - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-test-mode == 'reflect'
+      - name: Publish (release branch only)
+        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/moshi_1.14.x' && matrix.kotlin-test-mode == 'reflect'
         run: ./gradlew publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: '${{ secrets.SONATYPE_NEXUS_USERNAME }}'
