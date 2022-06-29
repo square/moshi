@@ -28,7 +28,7 @@ plugins {
 
 allprojects {
   group = "com.squareup.moshi"
-  version = "1.14.0-SNAPSHOT"
+  version = "2.0.0-SNAPSHOT"
 
   repositories {
     mavenCentral()
