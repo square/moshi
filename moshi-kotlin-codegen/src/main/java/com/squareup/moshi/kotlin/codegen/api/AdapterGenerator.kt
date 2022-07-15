@@ -71,6 +71,7 @@ public class AdapterGenerator(
       "DEPRECATION",
       // Because we look it up reflectively
       "unused",
+      "UNUSED_PARAMETER",
       // Because we include underscores
       "ClassName",
       // Because we generate redundant `out` variance for some generics and there's no way
