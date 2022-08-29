@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
-import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import org.junit.Test
+import kotlin.test.assertTrue
 
 class KotlinJsonAdapterTest {
   @JsonClass(generateAdapter = true)
@@ -30,8 +30,9 @@ class KotlinJsonAdapterTest {
       .add(KotlinJsonAdapterFactory())
       .build()
     val adapter = moshi.adapter(Data::class.java)
-    assertThat(adapter.toString()).isEqualTo(
-      "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
+
+    assertTrue(
+      adapter.toString().contentEquals("KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()")
     )
   }
 }

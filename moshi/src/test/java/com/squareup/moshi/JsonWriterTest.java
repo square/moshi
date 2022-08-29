@@ -15,9 +15,11 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.repeat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -53,7 +55,7 @@ public final class JsonWriterTest {
     writer.nullValue();
     writer.endObject();
     writer.close();
-    assertThat(factory.json()).isEqualTo("{}");
+    assertEquals(factory.json(), "{}");
   }
 
   @Test
@@ -65,7 +67,7 @@ public final class JsonWriterTest {
     writer.nullValue();
     writer.endObject();
     writer.close();
-    assertThat(factory.json()).isEqualTo("{\"a\":null}");
+    assertEquals(factory.json(), "{\"a\":null}");
   }
 
   @Test
@@ -73,7 +75,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.value(true);
     writer.close();
-    assertThat(factory.json()).isEqualTo("true");
+    assertEquals(factory.json(), "true");
   }
 
   @Test
@@ -81,7 +83,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.nullValue();
     writer.close();
-    assertThat(factory.json()).isEqualTo("null");
+    assertEquals(factory.json(), "null");
   }
 
   @Test
@@ -89,7 +91,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.value(123);
     writer.close();
-    assertThat(factory.json()).isEqualTo("123");
+    assertEquals(factory.json(), "123");
   }
 
   @Test
@@ -97,7 +99,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.value(123.4);
     writer.close();
-    assertThat(factory.json()).isEqualTo("123.4");
+    assertEquals(factory.json(), "123.4");
   }
 
   @Test
@@ -105,7 +107,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.value("a");
     writer.close();
-    assertThat(factory.json()).isEqualTo("\"a\"");
+    assertEquals(factory.json(), "\"a\"");
   }
 
   @Test
@@ -207,7 +209,7 @@ public final class JsonWriterTest {
     writer.name("a");
     writer.value((String) null);
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":null}");
+    assertEquals(factory.json(), "{\"a\":null}");
   }
 
   @Test
@@ -267,17 +269,17 @@ public final class JsonWriterTest {
     writer.value(Math.E);
     writer.endArray();
     writer.close();
-    assertThat(factory.json())
-        .isEqualTo(
-            "[-0.0,"
-                + "1.0,"
-                + "1.7976931348623157E308,"
-                + "4.9E-324,"
-                + "0.0,"
-                + "-0.5,"
-                + "2.2250738585072014E-308,"
-                + "3.141592653589793,"
-                + "2.718281828459045]");
+    assertEquals(
+        factory.json(),
+        "[-0.0,"
+            + "1.0,"
+            + "1.7976931348623157E308,"
+            + "4.9E-324,"
+            + "0.0,"
+            + "-0.5,"
+            + "2.2250738585072014E-308,"
+            + "3.141592653589793,"
+            + "2.718281828459045]");
   }
 
   @Test
@@ -291,8 +293,8 @@ public final class JsonWriterTest {
     writer.value(Long.MAX_VALUE);
     writer.endArray();
     writer.close();
-    assertThat(factory.json())
-        .isEqualTo("[0," + "1," + "-1," + "-9223372036854775808," + "9223372036854775807]");
+    assertEquals(
+        factory.json(), "[0," + "1," + "-1," + "-9223372036854775808," + "9223372036854775807]");
   }
 
   @Test
@@ -307,12 +309,12 @@ public final class JsonWriterTest {
     writer.value(new BigDecimal("3.141592653589793238462643383"));
     writer.endArray();
     writer.close();
-    assertThat(factory.json())
-        .isEqualTo(
-            "[0,"
-                + "9223372036854775808,"
-                + "-9223372036854775809,"
-                + "3.141592653589793238462643383]");
+    assertEquals(
+        factory.json(),
+        "[0,"
+            + "9223372036854775808,"
+            + "-9223372036854775809,"
+            + "3.141592653589793238462643383]");
   }
 
   @Test
@@ -322,7 +324,7 @@ public final class JsonWriterTest {
     writer.value((Number) null);
     writer.endArray();
     writer.close();
-    assertThat(factory.json()).isEqualTo("[null]");
+    assertEquals(factory.json(), "[null]");
   }
 
   @Test
@@ -332,7 +334,7 @@ public final class JsonWriterTest {
     writer.value(true);
     writer.value(false);
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[true,false]");
+    assertEquals(factory.json(), "[true,false]");
   }
 
   @Test
@@ -343,7 +345,7 @@ public final class JsonWriterTest {
     writer.value((Boolean) false);
     writer.value((Boolean) null);
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[true,false,null]");
+    assertEquals(factory.json(), "[true,false,null]");
   }
 
   @Test
@@ -352,7 +354,7 @@ public final class JsonWriterTest {
     writer.beginArray();
     writer.nullValue();
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[null]");
+    assertEquals(factory.json(), "[null]");
   }
 
   @Test
@@ -378,26 +380,26 @@ public final class JsonWriterTest {
     writer.value("\0");
     writer.value("\u0019");
     writer.endArray();
-    assertThat(factory.json())
-        .isEqualTo(
-            "[\"a\","
-                + "\"a\\\"\","
-                + "\"\\\"\","
-                + "\":\","
-                + "\",\","
-                + "\"\\b\","
-                + "\"\\f\","
-                + "\"\\n\","
-                + "\"\\r\","
-                + "\"\\t\","
-                + "\" \","
-                + "\"\\\\\","
-                + "\"{\","
-                + "\"}\","
-                + "\"[\","
-                + "\"]\","
-                + "\"\\u0000\","
-                + "\"\\u0019\"]");
+    assertEquals(
+        factory.json(),
+        "[\"a\","
+            + "\"a\\\"\","
+            + "\"\\\"\","
+            + "\":\","
+            + "\",\","
+            + "\"\\b\","
+            + "\"\\f\","
+            + "\"\\n\","
+            + "\"\\r\","
+            + "\"\\t\","
+            + "\" \","
+            + "\"\\\\\","
+            + "\"{\","
+            + "\"}\","
+            + "\"[\","
+            + "\"]\","
+            + "\"\\u0000\","
+            + "\"\\u0019\"]");
   }
 
   @Test
@@ -406,7 +408,7 @@ public final class JsonWriterTest {
     writer.beginArray();
     writer.value("\u2028 \u2029");
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"\\u2028 \\u2029\"]");
+    assertEquals(factory.json(), "[\"\\u2028 \\u2029\"]");
   }
 
   @Test
@@ -414,7 +416,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[]");
+    assertEquals(factory.json(), "[]");
   }
 
   @Test
@@ -422,7 +424,7 @@ public final class JsonWriterTest {
     JsonWriter writer = factory.newWriter();
     writer.beginObject();
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{}");
+    assertEquals(factory.json(), "{}");
   }
 
   @Test
@@ -438,7 +440,7 @@ public final class JsonWriterTest {
     writer.name("d").value(true);
     writer.endObject();
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[{\"a\":5,\"b\":false}," + "{\"c\":6,\"d\":true}]");
+    assertEquals(factory.json(), "[{\"a\":5,\"b\":false}," + "{\"c\":6,\"d\":true}]");
   }
 
   @Test
@@ -456,7 +458,7 @@ public final class JsonWriterTest {
     writer.value(true);
     writer.endArray();
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":[5,false]," + "\"b\":[6,true]}");
+    assertEquals(factory.json(), "{\"a\":[5,false]," + "\"b\":[6,true]}");
   }
 
   @Test
@@ -468,7 +470,7 @@ public final class JsonWriterTest {
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endArray();
     }
-    assertThat(factory.json()).isEqualTo(repeat("[", MAX_DEPTH) + repeat("]", MAX_DEPTH));
+    assertEquals(factory.json(), repeat("[", MAX_DEPTH) + repeat("]", MAX_DEPTH));
   }
 
   @Test
@@ -481,9 +483,11 @@ public final class JsonWriterTest {
       writer.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Nesting too deep at $" + repeat("[0]", MAX_DEPTH) + ": circular reference?"));
     }
   }
 
@@ -498,8 +502,7 @@ public final class JsonWriterTest {
     for (int i = 0; i < MAX_DEPTH; i++) {
       writer.endObject();
     }
-    assertThat(factory.json())
-        .isEqualTo(repeat("{\"a\":", MAX_DEPTH) + "true" + repeat("}", MAX_DEPTH));
+    assertEquals(factory.json(), repeat("{\"a\":", MAX_DEPTH) + "true" + repeat("}", MAX_DEPTH));
   }
 
   @Test
@@ -513,9 +516,11 @@ public final class JsonWriterTest {
       writer.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Nesting too deep at $" + repeat(".a", MAX_DEPTH) + ": circular reference?"));
     }
   }
 
@@ -530,7 +535,7 @@ public final class JsonWriterTest {
     writer.beginArray();
     writer.endArray();
     writer.close();
-    assertThat(factory.json()).isEqualTo("[][]");
+    assertEquals(factory.json(), "[][]");
   }
 
   @Test
@@ -628,7 +633,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(expected.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -641,7 +646,7 @@ public final class JsonWriterTest {
       writer.name("b");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(expected.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -653,7 +658,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(expected.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -666,7 +671,7 @@ public final class JsonWriterTest {
       writer.endObject();
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Dangling name: a");
+      assertTrue(expected.getMessage().contains("Dangling name: a"));
     }
   }
 
@@ -683,7 +688,7 @@ public final class JsonWriterTest {
     value.writeByte('"');
     value.close();
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":\"ffffffffffffffffsup-1\"}");
+    assertEquals(factory.json(), "{\"a\":\"ffffffffffffffffsup-1\"}");
   }
 
   @Test
@@ -694,14 +699,14 @@ public final class JsonWriterTest {
     writer.valueSink().writeByte('"').writeUtf8("sup").writeByte('"').close();
     writer.valueSink().writeUtf8("-1.0").close();
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"ffffffffffffffff\",\"sup\",-1.0]");
+    assertEquals(factory.json(), "[\"ffffffffffffffff\",\"sup\",-1.0]");
   }
 
   @Test
   public void streamingValueTopLevel() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.valueSink().writeUtf8("-1.0").close();
-    assertThat(factory.json()).isEqualTo("-1.0");
+    assertEquals(factory.json(), "-1.0");
   }
 
   @Test
@@ -714,7 +719,7 @@ public final class JsonWriterTest {
       writer.valueSink();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Sink from valueSink() was not closed");
+      assertTrue(e.getMessage().contains("Sink from valueSink() was not closed"));
     }
   }
 
@@ -729,7 +734,7 @@ public final class JsonWriterTest {
       writer.valueSink().writeByte('0').close();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(e.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -743,7 +748,7 @@ public final class JsonWriterTest {
       writer.value("b");
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Sink from valueSink() was not closed");
+      assertTrue(e.getMessage().contains("Sink from valueSink() was not closed"));
     }
   }
 
@@ -757,7 +762,7 @@ public final class JsonWriterTest {
       writer.name("b");
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(e.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -773,7 +778,7 @@ public final class JsonWriterTest {
       sink.writeByte('1');
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("closed");
+      assertTrue(e.getMessage().contains("closed"));
     }
   }
 
@@ -788,7 +793,7 @@ public final class JsonWriterTest {
     sink.close();
     writer.endObject();
     sink.close();
-    assertThat(factory.json()).isEqualTo("{\"a\":1.0}");
+    assertEquals(factory.json(), "{\"a\":1.0}");
     sink.close();
   }
 
@@ -813,20 +818,20 @@ public final class JsonWriterTest {
     writer.jsonValue(map);
     writer.endArray();
 
-    assertThat(factory.json())
-        .isEqualTo(
-            "["
-                + "null,"
-                + "1.1,"
-                + "1,"
-                + "1,"
-                + "true,"
-                + "\"one\","
-                + "[],"
-                + "[1,2,null,3],"
-                + "{},"
-                + "{\"one\":\"uno\",\"two\":null}"
-                + "]");
+    assertEquals(
+        factory.json(),
+        "["
+            + "null,"
+            + "1.1,"
+            + "1,"
+            + "1,"
+            + "true,"
+            + "\"one\","
+            + "[],"
+            + "[1,2,null,3],"
+            + "{},"
+            + "{\"one\":\"uno\",\"two\":null}"
+            + "]");
   }
 
   @Test
@@ -835,14 +840,14 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(new Object());
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Unsupported type: java.lang.Object");
+      assertTrue(e.getMessage().contains("Unsupported type: java.lang.Object"));
     }
 
     try {
       factory.newWriter().jsonValue('1');
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Unsupported type: java.lang.Character");
+      assertTrue(e.getMessage().contains("Unsupported type: java.lang.Character"));
     }
 
     Map<Integer, String> mapWrongKey = new LinkedHashMap<>();
@@ -851,9 +856,7 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(mapWrongKey);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("Map keys must be of type String: java.lang.Integer");
+      assertTrue(e.getMessage().contains("Map keys must be of type String: java.lang.Integer"));
     }
 
     Map<String, String> mapNullKey = new LinkedHashMap<>();
@@ -862,7 +865,7 @@ public final class JsonWriterTest {
       factory.newWriter().jsonValue(mapNullKey);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Map keys must be non-null");
+      assertTrue(e.getMessage().contains("Map keys must be non-null"));
     }
   }
 
@@ -874,7 +877,7 @@ public final class JsonWriterTest {
     writer.value("a");
     writer.value("b");
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":\"b\"}");
+    assertEquals(factory.json(), "{\"a\":\"b\"}");
   }
 
   @Test
@@ -885,7 +888,7 @@ public final class JsonWriterTest {
     writer.value(5.0);
     writer.value("b");
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"5.0\":\"b\"}");
+    assertEquals(factory.json(), "{\"5.0\":\"b\"}");
   }
 
   @Test
@@ -896,7 +899,7 @@ public final class JsonWriterTest {
     writer.value(5L);
     writer.value("b");
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"5\":\"b\"}");
+    assertEquals(factory.json(), "{\"5\":\"b\"}");
   }
 
   @Test
@@ -907,7 +910,7 @@ public final class JsonWriterTest {
     writer.value(BigInteger.ONE);
     writer.value("b");
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"1\":\"b\"}");
+    assertEquals(factory.json(), "{\"1\":\"b\"}");
   }
 
   @Test
@@ -919,9 +922,8 @@ public final class JsonWriterTest {
       writer.nullValue();
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("null cannot be used as a map key in JSON at path $.");
+      assertTrue(
+          expected.getMessage().contains("null cannot be used as a map key in JSON at path $."));
     }
   }
 
@@ -934,9 +936,8 @@ public final class JsonWriterTest {
       writer.value(true);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Boolean cannot be used as a map key in JSON at path $.");
+      assertTrue(
+          expected.getMessage().contains("Boolean cannot be used as a map key in JSON at path $."));
     }
   }
 
@@ -949,7 +950,7 @@ public final class JsonWriterTest {
       writer.name("a");
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(expected.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -959,15 +960,15 @@ public final class JsonWriterTest {
     writer.beginObject();
     writer.promoteValueToName();
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{}");
+    assertEquals(factory.json(), "{}");
   }
 
   @SuppressWarnings("rawtypes")
   @Test
   public void tags() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.tag(Integer.class)).isNull();
-    assertThat(writer.tag(CharSequence.class)).isNull();
+    assertNull(writer.tag(Integer.class));
+    assertNull(writer.tag(CharSequence.class));
 
     writer.setTag(Integer.class, 1);
     writer.setTag(CharSequence.class, "Foo");
@@ -975,17 +976,16 @@ public final class JsonWriterTest {
       writer.setTag((Class) CharSequence.class, 1);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Tag value must be of type java.lang.CharSequence");
+      assertTrue(
+          expected.getMessage().contains("Tag value must be of type java.lang.CharSequence"));
     }
 
     Object intTag = writer.tag(Integer.class);
-    assertThat(intTag).isEqualTo(1);
-    assertThat(intTag).isInstanceOf(Integer.class);
+    assertEquals(intTag, 1);
+    assertTrue(intTag instanceof Integer);
     Object charSequenceTag = writer.tag(CharSequence.class);
-    assertThat(charSequenceTag).isEqualTo("Foo");
-    assertThat(charSequenceTag).isInstanceOf(String.class);
-    assertThat(writer.tag(String.class)).isNull();
+    assertEquals(charSequenceTag, "Foo");
+    assertTrue(charSequenceTag instanceof String);
+    assertNull(writer.tag(String.class));
   }
 }

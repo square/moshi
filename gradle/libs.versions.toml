@@ -39,4 +39,3 @@ assertj = "org.assertj:assertj-core:3.11.1"
 junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "com.github.tschuchortdev:kotlin-compile-testing-ksp", version.ref ="kotlinCompileTesting" }
-truth = "com.google.truth:truth:1.1.3"

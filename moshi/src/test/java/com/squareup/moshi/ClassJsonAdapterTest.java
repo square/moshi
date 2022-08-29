@@ -15,9 +15,12 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
@@ -43,11 +46,11 @@ public final class ClassJsonAdapterTest {
     value.diameter = 13;
     value.extraCheese = true;
     String toJson = toJson(BasicPizza.class, value);
-    assertThat(toJson).isEqualTo("{\"diameter\":13,\"extraCheese\":true}");
+    assertEquals(toJson, "{\"diameter\":13,\"extraCheese\":true}");
 
     BasicPizza fromJson = fromJson(BasicPizza.class, "{\"diameter\":13,\"extraCheese\":true}");
-    assertThat(fromJson.diameter).isEqualTo(13);
-    assertThat(fromJson.extraCheese).isTrue();
+    assertEquals(fromJson.diameter, 13);
+    assertTrue(fromJson.extraCheese);
   }
 
   static class PrivateFieldsPizza {
@@ -59,11 +62,11 @@ public final class ClassJsonAdapterTest {
     PrivateFieldsPizza value = new PrivateFieldsPizza();
     value.secretIngredient = "vodka";
     String toJson = toJson(PrivateFieldsPizza.class, value);
-    assertThat(toJson).isEqualTo("{\"secretIngredient\":\"vodka\"}");
+    assertEquals(toJson, "{\"secretIngredient\":\"vodka\"}");
 
     PrivateFieldsPizza fromJson =
         fromJson(PrivateFieldsPizza.class, "{\"secretIngredient\":\"vodka\"}");
-    assertThat(fromJson.secretIngredient).isEqualTo("vodka");
+    assertEquals(fromJson.secretIngredient, "vodka");
   }
 
   static class BasePizza {
@@ -80,11 +83,11 @@ public final class ClassJsonAdapterTest {
     value.diameter = 13;
     value.chocolate = true;
     String toJson = toJson(DessertPizza.class, value);
-    assertThat(toJson).isEqualTo("{\"chocolate\":true,\"diameter\":13}");
+    assertEquals(toJson, "{\"chocolate\":true,\"diameter\":13}");
 
     DessertPizza fromJson = fromJson(DessertPizza.class, "{\"diameter\":13,\"chocolate\":true}");
-    assertThat(fromJson.diameter).isEqualTo(13);
-    assertThat(fromJson.chocolate).isTrue();
+    assertEquals(fromJson.diameter, 13);
+    assertTrue(fromJson.chocolate);
   }
 
   static class BaseAbcde {
@@ -107,15 +110,15 @@ public final class ClassJsonAdapterTest {
     value.d = 7;
     value.e = 8;
     String toJson = toJson(ExtendsBaseAbcde.class, value);
-    assertThat(toJson).isEqualTo("{\"a\":4,\"b\":5,\"c\":6,\"d\":7,\"e\":8}");
+    assertEquals(toJson, "{\"a\":4,\"b\":5,\"c\":6,\"d\":7,\"e\":8}");
 
     ExtendsBaseAbcde fromJson =
         fromJson(ExtendsBaseAbcde.class, "{\"a\":4,\"b\":5,\"c\":6,\"d\":7,\"e\":8}");
-    assertThat(fromJson.a).isEqualTo(4);
-    assertThat(fromJson.b).isEqualTo(5);
-    assertThat(fromJson.c).isEqualTo(6);
-    assertThat(fromJson.d).isEqualTo(7);
-    assertThat(fromJson.e).isEqualTo(8);
+    assertEquals(fromJson.a, 4);
+    assertEquals(fromJson.b, 5);
+    assertEquals(fromJson.c, 6);
+    assertEquals(fromJson.d, 7);
+    assertEquals(fromJson.e, 8);
   }
 
   static class StaticFields {
@@ -128,11 +131,11 @@ public final class ClassJsonAdapterTest {
     StaticFields value = new StaticFields();
     value.b = 12;
     String toJson = toJson(StaticFields.class, value);
-    assertThat(toJson).isEqualTo("{\"b\":12}");
+    assertEquals(toJson, "{\"b\":12}");
 
     StaticFields fromJson = fromJson(StaticFields.class, "{\"a\":13,\"b\":12}");
-    assertThat(StaticFields.a).isEqualTo(11); // Unchanged.
-    assertThat(fromJson.b).isEqualTo(12);
+    assertEquals(StaticFields.a, 11); // Unchanged.
+    assertEquals(fromJson.b, 12);
   }
 
   static class TransientFields {
@@ -146,11 +149,11 @@ public final class ClassJsonAdapterTest {
     value.a = 11;
     value.b = 12;
     String toJson = toJson(TransientFields.class, value);
-    assertThat(toJson).isEqualTo("{\"b\":12}");
+    assertEquals(toJson, "{\"b\":12}");
 
     TransientFields fromJson = fromJson(TransientFields.class, "{\"a\":13,\"b\":12}");
-    assertThat(fromJson.a).isEqualTo(0); // Not assigned.
-    assertThat(fromJson.b).isEqualTo(12);
+    assertEquals(fromJson.a, 0); // Not assigned.
+    assertEquals(fromJson.b, 12);
   }
 
   static class IgnoredFields {
@@ -166,11 +169,11 @@ public final class ClassJsonAdapterTest {
     value.a = 11;
     value.b = 12;
     String toJson = toJson(IgnoredFields.class, value);
-    assertThat(toJson).isEqualTo("{\"b\":12}");
+    assertEquals(toJson, "{\"b\":12}");
 
     IgnoredFields fromJson = fromJson(IgnoredFields.class, "{\"a\":13,\"b\":12}");
-    assertThat(fromJson.a).isEqualTo(0); // Not assigned.
-    assertThat(fromJson.b).isEqualTo(12);
+    assertEquals(fromJson.a, 0); // Not assigned.
+    assertEquals(fromJson.b, 12);
   }
 
   static class BaseA {
@@ -187,12 +190,13 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(ExtendsBaseA.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Conflicting fields:\n"
-                  + "    int com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA.a\n"
-                  + "    int com.squareup.moshi.ClassJsonAdapterTest$BaseA.a");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Conflicting fields:\n"
+                      + "    int com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA.a\n"
+                      + "    int com.squareup.moshi.ClassJsonAdapterTest$BaseA.a"));
     }
   }
 
@@ -209,12 +213,13 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(NameCollision.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Conflicting fields:\n"
-                  + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.foo\n"
-                  + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.bar");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Conflicting fields:\n"
+                      + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.foo\n"
+                      + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.bar"));
     }
   }
 
@@ -232,11 +237,11 @@ public final class ClassJsonAdapterTest {
     value.a = 11;
     ((TransientBaseA) value).a = 12;
     String toJson = toJson(ExtendsTransientBaseA.class, value);
-    assertThat(toJson).isEqualTo("{\"a\":11}");
+    assertEquals(toJson, "{\"a\":11}");
 
     ExtendsTransientBaseA fromJson = fromJson(ExtendsTransientBaseA.class, "{\"a\":11}");
-    assertThat(fromJson.a).isEqualTo(11);
-    assertThat(((TransientBaseA) fromJson).a).isEqualTo(0); // Not assigned.
+    assertEquals(fromJson.a, 11);
+    assertEquals(((TransientBaseA) fromJson).a, 0); // Not assigned.
   }
 
   static class NoArgConstructor {
@@ -251,8 +256,8 @@ public final class ClassJsonAdapterTest {
   @Test
   public void noArgConstructor() throws Exception {
     NoArgConstructor fromJson = fromJson(NoArgConstructor.class, "{\"b\":8}");
-    assertThat(fromJson.a).isEqualTo(5);
-    assertThat(fromJson.b).isEqualTo(8);
+    assertEquals(fromJson.a, 5);
+    assertEquals(fromJson.b, 8);
   }
 
   static class NoArgConstructorThrowsCheckedException {
@@ -267,7 +272,7 @@ public final class ClassJsonAdapterTest {
       fromJson(NoArgConstructorThrowsCheckedException.class, "{}");
       fail();
     } catch (RuntimeException expected) {
-      assertThat(expected.getCause()).hasMessageThat().isEqualTo("foo");
+      assertTrue(expected.getCause().getMessage().contains("foo"));
     }
   }
 
@@ -283,7 +288,7 @@ public final class ClassJsonAdapterTest {
       fromJson(NoArgConstructorThrowsUncheckedException.class, "{}");
       fail();
     } catch (UnsupportedOperationException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("foo");
+      assertTrue(expected.getMessage().contains("foo"));
     }
   }
 
@@ -296,8 +301,8 @@ public final class ClassJsonAdapterTest {
   public void noArgConstructorFieldDefaultsHonored() throws Exception {
     NoArgConstructorWithDefaultField fromJson =
         fromJson(NoArgConstructorWithDefaultField.class, "{\"b\":8}");
-    assertThat(fromJson.a).isEqualTo(5);
-    assertThat(fromJson.b).isEqualTo(8);
+    assertEquals(fromJson.a, 5);
+    assertEquals(fromJson.b, 8);
   }
 
   static class MagicConstructor {
@@ -311,7 +316,7 @@ public final class ClassJsonAdapterTest {
   @Test
   public void magicConstructor() throws Exception {
     MagicConstructor fromJson = fromJson(MagicConstructor.class, "{\"a\":8}");
-    assertThat(fromJson.a).isEqualTo(8);
+    assertEquals(fromJson.a, 8);
   }
 
   static class MagicConstructorWithDefaultField {
@@ -327,8 +332,8 @@ public final class ClassJsonAdapterTest {
   public void magicConstructorFieldDefaultsNotHonored() throws Exception {
     MagicConstructorWithDefaultField fromJson =
         fromJson(MagicConstructorWithDefaultField.class, "{\"b\":3}");
-    assertThat(fromJson.a).isEqualTo(0); // Surprising! No value is assigned.
-    assertThat(fromJson.b).isEqualTo(3);
+    assertEquals(fromJson.a, 0); // Surprising! No value is assigned.
+    assertEquals(fromJson.b, 3);
   }
 
   static class NullRootObject {
@@ -338,10 +343,10 @@ public final class ClassJsonAdapterTest {
   @Test
   public void nullRootObject() throws Exception {
     String toJson = toJson(PrivateFieldsPizza.class, null);
-    assertThat(toJson).isEqualTo("null");
+    assertEquals(toJson, "null");
 
     NullRootObject fromJson = fromJson(NullRootObject.class, "null");
-    assertThat(fromJson).isNull();
+    assertNull(fromJson);
   }
 
   static class NullFieldValue {
@@ -353,10 +358,10 @@ public final class ClassJsonAdapterTest {
     NullFieldValue value = new NullFieldValue();
     value.a = null;
     String toJson = toJson(NullFieldValue.class, value);
-    assertThat(toJson).isEqualTo("{\"a\":null}");
+    assertEquals(toJson, "{\"a\":null}");
 
     NullFieldValue fromJson = fromJson(NullFieldValue.class, "{\"a\":null}");
-    assertThat(fromJson.a).isNull();
+    assertNull(fromJson.a);
   }
 
   class NonStatic {}
@@ -367,11 +372,12 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(NonStatic.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Cannot serialize non-static nested class "
-                  + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Cannot serialize non-static nested class "
+                      + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic"));
     }
   }
 
@@ -388,9 +394,10 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(c.getClass(), NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Cannot serialize anonymous class " + c.getClass().getName());
+      assertTrue(
+          expected
+              .getMessage()
+              .contains("Cannot serialize anonymous class " + c.getClass().getName()));
     }
   }
 
@@ -401,10 +408,12 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(Local.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Cannot serialize local class " + "com.squareup.moshi.ClassJsonAdapterTest$1Local");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Cannot serialize local class "
+                      + "com.squareup.moshi.ClassJsonAdapterTest$1Local"));
     }
   }
 
@@ -412,7 +421,7 @@ public final class ClassJsonAdapterTest {
 
   @Test
   public void interfaceNotSupported() throws Exception {
-    assertThat(ClassJsonAdapter.Factory.create(Interface.class, NO_ANNOTATIONS, moshi)).isNull();
+    assertNull(ClassJsonAdapter.Factory.create(Interface.class, NO_ANNOTATIONS, moshi));
   }
 
   abstract static class Abstract {}
@@ -423,11 +432,12 @@ public final class ClassJsonAdapterTest {
       ClassJsonAdapter.Factory.create(Abstract.class, NO_ANNOTATIONS, moshi);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Cannot serialize abstract class "
-                  + "com.squareup.moshi.ClassJsonAdapterTest$Abstract");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "Cannot serialize abstract class "
+                      + "com.squareup.moshi.ClassJsonAdapterTest$Abstract"));
     }
   }
 
@@ -444,12 +454,12 @@ public final class ClassJsonAdapterTest {
     ExtendsPlatformClassWithPrivateField value = new ExtendsPlatformClassWithPrivateField();
     value.a = 4;
     String toJson = toJson(ExtendsPlatformClassWithPrivateField.class, value);
-    assertThat(toJson).isEqualTo("{\"a\":4}");
+    assertEquals(toJson, "{\"a\":4}");
 
     ExtendsPlatformClassWithPrivateField fromJson =
         fromJson(ExtendsPlatformClassWithPrivateField.class, "{\"a\":4,\"ID\":\"BAR\"}");
-    assertThat(fromJson.a).isEqualTo(4);
-    assertThat(fromJson.getID()).isEqualTo("FOO");
+    assertEquals(fromJson.a, 4);
+    assertEquals(fromJson.getID(), "FOO");
   }
 
   static class ExtendsPlatformClassWithProtectedField extends ByteArrayOutputStream {
@@ -467,13 +477,13 @@ public final class ClassJsonAdapterTest {
     value.write(5);
     value.write(6);
     String toJson = toJson(ExtendsPlatformClassWithProtectedField.class, value);
-    assertThat(toJson).isEqualTo("{\"a\":4,\"buf\":[5,6],\"count\":2}");
+    assertEquals(toJson, "{\"a\":4,\"buf\":[5,6],\"count\":2}");
 
     ExtendsPlatformClassWithProtectedField fromJson =
         fromJson(
             ExtendsPlatformClassWithProtectedField.class, "{\"a\":4,\"buf\":[5,6],\"count\":2}");
-    assertThat(fromJson.a).isEqualTo(4);
-    assertThat(fromJson.toByteArray()).asList().containsExactly((byte) 5, (byte) 6).inOrder();
+    assertEquals(4, fromJson.a);
+    assertArrayEquals(fromJson.toByteArray(), new byte[] {(byte) 5, (byte) 6});
   }
 
   static class NamedFields {
@@ -495,13 +505,13 @@ public final class ClassJsonAdapterTest {
     value.zipCode = "94043";
 
     String toJson = toJson(NamedFields.class, value);
-    assertThat(toJson)
-        .isEqualTo(
+    assertTrue(
+        toJson.contains(
             "{"
                 + "\"#\":[\"8005553333\",\"8005554444\"],"
                 + "\"@\":\"cash@square.com\","
                 + "\"zip code\":\"94043\""
-                + "}");
+                + "}"));
 
     NamedFields fromJson =
         fromJson(
@@ -511,9 +521,9 @@ public final class ClassJsonAdapterTest {
                 + "\"@\":\"cash@square.com\","
                 + "\"zip code\":\"94043\""
                 + "}");
-    assertThat(fromJson.phoneNumbers).isEqualTo(Arrays.asList("8005553333", "8005554444"));
-    assertThat(fromJson.emailAddress).isEqualTo("cash@square.com");
-    assertThat(fromJson.zipCode).isEqualTo("94043");
+    assertEquals(fromJson.phoneNumbers, Arrays.asList("8005553333", "8005554444"));
+    assertEquals(fromJson.emailAddress, "cash@square.com");
+    assertEquals(fromJson.zipCode, "94043");
   }
 
   static final class Box<T> {
@@ -534,8 +544,8 @@ public final class ClassJsonAdapterTest {
                     ClassJsonAdapterTest.class, Box.class, Integer.class),
                 NO_ANNOTATIONS,
                 moshi);
-    assertThat(adapter.fromJson("{\"data\":5}").data).isEqualTo(5);
-    assertThat(adapter.toJson(new Box<>(5))).isEqualTo("{\"data\":5}");
+    assertEquals(5, adapter.fromJson("{\"data\":5}").data.intValue());
+    assertEquals(adapter.toJson(new Box<>(5)), "{\"data\":5}");
   }
 
   private <T> String toJson(Class<T> type, T value) throws IOException {
@@ -550,9 +560,9 @@ public final class ClassJsonAdapterTest {
     jsonWriter.beginArray();
     jsonAdapter.toJson(jsonWriter, value);
     jsonWriter.endArray();
-    assertThat(buffer.readByte()).isEqualTo((byte) '[');
+    assertEquals(buffer.readByte(), (byte) '[');
     String json = buffer.readUtf8(buffer.size() - 1);
-    assertThat(buffer.readByte()).isEqualTo((byte) ']');
+    assertEquals(buffer.readByte(), (byte) ']');
     return json;
   }
 

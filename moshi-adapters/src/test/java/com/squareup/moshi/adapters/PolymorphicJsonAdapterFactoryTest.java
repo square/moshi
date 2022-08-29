@@ -15,7 +15,9 @@
  */
 package com.squareup.moshi.adapters;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.JsonAdapter;
@@ -43,10 +45,11 @@ public final class PolymorphicJsonAdapterFactoryTest {
             .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
-    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
-        .isEqualTo(new Success("Okay!"));
-    assertThat(adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"))
-        .isEqualTo(new Error(Collections.<String, Object>singletonMap("order", 66d)));
+    assertEquals(
+        adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"), new Success("Okay!"));
+    assertEquals(
+        adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"),
+        new Error(Collections.<String, Object>singletonMap("order", 66d)));
   }
 
   @Test
@@ -60,10 +63,11 @@ public final class PolymorphicJsonAdapterFactoryTest {
             .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
-    assertThat(adapter.toJson(new Success("Okay!")))
-        .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
-    assertThat(adapter.toJson(new Error(Collections.<String, Object>singletonMap("order", 66))))
-        .isEqualTo("{\"type\":\"error\",\"error_logs\":{\"order\":66}}");
+    assertEquals(
+        adapter.toJson(new Success("Okay!")), "{\"type\":\"success\",\"value\":\"Okay!\"}");
+    assertEquals(
+        adapter.toJson(new Error(Collections.singletonMap("order", 66))),
+        "{\"type\":\"error\",\"error_logs\":{\"order\":66}}");
   }
 
   @Test
@@ -83,13 +87,12 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Expected one of [success, error] for key 'type' but found"
-                  + " 'data'. Register a subtype for this label.");
+      assertEquals(
+          "Expected one of [success, error] for key 'type' but found"
+              + " 'data'. Register a subtype for this label.",
+          expected.getMessage());
     }
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
+    assertEquals(reader.peek(), JsonReader.Token.BEGIN_OBJECT);
   }
 
   @Test
@@ -106,7 +109,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
-    assertThat(message).isSameInstanceAs(fallbackError);
+    assertEquals(message.getClass(), fallbackError.getClass());
+    assertEquals(message.getClass().getName(), fallbackError.getClass().getName());
   }
 
   @Test
@@ -122,7 +126,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     Message message = adapter.fromJson("{\"type\":\"data\",\"value\":\"Okay!\"}");
-    assertThat(message).isNull();
+    assertNull(message);
   }
 
   @Test
@@ -138,10 +142,10 @@ public final class PolymorphicJsonAdapterFactoryTest {
                           @Override
                           public Object fromJson(JsonReader reader) throws IOException {
                             reader.beginObject();
-                            assertThat(reader.nextName()).isEqualTo("type");
-                            assertThat(reader.nextString()).isEqualTo("data");
-                            assertThat(reader.nextName()).isEqualTo("value");
-                            assertThat(reader.nextString()).isEqualTo("Okay!");
+                            assertEquals(reader.nextName(), "type");
+                            assertEquals(reader.nextString(), "data");
+                            assertEquals(reader.nextName(), "value");
+                            assertEquals(reader.nextString(), "Okay!");
                             reader.endObject();
                             return new EmptyMessage();
                           }
@@ -158,8 +162,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
         JsonReader.of(new Buffer().writeUtf8("{\"type\":\"data\",\"value\":\"Okay!\"}"));
 
     Message message = adapter.fromJson(reader);
-    assertThat(message).isInstanceOf(EmptyMessage.class);
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertTrue(message instanceof EmptyMessage);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -176,15 +180,14 @@ public final class PolymorphicJsonAdapterFactoryTest {
     try {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Expected one of [class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
-                  + " EmptyMessage, a class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
-                  + " this subtype.");
+      assertEquals(
+          "Expected one of [class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
+              + " EmptyMessage, a class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
+              + " this subtype.",
+          expected.getMessage());
     }
   }
 
@@ -204,15 +207,14 @@ public final class PolymorphicJsonAdapterFactoryTest {
     try {
       adapter.toJson(new EmptyMessage());
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Expected one of [class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
-                  + " EmptyMessage, a class"
-                  + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
-                  + " this subtype.");
+      assertEquals(
+          "Expected one of [class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Success, class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$Error] but found"
+              + " EmptyMessage, a class"
+              + " com.squareup.moshi.adapters.PolymorphicJsonAdapterFactoryTest$EmptyMessage. Register"
+              + " this subtype.",
+          expected.getMessage());
     }
   }
 
@@ -241,7 +243,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     String json = adapter.toJson(new EmptyMessage());
-    assertThat(json).isEqualTo("{\"type\":\"injected by fallbackJsonAdapter\"}");
+    assertEquals(json, "{\"type\":\"injected by fallbackJsonAdapter\"}");
   }
 
   @Test
@@ -259,9 +261,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson("{\"type\":{},\"value\":\"Okay!\"}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Expected a string but was BEGIN_OBJECT at path $.type");
+      assertEquals("Expected a string but was BEGIN_OBJECT at path $.type", expected.getMessage());
     }
   }
 
@@ -281,12 +281,10 @@ public final class PolymorphicJsonAdapterFactoryTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Expected BEGIN_OBJECT but was STRING at path $");
+      assertEquals("Expected BEGIN_OBJECT but was STRING at path $", expected.getMessage());
     }
-    assertThat(reader.nextString()).isEqualTo("Failure");
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.nextString(), "Failure");
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -302,14 +300,14 @@ public final class PolymorphicJsonAdapterFactoryTest {
 
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
-    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
-        .isEqualTo(new Success("Okay!"));
-    assertThat(adapter.fromJson("{\"type\":\"data\",\"value\":\"Data!\"}"))
-        .isEqualTo(new Success("Data!"));
-    assertThat(adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"))
-        .isEqualTo(new Error(Collections.<String, Object>singletonMap("order", 66d)));
-    assertThat(adapter.toJson(new Success("Data!")))
-        .isEqualTo("{\"type\":\"success\",\"value\":\"Data!\"}");
+    assertEquals(
+        adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"), new Success("Okay!"));
+    assertEquals(adapter.fromJson("{\"type\":\"data\",\"value\":\"Data!\"}"), new Success("Data!"));
+    assertEquals(
+        adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"),
+        new Error(Collections.<String, Object>singletonMap("order", 66d)));
+    assertEquals(
+        adapter.toJson(new Success("Data!")), "{\"type\":\"success\",\"value\":\"Data!\"}");
   }
 
   @Test
@@ -320,7 +318,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
       factory.withSubtype(Error.class, "data");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Labels must be unique.");
+      assertEquals("Labels must be unique.", expected.getMessage());
     }
   }
 
@@ -336,8 +334,8 @@ public final class PolymorphicJsonAdapterFactoryTest {
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("null"));
-    assertThat(adapter.fromJson(reader)).isNull();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertNull(adapter.fromJson(reader));
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   /**
@@ -354,12 +352,13 @@ public final class PolymorphicJsonAdapterFactoryTest {
             .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class);
 
-    assertThat(adapter.toJson(new MessageWithUnportableTypes(9007199254740993L)))
-        .isEqualTo("{\"type\":\"unportable\",\"long_value\":9007199254740993}");
+    assertEquals(
+        adapter.toJson(new MessageWithUnportableTypes(9007199254740993L)),
+        "{\"type\":\"unportable\",\"long_value\":9007199254740993}");
     MessageWithUnportableTypes decoded =
         (MessageWithUnportableTypes)
             adapter.fromJson("{\"type\":\"unportable\",\"long_value\":9007199254740993}");
-    assertThat(decoded.long_value).isEqualTo(9007199254740993L);
+    assertEquals(decoded.long_value, 9007199254740993L);
   }
 
   @Test
@@ -374,7 +373,7 @@ public final class PolymorphicJsonAdapterFactoryTest {
 
     MessageWithType decoded =
         (MessageWithType) adapter.fromJson("{\"value\":\"Okay!\",\"type\":\"success\"}");
-    assertThat(decoded.value).isEqualTo("Okay!");
+    assertEquals(decoded.value, "Okay!");
   }
 
   interface Message {}

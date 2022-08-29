@@ -15,8 +15,9 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -33,11 +34,11 @@ public final class JsonQualifiersTest {
     StringAndFooString v1 = new StringAndFooString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobar\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobar\"}");
 
     StringAndFooString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobar\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   static class BuiltInTypesJsonAdapter {
@@ -62,11 +63,11 @@ public final class JsonQualifiersTest {
     StringAndFooString v1 = new StringAndFooString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobar\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobar\"}");
 
     StringAndFooString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobar\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   static class ReaderWriterJsonAdapter {
@@ -113,11 +114,11 @@ public final class JsonQualifiersTest {
     StringAndFooBazString v1 = new StringAndFooBazString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
 
     StringAndFooBazString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   static class BuiltInTypesWithMultipleAnnotationsJsonAdapter {
@@ -145,11 +146,11 @@ public final class JsonQualifiersTest {
     StringAndFooBazString v1 = new StringAndFooBazString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
 
     StringAndFooBazString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   static class ReaderWriterWithMultipleAnnotationsJsonAdapter {
@@ -182,11 +183,11 @@ public final class JsonQualifiersTest {
     StringAndFooBazString v1 = new StringAndFooBazString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
 
     StringAndFooBazString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   static class BuiltInTypesDelegatingJsonAdapter {
@@ -217,11 +218,11 @@ public final class JsonQualifiersTest {
     StringAndFooBazString v1 = new StringAndFooBazString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
 
     StringAndFooBazString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobarbaz\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   @Test
@@ -247,11 +248,11 @@ public final class JsonQualifiersTest {
     StringAndFooString v1 = new StringAndFooString();
     v1.a = "aa";
     v1.b = "bar";
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":\"aa\",\"b\":\"foobar\"}");
+    assertEquals(adapter.toJson(v1), "{\"a\":\"aa\",\"b\":\"foobar\"}");
 
     StringAndFooString v2 = adapter.fromJson("{\"a\":\"aa\",\"b\":\"foobar\"}");
-    assertThat(v2.a).isEqualTo("aa");
-    assertThat(v2.b).isEqualTo("bar");
+    assertEquals(v2.a, "aa");
+    assertEquals(v2.b, "bar");
   }
 
   @Test
@@ -272,11 +273,11 @@ public final class JsonQualifiersTest {
     DateAndMillisDate v1 = new DateAndMillisDate();
     v1.a = new Date(5);
     v1.b = new Date(7);
-    assertThat(adapter.toJson(v1)).isEqualTo("{\"a\":5,\"b\":7}");
+    assertEquals(adapter.toJson(v1), "{\"a\":5,\"b\":7}");
 
     DateAndMillisDate v2 = adapter.fromJson("{\"a\":5,\"b\":7}");
-    assertThat(v2.a).isEqualTo(new Date(5));
-    assertThat(v2.b).isEqualTo(new Date(7));
+    assertEquals(v2.a, new Date(5));
+    assertEquals(v2.b, new Date(7));
   }
 
   /** Despite the fact that these methods are annotated, they match all dates. */
@@ -321,21 +322,21 @@ public final class JsonQualifiersTest {
       new Moshi.Builder().add(Date.class, Millis.class, jsonAdapter);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "interface com.squareup.moshi.JsonQualifiersTest$Millis "
-                  + "does not have @JsonQualifier");
+
+      assertEquals(
+          "interface com.squareup.moshi.JsonQualifiersTest$Millis "
+              + "does not have @JsonQualifier",
+          expected.getMessage());
     }
   }
 
   @Test
-  public void annotationsConflict() throws Exception {
+  public void annotationsConflict() {
     try {
       new Moshi.Builder().add(new AnnotationsConflictJsonAdapter());
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected).hasMessageThat().contains("Conflicting @ToJson methods");
+      assertTrue(expected.getMessage().contains("Conflicting @ToJson methods"));
     }
   }
 
@@ -360,25 +361,24 @@ public final class JsonQualifiersTest {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "No @FromJson adapter for class java.lang.String annotated "
-                  + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-                  + "\nfor class java.lang.String b"
-                  + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
-      assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No @FromJson adapter for class java.lang.String "
-                  + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected.getCause()).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause().getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No next JsonAdapter for class "
-                  + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+      assertEquals(
+          "No @FromJson adapter for class java.lang.String annotated "
+              + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+              + "\nfor class java.lang.String b"
+              + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString",
+          expected.getMessage());
+
+      assertTrue(expected.getCause() instanceof IllegalArgumentException);
+      assertEquals(
+          "No @FromJson adapter for class java.lang.String "
+              + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]",
+          expected.getCause().getMessage());
+
+      assertTrue(expected.getCause().getCause() instanceof IllegalArgumentException);
+      assertEquals(
+          "No next JsonAdapter for class "
+              + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]",
+          expected.getCause().getCause().getMessage());
     }
   }
 
@@ -398,25 +398,25 @@ public final class JsonQualifiersTest {
       moshi.adapter(StringAndFooString.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "No @ToJson adapter for class java.lang.String annotated "
-                  + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
-                  + "\nfor class java.lang.String b"
-                  + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString");
-      assertThat(expected).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No @ToJson adapter for class java.lang.String "
-                  + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
-      assertThat(expected.getCause()).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(expected.getCause().getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No next JsonAdapter for class "
-                  + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]");
+
+      assertEquals(
+          "No @ToJson adapter for class java.lang.String annotated "
+              + "[@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]"
+              + "\nfor class java.lang.String b"
+              + "\nfor class com.squareup.moshi.JsonQualifiersTest$StringAndFooString",
+          expected.getMessage());
+
+      assertTrue(expected.getCause() instanceof IllegalArgumentException);
+      assertEquals(
+          "No @ToJson adapter for class java.lang.String "
+              + "annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]",
+          expected.getCause().getMessage());
+
+      assertTrue(expected.getCause().getCause() instanceof IllegalArgumentException);
+      assertEquals(
+          "No next JsonAdapter for class "
+              + "java.lang.String annotated [@com.squareup.moshi.JsonQualifiersTest$FooPrefix()]",
+          expected.getCause().getCause().getMessage());
     }
   }
 

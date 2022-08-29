@@ -15,7 +15,8 @@
  */
 package com.squareup.moshi.adapters;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.Json;
@@ -29,15 +30,15 @@ public final class EnumJsonAdapterTest {
   @Test
   public void toAndFromJson() throws Exception {
     EnumJsonAdapter<Roshambo> adapter = EnumJsonAdapter.create(Roshambo.class);
-    assertThat(adapter.fromJson("\"ROCK\"")).isEqualTo(Roshambo.ROCK);
-    assertThat(adapter.toJson(Roshambo.PAPER)).isEqualTo("\"PAPER\"");
+    assertEquals(adapter.fromJson("\"ROCK\""), Roshambo.ROCK);
+    assertEquals(adapter.toJson(Roshambo.PAPER), "\"PAPER\"");
   }
 
   @Test
   public void withJsonName() throws Exception {
     EnumJsonAdapter<Roshambo> adapter = EnumJsonAdapter.create(Roshambo.class);
-    assertThat(adapter.fromJson("\"scr\"")).isEqualTo(Roshambo.SCISSORS);
-    assertThat(adapter.toJson(Roshambo.SCISSORS)).isEqualTo("\"scr\"");
+    assertEquals(adapter.fromJson("\"scr\""), Roshambo.SCISSORS);
+    assertEquals(adapter.toJson(Roshambo.SCISSORS), "\"scr\"");
   }
 
   @Test
@@ -48,11 +49,10 @@ public final class EnumJsonAdapterTest {
       adapter.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
+      assertEquals(
+          "Expected one of [ROCK, PAPER, scr] but was SPOCK at path $", expected.getMessage());
     }
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -60,8 +60,8 @@ public final class EnumJsonAdapterTest {
     EnumJsonAdapter<Roshambo> adapter =
         EnumJsonAdapter.create(Roshambo.class).withUnknownFallback(Roshambo.ROCK);
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
-    assertThat(adapter.fromJson(reader)).isEqualTo(Roshambo.ROCK);
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(adapter.fromJson(reader), Roshambo.ROCK);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -69,8 +69,8 @@ public final class EnumJsonAdapterTest {
     EnumJsonAdapter<Roshambo> adapter =
         EnumJsonAdapter.create(Roshambo.class).withUnknownFallback(null);
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
-    assertThat(adapter.fromJson(reader)).isNull();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertNull(adapter.fromJson(reader));
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   enum Roshambo {

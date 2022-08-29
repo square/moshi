@@ -17,10 +17,10 @@
 
 package com.squareup.moshi.kotlin.codegen
 
-import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ComplexGenericsInheritanceTest {
@@ -39,8 +39,8 @@ class ComplexGenericsInheritanceTest {
     val testInstance = PersonResponse().apply {
       data = Person("foo")
     }
-    assertThat(instance).isEqualTo(testInstance)
-    assertThat(adapter.toJson(instance)).isEqualTo(json)
+    assertEquals(instance, testInstance)
+    assertEquals(adapter.toJson(instance), json)
   }
 
   @Test
@@ -55,8 +55,8 @@ class ComplexGenericsInheritanceTest {
     val testInstance = NestedPersonResponse().apply {
       data = Person("foo")
     }
-    assertThat(instance).isEqualTo(testInstance)
-    assertThat(adapter.toJson(instance)).isEqualTo(json)
+    assertEquals(instance, testInstance)
+    assertEquals(adapter.toJson(instance), json)
   }
 
   @Test
@@ -71,8 +71,8 @@ class ComplexGenericsInheritanceTest {
     val testInstance = UntypedNestedPersonResponse<Person>().apply {
       data = Person("foo")
     }
-    assertThat(instance).isEqualTo(testInstance)
-    assertThat(adapter.toJson(instance)).isEqualTo(json)
+    assertEquals(instance, testInstance)
+    assertEquals(adapter.toJson(instance), json)
   }
 
   @Test
@@ -97,8 +97,8 @@ class ComplexGenericsInheritanceTest {
       layer2 = "layer2"
       layer1 = "layer1"
     }
-    assertThat(instance).isEqualTo(testInstance)
-    assertThat(adapter.toJson(testInstance)).isEqualTo(json)
+    assertEquals(instance, testInstance)
+    assertEquals(adapter.toJson(testInstance), json)
   }
 }
 

@@ -15,8 +15,9 @@
  */
 package com.squareup.moshi.records;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.FromJson;
@@ -73,7 +74,7 @@ public final class RecordsTest {
             new Map[] {Map.of("Hello", "value")});
     var json = adapter.toJson(instance);
     var deserialized = adapter.fromJson(json);
-    assertThat(deserialized).isEqualTo(instance);
+    assertEquals(deserialized, instance);
   }
 
   public record SmokeTestType(
@@ -147,7 +148,7 @@ public final class RecordsTest {
         moshi.<GenericRecord<String>>adapter(
             Types.newParameterizedTypeWithOwner(
                 RecordsTest.class, GenericRecord.class, String.class));
-    assertThat(adapter.fromJson("{\"value\":\"Okay!\"}")).isEqualTo(new GenericRecord<>("Okay!"));
+    assertEquals(adapter.fromJson("{\"value\":\"Okay!\"}"), new GenericRecord<>("Okay!"));
   }
 
   public record GenericRecord<T>(T value) {}
@@ -158,7 +159,7 @@ public final class RecordsTest {
         moshi.<GenericBoundedRecord<Integer>>adapter(
             Types.newParameterizedTypeWithOwner(
                 RecordsTest.class, GenericBoundedRecord.class, Integer.class));
-    assertThat(adapter.fromJson("{\"value\":4}")).isEqualTo(new GenericBoundedRecord<>(4));
+    assertEquals(adapter.fromJson("{\"value\":4}"), new GenericBoundedRecord<>(4));
   }
 
   @Test
@@ -168,8 +169,8 @@ public final class RecordsTest {
             new IndirectGenerics<>(1L, List.of(2L, 3L, 4L), Map.of("five", 5L)));
     var jsonAdapter = moshi.adapter(HasIndirectGenerics.class);
     var json = "{\"value\":{\"single\":1,\"list\":[2,3,4],\"map\":{\"five\":5}}}";
-    assertThat(jsonAdapter.toJson(value)).isEqualTo(json);
-    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value);
+    assertEquals(jsonAdapter.toJson(value), json);
+    assertEquals(jsonAdapter.fromJson(json), value);
   }
 
   public record IndirectGenerics<T>(T single, List<T> list, Map<String, T> map) {}
@@ -179,8 +180,7 @@ public final class RecordsTest {
   @Test
   public void qualifiedValues() throws IOException {
     var adapter = moshi.newBuilder().add(new ColorAdapter()).build().adapter(QualifiedValues.class);
-    assertThat(adapter.fromJson("{\"value\":\"#ff0000\"}"))
-        .isEqualTo(new QualifiedValues(16711680));
+    assertEquals(adapter.fromJson("{\"value\":\"#ff0000\"}"), new QualifiedValues(16711680));
   }
 
   public record QualifiedValues(@HexColor int value) {}
@@ -208,7 +208,7 @@ public final class RecordsTest {
   @Test
   public void jsonName() throws IOException {
     var adapter = moshi.adapter(JsonName.class);
-    assertThat(adapter.fromJson("{\"actualValue\":3}")).isEqualTo(new JsonName(3));
+    assertEquals(adapter.fromJson("{\"actualValue\":3}"), new JsonName(3));
   }
 
   public record JsonName(@Json(name = "actualValue") int value) {}
@@ -238,13 +238,13 @@ public final class RecordsTest {
       adapter.fromJson(json);
       fail();
     } catch (IOException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+      assertTrue(expected.getMessage().contains("boom!"));
     }
     try {
       adapter.toJson(new Buffer(), new BooleanRecord(true));
       fail();
     } catch (IOException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("boom!");
+      assertTrue(expected.getMessage().contains("boom!"));
     }
   }
 
@@ -257,7 +257,7 @@ public final class RecordsTest {
       adapter.fromJson("{\"s\":\"\"}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'i' missing at $");
+      assertTrue(expected.getMessage().contains("Required value 'i' missing at $"));
     }
   }
 
@@ -268,7 +268,7 @@ public final class RecordsTest {
       adapter.fromJson("{\"s\":\"\",\"i\":null}");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected an int but was NULL at path $.i");
+      assertTrue(expected.getMessage().contains("Expected an int but was NULL at path $.i"));
     }
   }
 
@@ -277,8 +277,8 @@ public final class RecordsTest {
     var adapter = moshi.adapter(AbsentValues.class);
     String json = "{\"i\":5}";
     AbsentValues value = new AbsentValues(null, 5);
-    assertThat(adapter.fromJson(json)).isEqualTo(value);
-    assertThat(adapter.toJson(value)).isEqualTo(json);
+    assertEquals(adapter.fromJson(json), value);
+    assertEquals(adapter.toJson(value), json);
   }
 
   @Test
@@ -286,8 +286,8 @@ public final class RecordsTest {
     var adapter = moshi.adapter(AbsentValues.class);
     String json = "{\"i\":5,\"s\":null}";
     AbsentValues value = new AbsentValues(null, 5);
-    assertThat(adapter.fromJson(json)).isEqualTo(value);
-    assertThat(adapter.toJson(value)).isEqualTo("{\"i\":5}");
+    assertEquals(adapter.fromJson(json), value);
+    assertEquals(adapter.toJson(value), "{\"i\":5}");
   }
 
   public record AbsentValues(String s, int i) {}

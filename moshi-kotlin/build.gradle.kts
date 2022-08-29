@@ -15,7 +15,6 @@ dependencies {
 
   testImplementation(kotlin("test"))
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
 }
 
 tasks.withType<Jar>().configureEach {

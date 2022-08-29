@@ -15,8 +15,8 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
 
 import com.squareup.moshi.internal.Util;
 import java.io.IOException;
@@ -56,19 +56,19 @@ public final class CircularAdaptersTest {
         new Team(
             "Alice",
             new Project("King", new Team("Charlie", new Project("Delivery", (Team[]) null))));
-    assertThat(teamAdapter.toJson(team))
-        .isEqualTo(
-            "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
-                + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
+    assertEquals(
+        teamAdapter.toJson(team),
+        "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
+            + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
 
     Team fromJson =
         teamAdapter.fromJson(
             "{\"lead\":\"Alice\",\"projects\":[{\"name\":"
                 + "\"King\",\"teams\":[{\"lead\":\"Charlie\",\"projects\":[{\"name\":\"Delivery\"}]}]}]}");
-    assertThat(fromJson.lead).isEqualTo("Alice");
-    assertThat(fromJson.projects[0].name).isEqualTo("King");
-    assertThat(fromJson.projects[0].teams[0].lead).isEqualTo("Charlie");
-    assertThat(fromJson.projects[0].teams[0].projects[0].name).isEqualTo("Delivery");
+    assertEquals(fromJson.lead, "Alice");
+    assertEquals(fromJson.projects[0].name, "King");
+    assertEquals(fromJson.projects[0].teams[0].lead, "Charlie");
+    assertEquals(fromJson.projects[0].teams[0].projects[0].name, "Delivery");
   }
 
   @Retention(RUNTIME)
@@ -146,13 +146,13 @@ public final class CircularAdaptersTest {
             "C",
             new Node("A", null, new Node("B", null, null)),
             new Node("D", null, new Node("E", null, null)));
-    assertThat(nodeAdapter.toJson(tree))
-        .isEqualTo(
-            "{"
-                + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
-                + "\"name\":\"C\","
-                + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
-                + "}");
+    assertEquals(
+        nodeAdapter.toJson(tree),
+        "{"
+            + "\"left\":{\"name\":\"L A\",\"right\":{\"name\":\"R B\"}},"
+            + "\"name\":\"C\","
+            + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
+            + "}");
 
     Node fromJson =
         nodeAdapter.fromJson(
@@ -161,10 +161,10 @@ public final class CircularAdaptersTest {
                 + "\"name\":\"C\","
                 + "\"right\":{\"name\":\"R D\",\"right\":{\"name\":\"R E\"}}"
                 + "}");
-    assertThat(fromJson.name).isEqualTo("C");
-    assertThat(fromJson.left.name).isEqualTo("A");
-    assertThat(fromJson.left.right.name).isEqualTo("B");
-    assertThat(fromJson.right.name).isEqualTo("D");
-    assertThat(fromJson.right.right.name).isEqualTo("E");
+    assertEquals(fromJson.name, "C");
+    assertEquals(fromJson.left.name, "A");
+    assertEquals(fromJson.left.right.name, "B");
+    assertEquals(fromJson.right.name, "D");
+    assertEquals(fromJson.right.right.name, "E");
   }
 }

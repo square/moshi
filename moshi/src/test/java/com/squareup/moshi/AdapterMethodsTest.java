@@ -15,8 +15,10 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.MoshiTest.Uppercase;
@@ -41,8 +43,8 @@ public final class AdapterMethodsTest {
   public void toAndFromJsonViaListOfIntegers() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new PointAsListOfIntegersJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
-    assertThat(pointAdapter.toJson(new Point(5, 8))).isEqualTo("[5,8]");
-    assertThat(pointAdapter.fromJson("[5,8]")).isEqualTo(new Point(5, 8));
+    assertEquals(pointAdapter.toJson(new Point(5, 8)), "[5,8]");
+    assertEquals(pointAdapter.fromJson("[5,8]"), new Point(5, 8));
   }
 
   static class PointAsListOfIntegersJsonAdapter {
@@ -62,8 +64,8 @@ public final class AdapterMethodsTest {
   public void toAndFromJsonWithWriterAndReader() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new PointWriterAndReaderJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
-    assertThat(pointAdapter.toJson(new Point(5, 8))).isEqualTo("[5,8]");
-    assertThat(pointAdapter.fromJson("[5,8]")).isEqualTo(new Point(5, 8));
+    assertEquals(pointAdapter.toJson(new Point(5, 8)), "[5,8]");
+    assertEquals(pointAdapter.fromJson("[5,8]"), new Point(5, 8));
   }
 
   static class PointWriterAndReaderJsonAdapter {
@@ -126,8 +128,8 @@ public final class AdapterMethodsTest {
     Moshi moshi = new Moshi.Builder().add(new PointJsonAdapterWithDelegate()).build();
     JsonAdapter<Point> adapter = moshi.adapter(Point.class);
     Point point = new Point(5, 8);
-    assertThat(adapter.toJson(point)).isEqualTo("[{\"x\":5,\"y\":8}]");
-    assertThat(adapter.fromJson("[{\"x\":5,\"y\":8}]")).isEqualTo(point);
+    assertEquals(adapter.toJson(point), "[{\"x\":5,\"y\":8}]");
+    assertEquals(adapter.fromJson("[{\"x\":5,\"y\":8}]"), point);
   }
 
   @Test
@@ -139,8 +141,8 @@ public final class AdapterMethodsTest {
             .build();
     JsonAdapter<Point> adapter = moshi.adapter(Point.class, WithParens.class);
     Point point = new Point(5, 8);
-    assertThat(adapter.toJson(point)).isEqualTo("[\"(5 8)\"]");
-    assertThat(adapter.fromJson("[\"(5 8)\"]")).isEqualTo(point);
+    assertEquals(adapter.toJson(point), "[\"(5 8)\"]");
+    assertEquals(adapter.fromJson("[\"(5 8)\"]"), point);
   }
 
   @Test
@@ -161,8 +163,8 @@ public final class AdapterMethodsTest {
                 })
             .build();
     JsonAdapter<String> adapter = moshi.adapter(String.class);
-    assertThat(adapter.toJson("pizza")).isEqualTo("\"|pizza|\"");
-    assertThat(adapter.fromJson("\"|pizza|\"")).isEqualTo("pizza");
+    assertEquals(adapter.toJson("pizza"), "\"|pizza|\"");
+    assertEquals(adapter.fromJson("\"|pizza|\""), "pizza");
   }
 
   @Test
@@ -186,16 +188,16 @@ public final class AdapterMethodsTest {
             .add(new UppercaseAdapterFactory())
             .build();
     JsonAdapter<String> adapter = moshi.adapter(String.class, Uppercase.class);
-    assertThat(adapter.toJson("pizza")).isEqualTo("\"|PIZZA|\"");
-    assertThat(adapter.fromJson("\"|pizza|\"")).isEqualTo("PIZZA");
+    assertEquals(adapter.toJson("pizza"), "\"|PIZZA|\"");
+    assertEquals(adapter.fromJson("\"|pizza|\""), "PIZZA");
   }
 
   @Test
   public void toJsonOnly() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new PointAsListOfIntegersToAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
-    assertThat(pointAdapter.toJson(new Point(5, 8))).isEqualTo("[5,8]");
-    assertThat(pointAdapter.fromJson("{\"x\":5,\"y\":8}")).isEqualTo(new Point(5, 8));
+    assertEquals(pointAdapter.toJson(new Point(5, 8)), "[5,8]");
+    assertEquals(pointAdapter.fromJson("{\"x\":5,\"y\":8}"), new Point(5, 8));
   }
 
   static class PointAsListOfIntegersToAdapter {
@@ -209,8 +211,8 @@ public final class AdapterMethodsTest {
   public void fromJsonOnly() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new PointAsListOfIntegersFromAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
-    assertThat(pointAdapter.toJson(new Point(5, 8))).isEqualTo("{\"x\":5,\"y\":8}");
-    assertThat(pointAdapter.fromJson("[5,8]")).isEqualTo(new Point(5, 8));
+    assertEquals(pointAdapter.toJson(new Point(5, 8)), "{\"x\":5,\"y\":8}");
+    assertEquals(pointAdapter.fromJson("[5,8]"), new Point(5, 8));
   }
 
   static class PointAsListOfIntegersFromAdapter {
@@ -225,8 +227,8 @@ public final class AdapterMethodsTest {
   public void multipleLayersOfAdapters() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new MultipleLayersJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class).lenient();
-    assertThat(pointAdapter.toJson(new Point(5, 8))).isEqualTo("\"5 8\"");
-    assertThat(pointAdapter.fromJson("\"5 8\"")).isEqualTo(new Point(5, 8));
+    assertEquals(pointAdapter.toJson(new Point(5, 8)), "\"5 8\"");
+    assertEquals(pointAdapter.fromJson("\"5 8\""), new Point(5, 8));
   }
 
   static class MultipleLayersJsonAdapter {
@@ -262,15 +264,15 @@ public final class AdapterMethodsTest {
   }
 
   @Test
-  public void conflictingToAdapters() throws Exception {
+  public void conflictingToAdapters() {
     Moshi.Builder builder = new Moshi.Builder();
     try {
       builder.add(new ConflictingsToJsonAdapter());
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).contains("Conflicting @ToJson methods:");
-      assertThat(expected.getMessage()).contains("pointToJson1");
-      assertThat(expected.getMessage()).contains("pointToJson2");
+      assertTrue(expected.getMessage().contains("Conflicting @ToJson methods:"));
+      assertTrue(expected.getMessage().contains("pointToJson1"));
+      assertTrue(expected.getMessage().contains("pointToJson2"));
     }
   }
 
@@ -293,9 +295,9 @@ public final class AdapterMethodsTest {
       builder.add(new ConflictingsFromJsonAdapter());
       fail();
     } catch (IllegalStateException expected) {
-      assertThat(expected.getMessage()).contains("Conflicting @FromJson methods:");
-      assertThat(expected.getMessage()).contains("pointFromJson1");
-      assertThat(expected.getMessage()).contains("pointFromJson2");
+      assertTrue(expected.getMessage().contains("Conflicting @FromJson methods:"));
+      assertTrue(expected.getMessage().contains("pointFromJson1"));
+      assertTrue(expected.getMessage().contains("pointFromJson2"));
     }
   }
 
@@ -318,11 +320,10 @@ public final class AdapterMethodsTest {
       builder.add(new EmptyJsonAdapter()).build();
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Expected at least one @ToJson or @FromJson method on "
-                  + "com.squareup.moshi.AdapterMethodsTest$EmptyJsonAdapter");
+      assertEquals(
+          "Expected at least one @ToJson or @FromJson method on "
+              + "com.squareup.moshi.AdapterMethodsTest$EmptyJsonAdapter",
+          expected.getMessage());
     }
   }
 
@@ -335,17 +336,16 @@ public final class AdapterMethodsTest {
       builder.add(new UnexpectedSignatureToJsonAdapter()).build();
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Unexpected signature for void "
-                  + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureToJsonAdapter.pointToJson"
-                  + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
-                  + "@ToJson method signatures may have one of the following structures:\n"
-                  + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
-                  + "    <any access modifier> void toJson(JsonWriter writer, T value,"
-                  + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
-                  + "    <any access modifier> R toJson(T value) throws <any>;\n");
+      assertEquals(
+          "Unexpected signature for void "
+              + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureToJsonAdapter.pointToJson"
+              + "(com.squareup.moshi.AdapterMethodsTest$Point).\n"
+              + "@ToJson method signatures may have one of the following structures:\n"
+              + "    <any access modifier> void toJson(JsonWriter writer, T value) throws <any>;\n"
+              + "    <any access modifier> void toJson(JsonWriter writer, T value,"
+              + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+              + "    <any access modifier> R toJson(T value) throws <any>;\n",
+          expected.getMessage());
     }
   }
 
@@ -361,17 +361,17 @@ public final class AdapterMethodsTest {
       builder.add(new UnexpectedSignatureFromJsonAdapter()).build();
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "Unexpected signature for void "
-                  + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
-                  + "(java.lang.String).\n"
-                  + "@FromJson method signatures may have one of the following structures:\n"
-                  + "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n"
-                  + "    <any access modifier> R fromJson(JsonReader jsonReader,"
-                  + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
-                  + "    <any access modifier> R fromJson(T value) throws <any>;\n");
+
+      assertEquals(
+          "Unexpected signature for void "
+              + "com.squareup.moshi.AdapterMethodsTest$UnexpectedSignatureFromJsonAdapter.pointFromJson"
+              + "(java.lang.String).\n"
+              + "@FromJson method signatures may have one of the following structures:\n"
+              + "    <any access modifier> R fromJson(JsonReader jsonReader) throws <any>;\n"
+              + "    <any access modifier> R fromJson(JsonReader jsonReader,"
+              + " JsonAdapter<any> delegate, <any more delegates>) throws <any>;\n"
+              + "    <any access modifier> R fromJson(T value) throws <any>;\n",
+          expected.getMessage());
     }
   }
 
@@ -389,8 +389,8 @@ public final class AdapterMethodsTest {
     Moshi moshi =
         new Moshi.Builder().add(new NotNullablePointAsListOfIntegersJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class).lenient();
-    assertThat(pointAdapter.toJson(null)).isEqualTo("null");
-    assertThat(pointAdapter.fromJson("null")).isNull();
+    assertEquals(pointAdapter.toJson(null), "null");
+    assertNull(pointAdapter.fromJson("null"));
   }
 
   static class NotNullablePointAsListOfIntegersJsonAdapter {
@@ -409,8 +409,8 @@ public final class AdapterMethodsTest {
   public void toAndFromNullNullable() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new NullablePointAsListOfIntegersJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class).lenient();
-    assertThat(pointAdapter.toJson(null)).isEqualTo("[0,0]");
-    assertThat(pointAdapter.fromJson("null")).isEqualTo(new Point(0, 0));
+    assertEquals(pointAdapter.toJson(null), "[0,0]");
+    assertEquals(pointAdapter.fromJson("null"), new Point(0, 0));
   }
 
   static class NullablePointAsListOfIntegersJsonAdapter {
@@ -434,8 +434,8 @@ public final class AdapterMethodsTest {
   public void toAndFromNullJsonWithWriterAndReader() throws Exception {
     Moshi moshi = new Moshi.Builder().add(new NullableIntToJsonAdapter()).build();
     JsonAdapter<Point> pointAdapter = moshi.adapter(Point.class);
-    assertThat(pointAdapter.fromJson("{\"x\":null,\"y\":3}")).isEqualTo(new Point(-1, 3));
-    assertThat(pointAdapter.toJson(new Point(-1, 3))).isEqualTo("{\"y\":3}");
+    assertEquals(pointAdapter.fromJson("{\"x\":null,\"y\":3}"), new Point(-1, 3));
+    assertEquals(pointAdapter.toJson(new Point(-1, 3)), "{\"y\":3}");
   }
 
   static class NullableIntToJsonAdapter {
@@ -466,14 +466,13 @@ public final class AdapterMethodsTest {
       arrayOfPointAdapter.toJson(new Point[] {null, null, new Point(0, 0)});
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected.getMessage()).isEqualTo("java.lang.Exception: pointToJson fail! at $[2]");
+      assertEquals(expected.getMessage(), "java.lang.Exception: pointToJson fail! at $[2]");
     }
     try {
       arrayOfPointAdapter.fromJson("[null,null,[0,0]]");
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected.getMessage())
-          .isEqualTo("java.lang.Exception: pointFromJson fail! at $[2]");
+      assertEquals("java.lang.Exception: pointFromJson fail! at $[2]", expected.getMessage());
     }
   }
 
@@ -506,17 +505,17 @@ public final class AdapterMethodsTest {
       toJsonMoshi.adapter(Shape.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo(
-              "No @FromJson adapter for interface "
-                  + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
-      assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No next JsonAdapter for interface "
-                  + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
+      assertEquals(
+          "No @FromJson adapter for interface "
+              + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)",
+          e.getMessage());
+
+      assertTrue(e.getCause() instanceof IllegalArgumentException);
+
+      assertEquals(
+          "No next JsonAdapter for interface "
+              + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)",
+          e.getCause().getMessage());
     }
   }
 
@@ -535,17 +534,18 @@ public final class AdapterMethodsTest {
       fromJsonMoshi.adapter(Shape.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo(
-              "No @ToJson adapter for interface "
-                  + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
-      assertThat(e).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-      assertThat(e.getCause())
-          .hasMessageThat()
-          .isEqualTo(
-              "No next JsonAdapter for interface "
-                  + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)");
+
+      assertEquals(
+          "No @ToJson adapter for interface "
+              + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)",
+          e.getMessage());
+
+      assertTrue(e.getCause() instanceof IllegalArgumentException);
+
+      assertEquals(
+          "No next JsonAdapter for interface "
+              + "com.squareup.moshi.AdapterMethodsTest$Shape (with no annotations)",
+          e.getCause().getMessage());
     }
   }
 
@@ -561,8 +561,8 @@ public final class AdapterMethodsTest {
     ParameterizedType listOfStringType = brokenParameterizedType(0, List.class, String.class);
 
     JsonAdapter<List<String>> jsonAdapter = moshi.adapter(listOfStringType);
-    assertThat(jsonAdapter.toJson(Arrays.asList("a", "b", "c"))).isEqualTo("\"a|b|c\"");
-    assertThat(jsonAdapter.fromJson("\"a|b|c\"")).isEqualTo(Arrays.asList("a", "b", "c"));
+    assertEquals(jsonAdapter.toJson(Arrays.asList("a", "b", "c")), "\"a|b|c\"");
+    assertEquals(jsonAdapter.fromJson("\"a|b|c\""), Arrays.asList("a", "b", "c"));
   }
 
   static class ListOfStringJsonAdapter {
@@ -594,8 +594,11 @@ public final class AdapterMethodsTest {
     Type b = brokenParameterizedType(1, List.class, String.class);
     Type c = brokenParameterizedType(2, List.class, String.class);
 
-    assertThat(moshi.adapter(b)).isSameInstanceAs(moshi.adapter(a));
-    assertThat(moshi.adapter(c)).isSameInstanceAs(moshi.adapter(a));
+    assertEquals(moshi.adapter(b).getClass(), moshi.adapter(a).getClass());
+    assertEquals(moshi.adapter(b), moshi.adapter(a));
+
+    assertEquals(moshi.adapter(c).getClass(), moshi.adapter(a).getClass());
+    assertEquals(moshi.adapter(c), moshi.adapter(a));
   }
 
   @Test
@@ -607,8 +610,8 @@ public final class AdapterMethodsTest {
             .build();
     JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
     Line line = new Line(new Point(5, 8), new Point(3, 2));
-    assertThat(lineAdapter.toJson(line)).isEqualTo("[[5,8],[3,2]]");
-    assertThat(lineAdapter.fromJson("[[5,8],[3,2]]")).isEqualTo(line);
+    assertEquals(lineAdapter.toJson(line), "[[5,8],[3,2]]");
+    assertEquals(lineAdapter.fromJson("[[5,8],[3,2]]"), line);
   }
 
   static class JsonAdapterWithWriterAndReaderTakingJsonAdapterParameter {
@@ -640,8 +643,8 @@ public final class AdapterMethodsTest {
             .build();
     JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
     Line line = new Line(new Point(5, 8), new Point(3, 2));
-    assertThat(lineAdapter.toJson(line)).isEqualTo("[\"(5 8)\",\"(3 2)\"]");
-    assertThat(lineAdapter.fromJson("[\"(5 8)\",\"(3 2)\"]")).isEqualTo(line);
+    assertEquals(lineAdapter.toJson(line), "[\"(5 8)\",\"(3 2)\"]");
+    assertEquals(lineAdapter.fromJson("[\"(5 8)\",\"(3 2)\"]"), line);
   }
 
   static class PointWithParensJsonAdapter {
@@ -690,8 +693,8 @@ public final class AdapterMethodsTest {
             .build();
     JsonAdapter<Line> lineAdapter = moshi.adapter(Line.class);
     Line line = new Line(new Point(5, 8), new Point(3, 2));
-    assertThat(lineAdapter.toJson(line)).isEqualTo("[[5,8],\"(3 2)\"]");
-    assertThat(lineAdapter.fromJson("[[5,8],\"(3 2)\"]")).isEqualTo(line);
+    assertEquals(lineAdapter.toJson(line), "[[5,8],\"(3 2)\"]");
+    assertEquals(lineAdapter.fromJson("[[5,8],\"(3 2)\"]"), line);
   }
 
   static class JsonAdapterWithWriterAndReaderTakingMultipleJsonAdapterParameters {
@@ -730,7 +733,7 @@ public final class AdapterMethodsTest {
       new Moshi.Builder().add(new ToJsonAdapterTakingJsonAdapterParameter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().startsWith("Unexpected signature");
+      assertTrue(expected.getMessage().startsWith("Unexpected signature"));
     }
   }
 
@@ -747,7 +750,7 @@ public final class AdapterMethodsTest {
       new Moshi.Builder().add(new FromJsonAdapterTakingJsonAdapterParameter());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().startsWith("Unexpected signature");
+      assertTrue(expected.getMessage().startsWith("Unexpected signature"));
     }
   }
 
@@ -766,8 +769,8 @@ public final class AdapterMethodsTest {
             Types.newParameterizedTypeWithOwner(AdapterMethodsTest.class, Box.class, Point.class));
     Box<Point> box = new Box<>(new Point(5, 8));
     String json = "[{\"x\":5,\"y\":8}]";
-    assertThat(boxAdapter.toJson(box)).isEqualTo(json);
-    assertThat(boxAdapter.fromJson(json)).isEqualTo(box);
+    assertEquals(boxAdapter.toJson(box), json);
+    assertEquals(boxAdapter.fromJson(json), box);
   }
 
   static class EnclosedParameterizedTypeJsonAdapter {
@@ -809,8 +812,8 @@ public final class AdapterMethodsTest {
         new MapOfByteArrays(Collections.singletonMap("a", new byte[] {0, -1}));
     String json = "{\"map\":{\"a\":\"00ff\"}}";
 
-    assertThat(jsonAdapter.toJson(mapOfByteArrays)).isEqualTo(json);
-    assertThat(jsonAdapter.fromJson(json)).isEqualTo(mapOfByteArrays);
+    assertEquals(jsonAdapter.toJson(mapOfByteArrays), json);
+    assertEquals(jsonAdapter.fromJson(json), mapOfByteArrays);
   }
 
   static class ByteArrayJsonAdapter {

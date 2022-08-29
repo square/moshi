@@ -15,7 +15,8 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public final class FlattenTest {
     writer.endFlatten(token);
     writer.endArray();
 
-    assertThat(factory.json()).isEqualTo("[1,2,3,4,5]");
+    assertEquals(factory.json(), "[1,2,3,4,5]");
   }
 
   @Test
@@ -76,7 +77,7 @@ public final class FlattenTest {
       writer.value("ccc");
     }
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":\"aaa\",\"b\":\"bbb\",\"c\":\"ccc\"}");
+    assertEquals(factory.json(), "{\"a\":\"aaa\",\"b\":\"bbb\",\"c\":\"ccc\"}");
   }
 
   @Test
@@ -97,7 +98,7 @@ public final class FlattenTest {
       writer.value("c");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",\"c\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",\"c\"]");
   }
 
   @Test
@@ -128,7 +129,7 @@ public final class FlattenTest {
       writer.value("e");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",\"c\",\"d\",\"e\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",\"c\",\"d\",\"e\"]");
   }
 
   @Test
@@ -154,7 +155,7 @@ public final class FlattenTest {
       writer.value("d");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",\"c\",\"d\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",\"c\",\"d\"]");
   }
 
   @Test
@@ -181,7 +182,7 @@ public final class FlattenTest {
       writer.value("e");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",[\"c\"],\"d\",\"e\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",[\"c\"],\"d\",\"e\"]");
   }
 
   @Test
@@ -207,7 +208,7 @@ public final class FlattenTest {
       writer.value("d");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",[\"c\"],\"d\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",[\"c\"],\"d\"]");
   }
 
   @Test
@@ -242,7 +243,7 @@ public final class FlattenTest {
       writer.value("e");
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\",\"b\",\"c\",\"d\",\"e\"]");
+    assertEquals(factory.json(), "[\"a\",\"b\",\"c\",\"d\",\"e\"]");
   }
 
   @Test
@@ -277,7 +278,7 @@ public final class FlattenTest {
       writer.endFlatten(token1);
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"a\"]");
+    assertEquals(factory.json(), "[\"a\"]");
   }
 
   @Test
@@ -287,7 +288,7 @@ public final class FlattenTest {
       writer.beginFlatten();
       fail();
     } catch (IllegalStateException e) {
-      assertThat(e).hasMessageThat().isEqualTo("Nesting problem.");
+      assertTrue(e.getMessage().contains("Nesting problem."));
     }
   }
 
@@ -314,7 +315,7 @@ public final class FlattenTest {
       writer.endFlatten(token);
     }
     writer.endObject();
-    assertThat(factory.json()).isEqualTo("{\"a\":[\"aaa\"],\"b\":\"bbb\",\"c\":[\"ccc\"]}");
+    assertEquals(factory.json(), "{\"a\":[\"aaa\"],\"b\":\"bbb\",\"c\":[\"ccc\"]}");
   }
 
   @Test
@@ -346,6 +347,6 @@ public final class FlattenTest {
       writer.endFlatten(token);
     }
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[{\"a\":\"aaa\"},\"bbb\",\"ccc\",{\"d\":\"ddd\"}]");
+    assertEquals(factory.json(), "[{\"a\":\"aaa\"},\"bbb\",\"ccc\",{\"d\":\"ddd\"}]");
   }
 }

@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.EOFException;
@@ -26,33 +26,34 @@ import org.junit.Test;
 public final class JsonValueSourceTest {
   @Test
   public void simpleValues() throws IOException {
-    assertThat(jsonPrefix("{\"hello\": \"world\"}, 1, 2, 3")).isEqualTo("{\"hello\": \"world\"}");
-    assertThat(jsonPrefix("['hello', 'world'], 1, 2, 3")).isEqualTo("['hello', 'world']");
-    assertThat(jsonPrefix("\"hello\", 1, 2, 3")).isEqualTo("\"hello\"");
+    assertEquals(jsonPrefix("{\"hello\": \"world\"}, 1, 2, 3"), "{\"hello\": \"world\"}");
+    assertEquals(jsonPrefix("['hello', 'world'], 1, 2, 3"), "['hello', 'world']");
+    assertEquals(jsonPrefix("\"hello\", 1, 2, 3"), "\"hello\"");
   }
 
   @Test
   public void braceMatching() throws IOException {
-    assertThat(jsonPrefix("[{},{},[],[{}]],[]")).isEqualTo("[{},{},[],[{}]]");
-    assertThat(jsonPrefix("[\"a\",{\"b\":{\"c\":{\"d\":[\"e\"]}}}],[]"))
-        .isEqualTo("[\"a\",{\"b\":{\"c\":{\"d\":[\"e\"]}}}]");
+    assertEquals(jsonPrefix("[{},{},[],[{}]],[]"), "[{},{},[],[{}]]");
+    assertEquals(
+        jsonPrefix("[\"a\",{\"b\":{\"c\":{\"d\":[\"e\"]}}}],[]"),
+        "[\"a\",{\"b\":{\"c\":{\"d\":[\"e\"]}}}]");
   }
 
   @Test
   public void stringEscapes() throws IOException {
-    assertThat(jsonPrefix("[\"12\\u00334\"],[]")).isEqualTo("[\"12\\u00334\"]");
-    assertThat(jsonPrefix("[\"12\\n34\"],[]")).isEqualTo("[\"12\\n34\"]");
-    assertThat(jsonPrefix("[\"12\\\"34\"],[]")).isEqualTo("[\"12\\\"34\"]");
-    assertThat(jsonPrefix("[\"12\\'34\"],[]")).isEqualTo("[\"12\\'34\"]");
-    assertThat(jsonPrefix("[\"12\\\\34\"],[]")).isEqualTo("[\"12\\\\34\"]");
-    assertThat(jsonPrefix("[\"12\\\\\"],[]")).isEqualTo("[\"12\\\\\"]");
+    assertEquals(jsonPrefix("[\"12\\u00334\"],[]"), "[\"12\\u00334\"]");
+    assertEquals(jsonPrefix("[\"12\\n34\"],[]"), "[\"12\\n34\"]");
+    assertEquals(jsonPrefix("[\"12\\\"34\"],[]"), "[\"12\\\"34\"]");
+    assertEquals(jsonPrefix("[\"12\\'34\"],[]"), "[\"12\\'34\"]");
+    assertEquals(jsonPrefix("[\"12\\\\34\"],[]"), "[\"12\\\\34\"]");
+    assertEquals(jsonPrefix("[\"12\\\\\"],[]"), "[\"12\\\\\"]");
   }
 
   @Test
   public void bracesInStrings() throws IOException {
-    assertThat(jsonPrefix("[\"]\"],[]")).isEqualTo("[\"]\"]");
-    assertThat(jsonPrefix("[\"\\]\"],[]")).isEqualTo("[\"\\]\"]");
-    assertThat(jsonPrefix("[\"\\[\"],[]")).isEqualTo("[\"\\[\"]");
+    assertEquals(jsonPrefix("[\"]\"],[]"), "[\"]\"]");
+    assertEquals(jsonPrefix("[\"\\]\"],[]"), "[\"\\]\"]");
+    assertEquals(jsonPrefix("[\"\\[\"],[]"), "[\"\\[\"]");
   }
 
   @Test
@@ -122,30 +123,30 @@ public final class JsonValueSourceTest {
 
   @Test
   public void lenientSingleQuotedStrings() throws IOException {
-    assertThat(jsonPrefix("['hello', 'world'], 1, 2, 3")).isEqualTo("['hello', 'world']");
-    assertThat(jsonPrefix("'abc\\'', 123")).isEqualTo("'abc\\''");
+    assertEquals(jsonPrefix("['hello', 'world'], 1, 2, 3"), "['hello', 'world']");
+    assertEquals(jsonPrefix("'abc\\'', 123"), "'abc\\''");
   }
 
   @Test
   public void lenientCStyleComments() throws IOException {
-    assertThat(jsonPrefix("[\"a\"/* \"b\" */,\"c\"],[]")).isEqualTo("[\"a\"/* \"b\" */,\"c\"]");
-    assertThat(jsonPrefix("[\"a\"/*]*/],[]")).isEqualTo("[\"a\"/*]*/]");
-    assertThat(jsonPrefix("[\"a\"/**/],[]")).isEqualTo("[\"a\"/**/]");
-    assertThat(jsonPrefix("[\"a\"/*/ /*/],[]")).isEqualTo("[\"a\"/*/ /*/]");
-    assertThat(jsonPrefix("[\"a\"/*/ **/],[]")).isEqualTo("[\"a\"/*/ **/]");
+    assertEquals(jsonPrefix("[\"a\"/* \"b\" */,\"c\"],[]"), "[\"a\"/* \"b\" */,\"c\"]");
+    assertEquals(jsonPrefix("[\"a\"/*]*/],[]"), "[\"a\"/*]*/]");
+    assertEquals(jsonPrefix("[\"a\"/**/],[]"), "[\"a\"/**/]");
+    assertEquals(jsonPrefix("[\"a\"/*/ /*/],[]"), "[\"a\"/*/ /*/]");
+    assertEquals(jsonPrefix("[\"a\"/*/ **/],[]"), "[\"a\"/*/ **/]");
   }
 
   @Test
   public void lenientEndOfLineComments() throws IOException {
-    assertThat(jsonPrefix("[\"a\"// \"b\" \n,\"c\"],[]")).isEqualTo("[\"a\"// \"b\" \n,\"c\"]");
-    assertThat(jsonPrefix("[\"a\"// \"b\" \r\n,\"c\"],[]")).isEqualTo("[\"a\"// \"b\" \r\n,\"c\"]");
-    assertThat(jsonPrefix("[\"a\"// \"b\" \r,\"c\"],[]")).isEqualTo("[\"a\"// \"b\" \r,\"c\"]");
-    assertThat(jsonPrefix("[\"a\"//]\r\n\"c\"],[]")).isEqualTo("[\"a\"//]\r\n\"c\"]");
+    assertEquals(jsonPrefix("[\"a\"// \"b\" \n,\"c\"],[]"), "[\"a\"// \"b\" \n,\"c\"]");
+    assertEquals(jsonPrefix("[\"a\"// \"b\" \r\n,\"c\"],[]"), "[\"a\"// \"b\" \r\n,\"c\"]");
+    assertEquals(jsonPrefix("[\"a\"// \"b\" \r,\"c\"],[]"), "[\"a\"// \"b\" \r,\"c\"]");
+    assertEquals(jsonPrefix("[\"a\"//]\r\n\"c\"],[]"), "[\"a\"//]\r\n\"c\"]");
   }
 
   @Test
   public void lenientSlashInToken() throws IOException {
-    assertThat(jsonPrefix("{a/b:\"c\"},[]")).isEqualTo("{a/b:\"c\"}");
+    assertEquals(jsonPrefix("{a/b:\"c\"},[]"), "{a/b:\"c\"}");
   }
 
   @Test
@@ -185,7 +186,7 @@ public final class JsonValueSourceTest {
     jsonValueSource.close();
     jsonValueSource.discard();
 
-    assertThat(allData.readUtf8()).isEqualTo(",[\"d\", \"e\"]");
+    assertEquals(allData.readUtf8(), ",[\"d\", \"e\"]");
   }
 
   private String jsonPrefix(String string) throws IOException {
@@ -197,7 +198,7 @@ public final class JsonValueSourceTest {
 
     String result = jsonPrefixBuffer.readUtf8();
     String remainder = allData.readUtf8();
-    assertThat(result + remainder).isEqualTo(string);
+    assertEquals(result + remainder, string);
 
     return result;
   }

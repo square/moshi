@@ -15,8 +15,9 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -42,8 +43,11 @@ public final class JsonValueWriterTest {
     writer.value(true);
     writer.nullValue();
     writer.endArray();
-
-    assertThat((List<Object>) writer.root()).containsExactly("s", 1.5d, true, null);
+    List<Object> values = (List<Object>) writer.root();
+    assertEquals("s", values.get(0));
+    assertEquals(1.5d, values.get(1));
+    assertEquals(true, values.get(2));
+    assertEquals(null, values.get(3));
   }
 
   @Test
@@ -57,9 +61,19 @@ public final class JsonValueWriterTest {
     writer.name("c").value(true);
     writer.name("d").nullValue();
     writer.endObject();
+    Map<String, Object> valuesMap = (Map<String, Object>) writer.root();
 
-    assertThat((Map<String, Object>) writer.root())
-        .containsExactly("a", "s", "b", 1.5d, "c", true, "d", null);
+    List<String> keys = Arrays.asList("a", "b", "c", "d");
+    List<Object> values = Arrays.asList("s", 1.5d, true, null);
+
+    assertEquals("s", valuesMap.get("a"));
+    assertEquals(1.5d, valuesMap.get("b"));
+    assertEquals(true, valuesMap.get("c"));
+    assertEquals(null, valuesMap.get("d"));
+    assertTrue(valuesMap.keySet().containsAll(keys));
+    assertTrue(keys.containsAll(valuesMap.keySet()));
+    assertTrue(values.containsAll(valuesMap.values()));
+    assertTrue(valuesMap.values().containsAll(values));
   }
 
   @Test
@@ -71,14 +85,12 @@ public final class JsonValueWriterTest {
       writer.name("a").value(2L);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Map key 'a' has multiple values at path $.a: 1 and 2");
+      assertEquals("Map key 'a' has multiple values at path $.a: 1 and 2", expected.getMessage());
     }
   }
 
   @Test
-  public void valueLongEmitsLong() throws Exception {
+  public void valueLongEmitsLong() {
     JsonValueWriter writer = new JsonValueWriter();
     writer.beginArray();
     writer.value(Long.MIN_VALUE);
@@ -88,8 +100,8 @@ public final class JsonValueWriterTest {
     writer.value(Long.MAX_VALUE);
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(Long.MIN_VALUE, -1L, 0L, 1L, Long.MAX_VALUE);
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    List<Number> numbers = Arrays.asList(Long.MIN_VALUE, -1L, 0L, 1L, Long.MAX_VALUE);
+    assertEquals(writer.root(), numbers);
   }
 
   @Test
@@ -145,7 +157,7 @@ public final class JsonValueWriterTest {
             Double.MAX_VALUE,
             Double.POSITIVE_INFINITY,
             Double.NaN);
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    assertEquals((List<?>) writer.root(), numbers);
   }
 
   @Test
@@ -158,9 +170,8 @@ public final class JsonValueWriterTest {
     writer.value(Long.valueOf(Long.MIN_VALUE));
     writer.endArray();
 
-    List<Number> numbers =
-        Arrays.<Number>asList(-128L, -32768L, -2147483648L, -9223372036854775808L);
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    List<Number> numbers = Arrays.asList(-128L, -32768L, -2147483648L, -9223372036854775808L);
+    assertEquals(writer.root(), numbers);
   }
 
   @Test
@@ -171,8 +182,8 @@ public final class JsonValueWriterTest {
     writer.value(Double.valueOf(0.5d));
     writer.endArray();
 
-    List<Number> numbers = Arrays.<Number>asList(0.5d, 0.5d);
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    List<Number> numbers = Arrays.asList(0.5d, 0.5d);
+    assertEquals(writer.root(), numbers);
   }
 
   @Test
@@ -221,7 +232,7 @@ public final class JsonValueWriterTest {
             new BigDecimal("0.5"),
             new BigDecimal("100000e15"),
             new BigDecimal("0.0000100e-10"));
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    assertEquals((List<?>) writer.root(), numbers);
   }
 
   @Test
@@ -235,12 +246,12 @@ public final class JsonValueWriterTest {
     writer.endArray();
 
     List<Number> numbers =
-        Arrays.<Number>asList(
+        Arrays.asList(
             new BigDecimal("-9223372036854775809"),
             new BigDecimal("-9223372036854775808"),
             new BigDecimal("0.5"),
             new BigDecimal("1.0"));
-    assertThat((List<?>) writer.root()).isEqualTo(numbers);
+    assertEquals(writer.root(), numbers);
   }
 
   @Test
@@ -256,8 +267,20 @@ public final class JsonValueWriterTest {
     writer.name("d");
     writer.value(new Buffer().writeUtf8("null"));
     writer.endObject();
-    assertThat((Map<String, Object>) writer.root())
-        .containsExactly("a", singletonList("value"), "b", 2.0d, "c", 3L, "d", null);
+
+    Map<String, Object> valuesMap = (Map<String, Object>) writer.root();
+
+    List<String> keys = Arrays.asList("a", "b", "c", "d");
+    List<Object> values = Arrays.asList(singletonList("value"), 2.0d, 3L, null);
+
+    assertEquals(singletonList("value"), valuesMap.get("a"));
+    assertEquals(2.0d, valuesMap.get("b"));
+    assertEquals(3L, valuesMap.get("c"));
+    assertEquals(null, valuesMap.get("d"));
+    assertTrue(valuesMap.keySet().containsAll(keys));
+    assertTrue(keys.containsAll(valuesMap.keySet()));
+    assertTrue(values.containsAll(valuesMap.values()));
+    assertTrue(valuesMap.values().containsAll(values));
   }
 
   /**

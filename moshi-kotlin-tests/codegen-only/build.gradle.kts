@@ -67,5 +67,4 @@ dependencies {
   testImplementation(kotlin("reflect"))
   testImplementation(libs.junit)
   testImplementation(libs.assertj)
-  testImplementation(libs.truth)
 }

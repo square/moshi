@@ -17,5 +17,4 @@ dependencies {
   testImplementation(project(":moshi"))
   testCompileOnly(libs.jsr305)
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
 }

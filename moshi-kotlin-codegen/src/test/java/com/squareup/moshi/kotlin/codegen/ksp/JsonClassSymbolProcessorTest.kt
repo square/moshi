@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi.kotlin.codegen.ksp
 
-import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -26,6 +25,8 @@ import com.tschuchort.compiletesting.kspArgs
 import com.tschuchort.compiletesting.kspIncremental
 import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessorProviders
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -56,8 +57,8 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains("constructor is not internal or public")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(result.messages.contains("constructor is not internal or public"))
   }
 
   @Test
@@ -74,8 +75,8 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains("property a is not visible")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(result.messages.contains("property a is not visible"))
   }
 
   @Test
@@ -95,8 +96,8 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains("property a is not visible")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(result.messages.contains("property a is not visible"))
   }
 
   @Test
@@ -113,9 +114,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Interface: must be a Kotlin class"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.Interface: must be a Kotlin class"
+      )
     )
   }
 
@@ -133,7 +136,7 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
   }
 
   @Test
@@ -150,9 +153,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.AbstractClass: must not be abstract"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.AbstractClass: must not be abstract"
+      )
     )
   }
 
@@ -170,9 +175,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.SealedClass: must not be sealed"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.SealedClass: must not be sealed"
+      )
     )
   }
 
@@ -192,9 +199,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class"
+      )
     )
   }
 
@@ -214,9 +223,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary"
+      )
     )
   }
 
@@ -238,9 +249,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to LocalClass: must not be local"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to LocalClass: must not be local"
+      )
     )
   }
 
@@ -258,9 +271,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.PrivateClass: must be internal or public"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.PrivateClass: must be internal or public"
+      )
     )
   }
 
@@ -280,9 +295,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class"
+      )
     )
   }
 
@@ -302,9 +319,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.expression: must be a Kotlin class"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "@JsonClass can't be applied to test.expression: must be a Kotlin class"
+      )
     )
   }
 
@@ -322,9 +341,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No default value for transient/ignored property a"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "No default value for transient/ignored property a"
+      )
     )
   }
 
@@ -343,9 +364,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No default value for transient/ignored property a"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "No default value for transient/ignored property a"
+      )
     )
   }
 
@@ -363,9 +386,11 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No property for required constructor parameter a"
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages.contains(
+        "No property for required constructor parameter a"
+      )
     )
   }
 
@@ -385,8 +410,10 @@ class JsonClassSymbolProcessorTest {
     ).apply {
       kspArgs[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
-    assertThat(result.messages).contains(
-      "Invalid option value for $OPTION_GENERATED"
+    assertTrue(
+      result.messages.contains(
+        "Invalid option value for $OPTION_GENERATED"
+      )
     )
   }
 
@@ -407,8 +434,8 @@ class JsonClassSymbolProcessorTest {
       kspArgs[OPTION_GENERATE_PROGUARD_RULES] = "false"
     }
     val result = compilation.compile()
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-    assertThat(compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.toList()).isEmpty()
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
+    assertEquals(0, compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.toList().size)
   }
 
   @Test
@@ -428,9 +455,9 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains("property a is not visible")
-    assertThat(result.messages).contains("property c is not visible")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(result.messages.contains("property a is not visible"))
+    assertTrue(result.messages.contains("property c is not visible"))
   }
 
   @Test
@@ -448,7 +475,7 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
+    assertTrue(result.messages.contains("supertype java.util.Date is not a Kotlin type"))
   }
 
   @Test
@@ -475,9 +502,11 @@ class JsonClassSymbolProcessorTest {
         """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages)
-      .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(
+      result.messages
+        .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
+    )
   }
 
   @Test
@@ -505,7 +534,7 @@ class JsonClassSymbolProcessorTest {
       )
     )
     // We instantiate directly, no FIELD site target necessary
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
   }
 
   @Test
@@ -533,8 +562,8 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertTrue(result.messages.contains("JsonQualifier @UpperCase must have RUNTIME retention"))
   }
 
   @Test
@@ -554,13 +583,13 @@ class JsonClassSymbolProcessorTest {
           """
       )
     )
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
 
     // We're checking here that we only generate one `stringAdapter` that's used for both the
     // regular string properties as well as the the aliased ones.
     // TODO loading compiled classes from results not supported in KSP yet
 //    val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
-//    assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
+//    assertEquals(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
 //      JsonReader.Options::class.createType(),
 //      JsonAdapter::class.parameterizedBy(String::class)
 //    )
@@ -684,64 +713,75 @@ class JsonClassSymbolProcessorTest {
       )
     )
     val result = compilation.compile()
-    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
 
     compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.forEach { generatedFile ->
       when (generatedFile.nameWithoutExtension) {
-        "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.Aliases" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.Aliases
           -keepnames class testPackage.Aliases
           -if class testPackage.Aliases
           -keep class testPackage.AliasesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
-        "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.Simple" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.Simple
           -keepnames class testPackage.Simple
           -if class testPackage.Simple
           -keep class testPackage.SimpleJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
-        "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.Generic" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.Generic
           -keepnames class testPackage.Generic
           -if class testPackage.Generic
           -keep class testPackage.GenericJsonAdapter {
               public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
         "moshi-testPackage.UsingQualifiers" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
+          assertTrue(
+            generatedFile.readText().contains(
+              """
             -if class testPackage.UsingQualifiers
             -keepnames class testPackage.UsingQualifiers
             -if class testPackage.UsingQualifiers
             -keep class testPackage.UsingQualifiersJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+              """.trimIndent()
+            )
           )
         }
-        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.MixedTypes" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.MixedTypes
           -keepnames class testPackage.MixedTypes
           -if class testPackage.MixedTypes
           -keep class testPackage.MixedTypesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
-        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.DefaultParams" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.DefaultParams
           -keepnames class testPackage.DefaultParams
           -if class testPackage.DefaultParams
@@ -754,11 +794,13 @@ class JsonClassSymbolProcessorTest {
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
         "moshi-testPackage.Complex" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
+          assertTrue(
+            generatedFile.readText().contains(
+              """
             -if class testPackage.Complex
             -keepnames class testPackage.Complex
             -if class testPackage.Complex
@@ -771,11 +813,13 @@ class JsonClassSymbolProcessorTest {
             -keepclassmembers class testPackage.Complex {
                 public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
             }
-            """.trimIndent()
+              """.trimIndent()
+            )
           )
         }
-        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
-          """
+        "moshi-testPackage.MultipleMasks" -> assertTrue(
+          generatedFile.readText().contains(
+            """
           -if class testPackage.MultipleMasks
           -keepnames class testPackage.MultipleMasks
           -if class testPackage.MultipleMasks
@@ -788,18 +832,21 @@ class JsonClassSymbolProcessorTest {
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+            """.trimIndent()
+          )
         )
         "moshi-testPackage.NestedType.NestedSimple" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
+          assertTrue(
+            generatedFile.readText().contains(
+              """
             -if class testPackage.NestedType${'$'}NestedSimple
             -keepnames class testPackage.NestedType${'$'}NestedSimple
             -if class testPackage.NestedType${'$'}NestedSimple
             -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+              """.trimIndent()
+            )
           )
         }
         else -> error("Unexpected proguard file! ${generatedFile.name}")

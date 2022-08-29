@@ -80,7 +80,6 @@ dependencies {
 
   testCompileOnly(libs.jsr305)
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
 }
 
 tasks.withType<Jar>().configureEach {

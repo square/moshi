@@ -15,7 +15,9 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -58,9 +60,9 @@ public final class JsonAdapterTest {
 
     JsonReader reader = factory.newReader("[-Infinity, NaN, Infinity]");
     reader.beginArray();
-    assertThat(lenient.fromJson(reader)).isEqualTo(Double.NEGATIVE_INFINITY);
-    assertThat(lenient.fromJson(reader)).isNaN();
-    assertThat(lenient.fromJson(reader)).isEqualTo(Double.POSITIVE_INFINITY);
+    assertEquals(Double.NEGATIVE_INFINITY, lenient.fromJson(reader), 0);
+    assertTrue(Double.isNaN(lenient.fromJson(reader)));
+    assertEquals(Double.POSITIVE_INFINITY, lenient.fromJson(reader), 0);
     reader.endArray();
 
     JsonWriter writer = factory.newWriter();
@@ -69,7 +71,7 @@ public final class JsonAdapterTest {
     lenient.toJson(writer, Double.NaN);
     lenient.toJson(writer, Double.POSITIVE_INFINITY);
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[-Infinity,NaN,Infinity]");
+    assertEquals(factory.json(), "[-Infinity,NaN,Infinity]");
   }
 
   @Test
@@ -89,9 +91,9 @@ public final class JsonAdapterTest {
 
     JsonReader reader = factory.newReader("[\"a\", null, \"c\"]");
     reader.beginArray();
-    assertThat(toUpperCase.fromJson(reader)).isEqualTo("A");
-    assertThat(toUpperCase.fromJson(reader)).isNull();
-    assertThat(toUpperCase.fromJson(reader)).isEqualTo("C");
+    assertEquals(toUpperCase.fromJson(reader), "A");
+    assertNull(toUpperCase.fromJson(reader));
+    assertEquals(toUpperCase.fromJson(reader), "C");
     reader.endArray();
 
     JsonWriter writer = factory.newWriter();
@@ -100,7 +102,7 @@ public final class JsonAdapterTest {
     toUpperCase.toJson(writer, null);
     toUpperCase.toJson(writer, "c");
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"A\",null,\"C\"]");
+    assertEquals(factory.json(), "[\"A\",null,\"C\"]");
   }
 
   @Test
@@ -120,15 +122,15 @@ public final class JsonAdapterTest {
 
     JsonReader reader = factory.newReader("[\"a\", null, \"c\"]");
     reader.beginArray();
-    assertThat(toUpperCase.fromJson(reader)).isEqualTo("A");
+    assertEquals(toUpperCase.fromJson(reader), "A");
     try {
       toUpperCase.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
-      assertThat(reader.<Object>nextNull()).isNull();
+      assertTrue(expected.getMessage().contains("Unexpected null at $[1]"));
+      assertNull(reader.nextNull());
     }
-    assertThat(toUpperCase.fromJson(reader)).isEqualTo("C");
+    assertEquals(toUpperCase.fromJson(reader), "C");
     reader.endArray();
 
     JsonWriter writer = factory.newWriter();
@@ -138,12 +140,12 @@ public final class JsonAdapterTest {
       toUpperCase.toJson(writer, null);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Unexpected null at $[1]");
+      assertTrue(expected.getMessage().contains("Unexpected null at $[1]"));
       writer.nullValue();
     }
     toUpperCase.toJson(writer, "c");
     writer.endArray();
-    assertThat(factory.json()).isEqualTo("[\"A\",null,\"C\"]");
+    assertEquals(factory.json(), "[\"A\",null,\"C\"]");
   }
 
   @Test
@@ -168,9 +170,9 @@ public final class JsonAdapterTest {
       alwaysSkip.fromJson(reader);
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Cannot skip unexpected STRING at $[0]");
+      assertTrue(expected.getMessage().contains("Cannot skip unexpected STRING at $[0]"));
     }
-    assertThat(reader.nextString()).isEqualTo("a");
+    assertEquals(reader.nextString(), "a");
     reader.endArray();
   }
 
@@ -197,8 +199,8 @@ public final class JsonAdapterTest {
 
     JsonWriter writer = factory.newWriter();
     indent.toJson(writer, Arrays.asList("a", "b", "c"));
-    assertThat(factory.json())
-        .isEqualTo("" + "[\n" + "\t\t\t\"a\",\n" + "\t\t\t\"b\",\n" + "\t\t\t\"c\"\n" + "]");
+    assertEquals(
+        factory.json(), "" + "[\n" + "\t\t\t\"a\",\n" + "\t\t\t\"b\",\n" + "\t\t\t\"c\"\n" + "]");
   }
 
   @Test
@@ -219,7 +221,7 @@ public final class JsonAdapterTest {
       adapter.indent(null);
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
+      assertTrue(expected.getMessage().contains("Parameter specified as non-null is null"));
     }
   }
 
@@ -244,7 +246,7 @@ public final class JsonAdapterTest {
 
     JsonWriter writer = factory.newWriter();
     serializeNulls.toJson(writer, Collections.<String, String>singletonMap("a", null));
-    assertThat(factory.json()).isEqualTo("{\"a\":null}");
+    assertEquals(factory.json(), "{\"a\":null}");
   }
 
   @Test
@@ -265,7 +267,7 @@ public final class JsonAdapterTest {
       brokenAdapter.fromJson("\"value\"");
       fail();
     } catch (JsonDataException e) {
-      assertThat(e).hasMessageThat().isEqualTo("JSON document was not fully consumed.");
+      assertTrue(e.getMessage().contains("JSON document was not fully consumed."));
     }
   }
 
@@ -287,9 +289,9 @@ public final class JsonAdapterTest {
       adapter.fromJson("true true");
       fail();
     } catch (JsonEncodingException e) {
-      assertThat(e)
-          .hasMessageThat()
-          .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $");
+      assertTrue(
+          e.getMessage()
+              .contains("Use JsonReader.setLenient(true) to accept malformed JSON at path $"));
     }
   }
 
@@ -307,7 +309,7 @@ public final class JsonAdapterTest {
             throw new AssertionError();
           }
         }.lenient();
-    assertThat(adapter.fromJson("true true")).isEqualTo(true);
+    assertEquals(adapter.fromJson("true true"), true);
   }
 
   @Test
@@ -324,18 +326,18 @@ public final class JsonAdapterTest {
             throw new AssertionError();
           }
         }.lenient().serializeNulls();
-    assertThat(adapter.fromJson("true true")).isEqualTo(true);
+    assertEquals(adapter.fromJson("true true"), true);
   }
 
   @Test
   public void nullSafeDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nullSafe();
-    assertThat(adapter.nullSafe()).isSameInstanceAs(adapter);
+    assertTrue(adapter.nullSafe() instanceof JsonAdapter);
   }
 
   @Test
   public void nonNullDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
-    assertThat(adapter.nonNull()).isSameInstanceAs(adapter);
+    assertTrue(adapter.nonNull() instanceof JsonAdapter);
   }
 }

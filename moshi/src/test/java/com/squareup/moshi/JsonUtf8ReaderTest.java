@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_ARRAY;
 import static com.squareup.moshi.JsonReader.Token.BEGIN_OBJECT;
 import static com.squareup.moshi.JsonReader.Token.BOOLEAN;
@@ -28,8 +27,7 @@ import static com.squareup.moshi.JsonReader.Token.STRING;
 import static com.squareup.moshi.TestUtil.MAX_DEPTH;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.TestUtil.repeat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -50,12 +48,12 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader1 = JsonReader.of(buffer);
     reader1.beginObject();
     reader1.endObject();
-    assertThat(buffer.size()).isEqualTo(2);
+    assertEquals(buffer.size(), 2);
 
     JsonReader reader2 = JsonReader.of(buffer);
     reader2.beginObject();
     reader2.endObject();
-    assertThat(buffer.size()).isEqualTo(0);
+    assertEquals(buffer.size(), 0);
   }
 
   @Test
@@ -63,12 +61,12 @@ public final class JsonUtf8ReaderTest {
     Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
     JsonReader reader = JsonReader.of(buffer);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("android");
-    assertThat(reader.nextName()).isEqualTo("b");
-    assertThat(reader.nextString()).isEqualTo("banana");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "android");
+    assertEquals(reader.nextName(), "b");
+    assertEquals(reader.nextString(), "banana");
     reader.endObject();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -76,12 +74,12 @@ public final class JsonUtf8ReaderTest {
     Buffer buffer = new Buffer().writeUtf8("{\"a\": \"android\", \"b\": \"banana\"}");
     JsonReader reader = JsonReader.of(Okio.buffer(new ForwardingSource(buffer) {}));
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("android");
-    assertThat(reader.nextName()).isEqualTo("b");
-    assertThat(reader.nextString()).isEqualTo("banana");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "android");
+    assertEquals(reader.nextName(), "b");
+    assertEquals(reader.nextString(), "banana");
     reader.endObject();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -167,9 +165,9 @@ public final class JsonUtf8ReaderTest {
       fail();
     } catch (JsonEncodingException expected) {
     }
-    assertThat(reader.nextString()).isEqualTo("01");
+    assertEquals(reader.nextString(), "01");
     reader.endArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -177,13 +175,13 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[truey]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(STRING);
+    assertEquals(reader.peek(), STRING);
     try {
       reader.nextBoolean();
       fail();
     } catch (JsonDataException expected) {
     }
-    assertThat(reader.nextString()).isEqualTo("truey");
+    assertEquals(reader.nextString(), "truey");
     reader.endArray();
   }
 
@@ -229,8 +227,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[" + s + "]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
-    assertThat(reader.nextString()).isEqualTo(s);
+    assertEquals(reader.peek(), JsonReader.Token.STRING);
+    assertEquals(reader.nextString(), s);
     reader.endArray();
   }
 
@@ -239,13 +237,13 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[12.34e5x]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(STRING);
+    assertEquals(reader.peek(), STRING);
     try {
       reader.nextInt();
       fail();
     } catch (JsonDataException expected) {
     }
-    assertThat(reader.nextString()).isEqualTo("12.34e5x");
+    assertEquals(reader.nextString(), "12.34e5x");
   }
 
   @Test
@@ -253,8 +251,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[-9223372036854775808]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
-    assertThat(reader.nextLong()).isEqualTo(-9223372036854775808L);
+    assertEquals(reader.peek(), NUMBER);
+    assertEquals(reader.nextLong(), -9223372036854775808L);
   }
 
   @Test
@@ -262,8 +260,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[9223372036854775807]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
-    assertThat(reader.nextLong()).isEqualTo(9223372036854775807L);
+    assertEquals(reader.peek(), NUMBER);
+    assertEquals(reader.nextLong(), 9223372036854775807L);
   }
 
   @Test
@@ -271,7 +269,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[22233720368547758070]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
@@ -284,7 +282,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[-22233720368547758070]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
@@ -297,7 +295,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[9223372036854775808]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
@@ -310,7 +308,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[9223372036854775806.5]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
@@ -323,13 +321,13 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[-9223372036854775809]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
     } catch (JsonDataException expected) {
     }
-    assertThat(reader.nextDouble()).isEqualTo(-9223372036854775809d);
+    assertEquals(-9223372036854775809d, reader.nextDouble(), 0);
   }
 
   @Test
@@ -337,7 +335,7 @@ public final class JsonUtf8ReaderTest {
     String json = "[9223372036854775806.000]";
     JsonReader reader = newReader(json);
     reader.beginArray();
-    assertThat(reader.nextLong()).isEqualTo(9223372036854775806L);
+    assertEquals(reader.nextLong(), 9223372036854775806L);
     reader.endArray();
   }
 
@@ -346,13 +344,13 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[-92233720368547758080]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertEquals(reader.peek(), NUMBER);
     try {
       reader.nextLong();
       fail();
     } catch (JsonDataException expected) {
     }
-    assertThat(reader.nextDouble()).isEqualTo(-92233720368547758080d);
+    assertEquals(-92233720368547758080d, reader.nextDouble(), 0);
   }
 
   @Test
@@ -366,12 +364,12 @@ public final class JsonUtf8ReaderTest {
   public void numberToStringCoersion() throws Exception {
     JsonReader reader = newReader("[0, 9223372036854775807, 2.5, 3.010, \"a\", \"5\"]");
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("0");
-    assertThat(reader.nextString()).isEqualTo("9223372036854775807");
-    assertThat(reader.nextString()).isEqualTo("2.5");
-    assertThat(reader.nextString()).isEqualTo("3.010");
-    assertThat(reader.nextString()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("5");
+    assertEquals(reader.nextString(), "0");
+    assertEquals(reader.nextString(), "9223372036854775807");
+    assertEquals(reader.nextString(), "2.5");
+    assertEquals(reader.nextString(), "3.010");
+    assertEquals(reader.nextString(), "a");
+    assertEquals(reader.nextString(), "5");
     reader.endArray();
   }
 
@@ -380,29 +378,29 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[\"12\u00334\"]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(STRING);
-    assertThat(reader.nextInt()).isEqualTo(1234);
+    assertEquals(reader.peek(), STRING);
+    assertEquals(reader.nextInt(), 1234);
   }
 
   @Test
   public void mixedCaseLiterals() throws IOException {
     JsonReader reader = newReader("[True,TruE,False,FALSE,NULL,nulL]");
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.nextBoolean()).isFalse();
-    assertThat(reader.nextBoolean()).isFalse();
+    assertTrue(reader.nextBoolean());
+    assertTrue(reader.nextBoolean());
+    assertFalse(reader.nextBoolean());
+    assertFalse(reader.nextBoolean());
     reader.nextNull();
     reader.nextNull();
     reader.endArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
   public void missingValue() throws IOException {
     JsonReader reader = newReader("{\"a\":}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.nextString();
       fail();
@@ -414,8 +412,8 @@ public final class JsonUtf8ReaderTest {
   public void prematureEndOfInput() throws IOException {
     JsonReader reader = newReader("{\"a\":true,");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextBoolean()).isTrue();
+    assertEquals(reader.nextName(), "a");
+    assertTrue(reader.nextBoolean());
     try {
       reader.nextName();
       fail();
@@ -459,7 +457,7 @@ public final class JsonUtf8ReaderTest {
   public void strictNameValueSeparator() throws IOException {
     JsonReader reader = newReader("{\"a\"=true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.nextBoolean();
       fail();
@@ -468,7 +466,7 @@ public final class JsonUtf8ReaderTest {
 
     reader = newReader("{\"a\"=>true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.nextBoolean();
       fail();
@@ -481,21 +479,21 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{\"a\"=true}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextBoolean()).isTrue();
+    assertEquals(reader.nextName(), "a");
+    assertTrue(reader.nextBoolean());
 
     reader = newReader("{\"a\"=>true}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextBoolean()).isTrue();
+    assertEquals(reader.nextName(), "a");
+    assertTrue(reader.nextBoolean());
   }
 
   @Test
   public void strictNameValueSeparatorWithSkipValue() throws IOException {
     JsonReader reader = newReader("{\"a\"=true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.skipValue();
       fail();
@@ -504,7 +502,7 @@ public final class JsonUtf8ReaderTest {
 
     reader = newReader("{\"a\"=>true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.skipValue();
       fail();
@@ -516,19 +514,19 @@ public final class JsonUtf8ReaderTest {
   public void commentsInStringValue() throws Exception {
     JsonReader reader = newReader("[\"// comment\"]");
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("// comment");
+    assertEquals(reader.nextString(), "// comment");
     reader.endArray();
 
     reader = newReader("{\"a\":\"#someComment\"}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("#someComment");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "#someComment");
     reader.endObject();
 
     reader = newReader("{\"#//a\":\"#some //Comment\"}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("#//a");
-    assertThat(reader.nextString()).isEqualTo("#some //Comment");
+    assertEquals(reader.nextName(), "#//a");
+    assertEquals(reader.nextString(), "#some //Comment");
     reader.endObject();
   }
 
@@ -564,22 +562,22 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[// comment \n true]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
 
     reader = newReader("[# comment \n true]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
 
     reader = newReader("[/* comment */ true]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
 
     reader = newReader("a//");
     reader.setLenient(true);
-    assertThat(reader.nextString()).isEqualTo("a");
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.nextString(), "a");
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -625,15 +623,15 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{a:true}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
   }
 
   @Test
   public void jsonIsSingleUnquotedString() throws IOException {
     JsonReader reader = newReader("abc");
     reader.setLenient(true);
-    assertThat(reader.nextString()).isEqualTo("abc");
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.nextString(), "abc");
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -663,7 +661,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{'a':true}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
   }
 
   @Test
@@ -704,7 +702,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[a]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("a");
+    assertEquals(reader.nextString(), "a");
   }
 
   @Test
@@ -712,7 +710,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[a#comment\n]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("a");
+    assertEquals(reader.nextString(), "a");
     reader.endArray();
   }
 
@@ -732,7 +730,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("['a']");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("a");
+    assertEquals(reader.nextString(), "a");
   }
 
   @Test
@@ -763,8 +761,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[true;true]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
+    assertTrue(reader.nextBoolean());
   }
 
   @Test
@@ -783,7 +781,7 @@ public final class JsonUtf8ReaderTest {
   public void strictSemicolonDelimitedNameValuePair() throws IOException {
     JsonReader reader = newReader("{\"a\":true;\"b\":true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.nextBoolean();
       reader.nextName();
@@ -797,16 +795,16 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{\"a\":true;\"b\":true}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.nextName()).isEqualTo("b");
+    assertEquals(reader.nextName(), "a");
+    assertTrue(reader.nextBoolean());
+    assertEquals(reader.nextName(), "b");
   }
 
   @Test
   public void strictSemicolonDelimitedNameValuePairWithSkipValue() throws IOException {
     JsonReader reader = newReader("{\"a\":true;\"b\":true}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try {
       reader.skipValue();
       reader.skipValue();
@@ -819,7 +817,7 @@ public final class JsonUtf8ReaderTest {
   public void strictUnnecessaryArraySeparators() throws IOException {
     JsonReader reader = newReader("[true,,true]");
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     try {
       reader.nextNull();
       fail();
@@ -836,7 +834,7 @@ public final class JsonUtf8ReaderTest {
 
     reader = newReader("[true,]");
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     try {
       reader.nextNull();
       fail();
@@ -857,22 +855,22 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[true,,true]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     reader.nextNull();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     reader.endArray();
 
     reader = newReader("[,true]");
     reader.setLenient(true);
     reader.beginArray();
     reader.nextNull();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     reader.endArray();
 
     reader = newReader("[true,]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     reader.nextNull();
     reader.endArray();
 
@@ -888,7 +886,7 @@ public final class JsonUtf8ReaderTest {
   public void strictUnnecessaryArraySeparatorsWithSkipValue() throws IOException {
     JsonReader reader = newReader("[true,,true]");
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     try {
       reader.skipValue();
       fail();
@@ -905,7 +903,7 @@ public final class JsonUtf8ReaderTest {
 
     reader = newReader("[true,]");
     reader.beginArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     try {
       reader.skipValue();
       fail();
@@ -939,10 +937,10 @@ public final class JsonUtf8ReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     reader.endArray();
-    assertThat(reader.nextBoolean()).isTrue();
+    assertTrue(reader.nextBoolean());
     reader.beginObject();
     reader.endObject();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -1033,7 +1031,7 @@ public final class JsonUtf8ReaderTest {
       reader1.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo(message);
+      assertTrue(expected.getMessage().contains(message));
     }
 
     // Also validate that it works when skipping.
@@ -1045,7 +1043,7 @@ public final class JsonUtf8ReaderTest {
       reader2.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo(message);
+      assertTrue(expected.getMessage().contains(message));
     }
   }
 
@@ -1064,7 +1062,7 @@ public final class JsonUtf8ReaderTest {
       reader.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $[1].a[2]");
+      assertTrue(expected.getMessage().contains("Expected value at path $[1].a[2]"));
     }
   }
 
@@ -1079,7 +1077,7 @@ public final class JsonUtf8ReaderTest {
       reader.peek();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Expected value at path $.null[1]");
+      assertTrue(expected.getMessage().contains("Expected value at path $.null[1]"));
     }
   }
 
@@ -1089,7 +1087,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[0." + repeat('9', 8192) + "]");
     reader.beginArray();
     try {
-      assertThat(reader.nextDouble()).isEqualTo(1d);
+      assertEquals(reader.nextDouble(), 1d);
       fail();
     } catch (JsonEncodingException expected) {
     }
@@ -1101,10 +1099,10 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[0." + repeat('9', 8192) + "]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
-    assertThat(reader.nextDouble()).isEqualTo(1d);
+    assertEquals(reader.peek(), JsonReader.Token.STRING);
+    assertEquals(reader.nextDouble(), 1d);
     reader.endArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+    assertEquals(reader.peek(), JsonReader.Token.END_DOCUMENT);
   }
 
   @Test
@@ -1113,7 +1111,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[" + literal + "]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo(literal);
+    assertEquals(reader.nextString(), literal);
     reader.endArray();
   }
 
@@ -1127,9 +1125,8 @@ public final class JsonUtf8ReaderTest {
       reader.beginArray();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Nesting too deep at $" + repeat("[0]", MAX_DEPTH));
+      assertTrue(
+          expected.getMessage().contains("Nesting too deep at $" + repeat("[0]", MAX_DEPTH)));
     }
   }
 
@@ -1145,15 +1142,13 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader(json);
     for (int i = 0; i < MAX_DEPTH; i++) {
       reader.beginObject();
-      assertThat(reader.nextName()).isEqualTo("a");
+      assertEquals(reader.nextName(), "a");
     }
     try {
       reader.beginObject();
       fail();
     } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Nesting too deep at $" + repeat(".a", MAX_DEPTH));
+      assertTrue(expected.getMessage().contains("Nesting too deep at $" + repeat(".a", MAX_DEPTH)));
     }
   }
 
@@ -1196,8 +1191,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{\"a\":\"android\"x");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("android");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "android");
     try {
       reader.peek();
       fail();
@@ -1213,7 +1208,7 @@ public final class JsonUtf8ReaderTest {
     String json = "[\"" + string + "\"]";
     JsonReader reader = newReader(json);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo(string);
+    assertEquals(reader.nextString(), string);
     reader.endArray();
   }
 
@@ -1226,7 +1221,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader(json);
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo(string);
+    assertEquals(reader.nextString(), string);
     reader.endArray();
   }
 
@@ -1239,7 +1234,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader(json);
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo(string);
+    assertEquals(reader.nextString(), string);
     try {
       reader.peek();
       fail();
@@ -1251,8 +1246,8 @@ public final class JsonUtf8ReaderTest {
   public void strictExtraCommasInMaps() throws IOException {
     JsonReader reader = newReader("{\"a\":\"b\",}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("b");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "b");
     try {
       reader.peek();
       fail();
@@ -1265,8 +1260,8 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{\"a\":\"b\",}");
     reader.setLenient(true);
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("b");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.nextString(), "b");
     try {
       reader.peek();
       fail();
@@ -1328,7 +1323,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[\"string");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.peek()).isEqualTo(JsonReader.Token.STRING);
+    assertEquals(reader.peek(), JsonReader.Token.STRING);
     try {
       reader.nextString();
       fail();
@@ -1344,7 +1339,7 @@ public final class JsonUtf8ReaderTest {
       reader.nextString();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo("Invalid escape sequence: \\i at path $[0]");
+      assertTrue(expected.getMessage().contains("Invalid escape sequence: \\i at path $[0]"));
     }
   }
 
@@ -1353,7 +1348,7 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("[\"str\\ing\"]");
     reader.setLenient(true);
     reader.beginArray();
-    assertThat(reader.nextString()).isEqualTo("string");
+    assertEquals(reader.nextString(), "string");
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {
@@ -1369,13 +1364,13 @@ public final class JsonUtf8ReaderTest {
       } else if (expectation == END_ARRAY) {
         reader.endArray();
       } else if (expectation == NAME) {
-        assertThat(reader.nextName()).isEqualTo("name");
+        assertEquals(reader.nextName(), "name");
       } else if (expectation == BOOLEAN) {
-        assertThat(reader.nextBoolean()).isFalse();
+        assertFalse(reader.nextBoolean());
       } else if (expectation == STRING) {
-        assertThat(reader.nextString()).isEqualTo("string");
+        assertEquals(reader.nextString(), "string");
       } else if (expectation == NUMBER) {
-        assertThat(reader.nextInt()).isEqualTo(123);
+        assertEquals(reader.nextInt(), 123);
       } else if (expectation == NULL) {
         reader.nextNull();
       } else if (expectation instanceof Class
@@ -1397,9 +1392,9 @@ public final class JsonUtf8ReaderTest {
     // language=JSON
     JsonReader reader = newReader("{\n  \"a\": {\n    \"b\": 2,\n    \"c\": 3\n  }\n}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try (BufferedSource valueSource = reader.nextSource()) {
-      assertThat(valueSource.readUtf8()).isEqualTo("{\n    \"b\": 2,\n    \"c\": 3\n  }");
+      assertEquals(valueSource.readUtf8(), "{\n    \"b\": 2,\n    \"c\": 3\n  }");
     }
   }
 
@@ -1408,9 +1403,9 @@ public final class JsonUtf8ReaderTest {
     // language=JSON
     JsonReader reader = newReader("{\n  \"a\": -2\n}");
     reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
+    assertEquals(reader.nextName(), "a");
     try (BufferedSource valueSource = reader.nextSource()) {
-      assertThat(valueSource.readUtf8()).isEqualTo("-2");
+      assertEquals(valueSource.readUtf8(), "-2");
     }
   }
 
@@ -1430,15 +1425,15 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = JsonReader.of(Okio.buffer((Source) stream));
     reader.beginArray();
     BufferedSource source = reader.nextSource();
-    assertThat(source.readUtf8(1)).isEqualTo("\"");
+    assertEquals(source.readUtf8(1), "\"");
     stream.writeUtf8("hello");
-    assertThat(source.readUtf8(5)).isEqualTo("hello");
+    assertEquals(source.readUtf8(5), "hello");
     stream.writeUtf8("world");
-    assertThat(source.readUtf8(5)).isEqualTo("world");
+    assertEquals(source.readUtf8(5), "world");
     stream.writeUtf8("\"");
-    assertThat(source.readUtf8(1)).isEqualTo("\"");
+    assertEquals(source.readUtf8(1), "\"");
     stream.writeUtf8("]");
-    assertThat(source.exhausted()).isTrue();
+    assertTrue(source.exhausted());
     reader.endArray();
   }
 
@@ -1447,9 +1442,9 @@ public final class JsonUtf8ReaderTest {
     // language=JSON
     JsonReader reader = newReader("[\"p\u0065psi\"]");
     reader.beginArray();
-    assertThat(reader.selectName(JsonReader.Options.of("coke"))).isEqualTo(-1);
+    assertEquals(reader.selectName(JsonReader.Options.of("coke")), -1);
     try (BufferedSource valueSource = reader.nextSource()) {
-      assertThat(valueSource.readUtf8()).isEqualTo("\"pepsi\""); // not the original characters!
+      assertEquals(valueSource.readUtf8(), "\"pepsi\""); // not the original characters!
     }
   }
 
@@ -1460,9 +1455,9 @@ public final class JsonUtf8ReaderTest {
     reader.beginObject();
     reader.promoteNameToValue();
     try (BufferedSource valueSource = reader.nextSource()) {
-      assertThat(valueSource.readUtf8()).isEqualTo("\"a\"");
+      assertEquals(valueSource.readUtf8(), "\"a\"");
     }
-    assertThat(reader.nextBoolean()).isEqualTo(true);
+    assertTrue(reader.nextBoolean());
     reader.endObject();
   }
 
@@ -1472,22 +1467,22 @@ public final class JsonUtf8ReaderTest {
     JsonReader reader = newReader("{\"a\":true,\"b\":[],\"c\":false}");
     reader.beginObject();
 
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.getPath()).isEqualTo("$.a");
-    assertThat(reader.nextBoolean()).isTrue();
-    assertThat(reader.getPath()).isEqualTo("$.a");
+    assertEquals(reader.nextName(), "a");
+    assertEquals(reader.getPath(), "$.a");
+    assertTrue(reader.nextBoolean());
+    assertEquals(reader.getPath(), "$.a");
 
-    assertThat(reader.nextName()).isEqualTo("b");
+    assertEquals(reader.nextName(), "b");
     try (BufferedSource valueSource = reader.nextSource()) {
-      assertThat(reader.getPath()).isEqualTo("$.b");
-      assertThat(valueSource.readUtf8()).isEqualTo("[]");
+      assertEquals(reader.getPath(), "$.b");
+      assertEquals(valueSource.readUtf8(), "[]");
     }
-    assertThat(reader.getPath()).isEqualTo("$.b");
+    assertEquals(reader.getPath(), "$.b");
 
-    assertThat(reader.nextName()).isEqualTo("c");
-    assertThat(reader.getPath()).isEqualTo("$.c");
-    assertThat(reader.nextBoolean()).isFalse();
-    assertThat(reader.getPath()).isEqualTo("$.c");
+    assertEquals(reader.nextName(), "c");
+    assertEquals(reader.getPath(), "$.c");
+    assertFalse(reader.nextBoolean());
+    assertEquals(reader.getPath(), "$.c");
     reader.endObject();
   }
 }

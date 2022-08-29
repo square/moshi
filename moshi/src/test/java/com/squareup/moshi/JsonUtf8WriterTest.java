@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import okio.Buffer;
@@ -59,7 +59,7 @@ public final class JsonUtf8WriterTest {
             + "      \"i\": 9.0\n"
             + "   }\n"
             + "}";
-    assertThat(buffer.readUtf8()).isEqualTo(expected);
+    assertEquals(buffer.readUtf8(), expected);
   }
 
   @Test
@@ -98,7 +98,7 @@ public final class JsonUtf8WriterTest {
             + "      9.0\n"
             + "   ]\n"
             + "]";
-    assertThat(buffer.readUtf8()).isEqualTo(expected);
+    assertEquals(buffer.readUtf8(), expected);
   }
 
   @Test
@@ -110,7 +110,7 @@ public final class JsonUtf8WriterTest {
     writer.name("a").value(2);
     writer.endObject();
     // JsonWriter doesn't attempt to detect duplicate names
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":1,\"a\":2}");
+    assertEquals(buffer.readUtf8(), "{\"a\":1,\"a\":2}");
   }
 
   @Test
@@ -127,6 +127,6 @@ public final class JsonUtf8WriterTest {
     writer.name("d");
     writer.value(new Buffer().writeUtf8("null"));
     writer.endObject();
-    assertThat(buffer.readUtf8()).isEqualTo("{\"a\":[\"value\"],\"b\":2,\"c\":3,\"d\":null}");
+    assertEquals(buffer.readUtf8(), "{\"a\":[\"value\"],\"b\":2,\"c\":3,\"d\":null}");
   }
 }

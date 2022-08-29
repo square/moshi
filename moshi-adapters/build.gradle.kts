@@ -14,7 +14,6 @@ dependencies {
   api(project(":moshi"))
 
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
 }
 
 tasks.withType<Jar>().configureEach {

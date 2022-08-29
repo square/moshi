@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -52,22 +52,22 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(delivery))
-        .isEqualTo(
-            "{"
-                + "\"address\":\"1455 Market St.\","
-                + "\"items\":["
-                + "{\"diameter\":12,\"extraCheese\":true},"
-                + "\"Pepsi\""
-                + "]"
-                + "}");
+    assertEquals(
+        adapter.toJson(delivery),
+        "{"
+            + "\"address\":\"1455 Market St.\","
+            + "\"items\":["
+            + "{\"diameter\":12,\"extraCheese\":true},"
+            + "\"Pepsi\""
+            + "]"
+            + "}");
   }
 
   @Test
   public void toJsonJavaLangObject() {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(new Object())).isEqualTo("{}");
+    assertEquals(adapter.toJson(new Object()), "{}");
   }
 
   @Test
@@ -81,23 +81,23 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(
-            adapter.fromJson(
-                "{"
-                    + "\"address\":\"1455 Market St.\","
-                    + "\"items\":["
-                    + "{\"diameter\":12,\"extraCheese\":true},"
-                    + "\"Pepsi\""
-                    + "]"
-                    + "}"))
-        .isEqualTo(delivery);
+    assertEquals(
+        adapter.fromJson(
+            "{"
+                + "\"address\":\"1455 Market St.\","
+                + "\"items\":["
+                + "{\"diameter\":12,\"extraCheese\":true},"
+                + "\"Pepsi\""
+                + "]"
+                + "}"),
+        delivery);
   }
 
   @Test
   public void fromJsonUsesDoublesForNumbers() throws Exception {
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.fromJson("[0, 1]")).isEqualTo(Arrays.asList(0d, 1d));
+    assertEquals(adapter.fromJson("[0, 1]"), Arrays.asList(0d, 1d));
   }
 
   @Test
@@ -108,7 +108,7 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.fromJson("{\"address\":null, \"items\":null}")).isEqualTo(emptyDelivery);
+    assertEquals(adapter.fromJson("{\"address\":null, \"items\":null}"), emptyDelivery);
   }
 
   @Test
@@ -128,7 +128,7 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(collection)).isEqualTo("[\"A\"]");
+    assertEquals(adapter.toJson(collection), "[\"A\"]");
   }
 
   @Test
@@ -148,7 +148,7 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(list)).isEqualTo("[\"A\"]");
+    assertEquals(adapter.toJson(list), "[\"A\"]");
   }
 
   @Test
@@ -168,7 +168,7 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(set)).isEqualTo("[\"A\"]");
+    assertEquals(adapter.toJson(set), "[\"A\"]");
   }
 
   @Test
@@ -183,7 +183,7 @@ public final class ObjectAdapterTest {
 
     Moshi moshi = new Moshi.Builder().build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(map)).isEqualTo("{\"A\":true}");
+    assertEquals(adapter.toJson(map), "{\"A\":true}");
   }
 
   @Test
@@ -202,7 +202,7 @@ public final class ObjectAdapterTest {
         };
     Moshi moshi = new Moshi.Builder().add(dateAdapter).build();
     JsonAdapter<Object> adapter = moshi.adapter(Object.class);
-    assertThat(adapter.toJson(Arrays.asList(new Date(1), new Date(2)))).isEqualTo("[1,2]");
+    assertEquals(adapter.toJson(Arrays.asList(new Date(1), new Date(2))), "[1,2]");
   }
 
   /**
@@ -228,7 +228,14 @@ public final class ObjectAdapterTest {
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     Map<String, String> value =
         (Map<String, String>) objectAdapter.fromJson("{\"a\":\"b\", \"c\":\"d\"}");
-    assertThat(value).containsExactly("A", "B", "C", "D");
+    Object[] keys = value.keySet().toArray();
+    Object[] values = value.values().toArray();
+    assertEquals(keys[0], "A");
+    assertEquals(keys[1], "C");
+    assertEquals(values[0], "B");
+    assertEquals(values[1], "D");
+    assertEquals(value.get("A"), "B");
+    assertEquals(value.get("C"), "D");
   }
 
   /**
@@ -266,13 +273,13 @@ public final class ObjectAdapterTest {
     Moshi moshi = new Moshi.Builder().add(objectFactory).build();
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     List<?> value = (List<?>) objectAdapter.fromJson("[0, 1, 2.0, 3.14]");
-    assertThat(value)
-        .isEqualTo(
-            Arrays.asList(
-                new BigDecimal("0"),
-                new BigDecimal("1"),
-                new BigDecimal("2.0"),
-                new BigDecimal("3.14")));
+    assertEquals(
+        value,
+        Arrays.asList(
+            new BigDecimal("0"),
+            new BigDecimal("1"),
+            new BigDecimal("2.0"),
+            new BigDecimal("3.14")));
   }
 
   /** Confirm that the built-in adapter for Object delegates to user-supplied adapters for lists. */
@@ -295,7 +302,7 @@ public final class ObjectAdapterTest {
     Moshi moshi = new Moshi.Builder().add(List.class, listAdapter).build();
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     Map<?, ?> mapOfList = (Map<?, ?>) objectAdapter.fromJson("{\"a\":[\"b\"]}");
-    assertThat(mapOfList).isEqualTo(singletonMap("a", singletonList("z")));
+    assertEquals(mapOfList, singletonMap("a", singletonList("z")));
   }
 
   /** Confirm that the built-in adapter for Object delegates to user-supplied adapters for maps. */
@@ -318,7 +325,7 @@ public final class ObjectAdapterTest {
     Moshi moshi = new Moshi.Builder().add(Map.class, mapAdapter).build();
     JsonAdapter<Object> objectAdapter = moshi.adapter(Object.class);
     List<?> listOfMap = (List<?>) objectAdapter.fromJson("[{\"b\":\"c\"}]");
-    assertThat(listOfMap).isEqualTo(singletonList(singletonMap("x", "y")));
+    assertEquals(listOfMap, singletonList(singletonMap("x", "y")));
   }
 
   static class Delivery {

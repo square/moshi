@@ -15,10 +15,14 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.internal.Util.canonicalize;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.annotation.Annotation;
@@ -50,47 +54,48 @@ public final class TypesTest {
   @TestQualifier private Object hasTestQualifier;
 
   @Test
-  public void nextAnnotationsRequiresJsonAnnotation() throws Exception {
+  public void nextAnnotationsRequiresJsonAnnotation() {
     try {
-      Types.nextAnnotations(Collections.<Annotation>emptySet(), TestAnnotation.class);
+      Types.nextAnnotations(Collections.emptySet(), TestAnnotation.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo(
-              "interface com.squareup.moshi.TypesTest$TestAnnotation is not a JsonQualifier.");
+      assertTrue(
+          expected
+              .getMessage()
+              .contains(
+                  "interface com.squareup.moshi.TypesTest$TestAnnotation is not a JsonQualifier."));
     }
   }
 
   @Test
-  public void nextAnnotationsDoesNotContainReturnsNull() throws Exception {
+  public void nextAnnotationsDoesNotContainReturnsNull() {
     Set<? extends Annotation> annotations =
         Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
-    assertThat(Types.nextAnnotations(annotations, TestQualifier.class)).isNull();
-    assertThat(Types.nextAnnotations(Collections.<Annotation>emptySet(), TestQualifier.class))
-        .isNull();
+    assertNull(Types.nextAnnotations(annotations, TestQualifier.class));
+    assertNull(Types.nextAnnotations(Collections.emptySet(), TestQualifier.class));
   }
 
   @Test
-  public void nextAnnotationsReturnsDelegateAnnotations() throws Exception {
+  public void nextAnnotationsReturnsDelegateAnnotations() {
     Set<Annotation> annotations = new LinkedHashSet<>(2);
     annotations.add(Types.createJsonQualifierImplementation(TestQualifier.class));
     annotations.add(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
     Set<AnotherTestQualifier> expected =
         Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
-    assertThat(Types.nextAnnotations(Collections.unmodifiableSet(annotations), TestQualifier.class))
-        .isEqualTo(expected);
+    assertEquals(
+        Types.nextAnnotations(Collections.unmodifiableSet(annotations), TestQualifier.class),
+        expected);
   }
 
   @Test
   public void newParameterizedType() throws Exception {
     // List<A>. List is a top-level class.
     Type type = Types.newParameterizedType(List.class, A.class);
-    assertThat(getFirstTypeArgument(type)).isEqualTo(A.class);
+    assertEquals(getFirstTypeArgument(type), A.class);
 
     // A<B>. A is a static inner class.
     type = Types.newParameterizedTypeWithOwner(TypesTest.class, A.class, B.class);
-    assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
+    assertEquals(getFirstTypeArgument(type), B.class);
   }
 
   @Test
@@ -99,58 +104,56 @@ public final class TypesTest {
       Types.newParameterizedType(List.class);
       fail("Should have errored due to missing type variable");
     } catch (Exception e) {
-      assertThat(e).hasMessageThat().contains("Missing type arguments");
+      assertTrue(e.getMessage().contains("Missing type arguments"));
     }
 
     try {
       Types.newParameterizedTypeWithOwner(TypesTest.class, A.class);
       fail("Should have errored due to missing type variable");
     } catch (Exception e) {
-      assertThat(e).hasMessageThat().contains("Missing type arguments");
+      assertTrue(e.getMessage().contains("Missing type arguments"));
     }
   }
 
   @Test
-  public void parameterizedTypeWithRequiredOwnerMissing() throws Exception {
+  public void parameterizedTypeWithRequiredOwnerMissing() {
     try {
       Types.newParameterizedType(A.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("unexpected owner type for " + A.class + ": null");
+      assertTrue(expected.getMessage().contains("unexpected owner type for " + A.class + ": null"));
     }
   }
 
   @Test
-  public void parameterizedTypeWithUnnecessaryOwnerProvided() throws Exception {
+  public void parameterizedTypeWithUnnecessaryOwnerProvided() {
     try {
       Types.newParameterizedTypeWithOwner(A.class, List.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("unexpected owner type for " + List.class + ": " + A.class);
+      assertTrue(
+          expected
+              .getMessage()
+              .contains("unexpected owner type for " + List.class + ": " + A.class));
     }
   }
 
   @Test
-  public void parameterizedTypeWithIncorrectOwnerProvided() throws Exception {
+  public void parameterizedTypeWithIncorrectOwnerProvided() {
     try {
       Types.newParameterizedTypeWithOwner(A.class, D.class, B.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("unexpected owner type for " + D.class + ": " + A.class);
+      assertTrue(
+          expected.getMessage().contains("unexpected owner type for " + D.class + ": " + A.class));
     }
   }
 
   @Test
   public void arrayOf() {
-    assertThat(Types.getRawType(Types.arrayOf(int.class))).isEqualTo(int[].class);
-    assertThat(Types.getRawType(Types.arrayOf(List.class))).isEqualTo(List[].class);
-    assertThat(Types.getRawType(Types.arrayOf(String[].class))).isEqualTo(String[][].class);
+    assertEquals(Types.getRawType(Types.arrayOf(int.class)), int[].class);
+    assertEquals(Types.getRawType(Types.arrayOf(List.class)), List[].class);
+    assertEquals(Types.getRawType(Types.arrayOf(String[].class)), String[][].class);
   }
 
   List<? extends CharSequence> listSubtype;
@@ -160,22 +163,22 @@ public final class TypesTest {
   public void subtypeOf() throws Exception {
     Type listOfWildcardType = TypesTest.class.getDeclaredField("listSubtype").getGenericType();
     Type expected = Types.collectionElementType(listOfWildcardType, List.class);
-    assertThat(Types.subtypeOf(CharSequence.class)).isEqualTo(expected);
+    assertEquals(Types.subtypeOf(CharSequence.class), expected);
   }
 
   @Test
   public void supertypeOf() throws Exception {
     Type listOfWildcardType = TypesTest.class.getDeclaredField("listSupertype").getGenericType();
     Type expected = Types.collectionElementType(listOfWildcardType, List.class);
-    assertThat(Types.supertypeOf(String.class)).isEqualTo(expected);
+    assertEquals(Types.supertypeOf(String.class), expected);
   }
 
   @Test
   public void getFirstTypeArgument() throws Exception {
-    assertThat(getFirstTypeArgument(A.class)).isNull();
+    assertNull(getFirstTypeArgument(A.class));
 
     Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, A.class, B.class, C.class);
-    assertThat(getFirstTypeArgument(type)).isEqualTo(B.class);
+    assertEquals(getFirstTypeArgument(type), B.class);
   }
 
   @Test
@@ -184,16 +187,16 @@ public final class TypesTest {
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
     ParameterizedType newMapType =
         Types.newParameterizedType(Map.class, String.class, Integer.class);
-    assertThat(newMapType).isEqualTo(mapOfStringIntegerType);
-    assertThat(newMapType.hashCode()).isEqualTo(mapOfStringIntegerType.hashCode());
-    assertThat(newMapType.toString()).isEqualTo(mapOfStringIntegerType.toString());
+    assertEquals(newMapType, mapOfStringIntegerType);
+    assertEquals(newMapType.hashCode(), mapOfStringIntegerType.hashCode());
+    assertEquals(newMapType.toString(), mapOfStringIntegerType.toString());
 
     Type arrayListOfMapOfStringIntegerType =
         TypesTest.class.getDeclaredField("arrayListOfMapOfStringInteger").getGenericType();
     ParameterizedType newListType = Types.newParameterizedType(ArrayList.class, newMapType);
-    assertThat(newListType).isEqualTo(arrayListOfMapOfStringIntegerType);
-    assertThat(newListType.hashCode()).isEqualTo(arrayListOfMapOfStringIntegerType.hashCode());
-    assertThat(newListType.toString()).isEqualTo(arrayListOfMapOfStringIntegerType.toString());
+    assertEquals(newListType, arrayListOfMapOfStringIntegerType);
+    assertEquals(newListType.hashCode(), arrayListOfMapOfStringIntegerType.hashCode());
+    assertEquals(newListType.toString(), arrayListOfMapOfStringIntegerType.toString());
   }
 
   private static final class A {}
@@ -224,15 +227,14 @@ public final class TypesTest {
 
   @Test
   public void arrayComponentType() throws Exception {
-    assertThat(Types.arrayComponentType(String[][].class)).isEqualTo(String[].class);
-    assertThat(Types.arrayComponentType(String[].class)).isEqualTo(String.class);
+    assertEquals(Types.arrayComponentType(String[][].class), String[].class);
+    assertEquals(Types.arrayComponentType(String[].class), String.class);
 
     Type arrayOfMapOfStringIntegerType =
         TypesTest.class.getDeclaredField("arrayOfMapOfStringInteger").getGenericType();
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
-    assertThat(Types.arrayComponentType(arrayOfMapOfStringIntegerType))
-        .isEqualTo(mapOfStringIntegerType);
+    assertEquals(Types.arrayComponentType(arrayOfMapOfStringIntegerType), mapOfStringIntegerType);
   }
 
   @Test
@@ -241,34 +243,35 @@ public final class TypesTest {
         TypesTest.class.getDeclaredField("arrayListOfMapOfStringInteger").getGenericType();
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
-    assertThat(Types.collectionElementType(arrayListOfMapOfStringIntegerType, List.class))
-        .isEqualTo(mapOfStringIntegerType);
+    assertEquals(
+        Types.collectionElementType(arrayListOfMapOfStringIntegerType, List.class),
+        mapOfStringIntegerType);
   }
 
   @Test
   public void mapKeyAndValueTypes() throws Exception {
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
-    assertThat(Types.mapKeyAndValueTypes(mapOfStringIntegerType, Map.class))
-        .asList()
-        .containsExactly(String.class, Integer.class)
-        .inOrder();
+    Type[] types = Types.mapKeyAndValueTypes(mapOfStringIntegerType, Map.class);
+
+    assertEquals(types[0], String.class);
+    assertEquals(types[1], Integer.class);
   }
 
   @Test
-  public void propertiesTypes() throws Exception {
-    assertThat(Types.mapKeyAndValueTypes(Properties.class, Properties.class))
-        .asList()
-        .containsExactly(String.class, String.class)
-        .inOrder();
+  public void propertiesTypes() {
+    Type[] types = Types.mapKeyAndValueTypes(Properties.class, Properties.class);
+
+    assertEquals(types[0], String.class);
+    assertEquals(types[1], String.class);
   }
 
   @Test
-  public void fixedVariablesTypes() throws Exception {
-    assertThat(Types.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class))
-        .asList()
-        .containsExactly(String.class, Integer.class)
-        .inOrder();
+  public void fixedVariablesTypes() {
+    Type[] types = Types.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class);
+
+    assertEquals(types[0], String.class);
+    assertEquals(types[1], Integer.class);
   }
 
   @SuppressWarnings("GetClassOnAnnotation") // Explicitly checking for proxy implementation.
@@ -277,46 +280,41 @@ public final class TypesTest {
     TestQualifier actual = Types.createJsonQualifierImplementation(TestQualifier.class);
     TestQualifier expected =
         (TestQualifier) TypesTest.class.getDeclaredField("hasTestQualifier").getAnnotations()[0];
-    assertThat(actual.annotationType()).isEqualTo(TestQualifier.class);
-    assertThat(actual).isEqualTo(expected);
-    assertThat(actual).isNotEqualTo(null);
-    assertThat(actual.hashCode()).isEqualTo(expected.hashCode());
-    assertThat(actual.getClass()).isNotEqualTo(TestQualifier.class);
+    assertEquals(actual.annotationType(), TestQualifier.class);
+    assertEquals(actual, expected);
+    assertNotNull(actual);
+    assertEquals(actual.hashCode(), expected.hashCode());
+    assertNotEquals(actual.getClass(), TestQualifier.class);
   }
 
   @Test
   public void arrayEqualsGenericTypeArray() {
-    assertThat(Types.equals(int[].class, Types.arrayOf(int.class))).isTrue();
-    assertThat(Types.equals(Types.arrayOf(int.class), int[].class)).isTrue();
-    assertThat(Types.equals(String[].class, Types.arrayOf(String.class))).isTrue();
-    assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
+    assertTrue(Types.equals(int[].class, Types.arrayOf(int.class)));
+    assertTrue(Types.equals(Types.arrayOf(int.class), int[].class));
+    assertTrue(Types.equals(String[].class, Types.arrayOf(String.class)));
+    assertTrue(Types.equals(Types.arrayOf(String.class), String[].class));
   }
 
   @Test
-  public void parameterizedAndWildcardTypesCannotHavePrimitiveArguments() throws Exception {
+  public void parameterizedAndWildcardTypesCannotHavePrimitiveArguments() {
     try {
       Types.newParameterizedType(List.class, int.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Unexpected primitive int. Use the boxed type.");
+      assertTrue(expected.getMessage().contains("Unexpected primitive int. Use the boxed type."));
     }
     try {
       Types.subtypeOf(byte.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Unexpected primitive byte. Use the boxed type.");
+      assertTrue(expected.getMessage().contains("Unexpected primitive byte. Use the boxed type."));
     }
     try {
       Types.subtypeOf(boolean.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Unexpected primitive boolean. Use the boxed type.");
+      assertTrue(
+          expected.getMessage().contains("Unexpected primitive boolean. Use the boxed type."));
     }
   }
 
@@ -325,8 +323,8 @@ public final class TypesTest {
     Set<? extends Annotation> annotations =
         Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class, "privateField");
 
-    assertThat(annotations).hasSize(1);
-    assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
+    assertEquals(1, annotations.size());
+    assertTrue(annotations.iterator().next() instanceof FieldAnnotation);
   }
 
   @Test
@@ -334,8 +332,8 @@ public final class TypesTest {
     Set<? extends Annotation> annotations =
         Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class, "publicField");
 
-    assertThat(annotations).hasSize(1);
-    assertThat(annotations.iterator().next()).isInstanceOf(FieldAnnotation.class);
+    assertEquals(1, annotations.size());
+    assertTrue(annotations.iterator().next() instanceof FieldAnnotation);
   }
 
   @Test
@@ -343,20 +341,20 @@ public final class TypesTest {
     Set<? extends Annotation> annotations =
         Types.getFieldJsonQualifierAnnotations(ClassWithAnnotatedFields.class, "unannotatedField");
 
-    assertThat(annotations).hasSize(0);
+    assertEquals(0, annotations.size());
   }
 
   @Test
   public void generatedJsonAdapterName_strings() {
-    assertThat(Types.generatedJsonAdapterName("com.foo.Test")).isEqualTo("com.foo.TestJsonAdapter");
-    assertThat(Types.generatedJsonAdapterName("com.foo.Test$Bar"))
-        .isEqualTo("com.foo.Test_BarJsonAdapter");
+    assertEquals(Types.generatedJsonAdapterName("com.foo.Test"), "com.foo.TestJsonAdapter");
+    assertEquals(Types.generatedJsonAdapterName("com.foo.Test$Bar"), "com.foo.Test_BarJsonAdapter");
   }
 
   @Test
   public void generatedJsonAdapterName_class() {
-    assertThat(Types.generatedJsonAdapterName(TestJsonClass.class))
-        .isEqualTo("com.squareup.moshi.TypesTest_TestJsonClassJsonAdapter");
+    assertEquals(
+        Types.generatedJsonAdapterName(TestJsonClass.class),
+        "com.squareup.moshi.TypesTest_TestJsonClassJsonAdapter");
   }
 
   @Test
@@ -365,7 +363,7 @@ public final class TypesTest {
       Types.generatedJsonAdapterName(TestNonJsonClass.class);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().contains("Class does not have a JsonClass annotation");
+      assertTrue(e.getMessage().contains("Class does not have a JsonClass annotation"));
     }
   }
 
@@ -387,19 +385,19 @@ public final class TypesTest {
             .adapter(
                 Types.newParameterizedTypeWithOwner(
                     TypesTest.class, RecursiveTypeVars.class, String.class));
-    assertThat(adapter).isNotNull();
+    assertNotNull(adapter);
   }
 
   @Test
   public void recursiveTypeVariablesResolve1() {
     JsonAdapter<TestType> adapter = new Moshi.Builder().build().adapter(TestType.class);
-    assertThat(adapter).isNotNull();
+    assertNotNull(adapter);
   }
 
   @Test
   public void recursiveTypeVariablesResolve2() {
     JsonAdapter<TestType2> adapter = new Moshi.Builder().build().adapter(TestType2.class);
-    assertThat(adapter).isNotNull();
+    assertNotNull(adapter);
   }
 
   private static class TestType<X> {

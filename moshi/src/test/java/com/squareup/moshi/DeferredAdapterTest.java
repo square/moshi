@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -59,12 +59,11 @@ public final class DeferredAdapterTest {
                     @Override
                     public void run() {
                       GreenNode greenBlue = new GreenNode(new BlueNode(null, null));
-                      assertThat(moshi.adapter(GreenNode.class).toJson(greenBlue))
-                          .isEqualTo("{\"blue\":{}}");
+                      assertEquals(
+                          moshi.adapter(GreenNode.class).toJson(greenBlue), "{\"blue\":{}}");
 
                       RedNode redBlue = new RedNode(new BlueNode(null, null));
-                      assertThat(moshi.adapter(RedNode.class).toJson(redBlue))
-                          .isEqualTo("{\"blue\":{}}");
+                      assertEquals(moshi.adapter(RedNode.class).toJson(redBlue), "{\"blue\":{}}");
                     }
                   });
             }
@@ -75,10 +74,11 @@ public final class DeferredAdapterTest {
     Moshi moshi = new Moshi.Builder().add(factory).build();
 
     JsonAdapter<BlueNode> jsonAdapter = moshi.adapter(BlueNode.class);
-    assertThat(jsonAdapter.toJson(new BlueNode(new GreenNode(new BlueNode(null, null)), null)))
-        .isEqualTo("{\"green\":{\"blue\":{}}}");
+    assertEquals(
+        jsonAdapter.toJson(new BlueNode(new GreenNode(new BlueNode(null, null)), null)),
+        "{\"green\":{\"blue\":{}}}");
 
-    assertThat(failures).isEmpty();
+    assertEquals(0, failures.size());
   }
 
   private void doInAnotherThread(Runnable runnable) {

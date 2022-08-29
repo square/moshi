@@ -75,7 +75,6 @@ dependencies {
   testImplementation(libs.kotlinpoet.metadata)
   testImplementation(libs.kotlinpoet.ksp)
   testImplementation(libs.junit)
-  testImplementation(libs.truth)
   testImplementation(libs.kotlinCompileTesting)
 }
 

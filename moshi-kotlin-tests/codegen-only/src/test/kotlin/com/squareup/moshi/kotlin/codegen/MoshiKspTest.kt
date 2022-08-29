@@ -15,9 +15,9 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 // Regression tests specific to Moshi-KSP
@@ -32,9 +32,9 @@ class MoshiKspTest {
     val json = """{"a":"aValue","b":"bValue"}"""
     val expected = SimpleImpl("aValue", "bValue")
     val instance = adapter.fromJson(json)!!
-    assertThat(instance).isEqualTo(expected)
+    assertEquals(instance, expected)
     val encoded = adapter.toJson(instance)
-    assertThat(encoded).isEqualTo(json)
+    assertEquals(encoded, json)
   }
 
   interface SimpleInterface {

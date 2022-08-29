@@ -15,7 +15,7 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
@@ -39,173 +39,173 @@ public final class JsonWriterPathTest {
   @Test
   public void path() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.");
+    assertEquals(writer.getPath(), "$.");
     writer.name("a");
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$.a[0]");
+    assertEquals(writer.getPath(), "$.a[0]");
     writer.value(2);
-    assertThat(writer.getPath()).isEqualTo("$.a[1]");
+    assertEquals(writer.getPath(), "$.a[1]");
     writer.value(true);
-    assertThat(writer.getPath()).isEqualTo("$.a[2]");
+    assertEquals(writer.getPath(), "$.a[2]");
     writer.value(false);
-    assertThat(writer.getPath()).isEqualTo("$.a[3]");
+    assertEquals(writer.getPath(), "$.a[3]");
     writer.nullValue();
-    assertThat(writer.getPath()).isEqualTo("$.a[4]");
+    assertEquals(writer.getPath(), "$.a[4]");
     writer.value("b");
-    assertThat(writer.getPath()).isEqualTo("$.a[5]");
+    assertEquals(writer.getPath(), "$.a[5]");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.a[5].");
+    assertEquals(writer.getPath(), "$.a[5].");
     writer.name("c");
-    assertThat(writer.getPath()).isEqualTo("$.a[5].c");
+    assertEquals(writer.getPath(), "$.a[5].c");
     writer.value("d");
-    assertThat(writer.getPath()).isEqualTo("$.a[5].c");
+    assertEquals(writer.getPath(), "$.a[5].c");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$.a[6]");
+    assertEquals(writer.getPath(), "$.a[6]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$.a[6][0]");
+    assertEquals(writer.getPath(), "$.a[6][0]");
     writer.value(3);
-    assertThat(writer.getPath()).isEqualTo("$.a[6][1]");
+    assertEquals(writer.getPath(), "$.a[6][1]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$.a[7]");
+    assertEquals(writer.getPath(), "$.a[7]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void arrayOfObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0]");
+    assertEquals(writer.getPath(), "$[0]");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$[0].");
+    assertEquals(writer.getPath(), "$[0].");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$[1]");
+    assertEquals(writer.getPath(), "$[1]");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$[1].");
+    assertEquals(writer.getPath(), "$[1].");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$[2]");
+    assertEquals(writer.getPath(), "$[2]");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$[2].");
+    assertEquals(writer.getPath(), "$[2].");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$[3]");
+    assertEquals(writer.getPath(), "$[3]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void arrayOfArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0]");
+    assertEquals(writer.getPath(), "$[0]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0][0]");
+    assertEquals(writer.getPath(), "$[0][0]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$[1]");
+    assertEquals(writer.getPath(), "$[1]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[1][0]");
+    assertEquals(writer.getPath(), "$[1][0]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$[2]");
+    assertEquals(writer.getPath(), "$[2]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[2][0]");
+    assertEquals(writer.getPath(), "$[2][0]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$[3]");
+    assertEquals(writer.getPath(), "$[3]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void objectPath() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.");
+    assertEquals(writer.getPath(), "$.");
     writer.name("a");
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.value(1);
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.name("b");
-    assertThat(writer.getPath()).isEqualTo("$.b");
+    assertEquals(writer.getPath(), "$.b");
     writer.value(2);
-    assertThat(writer.getPath()).isEqualTo("$.b");
+    assertEquals(writer.getPath(), "$.b");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.close();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void nestedObjects() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.");
+    assertEquals(writer.getPath(), "$.");
     writer.name("a");
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.a.");
+    assertEquals(writer.getPath(), "$.a.");
     writer.name("b");
-    assertThat(writer.getPath()).isEqualTo("$.a.b");
+    assertEquals(writer.getPath(), "$.a.b");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.a.b.");
+    assertEquals(writer.getPath(), "$.a.b.");
     writer.name("c");
-    assertThat(writer.getPath()).isEqualTo("$.a.b.c");
+    assertEquals(writer.getPath(), "$.a.b.c");
     writer.nullValue();
-    assertThat(writer.getPath()).isEqualTo("$.a.b.c");
+    assertEquals(writer.getPath(), "$.a.b.c");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$.a.b");
+    assertEquals(writer.getPath(), "$.a.b");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void arrayPath() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0]");
+    assertEquals(writer.getPath(), "$[0]");
     writer.value(1);
-    assertThat(writer.getPath()).isEqualTo("$[1]");
+    assertEquals(writer.getPath(), "$[1]");
     writer.value(true);
-    assertThat(writer.getPath()).isEqualTo("$[2]");
+    assertEquals(writer.getPath(), "$[2]");
     writer.value("a");
-    assertThat(writer.getPath()).isEqualTo("$[3]");
+    assertEquals(writer.getPath(), "$[3]");
     writer.value(5.5d);
-    assertThat(writer.getPath()).isEqualTo("$[4]");
+    assertEquals(writer.getPath(), "$[4]");
     writer.value(BigInteger.ONE);
-    assertThat(writer.getPath()).isEqualTo("$[5]");
+    assertEquals(writer.getPath(), "$[5]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.close();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void nestedArrays() throws IOException {
     JsonWriter writer = factory.newWriter();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0]");
+    assertEquals(writer.getPath(), "$[0]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0][0]");
+    assertEquals(writer.getPath(), "$[0][0]");
     writer.beginArray();
-    assertThat(writer.getPath()).isEqualTo("$[0][0][0]");
+    assertEquals(writer.getPath(), "$[0][0][0]");
     writer.nullValue();
-    assertThat(writer.getPath()).isEqualTo("$[0][0][1]");
+    assertEquals(writer.getPath(), "$[0][0][1]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$[0][1]");
+    assertEquals(writer.getPath(), "$[0][1]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$[1]");
+    assertEquals(writer.getPath(), "$[1]");
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.close();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
@@ -216,28 +216,28 @@ public final class JsonWriterPathTest {
     writer.setLenient(true);
     writer.beginArray();
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginArray();
     writer.endArray();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 
   @Test
   public void skipNulls() throws IOException {
     JsonWriter writer = factory.newWriter();
     writer.setSerializeNulls(false);
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
     writer.beginObject();
-    assertThat(writer.getPath()).isEqualTo("$.");
+    assertEquals(writer.getPath(), "$.");
     writer.name("a");
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.nullValue();
-    assertThat(writer.getPath()).isEqualTo("$.a");
+    assertEquals(writer.getPath(), "$.a");
     writer.name("b");
-    assertThat(writer.getPath()).isEqualTo("$.b");
+    assertEquals(writer.getPath(), "$.b");
     writer.nullValue();
-    assertThat(writer.getPath()).isEqualTo("$.b");
+    assertEquals(writer.getPath(), "$.b");
     writer.endObject();
-    assertThat(writer.getPath()).isEqualTo("$");
+    assertEquals(writer.getPath(), "$");
   }
 }

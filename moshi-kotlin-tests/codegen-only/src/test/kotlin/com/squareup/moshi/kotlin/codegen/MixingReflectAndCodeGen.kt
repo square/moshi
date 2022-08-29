@@ -15,10 +15,10 @@
  */
 package com.squareup.moshi.kotlin.codegen
 
-import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class MixingReflectAndCodeGen {
@@ -30,13 +30,12 @@ class MixingReflectAndCodeGen {
     val generatedAdapter = moshi.adapter<UsesGeneratedAdapter>()
     val reflectionAdapter = moshi.adapter<UsesReflectionAdapter>()
 
-    assertThat(generatedAdapter.toString())
-      .isEqualTo("GeneratedJsonAdapter(MixingReflectAndCodeGen.UsesGeneratedAdapter).nullSafe()")
-    assertThat(reflectionAdapter.toString())
-      .isEqualTo(
-        "KotlinJsonAdapter(com.squareup.moshi.kotlin.codegen.MixingReflectAndCodeGen" +
-          ".UsesReflectionAdapter).nullSafe()"
-      )
+    assertEquals("GeneratedJsonAdapter(MixingReflectAndCodeGen.UsesGeneratedAdapter).nullSafe()", generatedAdapter.toString())
+    assertEquals(
+      "KotlinJsonAdapter(com.squareup.moshi.kotlin.codegen.MixingReflectAndCodeGen" +
+        ".UsesReflectionAdapter).nullSafe()",
+      reflectionAdapter.toString()
+    )
   }
 
   @JsonClass(generateAdapter = true)

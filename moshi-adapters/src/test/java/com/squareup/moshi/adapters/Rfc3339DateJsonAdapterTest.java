@@ -15,7 +15,8 @@
  */
 package com.squareup.moshi.adapters;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.squareup.moshi.JsonAdapter;
 import java.util.Calendar;
@@ -30,46 +31,51 @@ public final class Rfc3339DateJsonAdapterTest {
 
   @Test
   public void fromJsonWithTwoDigitMillis() throws Exception {
-    assertThat(adapter.fromJson("\"1985-04-12T23:20:50.52Z\""))
-        .isEqualTo(newDate(1985, 4, 12, 23, 20, 50, 520, 0));
+    assertEquals(
+        adapter.fromJson("\"1985-04-12T23:20:50.52Z\""), newDate(1985, 4, 12, 23, 20, 50, 520, 0));
   }
 
   @Test
   public void fromJson() throws Exception {
-    assertThat(adapter.fromJson("\"1970-01-01T00:00:00.000Z\""))
-        .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
-    assertThat(adapter.fromJson("\"1985-04-12T23:20:50.520Z\""))
-        .isEqualTo(newDate(1985, 4, 12, 23, 20, 50, 520, 0));
-    assertThat(adapter.fromJson("\"1996-12-19T16:39:57-08:00\""))
-        .isEqualTo(newDate(1996, 12, 19, 16, 39, 57, 0, -8 * 60));
-    assertThat(adapter.fromJson("\"1990-12-31T23:59:60Z\""))
-        .isEqualTo(newDate(1990, 12, 31, 23, 59, 59, 0, 0));
-    assertThat(adapter.fromJson("\"1990-12-31T15:59:60-08:00\""))
-        .isEqualTo(newDate(1990, 12, 31, 15, 59, 59, 0, -8 * 60));
-    assertThat(adapter.fromJson("\"1937-01-01T12:00:27.870+00:20\""))
-        .isEqualTo(newDate(1937, 1, 1, 12, 0, 27, 870, 20));
+    assertEquals(
+        adapter.fromJson("\"1970-01-01T00:00:00.000Z\""), newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+    assertEquals(
+        adapter.fromJson("\"1985-04-12T23:20:50.520Z\""), newDate(1985, 4, 12, 23, 20, 50, 520, 0));
+    assertEquals(
+        adapter.fromJson("\"1996-12-19T16:39:57-08:00\""),
+        newDate(1996, 12, 19, 16, 39, 57, 0, -8 * 60));
+    assertEquals(
+        adapter.fromJson("\"1990-12-31T23:59:60Z\""), newDate(1990, 12, 31, 23, 59, 59, 0, 0));
+    assertEquals(
+        adapter.fromJson("\"1990-12-31T15:59:60-08:00\""),
+        newDate(1990, 12, 31, 15, 59, 59, 0, -8 * 60));
+    assertEquals(
+        adapter.fromJson("\"1937-01-01T12:00:27.870+00:20\""),
+        newDate(1937, 1, 1, 12, 0, 27, 870, 20));
   }
 
   @Test
   public void toJson() throws Exception {
-    assertThat(adapter.toJson(newDate(1970, 1, 1, 0, 0, 0, 0, 0)))
-        .isEqualTo("\"1970-01-01T00:00:00.000Z\"");
-    assertThat(adapter.toJson(newDate(1985, 4, 12, 23, 20, 50, 520, 0)))
-        .isEqualTo("\"1985-04-12T23:20:50.520Z\"");
-    assertThat(adapter.toJson(newDate(1996, 12, 19, 16, 39, 57, 0, -8 * 60)))
-        .isEqualTo("\"1996-12-20T00:39:57.000Z\"");
-    assertThat(adapter.toJson(newDate(1990, 12, 31, 23, 59, 59, 0, 0)))
-        .isEqualTo("\"1990-12-31T23:59:59.000Z\"");
-    assertThat(adapter.toJson(newDate(1990, 12, 31, 15, 59, 59, 0, -8 * 60)))
-        .isEqualTo("\"1990-12-31T23:59:59.000Z\"");
-    assertThat(adapter.toJson(newDate(1937, 1, 1, 12, 0, 27, 870, 20)))
-        .isEqualTo("\"1937-01-01T11:40:27.870Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1970, 1, 1, 0, 0, 0, 0, 0)), "\"1970-01-01T00:00:00.000Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1985, 4, 12, 23, 20, 50, 520, 0)), "\"1985-04-12T23:20:50.520Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1996, 12, 19, 16, 39, 57, 0, -8 * 60)),
+        "\"1996-12-20T00:39:57.000Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1990, 12, 31, 23, 59, 59, 0, 0)), "\"1990-12-31T23:59:59.000Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1990, 12, 31, 15, 59, 59, 0, -8 * 60)),
+        "\"1990-12-31T23:59:59.000Z\"");
+    assertEquals(
+        adapter.toJson(newDate(1937, 1, 1, 12, 0, 27, 870, 20)), "\"1937-01-01T11:40:27.870Z\"");
   }
 
   @Test
   public void nullSafety() throws Exception {
-    assertThat(adapter.toJson(null)).isEqualTo("null");
-    assertThat(adapter.fromJson("null")).isNull();
+    assertEquals(adapter.toJson(null), "null");
+    assertNull(adapter.fromJson("null"));
   }
 
   private Date newDate(
