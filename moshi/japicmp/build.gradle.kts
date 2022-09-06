@@ -9,7 +9,7 @@ val baseline = configurations.create("baseline")
 val latest = configurations.create("latest")
 
 dependencies {
-  baseline("com.squareup.moshi:moshi:1.13.0") {
+  baseline("com.squareup.moshi:moshi:1.14.0") {
     isTransitive = false
     isForce = true
   }

@@ -1063,12 +1063,12 @@ The reflection adapter requires the following additional dependency:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin</artifactId>
-  <version>1.12.0</version>
+  <version>1.14.0</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
+implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -1103,7 +1103,7 @@ plugins {
 }
 
 dependencies {
-  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
+  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")
 }
 
 ```
@@ -1116,13 +1116,13 @@ dependencies {
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin-codegen</artifactId>
-  <version>1.12.0</version>
+  <version>1.14.0</version>
   <scope>provided</scope>
 </dependency>
 ```
 
 ```kotlin
-kapt("com.squareup.moshi:moshi-kotlin-codegen:1.13.0")
+kapt("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")
 ```
 </details>
 
@@ -1146,12 +1146,12 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.13.0</version>
+  <version>1.14.0</version>
 </dependency>
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.13.0")
+implementation("com.squareup.moshi:moshi:1.14.0")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].

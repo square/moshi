@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+## Version 1.14.0
+
+ * Upgrade: [Kotlin 1.7.0][kotlin_1_7_0].
+
+
 ## Version 1.13.0
 
 _2021-12-08_
@@ -535,6 +540,7 @@ _2015-06-16_
  [kotlin_1_4_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.10
  [kotlin_1_4_31]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.31
  [kotlin_1_6_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.6.0
+ [kotlin_1_7_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.0
  [ksp]: https://github.com/google/ksp
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
  [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
