@@ -4,6 +4,10 @@ Change Log
 ## Version 1.14.0
 
  * Upgrade: [Kotlin 1.7.0][kotlin_1_7_0].
+ * Upgrade [KotlinPoet 1.12.0][kotlinpoet_1_12_0].
+   * Moshi no longer shades kotlinpoet-ksp APIs, meaning they can be updated independently of Moshi updates.
+ * Upgrade: [KSP 1.7.0-1.0.6][ksp_1_7_0_1_0_6].
+ * Upgrade: [kotlinx-metadata 0.5.0][kotlinx_metadata_0_5_0], allowing reading of kotlin 1.8 APIs too.
 
 
 ## Version 1.13.0
@@ -541,7 +545,10 @@ _2015-06-16_
  [kotlin_1_4_31]: https://github.com/JetBrains/kotlin/releases/tag/v1.4.31
  [kotlin_1_6_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.6.0
  [kotlin_1_7_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.0
+ [kotlinpoet_1_12_0]: https://github.com/square/kotlinpoet/releases/tag/1.12.0
+ [kotlinx_metadata_0_5_0]: https://github.com/JetBrains/kotlin/blob/master/libraries/kotlinx-metadata/jvm/ChangeLog.md#050
  [ksp]: https://github.com/google/ksp
+ [ksp_1_7_0_1_0_6]: https://github.com/google/ksp/releases/tag/1.7.10-1.0.6
  [maven_provided]: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
  [moshi_kotlin_docs]: https://github.com/square/moshi/blob/master/README.md#kotlin
  [mrjar]: https://openjdk.java.net/jeps/238
