@@ -7,6 +7,9 @@ kotlinCompileTesting = "1.4.9-alpha01"
 kotlinpoet = "1.12.0"
 ksp = "1.7.0-1.0.6"
 ktlint = "0.45.2"
+assertk = "0.25"
+junitJupiter = "5.9.1"
+#"org.junit.jupiter:junit-jupiter:5.9.1"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "1.6.21" }
@@ -36,7 +39,9 @@ okio = "com.squareup.okio:okio:3.1.0"
 
 # Test libs
 assertj = "org.assertj:assertj-core:3.11.1"
+assertk = { module = "com.willowtreeapps.assertk:assertk-jvm", version.ref = "assertk"}
 junit = "junit:junit:4.13.2"
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 kotlinCompileTesting = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "com.github.tschuchortdev:kotlin-compile-testing-ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.1.3"

@@ -16,6 +16,8 @@ dependencies {
   testImplementation(kotlin("test"))
   testImplementation(libs.junit)
   testImplementation(libs.truth)
+  testImplementation(libs.junit.jupiter)
+  testImplementation(libs.assertk)
 }
 
 tasks.withType<Jar>().configureEach {
