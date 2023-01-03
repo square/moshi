@@ -503,7 +503,7 @@ List<Card> cards = adapter.fromJson(cardsJsonResponse);
 
 ```kotlin
 val cardsJsonResponse: String = ...
-// We can just use a reified extension!
+// We can just use a reified extension! (Available with Kotlin ExperimentalStdlibApi)
 val adapter = moshi.adapter<List<Card>>()
 val cards: List<Card> = adapter.fromJson(cardsJsonResponse)
 ```
