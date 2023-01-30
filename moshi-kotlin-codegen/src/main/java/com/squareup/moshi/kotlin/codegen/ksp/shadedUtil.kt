@@ -56,7 +56,7 @@ private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>
   return Proxy.newProxyInstance(
     annotationClass.classLoader,
     arrayOf(annotationClass),
-    createInvocationHandler(annotationClass)
+    createInvocationHandler(annotationClass),
   ) as T
 }
 
@@ -119,8 +119,9 @@ private fun KSAnnotation.asAnnotation(
   annotationInterface: Class<*>,
 ): Any {
   return Proxy.newProxyInstance(
-    this.javaClass.classLoader, arrayOf(annotationInterface),
-    this.createInvocationHandler(annotationInterface)
+    this.javaClass.classLoader,
+    arrayOf(annotationInterface),
+    this.createInvocationHandler(annotationInterface),
   ) as Proxy
 }
 
@@ -158,7 +159,7 @@ private fun List<*>.asArray(method: Method) =
 private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any?> {
   val array: Array<Any?> = java.lang.reflect.Array.newInstance(
     method.returnType.componentType,
-    this.size
+    this.size,
   ) as Array<Any?>
   for (r in 0 until this.size) {
     array[r] = this[r]?.let { valueProvider.invoke(it) }
@@ -176,7 +177,7 @@ private fun <T> Any.asEnum(returnType: Class<T>): T =
         this.declaration.simpleName.getShortName()
       } else {
         this.toString()
-      }
+      },
     ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte

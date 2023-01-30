@@ -51,14 +51,16 @@ spotless {
     targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).editorConfigOverride(
+      mapOf("ktlint_standard_filename" to "disabled"),
+    )
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get())
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()

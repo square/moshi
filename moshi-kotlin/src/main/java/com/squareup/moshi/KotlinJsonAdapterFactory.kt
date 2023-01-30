@@ -19,7 +19,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 @Deprecated(
   message = "this moved to avoid a package name conflict in the Java Platform Module System.",
-  replaceWith = ReplaceWith("com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory")
+  replaceWith = ReplaceWith("com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory"),
 )
 public class KotlinJsonAdapterFactory :
   JsonAdapter.Factory by KotlinJsonAdapterFactory()

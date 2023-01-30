@@ -37,7 +37,7 @@ import kotlin.require
 
 internal class JsonUtf8Writer(
   /** The output data, containing at most one top-level array or object. */
-  private val sink: BufferedSink
+  private val sink: BufferedSink,
 ) : JsonWriter() {
 
   /** The name/value separator; either ":" or ": ". */

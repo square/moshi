@@ -20,7 +20,7 @@ import java.lang.reflect.Type
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> private constructor(
-  private val elementAdapter: JsonAdapter<T>
+  private val elementAdapter: JsonAdapter<T>,
 ) : JsonAdapter<C>() {
 
   abstract fun newCollection(): C

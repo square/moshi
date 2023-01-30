@@ -6,7 +6,7 @@ kotlin = "1.7.0"
 kotlinCompileTesting = "1.4.9"
 kotlinpoet = "1.12.0"
 ksp = "1.7.0-1.0.6"
-ktlint = "0.45.2"
+ktlint = "0.48.2"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "1.7.20" }
@@ -14,7 +14,7 @@ japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.24.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.1.2" }
-spotless = { id = "com.diffplug.spotless", version = "6.7.1" }
+spotless = { id = "com.diffplug.spotless", version = "6.14.0" }
 
 [libraries]
 asm = "org.ow2.asm:asm:9.4"

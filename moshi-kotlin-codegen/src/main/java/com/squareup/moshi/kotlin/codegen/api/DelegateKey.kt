@@ -46,20 +46,20 @@ public data class DelegateKey(
     nameAllocator: NameAllocator,
     typeRenderer: TypeRenderer,
     moshiParameter: ParameterSpec,
-    propertyName: String
+    propertyName: String,
   ): PropertySpec {
     val qualifierNames = jsonQualifiers.joinToString("") {
       "At${it.typeName.rawType().simpleName}"
     }
     val adapterName = nameAllocator.newName(
       "${type.toVariableName().replaceFirstChar { it.lowercase(Locale.US) }}${qualifierNames}Adapter",
-      this
+      this,
     )
 
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
     val standardArgs = arrayOf(
       moshiParameter,
-      typeRenderer.render(type)
+      typeRenderer.render(type),
     )
 
     val (initializerString, args) = when {
@@ -81,7 +81,7 @@ private fun AnnotationSpec.asInstantiationExpression(): CodeBlock {
   return CodeBlock.of(
     "%T(%L)",
     typeName,
-    members.joinToCode()
+    members.joinToCode(),
   )
 }
 

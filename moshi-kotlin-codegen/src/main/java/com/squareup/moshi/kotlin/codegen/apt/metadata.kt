@@ -66,7 +66,7 @@ private val VISIBILITY_MODIFIERS = setOf(
   KModifier.INTERNAL,
   KModifier.PRIVATE,
   KModifier.PROTECTED,
-  KModifier.PUBLIC
+  KModifier.PUBLIC,
 )
 
 private fun Collection<KModifier>.visibility(): KModifier {
@@ -78,7 +78,7 @@ internal fun primaryConstructor(
   targetElement: TypeElement,
   kotlinApi: TypeSpec,
   elements: Elements,
-  messager: Messager
+  messager: Messager,
 ): TargetConstructor? {
   val primaryConstructor = kotlinApi.primaryConstructor ?: return null
 
@@ -101,14 +101,14 @@ internal fun primaryConstructor(
       messager.printMessage(
         ERROR,
         "No KmConstructor found for primary constructor.",
-        targetElement
+        targetElement,
       )
       null
     }
   return TargetConstructor(
     parameters,
     primaryConstructor.modifiers.visibility(),
-    kmConstructorSignature
+    kmConstructorSignature,
   )
 }
 
@@ -127,7 +127,7 @@ internal fun targetType(
     messager.printMessage(
       ERROR,
       "@JsonClass can't be applied to $element: must be a Kotlin class",
-      element
+      element,
     )
     return null
   }
@@ -138,7 +138,7 @@ internal fun targetType(
     messager.printMessage(
       ERROR,
       "@JsonClass can't be applied to $element: must be a Class type",
-      element
+      element,
     )
     return null
   }
@@ -148,7 +148,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass with 'generateAdapter = \"true\"' can't be applied to $element: code gen for enums is not supported or necessary",
-        element
+        element,
       )
       return null
     }
@@ -156,7 +156,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must be a Kotlin class",
-        element
+        element,
       )
       return null
     }
@@ -164,7 +164,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be an inner class",
-        element
+        element,
       )
       return null
     }
@@ -172,7 +172,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be sealed",
-        element
+        element,
       )
       return null
     }
@@ -180,7 +180,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be abstract",
-        element
+        element,
       )
       return null
     }
@@ -188,7 +188,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must not be local",
-        element
+        element,
       )
       return null
     }
@@ -196,7 +196,7 @@ internal fun targetType(
       messager.printMessage(
         ERROR,
         "@JsonClass can't be applied to $element: must be internal or public",
-        element
+        element,
       )
       return null
     }
@@ -211,7 +211,7 @@ internal fun targetType(
     messager.printMessage(
       ERROR,
       "No primary constructor found on $element",
-      element
+      element,
     )
     return null
   }
@@ -220,7 +220,7 @@ internal fun targetType(
       ERROR,
       "@JsonClass can't be applied to $element: " +
         "primary constructor is not internal or public",
-      element
+      element,
     )
     return null
   }
@@ -234,7 +234,7 @@ internal fun targetType(
         messager.printMessage(
           ERROR,
           "@JsonClass can't be applied to $element: supertype $superclass is not a Kotlin type",
-          element
+          element,
         )
         return null
       }
@@ -272,7 +272,7 @@ internal fun targetType(
             .cast<TypeVariableName>()
             .map(TypeVariableName::name)
             .zip(apiSuperClass.typeArguments.asSequence())
-            .associate { it }
+            .associate { it },
         )
       }
 
@@ -286,7 +286,7 @@ internal fun targetType(
       kotlinApi = supertypeApi,
       allowedTypeVars = typeVariables.toSet(),
       currentClass = appliedClassName,
-      resolvedTypes = resolvedTypes
+      resolvedTypes = resolvedTypes,
     )
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
@@ -328,7 +328,7 @@ private fun resolveTypeArgs(
   propertyType: TypeName,
   resolvedTypes: List<ResolvedTypeMapping>,
   allowedTypeVars: Set<TypeVariableName>,
-  entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass }
+  entryStartIndex: Int = resolvedTypes.indexOfLast { it.target == targetClass },
 ): TypeName {
   val unwrappedType = propertyType.unwrapTypeAlias()
 
@@ -370,7 +370,7 @@ private fun declaredProperties(
   kotlinApi: TypeSpec,
   allowedTypeVars: Set<TypeVariableName>,
   currentClass: ClassName,
-  resolvedTypes: List<ResolvedTypeMapping>
+  resolvedTypes: List<ResolvedTypeMapping>,
 ): Map<String, TargetProperty> {
   val result = mutableMapOf<String, TargetProperty>()
   for (initialProperty in kotlinApi.propertySpecs) {
@@ -378,7 +378,7 @@ private fun declaredProperties(
       targetClass = currentClass,
       propertyType = initialProperty.type,
       resolvedTypes = resolvedTypes,
-      allowedTypeVars = allowedTypeVars
+      allowedTypeVars = allowedTypeVars,
     )
     val property = initialProperty.toBuilder(type = resolvedType).build()
     val name = property.name
@@ -391,7 +391,7 @@ private fun declaredProperties(
       parameter = parameter,
       visibility = property.modifiers.visibility(),
       jsonName = parameter?.jsonName ?: property.annotations.jsonName() ?: name,
-      jsonIgnore = isIgnored
+      jsonIgnore = isIgnored,
     )
   }
 
@@ -420,7 +420,7 @@ internal fun TargetProperty.generator(
       messager.printMessage(
         ERROR,
         "No default value for transient/ignored property $name",
-        sourceElement
+        sourceElement,
       )
       return null
     }
@@ -431,7 +431,7 @@ internal fun TargetProperty.generator(
     messager.printMessage(
       ERROR,
       "property $name is not visible",
-      sourceElement
+      sourceElement,
     )
     return null
   }
@@ -452,7 +452,7 @@ internal fun TargetProperty.generator(
       if (it.value != RetentionPolicy.RUNTIME) {
         messager.printMessage(
           ERROR,
-          "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
+          "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention",
         )
       }
     }
@@ -466,13 +466,13 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs),
   )
 }
 
 private fun List<AnnotationSpec>?.qualifiers(
   messager: Messager,
-  elements: Elements
+  elements: Elements,
 ): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return filterTo(mutableSetOf()) {

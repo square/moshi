@@ -53,7 +53,9 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     return if (rawType.isEnum) {
       @Suppress("UNCHECKED_CAST")
       EnumJsonAdapter(rawType as Class<out Enum<*>>).nullSafe()
-    } else null
+    } else {
+      null
+    }
   }
 
   fun rangeCheckNextInt(reader: JsonReader, typeMessage: String?, min: Int, max: Int): Int {
@@ -120,7 +122,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       // Double check for infinity after float conversion; many doubles > Float.MAX
       if (!reader.lenient && value.isInfinite()) {
         throw JsonDataException(
-          "JSON forbids NaN and infinities: $value at path ${reader.path}"
+          "JSON forbids NaN and infinities: $value at path ${reader.path}",
         )
       }
       return value
@@ -207,7 +209,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       val path = reader.path
       val name = reader.nextString()
       throw JsonDataException(
-        "Expected one of ${nameStrings.toList()} but was $name at path $path"
+        "Expected one of ${nameStrings.toList()} but was $name at path $path",
       )
     }
 
@@ -242,7 +244,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
         JsonReader.Token.BOOLEAN -> booleanAdapter.fromJson(reader)
         JsonReader.Token.NULL -> reader.nextNull()
         else -> throw IllegalStateException(
-          "Expected a value but was ${reader.peek()} at path ${reader.path}"
+          "Expected a value but was ${reader.peek()} at path ${reader.path}",
         )
       }
     }

@@ -34,7 +34,7 @@ tasks.withType<Test>().configureEach {
     "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
     "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
     "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
   )
 }
 
@@ -91,7 +91,7 @@ val shadowJar = tasks.shadowJar.apply {
     relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
     relocate(
       "com.squareup.kotlinpoet.classinspector",
-      "com.squareup.moshi.kotlinpoet.classinspector"
+      "com.squareup.moshi.kotlinpoet.classinspector",
     )
     relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
     transformers.add(ServiceFileTransformer())

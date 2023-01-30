@@ -39,7 +39,8 @@ import kotlin.reflect.full.declaredMemberProperties
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassCodegenProcessorTest {
 
-  @Rule @JvmField val temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @Rule @JvmField
+  val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun privateConstructor() {
@@ -57,8 +58,8 @@ class JsonClassCodegenProcessorTest {
               fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
             }
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("constructor is not internal or public")
@@ -74,8 +75,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class PrivateConstructorParameter(private var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -94,8 +95,8 @@ class JsonClassCodegenProcessorTest {
             private var a: Int = -1
             private var b: Int = -1
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -111,12 +112,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           interface Interface
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to Interface: must be a Kotlin class"
+      "error: @JsonClass can't be applied to Interface: must be a Kotlin class",
     )
   }
 
@@ -130,8 +131,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true, generator="customGenerator")
           interface Interface
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
@@ -146,12 +147,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           abstract class AbstractClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to AbstractClass: must not be abstract"
+      "error: @JsonClass can't be applied to AbstractClass: must not be abstract",
     )
   }
 
@@ -165,12 +166,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           sealed class SealedClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to SealedClass: must not be sealed"
+      "error: @JsonClass can't be applied to SealedClass: must not be sealed",
     )
   }
 
@@ -186,12 +187,12 @@ class JsonClassCodegenProcessorTest {
             @JsonClass(generateAdapter = true)
             inner class InnerClass(val a: Int)
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to Outer.InnerClass: must not be an inner class"
+      "error: @JsonClass can't be applied to Outer.InnerClass: must not be an inner class",
     )
   }
 
@@ -207,12 +208,12 @@ class JsonClassCodegenProcessorTest {
           enum class KotlinEnum {
             A, B
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass with 'generateAdapter = \"true\"' can't be applied to KotlinEnum: code gen for enums is not supported or necessary"
+      "error: @JsonClass with 'generateAdapter = \"true\"' can't be applied to KotlinEnum: code gen for enums is not supported or necessary",
     )
   }
 
@@ -230,12 +231,12 @@ class JsonClassCodegenProcessorTest {
             @JsonClass(generateAdapter = true)
             class LocalClass(val a: Int)
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to LocalClass: must not be local"
+      "error: @JsonClass can't be applied to LocalClass: must not be local",
     )
   }
 
@@ -249,12 +250,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           private class PrivateClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to PrivateClass: must be internal or public"
+      "error: @JsonClass can't be applied to PrivateClass: must be internal or public",
     )
   }
 
@@ -270,12 +271,12 @@ class JsonClassCodegenProcessorTest {
           object ObjectDeclaration {
             var a = 5
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to ObjectDeclaration: must be a Kotlin class"
+      "error: @JsonClass can't be applied to ObjectDeclaration: must be a Kotlin class",
     )
   }
 
@@ -291,12 +292,12 @@ class JsonClassCodegenProcessorTest {
           val expression = object : Any() {
             var a = 5
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: @JsonClass can't be applied to getExpression\$annotations(): must be a Kotlin class"
+      "error: @JsonClass can't be applied to getExpression\$annotations(): must be a Kotlin class",
     )
   }
 
@@ -310,12 +311,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Transient var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: No default value for transient/ignored property a"
+      "error: No default value for transient/ignored property a",
     )
   }
 
@@ -330,12 +331,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class RequiredIgnoredConstructorParameter(@Json(ignore = true) var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: No default value for transient/ignored property a"
+      "error: No default value for transient/ignored property a",
     )
   }
 
@@ -349,12 +350,12 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class NonPropertyConstructorParameter(a: Int, val b: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "error: No property for required constructor parameter a"
+      "error: No property for required constructor parameter a",
     )
   }
 
@@ -368,15 +369,16 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
-          """
-      )
+          """,
+      ),
     ).apply {
       kaptArgs[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
     assertThat(result.messages).contains(
-      "Invalid option value for $OPTION_GENERATED"
+      "Invalid option value for $OPTION_GENERATED",
     )
   }
+
   @Test
   fun disableProguardRulesGenerating() {
     val result = prepareCompilation(
@@ -387,8 +389,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
-          """
-      )
+          """,
+      ),
     ).apply {
       kaptArgs[OPTION_GENERATE_PROGUARD_RULES] = "false"
     }.compile()
@@ -408,8 +410,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class Class2(private var c: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -427,8 +429,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ExtendsPlatformClass(var a: Int) : Date()
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
   }
@@ -444,8 +446,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ExtendsJavaType(var b: Int) : JavaSuperclass()
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
@@ -472,8 +474,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
-          """
-      )
+          """,
+      ),
     )
     // We instantiate directly so doesn't need to be FIELD
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
@@ -500,8 +502,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
@@ -520,8 +522,8 @@ class JsonClassCodegenProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -530,7 +532,7 @@ class JsonClassCodegenProcessorTest {
     val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
     assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
       JsonReader.Options::class.createType(),
-      JsonAdapter::class.parameterizedBy(String::class)
+      JsonAdapter::class.parameterizedBy(String::class),
     )
   }
 
@@ -648,8 +650,8 @@ class JsonClassCodegenProcessorTest {
               val arg64: Long = 64,
               val arg65: Long = 65
           )
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -663,7 +665,7 @@ class JsonClassCodegenProcessorTest {
           -keep class testPackage.AliasesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
@@ -673,7 +675,7 @@ class JsonClassCodegenProcessorTest {
           -keep class testPackage.SimpleJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
@@ -683,7 +685,7 @@ class JsonClassCodegenProcessorTest {
           -keep class testPackage.GenericJsonAdapter {
               public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
@@ -694,7 +696,7 @@ class JsonClassCodegenProcessorTest {
             -keep class testPackage.UsingQualifiersJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
@@ -705,7 +707,7 @@ class JsonClassCodegenProcessorTest {
           -keep class testPackage.MixedTypesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
@@ -721,7 +723,7 @@ class JsonClassCodegenProcessorTest {
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
@@ -738,7 +740,7 @@ class JsonClassCodegenProcessorTest {
             -keepclassmembers class testPackage.Complex {
                 public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
@@ -755,7 +757,7 @@ class JsonClassCodegenProcessorTest {
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
@@ -766,7 +768,7 @@ class JsonClassCodegenProcessorTest {
             -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         else -> error("Unexpected proguard file! ${generatedFile.name}")
@@ -795,7 +797,7 @@ class JsonClassCodegenProcessorTest {
 
   private fun KClassifier.parameterizedBy(vararg types: KType): KType {
     return createType(
-      types.map { it.asProjection() }
+      types.map { it.asProjection() },
     )
   }
 
