@@ -103,7 +103,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labelKey: String,
   private val labels: List<String>,
   private val subtypes: List<Type>,
-  private val fallbackJsonAdapter: JsonAdapter<Any>?
+  private val fallbackJsonAdapter: JsonAdapter<Any>?,
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -121,7 +121,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labelKey = labelKey,
       labels = newLabels,
       subtypes = newSubtypes,
-      fallbackJsonAdapter = fallbackJsonAdapter
+      fallbackJsonAdapter = fallbackJsonAdapter,
     )
   }
 
@@ -133,14 +133,14 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
    * it within your implementation of [JsonAdapter.fromJson]
    */
   public fun withFallbackJsonAdapter(
-    fallbackJsonAdapter: JsonAdapter<Any>?
+    fallbackJsonAdapter: JsonAdapter<Any>?,
   ): PolymorphicJsonAdapterFactory<T> {
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
       labelKey = labelKey,
       labels = labels,
       subtypes = subtypes,
-      fallbackJsonAdapter = fallbackJsonAdapter
+      fallbackJsonAdapter = fallbackJsonAdapter,
     )
   }
 
@@ -161,7 +161,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
       override fun toJson(writer: JsonWriter, value: Any?) {
         throw IllegalArgumentException(
-          "Expected one of $subtypes but found $value, a ${value?.javaClass}. Register this subtype."
+          "Expected one of $subtypes but found $value, a ${value?.javaClass}. Register this subtype.",
         )
       }
     }
@@ -181,7 +181,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val labels: List<String>,
     private val subtypes: List<Type>,
     private val jsonAdapters: List<JsonAdapter<Any>>,
-    private val fallbackJsonAdapter: JsonAdapter<Any>?
+    private val fallbackJsonAdapter: JsonAdapter<Any>?,
   ) : JsonAdapter<Any>() {
     /** Single-element options containing the label's key only.  */
     private val labelKeyOptions: Options = Options.of(labelKey)
@@ -211,7 +211,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         val labelIndex = reader.selectString(labelOptions)
         if (labelIndex == -1 && fallbackJsonAdapter == null) {
           throw JsonDataException(
-            "Expected one of $labels for key '$labelKey' but found '${reader.nextString()}'. Register a subtype for this label."
+            "Expected one of $labels for key '$labelKey' but found '${reader.nextString()}'. Register a subtype for this label.",
           )
         }
         return labelIndex
@@ -259,7 +259,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         labelKey = labelKey,
         labels = emptyList(),
         subtypes = emptyList(),
-        fallbackJsonAdapter = null
+        fallbackJsonAdapter = null,
       )
     }
   }

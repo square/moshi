@@ -39,7 +39,7 @@ public annotation class Json(
    *
    * **Note:** this has no effect in `enum` or `record` classes.
    */
-  val ignore: Boolean = false
+  val ignore: Boolean = false,
 ) {
   public companion object {
     /** The default value of [name]. Should only be used to check if it's been set. */

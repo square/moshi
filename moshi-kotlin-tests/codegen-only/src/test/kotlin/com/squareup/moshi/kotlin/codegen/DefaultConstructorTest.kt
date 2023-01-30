@@ -62,7 +62,7 @@ data class TestClass(
   val optional2: Int = 2,
   val dynamicSelfReferenceOptional: String = required,
   val dynamicOptional: Int = createInt(),
-  val dynamicInlineOptional: Int = createInlineInt()
+  val dynamicInlineOptional: Int = createInlineInt(),
 )
 
 private fun createInt(): Int {

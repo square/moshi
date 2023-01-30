@@ -30,7 +30,7 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
 @JsonClass(generateAdapter = true)
 data class ExampleClass(
   val type: Int,
-  @JsonString val rawJson: String
+  @JsonString val rawJson: String,
 )
 
 @Retention(RUNTIME)

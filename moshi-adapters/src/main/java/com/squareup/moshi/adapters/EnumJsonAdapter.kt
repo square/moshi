@@ -78,12 +78,12 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
     if (!useFallbackValue) {
       val name = reader.nextString()
       throw JsonDataException(
-        "Expected one of ${nameStrings.toList()} but was $name at path $path"
+        "Expected one of ${nameStrings.toList()} but was $name at path $path",
       )
     }
     if (reader.peek() != STRING) {
       throw JsonDataException(
-        "Expected a string but was ${reader.peek()} at path $path"
+        "Expected a string but was ${reader.peek()} at path $path",
       )
     }
     reader.skipValue()
@@ -94,7 +94,7 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
   override fun toJson(writer: JsonWriter, value: T?) {
     if (value == null) {
       throw NullPointerException(
-        "value was null! Wrap in .nullSafe() to write nullable values."
+        "value was null! Wrap in .nullSafe() to write nullable values.",
       )
     }
     writer.value(nameStrings[value.ordinal])

@@ -63,5 +63,5 @@ public annotation class JsonClass(
    * generator to create the API signature to get started, then make your own generator match that
    * expected signature.
    */
-  val generator: String = ""
+  val generator: String = "",
 )

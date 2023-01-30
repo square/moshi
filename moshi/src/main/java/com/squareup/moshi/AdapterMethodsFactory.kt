@@ -29,12 +29,12 @@ import java.lang.reflect.Type
 
 internal class AdapterMethodsFactory(
   private val toAdapters: List<AdapterMethod>,
-  private val fromAdapters: List<AdapterMethod>
+  private val fromAdapters: List<AdapterMethod>,
 ) : JsonAdapter.Factory {
   override fun create(
     type: Type,
     annotations: Set<Annotation>,
-    moshi: Moshi
+    moshi: Moshi,
   ): JsonAdapter<*>? {
     val toAdapter = get(toAdapters, type, annotations)
     val fromAdapter = get(fromAdapters, type, annotations)
@@ -47,7 +47,7 @@ internal class AdapterMethodsFactory(
         val missingAnnotation = if (toAdapter == null) "@ToJson" else "@FromJson"
         throw IllegalArgumentException(
           "No $missingAnnotation adapter for ${type.toStringWithAnnotations(annotations)}",
-          e
+          e,
         )
       }
     } else {
@@ -154,7 +154,7 @@ internal class AdapterMethodsFactory(
             annotations = qualifierAnnotations,
             adapter = adapter,
             method = method,
-            nullable = true
+            nullable = true,
           ) {
             override fun toJson(moshi: Moshi, writer: JsonWriter, value: Any?) {
               invokeMethod(writer, value)
@@ -173,7 +173,7 @@ internal class AdapterMethodsFactory(
             annotations = qualifierAnnotations,
             adapter = adapter,
             method = method,
-            nullable = nullable
+            nullable = nullable,
           ) {
 
             private lateinit var delegate: JsonAdapter<Any>
@@ -203,7 +203,7 @@ internal class AdapterMethodsFactory(
                   <any access modifier> void toJson(JsonWriter writer, T value, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
                   <any access modifier> R toJson(T value) throws <any>;
 
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
       }
@@ -244,7 +244,7 @@ internal class AdapterMethodsFactory(
             annotations = returnTypeAnnotations,
             adapter = adapter,
             method = method,
-            nullable = true
+            nullable = true,
           ) {
             override fun fromJson(moshi: Moshi, reader: JsonReader) = invokeMethod(reader)
           }
@@ -260,7 +260,7 @@ internal class AdapterMethodsFactory(
             annotations = returnTypeAnnotations,
             adapter = adapter,
             method = method,
-            nullable = nullable
+            nullable = nullable,
           ) {
             lateinit var delegate: JsonAdapter<Any>
 
@@ -288,7 +288,7 @@ internal class AdapterMethodsFactory(
                   <any access modifier> R fromJson(JsonReader jsonReader, JsonAdapter<any> delegate, <any more delegates>) throws <any>;
                   <any access modifier> R fromJson(T value) throws <any>;
 
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
       }
@@ -298,7 +298,7 @@ internal class AdapterMethodsFactory(
     private fun get(
       adapterMethods: List<AdapterMethod>,
       type: Type,
-      annotations: Set<Annotation>
+      annotations: Set<Annotation>,
     ): AdapterMethod? {
       for (adapterMethod in adapterMethods) {
         if (Types.equals(adapterMethod.type, type) && adapterMethod.annotations == annotations) {
@@ -316,7 +316,7 @@ internal class AdapterMethodsFactory(
     val annotations: Set<Annotation>,
     val adapter: Any,
     val method: Method,
-    val nullable: Boolean
+    val nullable: Boolean,
   ) {
     val type = type.canonicalize()
     private val jsonAdapters: Array<JsonAdapter<*>?> = arrayOfNulls(parameterCount - adaptersOffset)
