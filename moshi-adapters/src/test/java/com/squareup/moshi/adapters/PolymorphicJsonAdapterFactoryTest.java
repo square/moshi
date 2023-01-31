@@ -16,6 +16,8 @@
 package com.squareup.moshi.adapters;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.JsonAdapter;
@@ -23,12 +25,18 @@ import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import okio.Buffer;
+import com.squareup.moshi.Types;
+
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import okio.Buffer;
 
 @SuppressWarnings("CheckReturnValue")
 public final class PolymorphicJsonAdapterFactoryTest {
@@ -160,6 +168,49 @@ public final class PolymorphicJsonAdapterFactoryTest {
     Message message = adapter.fromJson(reader);
     assertThat(message).isInstanceOf(EmptyMessage.class);
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test
+  public void specifiedFallbackJsonAdapterWithEmptyObject() throws IOException {
+    Moshi moshi =
+      new Moshi.Builder()
+        .add(
+          PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withFallbackJsonAdapter(new JsonAdapter<Object>() {
+              @Override
+              public Object fromJson(JsonReader reader) throws IOException {
+                Object jsonValue = reader.readJsonValue();
+                return new UnsupportedMessage(jsonValue);
+              }
+
+              @Override
+              public void toJson(JsonWriter writer, @Nullable Object value) throws IOException{
+                  // ignore
+              }
+            }))
+        .build();
+
+    JsonAdapter<List<Message>> adapter = moshi.adapter(
+      Types.newParameterizedType(List.class, Message.class)
+    );
+
+    final String jsonStringWithEmptyObject = adapter.toJson(
+      Arrays.asList(
+        new Success("this is success message"),
+        new UnsupportedMessage("this is a not support message")
+      )
+    );
+    assertEquals(
+      jsonStringWithEmptyObject,
+      "[{\"type\":\"success\",\"value\":\"this is success message\"},{}]"
+    );
+
+    List<Message> deserializeMessageList = adapter.fromJson(jsonStringWithEmptyObject);
+    assertNotNull(deserializeMessageList);
+    assertEquals(2, deserializeMessageList.size());
+    assertThat(deserializeMessageList.get(0)).isInstanceOf(Success.class);
+    assertThat(deserializeMessageList.get(1)).isInstanceOf(UnsupportedMessage.class);
   }
 
   @Test
@@ -445,4 +496,14 @@ public final class PolymorphicJsonAdapterFactoryTest {
       this.value = value;
     }
   }
+
+  static final class UnsupportedMessage implements Message {
+    final Object originJsonValue;
+
+    public UnsupportedMessage(Object originJsonValue) {
+      this.originJsonValue = originJsonValue;
+    }
+
+  }
+
 }

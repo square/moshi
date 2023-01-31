@@ -202,6 +202,11 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
     private fun labelIndex(reader: JsonReader): Int {
       reader.beginObject()
+
+      if (!reader.hasNext()) {
+        return -1
+      }
+
       while (reader.hasNext()) {
         if (reader.selectName(labelKeyOptions) == -1) {
           reader.skipName()
