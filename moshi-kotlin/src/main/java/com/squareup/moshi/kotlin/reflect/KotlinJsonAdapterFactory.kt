@@ -156,8 +156,8 @@ internal class KotlinJsonAdapter<T>(
     fun get(value: K) = property.get(value)
 
     fun set(result: K, value: P) {
-      if (value !== ABSENT_VALUE) {
-        (property as KMutableProperty1<K, P>).set(result, value)
+      if (value !== ABSENT_VALUE && property is KMutableProperty1<K, P>) {
+        property.set(result, value)
       }
     }
   }
@@ -264,7 +264,8 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         "'${property.name}' has a constructor parameter of type ${parameter!!.type} but a property of type ${property.returnType}."
       }
 
-      if (property !is KMutableProperty1 && parameter == null) continue
+      // collect val property except backing filed to allBindings for serialize to json.
+      if (property !is KMutableProperty1 && property.javaField == null) continue
 
       val jsonName = jsonAnnotation?.name?.takeUnless { it == Json.UNSET_NAME } ?: property.name
       val propertyType = when (val propertyTypeClassifier = property.returnType.classifier) {

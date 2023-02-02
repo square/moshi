@@ -23,6 +23,7 @@ import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
+import com.squareup.moshi.containsField
 import okio.IOException
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
@@ -103,6 +104,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labelKey: String,
   private val labels: List<String>,
   private val subtypes: List<Type>,
+  private val typeContainsLabelKeyFieldMap: LinkedHashMap<Type, Boolean>,
   private val fallbackJsonAdapter: JsonAdapter<Any>?,
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
@@ -116,11 +118,17 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       addAll(subtypes)
       add(subtype)
     }
+
+    val isBaseTypeContainsLabelKey = (true == typeContainsLabelKeyFieldMap[baseType])
+    val newSubTypeHasLabelKeyFieldMap = LinkedHashMap<Type, Boolean>(typeContainsLabelKeyFieldMap)
+    newSubTypeHasLabelKeyFieldMap[subtype] = isBaseTypeContainsLabelKey || subtype.containsField(labelKey, true)
+
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
       labelKey = labelKey,
       labels = newLabels,
       subtypes = newSubtypes,
+      typeContainsLabelKeyFieldMap = newSubTypeHasLabelKeyFieldMap,
       fallbackJsonAdapter = fallbackJsonAdapter,
     )
   }
@@ -140,6 +148,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labelKey = labelKey,
       labels = labels,
       subtypes = subtypes,
+      typeContainsLabelKeyFieldMap = typeContainsLabelKeyFieldMap,
       fallbackJsonAdapter = fallbackJsonAdapter,
     )
   }
@@ -172,7 +181,14 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       return null
     }
     val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
-    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+    return PolymorphicJsonAdapter(
+      labelKey = labelKey,
+      labels = labels,
+      subtypes = subtypes,
+      typeContainsLabelKeyFieldMap = typeContainsLabelKeyFieldMap,
+      jsonAdapters = jsonAdapters,
+      fallbackJsonAdapter = fallbackJsonAdapter
+    )
       .nullSafe()
   }
 
@@ -180,6 +196,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val labelKey: String,
     private val labels: List<String>,
     private val subtypes: List<Type>,
+    private val typeContainsLabelKeyFieldMap : Map<Type, Boolean>,
     private val jsonAdapters: List<JsonAdapter<Any>>,
     private val fallbackJsonAdapter: JsonAdapter<Any>?,
   ) : JsonAdapter<Any>() {
@@ -232,7 +249,9 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       }
       writer.beginObject()
       if (adapter !== fallbackJsonAdapter) {
-        writer.name(labelKey).value(labels[labelIndex])
+        if (false == typeContainsLabelKeyFieldMap[type]) {
+          writer.name(labelKey).value(labels[labelIndex])
+        }
       }
       val flattenToken = writer.beginFlatten()
       adapter.toJson(writer, value)
@@ -254,11 +273,17 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     @JvmStatic
     @CheckReturnValue
     public fun <T> of(baseType: Class<T>, labelKey: String): PolymorphicJsonAdapterFactory<T> {
+
+      val typeContainsLabelKeyFieldMap = linkedMapOf<Type, Boolean>(
+        baseType to baseType.containsField(labelKey, true)
+      )
+
       return PolymorphicJsonAdapterFactory(
         baseType = baseType,
         labelKey = labelKey,
         labels = emptyList(),
         subtypes = emptyList(),
+        typeContainsLabelKeyFieldMap = typeContainsLabelKeyFieldMap,
         fallbackJsonAdapter = null,
       )
     }

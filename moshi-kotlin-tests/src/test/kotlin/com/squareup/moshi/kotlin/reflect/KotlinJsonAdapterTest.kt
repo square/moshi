@@ -16,25 +16,16 @@
 package com.squareup.moshi.kotlin.reflect
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
-import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonQualifier
-import com.squareup.moshi.JsonReader
-import com.squareup.moshi.JsonWriter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
-import org.assertj.core.api.Assertions
-import org.junit.Assert.fail
-import org.junit.Test
+import com.squareup.moshi.*
 import java.io.ByteArrayOutputStream
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.WildcardType
-import java.util.Locale
-import java.util.SimpleTimeZone
+import java.util.*
 import kotlin.annotation.AnnotationRetention.RUNTIME
+import org.assertj.core.api.Assertions
+import org.junit.Assert
+import org.junit.Assert.fail
+import org.junit.Test
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
 class KotlinJsonAdapterTest {
@@ -484,10 +475,12 @@ class KotlinJsonAdapterTest {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<UnsettableProperty>()
 
+    // serialize val property to json.
     val encoded = UnsettableProperty()
     encoded.b = 5
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
+    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":-1,"b":5}""")
 
+    // when deserialize json string ignore val properties not in constructor parameters.
     val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)

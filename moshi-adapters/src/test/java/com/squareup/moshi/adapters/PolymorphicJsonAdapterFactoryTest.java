@@ -23,10 +23,17 @@ import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
+
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 import okio.Buffer;
+
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 
@@ -375,6 +382,110 @@ public final class PolymorphicJsonAdapterFactoryTest {
     MessageWithType decoded =
         (MessageWithType) adapter.fromJson("{\"value\":\"Okay!\",\"type\":\"success\"}");
     assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
+  @Test
+  public void baseTypeContainsTypeField() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+      .add(
+        PolymorphicJsonAdapterFactory.of(DataItem.class, "type")
+          .withSubtype(Text.class, "text")
+          .withSubtype(Image.class, "image")
+      )
+      .build();
+
+    JsonAdapter<List<DataItem>> adapter = moshi.adapter(
+      Types.newParameterizedType(List.class, DataItem.class)
+    );
+
+    String jsonString = adapter.toJson(Arrays.asList(
+      new Text("this is a text"),
+      new Image("http://xxx.xxx/xx.jpg")
+    ));
+
+    assertThat(jsonString)
+      .isEqualTo("[{\"text\":\"this is a text\",\"type\":\"text\"},{\"type\":\"image\",\"url\":\"http://xxx.xxx/xx.jpg\"}]");
+
+    List<DataItem> dataItemList = adapter.fromJson(jsonString);
+    assertThat(dataItemList).isNotNull();
+
+    assertThat(dataItemList.get(0)).isInstanceOf(Text.class);
+    Text textItem = (Text) dataItemList.get(0);
+    assertThat(textItem.type).isEqualTo("text");
+    assertThat(textItem.text).isEqualTo("this is a text");
+
+    assertThat(dataItemList.get(1)).isInstanceOf(Image.class);
+    Image imageItem = (Image) dataItemList.get(1);
+    assertThat(imageItem.type).isEqualTo("image");
+    assertThat(imageItem.url).isEqualTo("http://xxx.xxx/xx.jpg");
+
+  }
+
+  @Test
+  public void baseTypeWithoutTypeField() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+      .add(
+        PolymorphicJsonAdapterFactory.of(Message.class, "type")
+          .withSubtype(Success.class, "success")
+          .withSubtype(Error.class, "error")
+      )
+      .build();
+
+    JsonAdapter<List<Message>> adapter = moshi.adapter(
+      Types.newParameterizedType(List.class, Message.class)
+    );
+
+    String jsonString = adapter.toJson(Arrays.asList(
+      new Success("this is a success message."),
+      new Error(new HashMap<String, Object>() {
+        {
+          put("msg", "this is a error message");
+        }
+      })
+    ));
+
+    assertThat(jsonString)
+      .isEqualTo("[{\"type\":\"success\",\"value\":\"this is a success message.\"},{\"type\":\"error\",\"error_logs\":{\"msg\":\"this is a error message\"}}]");
+
+    List<Message> messageList = adapter.fromJson(jsonString);
+    assertThat(messageList).isNotNull();
+
+    assertThat(messageList.get(0)).isInstanceOf(Success.class);
+    Success success = (Success) messageList.get(0);
+    assertThat(success.value).isEqualTo("this is a success message.");
+
+    assertThat(messageList.get(1)).isInstanceOf(Error.class);
+    Error error = (Error) messageList.get(1);
+    assertThat(error.error_logs).hasSize(1);
+    assertThat(error.error_logs).containsEntry("msg", "this is a error message");
+  }
+
+  static class DataItem {
+    final String type;
+
+    public DataItem(String type) {
+      this.type = type;
+    }
+  }
+
+  static class Text extends DataItem {
+
+    String text;
+
+    public Text(String text) {
+      super("text");
+      this.text = text;
+    }
+  }
+
+  static class Image extends DataItem {
+
+    String url;
+
+    public Image(String url) {
+      super("image");
+      this.url = url;
+    }
   }
 
   interface Message {}

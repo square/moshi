@@ -69,3 +69,34 @@ public fun KClass<*>.asArrayType(): GenericArrayType = java.asArrayType()
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
 public fun Type.asArrayType(): GenericArrayType = Types.arrayOf(this)
+
+/** Returns true if [this] class contains field named [fieldName], otherwise return false. */
+@JvmOverloads
+public fun Class<*>.containsField(
+  fieldName: String,
+  recursive: Boolean = true
+): Boolean {
+
+  if (this.isInterface || Object::class.java == this) {
+    return false
+  }
+
+  var superType = this
+
+  do {
+
+    val containsField = superType.declaredFields.any { field ->
+      return@any fieldName == field.name
+    }
+
+    if (containsField) {
+      return true
+    }
+
+    superType = superType.superclass
+
+  } while (recursive && Object::class.java != superType)
+
+
+  return false
+}

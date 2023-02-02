@@ -59,6 +59,7 @@ dependencies {
       "kspTest"(project(":moshi-kotlin-codegen"))
     }
   }
+  testImplementation(project(":moshi-adapters"))
   testImplementation(project(":moshi"))
   testImplementation(project(":moshi-kotlin"))
   testImplementation(project(":moshi-kotlin-tests:extra-moshi-test-module"))
