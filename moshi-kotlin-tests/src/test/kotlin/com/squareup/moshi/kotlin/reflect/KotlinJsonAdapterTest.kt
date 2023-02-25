@@ -1083,6 +1083,7 @@ class KotlinJsonAdapterTest {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val adapter = moshi.adapter(type)
 
+    @Suppress("DEPRECATION")
     Assertions.assertThat(adapter.fromJson(json)).isEqualToComparingFieldByFieldRecursively(value)
     assertThat(adapter.toJson(value)).isEqualTo(json)
   }
