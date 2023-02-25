@@ -107,7 +107,6 @@ internal fun String.parseIsoDate(): Date {
       return GregorianCalendar(year, month - 1, day).time
     }
     if (hasT) {
-
       // extract hours, minutes, seconds and milliseconds
       hour = parseInt(this, 1.let { offset += it; offset }, 2.let { offset += it; offset })
       if (checkOffset(this, offset, ':')) {
@@ -164,14 +163,14 @@ internal fun String.parseIsoDate(): Date {
           val cleaned = act.replace(":", "")
           if (cleaned != timezoneId) {
             throw IndexOutOfBoundsException(
-              "Mismatching time zone indicator: $timezoneId given, resolves to ${timezone.id}"
+              "Mismatching time zone indicator: $timezoneId given, resolves to ${timezone.id}",
             )
           }
         }
       }
     } else {
       throw IndexOutOfBoundsException(
-        "Invalid time zone indicator '$timezoneIndicator'"
+        "Invalid time zone indicator '$timezoneIndicator'",
       )
     }
     val calendar: Calendar = GregorianCalendar(timezone)

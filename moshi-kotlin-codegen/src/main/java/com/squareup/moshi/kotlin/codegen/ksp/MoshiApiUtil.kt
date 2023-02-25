@@ -48,7 +48,7 @@ internal fun TargetProperty.generator(
     if (!hasDefault) {
       logger.error(
         "No default value for transient/ignored property $name",
-        originalType
+        originalType,
       )
       return null
     }
@@ -58,7 +58,7 @@ internal fun TargetProperty.generator(
   if (!isVisible) {
     logger.error(
       "property $name is not visible",
-      originalType
+      originalType,
     )
     return null
   }
@@ -76,7 +76,7 @@ internal fun TargetProperty.generator(
       annotationElement.findAnnotationWithType<Retention>()?.let {
         if (it.value != AnnotationRetention.RUNTIME) {
           logger.error(
-            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention"
+            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention",
           )
         }
       }
@@ -91,7 +91,7 @@ internal fun TargetProperty.generator(
 
   return PropertyGenerator(
     this,
-    DelegateKey(type, jsonQualifierSpecs)
+    DelegateKey(type, jsonQualifierSpecs),
   )
 }
 

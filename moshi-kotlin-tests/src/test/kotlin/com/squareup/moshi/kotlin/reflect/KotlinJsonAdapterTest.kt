@@ -276,7 +276,8 @@ class KotlinJsonAdapterTest {
   }
 
   class PropertyWithJsonName {
-    @Json(name = "key a") var a: Int = -1
+    @Json(name = "key a")
+    var a: Int = -1
     var b: Int = -1
   }
 
@@ -289,7 +290,7 @@ class KotlinJsonAdapterTest {
       assertThat(expected).hasMessageThat().isEqualTo(
         "No default value for transient constructor parameter #0 " +
           "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter",
       )
     }
   }
@@ -305,7 +306,7 @@ class KotlinJsonAdapterTest {
       assertThat(expected).hasMessageThat().isEqualTo(
         "No default value for ignored constructor parameter #0 " +
           "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter",
       )
     }
   }
@@ -320,7 +321,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
         "'a' has a constructor parameter of type " +
-          "kotlin.Int but a property of type kotlin.String."
+          "kotlin.Int but a property of type kotlin.String.",
       )
     }
   }
@@ -406,7 +407,7 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
-        "Platform class kotlin.Triple in kotlin.Triple<?, ?, ?> requires explicit JsonAdapter to be registered"
+        "Platform class kotlin.Triple in kotlin.Triple<?, ?, ?> requires explicit JsonAdapter to be registered",
       )
     }
   }
@@ -551,7 +552,7 @@ class KotlinJsonAdapterTest {
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
         "No property for required constructor parameter #0 a of fun `<init>`(" +
-          "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}"
+          "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}",
       )
     }
   }
@@ -579,7 +580,7 @@ class KotlinJsonAdapterTest {
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
         "No JsonAdapter for interface " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$Interface (with no annotations)"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$Interface (with no annotations)",
       )
     }
   }
@@ -594,7 +595,7 @@ class KotlinJsonAdapterTest {
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize abstract class " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$AbstractClass"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$AbstractClass",
       )
     }
   }
@@ -609,7 +610,7 @@ class KotlinJsonAdapterTest {
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize inner class " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$InnerClass"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$InnerClass",
       )
     }
   }
@@ -625,7 +626,7 @@ class KotlinJsonAdapterTest {
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize local class or object expression " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$localClassesNotSupported\$LocalClass",
       )
     }
   }
@@ -638,7 +639,7 @@ class KotlinJsonAdapterTest {
     } catch (e: IllegalArgumentException) {
       assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize object declaration " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$ObjectDeclaration"
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$ObjectDeclaration",
       )
     }
   }
@@ -666,7 +667,7 @@ class KotlinJsonAdapterTest {
       assertThat(e).hasMessageThat().isEqualTo(
         "Cannot serialize $type " +
           "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest\$anonymousClassesNotSupported" +
-          "\$expression$1"
+          "\$expression$1",
       )
     }
   }
@@ -682,7 +683,7 @@ class KotlinJsonAdapterTest {
       116, 117, 118, 119, 120,
       121, 122, 123, 124, 125,
       126, 127, 128, 129, 130,
-      131, 132
+      131, 132,
     )
     val json = (
       """
@@ -737,7 +738,7 @@ class KotlinJsonAdapterTest {
     var v29: Int,
     var v30: Int,
     var v31: Int,
-    var v32: Int
+    var v32: Int,
   )
 
   @Test fun manyProperties33() {
@@ -751,7 +752,7 @@ class KotlinJsonAdapterTest {
       116, 117, 118, 119, 120,
       121, 122, 123, 124, 125,
       126, 127, 128, 129, 130,
-      131, 132, 133
+      131, 132, 133,
     )
     val json = (
       """
@@ -808,7 +809,7 @@ class KotlinJsonAdapterTest {
     var v30: Int,
     var v31: Int,
     var v32: Int,
-    var v33: Int
+    var v33: Int,
   )
 
   data class Box<out T>(val data: T)
@@ -856,6 +857,7 @@ class KotlinJsonAdapterTest {
     fun toJson(@Uppercase s: String): String {
       return s.uppercase(Locale.US)
     }
+
     @FromJson
     @Uppercase
     fun fromJson(s: String): String {
@@ -885,7 +887,7 @@ class KotlinJsonAdapterTest {
             }
           }
           null
-        }
+        },
       )
       .add(KotlinJsonAdapterFactory())
       .build()
@@ -922,7 +924,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToStandardReflection::class.java,
       """{"map":{"key":"value"}}""",
-      MapOfStringToStandardReflection(mapOf("key" to "value"))
+      MapOfStringToStandardReflection(mapOf("key" to "value")),
     )
   }
 
@@ -933,7 +935,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToStandardCodegen::class.java,
       """{"map":{"key":"value"}}""",
-      MapOfStringToStandardCodegen(mapOf("key" to "value"))
+      MapOfStringToStandardCodegen(mapOf("key" to "value")),
     )
   }
 
@@ -945,7 +947,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToEnumReflection::class.java,
       """{"map":{"key":"A"}}""",
-      MapOfStringToEnumReflection(mapOf("key" to KotlinEnum.A))
+      MapOfStringToEnumReflection(mapOf("key" to KotlinEnum.A)),
     )
   }
 
@@ -956,7 +958,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToEnumCodegen::class.java,
       """{"map":{"key":"A"}}""",
-      MapOfStringToEnumCodegen(mapOf("key" to KotlinEnum.A))
+      MapOfStringToEnumCodegen(mapOf("key" to KotlinEnum.A)),
     )
   }
 
@@ -968,7 +970,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToCollectionReflection::class.java,
       """{"map":{"key":[]}}""",
-      MapOfStringToCollectionReflection(mapOf("key" to listOf()))
+      MapOfStringToCollectionReflection(mapOf("key" to listOf())),
     )
   }
 
@@ -979,7 +981,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToCollectionCodegen::class.java,
       """{"map":{"key":[]}}""",
-      MapOfStringToCollectionCodegen(mapOf("key" to listOf()))
+      MapOfStringToCollectionCodegen(mapOf("key" to listOf())),
     )
   }
 
@@ -991,7 +993,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToMapReflection::class.java,
       """{"map":{"key":{}}}""",
-      MapOfStringToMapReflection(mapOf("key" to mapOf()))
+      MapOfStringToMapReflection(mapOf("key" to mapOf())),
     )
   }
 
@@ -1002,7 +1004,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToMapCodegen::class.java,
       """{"map":{"key":{}}}""",
-      MapOfStringToMapCodegen(mapOf("key" to mapOf()))
+      MapOfStringToMapCodegen(mapOf("key" to mapOf())),
     )
   }
 
@@ -1014,7 +1016,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToArrayReflection::class.java,
       """{"map":{"key":[]}}""",
-      MapOfStringToArrayReflection(mapOf("key" to arrayOf()))
+      MapOfStringToArrayReflection(mapOf("key" to arrayOf())),
     )
   }
 
@@ -1025,7 +1027,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToArrayCodegen::class.java,
       """{"map":{"key":[]}}""",
-      MapOfStringToArrayCodegen(mapOf("key" to arrayOf()))
+      MapOfStringToArrayCodegen(mapOf("key" to arrayOf())),
     )
   }
 
@@ -1037,7 +1039,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToClassReflection::class.java,
       """{"map":{"key":{"a":19,"b":42}}}""",
-      MapOfStringToClassReflection(mapOf("key" to ConstructorParameters(19, 42)))
+      MapOfStringToClassReflection(mapOf("key" to ConstructorParameters(19, 42))),
     )
   }
 
@@ -1048,7 +1050,7 @@ class KotlinJsonAdapterTest {
     mapWildcardsParameterizedTest(
       MapOfStringToClassCodegen::class.java,
       """{"map":{"key":{"a":19,"b":42}}}""",
-      MapOfStringToClassCodegen(mapOf("key" to ConstructorParameters(19, 42)))
+      MapOfStringToClassCodegen(mapOf("key" to ConstructorParameters(19, 42))),
     )
   }
 

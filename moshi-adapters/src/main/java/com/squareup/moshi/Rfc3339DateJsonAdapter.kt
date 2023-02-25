@@ -23,7 +23,7 @@ import java.util.Date
   """This class moved to avoid a package name conflict in the Java Platform Module System.
       The new class is com.squareup.moshi.adapters.Rfc3339DateJsonAdapter.""",
   replaceWith = ReplaceWith("com.squareup.moshi.adapters.Rfc3339DateJsonAdapter"),
-  level = DeprecationLevel.ERROR
+  level = DeprecationLevel.ERROR,
 )
 public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
 

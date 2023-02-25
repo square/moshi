@@ -73,7 +73,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
       POSSIBLE_GENERATED_NAMES[it] ?: error(
         "Invalid option value for $OPTION_GENERATED. Found $it, " +
-          "allowable values are $POSSIBLE_GENERATED_NAMES."
+          "allowable values are $POSSIBLE_GENERATED_NAMES.",
       )
     }
 
@@ -98,7 +98,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
         messager.printMessage(
           Diagnostic.Kind.ERROR,
           "@JsonClass can't be applied to $type: must be a Kotlin class",
-          type
+          type,
         )
         continue
       }
@@ -115,10 +115,10 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
                     AnnotationSpec.builder(generatedClassName)
                       .addMember(
                         "value = [%S]",
-                        JsonClassCodegenProcessor::class.java.canonicalName
+                        JsonClassCodegenProcessor::class.java.canonicalName,
                       )
                       .addMember("comments = %S", "https://github.com/square/moshi")
-                      .build()
+                      .build(),
                   )
                 }
               }
@@ -136,7 +136,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
 
   private fun adapterGenerator(
     element: TypeElement,
-    cachedClassInspector: MoshiCachedClassInspector
+    cachedClassInspector: MoshiCachedClassInspector,
   ): AdapterGenerator? {
     val type = targetType(
       messager,
@@ -159,7 +159,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
         messager.printMessage(
           Diagnostic.Kind.ERROR,
           "No property for required constructor parameter $name",
-          element
+          element,
         )
         return null
       }

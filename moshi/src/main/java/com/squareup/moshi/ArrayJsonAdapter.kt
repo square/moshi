@@ -24,7 +24,7 @@ import java.lang.reflect.Array as JavaArray
  */
 internal class ArrayJsonAdapter(
   private val elementClass: Class<*>,
-  private val elementAdapter: JsonAdapter<Any>
+  private val elementAdapter: JsonAdapter<Any>,
 ) : JsonAdapter<Any?>() {
   override fun fromJson(reader: JsonReader): Any {
     val list = buildList<Any?> {

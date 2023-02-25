@@ -30,7 +30,7 @@ import kotlin.annotation.AnnotationTarget.TYPE
 @JsonClass(generateAdapter = true)
 data class GenericTestClassWithDefaults<T>(
   val input: String = "",
-  val genericInput: T
+  val genericInput: T,
 )
 
 @Target(TYPE)
@@ -43,28 +43,29 @@ annotation class TypeAnnotation
 @JsonClass(generateAdapter = true)
 data class TypeAnnotationClass(
   val propertyWithAnnotatedType: @TypeAnnotation String = "",
-  val generic: List<@TypeAnnotation String>
+  val generic: List<@TypeAnnotation String>,
 )
 
 // Regression test for https://github.com/square/moshi/issues/1277
 @JsonClass(generateAdapter = true)
 data class OtherTestModel(val TestModel: TestModel? = null)
+
 @JsonClass(generateAdapter = true)
 data class TestModel(
   val someVariable: Int,
-  val anotherVariable: String
+  val anotherVariable: String,
 )
 
 // Regression test for https://github.com/square/moshi/issues/1022
 @JsonClass(generateAdapter = true)
 internal data class MismatchParentAndNestedClassVisibility(
   val type: Int,
-  val name: String? = null
+  val name: String? = null,
 ) {
 
   @JsonClass(generateAdapter = true)
   data class NestedClass(
-    val nestedProperty: String
+    val nestedProperty: String,
   )
 }
 
@@ -76,13 +77,13 @@ data class KeysWithSpaces(
   @Json(name = "3. Last Refreshed") val lastRefreshed: String,
   @Json(name = "4. Interval") val interval: String,
   @Json(name = "5. Output Size") val size: String,
-  @Json(name = "6. Time Zone") val timeZone: String
+  @Json(name = "6. Time Zone") val timeZone: String,
 )
 
 // Regression test for https://github.com/square/moshi/issues/848
 @JsonClass(generateAdapter = true)
 data class Hotwords(
-  val `class`: List<String>?
+  val `class`: List<String>?,
 )
 
 /**
@@ -115,7 +116,7 @@ data class SmokeTestType(
   val aliasedName: TypeAliasName = "Woah",
   val genericAlias: GenericTypeAlias = listOf("Woah"),
   // Regression test for https://github.com/square/moshi/issues/1272
-  val nestedArray: Array<Map<String, Any>>? = null
+  val nestedArray: Array<Map<String, Any>>? = null,
 )
 
 typealias TypeAliasName = String
@@ -132,11 +133,11 @@ enum class Foo { BAR }
 @JsonClass(generateAdapter = true)
 data class ClassWithQualifier(
   @UpperCase(foo = [Foo.BAR])
-  val a: Int
+  val a: Int,
 )
 
 // Regression for https://github.com/ZacSweers/MoshiX/issues/120
 @JsonClass(generateAdapter = true)
 data class DataClassInModuleB(
-  val id: String
+  val id: String,
 ) : AbstractClassInModuleA()

@@ -530,7 +530,9 @@ internal class JsonUtf8Reader : JsonReader {
       peeked = PEEKED_NONE
       pathNames[stackSize - 1] = name
       i
-    } else -1
+    } else {
+      -1
+    }
   }
 
   override fun nextString(): String {
@@ -586,7 +588,9 @@ internal class JsonUtf8Reader : JsonReader {
       peeked = PEEKED_NONE
       pathIndices[stackSize - 1]++
       i
-    } else -1
+    } else {
+      -1
+    }
   }
 
   override fun nextBoolean(): Boolean {

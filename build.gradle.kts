@@ -15,7 +15,7 @@ buildscript {
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
-    classpath("com.google.guava:guava:28.2-jre")
+    classpath("com.google.guava:guava:31.1-jre")
   }
 }
 
@@ -51,14 +51,16 @@ spotless {
     targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).editorConfigOverride(
+      mapOf("ktlint_standard_filename" to "disabled"),
+    )
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.versions.ktlint.get()).editorConfigOverride(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get())
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
@@ -70,7 +72,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(18))
+        languageVersion.set(JavaLanguageVersion.of(19))
       }
     }
     if (project.name != "records-tests") {

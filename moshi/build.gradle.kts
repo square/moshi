@@ -62,7 +62,7 @@ tasks.withType<KotlinCompile>()
     kotlinOptions {
       val toAdd = mutableListOf(
         "-opt-in=kotlin.contracts.ExperimentalContracts",
-        "-Xjvm-default=all"
+        "-Xjvm-default=all",
       )
       if (name.contains("test", true)) {
         toAdd += "-opt-in=kotlin.ExperimentalStdlibApi"

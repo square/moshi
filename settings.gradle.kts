@@ -17,5 +17,3 @@ include(":moshi-kotlin-codegen")
 include(":moshi-kotlin-tests")
 include(":moshi-kotlin-tests:codegen-only")
 include(":moshi-kotlin-tests:extra-moshi-test-module")
-
-enableFeaturePreview("VERSION_CATALOGS")
