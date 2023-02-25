@@ -13,12 +13,17 @@ plugins {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    @Suppress("SuspiciousCollectionReassignment")
-    freeCompilerArgs += listOf(
+  compilerOptions {
+    freeCompilerArgs.addAll(
       "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
       "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
+  }
+}
+
+tasks.compileTestKotlin {
+  compilerOptions {
+    freeCompilerArgs.add("-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
   }
 }
 

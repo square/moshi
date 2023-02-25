@@ -3,7 +3,7 @@ autoService = "1.0.1"
 gjf = "1.15.0"
 jvmTarget = "1.8"
 kotlin = "1.8.10"
-kotlinCompileTesting = "1.4.9"
+kotlinCompileTesting = "0.2.1"
 kotlinpoet = "1.12.0"
 ksp = "1.8.10-1.0.9"
 ktlint = "0.48.2"
@@ -37,6 +37,6 @@ okio = "com.squareup.okio:okio:3.3.0"
 # Test libs
 assertj = "org.assertj:assertj-core:3.24.2"
 junit = "junit:junit:4.13.2"
-kotlinCompileTesting = { module = "com.github.tschuchortdev:kotlin-compile-testing", version.ref = "kotlinCompileTesting" }
-kotlinCompileTesting-ksp = { module = "com.github.tschuchortdev:kotlin-compile-testing-ksp", version.ref ="kotlinCompileTesting" }
+kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
+kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.1.3"
