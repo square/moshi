@@ -25,6 +25,10 @@ val customLauncher = service.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(17))
 }
 
+tasks.named<JavaCompile>("compileJava16Java") {
+  options.release.set(16)
+}
+
 tasks.named<KotlinCompile>("compileJava16Kotlin") {
   kotlinJavaToolchain.toolchain.use(customLauncher)
   compilerOptions.jvmTarget.set(JvmTarget.JVM_16)
