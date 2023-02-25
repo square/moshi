@@ -72,7 +72,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(18))
+        languageVersion.set(JavaLanguageVersion.of(19))
       }
     }
     if (project.name != "records-tests") {
