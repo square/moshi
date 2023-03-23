@@ -190,7 +190,7 @@ class CardAdapter {
 ```kotlin
 class CardAdapter {
   @ToJson fun toJson(card: Card): String {
-    return card.rank + card.suit.name.substring(0, 1)
+    return card.rank + card.suit.name.substring(0, 2)
   }
 
   @FromJson fun fromJson(card: String): Card {
