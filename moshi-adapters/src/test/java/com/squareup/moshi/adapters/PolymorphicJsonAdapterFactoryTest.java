@@ -162,6 +162,43 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
+
+  @Test
+  public void checkIfGoToFallbackJsonAdapterWithWrongLabelKey() throws IOException {
+    Moshi moshi =
+      new Moshi.Builder()
+        .add(
+          // "type" should be "faulty_state"
+          PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withFallbackJsonAdapter(
+              new JsonAdapter<Object>() {
+                @Override
+                public Object fromJson(JsonReader reader) throws IOException {
+                  reader.beginObject();
+                  assertThat(reader.nextName()).isEqualTo("faulty_state");
+                  assertThat(reader.nextString()).isEqualTo("Unknown Message Type");
+                  reader.endObject();
+                  return new EmptyMessage();
+                }
+
+                @Override
+                public void toJson(JsonWriter writer, @Nullable Object value) {
+                  throw new AssertionError();
+                }
+              }))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    JsonReader reader =
+      JsonReader.of(new Buffer().writeUtf8("{\"faulty_state\":\"Unknown Message Type\"}"));
+
+    Message message = adapter.fromJson(reader);
+    assertThat(message).isInstanceOf(EmptyMessage.class);
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
   @Test
   public void unregisteredSubtype() {
     Moshi moshi =

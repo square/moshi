@@ -216,7 +216,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         }
         return labelIndex
       }
-      throw JsonDataException("Missing label for $labelKey")
+      return -1
     }
 
     @Throws(IOException::class)
