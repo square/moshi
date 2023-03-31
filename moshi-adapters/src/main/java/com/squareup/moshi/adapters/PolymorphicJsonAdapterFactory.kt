@@ -104,6 +104,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labels: List<String>,
   private val subtypes: List<Type>,
   private val fallbackJsonAdapter: JsonAdapter<Any>?,
+  private var labelTypeClass : Class<*>
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -122,6 +123,18 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labels = newLabels,
       subtypes = newSubtypes,
       fallbackJsonAdapter = fallbackJsonAdapter,
+      labelTypeClass = labelTypeClass
+    )
+  }
+
+  public fun withLabelType(labelType: Class<*>): PolymorphicJsonAdapterFactory<T> {
+    return PolymorphicJsonAdapterFactory(
+      baseType = baseType,
+      labelKey = labelKey,
+      labels = labels,
+      subtypes = subtypes,
+      fallbackJsonAdapter = fallbackJsonAdapter,
+      labelTypeClass = labelType
     )
   }
 
@@ -141,6 +154,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labels = labels,
       subtypes = subtypes,
       fallbackJsonAdapter = fallbackJsonAdapter,
+      labelTypeClass = labelTypeClass
     )
   }
 
@@ -172,7 +186,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       return null
     }
     val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
-    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter, labelTypeClass)
       .nullSafe()
   }
 
@@ -182,6 +196,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val subtypes: List<Type>,
     private val jsonAdapters: List<JsonAdapter<Any>>,
     private val fallbackJsonAdapter: JsonAdapter<Any>?,
+    private val labelTypeClass: Class<*>
   ) : JsonAdapter<Any>() {
     /** Single-element options containing the label's key only.  */
     private val labelKeyOptions: Options = Options.of(labelKey)
@@ -208,7 +223,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
           reader.skipValue()
           continue
         }
-        val labelIndex = reader.selectString(labelOptions)
+        var labelIndex = reader.findSubtypeIndexInOptionsWithLabelType(labelTypeClass);
         if (labelIndex == -1 && fallbackJsonAdapter == null) {
           throw JsonDataException(
             "Expected one of $labels for key '$labelKey' but found '${reader.nextString()}'. Register a subtype for this label.",
@@ -217,6 +232,65 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         return labelIndex
       }
       throw JsonDataException("Missing label for $labelKey")
+    }
+
+    /**
+     * Finds the selected String index in [options].
+     *
+     * @param str The target string.
+     * @param options The options containing strings.
+     * @return The index of the target string in options.
+     */
+    private fun findStringIndexInOptions(str: String, options: Options): Int {
+      return options.strings().indexOfFirst { it == str }
+    }
+
+    /**
+     *  use JsonReader to find Subtype Index in labelOptions by different LabelType
+     *
+     *  @param classType label class Type
+     *  @return the index of the subtype value
+     */
+    private fun JsonReader.findSubtypeIndexInOptionsWithLabelType(classType: Class<*>?): Int {
+      lenient = true
+      return when (classType) {
+        Boolean::class, java.lang.Boolean::class.java -> {
+          findStringIndexInOptions(nextBoolean().toString(), labelOptions)
+        }
+        Int::class, java.lang.Integer::class.java -> {
+          findStringIndexInOptions(nextInt().toString(), labelOptions)
+        }
+        Double::class, java.lang.Double::class.java -> {
+          findStringIndexInOptions(nextDouble().toString(), labelOptions)
+        }
+        Long::class, java.lang.Long::class.java -> {
+          findStringIndexInOptions(nextLong().toString(), formatLongValue())
+        }
+        String::class, java.lang.String::class.java -> {
+          selectString(labelOptions)
+        }
+        else -> {
+          throw IllegalArgumentException(
+            "ClassType $subtypes does not support For RightNow.",
+          )
+        }
+      }
+    }
+
+    /**
+     * wipe off the L in labelOptions Long value
+     *
+     * @return the formatted Options
+     */
+    private fun formatLongValue(): Options {
+      val formattedValueList = labelOptions.strings().map { item ->
+        if (item.endsWith("L")) {
+          item.substring(0, item.length - 1)
+        } else {
+          item
+        }
+      }
+      return Options.of(*formattedValueList.toTypedArray())
     }
 
     @Throws(IOException::class)
@@ -232,13 +306,51 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       }
       writer.beginObject()
       if (adapter !== fallbackJsonAdapter) {
-        writer.name(labelKey).value(labels[labelIndex])
+        writer.writeValueWithType(labelKey, labelIndex, labelTypeClass);
       }
       val flattenToken = writer.beginFlatten()
       adapter.toJson(writer, value)
       writer.endFlatten(flattenToken)
       writer.endObject()
     }
+
+    /**
+     * Uses [JsonWriter] to write name and value by different [classType].
+     *
+     * @param labelKey The name of the label.
+     * @param labelIndex The index value for labels.
+     * @param classType The label's class type.
+     */
+    private fun JsonWriter.writeValueWithType(
+      labelKey: String,
+      labelIndex: Int,
+      classType: Class<*>?
+    ) {
+      name(labelKey)
+      when (classType) {
+        Boolean::class, java.lang.Boolean::class.java -> {
+          value((labels[labelIndex].toBoolean()))
+        }
+        Int::class, java.lang.Integer::class.java -> {
+          value(labels[labelIndex].toInt())
+        }
+        Double::class, java.lang.Double::class.java -> {
+          value(labels[labelIndex].toDouble())
+        }
+        Long::class, java.lang.Long::class.java -> {
+          value(formatLongValue().strings()[labelIndex].toLong())
+        }
+        String::class, java.lang.String::class.java -> {
+          value(labels[labelIndex])
+        }
+        else -> {
+          throw IllegalArgumentException(
+            "ClassType $classType does not support For RightNow.",
+          )
+        }
+      }
+    }
+
 
     override fun toString(): String {
       return "PolymorphicJsonAdapter($labelKey)"
@@ -260,6 +372,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         labels = emptyList(),
         subtypes = emptyList(),
         fallbackJsonAdapter = null,
+        labelTypeClass = String::class.java
       )
     }
   }

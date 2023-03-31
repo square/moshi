@@ -365,16 +365,178 @@ public final class PolymorphicJsonAdapterFactoryTest {
   @Test
   public void failOnUnknownMissingTypeLabel() throws IOException {
     Moshi moshi =
-        new Moshi.Builder()
-            .add(
-                PolymorphicJsonAdapterFactory.of(Message.class, "type")
-                    .withSubtype(MessageWithType.class, "success"))
-            .build();
+      new Moshi.Builder()
+        .add(
+          PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(MessageWithType.class, "success"))
+        .build();
     JsonAdapter<Message> adapter = moshi.adapter(Message.class).failOnUnknown();
 
     MessageWithType decoded =
-        (MessageWithType) adapter.fromJson("{\"value\":\"Okay!\",\"type\":\"success\"}");
+      (MessageWithType) adapter.fromJson("{\"value\":\"Okay!\",\"type\":\"success\"}");
     assertThat(decoded.value).isEqualTo("Okay!");
+  }
+
+  @Test
+  public void fromJSonWithBooleanLabelClassType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "true")
+            .withSubtype(Error.class, "false")
+            .withLabelType(Boolean.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\":true,\"value\":\"Okay!\"}"))
+      .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.fromJson("{\"type\":false,\"error_logs\":{\"order\":66}}"))
+      .isEqualTo(new Error(Collections.singletonMap("order", 66d)));
+  }
+
+  @Test
+  public void fromJSonWithDoubleLabelClassType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "9.03")
+            .withSubtype(Error.class, "8.03")
+            .withLabelType(Double.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\":9.03,\"value\":\"Okay!\"}"))
+      .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.fromJson("{\"type\":8.03,\"error_logs\":{\"order\":66}}"))
+      .isEqualTo(new Error(Collections.singletonMap("order", 66d)));
+  }
+
+  @Test
+  public void fromJSonWithStringLabelClassType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+      .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withLabelType(String.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\":\"success\",\"value\":\"Okay!\"}"))
+      .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.fromJson("{\"type\":\"error\",\"error_logs\":{\"order\":66}}"))
+      .isEqualTo(new Error(Collections.singletonMap("order", 66d)));
+  }
+
+  @Test
+  public void fromJSonWithIntegerLabelClassType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+      .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "9")
+            .withSubtype(Error.class, "8")
+            .withLabelType(Integer.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\": 9 ,\"value\":\"Okay!\"}"))
+      .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.fromJson("{\"type\": 8 ,\"error_logs\":{\"order\":66}}"))
+      .isEqualTo(new Error(Collections.singletonMap("order", 66d)));
+  }
+
+  @Test
+  public void fromJSonWithLongLabelClassType() throws IOException {
+    Moshi moshi = new Moshi.Builder()
+      .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "123456789L")
+            .withSubtype(Error.class, "12345678910L")
+            .withLabelType(Long.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.fromJson("{\"type\":123456789,\"value\":\"Okay!\"}"))
+      .isEqualTo(new Success("Okay!"));
+    assertThat(adapter.fromJson("{\"type\":12345678910,\"error_logs\":{\"order\":66}}"))
+      .isEqualTo(new Error(Collections.singletonMap("order", 66d)));
+  }
+
+  @Test
+  public void toJsonWithBooleanLabelClassType() {
+    Moshi moshi = new Moshi.Builder()
+      .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "true")
+            .withSubtype(Error.class, "false")
+            .withLabelType(Boolean.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new Success("Okay!")))
+      .isEqualTo("{\"type\":true,\"value\":\"Okay!\"}");
+    assertThat(adapter.toJson(new Error(Collections.singletonMap("order", 66))))
+      .isEqualTo("{\"type\":false,\"error_logs\":{\"order\":66}}");
+  }
+
+
+  @Test
+  public void toJsonWithLongLabelClassType() {
+    Moshi moshi = new Moshi.Builder()
+      .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "123456789L")
+            .withSubtype(Error.class, "12345678910L")
+            .withLabelType(Long.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+    assertThat(adapter.toJson(new Success("Okay!")))
+      .isEqualTo("{\"type\":123456789,\"value\":\"Okay!\"}");
+    assertThat(adapter.toJson(new Error(Collections.singletonMap("order", 66))))
+      .isEqualTo("{\"type\":12345678910,\"error_logs\":{\"order\":66}}");
+  }
+
+  @Test
+  public void toJsonWithDoubleLabelClassType() {
+    Moshi moshi = new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "9.03")
+            .withSubtype(Error.class, "8.03")
+            .withLabelType(Double.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new Success("Okay!")))
+      .isEqualTo("{\"type\":9.03,\"value\":\"Okay!\"}");
+    assertThat(adapter.toJson(new Error(Collections.singletonMap("order", 66))))
+      .isEqualTo("{\"type\":8.03,\"error_logs\":{\"order\":66}}");
+  }
+
+  @Test
+  public void toJsonWithIntegerLabelClassType() {
+    Moshi moshi =
+      new Moshi.Builder()
+        .add(PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "9")
+            .withSubtype(Error.class, "8")
+            .withLabelType(Integer.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new Success("Okay!")))
+      .isEqualTo("{\"type\":9,\"value\":\"Okay!\"}");
+    assertThat(adapter.toJson(new Error(Collections.singletonMap("order", 66))))
+      .isEqualTo("{\"type\":8,\"error_logs\":{\"order\":66}}");
+  }
+
+  @Test
+  public void toJsonWithStringLabelClassType() {
+    Moshi moshi = new Moshi.Builder()
+        .add(
+          PolymorphicJsonAdapterFactory.of(Message.class, "type")
+            .withSubtype(Success.class, "success")
+            .withSubtype(Error.class, "error")
+            .withLabelType(String.class))
+        .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new Success("Okay!")))
+      .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
+    assertThat(adapter.toJson(new Error(Collections.singletonMap("order", 66))))
+      .isEqualTo("{\"type\":\"error\",\"error_logs\":{\"order\":66}}");
   }
 
   interface Message {}
