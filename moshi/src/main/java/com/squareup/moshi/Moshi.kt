@@ -107,7 +107,7 @@ public class Moshi internal constructor(builder: Builder) {
   public fun <T> adapter(
     type: Type,
     annotations: Set<Annotation>,
-    fieldName: String?
+    fieldName: String?,
   ): JsonAdapter<T> {
     val cleanedType = type.canonicalize().removeSubtypeWildcard()
 
@@ -150,7 +150,7 @@ public class Moshi internal constructor(builder: Builder) {
   public fun <T> nextAdapter(
     skipPast: JsonAdapter.Factory,
     type: Type,
-    annotations: Set<Annotation>
+    annotations: Set<Annotation>,
   ): JsonAdapter<T> {
     val cleanedType = type.canonicalize().removeSubtypeWildcard()
     val skipPastIndex = factories.indexOf(skipPast)
@@ -203,7 +203,7 @@ public class Moshi internal constructor(builder: Builder) {
     public fun <T> add(
       type: Type,
       annotation: Class<out Annotation>,
-      jsonAdapter: JsonAdapter<T>
+      jsonAdapter: JsonAdapter<T>,
     ): Builder = apply {
       add(newAdapterFactory(type, annotation, jsonAdapter))
     }
@@ -225,7 +225,7 @@ public class Moshi internal constructor(builder: Builder) {
     public fun <T> addLast(
       type: Type,
       annotation: Class<out Annotation>,
-      jsonAdapter: JsonAdapter<T>
+      jsonAdapter: JsonAdapter<T>,
     ): Builder = apply {
       addLast(newAdapterFactory(type, annotation, jsonAdapter))
     }
@@ -373,7 +373,7 @@ public class Moshi internal constructor(builder: Builder) {
 
     fun <T> newAdapterFactory(
       type: Type,
-      jsonAdapter: JsonAdapter<T>
+      jsonAdapter: JsonAdapter<T>,
     ): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
         if (annotations.isEmpty() && typesMatch(type, targetType)) jsonAdapter else null
@@ -383,7 +383,7 @@ public class Moshi internal constructor(builder: Builder) {
     fun <T> newAdapterFactory(
       type: Type,
       annotation: Class<out Annotation>,
-      jsonAdapter: JsonAdapter<T>
+      jsonAdapter: JsonAdapter<T>,
     ): JsonAdapter.Factory {
       require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
       require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }

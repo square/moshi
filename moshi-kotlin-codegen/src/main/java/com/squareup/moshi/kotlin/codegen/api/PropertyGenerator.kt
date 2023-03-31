@@ -24,7 +24,7 @@ import com.squareup.kotlinpoet.PropertySpec
 public class PropertyGenerator(
   public val target: TargetProperty,
   public val delegateKey: DelegateKey,
-  public val isTransient: Boolean = false
+  public val isTransient: Boolean = false,
 ) {
   public val name: String = target.name
   public val jsonName: String = target.jsonName ?: target.name

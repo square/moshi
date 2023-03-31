@@ -158,6 +158,7 @@ public sealed class JsonWriter : Closeable, Flushable {
      * the encoded document will be compact.
      */
     get() = _indent.orEmpty()
+
     /**
      * Sets the indentation string to be repeated for each level of indentation in the encoded
      * document. If `indent.isEmpty()` the encoded document will be compact. Otherwise, the

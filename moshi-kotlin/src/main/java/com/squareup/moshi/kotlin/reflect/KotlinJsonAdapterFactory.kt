@@ -61,7 +61,7 @@ internal class KotlinJsonAdapter<T>(
   val constructor: KFunction<T>,
   val allBindings: List<Binding<T, Any?>?>,
   val nonIgnoredBindings: List<Binding<T, Any?>>,
-  val options: JsonReader.Options
+  val options: JsonReader.Options,
 ) : JsonAdapter<T>() {
 
   override fun fromJson(reader: JsonReader): T {
@@ -82,7 +82,7 @@ internal class KotlinJsonAdapter<T>(
       val propertyIndex = binding.propertyIndex
       if (values[propertyIndex] !== ABSENT_VALUE) {
         throw JsonDataException(
-          "Multiple values for '${binding.property.name}' at ${reader.path}"
+          "Multiple values for '${binding.property.name}' at ${reader.path}",
         )
       }
 
@@ -92,7 +92,7 @@ internal class KotlinJsonAdapter<T>(
         throw unexpectedNull(
           binding.property.name,
           binding.jsonName,
-          reader
+          reader,
         )
       }
     }
@@ -108,7 +108,7 @@ internal class KotlinJsonAdapter<T>(
           else -> throw missingProperty(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,
-            reader
+            reader,
           )
         }
       }
@@ -151,7 +151,7 @@ internal class KotlinJsonAdapter<T>(
     val adapter: JsonAdapter<P>,
     val property: KProperty1<K, P>,
     val parameter: KParameter?,
-    val propertyIndex: Int
+    val propertyIndex: Int,
   ) {
     fun get(value: K) = property.get(value)
 
@@ -165,7 +165,7 @@ internal class KotlinJsonAdapter<T>(
   /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
   class IndexedParameterMap(
     private val parameterKeys: List<KParameter>,
-    private val parameterValues: Array<Any?>
+    private val parameterValues: Array<Any?>,
   ) : AbstractMutableMap<KParameter, Any?>() {
 
     override fun put(key: KParameter, value: Any?): Any? = null
@@ -278,7 +278,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
             } else {
               Types.newParameterizedType(
                 rawClassifierType,
-                *property.returnType.arguments.mapNotNull { it.type?.javaType }.toTypedArray()
+                *property.returnType.arguments.mapNotNull { it.type?.javaType }.toTypedArray(),
               )
             }
           } else {
@@ -295,7 +295,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val adapter = moshi.adapter<Any?>(
         resolvedPropertyType,
         allAnnotations.toTypedArray().jsonAnnotations,
-        property.name
+        property.name,
       )
 
       @Suppress("UNCHECKED_CAST")
@@ -304,7 +304,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
         adapter,
         property as KProperty1<Any, Any?>,
         parameter,
-        parameter?.index ?: -1
+        parameter?.index ?: -1,
       )
     }
 

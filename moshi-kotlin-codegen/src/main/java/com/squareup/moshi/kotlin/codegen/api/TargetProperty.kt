@@ -26,7 +26,7 @@ public data class TargetProperty(
   val parameter: TargetParameter?,
   val visibility: KModifier,
   val jsonName: String?,
-  val jsonIgnore: Boolean
+  val jsonIgnore: Boolean,
 ) {
   val name: String get() = propertySpec.name
   val type: TypeName get() = propertySpec.type

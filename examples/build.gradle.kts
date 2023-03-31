@@ -15,7 +15,7 @@ dependencies {
 tasks.withType<KotlinCompile>().configureEach {
   kotlinOptions {
     freeCompilerArgs += listOf(
-      "-opt-in=kotlin.ExperimentalStdlibApi"
+      "-opt-in=kotlin.ExperimentalStdlibApi",
     )
   }
 }

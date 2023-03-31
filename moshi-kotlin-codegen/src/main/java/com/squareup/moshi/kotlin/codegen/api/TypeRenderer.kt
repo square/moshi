@@ -63,7 +63,7 @@ internal abstract class TypeRenderer {
           CodeBlock.of(
             "%T.arrayOf(%L)",
             Types::class,
-            renderObjectType(typeName.typeArguments[0])
+            renderObjectType(typeName.typeArguments[0]),
           )
         } else {
           val builder = CodeBlock.builder().apply {
@@ -97,7 +97,7 @@ internal abstract class TypeRenderer {
             method = "subtypeOf"
           }
           else -> throw IllegalArgumentException(
-            "Unrepresentable wildcard type. Cannot have more than one bound: $typeName"
+            "Unrepresentable wildcard type. Cannot have more than one bound: $typeName",
           )
         }
         CodeBlock.of("%T.%L(%L)", Types::class, method, render(target, forceBox = true))

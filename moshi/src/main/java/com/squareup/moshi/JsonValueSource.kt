@@ -47,7 +47,7 @@ internal class JsonValueSource @JvmOverloads constructor(
    * reached, this should be compared against 0. If it is zero, then we've read a complete value and
    * this source is exhausted.
    */
-  private var stackSize: Int = 0
+  private var stackSize: Int = 0,
 ) : Source {
   private val buffer: Buffer = source.buffer
 

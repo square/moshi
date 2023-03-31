@@ -47,6 +47,6 @@ public object Options {
 
   public val POSSIBLE_GENERATED_NAMES: Map<String, ClassName> = arrayOf(
     ClassName("javax.annotation.processing", "Generated"),
-    ClassName("javax.annotation", "Generated")
+    ClassName("javax.annotation", "Generated"),
   ).associateBy { it.canonicalName }
 }

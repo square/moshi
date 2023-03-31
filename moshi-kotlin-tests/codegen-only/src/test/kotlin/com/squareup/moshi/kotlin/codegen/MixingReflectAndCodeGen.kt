@@ -35,7 +35,7 @@ class MixingReflectAndCodeGen {
     assertThat(reflectionAdapter.toString())
       .isEqualTo(
         "KotlinJsonAdapter(com.squareup.moshi.kotlin.codegen.MixingReflectAndCodeGen" +
-          ".UsesReflectionAdapter).nullSafe()"
+          ".UsesReflectionAdapter).nullSafe()",
       )
   }
 
