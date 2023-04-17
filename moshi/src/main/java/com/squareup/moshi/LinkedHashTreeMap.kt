@@ -449,7 +449,6 @@ constructor(
     }
     replaceInParent(root, pivot)
 
-    // move the root to the pivot's left
     pivot.left = root
     root.parent = pivot
 
