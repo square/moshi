@@ -583,7 +583,6 @@ constructor(
  * trees, each of (approximately) half the previous size.
  */
 internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, V>?> {
-  // TODO: don't do anything if we're already at MAX_CAPACITY
   val oldCapacity = oldTable.size
   // Arrays and generics don't get along.
   val newTable: Array<Node<K, V>?> = arrayOfNulls<Node<K, V>?>(oldCapacity * 2)
