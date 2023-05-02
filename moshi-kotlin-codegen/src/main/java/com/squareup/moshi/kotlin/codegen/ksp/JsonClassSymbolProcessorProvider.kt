@@ -87,9 +87,9 @@ private class JsonClassSymbolProcessor(
 
       if (!jsonClassAnnotation.generateAdapter) continue
 
-      val originatingFile = type.containingFile!!
-      val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
       try {
+        val originatingFile = type.containingFile!!
+        val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
         val preparedAdapter = adapterGenerator
           .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
