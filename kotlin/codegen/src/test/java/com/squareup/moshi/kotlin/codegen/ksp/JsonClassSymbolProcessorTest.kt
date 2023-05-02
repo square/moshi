@@ -538,6 +538,24 @@ class JsonClassSymbolProcessorTest {
   }
 
   @Test
+  fun invalidGenericSyntaxErrorMessaging() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class ElementEnvelope(val elements: List)
+          """,
+      ),
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains("Error preparing ElementEnvelope")
+  }
+
+  @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
       kotlin(
