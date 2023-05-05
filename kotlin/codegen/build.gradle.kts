@@ -32,6 +32,9 @@ tasks.withType<KotlinCompile>().configureEach {
       "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
       "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
+    if (this@configureEach.name == "compileTestKotlin") {
+      freeCompilerArgs += "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"
+    }
   }
 }
 
