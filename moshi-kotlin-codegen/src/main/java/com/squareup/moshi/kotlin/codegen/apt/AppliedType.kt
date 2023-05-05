@@ -31,13 +31,13 @@ private val OBJECT_CLASS = ClassName("java.lang", "Object")
  */
 internal class AppliedType private constructor(
   val element: TypeElement,
-  private val mirror: DeclaredType
+  private val mirror: DeclaredType,
 ) {
   /** Returns all supertypes of this, recursively. Only [CLASS] is used as we can't really use other types. */
   @OptIn(DelicateKotlinPoetApi::class)
   fun superclasses(
     types: Types,
-    result: LinkedHashSet<AppliedType> = LinkedHashSet()
+    result: LinkedHashSet<AppliedType> = LinkedHashSet(),
   ): LinkedHashSet<AppliedType> {
     result.add(this)
     for (supertype in types.directSupertypes(mirror)) {

@@ -9,22 +9,24 @@ val baseline = configurations.create("baseline")
 val latest = configurations.create("latest")
 
 dependencies {
-  baseline("com.squareup.moshi:moshi-adapters:1.13.0") {
+  baseline("com.squareup.moshi:moshi-adapters:1.14.0") {
     isTransitive = false
-    isForce = true
+    version {
+      strictly("1.14.0")
+    }
   }
   latest(project(":moshi-adapters"))
 }
 
 val japicmp = tasks.register<JapicmpTask>("japicmp") {
   dependsOn("jar")
-  oldClasspath = baseline
-  newClasspath = latest
-  isOnlyBinaryIncompatibleModified = true
-  isFailOnModification = true
-  txtOutputFile = file("$buildDir/reports/japi.txt")
-  isIgnoreMissingClasses = true
-  isIncludeSynthetic = true
+  oldClasspath.from(baseline)
+  newClasspath.from(latest)
+  onlyBinaryIncompatibleModified.set(true)
+  failOnModification.set(true)
+  txtOutputFile.set(layout.buildDirectory.file("reports/japi.txt"))
+  ignoreMissingClasses.set(true)
+  includeSynthetic.set(true)
 }
 
 tasks.named("check").configure {

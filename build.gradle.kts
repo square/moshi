@@ -2,6 +2,7 @@ import com.diffplug.gradle.spotless.JavaExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
@@ -15,7 +16,7 @@ buildscript {
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
-    classpath("com.google.guava:guava:28.2-jre")
+    classpath("com.google.guava:guava:31.1-jre")
   }
 }
 
@@ -28,7 +29,7 @@ plugins {
 
 allprojects {
   group = "com.squareup.moshi"
-  version = "1.14.0-SNAPSHOT"
+  version = "2.0.0-SNAPSHOT"
 
   repositories {
     mavenCentral()
@@ -48,17 +49,19 @@ spotless {
   java {
     configureCommonJavaFormat()
     target("**/*.java")
-    targetExclude("**/build/**",)
+    targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get()).editorConfigOverride(
+      mapOf("ktlint_standard_filename" to "disabled"),
+    )
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
+    ktlint(libs.versions.ktlint.get())
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
@@ -70,7 +73,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(19))
       }
     }
     if (project.name != "records-tests") {
@@ -82,11 +85,9 @@ subprojects {
 
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
-      kotlinOptions {
-        // TODO re-enable when no longer supporting multiple kotlin versions
-//        @Suppress("SuspiciousCollectionReassignment")
-//        freeCompilerArgs += listOf("-progressive")
-        jvmTarget = libs.versions.jvmTarget.get()
+      compilerOptions {
+        freeCompilerArgs.add("-progressive")
+        jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvmTarget.get()))
       }
     }
 

@@ -37,14 +37,14 @@ import java.lang.reflect.Type
 internal class RecordJsonAdapter<T>(
   private val constructor: MethodHandle,
   private val targetClass: String,
-  componentBindings: Map<String, ComponentBinding<Any>>
+  componentBindings: Map<String, ComponentBinding<Any>>,
 ) : JsonAdapter<T>() {
 
   data class ComponentBinding<T>(
     val componentName: String,
     val jsonName: String,
     val adapter: JsonAdapter<T>,
-    val accessor: MethodHandle
+    val accessor: MethodHandle,
   )
 
   private val componentBindingsArray = componentBindings.values.toTypedArray()
@@ -77,7 +77,7 @@ internal class RecordJsonAdapter<T>(
           throw missingProperty(
             propertyName = componentBindingsArray[i].componentName,
             jsonName = componentBindingsArray[i].jsonName,
-            reader = reader
+            reader = reader,
           )
         }
       }
@@ -133,7 +133,7 @@ internal class RecordJsonAdapter<T>(
         val replaced = bindings.put(componentBinding.jsonName, componentBinding)
         if (replaced != null) {
           throw IllegalArgumentException(
-            "Conflicting components:\n    ${replaced.componentName}\n    ${componentBinding.componentName}"
+            "Conflicting components:\n    ${replaced.componentName}\n    ${componentBinding.componentName}",
           )
         }
         component.type
@@ -155,7 +155,7 @@ internal class RecordJsonAdapter<T>(
       rawType: Class<*>,
       moshi: Moshi,
       lookup: MethodHandles.Lookup,
-      component: RecordComponent
+      component: RecordComponent,
     ): ComponentBinding<Any> {
       val componentName = component.name
       val jsonName = component.jsonName(componentName)

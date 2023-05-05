@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 @file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.EMPTY_TYPE_ARRAY
@@ -74,7 +75,7 @@ public object Types {
   @JvmStatic
   public fun nextAnnotations(
     annotations: Set<Annotation>,
-    jsonQualifier: Class<out Annotation?>
+    jsonQualifier: Class<out Annotation?>,
   ): Set<Annotation>? {
     require(jsonQualifier.isAnnotationPresent(JsonQualifier::class.java)) {
       "$jsonQualifier is not a JsonQualifier."
@@ -112,7 +113,7 @@ public object Types {
   public fun newParameterizedTypeWithOwner(
     ownerType: Type?,
     rawType: Type,
-    vararg typeArguments: Type
+    vararg typeArguments: Type,
   ): ParameterizedType {
     require(typeArguments.isNotEmpty()) {
       "Missing type arguments for $rawType"
@@ -198,7 +199,9 @@ public object Types {
     }
     return if (collectionType is ParameterizedType) {
       collectionType.actualTypeArguments[0]
-    } else Any::class.java
+    } else {
+      Any::class.java
+    }
   }
 
   /** Returns true if `a` and `b` are equal. */
@@ -260,7 +263,7 @@ public object Types {
   @JvmStatic
   public fun getFieldJsonQualifierAnnotations(
     clazz: Class<*>,
-    fieldName: String
+    fieldName: String,
   ): Set<Annotation> {
     try {
       val field = clazz.getDeclaredField(fieldName)
@@ -277,7 +280,8 @@ public object Types {
       }
     } catch (e: NoSuchFieldException) {
       throw IllegalArgumentException(
-        "Could not access field $fieldName on class ${clazz.canonicalName}", e
+        "Could not access field $fieldName on class ${clazz.canonicalName}",
+        e,
       )
     }
   }
@@ -295,7 +299,8 @@ public object Types {
     }
     @Suppress("UNCHECKED_CAST")
     return Proxy.newProxyInstance(
-      annotationType.classLoader, arrayOf<Class<*>>(annotationType)
+      annotationType.classLoader,
+      arrayOf<Class<*>>(annotationType),
     ) { proxy, method, args ->
       when (method.name) {
         "annotationType" -> annotationType

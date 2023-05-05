@@ -34,7 +34,8 @@ import org.junit.rules.TemporaryFolder
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassSymbolProcessorTest {
 
-  @Rule @JvmField val temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @Rule @JvmField
+  val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun privateConstructor() {
@@ -53,8 +54,8 @@ class JsonClassSymbolProcessorTest {
               fun newInstance(a: Int, b: Int) = PrivateConstructor(a, b)
             }
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("constructor is not internal or public")
@@ -71,8 +72,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class PrivateConstructorParameter(private var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -92,8 +93,8 @@ class JsonClassSymbolProcessorTest {
             private var a: Int = -1
             private var b: Int = -1
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -110,12 +111,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           interface Interface
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Interface: must be a Kotlin class"
+      "@JsonClass can't be applied to test.Interface: must be a Kotlin class",
     )
   }
 
@@ -130,8 +131,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true, generator="customGenerator")
           interface Interface
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
@@ -147,12 +148,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           abstract class AbstractClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.AbstractClass: must not be abstract"
+      "@JsonClass can't be applied to test.AbstractClass: must not be abstract",
     )
   }
 
@@ -167,12 +168,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           sealed class SealedClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.SealedClass: must not be sealed"
+      "@JsonClass can't be applied to test.SealedClass: must not be sealed",
     )
   }
 
@@ -189,12 +190,12 @@ class JsonClassSymbolProcessorTest {
             @JsonClass(generateAdapter = true)
             inner class InnerClass(val a: Int)
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class"
+      "@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class",
     )
   }
 
@@ -211,12 +212,12 @@ class JsonClassSymbolProcessorTest {
           enum class KotlinEnum {
             A, B
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary"
+      "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary",
     )
   }
 
@@ -235,12 +236,12 @@ class JsonClassSymbolProcessorTest {
             @JsonClass(generateAdapter = true)
             class LocalClass(val a: Int)
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to LocalClass: must not be local"
+      "@JsonClass can't be applied to LocalClass: must not be local",
     )
   }
 
@@ -255,12 +256,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           private class PrivateClass(val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.PrivateClass: must be internal or public"
+      "@JsonClass can't be applied to test.PrivateClass: must be internal or public",
     )
   }
 
@@ -277,12 +278,12 @@ class JsonClassSymbolProcessorTest {
           object ObjectDeclaration {
             var a = 5
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class"
+      "@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class",
     )
   }
 
@@ -299,12 +300,12 @@ class JsonClassSymbolProcessorTest {
           val expression = object : Any() {
             var a = 5
           }
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.expression: must be a Kotlin class"
+      "@JsonClass can't be applied to test.expression: must be a Kotlin class",
     )
   }
 
@@ -319,12 +320,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Transient var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "No default value for transient/ignored property a"
+      "No default value for transient/ignored property a",
     )
   }
 
@@ -340,12 +341,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Json(ignore = true) var a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "No default value for transient/ignored property a"
+      "No default value for transient/ignored property a",
     )
   }
 
@@ -360,12 +361,12 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class NonPropertyConstructorParameter(a: Int, val b: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains(
-      "No property for required constructor parameter a"
+      "No property for required constructor parameter a",
     )
   }
 
@@ -380,13 +381,13 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
-          """
-      )
+          """,
+      ),
     ).apply {
       kspArgs[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
     assertThat(result.messages).contains(
-      "Invalid option value for $OPTION_GENERATED"
+      "Invalid option value for $OPTION_GENERATED",
     )
   }
 
@@ -401,8 +402,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
-          """
-      )
+          """,
+      ),
     ).apply {
       kspArgs[OPTION_GENERATE_PROGUARD_RULES] = "false"
     }
@@ -425,8 +426,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class Class2(private var c: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
@@ -445,8 +446,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ExtendsPlatformClass(var a: Int) : Date()
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
   }
@@ -463,7 +464,7 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ExtendsJavaType(var b: Int) : JavaSuperclass()
-          """
+          """,
       ),
       java(
         "JavaSuperclass.java",
@@ -472,8 +473,8 @@ class JsonClassSymbolProcessorTest {
         public class JavaSuperclass {
           public int a = 1;
         }
-        """
-      )
+        """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
@@ -501,8 +502,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
-          """
-      )
+          """,
+      ),
     )
     // We instantiate directly, no FIELD site target necessary
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
@@ -530,11 +531,29 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
+  }
+
+  @Test
+  fun invalidGenericSyntaxErrorMessaging() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class ElementEnvelope(val elements: List)
+          """,
+      ),
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains("Error preparing ElementEnvelope")
   }
 
   @Test
@@ -551,8 +570,8 @@ class JsonClassSymbolProcessorTest {
 
           @JsonClass(generateAdapter = true)
           data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
-          """
-      )
+          """,
+      ),
     )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
@@ -680,8 +699,8 @@ class JsonClassSymbolProcessorTest {
               val arg64: Long = 64,
               val arg65: Long = 65
           )
-          """
-      )
+          """,
+      ),
     )
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
@@ -696,7 +715,7 @@ class JsonClassSymbolProcessorTest {
           -keep class testPackage.AliasesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
@@ -706,7 +725,7 @@ class JsonClassSymbolProcessorTest {
           -keep class testPackage.SimpleJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
@@ -716,7 +735,7 @@ class JsonClassSymbolProcessorTest {
           -keep class testPackage.GenericJsonAdapter {
               public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
@@ -727,7 +746,7 @@ class JsonClassSymbolProcessorTest {
             -keep class testPackage.UsingQualifiersJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
@@ -738,7 +757,7 @@ class JsonClassSymbolProcessorTest {
           -keep class testPackage.MixedTypesJsonAdapter {
               public <init>(com.squareup.moshi.Moshi);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
@@ -754,7 +773,7 @@ class JsonClassSymbolProcessorTest {
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
@@ -771,7 +790,7 @@ class JsonClassSymbolProcessorTest {
             -keepclassmembers class testPackage.Complex {
                 public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
@@ -788,7 +807,7 @@ class JsonClassSymbolProcessorTest {
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
-          """.trimIndent()
+          """.trimIndent(),
         )
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
@@ -799,7 +818,7 @@ class JsonClassSymbolProcessorTest {
             -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
                 public <init>(com.squareup.moshi.Moshi);
             }
-            """.trimIndent()
+            """.trimIndent(),
           )
         }
         else -> error("Unexpected proguard file! ${generatedFile.name}")

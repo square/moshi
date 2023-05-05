@@ -87,7 +87,7 @@ class DualKotlinTest {
           @Suppress("UNUSED_PARAMETER")
           @FromJson
           fun fromJson(string: String): String? = null
-        }
+        },
       )
       .build()
       .adapter<HasNonNullProperty>()
@@ -125,7 +125,7 @@ class DualKotlinTest {
           @Suppress("UNUSED_PARAMETER")
           @FromJson
           fun fromJson(string: String): String? = null
-        }
+        },
       )
       .build()
       .adapter<HasNonNullPropertyDifferentJsonName>()
@@ -141,7 +141,8 @@ class DualKotlinTest {
 
   @JsonClass(generateAdapter = true)
   class HasNonNullPropertyDifferentJsonName {
-    @Json(name = "aPrime") var a: String = ""
+    @Json(name = "aPrime")
+    var a: String = ""
   }
 
   @Test fun nonNullConstructorParameterCalledWithNullFailsWithJsonDataException() {
@@ -163,7 +164,7 @@ class DualKotlinTest {
           @Suppress("UNUSED_PARAMETER")
           @FromJson
           fun fromJson(string: String): String? = null
-        }
+        },
       )
       .build()
       .adapter<HasNonNullConstructorParameter>()
@@ -199,7 +200,7 @@ class DualKotlinTest {
           fun toJson(@Nullable value: String?): String {
             return value ?: "fallback"
           }
-        }
+        },
       )
       .build()
 
@@ -208,7 +209,7 @@ class DualKotlinTest {
     assertThat(
       //language=JSON
       hasNonNullConstructorParameterAdapter
-        .fromJson("{\"a\":null}")
+        .fromJson("{\"a\":null}"),
     ).isEqualTo(HasNonNullConstructorParameter("fallback"))
 
     val hasNullableConstructorParameterAdapter =
@@ -216,12 +217,12 @@ class DualKotlinTest {
     assertThat(
       //language=JSON
       hasNullableConstructorParameterAdapter
-        .fromJson("{\"a\":null}")
+        .fromJson("{\"a\":null}"),
     ).isEqualTo(HasNullableConstructorParameter("fallback"))
     //language=JSON
     assertThat(
       hasNullableConstructorParameterAdapter
-        .toJson(HasNullableConstructorParameter(null))
+        .toJson(HasNullableConstructorParameter(null)),
     ).isEqualTo("{\"a\":\"fallback\"}")
   }
 
@@ -329,7 +330,7 @@ class DualKotlinTest {
       .isEqualTo(
         """
         {"text":"root","r":{"number":0,"r":{"text":"grand child 1"},"t":{"number":1}},"t":{"text":"child 1"}}
-        """.trimIndent()
+        """.trimIndent(),
       )
   }
 
@@ -418,7 +419,7 @@ class DualKotlinTest {
   class MultipleNonPropertyParameters(
     val prop: Int,
     param1: Int = 1,
-    param2: Int = 2
+    param2: Int = 2,
   ) {
     init {
       // Ensure the params always uses their default value
@@ -445,7 +446,7 @@ class DualKotlinTest {
   @JsonClass(generateAdapter = true)
   class OnlyMultipleNonPropertyParameters(
     param1: Int = 1,
-    param2: Int = 2
+    param2: Int = 2,
   ) {
     init {
       // Ensure the params always uses their default value
@@ -472,7 +473,7 @@ class DualKotlinTest {
       parameterized = GenericClass(6),
       wildcardIn = GenericClass(6),
       wildcardOut = GenericClass(6),
-      complex = GenericClass(listOf(GenericClass(6)))
+      complex = GenericClass(listOf(GenericClass(6))),
     )
     assertThat(adapter.toJson(testValue)).isEqualTo(testJson)
 
@@ -486,7 +487,7 @@ class DualKotlinTest {
     val parameterized: GenericClass<TypeAlias>,
     val wildcardIn: GenericClass<in TypeAlias>,
     val wildcardOut: GenericClass<out TypeAlias>,
-    val complex: GenericClass<GenericTypeAlias>?
+    val complex: GenericClass<GenericTypeAlias>?,
   )
 
   // Regression test for https://github.com/square/moshi/issues/991
@@ -506,7 +507,7 @@ class DualKotlinTest {
       int = 3,
       long = 3,
       float = 3.2f,
-      double = 3.2
+      double = 3.2,
     )
     assertThat(adapter.toJson(instance))
       .isEqualTo(testJson)
@@ -533,7 +534,7 @@ class DualKotlinTest {
     val float: Float,
     val nullableFloat: Float? = null,
     val double: Double,
-    val nullableDouble: Double? = null
+    val nullableDouble: Double? = null,
   )
 
   // Regression test for https://github.com/square/moshi/issues/990
@@ -577,7 +578,7 @@ class DualKotlinTest {
     val redundantNullableAShouldBeNullable: NullableA?,
     val manuallyNullableAShouldBeNullable: A?,
     val convolutedMultiNullableShouldBeNullable: NullableB?,
-    val deepNestedNullableShouldBeNullable: E
+    val deepNestedNullableShouldBeNullable: E,
   )
 
   // Regression test for https://github.com/square/moshi/issues/1009
@@ -617,12 +618,12 @@ class DualKotlinTest {
   interface IntersectionTypeInterface<E : Enum<E>>
 
   enum class IntersectionTypesEnum : IntersectionTypeInterface<IntersectionTypesEnum> {
-    VALUE
+    VALUE,
   }
 
   @JsonClass(generateAdapter = true)
   data class IntersectionTypes<E>(
-    val value: E
+    val value: E,
   ) where E : Enum<E>, E : IntersectionTypeInterface<E>
 
   @Test fun transientConstructorParameter() {
@@ -672,6 +673,7 @@ class DualKotlinTest {
 
   class TransientProperty {
     @Transient var a: Int = -1
+
     @Transient private var b: Int = -1
     var c: Int = -1
 
@@ -712,7 +714,7 @@ class DualKotlinTest {
   class MultipleIgnoredConstructorParameters(
     @Json(ignore = true) var a: Int = -1,
     var b: Int = -1,
-    @Json(ignore = true) var c: Int = -1
+    @Json(ignore = true) var c: Int = -1,
   )
 
   @Test fun ignoredProperty() {
@@ -732,8 +734,11 @@ class DualKotlinTest {
   }
 
   class IgnoredProperty {
-    @Json(ignore = true) var a: Int = -1
-    @Json(ignore = true) private var b: Int = -1
+    @Json(ignore = true)
+    var a: Int = -1
+
+    @Json(ignore = true)
+    private var b: Int = -1
     var c: Int = -1
 
     fun getB() = b
@@ -756,11 +761,12 @@ class DualKotlinTest {
   @JsonClass(generateAdapter = true)
   data class PropertyWithDollarSign(
     val `$a`: String,
-    @Json(name = "\$b") val b: String
+    @Json(name = "\$b") val b: String,
   )
 }
 
 typealias TypeAlias = Int
+
 @Suppress("REDUNDANT_PROJECTION")
 typealias GenericTypeAlias = List<out GenericClass<in TypeAlias>?>?
 

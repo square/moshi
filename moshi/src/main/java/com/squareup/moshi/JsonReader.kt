@@ -230,7 +230,6 @@ public sealed class JsonReader : Closeable {
    * useful in development and debugging because it means a typo like "locatiom" will be detected
    * early. It's potentially harmful in production because it complicates revising a JSON schema.
    */
-  /** Returns true if this parser forbids skipping names and values. */
   @get:JvmName("failOnUnknown")
   public var failOnUnknown: Boolean = false
 
@@ -578,7 +577,7 @@ public sealed class JsonReader : Closeable {
    */
   public class Options private constructor(
     internal val strings: Array<out String>,
-    internal val doubleQuoteSuffix: OkioOptions
+    internal val doubleQuoteSuffix: OkioOptions,
   ) {
     /** Returns a copy of this [Option's][Options] strings. */
     public fun strings(): List<String> {
@@ -657,7 +656,7 @@ public sealed class JsonReader : Closeable {
      * The end of the JSON stream. This sentinel value is returned by [JsonReader.peek] to
      * signal that the JSON-encoded value has no more tokens.
      */
-    END_DOCUMENT
+    END_DOCUMENT,
   }
 
   public companion object {

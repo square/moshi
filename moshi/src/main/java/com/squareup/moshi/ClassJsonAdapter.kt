@@ -49,7 +49,7 @@ import java.lang.reflect.Type
  */
 internal class ClassJsonAdapter<T>(
   private val classFactory: ClassFactory<T>,
-  fieldsMap: Map<String, FieldBinding<*>>
+  fieldsMap: Map<String, FieldBinding<*>>,
 ) : JsonAdapter<T>() {
   private val fieldsArray = fieldsMap.values.toTypedArray()
   private val options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
@@ -115,7 +115,7 @@ internal class ClassJsonAdapter<T>(
     override fun create(
       type: Type,
       annotations: Set<Annotation>,
-      moshi: Moshi
+      moshi: Moshi,
     ): JsonAdapter<*>? {
       if (type !is Class<*> && type !is ParameterizedType) {
         return null
@@ -136,7 +136,7 @@ internal class ClassJsonAdapter<T>(
           }
         }
         throw IllegalArgumentException(
-          "$messagePrefix requires explicit JsonAdapter to be registered"
+          "$messagePrefix requires explicit JsonAdapter to be registered",
         )
       }
 
@@ -185,7 +185,7 @@ internal class ClassJsonAdapter<T>(
     private fun createFieldBindings(
       moshi: Moshi,
       type: Type,
-      fieldBindings: MutableMap<String, FieldBinding<*>>
+      fieldBindings: MutableMap<String, FieldBinding<*>>,
     ) {
       val rawType = type.rawType
       val platformType = rawType.isPlatformType
@@ -201,7 +201,7 @@ internal class ClassJsonAdapter<T>(
         val adapter = moshi.adapter<Any>(
           type = fieldType,
           annotations = annotations,
-          fieldName = fieldName
+          fieldName = fieldName,
         )
 
         // Create the binding between field and JSON.

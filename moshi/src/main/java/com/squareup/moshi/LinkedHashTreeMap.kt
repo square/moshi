@@ -22,7 +22,7 @@ internal class LinkedHashTreeMap<K, V>
  * @param comparator the comparator to order elements with, or null to use the natural ordering.
  */
 constructor(
-  comparator: Comparator<Any?>? = null
+  comparator: Comparator<Any?>? = null,
 ) : AbstractMutableMap<K, V>(), Serializable {
   @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
@@ -83,6 +83,7 @@ constructor(
 
     @JvmField
     var next: Node<K, V>?
+
     @JvmField
     var prev: Node<K, V>?
 
@@ -448,7 +449,6 @@ constructor(
     }
     replaceInParent(root, pivot)
 
-    // move the root to the pivot's left
     pivot.left = root
     root.parent = pivot
 

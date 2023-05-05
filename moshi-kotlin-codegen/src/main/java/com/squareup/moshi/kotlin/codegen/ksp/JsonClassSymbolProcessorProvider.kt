@@ -48,7 +48,7 @@ public class JsonClassSymbolProcessorProvider : SymbolProcessorProvider {
 }
 
 private class JsonClassSymbolProcessor(
-  environment: SymbolProcessorEnvironment
+  environment: SymbolProcessorEnvironment,
 ) : SymbolProcessor {
 
   private companion object {
@@ -87,9 +87,9 @@ private class JsonClassSymbolProcessor(
 
       if (!jsonClassAnnotation.generateAdapter) continue
 
-      val originatingFile = type.containingFile!!
-      val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
       try {
+        val originatingFile = type.containingFile!!
+        val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
         val preparedAdapter = adapterGenerator
           .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
@@ -103,7 +103,7 @@ private class JsonClassSymbolProcessor(
         preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
       } catch (e: Exception) {
         logger.error(
-          "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}"
+          "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}",
         )
       }
     }
@@ -152,7 +152,7 @@ private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFi
     dependencies = Dependencies(aggregating = false, originatingKSFile),
     packageName = "",
     fileName = outputFilePathWithoutExtension(targetClass.canonicalName),
-    extensionName = "pro"
+    extensionName = "pro",
   )
   // Don't use writeTo(file) because that tries to handle directories under the hood
   OutputStreamWriter(file, StandardCharsets.UTF_8)

@@ -876,7 +876,7 @@ public final class MoshiTest {
           .hasMessageThat()
           .isEqualTo(
               "No JsonAdapter for java.util.List<java.lang.String> "
-                  + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
+                  + "annotated [@com.squareup.moshi.MoshiTest.Uppercase()]");
     }
   }
 
@@ -893,7 +893,7 @@ public final class MoshiTest {
           .hasMessageThat()
           .isEqualTo(
               "No JsonAdapter for class java.lang.String "
-                  + "annotated [@com.squareup.moshi.MoshiTest$Uppercase()]");
+                  + "annotated [@com.squareup.moshi.MoshiTest.Uppercase()]");
     }
   }
 

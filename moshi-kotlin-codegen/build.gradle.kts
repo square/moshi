@@ -13,14 +13,17 @@ plugins {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  kotlinOptions {
-    @Suppress("SuspiciousCollectionReassignment")
-    freeCompilerArgs += listOf(
-      "-Xopt-in=kotlin.RequiresOptIn",
-      "-Xopt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-      "-Xopt-in=com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview",
-      "-Xopt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
+  compilerOptions {
+    freeCompilerArgs.addAll(
+      "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
+      "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
+  }
+}
+
+tasks.compileTestKotlin {
+  compilerOptions {
+    freeCompilerArgs.add("-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
   }
 }
 
@@ -36,7 +39,7 @@ tasks.withType<Test>().configureEach {
     "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
     "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
     "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED"
+    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
   )
 }
 
@@ -44,7 +47,6 @@ val shade: Configuration = configurations.maybeCreate("compileShaded")
 configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
   implementation(project(":moshi"))
-  implementation(kotlin("reflect"))
   shade(libs.kotlinxMetadata) {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
   }
@@ -54,10 +56,7 @@ dependencies {
     exclude(group = "com.squareup", module = "kotlinpoet")
     exclude(group = "com.google.guava")
   }
-  shade(libs.kotlinpoet.ksp) {
-    exclude(group = "org.jetbrains.kotlin")
-    exclude(group = "com.squareup", module = "kotlinpoet")
-  }
+  implementation(libs.kotlinpoet.ksp)
   implementation(libs.guava)
   implementation(libs.asm)
 
@@ -72,6 +71,7 @@ dependencies {
   testImplementation(libs.ksp)
   testImplementation(libs.ksp.api)
   testImplementation(libs.kotlin.compilerEmbeddable)
+  testImplementation(libs.kotlin.annotationProcessingEmbeddable)
   testImplementation(libs.kotlinCompileTesting.ksp)
 
   // Copy these again as they're not automatically included since they're shaded
@@ -96,7 +96,7 @@ val shadowJar = tasks.shadowJar.apply {
     relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
     relocate(
       "com.squareup.kotlinpoet.classinspector",
-      "com.squareup.moshi.kotlinpoet.classinspector"
+      "com.squareup.moshi.kotlinpoet.classinspector",
     )
     relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
     transformers.add(ServiceFileTransformer())

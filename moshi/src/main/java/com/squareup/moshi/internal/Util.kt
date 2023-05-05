@@ -15,6 +15,7 @@
  */
 @file:JvmName("Util")
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package com.squareup.moshi.internal
 
 import com.squareup.moshi.Json
@@ -49,6 +50,7 @@ import java.util.LinkedHashSet
 import kotlin.contracts.contract
 
 @JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
+
 @JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
 
 @Suppress("UNCHECKED_CAST")
@@ -108,7 +110,7 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
       if ((annotation as java.lang.annotation.Annotation).annotationType()
-        .isAnnotationPresent(JsonQualifier::class.java)
+          .isAnnotationPresent(JsonQualifier::class.java)
       ) {
         if (result == null) result = LinkedHashSet()
         result.add(annotation)
@@ -118,7 +120,7 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
   }
 
 internal fun Set<Annotation>.isAnnotationPresent(
-  annotationClass: Class<out Annotation>
+  annotationClass: Class<out Annotation>,
 ): Boolean {
   if (isEmpty()) return false // Save an iterator in the common case.
   for (annotation in this) {
@@ -207,7 +209,7 @@ public fun Type.resolve(context: Type, contextRawType: Class<*>): Type {
 private fun Type.resolve(
   context: Type,
   contextRawType: Class<*>,
-  visitedTypeVariables: MutableCollection<TypeVariable<*>>
+  visitedTypeVariables: MutableCollection<TypeVariable<*>>,
 ): Type {
   // This implementation is made a little more complicated in an attempt to avoid object-creation.
   var toResolve = this
@@ -361,7 +363,7 @@ internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String 
  */
 public fun Moshi.generatedAdapter(
   type: Type,
-  rawType: Class<*>
+  rawType: Class<*>,
 ): JsonAdapter<*>? {
   val jsonClass = rawType.getAnnotation(JsonClass::class.java)
   if (jsonClass == null || !jsonClass.generateAdapter) {
@@ -403,11 +405,12 @@ public fun Moshi.generatedAdapter(
     if (possiblyFoundAdapter != null && type !is ParameterizedType && possiblyFoundAdapter.typeParameters.isNotEmpty()) {
       throw RuntimeException(
         "Failed to find the generated JsonAdapter constructor for '$type'. Suspiciously, the type was not parameterized but the target class '${possiblyFoundAdapter.canonicalName}' is generic. Consider using Types#newParameterizedType() to define these missing type variables.",
-        e
+        e,
       )
     } else {
       throw RuntimeException(
-        "Failed to find the generated JsonAdapter constructor for $type", e
+        "Failed to find the generated JsonAdapter constructor for $type",
+        e,
       )
     }
   } catch (e: IllegalAccessException) {
@@ -452,7 +455,7 @@ private fun <T> Class<T>.findConstructor(): Constructor<T> {
 public fun missingProperty(
   propertyName: String?,
   jsonName: String?,
-  reader: JsonReader
+  reader: JsonReader,
 ): JsonDataException {
   val path = reader.path
   val message = if (jsonName == propertyName) {
@@ -466,7 +469,7 @@ public fun missingProperty(
 public fun unexpectedNull(
   propertyName: String,
   jsonName: String,
-  reader: JsonReader
+  reader: JsonReader,
 ): JsonDataException {
   val path = reader.path
   val message: String = if (jsonName == propertyName) {
@@ -512,7 +515,7 @@ internal class ParameterizedTypeImpl private constructor(
   private val ownerType: Type?,
   private val rawType: Type,
   @JvmField
-  val typeArguments: Array<Type>
+  val typeArguments: Array<Type>,
 ) : ParameterizedType {
   override fun getActualTypeArguments() = typeArguments.clone()
 
@@ -547,14 +550,16 @@ internal class ParameterizedTypeImpl private constructor(
     operator fun invoke(
       ownerType: Type?,
       rawType: Type,
-      vararg typeArguments: Type
+      vararg typeArguments: Type,
     ): ParameterizedTypeImpl {
       // Require an owner type if the raw type needs it.
       if (rawType is Class<*>) {
         val enclosingClass = rawType.enclosingClass
         if (ownerType != null) {
           require(!(enclosingClass == null || ownerType.rawType != enclosingClass)) { "unexpected owner type for $rawType: $ownerType" }
-        } else require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
+        } else {
+          require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
+        }
       }
       @Suppress("UNCHECKED_CAST")
       val finalTypeArgs = typeArguments.clone() as Array<Type>
@@ -594,7 +599,7 @@ internal class GenericArrayTypeImpl private constructor(private val componentTyp
  */
 internal class WildcardTypeImpl private constructor(
   private val upperBound: Type,
-  private val lowerBound: Type?
+  private val lowerBound: Type?,
 ) : WildcardType {
 
   override fun getUpperBounds() = arrayOf(upperBound)
@@ -622,7 +627,7 @@ internal class WildcardTypeImpl private constructor(
     @JvmName("create")
     operator fun invoke(
       upperBounds: Array<Type>,
-      lowerBounds: Array<Type>
+      lowerBounds: Array<Type>,
     ): WildcardTypeImpl {
       require(lowerBounds.size <= 1)
       require(upperBounds.size == 1)
@@ -631,13 +636,13 @@ internal class WildcardTypeImpl private constructor(
         require(!(upperBounds[0] !== Any::class.java))
         WildcardTypeImpl(
           lowerBound = lowerBounds[0].canonicalize(),
-          upperBound = Any::class.java
+          upperBound = Any::class.java,
         )
       } else {
         upperBounds[0].checkNotPrimitive()
         WildcardTypeImpl(
           lowerBound = null,
-          upperBound = upperBounds[0].canonicalize()
+          upperBound = upperBounds[0].canonicalize(),
         )
       }
     }

@@ -20,6 +20,6 @@ package com.squareup.moshi.kotlin.codegen.api
 @Retention(value = AnnotationRetention.BINARY)
 @RequiresOptIn(
   level = RequiresOptIn.Level.WARNING,
-  message = "This is an internal API and may change at any time."
+  message = "This is an internal API and may change at any time.",
 )
 public annotation class InternalMoshiCodegenApi

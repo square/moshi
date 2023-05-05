@@ -87,7 +87,7 @@ internal abstract class ClassFactory<T> {
         val newInstance = ObjectStreamClass::class.java.getDeclaredMethod(
           "newInstance",
           Class::class.java,
-          Int::class.javaPrimitiveType
+          Int::class.javaPrimitiveType,
         )
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {

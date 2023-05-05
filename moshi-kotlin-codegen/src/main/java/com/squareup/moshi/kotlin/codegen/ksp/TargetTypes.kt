@@ -86,7 +86,7 @@ internal fun targetType(
   }
 
   val classTypeParamsResolver = type.typeParameters.toTypeParameterResolver(
-    sourceTypeHint = type.qualifiedName!!.asString()
+    sourceTypeHint = type.qualifiedName!!.asString(),
   )
   val typeVariables = type.typeParameters.map { it.toTypeVariableName(classTypeParamsResolver) }
   val appliedType = AppliedType(type)
@@ -100,7 +100,7 @@ internal fun targetType(
     logger.error(
       "@JsonClass can't be applied to $type: " +
         "primary constructor is not internal or public",
-      type
+      type,
     )
     return null
   }
@@ -117,7 +117,7 @@ internal fun targetType(
         Origin=${classDecl.origin}
         Annotations=${classDecl.annotations.joinToString(prefix = "[", postfix = "]") { it.shortName.getShortName() }}
         """.trimIndent(),
-        type
+        type,
       )
       return null
     }
@@ -127,7 +127,7 @@ internal fun targetType(
       classDecl = classDecl,
       resolver = resolver,
       typeParameterResolver = classDecl.typeParameters
-        .toTypeParameterResolver(classTypeParamsResolver)
+        .toTypeParameterResolver(classTypeParamsResolver),
     )
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
@@ -169,7 +169,7 @@ internal fun primaryConstructor(
   resolver: Resolver,
   targetType: KSClassDeclaration,
   typeParameterResolver: TypeParameterResolver,
-  logger: KSPLogger
+  logger: KSPLogger,
 ): TargetConstructor? {
   val primaryConstructor = targetType.primaryConstructor ?: return null
 
@@ -182,7 +182,7 @@ internal fun primaryConstructor(
       type = parameter.type.toTypeName(typeParameterResolver),
       hasDefault = parameter.hasDefault,
       qualifiers = parameter.qualifiers(resolver),
-      jsonName = parameter.jsonName()
+      jsonName = parameter.jsonName(),
     )
   }
 
@@ -194,7 +194,7 @@ internal fun primaryConstructor(
   return TargetConstructor(
     parameters,
     primaryConstructor.getVisibility().toKModifier() ?: KModifier.PUBLIC,
-    kmConstructorSignature
+    kmConstructorSignature,
   )
 }
 
@@ -244,7 +244,7 @@ private fun declaredProperties(
       parameter = parameter,
       visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
       jsonName = parameter?.jsonName ?: property.jsonName() ?: name,
-      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore()
+      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore(),
     )
   }
 
@@ -254,11 +254,11 @@ private fun declaredProperties(
 private fun KSPropertyDeclaration.toPropertySpec(
   resolver: Resolver,
   resolvedType: KSType,
-  typeParameterResolver: TypeParameterResolver
+  typeParameterResolver: TypeParameterResolver,
 ): PropertySpec {
   return PropertySpec.builder(
     name = simpleName.getShortName(),
-    type = resolvedType.toTypeName(typeParameterResolver).unwrapTypeAlias()
+    type = resolvedType.toTypeName(typeParameterResolver).unwrapTypeAlias(),
   )
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
@@ -273,7 +273,7 @@ private fun KSPropertyDeclaration.toPropertySpec(
               null
             }
           }
-          .asIterable()
+          .asIterable(),
       )
     }
     .build()

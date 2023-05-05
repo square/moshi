@@ -95,7 +95,7 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
           CodeBlock.of(
             "%T.newInstance(%L, 0).javaClass",
             Array::class.java.asClassName(),
-            componentType.rawType.asTypeBlock()
+            componentType.rawType.asTypeBlock(),
           )
         } else {
           CodeBlock.of("%T::class.java", copy(nullable = false))
@@ -148,7 +148,7 @@ internal fun TypeName.stripTypeVarVariance(resolver: TypeVariableResolver): Type
 }
 
 internal fun ParameterizedTypeName.deepCopy(
-  transform: (TypeName) -> TypeName
+  transform: (TypeName) -> TypeName,
 ): ParameterizedTypeName {
   return rawType.parameterizedBy(typeArguments.map { transform(it) })
     .copy(nullable = isNullable, annotations = annotations, tags = tags)
@@ -156,7 +156,7 @@ internal fun ParameterizedTypeName.deepCopy(
 
 internal fun TypeVariableName.deepCopy(
   variance: KModifier? = this.variance,
-  transform: (TypeName) -> TypeName
+  transform: (TypeName) -> TypeName,
 ): TypeVariableName {
   return TypeVariableName(name = name, bounds = bounds.map { transform(it) }, variance = variance)
     .copy(nullable = isNullable, annotations = annotations, tags = tags)
@@ -184,7 +184,7 @@ internal fun LambdaTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeNam
   return LambdaTypeName.get(
     receiver?.let(transform),
     parameters.map { it.toBuilder(type = transform(it.type)).build() },
-    transform(returnType)
+    transform(returnType),
   ).copy(nullable = isNullable, annotations = annotations, suspending = isSuspending)
 }
 
