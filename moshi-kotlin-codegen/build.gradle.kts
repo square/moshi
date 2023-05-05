@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 import com.vanniktech.maven.publish.JavadocJar.None
 import com.vanniktech.maven.publish.KotlinJvm
@@ -84,13 +83,8 @@ dependencies {
   testImplementation(libs.kotlinCompileTesting)
 }
 
-val relocateShadowJar = tasks.register<ConfigureShadowRelocation>("relocateShadowJar") {
-  target = tasks.shadowJar.get()
-}
-
 val shadowJar = tasks.shadowJar.apply {
   configure {
-    dependsOn(relocateShadowJar)
     archiveClassifier.set("")
     configurations = listOf(shade)
     relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
