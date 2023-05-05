@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import kotlin.NotImplementedError;
 import org.junit.Test;
 
 public final class TypesTest {
@@ -204,6 +206,8 @@ public final class TypesTest {
 
   private static final class D<T> {}
 
+  private static final class E<T extends A, T2 extends B> {}
+
   /**
    * Given a parameterized type {@code A<B, C>}, returns B. If the specified type is not a generic
    * type, returns null.
@@ -290,6 +294,25 @@ public final class TypesTest {
     assertThat(Types.equals(Types.arrayOf(int.class), int[].class)).isTrue();
     assertThat(Types.equals(String[].class, Types.arrayOf(String.class))).isTrue();
     assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
+  }
+
+  private E<A, B> methodReturningE() {
+    throw new NotImplementedError(); // Intentionally not implemented
+  }
+
+  @Test
+  public void parameterizedTypeMatchesClassWithGenericInfoFromReturn() {
+    Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, A.class, B.class);
+    Method returningE = null;
+    for (Method method : TypesTest.class.getDeclaredMethods()) {
+      if (method.getName().contains("methodReturningE")) {
+        returningE = method;
+        break;
+      }
+    }
+    Type rawType = Types.getRawType(returningE.getGenericReturnType());
+    assertThat(Types.equals(type, rawType)).isTrue();
+    assertThat(Types.equals(rawType, type)).isTrue();
   }
 
   @Test
