@@ -21,7 +21,6 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import kotlin.NotImplementedError;
 import org.junit.Test;
 
@@ -304,14 +302,9 @@ public final class TypesTest {
 
   @Test
   public void parameterizedTypeMatchesClassWithGenericInfoFromReturn() {
-    Type type = Types.newParameterizedTypeWithOwner(
-      TypesTest.class,
-      E.class,
-      A.class,
-      B.class
-    );
+    Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, A.class, B.class);
     Method returningE = null;
-    for (Method method: TypesTest.class.getDeclaredMethods()) {
+    for (Method method : TypesTest.class.getDeclaredMethods()) {
       if (method.getName().contains("methodReturningE")) {
         returningE = method;
         break;
@@ -321,7 +314,6 @@ public final class TypesTest {
     assertThat(Types.equals(type, rawType)).isTrue();
     assertThat(Types.equals(rawType, type)).isTrue();
   }
-
 
   @Test
   public void parameterizedAndWildcardTypesCannotHavePrimitiveArguments() throws Exception {

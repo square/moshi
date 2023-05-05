@@ -224,8 +224,9 @@ public object Types {
       }
       is ParameterizedType -> {
         // Class instance with generic info, from method return types
-        if (b is Class<*> && a.rawType == b.rawType)
+        if (b is Class<*> && a.rawType == b.rawType) {
           return b.typeParameters.map { it.bounds }.toTypedArray().flatten() == a.actualTypeArguments.toList()
+        }
         if (b !is ParameterizedType) return false
         val aTypeArguments = if (a is ParameterizedTypeImpl) a.typeArguments else a.actualTypeArguments
         val bTypeArguments = if (b is ParameterizedTypeImpl) b.typeArguments else b.actualTypeArguments
