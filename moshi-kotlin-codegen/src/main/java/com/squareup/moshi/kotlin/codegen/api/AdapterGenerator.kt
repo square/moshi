@@ -262,8 +262,12 @@ public class AdapterGenerator(
 
     val typeRenderer: TypeRenderer = object : TypeRenderer() {
       override fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock {
-        val index = typeVariables.indexOfFirst { it == typeVariable }
-        check(index != -1) { "Unexpected type variable $typeVariable" }
+        // Match only by name because equality checks for more things than just the name. For example, a base class
+        // may declare "T" but the subclass declares "T : Number", which is legal but will fail an equals() test.
+        val index = typeVariables.indexOfFirst { it.name == typeVariable.name }
+        check(index != -1) {
+          "Unexpected type variable $typeVariable"
+        }
         return CodeBlock.of("%N[%L]", typesParam, index)
       }
     }
@@ -618,7 +622,10 @@ public class AdapterGenerator(
 
     if (useDefaultsConstructor) {
       // Add the masks and a null instance for the trailing default marker instance
-      result.addCode(",\n%L,\n/*·DefaultConstructorMarker·*/·null", maskNames.map { CodeBlock.of("%L", it) }.joinToCode(", "))
+      result.addCode(
+        ",\n%L,\n/*·DefaultConstructorMarker·*/·null",
+        maskNames.map { CodeBlock.of("%L", it) }.joinToCode(", "),
+      )
     }
 
     result.addCode("\n»)\n")

@@ -2,6 +2,7 @@ import com.diffplug.gradle.spotless.JavaExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URL
@@ -84,11 +85,9 @@ subprojects {
 
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
-      kotlinOptions {
-        // TODO re-enable when no longer supporting multiple kotlin versions
-//        @Suppress("SuspiciousCollectionReassignment")
-//        freeCompilerArgs += listOf("-progressive")
-        jvmTarget = libs.versions.jvmTarget.get()
+      compilerOptions {
+        freeCompilerArgs.add("-progressive")
+        jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvmTarget.get()))
       }
     }
 

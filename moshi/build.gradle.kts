@@ -2,6 +2,7 @@ import com.vanniktech.maven.publish.JavadocJar.Dokka
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -24,9 +25,13 @@ val customLauncher = service.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(17))
 }
 
+tasks.named<JavaCompile>("compileJava16Java") {
+  options.release.set(16)
+}
+
 tasks.named<KotlinCompile>("compileJava16Kotlin") {
   kotlinJavaToolchain.toolchain.use(customLauncher)
-  kotlinOptions.jvmTarget = "16"
+  compilerOptions.jvmTarget.set(JvmTarget.JVM_16)
 }
 
 // Grant our java16 sources access to internal APIs in the main source set
@@ -59,16 +64,14 @@ tasks.withType<Test>().configureEach {
 
 tasks.withType<KotlinCompile>()
   .configureEach {
-    kotlinOptions {
-      val toAdd = mutableListOf(
+    compilerOptions {
+      freeCompilerArgs.addAll(
         "-opt-in=kotlin.contracts.ExperimentalContracts",
         "-Xjvm-default=all",
       )
       if (name.contains("test", true)) {
-        toAdd += "-opt-in=kotlin.ExperimentalStdlibApi"
+        freeCompilerArgs.add("-opt-in=kotlin.ExperimentalStdlibApi")
       }
-      @Suppress("SuspiciousCollectionReassignment") // It's not suspicious
-      freeCompilerArgs += toAdd
     }
   }
 
