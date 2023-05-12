@@ -25,14 +25,11 @@ rootProject.name = "moshi-root"
 include(":moshi")
 include(":moshi:japicmp")
 include(":moshi:records-tests")
-include(":adapters")
-project(":adapters").name = "moshi-adapters"
-include(":adapters:japicmp")
+include(":moshi-adapters")
+include(":moshi-adapters:japicmp")
 include(":examples")
-include(":kotlin:reflect")
-project(":kotlin:reflect").name = "moshi-kotlin"
-include(":kotlin:codegen")
-project(":kotlin:codegen").name = "moshi-kotlin-codegen"
+include(":moshi-kotlin")
+include(":moshi-kotlin-codegen")
 include(":kotlin:tests")
 include(":kotlin:tests:codegen-only")
 include(":kotlin:tests:extra-moshi-test-module")
