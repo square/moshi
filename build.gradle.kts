@@ -64,7 +64,11 @@ spotless {
   java {
     configureCommonJavaFormat()
     target("**/*.java")
-    targetExclude("**/build/**",)
+    targetExclude(
+      "**/build/**",
+      "**/RecordsTest.java",
+      "**/RecordJsonAdapter.java",
+    )
   }
   kotlin {
     ktlint(libs.versions.ktlint.get()).userData(mapOf("indent_size" to "2"))
