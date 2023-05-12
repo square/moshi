@@ -14,7 +14,7 @@
 
 [versions]
 autoService = "1.0"
-gjf = "1.11.0"
+gjf = "1.17.0"
 jvmTarget = "1.8"
 kotlin = "1.8.21"
 kotlinCompileTesting = "0.2.1"
@@ -26,7 +26,7 @@ ktlint = "0.41.0"
 dokka = { id = "org.jetbrains.dokka", version = "1.8.10" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.2.9" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.21.0" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.25.2" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "7.0.0" }
 spotless = { id = "com.diffplug.spotless", version = "5.14.2" }
 

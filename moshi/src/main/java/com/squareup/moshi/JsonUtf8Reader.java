@@ -45,6 +45,7 @@ final class JsonUtf8Reader extends JsonReader {
   private static final int PEEKED_SINGLE_QUOTED = 8;
   private static final int PEEKED_DOUBLE_QUOTED = 9;
   private static final int PEEKED_UNQUOTED = 10;
+
   /** When this is returned, the string value is stored in peekedString. */
   private static final int PEEKED_BUFFERED = 11;
 
@@ -52,6 +53,7 @@ final class JsonUtf8Reader extends JsonReader {
   private static final int PEEKED_DOUBLE_QUOTED_NAME = 13;
   private static final int PEEKED_UNQUOTED_NAME = 14;
   private static final int PEEKED_BUFFERED_NAME = 15;
+
   /** When this is returned, the integer value is stored in peekedLong. */
   private static final int PEEKED_LONG = 16;
 

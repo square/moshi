@@ -229,6 +229,7 @@ public final class PolymorphicJsonAdapterFactory<T> implements JsonAdapter.Facto
 
     /** Single-element options containing the label's key only. */
     final JsonReader.Options labelKeyOptions;
+
     /** Corresponds to subtypes. */
     final JsonReader.Options labelOptions;
 

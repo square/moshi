@@ -69,14 +69,14 @@ dependencies {
       // Do nothing
     }
     KAPT -> {
-      "kaptTest"(project(":kotlin:codegen"))
+      "kaptTest"(project(":moshi-kotlin-codegen"))
     }
     KSP -> {
-      "kspTest"(project(":kotlin:codegen"))
+      "kspTest"(project(":moshi-kotlin-codegen"))
     }
   }
   testImplementation(project(":moshi"))
-  testImplementation(project(":kotlin:reflect"))
+  testImplementation(project(":moshi-kotlin"))
   testImplementation(project(":kotlin:tests:extra-moshi-test-module"))
   testImplementation(kotlin("reflect"))
   testImplementation(libs.junit)
