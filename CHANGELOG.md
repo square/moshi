@@ -1,7 +1,22 @@
 Change Log
 ==========
 
+## Version 1.15.0
+
+_2023-05-12_
+
+ * Upgrade to Kotlin `1.8.21`.
+ * Upgrade to KSP `1.8.21-1.0.11`.
+ * Upgrade to kotlinx-metadata `0.6.0`.
+ * Upgrade to KotlinPoet `1.13.2`.
+ * Support Kotlin language version `1.9.0` in KAPT.
+ * Include name of the type being processed when creating the adapterGenerator fails in KSP.
+ * Suppress `UNUSED_PARAMETER` in generated code.
+ * Deprecate KAPT code gen. Please migrate to KSP, we will remove KAPT support in a future release. This release will also print an annoying noisy warning in KAPT processing if you use it.
+
 ## Version 1.14.0
+
+_2022-09-06_
 
  * Upgrade: [Kotlin 1.7.0][kotlin_1_7_0].
  * Upgrade [KotlinPoet 1.12.0][kotlinpoet_1_12_0].
