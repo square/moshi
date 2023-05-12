@@ -16,7 +16,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-import com.vanniktech.maven.publish.JavadocJar.None
+import com.vanniktech.maven.publish.JavadocJar.Empty
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -128,5 +128,5 @@ artifacts {
 }
 
 configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = None()))
+  configure(KotlinJvm(javadocJar = Empty()))
 }
