@@ -32,6 +32,9 @@ tasks.withType<KotlinCompile>().configureEach {
       "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
       "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
+    if (this@configureEach.name == "compileTestKotlin") {
+      freeCompilerArgs += "-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi"
+    }
   }
 }
 
@@ -68,6 +71,7 @@ dependencies {
   implementation(libs.kotlinpoet.ksp)
   implementation(libs.guava)
   implementation(libs.asm)
+  implementation(platform(libs.kotlin.bom))
 
   implementation(libs.autoService)
   ksp(libs.autoService.ksp)
@@ -75,12 +79,16 @@ dependencies {
   // KSP deps
   compileOnly(libs.ksp)
   compileOnly(libs.ksp.api)
+  compileOnly(libs.kotlin.annotationProcessingEmbeddable)
   compileOnly(libs.kotlin.compilerEmbeddable)
+  compileOnly(platform(libs.kotlin.bom))
   // Always force the latest KSP version to match the one we're compiling against
   testImplementation(libs.ksp)
   testImplementation(libs.ksp.api)
+  testImplementation(libs.kotlin.annotationProcessingEmbeddable)
   testImplementation(libs.kotlin.compilerEmbeddable)
   testImplementation(libs.kotlinCompileTesting.ksp)
+  testImplementation(platform(libs.kotlin.bom))
 
   // Copy these again as they're not automatically included since they're shaded
   testImplementation(project(":moshi"))

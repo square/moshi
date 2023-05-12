@@ -70,6 +70,7 @@ public class JsonClassCodegenProcessor : AbstractProcessor() {
 
   override fun init(processingEnv: ProcessingEnvironment) {
     super.init(processingEnv)
+    processingEnv.messager.printMessage(Diagnostic.Kind.WARNING, "Kapt support in Moshi Kotlin Code Gen is deprecated and will be removed in 2.0. Please migrate to KSP. https://github.com/square/moshi#codegen")
     generatedType = processingEnv.options[OPTION_GENERATED]?.let {
       POSSIBLE_GENERATED_NAMES[it] ?: error(
         "Invalid option value for $OPTION_GENERATED. Found $it, " +

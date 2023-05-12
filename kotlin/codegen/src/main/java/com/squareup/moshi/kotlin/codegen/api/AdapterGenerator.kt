@@ -72,6 +72,7 @@ public class AdapterGenerator(
       "DEPRECATION",
       // Because we look it up reflectively
       "unused",
+      "UNUSED_PARAMETER",
       // Because we include underscores
       "ClassName",
       // Because we generate redundant `out` variance for some generics and there's no way
@@ -258,8 +259,12 @@ public class AdapterGenerator(
 
     val typeRenderer: TypeRenderer = object : TypeRenderer() {
       override fun renderTypeVariable(typeVariable: TypeVariableName): CodeBlock {
-        val index = typeVariables.indexOfFirst { it == typeVariable }
-        check(index != -1) { "Unexpected type variable $typeVariable" }
+        // Match only by name because equality checks for more things than just the name. For example, a base class
+        // may declare "T" but the subclass declares "T : Number", which is legal but will fail an equals() test.
+        val index = typeVariables.indexOfFirst { it.name == typeVariable.name }
+        check(index != -1) {
+          "Unexpected type variable $typeVariable"
+        }
         return CodeBlock.of("%N[%L]", typesParam, index)
       }
     }
