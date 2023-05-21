@@ -6,7 +6,7 @@ classes:
 
 _Note: The Kotlin examples of this README assume use of either Kotlin code gen or `KotlinJsonAdapterFactory` for reflection. Plain Java-based reflection is unsupported on Kotlin classes._
 
-<details open>
+<details>
   <summary>Java</summary>
 
 ```java
@@ -20,7 +20,7 @@ System.out.println(blackjackHand);
 ```
 </details>
 
-<details>
+<details open>
   <summary>Kotlin</summary>
 
 ```kotlin
@@ -36,7 +36,7 @@ println(blackjackHand)
 
 And it can just as easily serialize Java or Kotlin objects as JSON:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -52,7 +52,7 @@ System.out.println(json);
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -81,7 +81,7 @@ Moshi has built-in support for reading and writing Java’s core data types:
 It supports your model classes by writing them out field-by-field. In the example above Moshi uses
 these classes:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -103,7 +103,7 @@ enum Suit {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -159,7 +159,7 @@ suit in separate fields: `{"rank":"A","suit":"HEARTS"}`. With a type adapter, we
 encoding to something more compact: `"4H"` for the four of hearts or `"JD"` for the jack of
 diamonds:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -184,7 +184,7 @@ class CardAdapter {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -211,7 +211,7 @@ class CardAdapter {
 
 Register the type adapter with the `Moshi.Builder` and we’re good to go.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -221,7 +221,7 @@ Moshi moshi = new Moshi.Builder()
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -265,7 +265,7 @@ We would like to combine these two fields into one string to facilitate the date
 later point. Also, we would like to have all variable names in CamelCase. Therefore, the `Event`
 class we want Moshi to produce like this:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -276,7 +276,7 @@ class Event {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -291,7 +291,7 @@ Instead of manually parsing the JSON line per line (which we could also do) we c
 transformation automatically. We simply define another class `EventJson` that directly corresponds
 to the JSON structure:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -303,7 +303,7 @@ class EventJson {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -321,7 +321,7 @@ to an `Event` it will first parse it to an `EventJson` as an intermediate step. 
 serialize an `Event` Moshi will first create an `EventJson` object and then serialize that object as
 usual.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -344,7 +344,7 @@ class EventJsonAdapter {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -371,7 +371,7 @@ class EventJsonAdapter {
 
 Again we register the adapter with Moshi.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -381,7 +381,7 @@ Moshi moshi = new Moshi.Builder()
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -393,7 +393,7 @@ val moshi = Moshi.Builder()
 
 We can now use Moshi to parse the JSON directly to an `Event`.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -402,7 +402,7 @@ Event event = jsonAdapter.fromJson(json);
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -424,7 +424,7 @@ Moshi provides a number of convenience methods for `JsonAdapter` objects:
 These factory methods wrap an existing `JsonAdapter` into additional functionality.
 For example, if you have an adapter that doesn't support nullable values, you can use `nullSafe()` to make it null safe:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -445,7 +445,7 @@ System.out.println(nullDate); // null
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -487,7 +487,7 @@ Say we have a JSON string of this structure:
 
 We can now use Moshi to parse the JSON string into a `List<Card>`.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -498,7 +498,7 @@ List<Card> cards = adapter.fromJson(cardsJsonResponse);
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -571,7 +571,7 @@ JSON has a field name containing a space:
 
 With `@Json` its corresponding Java or Kotlin class is easy:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -584,7 +584,7 @@ class Player {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -618,7 +618,7 @@ Here’s a JSON message with two integers and a color:
 
 By convention, Android programs also use `int` for colors:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -630,7 +630,7 @@ class Rectangle {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -654,7 +654,7 @@ But if we encoded the above Java or Kotlin class as JSON, the color isn't encode
 
 The fix is to define a qualifier annotation, itself annotated `@JsonQualifier`:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -665,7 +665,7 @@ public @interface HexColor {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -678,7 +678,7 @@ annotation class HexColor
 
 Next apply this `@HexColor` annotation to the appropriate field:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -690,7 +690,7 @@ class Rectangle {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -704,7 +704,7 @@ class Rectangle(
 
 And finally define a type adapter to handle it:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -721,7 +721,7 @@ class ColorAdapter {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -746,7 +746,7 @@ shouldn’t need this `@JsonQualifier`, but it’s very handy for those that do.
 Some models declare fields that shouldn’t be included in JSON. For example, suppose our blackjack
 hand has a `total` field with the sum of the cards:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -758,7 +758,7 @@ public final class BlackjackHand {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -773,7 +773,7 @@ class BlackjackHand(
 By default, all fields are emitted when encoding JSON, and all fields are accepted when decoding
 JSON. Prevent a field from being included by annotating them with `@Json(ignore = true)`.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -786,7 +786,7 @@ public final class BlackjackHand {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -875,7 +875,7 @@ adapters to build upon the standard conversion.
 
 In this example, we turn serialize nulls, then delegate to the built-in adapter:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -894,7 +894,7 @@ class TournamentWithNullsAdapter {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -922,7 +922,7 @@ the encoding and decoding process for any type, even without knowing about the t
 this example, we customize types annotated `@AlwaysSerializeNulls`, which an annotation we create,
 not built-in to Moshi:
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -932,7 +932,7 @@ public @interface AlwaysSerializeNulls {}
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -942,7 +942,7 @@ annotation class AlwaysSerializeNulls
 ```
 </details>
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -955,7 +955,7 @@ static class Car {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
@@ -972,7 +972,7 @@ Each `JsonAdapter.Factory` interface is invoked by `Moshi` when it needs to buil
 user's type. The factory either returns an adapter to use, or null if it doesn't apply to the
 requested type. In our case we match all classes that have our annotation.
 
-<details open>
+<details>
     <summary>Java</summary>
 
 ```java
@@ -991,7 +991,7 @@ static class AlwaysSerializeNullsFactory implements JsonAdapter.Factory {
 ```
 </details>
 
-<details>
+<details open>
     <summary>Kotlin</summary>
 
 ```kotlin
