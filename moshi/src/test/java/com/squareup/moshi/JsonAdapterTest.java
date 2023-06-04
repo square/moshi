@@ -16,6 +16,7 @@
 package com.squareup.moshi;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.intellij.lang.annotations.Language;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -337,5 +339,48 @@ public final class JsonAdapterTest {
   public void nonNullDoesntDuplicate() {
     JsonAdapter<Boolean> adapter = new Moshi.Builder().build().adapter(Boolean.class).nonNull();
     assertThat(adapter.nonNull()).isSameInstanceAs(adapter);
+  }
+
+  @Test
+  public void givenJsonWithTrailingComma_whenDeserializeInLenientMode_thenDeserializeSuccessfully()
+      throws IOException {
+    JsonAdapter<Ticket> adapter = new Moshi.Builder().build().adapter(Ticket.class).lenient();
+    @Language("JSON")
+    String json = "{ \"number\" : \"912392\", \"seat\": 1234, \"type\" : \"COMMON\", }";
+    Ticket ticket = adapter.fromJson(json);
+    assertNotNull(ticket);
+    assertThat(ticket.getNumber()).isEqualTo("912392");
+    assertThat(ticket.getSeat()).isEqualTo(1234);
+    assertThat(ticket.getType()).isEqualTo("COMMON");
+  }
+
+  static class Ticket {
+    private String number;
+    private Integer seat;
+    private String type;
+
+    public String getNumber() {
+      return number;
+    }
+
+    public void setNumber(String number) {
+      this.number = number;
+    }
+
+    public Integer getSeat() {
+      return seat;
+    }
+
+    public void setSeat(Integer seat) {
+      this.seat = seat;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    public void setType(String type) {
+      this.type = type;
+    }
   }
 }

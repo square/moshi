@@ -39,6 +39,7 @@ import okio.BufferedSource;
 import okio.ForwardingSource;
 import okio.Okio;
 import okio.Source;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -1268,9 +1269,10 @@ public final class JsonUtf8ReaderTest {
     assertThat(reader.nextName()).isEqualTo("a");
     assertThat(reader.nextString()).isEqualTo("b");
     try {
-      reader.peek();
+      JsonReader.Token peek = reader.peek();
+      Assert.assertEquals(JsonReader.Token.END_OBJECT, peek);
+    } catch (JsonEncodingException unexpected) {
       fail();
-    } catch (JsonEncodingException expected) {
     }
   }
 

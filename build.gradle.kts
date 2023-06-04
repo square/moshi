@@ -9,10 +9,8 @@ import java.net.URL
 
 buildscript {
   dependencies {
-    val kotlinVersion = System.getenv("MOSHI_KOTLIN_VERSION")
-      ?: libs.versions.kotlin.get()
-    val kspVersion = System.getenv("MOSHI_KSP_VERSION")
-      ?: libs.versions.ksp.get()
+    val kotlinVersion = System.getenv("MOSHI_KOTLIN_VERSION") ?: libs.versions.kotlin.get()
+    val kspVersion = System.getenv("MOSHI_KSP_VERSION") ?: libs.versions.ksp.get()
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
