@@ -2,7 +2,7 @@
 autoService = "1.0.1"
 gjf = "1.15.0"
 jvmTarget = "1.8"
-kotlin = "1.8.21"
+kotlin = "1.8.22"
 kotlinCompileTesting = "0.2.1"
 kotlinpoet = "1.14.2"
 ksp = "1.8.21-1.0.11"
