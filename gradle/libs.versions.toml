@@ -5,7 +5,7 @@ jvmTarget = "1.8"
 kotlin = "1.8.22"
 kotlinCompileTesting = "0.2.1"
 kotlinpoet = "1.14.2"
-ksp = "1.8.22-1.0.11"
+ksp = "1.9.0-1.0.13"
 ktlint = "0.48.2"
 
 [plugins]
