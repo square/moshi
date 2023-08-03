@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
@@ -787,7 +788,7 @@ class JsonClassCodegenProcessorTest {
       }
   }
 
-  private fun compile(vararg sourceFiles: SourceFile): KotlinCompilation.Result {
+  private fun compile(vararg sourceFiles: SourceFile): JvmCompilationResult {
     return prepareCompilation(*sourceFiles).compile()
   }
 
