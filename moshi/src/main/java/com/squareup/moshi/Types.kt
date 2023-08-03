@@ -32,6 +32,12 @@ import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.Properties
 import javax.annotation.CheckReturnValue
+import kotlin.reflect.KClass
+import kotlin.reflect.KClassifier
+import kotlin.reflect.KType
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.KVariance
+import kotlin.reflect.javaType
 import java.lang.annotation.Annotation as JavaAnnotation
 
 /** Factory methods for types. */
@@ -359,6 +365,89 @@ public object Types {
       is GenericArrayType -> type.genericComponentType
       is Class<*> -> type.componentType
       else -> null
+    }
+  }
+
+  public fun KType.canonicalize(): KType {
+    return MoshiKType(classifier, arguments, isMarkedNullable)
+  }
+
+  @ExperimentalStdlibApi
+  public fun JsonAdapter.Factory.toKFactory(): JsonAdapter.KFactory =
+    JsonAdapter.KFactory { type, annotations, moshi ->
+      val javaType = type.javaType
+      create(javaType, annotations, moshi)
+    }
+
+  public fun JsonAdapter.KFactory.toFactory(): JsonAdapter.Factory =
+    JsonAdapter.Factory { type, annotations, moshi -> create(type.toKType(), annotations, moshi) }
+
+  public fun KClass<*>.toKType(): KType = MoshiKType(this)
+
+  internal class MoshiKType(
+    override val classifier: KClassifier?,
+    override val arguments: List<KTypeProjection> = emptyList(),
+    override val isMarkedNullable: Boolean = false,
+  ) : KType {
+    override val annotations: List<Annotation> = emptyList()
+
+    override fun equals(other: Any?): Boolean {
+      if (this === other) return true
+      if (other !is KType) return false
+      if (other.isMarkedNullable != isMarkedNullable) return false
+      if (other.classifier != classifier) return false
+      if (other.arguments != arguments) return false
+      return true
+    }
+
+    override fun hashCode(): Int {
+      var result = classifier?.hashCode() ?: 0
+      result = 31 * result + arguments.hashCode()
+      result = 31 * result + isMarkedNullable.hashCode()
+      return result
+    }
+
+    override fun toString(): String {
+      return """
+        |classifier: $classifier
+        |arguments: $arguments
+        |isMarkedNullable: $isMarkedNullable
+        |
+      """.trimMargin()
+    }
+  }
+
+  public fun Type.toKType(): KType {
+    when (this) {
+      is Class<*> -> {
+        // TODO handle arrays here?
+        return this.kotlin.toKType()
+      }
+      is ParameterizedType -> {
+        val rawType = (this.rawType as Class<*>).kotlin
+        val arguments = this.actualTypeArguments
+          .map {
+            val type = it.toKType()
+            val variance = if (it is WildcardType) {
+              when {
+                it.lowerBounds.isNotEmpty() -> KVariance.IN
+                it.upperBounds.isNotEmpty() -> KVariance.OUT
+                else -> KVariance.INVARIANT
+              }
+            } else {
+              KVariance.INVARIANT
+            }
+            when (variance) {
+              KVariance.INVARIANT -> KTypeProjection.invariant(type)
+              KVariance.IN -> KTypeProjection.contravariant(type)
+              KVariance.OUT -> KTypeProjection.covariant(type)
+            }
+          }
+        return MoshiKType(rawType, arguments)
+      }
+      else -> {
+        throw IllegalArgumentException("Unsupported type: $this")
+      }
     }
   }
 }

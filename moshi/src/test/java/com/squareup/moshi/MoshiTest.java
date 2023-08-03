@@ -601,7 +601,7 @@ public final class MoshiTest {
     Class<? extends Annotation> annotation = Annotation.class;
     Moshi.Builder builder = new Moshi.Builder();
     try {
-      builder.add((null));
+      builder.add((JsonAdapter.Factory) null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
@@ -613,7 +613,7 @@ public final class MoshiTest {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
-      builder.add(null, null);
+      builder.add((Type) null, null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
@@ -1237,7 +1237,7 @@ public final class MoshiTest {
   public void newBuilder() throws Exception {
     Moshi moshi = new Moshi.Builder().add(Pizza.class, new PizzaAdapter()).build();
     Moshi.Builder newBuilder = moshi.newBuilder();
-    for (JsonAdapter.Factory factory : Moshi.BUILT_IN_FACTORIES) {
+    for (JsonAdapter.KFactory factory : Moshi.BUILT_IN_FACTORIES) {
       // Awkward but java sources don't know about the internal-ness of this
       assertThat(factory).isNotIn(newBuilder.getFactories$moshi());
     }

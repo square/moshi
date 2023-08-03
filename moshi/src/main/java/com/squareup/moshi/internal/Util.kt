@@ -48,6 +48,7 @@ import java.lang.reflect.WildcardType
 import java.util.Collections
 import java.util.LinkedHashSet
 import kotlin.contracts.contract
+import kotlin.reflect.KType
 
 @JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
 
@@ -354,6 +355,10 @@ internal fun Type.checkNotPrimitive() {
 }
 
 internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
+  return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
+}
+
+internal fun KType.toStringWithAnnotations(annotations: Set<Annotation>): String {
   return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
 }
 

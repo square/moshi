@@ -5,7 +5,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URL
+import java.net.URI
 
 buildscript {
   dependencies {
@@ -73,7 +73,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(19))
+        languageVersion.set(JavaLanguageVersion.of(20))
       }
     }
     if (project.name != "records-tests") {
@@ -115,7 +115,7 @@ allprojects {
       dokkaSourceSets.configureEach {
         skipDeprecated.set(true)
         externalDocumentationLink {
-          url.set(URL("https://square.github.io/okio/2.x/okio/"))
+          url.set(URI("https://square.github.io/okio/2.x/okio/").toURL())
         }
       }
     }

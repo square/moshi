@@ -15,10 +15,11 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.Types.canonicalize
 import com.squareup.moshi.Types.createJsonQualifierImplementation
+import com.squareup.moshi.Types.toKFactory
+import com.squareup.moshi.Types.toKType
 import com.squareup.moshi.internal.NO_ANNOTATIONS
-import com.squareup.moshi.internal.NonNullJsonAdapter
-import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard
@@ -86,17 +87,8 @@ public class Moshi internal constructor(builder: Builder) {
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
-    val adapter = adapter<T>(ktype.javaType)
-    return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
-      // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
-      adapter
-    } else if (ktype.isMarkedNullable) {
-      adapter.nullSafe()
-    } else {
-      adapter.nonNull()
-    }
+    return adapter(ktype, NO_ANNOTATIONS, null)
   }
 
   /**
@@ -109,7 +101,20 @@ public class Moshi internal constructor(builder: Builder) {
     annotations: Set<Annotation>,
     fieldName: String?,
   ): JsonAdapter<T> {
-    val cleanedType = type.canonicalize().removeSubtypeWildcard()
+    return adapter(type.canonicalize().removeSubtypeWildcard().toKType(), annotations, fieldName)
+  }
+
+  /**
+   * @param fieldName An optional field name associated with this type. The field name is used as a
+   * hint for better adapter lookup error messages for nested structures.
+   */
+  @CheckReturnValue
+  public fun <T> adapter(
+    type: KType,
+    annotations: Set<Annotation>,
+    fieldName: String?,
+  ): JsonAdapter<T> {
+    val cleanedType = type.canonicalize()
 
     // If there's an equivalent adapter in the cache, we're done!
     val cacheKey = cacheKey(cleanedType, annotations)
@@ -152,8 +157,26 @@ public class Moshi internal constructor(builder: Builder) {
     type: Type,
     annotations: Set<Annotation>,
   ): JsonAdapter<T> {
-    val cleanedType = type.canonicalize().removeSubtypeWildcard()
-    val skipPastIndex = factories.indexOf(skipPast)
+    return nextAdapterInternal(skipPast, type.canonicalize().removeSubtypeWildcard().toKType(), annotations)
+  }
+
+  @CheckReturnValue
+  public fun <T> nextAdapter(
+    skipPast: JsonAdapter.KFactory,
+    type: KType,
+    annotations: Set<Annotation>,
+  ): JsonAdapter<T> {
+    return nextAdapterInternal(skipPast, type, annotations)
+  }
+
+  @CheckReturnValue
+  private fun <T> nextAdapterInternal(
+    skipPast: Any,
+    type: KType,
+    annotations: Set<Annotation>,
+  ): JsonAdapter<T> {
+    val cleanedType = type.canonicalize()
+    val skipPastIndex = factories.indexOfFirst { it == skipPast }
     require(skipPastIndex != -1) { "Unable to skip past unknown factory $skipPast" }
     for (i in (skipPastIndex + 1) until factories.size) {
       @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
@@ -184,12 +207,12 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   /** Returns an opaque object that's equal if the type and annotations are equal. */
-  private fun cacheKey(type: Type, annotations: Set<Annotation>): Any {
+  private fun cacheKey(type: KType, annotations: Set<Annotation>): Any {
     return if (annotations.isEmpty()) type else listOf(type, annotations)
   }
 
   public class Builder {
-    internal val factories = mutableListOf<JsonAdapter.Factory>()
+    internal val factories = mutableListOf<JsonAdapter.KFactory>()
     internal var lastOffset = 0
 
     @CheckReturnValue
@@ -197,6 +220,10 @@ public class Moshi internal constructor(builder: Builder) {
     public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
 
     public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
+      add(newAdapterFactory(type, jsonAdapter))
+    }
+
+    public fun <T> add(type: KType, jsonAdapter: JsonAdapter<T>): Builder = apply {
       add(newAdapterFactory(type, jsonAdapter))
     }
 
@@ -208,7 +235,12 @@ public class Moshi internal constructor(builder: Builder) {
       add(newAdapterFactory(type, annotation, jsonAdapter))
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     public fun add(factory: JsonAdapter.Factory): Builder = apply {
+      factories.add(lastOffset++, factory.toKFactory())
+    }
+
+    public fun add(factory: JsonAdapter.KFactory): Builder = apply {
       factories.add(lastOffset++, factory)
     }
 
@@ -230,7 +262,12 @@ public class Moshi internal constructor(builder: Builder) {
       addLast(newAdapterFactory(type, annotation, jsonAdapter))
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     public fun addLast(factory: JsonAdapter.Factory): Builder = apply {
+      factories.add(factory.toKFactory())
+    }
+
+    public fun addLast(factory: JsonAdapter.KFactory): Builder = apply {
       factories.add(factory)
     }
 
@@ -271,7 +308,7 @@ public class Moshi internal constructor(builder: Builder) {
      * time in this call that the cache key has been requested in this call. This may return a
      * lookup that isn't yet ready if this lookup is reentrant.
      */
-    fun <T> push(type: Type, fieldName: String?, cacheKey: Any): JsonAdapter<T>? {
+    fun <T> push(type: KType, fieldName: String?, cacheKey: Any): JsonAdapter<T>? {
       // Try to find a lookup with the same key for the same call.
       var i = 0
       val size = callLookups.size
@@ -347,7 +384,7 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
-  internal class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
+  internal class Lookup<T>(val type: KType, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
@@ -361,14 +398,15 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   internal companion object {
+    @OptIn(ExperimentalStdlibApi::class)
     @JvmField
-    val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> = buildList(6) {
-      add(StandardJsonAdapters)
-      add(CollectionJsonAdapter.Factory)
-      add(MapJsonAdapter.Factory)
-      add(ArrayJsonAdapter.Factory)
-      add(RecordJsonAdapter.Factory)
-      add(ClassJsonAdapter.Factory)
+    val BUILT_IN_FACTORIES: List<JsonAdapter.KFactory> = buildList(6) {
+      add(StandardJsonAdapters.toKFactory())
+      add(CollectionJsonAdapter.Factory.toKFactory())
+      add(MapJsonAdapter.Factory.toKFactory())
+      add(ArrayJsonAdapter.Factory.toKFactory())
+      add(RecordJsonAdapter.Factory.toKFactory())
+      add(ClassJsonAdapter.Factory.toKFactory())
     }
 
     fun <T> newAdapterFactory(
@@ -377,6 +415,16 @@ public class Moshi internal constructor(builder: Builder) {
     ): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
         if (annotations.isEmpty() && typesMatch(type, targetType)) jsonAdapter else null
+      }
+    }
+
+    fun <T> newAdapterFactory(
+      type: KType,
+      jsonAdapter: JsonAdapter<T>,
+    ): JsonAdapter.KFactory {
+      return JsonAdapter.KFactory { targetType, annotations, _ ->
+        // TODO do we need a typesMatch for KType?
+        if (annotations.isEmpty() && type == targetType) jsonAdapter else null
       }
     }
 

@@ -25,6 +25,7 @@ import org.intellij.lang.annotations.Language
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.Throws
+import kotlin.reflect.KType
 
 /**
  * Converts Java values to JSON, and JSON values to Java.
@@ -216,7 +217,7 @@ public abstract class JsonAdapter<T> {
 
   /**
    * Returns a JSON adapter equal to this, but that throws a [JsonDataException] when
-   * [unknown names and values][JsonReader.setFailOnUnknown] are encountered.
+   * [unknown names and values][JsonReader.failOnUnknown] are encountered.
    * This constraint applies to both the top-level message handled by this type adapter as well as
    * to nested messages.
    */
@@ -281,9 +282,22 @@ public abstract class JsonAdapter<T> {
   public open val isLenient: Boolean
     get() = false
 
+  public fun interface KFactory {
+    /**
+     * Attempts to create an adapter for [type] annotated with [annotations]. This
+     * returns the adapter if one was created, or null if this factory isn't capable of creating
+     * such an adapter.
+     *
+     * Implementations may use [Moshi.adapter] to compose adapters of other types, or
+     * [Moshi.nextAdapter] to delegate to the underlying adapter of the same type.
+     */
+    @CheckReturnValue
+    public fun create(type: KType, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>?
+  }
+
   public fun interface Factory {
     /**
-     * Attempts to create an adapter for `type` annotated with `annotations`. This
+     * Attempts to create an adapter for [type] annotated with [annotations]. This
      * returns the adapter if one was created, or null if this factory isn't capable of creating
      * such an adapter.
      *
