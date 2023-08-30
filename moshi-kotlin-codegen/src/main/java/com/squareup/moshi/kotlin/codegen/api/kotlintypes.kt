@@ -118,7 +118,7 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
             // Remove nullable but keep the java object type
             CodeBlock.of("%T::class.javaObjectType", copy(nullable = false))
           } else {
-            CodeBlock.of("%T::class.javaPrimitiveType", this)
+            CodeBlock.of("%T::class.javaPrimitiveType!!", this)
           }
         }
         UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")

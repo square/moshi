@@ -58,9 +58,9 @@ public class AdapterGenerator(
 ) {
 
   private companion object {
-    private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType", INT)
+    private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType!!", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
-      "%M",
+      "%M!!",
       MemberName(MOSHI_UTIL_PACKAGE, "DEFAULT_CONSTRUCTOR_MARKER"),
     )
     private val CN_MOSHI = Moshi::class.asClassName()
