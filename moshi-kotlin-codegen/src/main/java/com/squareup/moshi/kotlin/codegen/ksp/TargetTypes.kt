@@ -228,7 +228,9 @@ private fun declaredProperties(
   val result = mutableMapOf<String, TargetProperty>()
   for (property in classDecl.getDeclaredProperties()) {
     val initialType = property.type.resolve()
-    val resolvedType = if (initialType.declaration is KSTypeParameter) {
+    val resolvedType = if (initialType.declaration is KSTypeParameter ||
+      initialType.arguments.any { it.type?.resolve()?.declaration is KSTypeParameter }
+    ) {
       property.asMemberOf(originalType.asType())
     } else {
       initialType
