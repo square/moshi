@@ -189,7 +189,8 @@ internal class JsonUtf8Reader : JsonReader {
             buffer.readByte() // consume the '}'.
             PEEKED_END_OBJECT
           } else {
-            throw syntaxError("Expected name")
+            checkLenient()
+            PEEKED_END_OBJECT
           }
           else -> {
             checkLenient()

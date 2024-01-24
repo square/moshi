@@ -55,15 +55,7 @@ internal class ClassJsonAdapter<T>(
   private val options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
 
   override fun fromJson(reader: JsonReader): T {
-    val result: T = try {
-      classFactory.newInstance()
-    } catch (e: InstantiationException) {
-      throw RuntimeException(e)
-    } catch (e: InvocationTargetException) {
-      throw e.rethrowCause()
-    } catch (e: IllegalAccessException) {
-      throw AssertionError()
-    }
+    val instance: T = instanciateTargetClass()
 
     try {
       reader.beginObject()
@@ -74,10 +66,22 @@ internal class ClassJsonAdapter<T>(
           reader.skipValue()
           continue
         }
-        fieldsArray[index].read(reader, result)
+        fieldsArray[index].read(reader, instance)
       }
       reader.endObject()
-      return result
+      return instance
+    } catch (e: IllegalAccessException) {
+      throw AssertionError()
+    }
+  }
+
+  private fun instanciateTargetClass(): T {
+    return try {
+      classFactory.newInstance()
+    } catch (e: InstantiationException) {
+      throw RuntimeException(e)
+    } catch (e: InvocationTargetException) {
+      throw e.rethrowCause()
     } catch (e: IllegalAccessException) {
       throw AssertionError()
     }
@@ -96,7 +100,7 @@ internal class ClassJsonAdapter<T>(
     }
   }
 
-  override fun toString() = "JsonAdapter($classFactory)"
+  override fun toString() = "ClassJsonAdapter($classFactory)"
 
   internal class FieldBinding<T>(val name: String, val field: Field, val adapter: JsonAdapter<T>) {
     fun read(reader: JsonReader, value: Any?) {
