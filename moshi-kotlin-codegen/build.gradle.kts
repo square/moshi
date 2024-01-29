@@ -83,19 +83,20 @@ dependencies {
   testImplementation(libs.kotlinCompileTesting)
 }
 
-val shadowJar = tasks.shadowJar.apply {
-  configure {
-    archiveClassifier.set("")
-    configurations = listOf(shade)
-    relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
-    relocate(
-      "com.squareup.kotlinpoet.classinspector",
-      "com.squareup.moshi.kotlinpoet.classinspector",
-    )
-    relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
-    transformers.add(ServiceFileTransformer())
+val shadowJar =
+  tasks.shadowJar.apply {
+    configure {
+      archiveClassifier.set("")
+      configurations = listOf(shade)
+      relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
+      relocate(
+        "com.squareup.kotlinpoet.classinspector",
+        "com.squareup.moshi.kotlinpoet.classinspector",
+      )
+      relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
+      transformers.add(ServiceFileTransformer())
+    }
   }
-}
 
 artifacts {
   runtimeOnly(shadowJar)

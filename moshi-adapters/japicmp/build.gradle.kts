@@ -18,16 +18,17 @@ dependencies {
   latest(project(":moshi-adapters"))
 }
 
-val japicmp = tasks.register<JapicmpTask>("japicmp") {
-  dependsOn("jar")
-  oldClasspath.from(baseline)
-  newClasspath.from(latest)
-  onlyBinaryIncompatibleModified.set(true)
-  failOnModification.set(true)
-  txtOutputFile.set(layout.buildDirectory.file("reports/japi.txt"))
-  ignoreMissingClasses.set(true)
-  includeSynthetic.set(true)
-}
+val japicmp =
+  tasks.register<JapicmpTask>("japicmp") {
+    dependsOn("jar")
+    oldClasspath.from(baseline)
+    newClasspath.from(latest)
+    onlyBinaryIncompatibleModified.set(true)
+    failOnModification.set(true)
+    txtOutputFile.set(layout.buildDirectory.file("reports/japi.txt"))
+    ignoreMissingClasses.set(true)
+    includeSynthetic.set(true)
+  }
 
 tasks.named("check").configure {
   dependsOn(japicmp)

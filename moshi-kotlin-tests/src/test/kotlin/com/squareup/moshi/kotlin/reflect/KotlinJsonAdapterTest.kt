@@ -569,7 +569,8 @@ class KotlinJsonAdapterTest {
   data class UsingEnum(val e: KotlinEnum)
 
   enum class KotlinEnum {
-    A, B
+    A,
+    B,
   }
 
   @Test fun interfacesNotSupported() {
