@@ -1,9 +1,9 @@
-Change Log
-==========
+# Change Log
 
-## Version 1.15.0
+## Unreleased
 
-_2023-05-12_
+
+## [1.15.0] - 2023-05-12
 
  * Upgrade to Kotlin `1.8.21`.
  * Upgrade to KSP `1.8.21-1.0.11`.
@@ -14,9 +14,7 @@ _2023-05-12_
  * Suppress `UNUSED_PARAMETER` in generated code.
  * Deprecate KAPT code gen. Please migrate to KSP, we will remove KAPT support in a future release. This release will also print an annoying noisy warning in KAPT processing if you use it.
 
-## Version 1.14.0
-
-_2022-09-06_
+## [1.14.0] - 2022-09-06
 
  * Upgrade: [Kotlin 1.7.0][kotlin_1_7_0].
  * Upgrade [KotlinPoet 1.12.0][kotlinpoet_1_12_0].
@@ -25,9 +23,7 @@ _2022-09-06_
  * Upgrade: [kotlinx-metadata 0.5.0][kotlinx_metadata_0_5_0], allowing reading of kotlin 1.8 APIs too.
 
 
-## Version 1.13.0
-
-_2021-12-08_
+## [1.13.0] - 2021-12-08
 
  * New: Support for [Kotlin Symbol Processing (KSP)][ksp]. KSP is an alternative to annotation
    processing code gen. It's builds faster and better supports Kotlin language features.
@@ -64,9 +60,7 @@ _2021-12-08_
 
  * Upgrade: [Kotlin 1.6.0][kotlin_1_6_0].
 
-## Version 1.12.0
-
-_2021-04-01_
+## [1.12.0] - 2021-04-01
 
  * New: Improve generated code performance when all properties are set.
  * Fix: Don't crash on a missing type element like `@SuppressLint`.
@@ -76,9 +70,7 @@ _2021-04-01_
  * Upgrade: [Okio 2.10.0][okio_2_10_0].
  * Upgrade: [Kotlin 1.4.31][kotlin_1_4_31].
 
-## Version 1.11.0
-
-_2020-10-04_
+## [1.11.0] - 2020-10-04
 
  * New: Kotlin extension functions and properties. Use of these extensions is only possible from
    Kotlin, and requires the Kotlin stdlib dependency. This release does not have any Kotlin
@@ -137,9 +129,7 @@ _2020-10-04_
  * Upgrade: [Okio 1.17.5][okio_1_7_5].
  * Upgrade: [Kotlin 1.4.10][kotlin_1_4_10].
 
-## Version 1.10.0
-
-_2020-08-26_
+## [1.10.0] - 2020-08-26
 
  * New: Upgrade to Kotlin 1.4.0.
  * New: `JsonReader.promoteNameToValue()` makes it easier to build custom `Map` adapters.
@@ -153,9 +143,7 @@ _2020-08-26_
  * Fix: Avoid VerifyErrors on Android 4.4 devices when using R8
  * Fix: Fix resolution of types in superclass settable properties
 
-## Version 1.9.3
-
-_2020-06-11_
+## [1.9.3] - 2020-06-11
 
  * Fix: Tweak a shrinker rule to mitigate an R8 bug which was causing classes unrelated to the Kotlin adpater code generation to be retained.
  * Fix: Ensure that the Kotlin adapter code generation does not line wrap in the middle of a string if your JSON keys contain spaces.
@@ -163,18 +151,14 @@ _2020-06-11_
  * Fix: Separate the runtime check for Kotlin's `DefaultConstructorMarker` from the check for `Metadata`. A shrinker may have removed `Metadata` and we should still check for `DefaultConstructorMarker`.
 
 
-## Version 1.9.2
-
-_2019-11-17_
+## [1.9.2] - 2019-11-17
 
  * Fix: Generate correct adapters for several special cases including reified inline types, public
    classes enclosed in internal classes, deprecated types with `-Werror`, primitives in type
    parameters, nullables in type parameters, and type aliases in type parameters.
 
 
-## Version 1.9.1
-
-_2019-10-30_
+## [1.9.1] - 2019-10-30
 
  * Fix: "abstract function ... cannot have code" code gen crash when parsing Kotlin metadata.
  * Fix: Generate code to support constructors with more than 32 parameters. The 1.9.0 release had
@@ -184,9 +168,7 @@ _2019-10-30_
  * Fix: Generate code to handle type aliases in type parameters.
 
 
-## Version 1.9.0
-
-_2019-10-29_
+## [1.9.0] - 2019-10-29
 
  * **This release requires kotlin-reflect or moshi-kotlin-codegen for all Kotlin classes.**
 
@@ -246,9 +228,7 @@ _2019-10-29_
    `skipValue()` at the end of a document.
 
 
-## Version 1.8.0
-
-_2018-11-09_
+## [1.8.0] - 2018-11-09
 
  * New: Support JSON objects that include type information in the JSON. The new
    `PolymorphicJsonAdapterFactory` writes a type field when encoding, and reads it when decoding.
@@ -275,9 +255,7 @@ _2018-11-09_
  * Fix: Remove code generation companion objects. This API was neither complete nor necessary.
 
 
-## Version 1.7.0
-
-_2018-09-24_
+## [1.7.0] - 2018-09-24
 
  * New: `EnumJsonAdapter` makes it easy to specify a fallback value for unknown enum constants.
    By default Moshi throws an `JsonDataException` if it reads an unknown enum constant. With this
@@ -315,9 +293,7 @@ _2018-09-24_
    with dollar signs in their names, and named companion objects.
 
 
-## Version 1.6.0
-
-_2018-05-14_
+## [1.6.0] - 2018-05-14
 
  * **Moshi now supports codegen for Kotlin.** We've added a new annotation processor that generates
    a small and fast JSON adapter for your Kotlin types. It can be used on its own or with the
@@ -363,9 +339,7 @@ _2018-05-14_
    an opaque Object it would only use the built-in adapters. With this change user-installed
    adapters for types like `String` will always be honored.
 
-## Version 1.5.0
-
-_2017-05-14_
+## [1.5.0] - 2017-05-14
 
  *  **Moshi now uses `@Nullable` to annotate all possibly-null values.** We've added a compile-time
     dependency on the JSR 305 annotations. This is a [provided][maven_provided] dependency and does
@@ -400,9 +374,7 @@ _2017-05-14_
  *  Fix: Retain the sign on negative zero.
 
 
-## Version 1.4.0
-
-_2017-02-04_
+## [1.4.0] - 2017-02-04
 
 Moshi 1.4 is a major release that adds _JSON values_ as a core part of the library. We consider any
 Java object comprised of maps, lists, strings, numbers, booleans and nulls to be a JSON value. These
@@ -436,17 +408,13 @@ your application classes.
     `JsonAdapter.Factory`.
  *  Fix: Don't fail on large longs that have a fractional component like `9223372036854775806.0`.
 
-## Version 1.3.1
-
-_2016-10-21_
+## [1.3.1] - 2016-10-21
 
  *  Fix: Don't incorrectly report invalid input when a slash character is escaped. When we tightened
     our invalid escape handling we missed the one character that is valid both escaped `\/` and
     unescaped `/`.
 
-## Version 1.3.0
-
-_2016-10-15_
+## [1.3.0] - 2016-10-15
 
  *  New: Permit `@ToJson` and `@FromJson` methods to take any number of `JsonAdapter` parameters to
     delegate to. This is supported for `@ToJson` methods that take a `JsonWriter` and `@FromJson`
@@ -476,9 +444,7 @@ _2016-10-15_
     characters permitted to be escaped may be escaped. Use `JsonReader.setLenient(true)` to read
     JSON documents that escape characters that should not be escaped.
 
-## Version 1.2.0
-
-_2016-05-28_
+## [1.2.0] - 2016-05-28
 
  *  New: Take advantage of Okio's new `Options` feature when reading field names and enum values.
     This has a significant impact on performance. We measured parsing performance improve from 89k
@@ -500,9 +466,7 @@ _2016-05-28_
     implicit call to booleanValue() which has the potential to throw NPEs.
  *  Fix: Be more aggressive about canonicalizing types.
 
-## Version 1.1.0
-
-_2016-01-19_
+## [1.1.0] - 2016-01-19
 
  *  New: Support [RFC 7159][rfc_7159], the latest JSON specification. This removes the constraint
     that the root value must be an array or an object. It may now take any value: array, object,
@@ -513,9 +477,7 @@ _2016-01-19_
  *  New: `Types.getRawType()` and `Types.collectionElementType()` APIs to assist in defining generic
     type adapter factories.
 
-## Version 1.0.0
-
-_2015-09-27_
+## [1.0.0] - 2015-09-27
 
  *  **API Change**: Replaced `new JsonReader()` with `JsonReader.of()` and `new JsonWriter()` with
     `JsonWriter.of()`. If your code calls either of these constructors it will need to be updated to
@@ -537,9 +499,7 @@ _2015-09-27_
     encountered on the stream. Use this in development and debug builds to detect typos in field
     names. This feature shouldn’t be used in production because it makes migrations very difficult.
 
-## Version 0.9.0
-
-_2015-06-16_
+## [0.9.0] - 2015-06-16
 
  *  Databinding for primitive types, strings, enums, arrays, collections, and maps.
  *  Databinding for plain old Java objects.
@@ -553,6 +513,29 @@ _2015-06-16_
     `LinkedHashTreeMap` for hash-collision avoidance and `Types` for typesafe databinding.
 
 
+
+ [Unreleased]: https://github.com/square/moshi/compare/1.15.0...HEAD
+ [1.15.0]: https://github.com/square/moshi/releases/tag/1.15.0
+ [1.14.0]: https://github.com/square/moshi/releases/tag/1.14.0
+ [1.13.0]: https://github.com/square/moshi/releases/tag/1.13.0
+ [1.12.0]: https://github.com/square/moshi/releases/tag/1.12.0
+ [1.11.0]: https://github.com/square/moshi/releases/tag/1.11.0
+ [1.10.0]: https://github.com/square/moshi/releases/tag/1.10.0
+ [1.9.3]: https://github.com/square/moshi/releases/tag/1.9.3
+ [1.9.2]: https://github.com/square/moshi/releases/tag/1.9.2
+ [1.9.1]: https://github.com/square/moshi/releases/tag/1.9.1
+ [1.9.0]: https://github.com/square/moshi/releases/tag/1.9.0
+ [1.8.0]: https://github.com/square/moshi/releases/tag/1.8.0
+ [1.7.0]: https://github.com/square/moshi/releases/tag/1.7.0
+ [1.6.0]: https://github.com/square/moshi/releases/tag/1.6.0
+ [1.5.0]: https://github.com/square/moshi/releases/tag/1.5.0
+ [1.4.0]: https://github.com/square/moshi/releases/tag/1.4.0
+ [1.3.1]: https://github.com/square/moshi/releases/tag/1.3.1
+ [1.3.0]: https://github.com/square/moshi/releases/tag/1.3.0
+ [1.2.0]: https://github.com/square/moshi/releases/tag/1.2.0
+ [1.1.0]: https://github.com/square/moshi/releases/tag/1.1.0
+ [1.0.0]: https://github.com/square/moshi/releases/tag/1.0.0
+ [0.9.0]: https://github.com/square/moshi/releases/tag/0.9.0
  [dates_example]: https://github.com/square/moshi/blob/master/examples/src/main/java/com/squareup/moshi/recipes/ReadAndWriteRfc3339Dates.java
  [gson]: https://github.com/google/gson
  [jackson]: http://wiki.fasterxml.com/JacksonHome

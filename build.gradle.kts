@@ -24,7 +24,7 @@ buildscript {
 
 plugins {
   alias(libs.plugins.mavenPublish) apply false
-  alias(libs.plugins.dokka) apply false
+  alias(libs.plugins.dokka)
   alias(libs.plugins.spotless)
   alias(libs.plugins.japicmp) apply false
 }
@@ -113,7 +113,6 @@ allprojects {
       }
     }
     if (name == "dokkaHtml") {
-      outputDirectory.set(rootDir.resolve("docs/1.x"))
       dokkaSourceSets.configureEach {
         skipDeprecated.set(true)
         externalDocumentationLink {

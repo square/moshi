@@ -1,6 +1,13 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  pull_request: {}
+  workflow_dispatch: {}
+  push:
+    branches:
+      - 'master'
+    tags-ignore:
+      - '**'
 
 jobs:
   build:
@@ -13,26 +20,30 @@ jobs:
         kotlin-test-mode: [ 'REFLECT', 'KSP', 'KAPT' ]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate Gradle Wrapper
-        uses: gradle/wrapper-validation-action@v1
-
-      - name: Configure JDK
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '20'
-          cache: 'gradle'
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v3
 
       - name: Test
-        run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
+        run: ./gradlew build --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
 
-      - name: Publish (default branch only)
-        if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master' && matrix.kotlin-test-mode == 'reflect'
-        run: ./gradlew publish
+  publish:
+    runs-on: ubuntu-latest
+    if: github.repository == 'square/moshi' && github.ref == 'refs/heads/master'
+    needs:
+      - build
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - run: ./gradlew publish
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
