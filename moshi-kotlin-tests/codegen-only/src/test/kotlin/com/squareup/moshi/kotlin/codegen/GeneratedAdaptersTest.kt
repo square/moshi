@@ -1189,6 +1189,7 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
+  @Suppress("ktlint:standard:property-naming")
   class MutableUppercasePropertyName {
     var AAA: Int = -1
     var BBB: Int = -1

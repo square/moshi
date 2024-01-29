@@ -448,7 +448,8 @@ internal class JsonUtf8Reader : JsonReader {
         checkLenient() // fall-through
         false
       }
-      '{', '}', '[', ']', ':', ',', ' ', '\t', '\u000C'/*\f*/, '\r', '\n' -> false
+      // 0x000C = \f
+      '{', '}', '[', ']', ':', ',', ' ', '\t', '\u000C', '\r', '\n' -> false
       else -> true
     }
   }

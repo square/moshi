@@ -9,10 +9,12 @@ import java.net.URI
 
 buildscript {
   dependencies {
-    val kotlinVersion = System.getenv("MOSHI_KOTLIN_VERSION")
-      ?: libs.versions.kotlin.get()
-    val kspVersion = System.getenv("MOSHI_KSP_VERSION")
-      ?: libs.versions.ksp.get()
+    val kotlinVersion =
+      System.getenv("MOSHI_KOTLIN_VERSION")
+        ?: libs.versions.kotlin.get()
+    val kspVersion =
+      System.getenv("MOSHI_KSP_VERSION")
+        ?: libs.versions.ksp.get()
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
@@ -44,7 +46,7 @@ spotless {
     endWithNewline()
   }
   val configureCommonJavaFormat: JavaExtension.() -> Unit = {
-    googleJavaFormat(libs.versions.gjf.get())
+    googleJavaFormat(libs.googleJavaFormat.get().version)
   }
   java {
     configureCommonJavaFormat()
@@ -52,7 +54,7 @@ spotless {
     targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.versions.ktlint.get()).editorConfigOverride(
+    ktlint(libs.ktlint.get().version).editorConfigOverride(
       mapOf("ktlint_standard_filename" to "disabled"),
     )
     target("**/*.kt")
@@ -61,7 +63,7 @@ spotless {
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.versions.ktlint.get())
+    ktlint(libs.ktlint.get().version)
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()

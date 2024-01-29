@@ -151,6 +151,7 @@ public sealed class JsonWriter : Closeable, Flushable {
    * pretty printing.
    */
   @JvmField
+  @Suppress("ktlint:standard:property-naming") // Exposed to sealed subtypes.
   protected var _indent: String? = null
   public open var indent: String
     /**

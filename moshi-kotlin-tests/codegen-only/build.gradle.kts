@@ -10,12 +10,15 @@ plugins {
 }
 
 enum class TestMode {
-  REFLECT, KAPT, KSP
+  REFLECT,
+  KAPT,
+  KSP,
 }
 
-val testMode = findProperty("kotlinTestMode")?.toString()
-  ?.let(TestMode::valueOf)
-  ?: KSP
+val testMode =
+  findProperty("kotlinTestMode")?.toString()
+    ?.let(TestMode::valueOf)
+    ?: KSP
 
 when (testMode) {
   REFLECT -> {
