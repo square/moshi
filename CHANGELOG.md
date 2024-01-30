@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## Version 1.15.1
+
+_2024-01-30_
+
+ * Upgrade to Okio `3.7.0`
+
+
 ## Version 1.15.0
 
 _2023-05-12_
