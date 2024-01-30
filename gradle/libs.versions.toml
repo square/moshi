@@ -47,7 +47,7 @@ kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin
 kotlinxMetadata = "org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0"
 ksp = { module = "com.google.devtools.ksp:symbol-processing", version.ref = "ksp" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
-okio = "com.squareup.okio:okio:2.10.0"
+okio = "com.squareup.okio:okio:3.7.0"
 
 # Test libs
 assertj = "org.assertj:assertj-core:3.11.1"
