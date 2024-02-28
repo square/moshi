@@ -200,7 +200,9 @@ public class AdapterGenerator(
   private fun TypeSpec.createProguardRule(): ProguardConfig {
     val adapterConstructorParams = when (requireNotNull(primaryConstructor).parameters.size) {
       1 -> listOf(CN_MOSHI.reflectionName())
+
       2 -> listOf(CN_MOSHI.reflectionName(), "${CN_TYPE.reflectionName()}[]")
+
       // Should never happen
       else -> error("Unexpected number of arguments on primary constructor: $primaryConstructor")
     }
@@ -726,16 +728,26 @@ public data class PreparedAdapter(val spec: FileSpec, val proguardConfig: Progua
 private fun AsmType.toReflectionString(): String {
   return when (this) {
     AsmType.VOID_TYPE -> "void"
+
     AsmType.BOOLEAN_TYPE -> "boolean"
+
     AsmType.CHAR_TYPE -> "char"
+
     AsmType.BYTE_TYPE -> "byte"
+
     AsmType.SHORT_TYPE -> "short"
+
     AsmType.INT_TYPE -> "int"
+
     AsmType.FLOAT_TYPE -> "float"
+
     AsmType.LONG_TYPE -> "long"
+
     AsmType.DOUBLE_TYPE -> "double"
+
     else -> when (sort) {
       AsmType.ARRAY -> "${elementType.toReflectionString()}[]"
+
       // Object type
       else -> className
     }

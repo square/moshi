@@ -163,22 +163,27 @@ public object Types {
         // type is a normal class.
         type
       }
+
       is ParameterizedType -> {
         // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
         // suspects some pathological case related to nested classes exists.
         val rawType = type.rawType
         rawType as Class<*>
       }
+
       is GenericArrayType -> {
         val componentType = type.genericComponentType
         java.lang.reflect.Array.newInstance(getRawType(componentType), 0).javaClass
       }
+
       is TypeVariable<*> -> {
         // We could use the variable's bounds, but that won't work if there are multiple. having a raw
         // type that's more general than necessary is okay.
         Any::class.java
       }
+
       is WildcardType -> getRawType(type.upperBounds[0])
+
       else -> {
         val className = type?.javaClass?.name?.toString()
         throw IllegalArgumentException("Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className")
@@ -222,6 +227,7 @@ public object Types {
           a == b // Class already specifies equals().
         }
       }
+
       is ParameterizedType -> {
         // Class instance with generic info, from method return types
         if (b is Class<*> && a.rawType == b.rawType) {
@@ -235,6 +241,7 @@ public object Types {
             (a.rawType == b.rawType) && aTypeArguments.contentEquals(bTypeArguments)
           )
       }
+
       is GenericArrayType -> {
         if (b is Class<*>) {
           return equals(b.componentType, a.genericComponentType)
@@ -242,14 +249,17 @@ public object Types {
         if (b !is GenericArrayType) return false
         return equals(a.genericComponentType, b.genericComponentType)
       }
+
       is WildcardType -> {
         if (b !is WildcardType) return false
         return (a.upperBounds.contentEquals(b.upperBounds) && a.lowerBounds.contentEquals(b.lowerBounds))
       }
+
       is TypeVariable<*> -> {
         if (b !is TypeVariable<*>) return false
         return (a.genericDeclaration === b.genericDeclaration && (a.name == b.name))
       }
+
       else -> return false // This isn't a supported type.
     }
   }
@@ -305,12 +315,16 @@ public object Types {
     ) { proxy, method, args ->
       when (method.name) {
         "annotationType" -> annotationType
+
         "equals" -> {
           val o = args[0]
           annotationType.isInstance(o)
         }
+
         "hashCode" -> 0
+
         "toString" -> "@${annotationType.name}()"
+
         else -> method.invoke(proxy, *args)
       }
     } as T

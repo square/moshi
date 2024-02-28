@@ -302,21 +302,27 @@ internal class JsonUtf8Writer(
         }
         nextTop = JsonScope.NONEMPTY_DOCUMENT
       }
+
       JsonScope.EMPTY_DOCUMENT -> nextTop = JsonScope.NONEMPTY_DOCUMENT
+
       JsonScope.NONEMPTY_ARRAY -> {
         sink.writeByte(','.code)
         newline()
         nextTop = JsonScope.NONEMPTY_ARRAY
       }
+
       JsonScope.EMPTY_ARRAY -> {
         newline()
         nextTop = JsonScope.NONEMPTY_ARRAY
       }
+
       JsonScope.DANGLING_NAME -> {
         nextTop = JsonScope.NONEMPTY_OBJECT
         sink.writeUtf8(separator)
       }
+
       JsonScope.STREAMING_VALUE -> throw IllegalStateException("Sink from valueSink() was not closed")
+
       else -> throw IllegalStateException("Nesting problem.")
     }
     replaceTop(nextTop)

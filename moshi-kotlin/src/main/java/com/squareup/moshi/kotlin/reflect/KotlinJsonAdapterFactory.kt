@@ -104,7 +104,10 @@ internal class KotlinJsonAdapter<T>(
       if (values[i] === ABSENT_VALUE) {
         when {
           constructor.parameters[i].isOptional -> isFullInitialized = false
-          constructor.parameters[i].type.isMarkedNullable -> values[i] = null // Replace absent with null.
+
+          // Replace absent with null.
+          constructor.parameters[i].type.isMarkedNullable -> values[i] = null
+
           else -> throw missingProperty(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,
@@ -285,9 +288,11 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
             property.returnType.javaType
           }
         }
+
         is KTypeParameter -> {
           property.returnType.javaType
         }
+
         else -> error("Not possible!")
       }
       val resolvedPropertyType = propertyType.resolve(type, rawType)

@@ -76,6 +76,7 @@ private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Bu
       }
       member.add("⇤⇤)")
     }
+
     is KSType -> {
       val unwrapped = value.unwrapTypeAlias()
       val isEnum = (unwrapped.declaration as KSClassDeclaration).classKind == ClassKind.ENUM_ENTRY
@@ -87,13 +88,16 @@ private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Bu
         member.add("%T::class", unwrapped.toClassName())
       }
     }
+
     is KSName ->
       member.add(
         "%T.%L",
         ClassName.bestGuess(value.getQualifier()),
         value.getShortName(),
       )
+
     is KSAnnotation -> member.add("%L", value.toAnnotationSpec(resolver))
+
     else -> member.add(memberForValue(value))
   }
 }
@@ -105,13 +109,21 @@ private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Bu
  */
 internal fun memberForValue(value: Any) = when (value) {
   is Class<*> -> CodeBlock.of("%T::class", value)
+
   is Enum<*> -> CodeBlock.of("%T.%L", value.javaClass, value.name)
+
   is String -> CodeBlock.of("%S", value)
+
   is Float -> CodeBlock.of("%Lf", value)
+
   is Double -> CodeBlock.of("%L", value)
+
   is Char -> CodeBlock.of("$value.toChar()")
+
   is Byte -> CodeBlock.of("$value.toByte()")
+
   is Short -> CodeBlock.of("$value.toShort()")
+
   // Int or Boolean
   else -> CodeBlock.of("%L", value)
 }

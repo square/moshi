@@ -44,18 +44,23 @@ private fun TypeName.unwrapTypeAliasInternal(): TypeName? {
 internal fun TypeName.unwrapTypeAlias(): TypeName {
   return when (this) {
     is ClassName -> unwrapTypeAliasInternal() ?: this
+
     is ParameterizedTypeName -> {
       unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
+
     is TypeVariableName -> {
       unwrapTypeAliasInternal() ?: deepCopy(transform = TypeName::unwrapTypeAlias)
     }
+
     is WildcardTypeName -> {
       unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
+
     is LambdaTypeName -> {
       unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
+
     Dynamic -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }

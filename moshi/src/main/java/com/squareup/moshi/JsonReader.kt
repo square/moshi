@@ -483,6 +483,7 @@ public sealed class JsonReader : Closeable {
           endArray()
         }
       }
+
       Token.BEGIN_OBJECT -> {
         return buildMap {
           beginObject()
@@ -497,10 +498,15 @@ public sealed class JsonReader : Closeable {
           endObject()
         }
       }
+
       Token.STRING -> nextString()
+
       Token.NUMBER -> nextDouble()
+
       Token.BOOLEAN -> nextBoolean()
+
       Token.NULL -> nextNull<Any>()
+
       else -> throw IllegalStateException("Expected a value but was ${peek()} at path $path")
     }
   }

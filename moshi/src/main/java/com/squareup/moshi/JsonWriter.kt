@@ -151,22 +151,15 @@ public sealed class JsonWriter : Closeable, Flushable {
    * pretty printing.
    */
   @JvmField
-  @Suppress("ktlint:standard:property-naming") // Exposed to sealed subtypes.
+  @Suppress("ktlint:standard:backing-property-naming") // Exposed to sealed subtypes.
   protected var _indent: String? = null
-  public open var indent: String
-    /**
-     * Returns a string containing only whitespace, used for each level of indentation. If empty,
-     * the encoded document will be compact.
-     */
-    get() = _indent.orEmpty()
 
-    /**
-     * Sets the indentation string to be repeated for each level of indentation in the encoded
-     * document. If `indent.isEmpty()` the encoded document will be compact. Otherwise, the
-     * encoded document will be more human-readable.
-     *
-     * @param value a string containing only whitespace.
-     */
+  /**
+   * A string containing only whitespace, used for each level of indentation.
+   * If empty, the encoded document will be compact.
+   */
+  public open var indent: String
+    get() = _indent.orEmpty()
     set(value) {
       _indent = value.ifEmpty { null }
     }
@@ -402,6 +395,7 @@ public sealed class JsonWriter : Closeable, Flushable {
         }
         endObject()
       }
+
       is List<*> -> {
         beginArray()
         for (element in value) {
@@ -409,12 +403,19 @@ public sealed class JsonWriter : Closeable, Flushable {
         }
         endArray()
       }
+
       is String -> value(value as String?)
+
       is Boolean -> value(value)
+
       is Double -> value(value)
+
       is Long -> value(value)
+
       is Number -> value(value)
+
       null -> nullValue()
+
       else -> throw IllegalArgumentException("Unsupported type: ${value.javaClass.name}")
     }
     return this

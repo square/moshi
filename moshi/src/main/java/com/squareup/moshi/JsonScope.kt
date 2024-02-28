@@ -59,12 +59,14 @@ internal object JsonScope {
       for (i in 0 until stackSize) {
         when (stack[i]) {
           EMPTY_ARRAY, NONEMPTY_ARRAY -> append('[').append(pathIndices[i]).append(']')
+
           EMPTY_OBJECT, DANGLING_NAME, NONEMPTY_OBJECT -> {
             append('.')
             if (pathNames[i] != null) {
               append(pathNames[i])
             }
           }
+
           NONEMPTY_DOCUMENT, EMPTY_DOCUMENT, CLOSED -> {}
         }
       }

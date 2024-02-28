@@ -49,7 +49,9 @@ internal fun TypeName.rawType(): ClassName {
 internal fun TypeName.findRawType(): ClassName? {
   return when (this) {
     is ClassName -> this
+
     is ParameterizedTypeName -> rawType
+
     is LambdaTypeName -> {
       var count = parameters.size
       if (receiver != null) {
@@ -62,6 +64,7 @@ internal fun TypeName.findRawType(): ClassName? {
       }
       ClassName("kotlin.jvm.functions", functionSimpleName)
     }
+
     else -> null
   }
 }
@@ -104,11 +107,14 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
         rawType.asTypeBlock()
       }
     }
+
     is TypeVariableName -> {
       val bound = bounds.firstOrNull() ?: ANY
       return bound.asTypeBlock()
     }
+
     is LambdaTypeName -> return rawType().asTypeBlock()
+
     is ClassName -> {
       // Check against the non-nullable version for equality, but we'll keep the nullability in
       // consideration when creating the CodeBlock if needed.
@@ -121,10 +127,13 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
             CodeBlock.of("%T::class.javaPrimitiveType!!", this)
           }
         }
+
         UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+
         else -> CodeBlock.of("%T::class.java", copy(nullable = false))
       }
     }
+
     else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
   }
 }
@@ -138,11 +147,15 @@ internal fun KModifier.checkIsVisibility() {
 internal fun TypeName.stripTypeVarVariance(resolver: TypeVariableResolver): TypeName {
   return when (this) {
     is ClassName -> this
+
     is ParameterizedTypeName -> {
       deepCopy { it.stripTypeVarVariance(resolver) }
     }
+
     is TypeVariableName -> resolver[name]
+
     is WildcardTypeName -> deepCopy { it.stripTypeVarVariance(resolver) }
+
     else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
   }
 }
@@ -168,14 +181,17 @@ internal fun WildcardTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeN
   // Consumer type - single element inTypes, single ANY element outType.
   return when {
     this == STAR -> this
+
     outTypes.isNotEmpty() && inTypes.isEmpty() -> {
       WildcardTypeName.producerOf(transform(outTypes[0]))
         .copy(nullable = isNullable, annotations = annotations)
     }
+
     inTypes.isNotEmpty() -> {
       WildcardTypeName.consumerOf(transform(inTypes[0]))
         .copy(nullable = isNullable, annotations = annotations)
     }
+
     else -> throw UnsupportedOperationException("Not possible.")
   }
 }

@@ -147,6 +147,7 @@ internal class JsonUtf8Reader : JsonReader {
     val peekStack = scopes[stackSize - 1]
     when (peekStack) {
       JsonScope.EMPTY_ARRAY -> scopes[stackSize - 1] = JsonScope.NONEMPTY_ARRAY
+
       JsonScope.NONEMPTY_ARRAY -> {
         // Look for a comma before the next element.
         val c = nextNonWhitespace(true).toChar()
@@ -155,11 +156,16 @@ internal class JsonUtf8Reader : JsonReader {
           ']' -> {
             return setPeeked(PEEKED_END_ARRAY)
           }
+
           ';' -> checkLenient()
-          ',' -> Unit /*no op*/
+
+          /*no op*/
+          ',' -> Unit
+
           else -> throw syntaxError("Unterminated array")
         }
       }
+
       JsonScope.EMPTY_OBJECT, JsonScope.NONEMPTY_OBJECT -> {
         scopes[stackSize - 1] = JsonScope.DANGLING_NAME
         // Look for a comma before the next element.
@@ -170,8 +176,12 @@ internal class JsonUtf8Reader : JsonReader {
             '}' -> {
               return setPeeked(PEEKED_END_OBJECT)
             }
-            ',' -> Unit /*no op*/
+
+            /*no op*/
+            ',' -> Unit
+
             ';' -> checkLenient()
+
             else -> throw syntaxError("Unterminated object")
           }
         }
@@ -180,17 +190,20 @@ internal class JsonUtf8Reader : JsonReader {
             buffer.readByte() // consume the '\"'.
             PEEKED_DOUBLE_QUOTED_NAME
           }
+
           '\'' -> {
             buffer.readByte() // consume the '\''.
             checkLenient()
             PEEKED_SINGLE_QUOTED_NAME
           }
+
           '}' -> if (peekStack != JsonScope.NONEMPTY_OBJECT) {
             buffer.readByte() // consume the '}'.
             PEEKED_END_OBJECT
           } else {
             throw syntaxError("Expected name")
           }
+
           else -> {
             checkLenient()
             if (isLiteral(c.code)) {
@@ -203,23 +216,29 @@ internal class JsonUtf8Reader : JsonReader {
         peeked = next
         return next
       }
+
       JsonScope.DANGLING_NAME -> {
         scopes[stackSize - 1] = JsonScope.NONEMPTY_OBJECT
         // Look for a colon before the value.
         val c = nextNonWhitespace(true).toChar()
         buffer.readByte() // Consume ':'.
         when (c) {
-          ':' -> Unit /*no op*/
+          /*no op*/
+          ':' -> Unit
+
           '=' -> {
             checkLenient()
             if (source.request(1) && buffer[0].asChar() == '>') {
               buffer.readByte() // Consume '>'.
             }
           }
+
           else -> throw syntaxError("Expected ':'")
         }
       }
+
       JsonScope.EMPTY_DOCUMENT -> scopes[stackSize - 1] = JsonScope.NONEMPTY_DOCUMENT
+
       JsonScope.NONEMPTY_DOCUMENT -> {
         if (nextNonWhitespace(false) == -1) {
           return setPeeked(PEEKED_EOF)
@@ -227,12 +246,14 @@ internal class JsonUtf8Reader : JsonReader {
           checkLenient()
         }
       }
+
       JsonScope.STREAMING_VALUE -> {
         valueSource!!.discard()
         valueSource = null
         stackSize--
         return doPeek()
       }
+
       else -> check(peekStack != JsonScope.CLOSED) { "JsonReader is closed" }
     }
     // "fallthrough" from previous `when`
@@ -243,39 +264,48 @@ internal class JsonUtf8Reader : JsonReader {
             buffer.readByte() // Consume ']'.
             setPeeked(PEEKED_END_ARRAY)
           }
+
           JsonScope.NONEMPTY_ARRAY -> {
             // In lenient mode, a 0-length literal in an array means 'null'.
             checkLenient()
             setPeeked(PEEKED_NULL)
           }
+
           else -> throw syntaxError("Unexpected value")
         }
       }
+
       // In lenient mode, a 0-length literal in an array means 'null'.
       ';', ',' -> return when (peekStack) {
         JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
           checkLenient()
           setPeeked(PEEKED_NULL)
         }
+
         else -> throw syntaxError("Unexpected value")
       }
+
       '\'' -> {
         checkLenient()
         buffer.readByte() // Consume '\''.
         return setPeeked(PEEKED_SINGLE_QUOTED)
       }
+
       '"' -> {
         buffer.readByte() // Consume '\"'.
         return setPeeked(PEEKED_DOUBLE_QUOTED)
       }
+
       '[' -> {
         buffer.readByte() // Consume '['.
         return setPeeked(PEEKED_BEGIN_ARRAY)
       }
+
       '{' -> {
         buffer.readByte() // Consume '{'.
         return setPeeked(PEEKED_BEGIN_OBJECT)
       }
+
       else -> Unit /* no-op */
     }
     var result = peekKeyword()
@@ -305,16 +335,19 @@ internal class JsonUtf8Reader : JsonReader {
         keywordUpper = "TRUE"
         peeking = PEEKED_TRUE
       }
+
       'f', 'F' -> {
         keyword = "false"
         keywordUpper = "FALSE"
         peeking = PEEKED_FALSE
       }
+
       'n', 'N' -> {
         keyword = "null"
         keywordUpper = "NULL"
         peeking = PEEKED_NULL
       }
+
       else -> return PEEKED_NONE
     }
 
@@ -358,6 +391,7 @@ internal class JsonUtf8Reader : JsonReader {
               i++
               continue
             }
+
             NUMBER_CHAR_EXP_E -> {
               last = NUMBER_CHAR_EXP_SIGN
               i++
@@ -366,6 +400,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           return PEEKED_NONE
         }
+
         '+' -> {
           if (last == NUMBER_CHAR_EXP_E) {
             last = NUMBER_CHAR_EXP_SIGN
@@ -374,6 +409,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           return PEEKED_NONE
         }
+
         'e', 'E' -> {
           if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT) {
             last = NUMBER_CHAR_EXP_E
@@ -382,6 +418,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           return PEEKED_NONE
         }
+
         '.' -> {
           if (last == NUMBER_CHAR_DIGIT) {
             last = NUMBER_CHAR_DECIMAL
@@ -390,6 +427,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           return PEEKED_NONE
         }
+
         else -> {
           if (c !in '0'..'9') {
             if (!isLiteral(c.code)) break
@@ -400,6 +438,7 @@ internal class JsonUtf8Reader : JsonReader {
               value = -(c - '0').toLong()
               last = NUMBER_CHAR_DIGIT
             }
+
             NUMBER_CHAR_DIGIT -> {
               if (value == 0L) {
                 return PEEKED_NONE // Leading '0' prefix is not allowed (since it could be octal).
@@ -413,7 +452,9 @@ internal class JsonUtf8Reader : JsonReader {
                   )
               value = newValue
             }
+
             NUMBER_CHAR_DECIMAL -> last = NUMBER_CHAR_FRACTION_DIGIT
+
             NUMBER_CHAR_EXP_E, NUMBER_CHAR_EXP_SIGN -> last = NUMBER_CHAR_EXP_DIGIT
           }
         }
@@ -431,12 +472,14 @@ internal class JsonUtf8Reader : JsonReader {
         buffer.skip(i)
         setPeeked(PEEKED_LONG)
       }
+
       last == NUMBER_CHAR_DIGIT ||
         last == NUMBER_CHAR_FRACTION_DIGIT ||
         last == NUMBER_CHAR_EXP_DIGIT -> {
         peekedNumberLength = i.toInt()
         setPeeked(PEEKED_NUMBER)
       }
+
       else -> PEEKED_NONE
     }
   }
@@ -448,8 +491,10 @@ internal class JsonUtf8Reader : JsonReader {
         checkLenient() // fall-through
         false
       }
+
       // 0x000C = \f
       '{', '}', '[', ']', ':', ',', ' ', '\t', '\u000C', '\r', '\n' -> false
+
       else -> true
     }
   }
@@ -458,13 +503,17 @@ internal class JsonUtf8Reader : JsonReader {
   override fun nextName(): String {
     val result = when (peekIfNone()) {
       PEEKED_UNQUOTED_NAME -> nextUnquotedValue()
+
       PEEKED_DOUBLE_QUOTED_NAME -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+
       PEEKED_SINGLE_QUOTED_NAME -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+
       PEEKED_BUFFERED_NAME -> {
         val name = peekedString!!
         peekedString = null
         name
       }
+
       else -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
@@ -539,15 +588,21 @@ internal class JsonUtf8Reader : JsonReader {
   override fun nextString(): String {
     val result = when (peekIfNone()) {
       PEEKED_UNQUOTED -> nextUnquotedValue()
+
       PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+
       PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+
       PEEKED_BUFFERED -> {
         val buffered = peekedString!!
         peekedString = null
         buffered
       }
+
       PEEKED_LONG -> peekedLong.toString()
+
       PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
+
       else -> throw JsonDataException("Expected a string but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
@@ -601,11 +656,13 @@ internal class JsonUtf8Reader : JsonReader {
         pathIndices[stackSize - 1]++
         true
       }
+
       PEEKED_FALSE -> {
         peeked = PEEKED_NONE
         pathIndices[stackSize - 1]++
         false
       }
+
       else -> throw JsonDataException("Expected a boolean but was ${peek()} at path $path")
     }
   }
@@ -630,13 +687,18 @@ internal class JsonUtf8Reader : JsonReader {
     }
     val next = when (p) {
       PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+
       PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH).also { peekedString = it }
+
       PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH).also { peekedString = it }
+
       PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
+
       PEEKED_BUFFERED -> {
         // PEEKED_BUFFERED means the value's been stored in peekedString
         knownNotNull(peekedString)
       }
+
       else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
     }
     peeked = PEEKED_BUFFERED
@@ -663,6 +725,7 @@ internal class JsonUtf8Reader : JsonReader {
     }
     when {
       p == PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
+
       p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED -> {
         peekedString = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
         try {
@@ -674,6 +737,7 @@ internal class JsonUtf8Reader : JsonReader {
           // Fall back to parse as a BigDecimal below.
         }
       }
+
       p != PEEKED_BUFFERED -> {
         throw JsonDataException("Expected a long but was " + peek() + " at path " + path)
       }
@@ -768,6 +832,7 @@ internal class JsonUtf8Reader : JsonReader {
       PEEKED_NUMBER -> {
         buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
       }
+
       PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
         val next = if (p == PEEKED_DOUBLE_QUOTED) {
           nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
@@ -785,10 +850,12 @@ internal class JsonUtf8Reader : JsonReader {
           next
         }
       }
+
       PEEKED_BUFFERED -> {
         // PEEKED_BUFFERED means the value's been stored in peekedString
         knownNotNull(peekedString)
       }
+
       else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
     }
     peeked = PEEKED_BUFFERED
@@ -826,10 +893,12 @@ internal class JsonUtf8Reader : JsonReader {
           pushScope(JsonScope.EMPTY_ARRAY)
           count++
         }
+
         PEEKED_BEGIN_OBJECT -> {
           pushScope(JsonScope.EMPTY_OBJECT)
           count++
         }
+
         PEEKED_END_ARRAY -> {
           count--
           if (count < 0) {
@@ -837,6 +906,7 @@ internal class JsonUtf8Reader : JsonReader {
           }
           stackSize--
         }
+
         PEEKED_END_OBJECT -> {
           count--
           if (count < 0) {
@@ -844,10 +914,15 @@ internal class JsonUtf8Reader : JsonReader {
           }
           stackSize--
         }
+
         PEEKED_UNQUOTED_NAME, PEEKED_UNQUOTED -> skipUnquotedValue()
+
         PEEKED_DOUBLE_QUOTED, PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+
         PEEKED_SINGLE_QUOTED, PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
+
         PEEKED_NUMBER -> buffer.skip(peekedNumberLength.toLong())
+
         PEEKED_EOF -> throw JsonDataException("Expected a value but was ${peek()} at path $path")
       }
       peeked = PEEKED_NONE
@@ -867,29 +942,38 @@ internal class JsonUtf8Reader : JsonReader {
         state = JsonValueSource.STATE_JSON
         valueSourceStackSize++
       }
+
       PEEKED_BEGIN_OBJECT -> {
         prefix.writeUtf8("{")
         state = JsonValueSource.STATE_JSON
         valueSourceStackSize++
       }
+
       PEEKED_DOUBLE_QUOTED -> {
         prefix.writeUtf8("\"")
         state = JsonValueSource.STATE_DOUBLE_QUOTED
       }
+
       PEEKED_SINGLE_QUOTED -> {
         prefix.writeUtf8("'")
         state = JsonValueSource.STATE_SINGLE_QUOTED
       }
+
       PEEKED_NUMBER, PEEKED_LONG, PEEKED_UNQUOTED -> prefix.writeUtf8(nextString())
+
       PEEKED_TRUE -> prefix.writeUtf8("true")
+
       PEEKED_FALSE -> prefix.writeUtf8("false")
+
       PEEKED_NULL -> prefix.writeUtf8("null")
+
       PEEKED_BUFFERED -> {
         val string = nextString()
         JsonWriter.of(prefix).use { jsonWriter ->
           jsonWriter.value(string)
         }
       }
+
       else -> throw JsonDataException("Expected a value but was ${peek()} at path $path")
     }
 
@@ -942,6 +1026,7 @@ internal class JsonUtf8Reader : JsonReader {
               p = 0
               continue
             }
+
             '/' -> {
               // skip a // end-of-line comment
               buffer.readByte() // '/'
@@ -950,9 +1035,11 @@ internal class JsonUtf8Reader : JsonReader {
               p = 0
               continue
             }
+
             else -> c.code
           }
         }
+
         '#' -> {
           // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but it's
           // required to parse existing documents.
@@ -960,6 +1047,7 @@ internal class JsonUtf8Reader : JsonReader {
           skipToEndOfLine()
           p = 0
         }
+
         else -> return c.code
       }
     }
@@ -1026,12 +1114,20 @@ internal class JsonUtf8Reader : JsonReader {
         buffer.skip(4)
         result
       }
+
       't' -> '\t'
+
       'b' -> '\b'
+
       'n' -> '\n'
+
       'r' -> '\r'
-      'f' -> '\u000C' /*\f*/
+
+      /*\f*/
+      'f' -> '\u000C'
+
       '\n', '\'', '"', '\\', '/' -> escaped
+
       else -> {
         if (!lenient) throw syntaxError("Invalid escape sequence: \\$escaped")
         escaped

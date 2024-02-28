@@ -168,10 +168,13 @@ internal class JsonValueWriter : JsonWriter() {
   override fun value(value: Number?): JsonWriter = apply {
     when (value) {
       null -> nullValue()
+
       // If it's trivially converted to a long, do that.
       is Byte, is Short, is Int, is Long -> value(value.toLong())
+
       // If it's trivially converted to a double, do that.
       is Float, is Double -> value(value.toDouble())
+
       else -> {
         // Everything else gets converted to a BigDecimal.
         val bigDecimalValue = if (value is BigDecimal) value else BigDecimal(value.toString())
@@ -229,6 +232,7 @@ internal class JsonValueWriter : JsonWriter() {
         scopes[stackSize - 1] = NONEMPTY_DOCUMENT
         stack[stackSize - 1] = newTop
       }
+
       scope == EMPTY_OBJECT && deferredName != null -> {
         if (newTop != null || serializeNulls) {
           // Our maps always have string keys and object values.
@@ -242,13 +246,16 @@ internal class JsonValueWriter : JsonWriter() {
         }
         deferredName = null
       }
+
       scope == EMPTY_ARRAY -> {
         // Our lists always have object values.
         @Suppress("UNCHECKED_CAST")
         val list = stack[stackSize - 1] as MutableList<Any?>
         list.add(newTop)
       }
+
       scope == STREAMING_VALUE -> throw IllegalStateException("Sink from valueSink() was not closed")
+
       else -> throw IllegalStateException("Nesting problem.")
     }
     return this

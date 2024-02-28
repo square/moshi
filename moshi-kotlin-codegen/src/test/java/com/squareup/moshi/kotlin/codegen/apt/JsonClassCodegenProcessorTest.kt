@@ -668,6 +668,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Simple
@@ -678,6 +679,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Generic
@@ -688,6 +690,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -700,6 +703,7 @@ class JsonClassCodegenProcessorTest {
             """.trimIndent(),
           )
         }
+
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MixedTypes
@@ -710,6 +714,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.DefaultParams
@@ -726,6 +731,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -744,6 +750,7 @@ class JsonClassCodegenProcessorTest {
             """.trimIndent(),
           )
         }
+
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MultipleMasks
@@ -760,6 +767,7 @@ class JsonClassCodegenProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -772,6 +780,7 @@ class JsonClassCodegenProcessorTest {
             """.trimIndent(),
           )
         }
+
         else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
     }
