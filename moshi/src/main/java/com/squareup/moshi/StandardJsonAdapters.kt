@@ -238,11 +238,17 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader): Any? {
       return when (reader.peek()) {
         JsonReader.Token.BEGIN_ARRAY -> listJsonAdapter.fromJson(reader)
+
         JsonReader.Token.BEGIN_OBJECT -> mapAdapter.fromJson(reader)
+
         JsonReader.Token.STRING -> stringAdapter.fromJson(reader)
+
         JsonReader.Token.NUMBER -> doubleAdapter.fromJson(reader)
+
         JsonReader.Token.BOOLEAN -> booleanAdapter.fromJson(reader)
+
         JsonReader.Token.NULL -> reader.nextNull()
+
         else -> throw IllegalStateException(
           "Expected a value but was ${reader.peek()} at path ${reader.path}",
         )

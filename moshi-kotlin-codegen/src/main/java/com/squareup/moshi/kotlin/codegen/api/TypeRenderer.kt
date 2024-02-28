@@ -92,10 +92,12 @@ internal abstract class TypeRenderer {
             target = typeName.inTypes[0]
             method = "supertypeOf"
           }
+
           typeName.outTypes.size == 1 -> {
             target = typeName.outTypes[0]
             method = "subtypeOf"
           }
+
           else -> throw IllegalArgumentException(
             "Unrepresentable wildcard type. Cannot have more than one bound: $typeName",
           )

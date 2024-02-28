@@ -64,6 +64,7 @@ public data class DelegateKey(
 
     val (initializerString, args) = when {
       jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
+
       else -> {
         ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
       }

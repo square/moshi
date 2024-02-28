@@ -91,19 +91,23 @@ internal class JsonValueSource @JvmOverloads constructor(
             stackSize++
             limit = index + 1
           }
+
           ']', '}' -> {
             stackSize--
             if (stackSize == 0) state = STATE_END_OF_JSON
             limit = index + 1
           }
+
           '\"' -> {
             state = STATE_DOUBLE_QUOTED
             limit = index + 1
           }
+
           '\'' -> {
             state = STATE_SINGLE_QUOTED
             limit = index + 1
           }
+
           '/' -> {
             source.require(index + 2)
             when (buffer[index + 1]) {
@@ -111,20 +115,24 @@ internal class JsonValueSource @JvmOverloads constructor(
                 state = STATE_END_OF_LINE_COMMENT
                 limit = index + 2
               }
+
               '*'.code.toByte() -> {
                 state = STATE_C_STYLE_COMMENT
                 limit = index + 2
               }
+
               else -> {
                 limit = index + 1
               }
             }
           }
+
           '#' -> {
             state = STATE_END_OF_LINE_COMMENT
             limit = index + 1
           }
         }
+
         state === STATE_SINGLE_QUOTED || state === STATE_DOUBLE_QUOTED -> {
           if (b == '\\'.code.toByte()) {
             source.require(index + 2)
@@ -134,6 +142,7 @@ internal class JsonValueSource @JvmOverloads constructor(
             limit = index + 1
           }
         }
+
         state === STATE_C_STYLE_COMMENT -> {
           source.require(index + 2)
           if (buffer[index + 1] == '/'.code.toByte()) {
@@ -143,10 +152,12 @@ internal class JsonValueSource @JvmOverloads constructor(
             limit = index + 1
           }
         }
+
         state === STATE_END_OF_LINE_COMMENT -> {
           limit = index + 1
           state = STATE_JSON
         }
+
         else -> {
           throw AssertionError()
         }

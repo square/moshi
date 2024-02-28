@@ -53,9 +53,11 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
         List::class.java, Collection::class.java -> {
           newArrayListAdapter<Any>(type, moshi).nullSafe()
         }
+
         Set::class.java -> {
           newLinkedHashSetAdapter<Any>(type, moshi).nullSafe()
         }
+
         else -> null
       }
     }

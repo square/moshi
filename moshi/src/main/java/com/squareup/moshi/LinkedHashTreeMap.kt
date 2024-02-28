@@ -14,14 +14,10 @@ private val NATURAL_ORDER = Comparator<Any> { o1, o2 -> (o1 as Comparable<Any>).
  * removal.
  *
  * This implementation was derived from Android 4.1's TreeMap and LinkedHashMap classes.
- */
-internal class LinkedHashTreeMap<K, V>
-/**
- * Create a tree map ordered by [comparator]. This map's keys may only be null if [comparator] permits.
  *
  * @param comparator the comparator to order elements with, or null to use the natural ordering.
  */
-constructor(
+internal class LinkedHashTreeMap<K, V>(
   comparator: Comparator<Any?>? = null,
 ) : AbstractMutableMap<K, V>(), Serializable {
   @Suppress("UNCHECKED_CAST")
@@ -402,6 +398,7 @@ constructor(
             break // no further rotations will be necessary
           }
         }
+
         2 -> {
           val leftLeft = left!!.left
           val leftRight = left.right
@@ -417,12 +414,14 @@ constructor(
             break // no further rotations will be necessary
           }
         }
+
         0 -> {
           node.height = leftHeight + 1 // leftHeight == rightHeight
           if (insert) {
             break // the insert caused balance, so rebalancing is done!
           }
         }
+
         else -> {
           assert(delta == -1 || delta == 1)
           node.height = max(leftHeight, rightHeight) + 1
@@ -748,6 +747,7 @@ internal class AvlBuilder<K, V> {
           left.parent = center
           right.parent = center
         }
+
         1 -> {
           // Pop right and center, then make center the top of the stack.
           val right = stack
@@ -759,6 +759,7 @@ internal class AvlBuilder<K, V> {
           right.parent = center
           leavesSkipped = 0
         }
+
         2 -> {
           leavesSkipped = 0
         }

@@ -80,32 +80,39 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
       }
       when (val result = argument.value ?: method.defaultValue) {
         is Proxy -> result
+
         is List<*> -> {
           val value = { result.asArray(method) }
           cache.getOrPut(Pair(method.returnType, result), value)
         }
+
         else -> {
           when {
             method.returnType.isEnum -> {
               val value = { result.asEnum(method.returnType) }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.isAnnotation -> {
               val value = { (result as KSAnnotation).asAnnotation(method.returnType) }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "java.lang.Class" -> {
               val value = { (result as KSType).asClass() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "byte" -> {
               val value = { result.asByte() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "short" -> {
               val value = { result.asShort() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             else -> result // original value
           }
         }
@@ -129,27 +136,39 @@ private fun KSAnnotation.asAnnotation(
 private fun List<*>.asArray(method: Method) =
   when (method.returnType.componentType.name) {
     "boolean" -> (this as List<Boolean>).toBooleanArray()
+
     "byte" -> (this as List<Byte>).toByteArray()
+
     "short" -> (this as List<Short>).toShortArray()
+
     "char" -> (this as List<Char>).toCharArray()
+
     "double" -> (this as List<Double>).toDoubleArray()
+
     "float" -> (this as List<Float>).toFloatArray()
+
     "int" -> (this as List<Int>).toIntArray()
+
     "long" -> (this as List<Long>).toLongArray()
+
     "java.lang.Class" -> (this as List<KSType>).map {
       Class.forName(it.declaration.qualifiedName!!.asString())
     }.toTypedArray()
+
     "java.lang.String" -> (this as List<String>).toTypedArray()
+
     else -> { // arrays of enums or annotations
       when {
         method.returnType.componentType.isEnum -> {
           this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
         }
+
         method.returnType.componentType.isAnnotation -> {
           this.toArray(method) { result ->
             (result as KSAnnotation).asAnnotation(method.returnType.componentType)
           }
         }
+
         else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
       }
     }

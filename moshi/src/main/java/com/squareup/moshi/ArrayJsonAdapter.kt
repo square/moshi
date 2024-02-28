@@ -49,41 +49,49 @@ internal class ArrayJsonAdapter(
           elementAdapter.toJson(writer, element)
         }
       }
+
       is ByteArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is CharArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is DoubleArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is FloatArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is IntArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is LongArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is ShortArray -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)
         }
       }
+
       is Array<*> -> {
         for (element in value) {
           elementAdapter.toJson(writer, element)

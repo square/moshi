@@ -61,7 +61,9 @@ internal class AdapterMethodsFactory(
       override fun toJson(writer: JsonWriter, value: Any?) {
         when {
           toAdapter == null -> knownNotNull(delegate).toJson(writer, value)
+
           !toAdapter.nullable && value == null -> writer.nullValue()
+
           else -> {
             try {
               toAdapter.toJson(moshi, writer, value)
@@ -77,7 +79,9 @@ internal class AdapterMethodsFactory(
       override fun fromJson(reader: JsonReader): Any? {
         return when {
           fromAdapter == null -> knownNotNull(delegate).fromJson(reader)
+
           !fromAdapter.nullable && reader.peek() == JsonReader.Token.NULL -> reader.nextNull<Any>()
+
           else -> {
             try {
               fromAdapter.fromJson(moshi, reader)
@@ -161,6 +165,7 @@ internal class AdapterMethodsFactory(
             }
           }
         }
+
         parameterTypes.size == 1 && returnType != Void.TYPE -> {
           // List<Integer> pointToJson(Point point) {
           val returnTypeAnnotations = method.jsonAnnotations
@@ -194,6 +199,7 @@ internal class AdapterMethodsFactory(
             }
           }
         }
+
         else -> {
           throw IllegalArgumentException(
             """
@@ -249,6 +255,7 @@ internal class AdapterMethodsFactory(
             override fun fromJson(moshi: Moshi, reader: JsonReader) = invokeMethod(reader)
           }
         }
+
         parameterTypes.size == 1 && returnType != Void.TYPE -> {
           // Point pointFromJson(List<Integer> o) {
           val qualifierAnnotations = parameterAnnotations[0].jsonAnnotations
@@ -279,6 +286,7 @@ internal class AdapterMethodsFactory(
             }
           }
         }
+
         else -> {
           throw IllegalArgumentException(
             """

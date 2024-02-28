@@ -176,18 +176,22 @@ internal fun Type.canonicalize(): Type {
     is Class<*> -> {
       if (isArray) GenericArrayTypeImpl(this@canonicalize.componentType.canonicalize()) else this
     }
+
     is ParameterizedType -> {
       if (this is ParameterizedTypeImpl) return this
       ParameterizedTypeImpl(ownerType, rawType, *actualTypeArguments)
     }
+
     is GenericArrayType -> {
       if (this is GenericArrayTypeImpl) return this
       GenericArrayTypeImpl(genericComponentType)
     }
+
     is WildcardType -> {
       if (this is WildcardTypeImpl) return this
       WildcardTypeImpl(upperBounds, lowerBounds)
     }
+
     else -> this // This type is unsupported!
   }
 }
@@ -226,18 +230,21 @@ private fun Type.resolve(
         toResolve = resolveTypeVariable(context, contextRawType, typeVariable)
         if (toResolve === typeVariable) return toResolve
       }
+
       toResolve is Class<*> && toResolve.isArray -> {
         val original = toResolve
         val componentType: Type = original.componentType
         val newComponentType = componentType.resolve(context, contextRawType, visitedTypeVariables)
         return if (componentType === newComponentType) original else newComponentType.asArrayType()
       }
+
       toResolve is GenericArrayType -> {
         val original = toResolve
         val componentType = original.genericComponentType
         val newComponentType = componentType.resolve(context, contextRawType, visitedTypeVariables)
         return if (componentType === newComponentType) original else newComponentType.asArrayType()
       }
+
       toResolve is ParameterizedType -> {
         val original = toResolve
         val ownerType: Type? = original.ownerType
@@ -258,6 +265,7 @@ private fun Type.resolve(
         }
         return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, *args) else original
       }
+
       toResolve is WildcardType -> {
         val original = toResolve
         val originalLowerBound = original.lowerBounds
@@ -275,6 +283,7 @@ private fun Type.resolve(
         }
         return original
       }
+
       else -> return toResolve
     }
   }

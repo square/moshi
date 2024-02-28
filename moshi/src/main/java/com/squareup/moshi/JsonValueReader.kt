@@ -113,13 +113,21 @@ internal class JsonValueReader : JsonReader {
     // If the top of the stack is an iterator, take its first element and push it on the stack.
     return when (val peeked = stack[stackSize - 1]) {
       is JsonIterator -> peeked.endToken
+
       is List<*> -> Token.BEGIN_ARRAY
+
       is Map<*, *> -> Token.BEGIN_OBJECT
+
       is Map.Entry<*, *> -> Token.NAME
+
       is String -> Token.STRING
+
       is Boolean -> Token.BOOLEAN
+
       is Number -> Token.NUMBER
+
       null -> Token.NULL
+
       else -> ifNotClosed(peeked) {
         throw typeMismatch(peeked, "a JSON value")
       }
@@ -170,10 +178,12 @@ internal class JsonValueReader : JsonReader {
         remove()
         peeked
       }
+
       is Number -> {
         remove()
         peeked.toString()
       }
+
       else -> ifNotClosed(peeked) {
         throw typeMismatch(peeked, Token.STRING)
       }
@@ -211,6 +221,7 @@ internal class JsonValueReader : JsonReader {
   override fun nextDouble(): Double {
     val result = when (val peeked = require<Any>(Token.NUMBER)) {
       is Number -> peeked.toDouble()
+
       is String -> {
         try {
           peeked.toDouble()
@@ -218,6 +229,7 @@ internal class JsonValueReader : JsonReader {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
+
       else -> {
         throw typeMismatch(peeked, Token.NUMBER)
       }
@@ -232,6 +244,7 @@ internal class JsonValueReader : JsonReader {
   override fun nextLong(): Long {
     val result: Long = when (val peeked = require<Any>(Token.NUMBER)) {
       is Number -> peeked.toLong()
+
       is String -> try {
         peeked.toLong()
       } catch (e: NumberFormatException) {
@@ -241,6 +254,7 @@ internal class JsonValueReader : JsonReader {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
+
       else -> throw typeMismatch(peeked, Token.NUMBER)
     }
     remove()
@@ -250,6 +264,7 @@ internal class JsonValueReader : JsonReader {
   override fun nextInt(): Int {
     val result = when (val peeked = require<Any>(Token.NUMBER)) {
       is Number -> peeked.toInt()
+
       is String -> try {
         peeked.toInt()
       } catch (e: NumberFormatException) {
@@ -259,6 +274,7 @@ internal class JsonValueReader : JsonReader {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
+
       else -> throw typeMismatch(peeked, Token.NUMBER)
     }
     remove()

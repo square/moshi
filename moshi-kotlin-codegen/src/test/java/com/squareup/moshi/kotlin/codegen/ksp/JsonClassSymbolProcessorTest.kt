@@ -718,6 +718,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Simple
@@ -728,6 +729,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.Generic
@@ -738,6 +740,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -750,6 +753,7 @@ class JsonClassSymbolProcessorTest {
             """.trimIndent(),
           )
         }
+
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MixedTypes
@@ -760,6 +764,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.DefaultParams
@@ -776,6 +781,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -794,6 +800,7 @@ class JsonClassSymbolProcessorTest {
             """.trimIndent(),
           )
         }
+
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
           -if class testPackage.MultipleMasks
@@ -810,6 +817,7 @@ class JsonClassSymbolProcessorTest {
           }
           """.trimIndent(),
         )
+
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
             """
@@ -822,6 +830,7 @@ class JsonClassSymbolProcessorTest {
             """.trimIndent(),
           )
         }
+
         else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
     }

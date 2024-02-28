@@ -152,6 +152,7 @@ internal fun targetType(
       )
       return null
     }
+
     !kmClass.isClass -> {
       messager.printMessage(
         ERROR,
@@ -160,6 +161,7 @@ internal fun targetType(
       )
       return null
     }
+
     kmClass.isInner -> {
       messager.printMessage(
         ERROR,
@@ -168,6 +170,7 @@ internal fun targetType(
       )
       return null
     }
+
     kmClass.flags.isSealed -> {
       messager.printMessage(
         ERROR,
@@ -176,6 +179,7 @@ internal fun targetType(
       )
       return null
     }
+
     kmClass.flags.isAbstract -> {
       messager.printMessage(
         ERROR,
@@ -184,6 +188,7 @@ internal fun targetType(
       )
       return null
     }
+
     kmClass.flags.isLocal -> {
       messager.printMessage(
         ERROR,
@@ -192,6 +197,7 @@ internal fun targetType(
       )
       return null
     }
+
     !kmClass.flags.isPublic && !kmClass.flags.isInternal -> {
       messager.printMessage(
         ERROR,
@@ -350,15 +356,18 @@ private fun resolveTypeArgs(
 
   return when {
     resolvedType !is TypeVariableName -> resolvedType
+
     entryStartIndex != 0 -> {
       // We need to go deeper
       resolveTypeArgs(targetClass, resolvedType, resolvedTypes, allowedTypeVars, entryStartIndex - 1)
     }
+
     resolvedType.copy(nullable = false) in allowedTypeVars -> {
       // This is a generic type in the top-level declared class. This is fine to leave in because
       // this will be handled by the `Type` array passed in at runtime.
       resolvedType
     }
+
     else -> error("Could not find $resolvedType in $resolvedTypes. Also not present in allowable top-level type vars $allowedTypeVars")
   }
 }

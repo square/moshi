@@ -24,9 +24,11 @@ when (testMode) {
   REFLECT -> {
     // Do nothing!
   }
+
   KAPT -> {
     apply(plugin = "org.jetbrains.kotlin.kapt")
   }
+
   KSP -> {
     apply(plugin = "com.google.devtools.ksp")
   }
@@ -51,9 +53,11 @@ dependencies {
     REFLECT -> {
       // Do nothing
     }
+
     KAPT -> {
       "kaptTest"(project(":moshi-kotlin-codegen"))
     }
+
     KSP -> {
       "kspTest"(project(":moshi-kotlin-codegen"))
     }
