@@ -35,6 +35,6 @@ assertj = "org.assertj:assertj-core:3.25.3"
 junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
-truth = "com.google.truth:truth:1.4.1"
+truth = "com.google.truth:truth:1.4.2"
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.20.0"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.2.0"
