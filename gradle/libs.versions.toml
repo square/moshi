@@ -4,7 +4,7 @@ jvmTarget = "1.8"
 kotlin = "1.9.21"
 kotlinCompileTesting = "0.4.0"
 kotlinpoet = "1.14.2"
-ksp = "1.9.22-1.0.18"
+ksp = "1.9.23-1.0.19"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
