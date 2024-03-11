@@ -74,16 +74,15 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
   override fun fromJson(reader: JsonReader): T? {
     val index = reader.selectString(options)
     if (index != -1) return constants[index]
-    val path = reader.path
     if (!useFallbackValue) {
       val name = reader.nextString()
       throw JsonDataException(
-        "Expected one of ${nameStrings.toList()} but was $name at path $path",
+        "Expected one of ${nameStrings.toList()} but was $name at path ${reader.path}",
       )
     }
     if (reader.peek() != STRING) {
       throw JsonDataException(
-        "Expected a string but was ${reader.peek()} at path $path",
+        "Expected a string but was ${reader.peek()} at path ${reader.path}",
       )
     }
     reader.skipValue()
