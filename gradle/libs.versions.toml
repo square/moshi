@@ -15,7 +15,7 @@ mavenShadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
 
 [libraries]
-asm = "org.ow2.asm:asm:9.6"
+asm = "org.ow2.asm:asm:9.7"
 autoCommon = "com.google.auto:auto-common:1.2.2"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.1.0"
