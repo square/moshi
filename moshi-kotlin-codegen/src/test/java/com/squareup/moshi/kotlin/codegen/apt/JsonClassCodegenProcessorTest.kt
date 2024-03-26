@@ -511,6 +511,28 @@ class JsonClassCodegenProcessorTest {
   }
 
   @Test
+  fun genericSuperClassPropertyTypeSubstitution() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          open class GenericSuperClass<T> {
+            var t: T? = null
+            var list: List<T>? = null
+          }
+
+          @JsonClass(generateAdapter = true)
+          class SubClassOfGeneric : GenericSuperClass<String>()
+          """,
+      ),
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+  }
+
+  @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
       kotlin(

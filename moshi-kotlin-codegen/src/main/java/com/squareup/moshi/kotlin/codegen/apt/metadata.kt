@@ -338,7 +338,13 @@ private fun resolveTypeArgs(
 ): TypeName {
   val unwrappedType = propertyType.unwrapTypeAlias()
 
-  if (unwrappedType !is TypeVariableName) {
+  if (unwrappedType is ParameterizedTypeName) {
+    return unwrappedType.copy(
+      typeArguments = unwrappedType.typeArguments.map {
+        resolveTypeArgs(targetClass, it, resolvedTypes, allowedTypeVars, entryStartIndex)
+      },
+    )
+  } else if (unwrappedType !is TypeVariableName) {
     return unwrappedType
   } else if (entryStartIndex == -1) {
     return unwrappedType
