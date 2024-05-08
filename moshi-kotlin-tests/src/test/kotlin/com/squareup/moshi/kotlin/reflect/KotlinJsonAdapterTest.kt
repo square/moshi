@@ -1074,6 +1074,24 @@ class KotlinJsonAdapterTest {
 
   sealed class SealedClass
 
+  @Test fun requirePrimaryConstructor() {
+    val moshi: Moshi = Moshi.Builder()
+      .add(KotlinJsonAdapterFactory())
+      .build()
+    try {
+      moshi.adapter(SubClass::class.java)
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageThat()
+        .contains("Cannot reflectively serialize class without the primary constructor")
+    }
+  }
+
+  open class SuperClass
+
+  class SubClass : SuperClass {
+    constructor() : super()
+  }
+
   private fun <T> mapWildcardsParameterizedTest(type: Class<T>, json: String, value: T) {
     // Ensure the map was created with the expected wildcards of a Kotlin map.
     val fieldType = type.getDeclaredField("map").genericType
