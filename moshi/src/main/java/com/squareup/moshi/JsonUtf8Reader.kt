@@ -200,7 +200,8 @@ internal class JsonUtf8Reader : JsonReader {
           '}' -> {
             if (peekStack == JsonScope.NONEMPTY_OBJECT && !lenient) {
               throw syntaxError(
-                "Expected name. Use JsonReader.setLenient(true) to accept malformed JSON"
+                "Expected name. Use JsonReader.setLenient(true) to accept " +
+                  "malformed JSON",
               )
             }
             buffer.readByte() // consume the '}'.

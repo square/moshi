@@ -1352,8 +1352,10 @@ public final class JsonUtf8ReaderTest {
       reader.endObject();
       fail();
     } catch (JsonEncodingException expected) {
-      assertThat(expected.getMessage()).isEqualTo(
-        "Expected name. Use JsonReader.setLenient(true) to accept malformed JSON at path $.a");
+      assertThat(expected.getMessage())
+          .isEqualTo(
+              "Expected name. Use JsonReader.setLenient(true) to accept malformed "
+                  + "JSON at path $.a");
     }
     reader = newReader("{\"a\": 1, }");
     reader.beginObject();
@@ -1374,7 +1376,7 @@ public final class JsonUtf8ReaderTest {
       fail();
     } catch (JsonEncodingException expected) {
       assertThat(expected.getMessage())
-        .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $[1]");
+          .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $[1]");
     }
     reader = newReader("[1,]");
     reader.beginArray();
