@@ -34,7 +34,6 @@ import java.util.Date
  * ```
  */
 public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
-  @Synchronized
   @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): Date? {
     if (reader.peek() == NULL) {
@@ -44,7 +43,6 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
     return string.parseIsoDate()
   }
 
-  @Synchronized
   @Throws(IOException::class)
   override fun toJson(writer: JsonWriter, value: Date?) {
     if (value == null) {
