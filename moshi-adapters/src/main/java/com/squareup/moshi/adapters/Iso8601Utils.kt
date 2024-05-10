@@ -47,7 +47,7 @@ private val TIMEZONE_Z: TimeZone = TimeZone.getTimeZone(GMT_ID)
 /** Returns `date` formatted as yyyy-MM-ddThh:mm:ss.sssZ  */
 internal fun Date.formatIsoDate(): String {
   val calendar: Calendar = GregorianCalendar(TIMEZONE_Z, Locale.US)
-  calendar.time = this
+  calendar.time = Date(this.time)
 
   // estimate capacity of buffer as close as we can (yeah, that's pedantic ;)
   val capacity = "yyyy-MM-ddThh:mm:ss.sssZ".length
