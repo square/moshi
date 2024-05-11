@@ -48,7 +48,7 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
     if (value == null) {
       writer.nullValue()
     } else {
-      val string = Date(value.time).formatIsoDate()
+      val string = value.formatIsoDate()
       writer.value(string)
     }
   }
