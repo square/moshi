@@ -34,7 +34,8 @@ import java.util.Date
  * ```
  */
 public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
-  @Synchronized
+
+  /** The underlying deserialization logic is thread-safe and does not require synchronization. **/
   @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): Date? {
     if (reader.peek() == NULL) {
@@ -44,7 +45,7 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
     return string.parseIsoDate()
   }
 
-  @Synchronized
+  /*** The underlying serialization logic is thread-safe and does not require synchronization. **/
   @Throws(IOException::class)
   override fun toJson(writer: JsonWriter, value: Date?) {
     if (value == null) {
