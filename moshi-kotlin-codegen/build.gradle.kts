@@ -53,7 +53,6 @@ dependencies {
   // Copy these again as they're not automatically included since they're shaded
   testImplementation(project(":moshi"))
   testImplementation(kotlin("reflect"))
-  testImplementation(libs.kotlinpoet.metadata)
   testImplementation(libs.kotlinpoet.ksp)
   testImplementation(libs.junit)
   testImplementation(libs.truth)
