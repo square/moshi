@@ -16,7 +16,6 @@
 package com.squareup.moshi.kotlin.codegen.ksp
 
 import com.google.common.truth.Truth.assertThat
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
@@ -27,11 +26,8 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.java
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import com.tschuchort.compiletesting.configureKsp
-import com.tschuchort.compiletesting.kspIncremental
 import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
-import com.tschuchort.compiletesting.kspWithCompilation
-import com.tschuchort.compiletesting.symbolProcessorProviders
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
@@ -40,9 +36,21 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-class JsonClassSymbolProcessorTest {
+@RunWith(Parameterized::class)
+class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
+
+  companion object {
+    @JvmStatic
+    @Parameterized.Parameters(name = "useKSP2={0}")
+    fun data(): Collection<Array<Any>> = listOf(
+      arrayOf(false),
+      arrayOf(true),
+    )
+  }
 
   @Rule
   @JvmField
@@ -852,12 +860,10 @@ class JsonClassSymbolProcessorTest {
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
-        // TODO parameterize this
-        val useKsp2 = false
-        configureKsp(useKsp2 = useKsp2) {
+        configureKsp(useKsp2 = useKSP2) {
           symbolProcessorProviders += JsonClassSymbolProcessorProvider()
           incremental = true // The default now
-          if (!useKsp2) {
+          if (!useKSP2) {
             withCompilation = true // Only necessary for KSP1
             languageVersion = "1.9"
           }
