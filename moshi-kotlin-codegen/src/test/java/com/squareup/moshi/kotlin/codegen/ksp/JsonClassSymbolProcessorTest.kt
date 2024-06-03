@@ -28,16 +28,16 @@ import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
-import kotlin.reflect.KTypeProjection
-import kotlin.reflect.full.createType
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.typeOf
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.typeOf
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 @RunWith(Parameterized::class)
@@ -599,7 +599,7 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
     val adapterClass = result.classLoader.loadClass("test.PersonJsonAdapter").kotlin
     assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
       JsonReader.Options::class.createType(),
-      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String>())))
+      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String>()))),
     )
   }
 
