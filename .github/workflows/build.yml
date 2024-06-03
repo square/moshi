@@ -16,15 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
-
       - name: Configure JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '20'
+          java-version: '21'
           cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Test
         run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}

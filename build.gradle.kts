@@ -77,7 +77,7 @@ subprojects {
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
       toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
       }
     }
     if (project.name != "records-tests") {
