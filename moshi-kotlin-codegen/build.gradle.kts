@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
 import com.vanniktech.maven.publish.JavadocJar.None
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -8,7 +7,6 @@ plugins {
   kotlin("jvm")
   id("com.google.devtools.ksp")
   id("com.vanniktech.maven.publish.base")
-  alias(libs.plugins.mavenShadow)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
@@ -26,35 +24,9 @@ tasks.compileTestKotlin {
   }
 }
 
-// --add-opens for kapt to work. KGP covers this for us but local JVMs in tests do not
-tasks.withType<Test>().configureEach {
-  jvmArgs(
-    "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
-    "--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
-  )
-}
-
-val shade: Configuration = configurations.maybeCreate("compileShaded")
-configurations.getByName("compileOnly").extendsFrom(shade)
 dependencies {
   implementation(project(":moshi"))
-  shade(libs.kotlinxMetadata) {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-  }
   api(libs.kotlinpoet)
-  shade(libs.kotlinpoet.metadata) {
-    exclude(group = "org.jetbrains.kotlin")
-    exclude(group = "com.squareup", module = "kotlinpoet")
-    exclude(group = "com.google.guava")
-  }
   implementation(libs.kotlinpoet.ksp)
   implementation(libs.guava)
   implementation(libs.asm)
@@ -81,26 +53,6 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.truth)
   testImplementation(libs.kotlinCompileTesting)
-}
-
-val shadowJar =
-  tasks.shadowJar.apply {
-    configure {
-      archiveClassifier.set("")
-      configurations = listOf(shade)
-      relocate("com.squareup.kotlinpoet.metadata", "com.squareup.moshi.kotlinpoet.metadata")
-      relocate(
-        "com.squareup.kotlinpoet.classinspector",
-        "com.squareup.moshi.kotlinpoet.classinspector",
-      )
-      relocate("kotlinx.metadata", "com.squareup.moshi.kotlinx.metadata")
-      transformers.add(ServiceFileTransformer())
-    }
-  }
-
-artifacts {
-  runtimeOnly(shadowJar)
-  archives(shadowJar)
 }
 
 configure<MavenPublishBaseExtension> {

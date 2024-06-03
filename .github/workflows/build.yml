@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        kotlin-test-mode: [ 'REFLECT', 'KSP', 'KAPT' ]
+        kotlin-test-mode: [ 'REFLECT', 'KSP' ]
 
     steps:
       - name: Checkout
