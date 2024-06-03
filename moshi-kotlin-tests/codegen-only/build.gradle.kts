@@ -1,17 +1,14 @@
-import Build_gradle.TestMode.KAPT
 import Build_gradle.TestMode.KSP
 import Build_gradle.TestMode.REFLECT
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
-  kotlin("kapt") apply false
   id("com.google.devtools.ksp") apply false
 }
 
 enum class TestMode {
   REFLECT,
-  KAPT,
   KSP,
 }
 
@@ -25,11 +22,6 @@ when (testMode) {
     // Default to KSP. This is a CI-only thing
     apply(plugin = "com.google.devtools.ksp")
   }
-
-  KAPT -> {
-    apply(plugin = "org.jetbrains.kotlin.kapt")
-  }
-
   KSP -> {
     apply(plugin = "com.google.devtools.ksp")
   }
@@ -55,11 +47,6 @@ dependencies {
       // Default to KSP in this case, this is a CI-only thing
       "kspTest"(project(":moshi-kotlin-codegen"))
     }
-
-    KAPT -> {
-      "kaptTest"(project(":moshi-kotlin-codegen"))
-    }
-
     KSP -> {
       "kspTest"(project(":moshi-kotlin-codegen"))
     }

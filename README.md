@@ -1076,7 +1076,7 @@ Note that the reflection adapter transitively depends on the `kotlin-reflect` li
 
 #### Codegen
 
-Moshi’s Kotlin codegen support can be used as an annotation processor (via [kapt][kapt]) or Kotlin SymbolProcessor ([KSP][ksp]).
+Moshi’s Kotlin codegen support can be used as a Kotlin SymbolProcessor ([KSP][ksp]).
 It generates a small and fast adapter for each of your Kotlin classes at compile-time. Enable it by annotating
 each class that you want to encode as JSON:
 
@@ -1106,23 +1106,6 @@ dependencies {
   ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
 }
 
-```
-</details>
-
-<details>
-    <summary>Kapt</summary>
-
-```xml
-<dependency>
-  <groupId>com.squareup.moshi</groupId>
-  <artifactId>moshi-kotlin-codegen</artifactId>
-  <version>1.15.1</version>
-  <scope>provided</scope>
-</dependency>
-```
-
-```kotlin
-kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
 ```
 </details>
 
@@ -1190,5 +1173,4 @@ License
  [okhttp]: https://github.com/square/okhttp/
  [gson]: https://github.com/google/gson/
  [javadoc]: https://square.github.io/moshi/1.x/moshi/
- [kapt]: https://kotlinlang.org/docs/reference/kapt.html
  [ksp]: https://github.com/google/ksp
