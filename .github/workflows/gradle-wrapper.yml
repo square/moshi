@@ -5,7 +5,7 @@ on:
     paths:
       - 'gradlew'
       - 'gradlew.bat'
-      - 'gradle/wrapper/'
+      - 'gradle/wrapper/**'
 
 jobs:
   validate:
