@@ -11,10 +11,7 @@ plugins {
 
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
-    optIn.addAll(
-      "com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-      "com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
-    )
+    optIn.add("com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi")
   }
 }
 
