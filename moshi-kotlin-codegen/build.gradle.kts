@@ -11,17 +11,25 @@ plugins {
 
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
-    freeCompilerArgs.addAll(
-      "-opt-in=com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
-      "-opt-in=com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
+    optIn.addAll(
+      "com.squareup.kotlinpoet.metadata.KotlinPoetMetadataPreview",
+      "com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi",
     )
   }
 }
 
 tasks.compileTestKotlin {
   compilerOptions {
-    freeCompilerArgs.add("-opt-in=org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
+    optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
   }
+}
+
+tasks.test {
+  // KSP2 needs more memory to run until 1.0.21
+  minHeapSize = "2048m"
+  maxHeapSize = "2048m"
+  // Disable the annoying GradleWorkerMain apps that pop up while running
+  jvmArgs("-Djava.awt.headless=true")
 }
 
 dependencies {
