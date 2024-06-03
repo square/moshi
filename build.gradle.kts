@@ -27,6 +27,7 @@ plugins {
   alias(libs.plugins.dokka) apply false
   alias(libs.plugins.spotless)
   alias(libs.plugins.japicmp) apply false
+  alias(libs.plugins.ksp) apply false
 }
 
 allprojects {
