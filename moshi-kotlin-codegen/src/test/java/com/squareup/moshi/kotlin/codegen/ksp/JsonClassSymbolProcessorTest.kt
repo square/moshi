@@ -16,6 +16,9 @@
 package com.squareup.moshi.kotlin.codegen.ksp
 
 import com.google.common.truth.Truth.assertThat
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonReader
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
 import com.tschuchort.compiletesting.JvmCompilationResult
@@ -23,10 +26,16 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.SourceFile.Companion.java
 import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
-import com.tschuchort.compiletesting.kspArgs
+import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspIncremental
+import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
+import com.tschuchort.compiletesting.kspWithCompilation
 import com.tschuchort.compiletesting.symbolProcessorProviders
+import kotlin.reflect.KTypeProjection
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.typeOf
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +44,8 @@ import org.junit.rules.TemporaryFolder
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassSymbolProcessorTest {
 
-  @Rule @JvmField
+  @Rule
+  @JvmField
   val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
@@ -385,7 +395,7 @@ class JsonClassSymbolProcessorTest {
           """,
       ),
     ).apply {
-      kspArgs[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
+      kspProcessorOptions[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
     }.compile()
     assertThat(result.messages).contains(
       "Invalid option value for $OPTION_GENERATED",
@@ -406,7 +416,7 @@ class JsonClassSymbolProcessorTest {
           """,
       ),
     ).apply {
-      kspArgs[OPTION_GENERATE_PROGUARD_RULES] = "false"
+      kspProcessorOptions[OPTION_GENERATE_PROGUARD_RULES] = "false"
     }
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
@@ -577,13 +587,12 @@ class JsonClassSymbolProcessorTest {
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
     // We're checking here that we only generate one `stringAdapter` that's used for both the
-    // regular string properties as well as the the aliased ones.
-    // TODO loading compiled classes from results not supported in KSP yet
-//    val adapterClass = result.classLoader.loadClass("PersonJsonAdapter").kotlin
-//    assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
-//      JsonReader.Options::class.createType(),
-//      JsonAdapter::class.parameterizedBy(String::class)
-//    )
+    // regular string properties as well as the aliased ones.
+    val adapterClass = result.classLoader.loadClass("test.PersonJsonAdapter").kotlin
+    assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
+      JsonReader.Options::class.createType(),
+      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String>())))
+    )
   }
 
   @Test
@@ -841,10 +850,18 @@ class JsonClassSymbolProcessorTest {
       .apply {
         workingDir = temporaryFolder.root
         inheritClassPath = true
-        symbolProcessorProviders = listOf(JsonClassSymbolProcessorProvider())
         sources = sourceFiles.asList()
         verbose = false
-        kspIncremental = true // The default now
+        // TODO parameterize this
+        val useKsp2 = false
+        configureKsp(useKsp2 = useKsp2) {
+          symbolProcessorProviders += JsonClassSymbolProcessorProvider()
+          incremental = true // The default now
+          if (!useKsp2) {
+            withCompilation = true // Only necessary for KSP1
+            languageVersion = "1.9"
+          }
+        }
       }
   }
 
