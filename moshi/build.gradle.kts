@@ -19,11 +19,11 @@ val java16: SourceSet by sourceSets.creating {
   }
 }
 
-// We use JDK 17 for latest but target 16 for maximum compatibility
+// We use newer JDKs but target 16 for maximum compatibility
 val service = project.extensions.getByType<JavaToolchainService>()
 val customLauncher =
   service.launcherFor {
-    languageVersion.set(JavaLanguageVersion.of(17))
+    languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
   }
 
 tasks.named<JavaCompile>("compileJava16Java") {

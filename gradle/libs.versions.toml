@@ -1,5 +1,6 @@
 [versions]
 autoService = "1.1.1"
+jdk = "21"
 jvmTarget = "1.8"
 kotlin = "2.0.0"
 # No 0.5.0 full release yet due to KSP's 1.0.21 release being busted for CLI/programmatic use
