@@ -20,7 +20,7 @@ spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
 asm = "org.ow2.asm:asm:9.7"
 autoCommon = "com.google.auto:auto-common:1.2.2"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
-autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.1.0"
+autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.2.0"
 guava = "com.google.guava:guava:33.2.1-jre"
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 kotlin-annotationProcessingEmbeddable = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable", version.ref = "kotlin" }
