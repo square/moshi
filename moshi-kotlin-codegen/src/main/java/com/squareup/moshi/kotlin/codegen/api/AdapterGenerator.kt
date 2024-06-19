@@ -455,8 +455,10 @@ public class AdapterGenerator(
             maskNames[maskNameIndex],
             Integer.toHexString(inverted),
           )
-        } else {
-          // Presence tracker for a mutable property
+        }
+
+        if (property.isRequired) {
+          // Presence tracker for a required property
           result.addStatement("%N = true", property.localIsPresentName)
         }
         result.endControlFlow()
@@ -498,6 +500,21 @@ public class AdapterGenerator(
     result.endControlFlow() // while
     result.addStatement("%N.endObject()", readerParam)
 
+    // Check any required properties that weren't set
+    for (property in nonTransientProperties) {
+      if (property.isRequired) {
+        result.addStatement(
+          "%M(%N, %S, %N, %S, %N)",
+          MemberName(MOSHI_UTIL_PACKAGE, "checkMissingProperty"),
+          property.localIsPresentName,
+          property.localName,
+          property.localName,
+          property.jsonName,
+          readerParam
+        )
+      }
+    }
+
     var separator = "\n"
 
     val resultName = nameAllocator.newName("result")
@@ -532,13 +549,11 @@ public class AdapterGenerator(
       for (input in paramsToSet) {
         result.addCode(localSeparator)
         val property = input.property
-        result.addCode("%N = %N", property.name, property.localName)
-        if (property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
-        } else if (!input.type.isNullable) {
-          // Unfortunately incurs an intrinsic null-check even though we know it's set, but
-          // maybe in the future we can use contracts to omit them.
-          result.addCode("·as·%T", input.type)
+        result.addCode("%N = ", property.name)
+        if (property.target.type.isNullable) {
+          result.addCode("%N", property.localName)
+        } else {
+          result.addCode("%L", knownNotNull(property.localName))
         }
         localSeparator = ",\n"
       }
@@ -612,12 +627,6 @@ public class AdapterGenerator(
       } else if (input !is ParameterOnly) {
         val property = (input as ParameterProperty).property
         result.addCode("%N = %N", property.name, property.localName)
-      }
-      if (input is PropertyComponent) {
-        val property = input.property
-        if (!property.isTransient && property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
-        }
       }
       separator = ",\n"
     }
@@ -709,16 +718,8 @@ public class AdapterGenerator(
   }
 }
 
-private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator, readerParam: ParameterSpec) {
-  val missingPropertyBlock =
-    CodeBlock.of(
-      "%M(%S, %S, %N)",
-      MemberName(MOSHI_UTIL_PACKAGE, "missingProperty"),
-      property.localName,
-      property.jsonName,
-      readerParam,
-    )
-  addCode(" ?: throw·%L", missingPropertyBlock)
+private fun knownNotNull(variableName: String): CodeBlock {
+  return CodeBlock.of("%M(%L)", MemberName("com.squareup.moshi.internal", "disableIntrinsicNullCheck"), variableName)
 }
 
 /** Represents a prepared adapter with its [spec] and optional associated [proguardConfig]. */
