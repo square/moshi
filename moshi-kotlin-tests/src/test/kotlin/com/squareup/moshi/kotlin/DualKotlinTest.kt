@@ -627,7 +627,6 @@ class DualKotlinTest {
   ) where E : Enum<E>, E : IntersectionTypeInterface<E>
 
   @Test fun transientConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<TransientConstructorParameter>()
 
     val encoded = TransientConstructorParameter(3, 5)
@@ -641,7 +640,6 @@ class DualKotlinTest {
   class TransientConstructorParameter(@Transient var a: Int = -1, var b: Int = -1)
 
   @Test fun multipleTransientConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
 
     val encoded = MultipleTransientConstructorParameters(3, 5, 7)
@@ -656,7 +654,6 @@ class DualKotlinTest {
   class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
 
   @Test fun transientProperty() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<TransientProperty>()
 
     val encoded = TransientProperty()
@@ -685,7 +682,6 @@ class DualKotlinTest {
   }
 
   @Test fun ignoredConstructorParameter() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<IgnoredConstructorParameter>()
 
     val encoded = IgnoredConstructorParameter(3, 5)
@@ -699,7 +695,6 @@ class DualKotlinTest {
   class IgnoredConstructorParameter(@Json(ignore = true) var a: Int = -1, var b: Int = -1)
 
   @Test fun multipleIgnoredConstructorParameters() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter(MultipleIgnoredConstructorParameters::class.java)
 
     val encoded = MultipleIgnoredConstructorParameters(3, 5, 7)
@@ -718,7 +713,6 @@ class DualKotlinTest {
   )
 
   @Test fun ignoredProperty() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<IgnoredProperty>()
 
     val encoded = IgnoredProperty()
@@ -749,7 +743,6 @@ class DualKotlinTest {
   }
 
   @Test fun propertyNameHasDollarSign() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<PropertyWithDollarSign>()
 
     val value = PropertyWithDollarSign("apple", "banana")
@@ -762,6 +755,41 @@ class DualKotlinTest {
   data class PropertyWithDollarSign(
     val `$a`: String,
     @Json(name = "\$b") val b: String,
+  )
+
+  @Test fun nullSafety() {
+    val jsonAdapter = moshi.adapter<NullSafety>()
+
+    // Present is ok
+    jsonAdapter.fromJson(
+      """
+      {
+        "a": "hello"
+      }
+      """.trimIndent()
+    )
+
+    // Explicit null is ok
+    jsonAdapter.fromJson(
+      """
+      {
+        "a": null
+      }
+      """.trimIndent()
+    )
+
+    // Absent is not
+    try {
+      jsonAdapter.fromJson("{}")
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'a' missing at $")
+    }
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class NullSafety(
+    val a: String?, // No default value means absence should fail if absent
   )
 }
 
