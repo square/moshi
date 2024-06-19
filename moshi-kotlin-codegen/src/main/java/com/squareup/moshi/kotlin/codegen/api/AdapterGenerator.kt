@@ -510,7 +510,7 @@ public class AdapterGenerator(
           property.localName,
           property.localName,
           property.jsonName,
-          readerParam
+          readerParam,
         )
       }
     }

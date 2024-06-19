@@ -766,7 +766,7 @@ class DualKotlinTest {
       {
         "a": "hello"
       }
-      """.trimIndent()
+      """.trimIndent(),
     )
 
     // Explicit null is ok
@@ -775,7 +775,7 @@ class DualKotlinTest {
       {
         "a": null
       }
-      """.trimIndent()
+      """.trimIndent(),
     )
 
     // Absent is not
