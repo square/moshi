@@ -12,7 +12,7 @@ ksp = "2.0.0-1.0.22"
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.4.3" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.28.0" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
 
