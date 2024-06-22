@@ -15,21 +15,25 @@
  */
 package com.squareup.moshi.kotlin.codegen.api;
 
-import com.google.common.collect.ImmutableList;
-import com.google.devtools.ksp.symbol.*;
-import com.squareup.kotlinpoet.ClassName;
-import com.squareup.kotlinpoet.ksp.KsClassDeclarationsKt;
-import kotlin.NotImplementedError;
+import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
-import static com.squareup.kotlinpoet.TypeNames.DOUBLE;
-import static com.squareup.kotlinpoet.TypeNames.FLOAT;
-import static com.squareup.kotlinpoet.TypeNames.LONG;
-import static com.squareup.kotlinpoet.TypeNames.*;
-import static java.util.stream.Collectors.joining;
 import static org.objectweb.asm.ClassWriter.COMPUTE_MAXS;
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_FINAL;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ARETURN;
+import static org.objectweb.asm.Opcodes.DLOAD;
+import static org.objectweb.asm.Opcodes.DUP;
+import static org.objectweb.asm.Opcodes.FLOAD;
+import static org.objectweb.asm.Opcodes.ILOAD;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.LLOAD;
+import static org.objectweb.asm.Opcodes.NEW;
+import static org.objectweb.asm.Opcodes.V1_8;
 
 /**
  * Generates a class that invokes the constructor of another class.
@@ -65,18 +69,18 @@ final class ForwardingClassGenerator {
    * APIs. So we have to pass the constructed type and the constructor parameter types separately.
    *
    * @param forwardingClassName the fully-qualified name of the class to generate
-   * @param classToConstruct the type whose constructor will be invoked ({@code ConstructMe} in the
+   * @param targetClass the internal name of the type whose constructor will be invoked ({@code ConstructMe} in the
    *     example above)
-   * @param constructorParameters the erased types of the constructor parameters, which will also be
-   *     the types of the generated {@code of} method. We require the types to be erased so as not
-   *     to require an instance of the {@code Types} interface to erase them here. Having to deal
-   *     with generics would complicate things unnecessarily.
-   * @return a byte array making up the new class file
+   * @param parameterDescriptor the jvm parameters descriptor of the target class constructor to invoke. Should include the bit fields and default constructor marker.
+   * @param creatorSignature the jvm signature (not descriptor) of the to-be-generated "of" creator method. Should include generics information.
+   * @return a byte array making up the new class file.
    */
   static byte[] makeConstructorForwarder(
       String forwardingClassName,
-      KSClassDeclaration classToConstruct,
-      ImmutableList<KSType> constructorParameters) {
+      String targetClass,
+      String parameterDescriptor,
+      String creatorSignature
+      ) {
 
     ClassWriter classWriter = new ClassWriter(COMPUTE_MAXS);
     classWriter.visit(
@@ -88,21 +92,21 @@ final class ForwardingClassGenerator {
         null);
     classWriter.visitSource(forwardingClassName, null);
 
-    // Generate the `of` method.
-    // TODO(emcmanus): cleaner generics. If we're constructing Foo<T extends Number> then we should
-    // generate a generic signature for the `of` method, as if the Java declaration were this:
-    //   static <T extends Number> Foo<T> of(...)
-    // Currently we just generate:
-    //   static Foo of(...)
-    // which returns the raw Foo type.
-    String parameterSignature =
-        constructorParameters.stream()
-            .map(ForwardingClassGenerator::signatureEncoding)
-            .collect(joining(""));
-    String internalClassToConstruct = internalName(KsClassDeclarationsKt.toClassName(classToConstruct));
-    String ofMethodSignature = "(" + parameterSignature + ")L" + internalClassToConstruct + ";";
+    String internalClassToConstruct = internalName(targetClass);
+    String ofMethodDescriptor =  "(" + parameterDescriptor + ")L" + internalClassToConstruct + ";";
     MethodVisitor ofMethodVisitor =
-        classWriter.visitMethod(ACC_STATIC, "of", ofMethodSignature, null, null);
+        classWriter.visitMethod(
+          ACC_STATIC,
+          /* name */ "of",
+          /* descriptor */ ofMethodDescriptor,
+          /* signature */ creatorSignature,
+          null
+        );
+
+    // Tell Kotlin we're always returning non-null and avoid a platform type warning.
+    AnnotationVisitor av = ofMethodVisitor.visitAnnotation("Lorg/jetbrains/annotations/NotNull;", true);
+    av.visitEnd();
+
     ofMethodVisitor.visitCode();
 
     // The remaining instructions are basically what ASMifier generates for a class like the
@@ -110,12 +114,13 @@ final class ForwardingClassGenerator {
     ofMethodVisitor.visitTypeInsn(NEW, internalClassToConstruct);
     ofMethodVisitor.visitInsn(DUP);
 
+    String constructorToCallSignature = "(" + parameterDescriptor + ")V";
+    Type[] paramTypes = Type.getArgumentTypes(constructorToCallSignature);
     int local = 0;
-    for (KSType type : constructorParameters) {
+    for (Type type : paramTypes) {
       ofMethodVisitor.visitVarInsn(loadInstruction(type), local);
       local += localSize(type);
     }
-    String constructorToCallSignature = "(" + parameterSignature + ")V";
     ofMethodVisitor.visitMethodInsn(
         INVOKESPECIAL,
         internalClassToConstruct,
@@ -131,34 +136,25 @@ final class ForwardingClassGenerator {
   }
 
   /** The bytecode instruction that copies a parameter of the given type onto the JVM stack. */
-  private static int loadInstruction(KSType type) {
-    if (type.isMarkedNullable()) {
-      // Always using a boxed type
-      return ALOAD;
-    }
-    ClassName rawType = rawType(type);
-    if (rawType.equals(ARRAY)) {
-      return ALOAD;
-    } else if (rawType.equals(LONG)) {
-      return LLOAD;
-    } else if (rawType.equals(FLOAT)) {
-      return FLOAD;
-    } else if (rawType.equals(DOUBLE)) {
-      return DLOAD;
-    } else if (rawType.equals(BYTE)) {
-      // These are all represented as int local variables.
-      return ILOAD;
-    } else if (rawType.equals(SHORT)) {
-      return ILOAD;
-    } else if (rawType.equals(INT)) {
-      return ILOAD;
-    } else if (rawType.equals(CHAR)) {
-      return ILOAD;
-    } else if (rawType.equals(BOOLEAN)) {
-      return ILOAD;
-    } else {
-      // Declared type
-      return ALOAD;
+  private static int loadInstruction(Type type) {
+    switch (type.getSort()) {
+      case Type.BOOLEAN:
+      case Type.CHAR:
+      case Type.BYTE:
+      case Type.SHORT:
+      case Type.INT:
+        return ILOAD;
+      case Type.FLOAT:
+        return FLOAD;
+      case Type.LONG:
+        return LLOAD;
+      case Type.DOUBLE:
+        return DLOAD;
+      case Type.ARRAY:
+      case Type.OBJECT:
+        return ALOAD;
+      default:
+        throw new IllegalArgumentException("Unexpected type " + type);
     }
   }
 
@@ -168,70 +164,18 @@ final class ForwardingClassGenerator {
    * (The first n local variables are the parameters, so we need to know their sizes when iterating
    * over them.)
    */
-  private static int localSize(KSType type) {
-    // Nullable always uses the boxed type
-    if (type.isMarkedNullable()) return 1;
-    ClassName rawType = rawType(type);
-    if (rawType.equals(LONG) || rawType.equals(DOUBLE)) {
-      return 2;
-    } else {
-      return 1;
+  private static int localSize(Type type) {
+    switch (type.getSort()) {
+      case Type.LONG:
+      case Type.DOUBLE:
+        return 2;
+      default:
+        return 1;
     }
   }
 
   private static String internalName(String className) {
     return className.replace('.', '/');
-  }
-
-  /**
-   * Given a class like {@code foo.bar.Outer.Inner}, produces a string like {@code
-   * "foo/bar/Outer$Inner"}, which is the way the class is referenced in the JVM.
-   */
-  private static String internalName(ClassName className) {
-    return className.reflectionName();
-  }
-
-  private static ClassName rawType(KSType type) {
-    // TODO handle other KSTypes
-    return KsClassDeclarationsKt.toClassName((KSClassDeclaration) type.getDeclaration());
-  }
-
-  private static String signatureEncoding(KSType type) {
-    KSDeclaration declaration = type.getDeclaration();
-    if (declaration instanceof KSClassDeclaration) {
-      ClassName rawType = KsClassDeclarationsKt.toClassName((KSClassDeclaration) declaration);
-      if (rawType.equals(ARRAY)) {
-        KSType componentType = type.getArguments().get(0).getType().resolve();
-        return "[" + signatureEncoding(componentType);
-      } else if (rawType.equals(BYTE)) {
-        return "B";
-      } else if (rawType.equals(SHORT)) {
-        return "S";
-      } else if (rawType.equals(INT)) {
-        return "I";
-      } else if (rawType.equals(LONG)) {
-        return "J";
-      } else if (rawType.equals(FLOAT)) {
-        return "F";
-      } else if (rawType.equals(DOUBLE)) {
-        return "D";
-      } else if (rawType.equals(CHAR)) {
-        return "C";
-      } else if (rawType.equals(BOOLEAN)) {
-        return "Z";
-      } else {
-        // Declared type
-        return "L" + internalName(rawType) + ";";
-      }
-    } else if (declaration instanceof KSTypeAlias) {
-      // TODO
-      throw new NotImplementedError("Type alias not supported");
-    } else if (declaration instanceof KSTypeParameter) {
-      // TODO
-      throw new NotImplementedError("Type parameter not supported");
-    } else {
-      throw new IllegalArgumentException("Unexpected type " + type);
-    }
   }
 
   private ForwardingClassGenerator() {}
