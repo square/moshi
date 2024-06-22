@@ -13,7 +13,8 @@ enum class TestMode {
 }
 
 val testMode =
-  findProperty("kotlinTestMode")?.toString()
+  findProperty("kotlinTestMode")
+    ?.toString()
     ?.let(TestMode::valueOf)
     ?: REFLECT
 

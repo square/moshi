@@ -238,7 +238,8 @@ public object Types {
         val bTypeArguments = if (b is ParameterizedTypeImpl) b.typeArguments else b.actualTypeArguments
         return (
           equals(a.ownerType, b.ownerType) &&
-            (a.rawType == b.rawType) && aTypeArguments.contentEquals(bTypeArguments)
+            (a.rawType == b.rawType) &&
+            aTypeArguments.contentEquals(bTypeArguments)
           )
       }
 

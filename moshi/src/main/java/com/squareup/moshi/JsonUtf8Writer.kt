@@ -115,8 +115,10 @@ internal class JsonUtf8Writer(
     check(stackSize != 0) { "JsonWriter is closed." }
     val context = peekScope()
     val isWritingObject = !(
-      context != JsonScope.EMPTY_OBJECT && context != JsonScope.NONEMPTY_OBJECT ||
-        deferredName != null || promoteValueToName
+      context != JsonScope.EMPTY_OBJECT &&
+        context != JsonScope.NONEMPTY_OBJECT ||
+        deferredName != null ||
+        promoteValueToName
       )
     check(isWritingObject) { "Nesting problem." }
     deferredName = name
@@ -281,7 +283,8 @@ internal class JsonUtf8Writer(
     if (context == JsonScope.NONEMPTY_OBJECT) { // first in object
       sink.writeByte(','.code)
     } else {
-      check(context == JsonScope.EMPTY_OBJECT) { // not in an object!
+      check(context == JsonScope.EMPTY_OBJECT) {
+        // not in an object!
         "Nesting problem."
       }
     }

@@ -134,7 +134,9 @@ abstract class Layer1<A> {
   var layer1: A? = null
 }
 
-abstract class Layer2<B> : Layer1<B>(), LayerInterface<B> {
+abstract class Layer2<B> :
+  Layer1<B>(),
+  LayerInterface<B> {
   var layer2: B? = null
 }
 
@@ -147,4 +149,5 @@ abstract class Layer3<C, D> : Layer2<D>() {
 data class Layer4<E : Personable, F>(
   val layer4E: E,
   val layer4F: F? = null,
-) : Layer3<List<Int>, String>(), LayerInterface<String>
+) : Layer3<List<Int>, String>(),
+  LayerInterface<String>

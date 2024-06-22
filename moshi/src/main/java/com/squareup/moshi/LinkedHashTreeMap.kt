@@ -19,7 +19,8 @@ private val NATURAL_ORDER = Comparator<Any> { o1, o2 -> (o1 as Comparable<Any>).
  */
 internal class LinkedHashTreeMap<K, V>(
   comparator: Comparator<Any?>? = null,
-) : AbstractMutableMap<K, V>(), Serializable {
+) : AbstractMutableMap<K, V>(),
+  Serializable {
   @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
   private var table: Array<Node<K, V>?> = arrayOfNulls(16) // TODO: sizing/resizing policies
