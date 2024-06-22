@@ -774,20 +774,24 @@ private sealed class FromJsonComponent {
 
   data class ParameterOnly(
     override val parameter: TargetParameter,
-  ) : FromJsonComponent(), ParameterComponent {
+  ) : FromJsonComponent(),
+    ParameterComponent {
     override val type: TypeName = parameter.type
   }
 
   data class PropertyOnly(
     override val property: PropertyGenerator,
-  ) : FromJsonComponent(), PropertyComponent {
+  ) : FromJsonComponent(),
+    PropertyComponent {
     override val type: TypeName = property.target.type
   }
 
   data class ParameterProperty(
     override val parameter: TargetParameter,
     override val property: PropertyGenerator,
-  ) : FromJsonComponent(), ParameterComponent, PropertyComponent {
+  ) : FromJsonComponent(),
+    ParameterComponent,
+    PropertyComponent {
     override val type: TypeName = parameter.type
   }
 }

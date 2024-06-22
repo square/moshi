@@ -398,7 +398,8 @@ internal class JsonValueReader : JsonReader {
     val endToken: Token,
     val array: Array<Any?>,
     var next: Int,
-  ) : Iterator<Any?>, Cloneable {
+  ) : Iterator<Any?>,
+    Cloneable {
     override fun hasNext() = next < array.size
 
     override fun next() = array[next++]

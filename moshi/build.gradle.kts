@@ -63,7 +63,8 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 
-tasks.withType<KotlinCompile>()
+tasks
+  .withType<KotlinCompile>()
   .configureEach {
     compilerOptions {
       freeCompilerArgs.addAll(

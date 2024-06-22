@@ -44,5 +44,7 @@ class MoshiKspTest {
   // NOTE the Any() superclass is important to test that we're detecting the farthest parent class
   // correct.y
   @JsonClass(generateAdapter = true)
-  data class SimpleImpl(override val a: String, val b: String) : Any(), SimpleInterface
+  data class SimpleImpl(override val a: String, val b: String) :
+    Any(),
+    SimpleInterface
 }

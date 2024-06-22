@@ -43,8 +43,9 @@ internal fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaratio
 
 internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
   return this.annotations.filter {
-    it.shortName.getShortName() == annotationKClass.simpleName && it.annotationType.resolve().declaration
-      .qualifiedName?.asString() == annotationKClass.qualifiedName
+    it.shortName.getShortName() == annotationKClass.simpleName &&
+      it.annotationType.resolve().declaration
+        .qualifiedName?.asString() == annotationKClass.qualifiedName
   }.map { it.toAnnotation(annotationKClass.java) }
 }
 
