@@ -22,7 +22,8 @@ import com.squareup.kotlinpoet.KModifier
 public data class TargetConstructor(
   val parameters: LinkedHashMap<String, TargetParameter>,
   val visibility: KModifier,
-  val signature: String?,
+  val descriptor: String?,
+  val creatorSignature: String?,
 ) {
   init {
     visibility.checkIsVisibility()

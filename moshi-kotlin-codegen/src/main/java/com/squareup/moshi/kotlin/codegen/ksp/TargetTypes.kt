@@ -33,12 +33,16 @@ import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.Origin
+import com.squareup.kotlinpoet.ANY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
@@ -51,7 +55,13 @@ import com.squareup.moshi.kotlin.codegen.api.TargetConstructor
 import com.squareup.moshi.kotlin.codegen.api.TargetParameter
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.TargetType
+import com.squareup.moshi.kotlin.codegen.api.internalName
+import com.squareup.moshi.kotlin.codegen.api.rawType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
+import kotlin.jvm.internal.DefaultConstructorMarker
+import org.objectweb.asm.Type
+import org.objectweb.asm.signature.SignatureWriter
+
 
 /** Returns a target type for [type] or null if it cannot be used with code gen. */
 internal fun targetType(
@@ -164,6 +174,42 @@ private fun ClassName.withTypeArguments(arguments: List<TypeName>): TypeName {
   }
 }
 
+private fun TypeVariableName.isImplicitBound(): Boolean {
+  return bounds.size == 1 && bounds[0] == ANY.copy(nullable = true)
+}
+
+@OptIn(KspExperimental::class)
+private fun TypeName.mapToJava(resolver: Resolver): TypeName {
+  return when (this) {
+    is ClassName -> {
+      resolver.mapKotlinNameToJava(resolver.getKSNameFromString(canonicalName))?.asString()?.let(ClassName::bestGuess) ?: this
+    }
+
+    is ParameterizedTypeName -> {
+      (rawType.mapToJava(resolver) as ClassName).parameterizedBy(typeArguments.map { it.mapToJava(resolver) })
+    }
+
+    is TypeVariableName -> {
+      if (isImplicitBound()) {
+        return this
+      }
+      this.copy(bounds = bounds.map { it.mapToJava(resolver) })
+    }
+
+    is WildcardTypeName -> {
+      if (outTypes.isNotEmpty() && inTypes.isEmpty()) {
+        WildcardTypeName.producerOf(outTypes[0].mapToJava(resolver))
+      } else if (inTypes.isNotEmpty()) {
+        WildcardTypeName.consumerOf(inTypes[0].mapToJava(resolver))
+      } else {
+        this
+      }
+    }
+
+    else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
+  }
+}
+
 @OptIn(KspExperimental::class)
 internal fun primaryConstructor(
   resolver: Resolver,
@@ -173,8 +219,73 @@ internal fun primaryConstructor(
 ): TargetConstructor? {
   val primaryConstructor = targetType.primaryConstructor ?: return null
 
+  val signatureWriter: SignatureWriter? = if (targetType.typeParameters.isEmpty()) {
+    null
+  } else {
+    SignatureWriter()
+      .apply {
+        for (typeParameter in targetType.typeParameters) {
+          val typeVarName = typeParameter.toTypeVariableName(typeParameterResolver)
+          visitFormalTypeParameter(typeVarName.name)
+          if (typeVarName.bounds.isNotEmpty()) {
+            visitClassBound().apply {
+              for (bound in typeVarName.bounds) {
+                // TODO what about parmameterized types?
+                visitClassType(bound.mapToJava(resolver).rawType().internalName)
+              }
+              visitEnd()
+            }
+          }
+        }
+      }
+  }
+
+  val constructorSignature: String = resolver.mapToJvmSignature(primaryConstructor)
+    ?: run {
+      logger.error("No primary constructor found.", primaryConstructor)
+      return null
+    }
+
+  val asmParamTypes = Type.getArgumentTypes(constructorSignature)
+
+  var hasDefaultParams = false
   val parameters = LinkedHashMap<String, TargetParameter>()
   for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
+    if (parameter.hasDefault) {
+      hasDefaultParams = true
+    }
+
+    val type = parameter.type.toTypeName(typeParameterResolver)
+    val asmType = asmParamTypes[index]
+    if (type is TypeVariableName) {
+      // Add the name to the signature
+      signatureWriter?.visitParameterType()?.visitTypeVariable(type.name)
+    } else {
+      // Add the type from asm types to the signature
+      signatureWriter?.visitParameterType()?.apply {
+        when (asmType.sort) {
+          Type.ARRAY -> {
+            // TODO
+//            visitArrayType()
+//            visitTypeArgument()
+//            visitClassType(asmType.elementType)
+//            visitEnd()
+          }
+
+          Type.OBJECT -> {
+            // TODO generics? Not sure it's necessary though
+            visitClassType(asmType.internalName)
+            visitEnd()
+          }
+
+          else -> {
+            // Primitive
+            visitBaseType(asmType.descriptor[0])
+          }
+        }
+      }
+    }
+
     val name = parameter.name!!.getShortName()
     parameters[name] = TargetParameter(
       name = name,
@@ -185,16 +296,30 @@ internal fun primaryConstructor(
       jsonName = parameter.jsonName(),
     )
   }
-
-  val kmConstructorSignature: String = resolver.mapToJvmSignature(primaryConstructor)
-    ?: run {
-      logger.error("No primary constructor found.", primaryConstructor)
-      return null
+  if (hasDefaultParams) {
+    repeat((parameters.size + 31) / 32) {
+      signatureWriter?.visitParameterType()?.visitBaseType('I')
     }
+    signatureWriter?.visitParameterType()?.apply {
+      visitClassType(Type.getInternalName(DefaultConstructorMarker::class.java))
+      visitEnd()
+    }
+  }
+  signatureWriter?.visitReturnType()?.apply {
+    visitClassType(targetType.toClassName().rawType().internalName)
+    // TODO nesting?
+    for (typeParameter in targetType.typeParameters) {
+      visitTypeArgument('=')
+      visitTypeVariable(typeParameter.name.asString())
+    }
+    visitEnd()
+  }
+
   return TargetConstructor(
     parameters,
     primaryConstructor.getVisibility().toKModifier() ?: KModifier.PUBLIC,
-    kmConstructorSignature,
+    constructorSignature,
+    signatureWriter?.toString(),
   )
 }
 

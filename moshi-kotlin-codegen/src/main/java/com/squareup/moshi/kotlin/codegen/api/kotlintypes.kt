@@ -69,6 +69,17 @@ internal fun TypeName.findRawType(): ClassName? {
   }
 }
 
+internal val PRIMITIVES = mapOf(
+  BOOLEAN to 'Z',
+  CHAR to 'C',
+  BYTE to 'B',
+  SHORT to 'S',
+  INT to 'I',
+  FLOAT to 'F',
+  LONG to 'J',
+  DOUBLE to 'D',
+)
+
 internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
   when (this) {
     BOOLEAN -> CodeBlock.of("false")
@@ -82,6 +93,9 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
     UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
     else -> CodeBlock.of("null")
   }
+
+internal val TypeName.isPrimitive: Boolean
+  get() = this in PRIMITIVES
 
 @OptIn(DelicateKotlinPoetApi::class)
 internal fun TypeName.asTypeBlock(): CodeBlock {
@@ -243,3 +257,6 @@ internal fun List<TypeName>.toTypeVariableResolver(
 
   return resolver
 }
+
+internal val ClassName.internalName: String
+  get() = reflectionName().replace('.', '/')
