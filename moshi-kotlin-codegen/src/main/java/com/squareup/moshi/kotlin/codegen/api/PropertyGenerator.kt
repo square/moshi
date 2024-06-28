@@ -56,10 +56,11 @@ public class PropertyGenerator(
   }
 
   internal fun generateLocalProperty(): PropertySpec {
-    return PropertySpec.builder(localName, target.type.copy(nullable = true))
+    val isPrimitive = target.type.isPrimitive
+    return PropertySpec.builder(localName, target.type.copy(nullable = !isPrimitive))
       .mutable(true)
       .apply {
-        if (hasConstructorDefault) {
+        if (hasConstructorDefault || isPrimitive) {
           // We default to the primitive default type, as reflectively invoking the constructor
           // without this (even though it's a throwaway) will fail argument type resolution in
           // the reflective invocation.
