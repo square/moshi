@@ -49,9 +49,11 @@ import java.util.Collections
 import java.util.LinkedHashSet
 import kotlin.contracts.contract
 
-@JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
+@JvmField
+internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
 
-@JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
+@JvmField
+internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
 
 @Suppress("UNCHECKED_CAST")
 private val METADATA: Class<out Annotation>? = try {
@@ -461,6 +463,25 @@ private fun <T> Class<T>.findConstructor(): Constructor<T> {
   throw IllegalStateException("No defaults constructor found for $this")
 }
 
+public fun checkMissingProperty(
+  isSet: Boolean,
+  propertyName: String?,
+  propertyVar: Any?,
+  jsonName: String?,
+  reader: JsonReader,
+) {
+  contract { returns() implies (propertyVar != null) }
+  if (isSet) return
+  val path = reader.path
+  val message = if (jsonName == propertyName) {
+    "Required value '$propertyName' missing at $path"
+  } else {
+    "Required value '$propertyName' (JSON name '$jsonName') missing at $path"
+  }
+  throw JsonDataException(message)
+}
+
+// Just here for binary compatibility
 public fun missingProperty(
   propertyName: String?,
   jsonName: String?,
@@ -518,6 +539,19 @@ internal inline fun <T : Any> checkNull(value: T?, lazyMessage: (T) -> Any) {
     val message = lazyMessage(value)
     throw IllegalStateException(message.toString())
   }
+}
+
+public fun <T> markNotNullForIntrinsics(value: T?): Boolean {
+  contract {
+    returns() implies (value != null)
+  }
+  return true
+}
+
+public fun <T> disableIntrinsicNullCheck(value: T?): T {
+  contract { returns() implies (value != null) }
+  markNotNullForIntrinsics(value)
+  return value
 }
 
 internal class ParameterizedTypeImpl private constructor(

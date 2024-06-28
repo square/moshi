@@ -104,10 +104,6 @@ internal class KotlinJsonAdapter<T>(
       if (values[i] === ABSENT_VALUE) {
         when {
           constructor.parameters[i].isOptional -> isFullInitialized = false
-
-          // Replace absent with null.
-          constructor.parameters[i].type.isMarkedNullable -> values[i] = null
-
           else -> throw missingProperty(
             constructor.parameters[i].name,
             allBindings[i]?.jsonName,

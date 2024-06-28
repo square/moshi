@@ -187,9 +187,12 @@ class KotlinJsonAdapterTest {
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
     assertThat(jsonAdapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null,"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"b":6}""")!!
-    assertThat(decoded.a).isNull()
-    assertThat(decoded.b).isEqualTo(6)
+    try {
+      jsonAdapter.fromJson("""{"b":6}""")!!
+      fail()
+    } catch (expected: JsonDataException) {
+      assertThat(expected).hasMessageThat().isEqualTo("Required value 'a' missing at $")
+    }
   }
 
   class AbsentNull(var a: Int?, var b: Int?)
