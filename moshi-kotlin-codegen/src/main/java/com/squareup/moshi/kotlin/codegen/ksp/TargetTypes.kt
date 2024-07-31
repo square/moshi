@@ -18,6 +18,7 @@ package com.squareup.moshi.kotlin.codegen.ksp
 import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getDeclaredProperties
 import com.google.devtools.ksp.getVisibility
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.isInternal
 import com.google.devtools.ksp.isLocal
 import com.google.devtools.ksp.isPublic
@@ -198,6 +199,7 @@ internal fun primaryConstructor(
   )
 }
 
+@OptIn(KspExperimental::class)
 private fun KSAnnotated?.qualifiers(resolver: Resolver): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return annotations

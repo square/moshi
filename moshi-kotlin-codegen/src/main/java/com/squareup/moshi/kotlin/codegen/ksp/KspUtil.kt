@@ -15,6 +15,9 @@
  */
 package com.squareup.moshi.kotlin.codegen.ksp
 
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.ClassKind
@@ -34,12 +37,14 @@ import com.squareup.kotlinpoet.ksp.toClassName
 
 internal fun KSClassDeclaration.asType() = asType(emptyList())
 
+@OptIn(KspExperimental::class)
 internal fun KSClassDeclaration.isKotlinClass(): Boolean {
   return origin == KOTLIN ||
     origin == KOTLIN_LIB ||
     isAnnotationPresent(Metadata::class)
 }
 
+@OptIn(KspExperimental::class)
 internal inline fun <reified T : Annotation> KSAnnotated.findAnnotationWithType(): T? {
   return getAnnotationsByType(T::class).firstOrNull()
 }
