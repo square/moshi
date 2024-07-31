@@ -159,7 +159,7 @@ public final class MoshiTest {
       final char c = (char) i;
       String s;
       switch (c) {
-          // TODO: make JsonWriter.REPLACEMENT_CHARS visible for testing?
+        // TODO: make JsonWriter.REPLACEMENT_CHARS visible for testing?
         case '\"':
           s = "\\\"";
           break;
