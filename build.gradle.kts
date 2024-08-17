@@ -19,7 +19,7 @@ buildscript {
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
     // https://github.com/melix/japicmp-gradle-plugin/issues/36
-    classpath("com.google.guava:guava:33.2.1-jre")
+    classpath("com.google.guava:guava:33.3.0-jre")
   }
 }
 
