@@ -548,7 +548,7 @@ But the two libraries have a few important differences:
    to convert that to `visible_cards`, Moshi wants you to just name the field `visible_cards` as it
    appears in the JSON.
  * **Moshi doesn’t have a `JsonElement` model.** Instead it just uses built-in types like `List` and
-   `Map`.
+   `Map`. If you're interested in a similar model, you can use the AST adapter.
  * **No HTML-safe escaping.** Gson encodes `=` as `\u003d` by default so that it can be safely
    encoded in HTML without additional escaping. Moshi encodes it naturally (as `=`) and assumes that
    the HTML encoder – if there is one – will do its job.
@@ -1025,6 +1025,63 @@ Composing adapters can be very sophisticated:
 
 Moshi is itself built on the pattern of repeatedly composing adapters. For example, Moshi's built-in
 adapter for `List<T>` delegates to the adapter of `T`, and calls it repeatedly.
+
+### AST
+
+Moshi offers a default adapter that exposes the JSON document as an abstract syntax tree (AST). This
+is useful when you need to inspect the JSON document before converting it to a Java or Kotlin object,
+or when you need to process a document that doesn't map well to a Java or Kotlin object, or does not
+have a schema that can be expressed by the type system. As a little treat, Integer and Decimal values
+are differentiated in the AST, to help with precision issues.
+
+The AST adapter does not throw on an
+invalid document token, but instead returns a `JNothing` value. Keep in mind that Moshi itself does
+throw on invalid documents unless you enable leniency, and lenient parsers will produce strings on
+most invalid inputs, so `JNothing` is a value that is not normally expected in normal operation, and
+can instead be used when constructing an AST as a dummy to fill in the gaps, since the value is
+ignored on serialization.
+
+```kotlin
+import com.squareup.moshi.AstAdapter
+import com.squareup.moshi.ast.*
+
+val adapter = AstAdapter()
+val json = """
+  {
+    "name": "Jesse",
+    "age": 35,
+    "isDeveloper": true,
+    "height": 1.85,
+    "address": {
+      "street": "Unknown",
+      "city": "San Francisco"
+    },
+    "children": ["Julia", "Sam"]
+  }
+"""
+val value = adapter.fromJson(json)
+assert(value is JObject)
+recursiveStuff(value)
+  ...
+// Inspect the AST
+fun recursiveStuff(obj: JValue<*>) {
+  when (obj) {
+    is JArray -> obj.value.forEach { recursiveStuff(it) }
+    is JObject -> obj.value.forEach {
+      print("Field: ${it.name}")
+      recursiveStuff(it.value)
+    }
+    is JString -> println("String: ${obj.value.value}")
+    is JNumber -> println("Number: ${obj.value}")
+    is JBoolean -> println("Boolean: ${obj.value}")
+    is JNull -> println("Null")
+    is JNothing -> error("Oh no! Invalid token")
+  }
+}
+
+
+```
+
 
 ### Precedence
 
