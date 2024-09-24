@@ -82,7 +82,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Byte?) {
-      writer.value((knownNotNull(value).toInt() and 0xff).toLong())
+      writer.value(knownNotNull(value).toLong())
     }
 
     override fun toString() = "JsonAdapter(Byte)"
