@@ -142,7 +142,16 @@ private class JsonClassSymbolProcessor(
       }
     }
 
-    return AdapterGenerator(type, sortedProperties)
+    return AdapterGenerator(type, sortedProperties) { className, bytes ->
+      codeGenerator.createNewFile(
+        dependencies = Dependencies(aggregating = false, originalType.containingFile!!),
+        packageName = className.packageName,
+        fileName = className.simpleName,
+        extensionName = "class",
+      ).buffered().use { writer ->
+        writer.write(bytes)
+      }
+    }
   }
 }
 

@@ -18,15 +18,14 @@ package com.squareup.moshi.kotlin.codegen.api
 import com.squareup.kotlinpoet.ARRAY
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.AnnotationSpec.UseSiteTarget.FILE
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.NameAllocator
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -42,8 +41,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterOnly
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.ParameterProperty
 import com.squareup.moshi.kotlin.codegen.api.FromJsonComponent.PropertyOnly
-import java.lang.reflect.Constructor
 import java.lang.reflect.Type
+import kotlin.jvm.internal.DefaultConstructorMarker
 import org.objectweb.asm.Type as AsmType
 
 private const val MOSHI_UTIL_PACKAGE = "com.squareup.moshi.internal"
@@ -55,10 +54,10 @@ private const val TO_STRING_SIZE_BASE = TO_STRING_PREFIX.length + 1 // 1 is the 
 public class AdapterGenerator(
   private val target: TargetType,
   private val propertyList: List<PropertyGenerator>,
+  private val generateForwardingClass: ((ClassName, ByteArray) -> Unit),
 ) {
 
   private companion object {
-    private val INT_TYPE_BLOCK = CodeBlock.of("%T::class.javaPrimitiveType!!", INT)
     private val DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK = CodeBlock.of(
       "%M!!",
       MemberName(MOSHI_UTIL_PACKAGE, "DEFAULT_CONSTRUCTOR_MARKER"),
@@ -161,16 +160,6 @@ public class AdapterGenerator(
     )
     .build()
 
-  private val constructorProperty = PropertySpec.builder(
-    nameAllocator.newName("constructorRef"),
-    Constructor::class.asClassName().parameterizedBy(originalTypeName).copy(nullable = true),
-    KModifier.PRIVATE,
-  )
-    .addAnnotation(Volatile::class)
-    .mutable(true)
-    .initializer("null")
-    .build()
-
   public fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
     val reservedSimpleNames = mutableSetOf<String>()
     for (property in nonTransientProperties) {
@@ -207,24 +196,10 @@ public class AdapterGenerator(
       else -> error("Unexpected number of arguments on primary constructor: $primaryConstructor")
     }
 
-    var hasDefaultProperties = false
-    var parameterTypes = emptyList<String>()
-    target.constructor.signature?.let { constructorSignature ->
-      if (constructorSignature.startsWith("constructor-impl")) {
-        // Inline class, we don't support this yet.
-        // This is a static method with signature like 'constructor-impl(I)I'
-        return@let
-      }
-      hasDefaultProperties = propertyList.any { it.hasDefault }
-      parameterTypes = AsmType.getArgumentTypes(constructorSignature.removePrefix("<init>"))
-        .map { it.toReflectionString() }
-    }
     return ProguardConfig(
       targetClass = className,
       adapterName = adapterName,
       adapterConstructorParams = adapterConstructorParams,
-      targetConstructorHasDefaults = hasDefaultProperties,
-      targetConstructorParams = parameterTypes,
     )
   }
 
@@ -287,7 +262,7 @@ public class AdapterGenerator(
     }
 
     result.addFunction(generateToStringFun())
-    result.addFunction(generateFromJsonFun(result))
+    result.addFunction(generateFromJsonFun())
     result.addFunction(generateToJsonFun())
 
     return result.build()
@@ -321,7 +296,7 @@ public class AdapterGenerator(
       .build()
   }
 
-  private fun generateFromJsonFun(classBuilder: TypeSpec.Builder): FunSpec {
+  private fun generateFromJsonFun(): FunSpec {
     val result = FunSpec.builder("fromJson")
       .addModifiers(KModifier.OVERRIDE)
       .addParameter(readerParam)
@@ -510,81 +485,35 @@ public class AdapterGenerator(
       CodeBlock.of("return·")
     }
 
-    // Used to indicate we're in an if-block that's assigning our result value and
-    // needs to be closed with endControlFlow
-    var closeNextControlFlowInAssignment = false
-
     if (useDefaultsConstructor) {
-      // Happy path - all parameters with defaults are set
-      val allMasksAreSetBlock = maskNames.withIndex()
-        .map { (index, maskName) ->
-          CodeBlock.of("$maskName·== 0x${Integer.toHexString(maskAllSetValues[index])}.toInt()")
-        }
-        .joinToCode("·&& ")
-      result.beginControlFlow("if (%L)", allMasksAreSetBlock)
-      result.addComment("All parameters with defaults are set, invoke the constructor directly")
-      result.addCode("«%L·%T(", returnOrResultAssignment, originalTypeName)
-      var localSeparator = "\n"
-      val paramsToSet = components.filterIsInstance<ParameterProperty>()
-        .filterNot { it.property.isTransient }
+      val forwardingClassName = ClassName(originalRawTypeName.packageName, "${adapterName}Forwarder")
 
-      // Set all non-transient property parameters
-      for (input in paramsToSet) {
-        result.addCode(localSeparator)
-        val property = input.property
-        result.addCode("%N = %N", property.name, property.localName)
-        if (property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
-        } else if (!input.type.isNullable) {
-          // Unfortunately incurs an intrinsic null-check even though we know it's set, but
-          // maybe in the future we can use contracts to omit them.
-          result.addCode("·as·%T", input.type)
-        }
-        localSeparator = ",\n"
-      }
-      result.addCode("\n»)\n")
-      result.nextControlFlow("else")
-      closeNextControlFlowInAssignment = true
+      generateForwardingClass(forwardingClassName,
+        ForwardingClassGenerator.makeConstructorForwarder(
+          forwardingClassName.canonicalName,
+          originalRawTypeName.reflectionName(),
+          // TODO omit the marker?
+          target.constructor.descriptor!!.let {
+            val parameterSignature = it.substringAfter('(').substringBeforeLast(')')
+            parameterSignature + maskNames.joinToString("") { "I" } + "L${DefaultConstructorMarker::class.asClassName().reflectionName().replace('.', '/')};"
+          },
+          target.constructor.creatorSignature,
+        ))
 
-      classBuilder.addProperty(constructorProperty)
-      result.addComment("Reflectively invoke the synthetic defaults constructor")
+      result.addComment("Invoke the synthetic defaults constructor")
       // Dynamic default constructor call
-      val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
-      val args = constructorPropertyTypes
-        .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
-        .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
-        .joinToCode(", ")
-      val coreLookupBlock = CodeBlock.of(
-        "%T::class.java.getDeclaredConstructor(%L)",
-        originalRawTypeName,
-        args,
-      )
-      val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
-        CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
+      // TODO is this necessary? Think the IDE can just infer this directly
+      val possibleGeneric = if (typeVariables.isNotEmpty()) {
+        // TODO support TypeParameterName as %N
+        CodeBlock.of("<%L>", typeVariables.joinToCode { CodeBlock.of(it.name) })
       } else {
-        coreLookupBlock
+        CodeBlock.of("")
       }
-      val initializerBlock = CodeBlock.of(
-        "this.%1N·?: %2L.also·{ this.%1N·= it }",
-        constructorProperty,
-        lookupBlock,
-      )
-      val localConstructorProperty = PropertySpec.builder(
-        nameAllocator.newName("localConstructor"),
-        nonNullConstructorType,
-      )
-        .addAnnotation(
-          AnnotationSpec.builder(Suppress::class)
-            .addMember("%S", "UNCHECKED_CAST")
-            .build(),
-        )
-        .initializer(initializerBlock)
-        .build()
-      result.addCode("%L", localConstructorProperty)
       result.addCode(
-        "«%L%N.newInstance(",
+        "«%L%T.of%L(",
         returnOrResultAssignment,
-        localConstructorProperty,
+        forwardingClassName,
+        possibleGeneric,
       )
     } else {
       // Standard constructor call. Don't omit generics for parameterized types even if they can be
@@ -631,11 +560,6 @@ public class AdapterGenerator(
     }
 
     result.addCode("\n»)\n")
-
-    // Close the result assignment control flow, if any
-    if (closeNextControlFlowInAssignment) {
-      result.endControlFlow()
-    }
 
     // Assign properties not present in the constructor.
     for (property in nonTransientProperties) {
