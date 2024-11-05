@@ -37,4 +37,4 @@ kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "k
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.4.4"
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.24.0"
-ktlint = "com.pinterest.ktlint:ktlint-cli:1.3.1"
+ktlint = "com.pinterest.ktlint:ktlint-cli:1.4.1"
