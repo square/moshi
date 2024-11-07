@@ -69,19 +69,18 @@ internal fun TypeName.findRawType(): ClassName? {
   }
 }
 
-internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
-  when (this) {
-    BOOLEAN -> CodeBlock.of("false")
-    CHAR -> CodeBlock.of("0.toChar()")
-    BYTE -> CodeBlock.of("0.toByte()")
-    SHORT -> CodeBlock.of("0.toShort()")
-    INT -> CodeBlock.of("0")
-    FLOAT -> CodeBlock.of("0f")
-    LONG -> CodeBlock.of("0L")
-    DOUBLE -> CodeBlock.of("0.0")
-    UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
-    else -> CodeBlock.of("null")
-  }
+internal fun TypeName.defaultPrimitiveValue(): CodeBlock = when (this) {
+  BOOLEAN -> CodeBlock.of("false")
+  CHAR -> CodeBlock.of("0.toChar()")
+  BYTE -> CodeBlock.of("0.toByte()")
+  SHORT -> CodeBlock.of("0.toShort()")
+  INT -> CodeBlock.of("0")
+  FLOAT -> CodeBlock.of("0f")
+  LONG -> CodeBlock.of("0L")
+  DOUBLE -> CodeBlock.of("0.0")
+  UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+  else -> CodeBlock.of("null")
+}
 
 @OptIn(DelicateKotlinPoetApi::class)
 internal fun TypeName.asTypeBlock(): CodeBlock {

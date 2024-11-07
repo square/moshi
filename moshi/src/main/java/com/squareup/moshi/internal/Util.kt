@@ -533,8 +533,7 @@ internal class ParameterizedTypeImpl private constructor(
   override fun getOwnerType() = ownerType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  override fun equals(other: Any?) =
-    other is ParameterizedType && Types.equals(this, other as ParameterizedType?)
+  override fun equals(other: Any?) = other is ParameterizedType && Types.equals(this, other as ParameterizedType?)
 
   override fun hashCode(): Int {
     return typeArguments.contentHashCode() xor rawType.hashCode() xor ownerType.hashCodeOrZero
@@ -585,8 +584,7 @@ internal class GenericArrayTypeImpl private constructor(private val componentTyp
   override fun getGenericComponentType() = componentType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  override fun equals(other: Any?) =
-    other is GenericArrayType && Types.equals(this, other as GenericArrayType?)
+  override fun equals(other: Any?) = other is GenericArrayType && Types.equals(this, other as GenericArrayType?)
 
   override fun hashCode() = componentType.hashCode()
 

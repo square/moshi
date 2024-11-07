@@ -53,8 +53,7 @@ public class Moshi internal constructor(builder: Builder) {
   public fun <T> adapter(type: Class<T>): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> =
-    adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
+  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> = adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
 
   @CheckReturnValue
   public fun <T> adapter(type: Type, vararg annotationTypes: Class<out Annotation>): JsonAdapter<T> {
@@ -70,8 +69,7 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
-    adapter(type, annotations, fieldName = null)
+  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> = adapter(type, annotations, fieldName = null)
 
   /**
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
@@ -354,8 +352,7 @@ public class Moshi internal constructor(builder: Builder) {
 
     override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
-    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R =
-      checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
+    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R = checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
 
     override fun toString() = adapter?.toString() ?: super.toString()
   }

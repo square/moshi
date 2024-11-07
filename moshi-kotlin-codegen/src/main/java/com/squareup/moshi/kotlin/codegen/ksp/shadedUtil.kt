@@ -38,8 +38,7 @@ import kotlin.reflect.KClass
  * @param name fully qualified name of the class to be loaded; using '.' as separator.
  * @return a KSClassDeclaration, or null if not found.
  */
-internal fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? =
-  getClassDeclarationByName(getKSNameFromString(name))
+internal fun Resolver.getClassDeclarationByName(name: String): KSClassDeclaration? = getClassDeclarationByName(getKSNameFromString(name))
 
 internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
   return this.annotations.filter {
@@ -49,8 +48,7 @@ internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass:
   }.map { it.toAnnotation(annotationKClass.java) }
 }
 
-internal fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean =
-  getAnnotationsByType(annotationKClass).firstOrNull() != null
+internal fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean = getAnnotationsByType(annotationKClass).firstOrNull() != null
 
 @Suppress("UNCHECKED_CAST")
 private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>): T {
@@ -134,46 +132,45 @@ private fun KSAnnotation.asAnnotation(
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun List<*>.asArray(method: Method) =
-  when (method.returnType.componentType.name) {
-    "boolean" -> (this as List<Boolean>).toBooleanArray()
+private fun List<*>.asArray(method: Method) = when (method.returnType.componentType.name) {
+  "boolean" -> (this as List<Boolean>).toBooleanArray()
 
-    "byte" -> (this as List<Byte>).toByteArray()
+  "byte" -> (this as List<Byte>).toByteArray()
 
-    "short" -> (this as List<Short>).toShortArray()
+  "short" -> (this as List<Short>).toShortArray()
 
-    "char" -> (this as List<Char>).toCharArray()
+  "char" -> (this as List<Char>).toCharArray()
 
-    "double" -> (this as List<Double>).toDoubleArray()
+  "double" -> (this as List<Double>).toDoubleArray()
 
-    "float" -> (this as List<Float>).toFloatArray()
+  "float" -> (this as List<Float>).toFloatArray()
 
-    "int" -> (this as List<Int>).toIntArray()
+  "int" -> (this as List<Int>).toIntArray()
 
-    "long" -> (this as List<Long>).toLongArray()
+  "long" -> (this as List<Long>).toLongArray()
 
-    "java.lang.Class" -> (this as List<KSType>).map {
-      Class.forName(it.declaration.qualifiedName!!.asString())
-    }.toTypedArray()
+  "java.lang.Class" -> (this as List<KSType>).map {
+    Class.forName(it.declaration.qualifiedName!!.asString())
+  }.toTypedArray()
 
-    "java.lang.String" -> (this as List<String>).toTypedArray()
+  "java.lang.String" -> (this as List<String>).toTypedArray()
 
-    else -> { // arrays of enums or annotations
-      when {
-        method.returnType.componentType.isEnum -> {
-          this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
-        }
-
-        method.returnType.componentType.isAnnotation -> {
-          this.toArray(method) { result ->
-            (result as KSAnnotation).asAnnotation(method.returnType.componentType)
-          }
-        }
-
-        else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
+  else -> { // arrays of enums or annotations
+    when {
+      method.returnType.componentType.isEnum -> {
+        this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
       }
+
+      method.returnType.componentType.isAnnotation -> {
+        this.toArray(method) { result ->
+          (result as KSAnnotation).asAnnotation(method.returnType.componentType)
+        }
+      }
+
+      else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
     }
   }
+}
 
 @Suppress("UNCHECKED_CAST")
 private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any?> {
@@ -188,17 +185,16 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun <T> Any.asEnum(returnType: Class<T>): T =
-  returnType.getDeclaredMethod("valueOf", String::class.java)
-    .invoke(
-      null,
-      // Change from upstream KSP - https://github.com/google/ksp/pull/685
-      if (this is KSType) {
-        this.declaration.simpleName.getShortName()
-      } else {
-        this.toString()
-      },
-    ) as T
+private fun <T> Any.asEnum(returnType: Class<T>): T = returnType.getDeclaredMethod("valueOf", String::class.java)
+  .invoke(
+    null,
+    // Change from upstream KSP - https://github.com/google/ksp/pull/685
+    if (this is KSType) {
+      this.declaration.simpleName.getShortName()
+    } else {
+      this.toString()
+    },
+  ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
 
