@@ -21,28 +21,41 @@ import com.squareup.moshi.ToJson;
 import com.squareup.moshi.recipes.models.Card;
 import com.squareup.moshi.recipes.models.Suit;
 
+import java.util.Map;
+
 public final class CardAdapter {
-  @ToJson
-  String toJson(Card card) {
-    return card.rank + card.suit.name().substring(0, 1);
-  }
 
-  @FromJson
-  Card fromJson(String card) {
-    if (card.length() != 2) throw new JsonDataException("Unknown card: " + card);
+    private static final Map<Character, Suit> SUIT_MAP = Map.of(
+        'C', Suit.CLUBS,
+        'D', Suit.DIAMONDS,
+        'H', Suit.HEARTS,
+        'S', Suit.SPADES
+    );
 
-    char rank = card.charAt(0);
-    switch (card.charAt(1)) {
-      case 'C':
-        return new Card(rank, Suit.CLUBS);
-      case 'D':
-        return new Card(rank, Suit.DIAMONDS);
-      case 'H':
-        return new Card(rank, Suit.HEARTS);
-      case 'S':
-        return new Card(rank, Suit.SPADES);
-      default:
-        throw new JsonDataException("unknown suit: " + card);
+    @ToJson
+    String toJson(Card card) {
+        // Validação para garantir que o card não seja nulo ou inválido
+        if (card == null || card.suit == null || card.rank == 0) {
+            throw new JsonDataException("Invalid card: " + card);
+        }
+        // Gera a string JSON com rank e abreviação do naipe
+        return card.rank + card.suit.name().substring(0, 1);
     }
-  }
+
+    @FromJson
+    Card fromJson(String card) {
+        // Validação de formato e conteúdo do card
+        if (card == null || card.length() != 2 || !Character.isDigit(card.charAt(0))) {
+            throw new JsonDataException("Invalid card format: " + card);
+        }
+
+        char rank = card.charAt(0); // Extração do rank
+        Suit suit = SUIT_MAP.get(card.charAt(1)); // Mapeamento do naipe
+        if (suit == null) {
+            throw new JsonDataException("Unknown suit: " + card.charAt(1));
+        }
+
+        // Retorna o objeto Card criado
+        return new Card(rank, suit);
+    }
 }
