@@ -1,16 +1,33 @@
 Adapters
 ===================
 
-Prebuilt Moshi `JsonAdapter`s for various things, such as `Rfc3339DateJsonAdapter` for parsing `java.util.Date`s
+Prebuilt Moshi `JsonAdapter`s for various purposes, such as the `Rfc3339DateJsonAdapter` for parsing `java.util.Date` objects in the RFC 3339 format.
 
-To use, supply an instance of your desired converter when building your `Moshi` instance.
+### How to Use
+To use an adapter, supply an instance of your desired converter when building your `Moshi` instance:
 
 ```java
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter;
+import java.util.Date;
+
 Moshi moshi = new Moshi.Builder()
     .add(Date.class, new Rfc3339DateJsonAdapter())
-    //etc
     .build();
 ```
+
+// Example of valid JSON parsing
+String json = "{\"date\": \"2024-11-24T15:30:00Z\"}";
+Date date = moshi.adapter(Date.class).fromJson(json);
+System.out.println("Parsed date: " + date);
+
+// Example of handling invalid JSON
+try {
+    String invalidJson = "{\"date\": \"invalid-date\"}";
+    Date invalidDate = moshi.adapter(Date.class).fromJson(invalidJson);
+} catch (Exception e) {
+    System.err.println("Failed to parse date: " + e.getMessage());
+}
 
 Download
 --------
