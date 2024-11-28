@@ -181,7 +181,7 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
     method.returnType.componentType,
     this.size,
   ) as Array<Any?>
-  for (r in 0 until this.size) {
+  for (r in indices) {
     array[r] = this[r]?.let { valueProvider.invoke(it) }
   }
   return array
