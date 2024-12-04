@@ -26,7 +26,8 @@ import com.squareup.kotlinpoet.ClassName
  *   constructor as well as the DefaultConstructorMarker type Kotlin adds to it.
  *
  * Each rule is intended to be as specific and targeted as possible to reduce footprint, and each is
- * conditioned on usage of the original target type.
+ * conditioned on usage of the original target type (implicitly for keepnames and keepclassmembers,
+ * which have no effect if the target type was removed in the shrinking phase).
  *
  * To keep this processor as an ISOLATING incremental processor, we generate one file per target
  * class with a deterministic name (see [outputFilePathWithoutExtension]) with an appropriate
@@ -46,7 +47,6 @@ public data class ProguardConfig(
 
   public fun writeTo(out: Appendable): Unit = out.run {
     //
-    // -if class {the target class}
     // -keepnames class {the target class}
     // -if class {the target class}
     // -keep class {the generated adapter} {
@@ -57,7 +57,6 @@ public data class ProguardConfig(
     val targetName = targetClass.reflectionName()
     val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
     // Keep the class name for Moshi's reflective lookup based on it
-    appendLine("-if class $targetName")
     appendLine("-keepnames class $targetName")
 
     appendLine("-if class $targetName")
@@ -70,6 +69,7 @@ public data class ProguardConfig(
     if (targetConstructorHasDefaults) {
       // If the target class has default parameter values, keep its synthetic constructor
       //
+      // -if class {the target class}
       // -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
       // -keepclassmembers @com.squareup.moshi.JsonClass @kotlin.Metadata class * {
       //     synthetic <init>(...);
@@ -77,7 +77,6 @@ public data class ProguardConfig(
       //
       appendLine("-if class $targetName")
       appendLine("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
-      appendLine("-if class $targetName")
       appendLine("-keepclassmembers class $targetName {")
       val allParams = targetConstructorParams.toMutableList()
       val maskCount = if (targetConstructorParams.isEmpty()) {
