@@ -657,7 +657,6 @@ class JsonClassCodegenProcessorTest {
       when (generatedFile.nameWithoutExtension) {
         "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Aliases
           -keepnames class testPackage.Aliases
           -if class testPackage.Aliases
           -keep class testPackage.AliasesJsonAdapter {
@@ -667,7 +666,6 @@ class JsonClassCodegenProcessorTest {
         )
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Simple
           -keepnames class testPackage.Simple
           -if class testPackage.Simple
           -keep class testPackage.SimpleJsonAdapter {
@@ -677,7 +675,6 @@ class JsonClassCodegenProcessorTest {
         )
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Generic
           -keepnames class testPackage.Generic
           -if class testPackage.Generic
           -keep class testPackage.GenericJsonAdapter {
@@ -688,7 +685,6 @@ class JsonClassCodegenProcessorTest {
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.UsingQualifiers
             -keepnames class testPackage.UsingQualifiers
             -if class testPackage.UsingQualifiers
             -keep class testPackage.UsingQualifiersJsonAdapter {
@@ -699,7 +695,6 @@ class JsonClassCodegenProcessorTest {
         }
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.MixedTypes
           -keepnames class testPackage.MixedTypes
           -if class testPackage.MixedTypes
           -keep class testPackage.MixedTypesJsonAdapter {
@@ -709,7 +704,6 @@ class JsonClassCodegenProcessorTest {
         )
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.DefaultParams
           -keepnames class testPackage.DefaultParams
           -if class testPackage.DefaultParams
           -keep class testPackage.DefaultParamsJsonAdapter {
@@ -717,7 +711,6 @@ class JsonClassCodegenProcessorTest {
           }
           -if class testPackage.DefaultParams
           -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -if class testPackage.DefaultParams
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
@@ -726,7 +719,6 @@ class JsonClassCodegenProcessorTest {
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.Complex
             -keepnames class testPackage.Complex
             -if class testPackage.Complex
             -keep class testPackage.ComplexJsonAdapter {
@@ -734,7 +726,6 @@ class JsonClassCodegenProcessorTest {
             }
             -if class testPackage.Complex
             -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-            -if class testPackage.Complex
             -keepclassmembers class testPackage.Complex {
                 public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
             }
@@ -743,7 +734,6 @@ class JsonClassCodegenProcessorTest {
         }
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.MultipleMasks
           -keepnames class testPackage.MultipleMasks
           -if class testPackage.MultipleMasks
           -keep class testPackage.MultipleMasksJsonAdapter {
@@ -751,7 +741,6 @@ class JsonClassCodegenProcessorTest {
           }
           -if class testPackage.MultipleMasks
           -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -if class testPackage.MultipleMasks
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
@@ -760,7 +749,6 @@ class JsonClassCodegenProcessorTest {
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.NestedType${'$'}NestedSimple
             -keepnames class testPackage.NestedType${'$'}NestedSimple
             -if class testPackage.NestedType${'$'}NestedSimple
             -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
