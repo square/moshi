@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## Version 1.15.2
+
+_2024-12-05_
+
+ * Do not generate conditional shrinker rules (i.e., `-if`) when the rule is already predicated on the presence of the target type (as `-keepnames` and `-keepclassmembers` are).
+   This will improve shrinker performance for projects with hundreds of model types, as conditional rules are more expensive to evaluate.
+
+
 ## Version 1.15.1
 
 _2024-01-30_
