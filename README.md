@@ -1063,12 +1063,12 @@ The reflection adapter requires the following additional dependency:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin</artifactId>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -1103,7 +1103,7 @@ plugins {
 }
 
 dependencies {
-  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
+  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
 }
 
 ```
@@ -1129,12 +1129,12 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
 </dependency>
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.15.1")
+implementation("com.squareup.moshi:moshi:1.15.2")
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
