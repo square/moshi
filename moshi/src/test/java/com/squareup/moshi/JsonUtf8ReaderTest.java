@@ -1261,20 +1261,6 @@ public final class JsonUtf8ReaderTest {
   }
 
   @Test
-  public void lenientExtraCommasInMaps() throws IOException {
-    JsonReader reader = newReader("{\"a\":\"b\",}");
-    reader.setLenient(true);
-    reader.beginObject();
-    assertThat(reader.nextName()).isEqualTo("a");
-    assertThat(reader.nextString()).isEqualTo("b");
-    try {
-      reader.peek();
-      fail();
-    } catch (JsonEncodingException expected) {
-    }
-  }
-
-  @Test
   public void malformedDocuments() throws IOException {
     assertDocument("{]", BEGIN_OBJECT, JsonEncodingException.class);
     assertDocument("{,", BEGIN_OBJECT, JsonEncodingException.class);
@@ -1354,6 +1340,51 @@ public final class JsonUtf8ReaderTest {
     reader.setLenient(true);
     reader.beginArray();
     assertThat(reader.nextString()).isEqualTo("string");
+  }
+
+  @Test
+  public void trailingCommaInJsonObject() throws Exception {
+    JsonReader reader = newReader("{\"a\":1,}");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    try {
+      reader.endObject();
+      fail();
+    } catch (JsonEncodingException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo(
+              "Expected name. Use JsonReader.setLenient(true) to accept malformed "
+                  + "JSON at path $.a");
+    }
+    reader = newReader("{\"a\": 1, }");
+    reader.beginObject();
+    assertThat(reader.nextName()).isEqualTo("a");
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.setLenient(true);
+    reader.endObject();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test
+  public void trailingCommaInJsonArray() throws Exception {
+    JsonReader reader = newReader("[1, ]");
+    reader.beginArray();
+    assertThat(reader.nextInt()).isEqualTo(1);
+    try {
+      reader.endArray();
+      fail();
+    } catch (JsonEncodingException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("Use JsonReader.setLenient(true) to accept malformed JSON at path $[1]");
+    }
+    reader = newReader("[1,]");
+    reader.beginArray();
+    assertThat(reader.nextInt()).isEqualTo(1);
+    reader.setLenient(true);
+    reader.nextNull();
+    reader.endArray();
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 
   private void assertDocument(String document, Object... expectations) throws IOException {
