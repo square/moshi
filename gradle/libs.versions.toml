@@ -6,7 +6,7 @@ kotlin = "2.0.0"
 # No 0.5.0 full release yet due to KSP's 1.0.21 release being busted for CLI/programmatic use
 kotlinCompileTesting = "0.5.0-alpha07"
 kotlinpoet = "2.0.0"
-ksp = "2.0.21-1.0.25"
+ksp = "2.1.0-1.0.29"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "1.9.20" }
