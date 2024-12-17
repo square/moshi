@@ -21,7 +21,7 @@ asm = "org.ow2.asm:asm:9.7.1"
 autoCommon = "com.google.auto:auto-common:1.2.2"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.2.0"
-guava = "com.google.guava:guava:33.3.1-jre"
+guava = "com.google.guava:guava:33.4.0-jre"
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 kotlin-annotationProcessingEmbeddable = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable", version.ref = "kotlin" }
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
