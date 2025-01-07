@@ -377,6 +377,49 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  @Test
+  public void toJsonAutoTypeSerializationOn() throws IOException {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(Success.class, "success")
+                    .withSubtype(MessageWithType.class, "customType"))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    assertThat(adapter.toJson(new Success("Okay!")))
+        .isEqualTo("{\"type\":\"success\",\"value\":\"Okay!\"}");
+
+    // Ensures that when the `type` label auto serialization is on,
+    // it does continue to serialize the `type` along with class property `type` (twice)
+    assertThat(adapter.toJson(new MessageWithType("customType", "Object with type property")))
+        .isEqualTo(
+            "{\"type\":\"customType\",\"type\":\"customType\",\"value\":\"Object with type property\"}");
+  }
+
+  @Test
+  public void toJsonAutoTypeSerializationOff() throws IOException {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(Success.class, "success")
+                    .withSubtype(MessageWithType.class, "customType")
+                    .autoSerializeLabel(false))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    // Validates that when `type` label auto serialization is off,
+    // it does NOT serialize the type label key and value
+    assertThat(adapter.toJson(new Success("Okay!"))).isEqualTo("{\"value\":\"Okay!\"}");
+
+    // Validates that when the `type` label auto serialization is off,
+    // it continues to serialize the class property `type` but not from the factory
+    assertThat(adapter.toJson(new MessageWithType("customType", "Object with type property")))
+        .isEqualTo("{\"type\":\"customType\",\"value\":\"Object with type property\"}");
+  }
+
   interface Message {}
 
   static final class Success implements Message {

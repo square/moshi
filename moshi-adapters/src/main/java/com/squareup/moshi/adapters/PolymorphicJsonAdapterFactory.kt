@@ -96,6 +96,9 @@ import javax.annotation.CheckReturnValue
  *  * If [withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.toJson(writer, value)` result will be returned.
  *  * Otherwise a [IllegalArgumentException] will be thrown.
  *
+ * If all known subtypes has serializable type property in the class definition, then the factory can be configured
+ * with [autoSerializeLabel] to disable automatic serialization of the type label, and it's respective value.
+ *
  * If the same subtype has multiple labels the first one is used when encoding.
  */
 public class PolymorphicJsonAdapterFactory<T> internal constructor(
@@ -104,6 +107,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labels: List<String>,
   private val subtypes: List<Type>,
   private val fallbackJsonAdapter: JsonAdapter<Any>?,
+  private val autoSerializeLabel: Boolean,
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -122,6 +126,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labels = newLabels,
       subtypes = newSubtypes,
       fallbackJsonAdapter = fallbackJsonAdapter,
+      autoSerializeLabel = autoSerializeLabel,
     )
   }
 
@@ -141,6 +146,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       labels = labels,
       subtypes = subtypes,
       fallbackJsonAdapter = fallbackJsonAdapter,
+      autoSerializeLabel = autoSerializeLabel,
     )
   }
 
@@ -150,6 +156,21 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
    */
   public fun withDefaultValue(defaultValue: T?): PolymorphicJsonAdapterFactory<T> {
     return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
+  }
+
+  /**
+   * Allows the factory to be configured to enable/disable [labelKey] and it's value serialization
+   * into JSON object. By default, automatic serialization of type label key and value is enabled.
+   */
+  public fun autoSerializeLabel(shouldAutoSerializeLabel: Boolean): PolymorphicJsonAdapterFactory<T> {
+    return PolymorphicJsonAdapterFactory(
+      baseType = baseType,
+      labelKey = labelKey,
+      labels = labels,
+      subtypes = subtypes,
+      fallbackJsonAdapter = fallbackJsonAdapter,
+      autoSerializeLabel = shouldAutoSerializeLabel
+    )
   }
 
   private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any> {
@@ -172,7 +193,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       return null
     }
     val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
-    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter, autoSerializeLabel)
       .nullSafe()
   }
 
@@ -182,6 +203,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val subtypes: List<Type>,
     private val jsonAdapters: List<JsonAdapter<Any>>,
     private val fallbackJsonAdapter: JsonAdapter<Any>?,
+    private val autoSerializeLabel: Boolean,
   ) : JsonAdapter<Any>() {
     /** Single-element options containing the label's key only.  */
     private val labelKeyOptions: Options = Options.of(labelKey)
@@ -231,7 +253,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         jsonAdapters[labelIndex]
       }
       writer.beginObject()
-      if (adapter !== fallbackJsonAdapter) {
+      if (autoSerializeLabel && adapter !== fallbackJsonAdapter) {
         writer.name(labelKey).value(labels[labelIndex])
       }
       val flattenToken = writer.beginFlatten()
@@ -260,6 +282,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         labels = emptyList(),
         subtypes = emptyList(),
         fallbackJsonAdapter = null,
+        autoSerializeLabel = true,
       )
     }
   }
