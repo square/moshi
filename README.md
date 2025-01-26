@@ -6,6 +6,31 @@ classes:
 
 _Note: The Kotlin examples of this README assume use of either Kotlin code gen or `KotlinJsonAdapterFactory` for reflection. Plain Java-based reflection is unsupported on Kotlin classes._
 
+
+## Table of contents
+
+  - [Simple example of serializing](#simple-example-of-serializing)
+  - [Simple example of deserializing](#simple-example-of-deserializing)
+  - [Built-in Type Adapters](#builtin-type-adapters)
+  - [Custom Type Adapters](#custom-type-adapters)
+    - [Another Example](#another-example)
+  - [Adapter convenience methods](#adapter-convenience-methods)
+  - [Built on Okio](#built-on-okio)
+  - [Borrows from Gson](#borrows-from-gson)
+  - [Custom field names with @Json](#custom-field-names-with-json)
+  - [Alternate type adapters with @JsonQualifier](#alternate-type-adapters-with-jsonqualifier)
+  - [Omitting fields](#omitting-fields)
+  - [Default Values & Constructors](#default-values--constructors)
+  - [Composing Adapters](#composing-adapters)
+  - [Precedence](#precedence)
+    - [Reflection](#reflection)
+    - [Codegen](#codegen)
+    - [Limitations](#limitations)
+    - [Enums](#enums)
+
+
+### Simple example of serializing
+
 <details>
   <summary>Java</summary>
 
@@ -33,6 +58,8 @@ val blackjackHand = jsonAdapter.fromJson(json)
 println(blackjackHand)
 ```
 </details>
+
+### Simple example of deserializing
 
 And it can just as easily serialize Java or Kotlin objects as JSON:
 
