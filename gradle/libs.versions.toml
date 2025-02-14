@@ -10,7 +10,7 @@ ksp = "2.0.21-1.0.25"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "2.0.0" }
-japicmp = { id = "me.champeau.gradle.japicmp", version = "0.4.5" }
+japicmp = { id = "me.champeau.gradle.japicmp", version = "0.4.6" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.30.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
