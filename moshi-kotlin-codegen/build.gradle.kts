@@ -33,7 +33,6 @@ dependencies {
   implementation(project(":moshi"))
   api(libs.kotlinpoet)
   implementation(libs.kotlinpoet.ksp)
-  implementation(libs.guava)
   implementation(libs.asm)
 
   implementation(libs.autoService)
