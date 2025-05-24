@@ -1137,7 +1137,7 @@ or Gradle:
 implementation("com.squareup.moshi:moshi:1.15.2")
 ```
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+Snapshots of the development version are available in [the Central Portal Snapshots repository][snap].
 
 
 R8 / ProGuard
@@ -1168,7 +1168,7 @@ License
 
 
  [dl]: https://search.maven.org/classic/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/
+ [snap]: https://central.sonatype.com/repository/maven-snapshots/
  [okio]: https://github.com/square/okio/
  [okhttp]: https://github.com/square/okhttp/
  [gson]: https://github.com/google/gson/
