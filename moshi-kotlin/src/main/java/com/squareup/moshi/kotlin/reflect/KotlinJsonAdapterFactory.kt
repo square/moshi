@@ -213,6 +213,9 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       // Fall back to a reflective adapter when the generated adapter is not found.
     }
 
+    require(!rawType.isAnonymousClass) {
+      "Cannot serialize anonymous class ${rawType.name}"
+    }
     require(!rawType.isLocalClass) {
       "Cannot serialize local class or object expression ${rawType.name}"
     }
@@ -230,7 +233,11 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       "Cannot reflectively serialize sealed class ${rawType.name}. Please register an adapter."
     }
 
-    val constructor = rawTypeKotlin.primaryConstructor ?: return null
+    val constructor = rawTypeKotlin.primaryConstructor
+    requireNotNull(constructor) {
+      "Cannot reflectively serialize class without the primary constructor ${rawType.name}." +
+        " Please register an adapter."
+    }
     val parametersByName = constructor.parameters.associateBy { it.name }
     constructor.isAccessible = true
 
