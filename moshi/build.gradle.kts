@@ -3,7 +3,8 @@ import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -12,49 +13,29 @@ plugins {
   id("org.jetbrains.dokka")
 }
 
-val mainSourceSet by sourceSets.named("main")
-val java16: SourceSet by sourceSets.creating {
-  java {
-    srcDir("src/main/java16")
-  }
-}
+kotlin.target {
+  val main = compilations.getByName(MAIN_COMPILATION_NAME)
+  val java16 =
+    compilations.create("java16") {
+      associateWith(main)
+      defaultSourceSet.kotlin.srcDir("src/main/java16")
+      compileJavaTaskProvider.configure {
+        options.release = 16
+      }
+      compileTaskProvider.configure {
+        (compilerOptions as KotlinJvmCompilerOptions).jvmTarget = JvmTarget.JVM_16
+      }
+    }
 
-// We use newer JDKs but target 16 for maximum compatibility
-val service = project.extensions.getByType<JavaToolchainService>()
-val customLauncher =
-  service.launcherFor {
-    languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
-  }
-
-tasks.named<JavaCompile>("compileJava16Java") {
-  options.release.set(16)
-}
-
-tasks.named<KotlinCompile>("compileJava16Kotlin") {
-  kotlinJavaToolchain.toolchain.use(customLauncher)
-  compilerOptions.jvmTarget.set(JvmTarget.JVM_16)
-}
-
-// Grant our java16 sources access to internal APIs in the main source set
-kotlin.target.compilations.run {
-  getByName("java16")
-    .associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
-}
-
-// Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
-tasks.named<Jar>("jar") {
-  from(java16.output) {
-    into("META-INF/versions/16")
-  }
-  manifest {
-    attributes("Multi-Release" to "true")
-  }
-}
-
-configurations {
-  "java16Implementation" {
-    extendsFrom(api.get())
-    extendsFrom(implementation.get())
+  // Package our actual RecordJsonAdapter from java16 sources in and denote it as an MRJAR
+  tasks.named<Jar>(artifactsTaskName) {
+    from(java16.output) {
+      into("META-INF/versions/16")
+      exclude("META-INF")
+    }
+    manifest {
+      attributes("Multi-Release" to "true")
+    }
   }
 }
 
@@ -78,8 +59,6 @@ tasks
   }
 
 dependencies {
-  // So the j16 source set can "see" main Moshi sources
-  "java16Implementation"(mainSourceSet.output)
   compileOnly(libs.jsr305)
   api(libs.okio)
 
