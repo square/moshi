@@ -15,6 +15,9 @@
  */
 package com.squareup.moshi.kotlin.codegen.ksp
 
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getClassDeclarationByName
+import com.google.devtools.ksp.isAnnotationPresent
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -95,5 +98,6 @@ internal fun TargetProperty.generator(
   )
 }
 
+@OptIn(KspExperimental::class)
 internal val KSClassDeclaration.isJsonQualifier: Boolean
   get() = isAnnotationPresent(JsonQualifier::class)
