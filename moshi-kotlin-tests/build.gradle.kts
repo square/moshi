@@ -35,8 +35,9 @@ tasks.withType<Test>().configureEach {
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
     allWarningsAsErrors.set(true)
-    freeCompilerArgs.add(
+    freeCompilerArgs.addAll(
       "-opt-in=kotlin.ExperimentalStdlibApi",
+      "-Xannotation-default-target=param-property",
     )
   }
 }
