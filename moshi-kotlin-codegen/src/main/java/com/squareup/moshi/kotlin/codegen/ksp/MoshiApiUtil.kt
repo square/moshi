@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen.ksp
 
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSClassDeclaration
