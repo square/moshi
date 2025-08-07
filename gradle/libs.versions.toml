@@ -30,7 +30,7 @@ kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlin
 ksp = { module = "com.google.devtools.ksp:symbol-processing", version.ref = "ksp" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 okio = "com.squareup.okio:okio:3.15.0"
-assertj = "org.assertj:assertj-core:3.27.3"
+assertj = "org.assertj:assertj-core:3.27.4"
 junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
