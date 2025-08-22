@@ -30,8 +30,10 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Nullability
 import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -258,7 +260,8 @@ private fun KSPropertyDeclaration.toPropertySpec(
 ): PropertySpec {
   return PropertySpec.builder(
     name = simpleName.getShortName(),
-    type = resolvedType.toTypeName(typeParameterResolver).unwrapTypeAlias(),
+    type = resolvedType.toTypeName(typeParameterResolver).unwrapTypeAlias()
+      .fixTypeAliasNullability(resolvedType),
   )
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
@@ -277,4 +280,14 @@ private fun KSPropertyDeclaration.toPropertySpec(
       )
     }
     .build()
+}
+
+private fun TypeName.fixTypeAliasNullability(resolvedType: KSType): TypeName {
+  return if (resolvedType.declaration is KSTypeAlias) {
+    copy(
+      nullable = resolvedType.nullability == Nullability.NULLABLE,
+    )
+  } else {
+    this
+  }
 }
