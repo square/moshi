@@ -487,7 +487,7 @@ class DualKotlinTest {
     val parameterized: GenericClass<TypeAlias>,
     val wildcardIn: GenericClass<in TypeAlias>,
     val wildcardOut: GenericClass<out TypeAlias>,
-    val complex: GenericClass<GenericTypeAlias>?,
+    val complex: GenericClass<GenericTypeAlias?>?,
   )
 
   // Regression test for https://github.com/square/moshi/issues/991
