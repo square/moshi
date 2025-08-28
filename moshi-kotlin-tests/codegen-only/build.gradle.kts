@@ -1,5 +1,5 @@
-import Build_gradle.TestMode.KSP
-import Build_gradle.TestMode.REFLECT
+import TestMode.KSP
+import TestMode.REFLECT
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
