@@ -45,7 +45,7 @@ public data class ProguardConfig(
     return "META-INF/proguard/moshi-$canonicalName"
   }
 
-  public fun writeTo(out: Appendable): Unit = out.run {
+  public fun writeTo(out: Appendable, dontKeepClassNames: Boolean): Unit = out.run {
     //
     // -keepnames class {the target class}
     // -if class {the target class}
@@ -56,11 +56,17 @@ public data class ProguardConfig(
     //
     val targetName = targetClass.reflectionName()
     val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
-    // Keep the class name for Moshi's reflective lookup based on it
-    appendLine("-keepnames class $targetName")
+
+    // Keep the class name for Moshi's reflective lookup based on it,
+    // but only if the user hasn't opted out of this.
+    if (!dontKeepClassNames)
+      appendLine("-keepnames class $targetName")
+
+    // Keep the `JsonClass` annotation on the target class, R8 will shrink it away otherwise.
+    appendLine("-keep${if (dontKeepClassNames) ",allowobfuscation" else ""} @com.squareup.moshi.JsonClass class *")
 
     appendLine("-if class $targetName")
-    appendLine("-keep class $adapterCanonicalName {")
+    appendLine("-${if (dontKeepClassNames) "keepclassmembers" else "keep"} class $adapterCanonicalName {")
     // Keep the constructor for Moshi's reflective lookup
     val constructorArgs = adapterConstructorParams.joinToString(",")
     appendLine("    public <init>($constructorArgs);")

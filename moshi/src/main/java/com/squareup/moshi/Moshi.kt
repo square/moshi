@@ -45,6 +45,8 @@ public class Moshi internal constructor(builder: Builder) {
   private val lookupChainThreadLocal = ThreadLocal<LookupChain>()
   private val adapterCache = LinkedHashMap<Any?, JsonAdapter<*>?>()
 
+  internal val registry = builder.registry
+
   /** Returns a JSON adapter for `type`, creating it if necessary. */
   @CheckReturnValue
   public fun <T> adapter(type: Type): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
@@ -191,6 +193,7 @@ public class Moshi internal constructor(builder: Builder) {
   public class Builder {
     internal val factories = mutableListOf<JsonAdapter.Factory>()
     internal var lastOffset = 0
+    internal var registry: AdapterRegistry? = null
 
     @CheckReturnValue
     @ExperimentalStdlibApi
@@ -239,8 +242,40 @@ public class Moshi internal constructor(builder: Builder) {
       addLast(AdapterMethodsFactory(adapter))
     }
 
+    public fun setRegistry(adapterRegistry: AdapterRegistry): Builder = apply {
+      this.registry = adapterRegistry
+    }
+
     @CheckReturnValue
     public fun build(): Moshi = Moshi(this)
+  }
+
+  /**
+   * A registry of [JsonAdapter]s to be registered with a [Moshi] instance.
+   *
+   * To use, create a subclass and implement [adapters]. Then set an instance of your subclass on
+   * [Moshi.Builder.setRegistry].
+   *
+   * Example:
+   * ```
+   * class MyAdapterRegistry : Moshi.AdapterRegistry {
+   *   override val adapters = mapOf(
+   *     MyType::class.java to MyTypeJsonAdapter::class.java,
+   *     Types.newParameterizedType(List::class.java, String::class.java) to MyStringListJsonAdapter::class.java
+   *   )
+   * }
+   *
+   * val myRegistry = MyAdapterRegistry()
+   *
+   * val builder = Moshi.Builder().setRegistry(myRegistry)
+   * val moshi = builder.build()
+   * ```
+   */
+  public interface AdapterRegistry {
+    /**
+     * A map of [Type] to [JsonAdapter] to be registered.
+     */
+    public val adapters: Map<Type, Class<out JsonAdapter<*>>>
   }
 
   /**

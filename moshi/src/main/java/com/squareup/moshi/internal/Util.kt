@@ -378,12 +378,24 @@ public fun Moshi.generatedAdapter(
   if (jsonClass == null || !jsonClass.generateAdapter) {
     return null
   }
-  val adapterClassName = Types.generatedJsonAdapterName(rawType.name)
+
+  val adapters = registry?.adapters
+
+  val rawAdapterClassName = Types.generatedJsonAdapterName(rawType.name)
   var possiblyFoundAdapter: Class<out JsonAdapter<*>>? = null
+
   return try {
     @Suppress("UNCHECKED_CAST")
-    val adapterClass = Class.forName(adapterClassName, true, rawType.classLoader) as Class<out JsonAdapter<*>>
+    val adapterClass = adapters?.firstNotNullOfOrNull { (regType, regAdapter) ->
+      if (typesMatch(rawType, regType)) {
+        regAdapter
+      } else {
+        null
+      }
+    } ?: Class.forName(rawAdapterClassName, true, rawType.classLoader) as? Class<out JsonAdapter<*>>?
+    ?: throw ClassNotFoundException()
     possiblyFoundAdapter = adapterClass
+
     var constructor: Constructor<out JsonAdapter<*>>
     var args: Array<Any>
     if (type is ParameterizedType) {

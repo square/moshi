@@ -24,16 +24,22 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ksp.addOriginatingKSFile
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.kotlin.codegen.api.AdapterGenerator
+import com.squareup.moshi.kotlin.codegen.api.AdapterRegistration
+import com.squareup.moshi.kotlin.codegen.api.AdapterRegistryGenerator
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATED
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_DEFAULT_ADAPTER_REGISTRY
 import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_GENERATE_PROGUARD_RULES
+import com.squareup.moshi.kotlin.codegen.api.Options.OPTION_PROGUARD_RULES_DONT_KEEP_CLASS_NAMES
 import com.squareup.moshi.kotlin.codegen.api.Options.POSSIBLE_GENERATED_NAMES
 import com.squareup.moshi.kotlin.codegen.api.ProguardConfig
 import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
@@ -63,6 +69,10 @@ private class JsonClassSymbolProcessor(
     }
   }
   private val generateProguardRules = environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
+  private val proguardRulesDontKeepClassNames = environment.options[OPTION_PROGUARD_RULES_DONT_KEEP_CLASS_NAMES]?.toBooleanStrictOrNull() ?: false
+  private val generateDefaultAdapterRegistry = environment.options[OPTION_GENERATE_DEFAULT_ADAPTER_REGISTRY]?.toBooleanStrictOrNull() ?: false
+
+  private val adapterRegistrations = mutableListOf<AdapterRegistration>()
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
     val generatedAnnotation = generatedOption?.let {
@@ -100,13 +110,40 @@ private class JsonClassSymbolProcessor(
               .build()
           }
         preparedAdapter.spec.writeTo(codeGenerator, aggregating = false)
-        preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
+        preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile, proguardRulesDontKeepClassNames)
+
+        // Collect adapter registration information.
+        if (generateDefaultAdapterRegistry && type is KSClassDeclaration) {
+          val targetClassName = type.toClassName()
+          val adapterClassName = ClassName(
+            targetClassName.packageName,
+            "${targetClassName.simpleNames.joinToString("_")}JsonAdapter"
+          )
+          val hasTypeParameters = type.typeParameters.isNotEmpty()
+
+          adapterRegistrations.add(
+            AdapterRegistration(
+              targetClassName = targetClassName,
+              adapterClassName = adapterClassName,
+              hasTypeParameters = hasTypeParameters
+            )
+          )
+        }
       } catch (e: Exception) {
         logger.error(
           "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}",
         )
       }
     }
+
+    if (adapterRegistrations.isNotEmpty()) {
+      // FileAlreadyExistsException can happen if multiple compilations.
+      runCatching {
+        val adapterRegistryGenerator = adapterRegistryGenerator()
+        adapterRegistryGenerator.generate().writeTo(codeGenerator, aggregating = false)
+      }
+    }
+
     return emptyList()
   }
 
@@ -144,10 +181,12 @@ private class JsonClassSymbolProcessor(
 
     return AdapterGenerator(type, sortedProperties)
   }
+
+  private fun adapterRegistryGenerator() = AdapterRegistryGenerator(adapterRegistrations)
 }
 
 /** Writes this config to a [codeGenerator]. */
-private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile) {
+private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile, dontKeepClassNames: Boolean) {
   val file = codeGenerator.createNewFile(
     dependencies = Dependencies(aggregating = false, originatingKSFile),
     packageName = "",
@@ -156,5 +195,5 @@ private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFi
   )
   // Don't use writeTo(file) because that tries to handle directories under the hood
   OutputStreamWriter(file, StandardCharsets.UTF_8)
-    .use(::writeTo)
+    .use { writeTo(it, dontKeepClassNames) }
 }
