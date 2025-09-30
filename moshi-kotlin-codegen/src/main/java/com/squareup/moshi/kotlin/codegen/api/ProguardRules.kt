@@ -62,8 +62,22 @@ public data class ProguardConfig(
     if (!dontKeepClassNames)
       appendLine("-keepnames class $targetName")
 
-    // Keep the `JsonClass` annotation on the target class, R8 will shrink it away otherwise.
+    // Keep the `JsonClass` annotation on the target class, R8 will strip it away otherwise.
     appendLine("-keep${if (dontKeepClassNames) ",allowobfuscation" else ""} @com.squareup.moshi.JsonClass class *")
+
+    //
+    // -keepclassmembers enum * {
+    //    public static **[] values();
+    //    public static ** valueOf(java.lang.String);
+    //    public static <fields>;
+    // }
+    //
+    // Keep the enum values method, R8 will strip it away otherwise.
+    appendLine("-keepclassmembers enum * {")
+    appendLine("    public static **[] values();")
+    appendLine("    public static ** valueOf(java.lang.String);")
+    appendLine("    public static <fields>;")
+    appendLine("}")
 
     appendLine("-if class $targetName")
     appendLine("-${if (dontKeepClassNames) "keepclassmembers" else "keep"} class $adapterCanonicalName {")
