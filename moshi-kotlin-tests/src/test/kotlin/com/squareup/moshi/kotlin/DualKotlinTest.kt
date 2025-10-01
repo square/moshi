@@ -243,6 +243,8 @@ class DualKotlinTest {
     assertThat(decoded.a).isEqualTo(null)
   }
 
+  // TODO CR ValueClass enables generateAdapter but it's not present in reflect-only.
+  //  We previously allowed reflect to do this
   @Test fun valueClass() {
     val adapter = moshi.adapter<ValueClass>()
 
