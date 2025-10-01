@@ -22,7 +22,7 @@ jobs:
           java-version-file: .github/workflows/.java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Test
         run: ./gradlew build check --stacktrace -PkotlinTestMode=${{ matrix.kotlin-test-mode }}
