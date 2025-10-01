@@ -21,14 +21,12 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSNode
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSTypeAlias
 import com.google.devtools.ksp.symbol.Origin.KOTLIN
 import com.google.devtools.ksp.symbol.Origin.KOTLIN_LIB
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
 
@@ -86,41 +84,6 @@ private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Bu
         member.add("%T.%L", parent.toClassName(), entry)
       } else {
         member.add("%T::class", unwrapped.toClassName())
-      }
-    }
-
-    is KSName -> {
-      // Try to resolve enum names using annotation context first
-      val qualifier = value.getQualifier()
-      val shortName = value.getShortName()
-
-      if (qualifier != null) {
-        // Try direct resolution first
-        val resolvedClass = resolver.getClassDeclarationByName(resolver.getKSNameFromString(qualifier))
-        when {
-          resolvedClass?.classKind == ClassKind.ENUM_CLASS -> {
-            member.add("%T.%L", resolvedClass.toClassName(), shortName)
-          }
-          annotationContext != null -> {
-            // Look for nested enum in annotation context
-            val nestedEnum = annotationContext.declarations
-              .filterIsInstance<KSClassDeclaration>()
-              .find { it.simpleName.getShortName() == qualifier && it.classKind == ClassKind.ENUM_CLASS }
-
-            if (nestedEnum != null) {
-              member.add("%T.%L", nestedEnum.toClassName(), shortName)
-            } else {
-              // Fallback to best guess
-              member.add("%T.%L", ClassName.bestGuess(qualifier), shortName)
-            }
-          }
-          else -> {
-            // Fallback to best guess
-            member.add("%T.%L", ClassName.bestGuess(qualifier), shortName)
-          }
-        }
-      } else {
-        member.add("%L", shortName)
       }
     }
 
