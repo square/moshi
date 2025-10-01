@@ -114,7 +114,7 @@ dependencies {
 
 dokka {
   dokkaPublications.html {
-    outputDirectory.set(rootDir.resolve("docs/2.x"))
+    outputDirectory.set(layout.projectDirectory.dir("docs/2.x"))
   }
 }
 
@@ -138,7 +138,8 @@ subprojects {
         }
         sourceLink {
           localDirectory.set(layout.projectDirectory.dir("src"))
-          val relPath = rootProject.projectDir.toPath().relativize(projectDir.toPath())
+          val relPath = rootProject.isolated.projectDirectory.asFile.toPath()
+            .relativize(projectDir.toPath())
           remoteUrl("https://github.com/square/moshi/tree/main/$relPath/src")
           remoteLineSuffix.set("#L")
         }
