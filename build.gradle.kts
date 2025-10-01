@@ -2,7 +2,6 @@ import com.diffplug.gradle.spotless.JavaExtension
 import com.google.devtools.ksp.gradle.KspTaskJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.dokka.gradle.DokkaExtension
-import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -125,7 +124,6 @@ subprojects {
       dokkaSourceSets.configureEach {
         skipDeprecated.set(true)
         reportUndocumented.set(true)
-        documentedVisibilities.add(VisibilityModifier.Public)
         jdkVersion.set(8)
         perPackageOption {
           matchingRegex.set("com\\.squareup\\.moshi\\.internal.*")
