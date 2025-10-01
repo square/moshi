@@ -268,6 +268,7 @@ class DualKotlinTest {
   @JsonClass(generateAdapter = true)
   data class InlineConsumer(val inline: ValueClass)
 
+  // TODO this produces {"inline":23} now
   @Test fun inlineClassConsumer() {
     val adapter = moshi.adapter<InlineConsumer>()
 

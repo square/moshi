@@ -380,6 +380,7 @@ class KotlinJsonAdapterTest {
 
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
+  // TODO in code review - this now only produces {"a":3}. Do we want this?
   @Test fun extendsPlatformClassWithProtectedField() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()
