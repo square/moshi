@@ -154,6 +154,8 @@ public val Class<*>.isPlatformType: Boolean
         name.startsWith("androidx.") ||
         name.startsWith("java.") ||
         name.startsWith("javax.") ||
+        // L8 desugared APIs
+        name.startsWith("j$.") ||
         name.startsWith("kotlin.") ||
         name.startsWith("kotlinx.") ||
         name.startsWith("scala.")
