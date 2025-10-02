@@ -129,10 +129,9 @@ subprojects {
           matchingRegex.set("com\\.squareup\\.moshi\\.internal.*")
           suppress.set(true)
         }
-        externalDocumentationLinks {
-          maybeCreate("okio").apply {
-            url("https://square.github.io/okio/3.x/okio/")
-          }
+        externalDocumentationLinks.register("Okio") {
+          packageListUrl("https://square.github.io/okio/3.x/okio/okio/package-list")
+          url("https://square.github.io/okio/3.x/okio")
         }
         sourceLink {
           localDirectory.set(layout.projectDirectory.dir("src"))
