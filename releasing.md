@@ -47,4 +47,3 @@ Cutting a Release
    This will trigger a GitHub Action workflow which will create a GitHub release and upload the
    release artifacts to Maven Central.
 
-[sonatype_issues]: https://issues.sonatype.org/
