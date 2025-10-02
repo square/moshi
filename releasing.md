@@ -1,61 +1,50 @@
-Releasing
-=========
+# Releasing
 
 ### Prerequisite: Sonatype (Maven Central) Account
 
 Create an account on the [Sonatype issues site][sonatype_issues]. Ask an existing publisher to open
 an issue requesting publishing permissions for `com.squareup` projects.
 
-
 Cutting a Release
 -----------------
 
-1. Update `CHANGELOG.md`.
+1. Update the `VERSION_NAME` in `gradle.properties` to the release version.
 
-2. Set versions:
+2. Update the `CHANGELOG.md`:
+   1. Change the `Unreleased` header to the release version.
+   2. Add a link URL to ensure the header link works.
+   3. Add a new `Unreleased` section to the top.
 
-    ```
-    export RELEASE_VERSION=X.Y.Z
-    export NEXT_VERSION=X.Y.Z-SNAPSHOT
-    ```
+3. Update the `README.md` so the "Download" section reflects the new release version and the
+   snapshot section reflects the next "SNAPSHOT" version.
 
-3. Update versions:
+4. Commit
 
-    ```
-    sed -i "" \
-      "s/VERSION_NAME=.*/VERSION_NAME=$RELEASE_VERSION/g" \
-      gradle.properties
-    sed -i "" \
-      "s/\"com.squareup.moshi:\([^\:]*\):[^\"]*\"/\"com.squareup.moshi:\1:$RELEASE_VERSION\"/g" \
-      `find . -name "README.md"`
-    ```
+   ```
+   $ git commit -am "Prepare version X.Y.Z"
+   ```
 
-4. Tag the release and push to GitHub.
+5. Tag
 
-    ```
-    git commit -am "Prepare for release $RELEASE_VERSION."
-    git tag -a parent-$RELEASE_VERSION -m "Version $RELEASE_VERSION"
-    git push && git push --tags
-    ```
+   ```
+   $ git tag -am "Version X.Y.Z" X.Y.Z
+   ```
 
-5. Wait for [GitHub Actions][github_actions] to start building the release.
+6. Update the `VERSION_NAME` in `gradle.properties` to the next "SNAPSHOT" version.
 
-6. Prepare for ongoing development and push to GitHub.
+7. Commit
 
-    ```
-    sed -i "" \
-      "s/VERSION_NAME=.*/VERSION_NAME=$NEXT_VERSION/g" \
-      gradle.properties
-    git commit -am "Prepare next development version."
-    git push
-    ```
+   ```
+   $ git commit -am "Prepare next development version"
+   ```
 
-7. Wait for [GitHub Actions][github_actions] to build and publish releases for both Windows and
-   Non-Windows.
+8. Push!
 
-8. Visit [Sonatype Nexus][sonatype_nexus] to promote (close then release) the releases. Or drop it
-   if there is a problem!
+   ```
+   $ git push && git push --tags
+   ```
 
- [github_actions]: https://github.com/square/moshi/actions
- [sonatype_issues]: https://issues.sonatype.org/
- [sonatype_nexus]: https://s01.oss.sonatype.org/
+   This will trigger a GitHub Action workflow which will create a GitHub release and upload the
+   release artifacts to Maven Central.
+
+[sonatype_issues]: https://issues.sonatype.org/
