@@ -1,6 +1,3 @@
-import com.vanniktech.maven.publish.JavadocJar.Dokka
-import com.vanniktech.maven.publish.KotlinJvm
-import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
@@ -71,8 +68,4 @@ tasks.withType<Jar>().configureEach {
   manifest {
     attributes("Automatic-Module-Name" to "com.squareup.moshi")
   }
-}
-
-configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = Dokka("dokkaGfm")))
 }
