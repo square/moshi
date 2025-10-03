@@ -1196,7 +1196,12 @@ class GeneratedAdaptersTest {
   }
 
   @JsonQualifier
-  annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false)
+  annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false, val temperature: Temperature = Temperature.COLD) {
+    enum class Temperature {
+      WARM,
+      COLD,
+    }
+  }
 
   class UppercaseJsonAdapter {
     @ToJson
