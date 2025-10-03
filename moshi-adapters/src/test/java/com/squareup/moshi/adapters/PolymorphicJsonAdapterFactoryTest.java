@@ -445,4 +445,118 @@ public final class PolymorphicJsonAdapterFactoryTest {
       this.value = value;
     }
   }
+
+  @Test
+  public void multiLevelPolymorphic() throws IOException {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(OperationSystem.class, "familyName")
+                    .withSubtype(Windows.class, "Windows")
+                    .withSubtype(MacOS.class, "MacOS")
+                    .withSubtype(Others.class, "Others"))
+            .add(
+                PolymorphicJsonAdapterFactory.of(Others.class, "projectType")
+                    .withSubtype(OpenSourceSystem.class, "OPEN_SOURCE")
+                    .withSubtype(ClosedSourceSystem.class, "CLOSED_SOURCE")
+                    .withSubtype(Unknown.class, "UNLICENSED"))
+            .add(
+                PolymorphicJsonAdapterFactory.of(OpenSourceSystem.class, "name")
+                    .withSubtype(Linux.class, "Linux")
+                    .withSubtype(Android.class, "Android"))
+            .add(
+                PolymorphicJsonAdapterFactory.of(ClosedSourceSystem.class, "name")
+                    .withSubtype(IOS.class, "iOS"))
+            .build();
+
+    JsonAdapter<OperationSystem> adapter = moshi.adapter(OperationSystem.class);
+    assertThat(
+            adapter.fromJson(
+                "{\"familyName\":\"Others\",\"projectType\":\"OPEN_SOURCE\",\"name\":\"Linux\"}"))
+        .isInstanceOf(Linux.class);
+    assertThat(
+            adapter.fromJson(
+                "{\"familyName\":\"Others\",\"projectType\":\"CLOSED_SOURCE\",\"name\":\"iOS\",\"latestMajorVersion\":12}"))
+        .isInstanceOf(IOS.class);
+    assertThat(adapter.fromJson("{\"familyName\":\"Others\",\"projectType\":\"UNLICENSED\"}"))
+        .isInstanceOf(Unknown.class);
+
+    assertThat(adapter.toJson(new MacOS())).isEqualTo("{\"familyName\":\"MacOS\"}");
+
+    assertThat(adapter.toJson(new Unknown()))
+        .isEqualTo("{\"familyName\":\"Others\",\"projectType\":\"UNLICENSED\"}");
+
+    assertThat(adapter.toJson(new IOS(12)))
+        .isEqualTo(
+            "{\"familyName\":\"Others\",\"latestMajorVersion\":12,\"name\":\"iOS\",\"projectType\":\"CLOSED_SOURCE\"}");
+  }
+
+  interface OperationSystem {}
+
+  static final class Windows implements OperationSystem {}
+
+  static final class MacOS implements OperationSystem {}
+
+  abstract static class Others implements OperationSystem {
+    final ProjectType projectType;
+
+    Others(ProjectType projectType) {
+      this.projectType = projectType;
+    }
+  }
+
+  static class Unknown extends Others {
+
+    Unknown() {
+      super(ProjectType.UNLICENSED);
+    }
+  }
+
+  abstract static class OpenSourceSystem extends Others {
+
+    final String name;
+
+    OpenSourceSystem(String name) {
+      super(ProjectType.OPEN_SOURCE);
+      this.name = name;
+    }
+  }
+
+  static final class Linux extends OpenSourceSystem {
+    Linux() {
+      super("Linux");
+    }
+  }
+
+  static final class Android extends OpenSourceSystem {
+    Android() {
+      super("Android");
+    }
+  }
+
+  abstract static class ClosedSourceSystem extends Others {
+
+    final String name;
+
+    ClosedSourceSystem(String name) {
+      super(ProjectType.CLOSED_SOURCE);
+      this.name = name;
+    }
+  }
+
+  static final class IOS extends ClosedSourceSystem {
+
+    final int latestMajorVersion;
+
+    IOS(int latestMajorVersion) {
+      super("iOS");
+      this.latestMajorVersion = latestMajorVersion;
+    }
+  }
+
+  enum ProjectType {
+    OPEN_SOURCE,
+    CLOSED_SOURCE,
+    UNLICENSED
+  }
 }
