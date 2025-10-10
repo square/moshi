@@ -288,9 +288,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No default value for transient constructor parameter #0 " +
-          "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter",
+        "No default value for transient/ignored constructor parameter 'a' on type " +
+          "'com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter'",
       )
     }
   }
@@ -304,9 +303,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No default value for ignored constructor parameter #0 " +
-          "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter",
+        "No default value for transient/ignored constructor parameter 'a' on type " +
+          "'com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter'",
       )
     }
   }
@@ -382,6 +380,7 @@ class KotlinJsonAdapterTest {
 
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
 
+  // TODO in code review - this now only produces {"a":3}. Do we want this?
   @Test fun extendsPlatformClassWithProtectedField() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()
@@ -551,8 +550,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No property for required constructor parameter #0 a of fun `<init>`(" +
-          "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}",
+        "No property for required constructor parameter 'a' on type " +
+          "'${NonPropertyConstructorParameter::class.qualifiedName}'",
       )
     }
   }

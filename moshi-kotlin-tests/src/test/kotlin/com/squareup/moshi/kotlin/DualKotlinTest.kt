@@ -243,6 +243,8 @@ class DualKotlinTest {
     assertThat(decoded.a).isEqualTo(null)
   }
 
+  // TODO CR ValueClass enables generateAdapter but it's not present in reflect-only.
+  //  We previously allowed reflect to do this
   @Test fun valueClass() {
     val adapter = moshi.adapter<ValueClass>()
 
@@ -268,6 +270,7 @@ class DualKotlinTest {
   @JsonClass(generateAdapter = true)
   data class InlineConsumer(val inline: ValueClass)
 
+  // TODO this produces {"inline":23} now
   @Test fun inlineClassConsumer() {
     val adapter = moshi.adapter<InlineConsumer>()
 
