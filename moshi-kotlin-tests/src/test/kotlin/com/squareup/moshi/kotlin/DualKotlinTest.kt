@@ -20,6 +20,7 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
@@ -762,6 +763,41 @@ class DualKotlinTest {
   data class PropertyWithDollarSign(
     val `$a`: String,
     @Json(name = "\$b") val b: String,
+  )
+
+  @Retention(RUNTIME)
+  @JsonQualifier
+  annotation class NestedEnum(val nested: Nested = Nested.A) {
+    enum class Nested { A, B, C }
+  }
+
+  @Test fun nestedEnumAnnotation() {
+    val moshi = Moshi.Builder()
+      .add(
+        object {
+          @FromJson
+          @NestedEnum
+          fun fromJson(string: String): String? = string
+
+          @ToJson
+          fun toJson(@NestedEnum @Nullable value: String?): String {
+            return value ?: "fallback"
+          }
+        },
+      )
+      .add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<PropertyWithNestedEnumAnnotation>()
+
+    val value = PropertyWithNestedEnumAnnotation("apple")
+    val json = """{"value":"apple"}"""
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json)
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class PropertyWithNestedEnumAnnotation(
+    @NestedEnum
+    val value: String,
   )
 }
 
