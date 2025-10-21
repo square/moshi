@@ -197,11 +197,15 @@ internal class JsonUtf8Reader : JsonReader {
             PEEKED_SINGLE_QUOTED_NAME
           }
 
-          '}' -> if (peekStack != JsonScope.NONEMPTY_OBJECT) {
+          '}' -> {
+            if (peekStack == JsonScope.NONEMPTY_OBJECT && !lenient) {
+              throw syntaxError(
+                "Expected name. Use JsonReader.setLenient(true) to accept " +
+                  "malformed JSON",
+              )
+            }
             buffer.readByte() // consume the '}'.
             PEEKED_END_OBJECT
-          } else {
-            throw syntaxError("Expected name")
           }
 
           else -> {
@@ -213,8 +217,7 @@ internal class JsonUtf8Reader : JsonReader {
             }
           }
         }
-        peeked = next
-        return next
+        return setPeeked(next)
       }
 
       JsonScope.DANGLING_NAME -> {
