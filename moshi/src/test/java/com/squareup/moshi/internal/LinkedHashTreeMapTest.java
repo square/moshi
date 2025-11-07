@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi.internal;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
-
-import com.squareup.moshi.LinkedHashTreeMap.Node;
+import com.squareup.moshi.internal.LinkedHashTreeMap.Node;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings("KotlinInternalInJava")
 public final class LinkedHashTreeMapTest {

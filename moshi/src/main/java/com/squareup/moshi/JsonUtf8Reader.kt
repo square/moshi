@@ -15,7 +15,9 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.JsonValueSource
 import com.squareup.moshi.internal.knownNotNull
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -23,7 +25,6 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.IOException
 import okio.buffer
-import java.math.BigDecimal
 
 internal class JsonUtf8Reader : JsonReader {
   /** The input JSON. */

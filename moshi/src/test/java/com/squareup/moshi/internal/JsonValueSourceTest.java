@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
+package com.squareup.moshi.internal;
 
 import java.io.EOFException;
 import java.io.IOException;
 import okio.Buffer;
 import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 public final class JsonValueSourceTest {
   @Test

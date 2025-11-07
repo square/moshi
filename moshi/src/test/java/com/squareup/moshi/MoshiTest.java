@@ -15,13 +15,9 @@
  */
 package com.squareup.moshi;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.squareup.moshi.TestUtil.newReader;
-import static com.squareup.moshi.TestUtil.repeat;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.junit.Assert.fail;
-
 import android.util.Pair;
+import com.squareup.moshi.internal.MapJsonAdapter;
+import com.squareup.moshi.internal.StandardJsonAdapters;
 import com.squareup.moshi.internal.Util;
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +42,11 @@ import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
 import okio.Buffer;
 import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.moshi.TestUtil.newReader;
+import static com.squareup.moshi.TestUtil.repeat;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings({"CheckReturnValue", "ResultOfMethodCallIgnored"})
 public final class MoshiTest {

@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonScope.EMPTY_DOCUMENT
 import com.squareup.moshi.JsonScope.EMPTY_OBJECT
 import com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT
 import com.squareup.moshi.JsonScope.STREAMING_VALUE
+import com.squareup.moshi.internal.LinkedHashTreeMap
 import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSink
