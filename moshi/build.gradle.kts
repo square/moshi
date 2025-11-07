@@ -1,4 +1,8 @@
+import com.vanniktech.maven.publish.JavadocJar.None
+import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
@@ -69,3 +73,8 @@ tasks.withType<Jar>().configureEach {
     attributes("Automatic-Module-Name" to "com.squareup.moshi")
   }
 }
+
+configure<MavenPublishBaseExtension> {
+  configure(KotlinJvm(javadocJar = None()))
+}
+
