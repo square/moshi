@@ -77,4 +77,3 @@ tasks.withType<Jar>().configureEach {
 configure<MavenPublishBaseExtension> {
   configure(KotlinJvm(javadocJar = None()))
 }
-

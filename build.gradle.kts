@@ -1,11 +1,11 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import com.google.devtools.ksp.gradle.KspTaskJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import java.net.URI
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.URI
 
 buildscript {
   dependencies {
