@@ -15,8 +15,8 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonScope.getPath
-import com.squareup.moshi.JsonUtf8Writer.Companion.string
+import com.squareup.moshi.`-JsonUtf8Writer`.Companion.string
+import com.squareup.moshi.internal.JsonScope.getPath
 import okio.Buffer
 import okio.BufferedSource
 import okio.Closeable
@@ -670,7 +670,7 @@ public sealed class JsonReader : Closeable {
     @CheckReturnValue
     @JvmStatic
     public fun of(source: BufferedSource): JsonReader {
-      return JsonUtf8Reader(source)
+      return `-JsonUtf8Reader`(source)
     }
   }
 }

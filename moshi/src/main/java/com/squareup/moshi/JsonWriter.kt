@@ -15,10 +15,11 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonScope.EMPTY_ARRAY
-import com.squareup.moshi.JsonScope.EMPTY_OBJECT
-import com.squareup.moshi.JsonScope.NONEMPTY_ARRAY
-import com.squareup.moshi.JsonScope.NONEMPTY_OBJECT
+import com.squareup.moshi.internal.JsonScope
+import com.squareup.moshi.internal.JsonScope.EMPTY_ARRAY
+import com.squareup.moshi.internal.JsonScope.EMPTY_OBJECT
+import com.squareup.moshi.internal.JsonScope.NONEMPTY_ARRAY
+import com.squareup.moshi.internal.JsonScope.NONEMPTY_OBJECT
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.Closeable
@@ -235,7 +236,7 @@ public sealed class JsonWriter :
     scopes = scopes.copyOf(scopes.size * 2)
     pathNames = pathNames.copyOf(pathNames.size * 2)
     pathIndices = pathIndices.copyOf(pathIndices.size * 2)
-    if (this is JsonValueWriter) {
+    if (this is `-JsonValueWriter`) {
       stack = stack.copyOf(stack.size * 2)
     }
     return true
@@ -538,6 +539,6 @@ public sealed class JsonWriter :
     /** Returns a new instance that writes UTF-8 encoded JSON to `sink`. */
     @JvmStatic
     @CheckReturnValue
-    public fun of(sink: BufferedSink): JsonWriter = JsonUtf8Writer(sink)
+    public fun of(sink: BufferedSink): JsonWriter = `-JsonUtf8Writer`(sink)
   }
 }

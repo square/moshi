@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.JsonValueSource
 import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
@@ -26,7 +27,8 @@ import okio.IOException
 import okio.buffer
 import java.math.BigDecimal
 
-internal class JsonUtf8Reader : JsonReader {
+@Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
+internal class `-JsonUtf8Reader` : JsonReader {
   /** The input JSON. */
   private val source: BufferedSource
   private val buffer: Buffer
@@ -61,7 +63,7 @@ internal class JsonUtf8Reader : JsonReader {
   }
 
   /** Copy-constructor makes a deep copy for peeking. */
-  constructor(copyFrom: JsonUtf8Reader) : super(copyFrom) {
+  constructor(copyFrom: `-JsonUtf8Reader`) : super(copyFrom) {
     val sourcePeek = copyFrom.source.peek()
     source = sourcePeek
     buffer = sourcePeek.buffer
@@ -1081,7 +1083,7 @@ internal class JsonUtf8Reader : JsonReader {
     return found
   }
 
-  override fun peekJson(): JsonReader = JsonUtf8Reader(this)
+  override fun peekJson(): JsonReader = `-JsonUtf8Reader`(this)
 
   override fun toString(): String = "JsonReader($source)"
 
@@ -1195,8 +1197,8 @@ internal class JsonUtf8Reader : JsonReader {
     private const val NUMBER_CHAR_EXP_E = 5
     private const val NUMBER_CHAR_EXP_SIGN = 6
     private const val NUMBER_CHAR_EXP_DIGIT = 7
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun Byte.asChar(): Char = toInt().toChar()
   }
 }
-
-@Suppress("NOTHING_TO_INLINE")
-private inline fun Byte.asChar(): Char = toInt().toChar()

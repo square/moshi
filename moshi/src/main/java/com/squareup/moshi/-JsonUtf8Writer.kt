@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.JsonScope
 import okio.Buffer
 import okio.BufferedSink
 import okio.Sink
@@ -35,7 +36,8 @@ import kotlin.check
 import kotlin.code
 import kotlin.require
 
-internal class JsonUtf8Writer(
+@Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
+internal class `-JsonUtf8Writer`(
   /** The output data, containing at most one top-level array or object. */
   private val sink: BufferedSink,
 ) : JsonWriter() {

@@ -20,7 +20,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.rawType
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException
@@ -166,7 +165,7 @@ internal class ClassJsonAdapter<T>(
       var parentType = type
       while (parentType != Any::class.java) {
         createFieldBindings(moshi, parentType, fields)
-        parentType = Types.getGenericSuperclass(parentType)
+        parentType = getGenericSuperclass(parentType)
       }
       return ClassJsonAdapter(classFactory, fields).nullSafe()
     }
