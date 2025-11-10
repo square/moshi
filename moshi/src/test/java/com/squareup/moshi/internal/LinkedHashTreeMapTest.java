@@ -15,13 +15,14 @@
  */
 package com.squareup.moshi.internal;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+
 import com.squareup.moshi.internal.LinkedHashTreeMap.Node;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import org.junit.Test;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 @SuppressWarnings("KotlinInternalInJava")
 public final class LinkedHashTreeMapTest {

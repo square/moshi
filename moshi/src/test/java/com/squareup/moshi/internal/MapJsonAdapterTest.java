@@ -15,6 +15,11 @@
  */
 package com.squareup.moshi.internal;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.moshi.TestUtil.newReader;
+import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
+import static org.junit.Assert.fail;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import com.squareup.moshi.JsonReader;
@@ -29,10 +34,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import okio.Buffer;
 import org.junit.Test;
-import static com.google.common.truth.Truth.assertThat;
-import static com.squareup.moshi.TestUtil.newReader;
-import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
-import static org.junit.Assert.fail;
 
 public final class MapJsonAdapterTest {
   private final Moshi moshi = new Moshi.Builder().build();

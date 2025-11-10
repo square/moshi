@@ -15,6 +15,11 @@
  */
 package com.squareup.moshi.internal;
 
+import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.moshi.TestUtil.newReader;
+import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
+import static org.junit.Assert.fail;
+
 import com.squareup.moshi.Json;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
@@ -29,10 +34,6 @@ import java.util.List;
 import java.util.SimpleTimeZone;
 import okio.Buffer;
 import org.junit.Test;
-import static com.google.common.truth.Truth.assertThat;
-import static com.squareup.moshi.TestUtil.newReader;
-import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
-import static org.junit.Assert.fail;
 
 public final class ClassJsonAdapterTest {
   private final Moshi moshi = new Moshi.Builder().build();
@@ -409,7 +410,8 @@ public final class ClassJsonAdapterTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "Cannot serialize local class " + "com.squareup.moshi.internal.ClassJsonAdapterTest$1Local");
+              "Cannot serialize local class "
+                  + "com.squareup.moshi.internal.ClassJsonAdapterTest$1Local");
     }
   }
 

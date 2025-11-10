@@ -16,7 +16,6 @@
 package com.squareup.moshi.internal
 
 import com.squareup.moshi.JsonReader
-import kotlin.math.min
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -24,6 +23,7 @@ import okio.ByteString.Companion.EMPTY
 import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.Source
+import kotlin.math.min
 
 /**
  * This source reads a prefix of another source as a JSON value and then terminates. It can read

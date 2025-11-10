@@ -21,8 +21,8 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.rawType
-import java.lang.reflect.Array as JavaArray
 import java.lang.reflect.Type
+import java.lang.reflect.Array as JavaArray
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
