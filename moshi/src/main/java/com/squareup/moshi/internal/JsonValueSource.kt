@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.internal
 
+import com.squareup.moshi.JsonReader
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -22,7 +23,6 @@ import okio.ByteString.Companion.EMPTY
 import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.Source
-import kotlin.jvm.JvmOverloads
 import kotlin.math.min
 
 /**

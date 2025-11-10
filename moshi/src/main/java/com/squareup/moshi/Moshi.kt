@@ -16,9 +16,16 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.Types.createJsonQualifierImplementation
+import com.squareup.moshi.internal.AdapterMethodsFactory
+import com.squareup.moshi.internal.ArrayJsonAdapter
+import com.squareup.moshi.internal.ClassJsonAdapter
+import com.squareup.moshi.internal.CollectionJsonAdapter
+import com.squareup.moshi.internal.MapJsonAdapter
 import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
+import com.squareup.moshi.internal.RecordJsonAdapter
+import com.squareup.moshi.internal.StandardJsonAdapters
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard

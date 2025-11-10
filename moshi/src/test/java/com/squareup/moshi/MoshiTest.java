@@ -22,6 +22,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.fail;
 
 import android.util.Pair;
+import com.squareup.moshi.internal.MapJsonAdapter;
+import com.squareup.moshi.internal.StandardJsonAdapters;
 import com.squareup.moshi.internal.Util;
 import java.io.File;
 import java.io.IOException;

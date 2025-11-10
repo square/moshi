@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.internal
 
-import com.squareup.moshi.internal.rethrowCause
 import java.io.ObjectInputStream
 import java.io.ObjectStreamClass
 import java.lang.reflect.InvocationTargetException

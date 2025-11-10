@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi;
+package com.squareup.moshi.internal;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.moshi.TestUtil.newReader;
 import static com.squareup.moshi.internal.Util.NO_ANNOTATIONS;
 import static org.junit.Assert.fail;
 
+import com.squareup.moshi.Json;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonReader;
+import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Types;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -191,8 +197,8 @@ public final class ClassJsonAdapterTest {
           .hasMessageThat()
           .isEqualTo(
               "Conflicting fields:\n"
-                  + "    int com.squareup.moshi.ClassJsonAdapterTest$ExtendsBaseA.a\n"
-                  + "    int com.squareup.moshi.ClassJsonAdapterTest$BaseA.a");
+                  + "    int com.squareup.moshi.internal.ClassJsonAdapterTest$ExtendsBaseA.a\n"
+                  + "    int com.squareup.moshi.internal.ClassJsonAdapterTest$BaseA.a");
     }
   }
 
@@ -213,8 +219,8 @@ public final class ClassJsonAdapterTest {
           .hasMessageThat()
           .isEqualTo(
               "Conflicting fields:\n"
-                  + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.foo\n"
-                  + "    java.lang.String com.squareup.moshi.ClassJsonAdapterTest$NameCollision.bar");
+                  + "    java.lang.String com.squareup.moshi.internal.ClassJsonAdapterTest$NameCollision.foo\n"
+                  + "    java.lang.String com.squareup.moshi.internal.ClassJsonAdapterTest$NameCollision.bar");
     }
   }
 
@@ -371,7 +377,7 @@ public final class ClassJsonAdapterTest {
           .hasMessageThat()
           .isEqualTo(
               "Cannot serialize non-static nested class "
-                  + "com.squareup.moshi.ClassJsonAdapterTest$NonStatic");
+                  + "com.squareup.moshi.internal.ClassJsonAdapterTest$NonStatic");
     }
   }
 
@@ -404,7 +410,8 @@ public final class ClassJsonAdapterTest {
       assertThat(expected)
           .hasMessageThat()
           .isEqualTo(
-              "Cannot serialize local class " + "com.squareup.moshi.ClassJsonAdapterTest$1Local");
+              "Cannot serialize local class "
+                  + "com.squareup.moshi.internal.ClassJsonAdapterTest$1Local");
     }
   }
 
@@ -427,7 +434,7 @@ public final class ClassJsonAdapterTest {
           .hasMessageThat()
           .isEqualTo(
               "Cannot serialize abstract class "
-                  + "com.squareup.moshi.ClassJsonAdapterTest$Abstract");
+                  + "com.squareup.moshi.internal.ClassJsonAdapterTest$Abstract");
     }
   }
 

@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.JsonValueSource
 import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSource
