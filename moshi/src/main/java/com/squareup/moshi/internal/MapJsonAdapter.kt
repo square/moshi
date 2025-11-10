@@ -20,7 +20,6 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.rawType
 import java.lang.reflect.Type
 
@@ -72,7 +71,7 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
       if (annotations.isNotEmpty()) return null
       val rawType = type.rawType
       if (rawType != Map::class.java) return null
-      val keyAndValue = Types.mapKeyAndValueTypes(type, rawType)
+      val keyAndValue = mapKeyAndValueTypes(type, rawType)
       return MapJsonAdapter<Any, Any>(moshi, keyAndValue[0], keyAndValue[1]).nullSafe()
     }
   }

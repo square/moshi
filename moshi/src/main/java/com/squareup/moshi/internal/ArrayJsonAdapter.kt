@@ -19,7 +19,6 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.rawType
 import java.lang.reflect.Type
 import java.lang.reflect.Array as JavaArray
@@ -111,7 +110,7 @@ internal class ArrayJsonAdapter(
 
   companion object Factory : JsonAdapter.Factory {
     override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
-      val elementType = Types.arrayComponentType(type) ?: return null
+      val elementType = arrayComponentType(type) ?: return null
       if (annotations.isNotEmpty()) return null
       val elementClass = elementType.rawType
       val elementAdapter = moshi.adapter<Any>(elementType)

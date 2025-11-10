@@ -26,27 +26,20 @@ import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.squareup.moshi.Types.getRawType
 import com.squareup.moshi.asArrayType
 import com.squareup.moshi.rawType
-import java.lang.ClassNotFoundException
-import java.lang.Error
-import java.lang.IllegalAccessException
-import java.lang.IllegalStateException
-import java.lang.InstantiationException
-import java.lang.NoSuchMethodException
-import java.lang.RuntimeException
-import java.lang.StringBuilder
-import java.lang.Void
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Constructor
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Proxy
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
-import java.util.LinkedHashSet
+import java.util.Properties
 import kotlin.contracts.contract
 
 @JvmField internal val NO_ANNOTATIONS: Set<Annotation> = emptySet()
@@ -366,6 +359,80 @@ internal fun Type.checkNotPrimitive() {
 
 internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
   return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
+}
+
+/**
+ * Returns the element type of `type` if it is an array type, or null if it is not an array
+ * type.
+ */
+internal fun arrayComponentType(type: Type): Type? {
+  return when (type) {
+    is GenericArrayType -> type.genericComponentType
+    is Class<*> -> type.componentType
+    else -> null
+  }
+}
+
+internal fun getGenericSuperclass(type: Type): Type {
+  val rawType = getRawType(type)
+  return rawType.genericSuperclass.resolve(type, rawType)
+}
+
+/**
+ * Returns a two element array containing this map's key and value types in positions 0 and 1
+ * respectively.
+ */
+internal fun mapKeyAndValueTypes(context: Type, contextRawType: Class<*>): Array<Type> {
+  // Work around a problem with the declaration of java.util.Properties. That class should extend
+  // Hashtable<String, String>, but it's declared to extend Hashtable<Object, Object>.
+  if (context === Properties::class.java) return arrayOf(String::class.java, String::class.java)
+  val mapType = getSupertype(context, contextRawType, MutableMap::class.java)
+  if (mapType is ParameterizedType) {
+    return mapType.actualTypeArguments
+  }
+  return arrayOf(Any::class.java, Any::class.java)
+}
+
+/**
+ * Returns the generic form of `supertype`. For example, if this is `ArrayList<String>`, this returns `Iterable<String>` given the input `Iterable.class`.
+ *
+ * @param supertype a superclass of, or interface implemented by, this.
+ */
+internal fun getSupertype(context: Type, contextRawType: Class<*>, supertype: Class<*>): Type {
+  if (!supertype.isAssignableFrom(contextRawType)) throw IllegalArgumentException()
+  return getGenericSupertype(context, contextRawType, supertype).resolve((context), (contextRawType))
+}
+
+internal fun <T : Annotation?> createJsonQualifierImplementation(annotationType: Class<T>): T {
+  require(annotationType.isAnnotation) {
+    "$annotationType must be an annotation."
+  }
+  require(annotationType.isAnnotationPresent(JsonQualifier::class.java)) {
+    "$annotationType must have @JsonQualifier."
+  }
+  require(annotationType.declaredMethods.isEmpty()) {
+    "$annotationType must not declare methods."
+  }
+  @Suppress("UNCHECKED_CAST")
+  return Proxy.newProxyInstance(
+    annotationType.classLoader,
+    arrayOf<Class<*>>(annotationType),
+  ) { proxy, method, args ->
+    when (method.name) {
+      "annotationType" -> annotationType
+
+      "equals" -> {
+        val o = args[0]
+        annotationType.isInstance(o)
+      }
+
+      "hashCode" -> 0
+
+      "toString" -> "@${annotationType.name}()"
+
+      else -> method.invoke(proxy, *args)
+    }
+  } as T
 }
 
 /**

@@ -15,7 +15,6 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.Types.createJsonQualifierImplementation
 import com.squareup.moshi.internal.AdapterMethodsFactory
 import com.squareup.moshi.internal.ArrayJsonAdapter
 import com.squareup.moshi.internal.ClassJsonAdapter
@@ -27,6 +26,7 @@ import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.RecordJsonAdapter
 import com.squareup.moshi.internal.StandardJsonAdapters
 import com.squareup.moshi.internal.canonicalize
+import com.squareup.moshi.internal.createJsonQualifierImplementation
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard
 import com.squareup.moshi.internal.toStringWithAnnotations
@@ -43,7 +43,7 @@ import kotlin.reflect.typeOf
  * Moshi instances are thread-safe, meaning multiple threads can safely use a single instance
  * concurrently.
  */
-public class Moshi internal constructor(builder: Builder) {
+public class Moshi private constructor(builder: Builder) {
   private val factories = buildList {
     addAll(builder.factories)
     addAll(BUILT_IN_FACTORIES)
@@ -268,7 +268,7 @@ public class Moshi internal constructor(builder: Builder) {
    * successfully been computed. That way we don't pollute the cache with incomplete stubs, or
    * adapters that may transitively depend on incomplete stubs.
    */
-  internal inner class LookupChain {
+  private inner class LookupChain {
     private val callLookups = mutableListOf<Lookup<*>>()
     private val stack = ArrayDeque<Lookup<*>>()
     private var exceptionAnnotated = false
@@ -354,7 +354,7 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
-  internal class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
+  private class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
