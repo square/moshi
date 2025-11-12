@@ -267,9 +267,7 @@ internal class `-JsonUtf8Writer`(
   }
 
   private fun newline() {
-    if (_indent == null) {
-      return
-    }
+    val indent = _indent ?: return
     sink.writeByte('\n'.code)
     repeat(stackSize - 1) {
       sink.writeUtf8(indent)
