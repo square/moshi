@@ -297,23 +297,23 @@ public final class TypesTest {
     assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
   }
 
-  private E<A, B> methodReturningE() {
-    throw new NotImplementedError(); // Intentionally not implemented
-  }
-
   @Test
   public void parameterizedTypeMatchesClassWithGenericInfoFromReturn() {
-    Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, A.class, B.class);
-    Method returningE = null;
-    for (Method method : TypesTest.class.getDeclaredMethods()) {
-      if (method.getName().contains("methodReturningE")) {
-        returningE = method;
-        break;
-      }
-    }
-    Type rawType = Types.getRawType(returningE.getGenericReturnType());
-    assertThat(Types.equals(type, rawType)).isTrue();
-    assertThat(Types.equals(rawType, type)).isTrue();
+    Type parameterizedEAB = Types.newParameterizedTypeWithOwner(
+      TypesTest.class, E.class, A.class, B.class);
+    Class<E> eClass = E.class;
+    assertThat(Types.equals(parameterizedEAB, eClass)).isTrue();
+    assertThat(Types.equals(eClass, parameterizedEAB)).isTrue();
+
+    Type parameterizedEBA = Types.newParameterizedTypeWithOwner(
+      TypesTest.class, E.class, B.class, A.class);
+    assertThat(Types.equals(parameterizedEBA, eClass)).isFalse();
+    assertThat(Types.equals(eClass, parameterizedEBA)).isFalse();
+
+    Type parameterizedEObjectObject = Types.newParameterizedTypeWithOwner(
+      TypesTest.class, E.class, Object.class, Object.class);
+    assertThat(Types.equals(parameterizedEObjectObject, eClass)).isFalse();
+    assertThat(Types.equals(eClass, parameterizedEObjectObject)).isFalse();
   }
 
   @Test
