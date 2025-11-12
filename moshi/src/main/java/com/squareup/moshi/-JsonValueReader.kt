@@ -17,9 +17,9 @@ package com.squareup.moshi
 
 import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.knownNotNull
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
-import java.math.BigDecimal
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -223,7 +223,7 @@ internal class `-JsonValueReader` : JsonReader {
       is String -> {
         try {
           peeked.toDouble()
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -245,10 +245,10 @@ internal class `-JsonValueReader` : JsonReader {
 
       is String -> try {
         peeked.toLong()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).longValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -265,10 +265,10 @@ internal class `-JsonValueReader` : JsonReader {
 
       is String -> try {
         peeked.toInt()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).intValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
