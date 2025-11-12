@@ -89,11 +89,6 @@ internal fun Json?.jsonName(declaredName: String): String {
   return if (Json.UNSET_NAME == annotationName) declaredName else annotationName
 }
 
-internal fun typesMatch(pattern: Type, candidate: Type): Boolean {
-  // TODO: permit raw types (like Set.class) to match non-raw candidates (like Set<Long>).
-  return Types.equals(pattern, candidate)
-}
-
 internal val AnnotatedElement.jsonAnnotations: Set<Annotation>
   get() = annotations.jsonAnnotations
 

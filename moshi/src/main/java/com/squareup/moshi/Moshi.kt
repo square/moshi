@@ -30,7 +30,6 @@ import com.squareup.moshi.internal.createJsonQualifierImplementation
 import com.squareup.moshi.internal.isAnnotationPresent
 import com.squareup.moshi.internal.removeSubtypeWildcard
 import com.squareup.moshi.internal.toStringWithAnnotations
-import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.reflect.KType
@@ -108,7 +107,7 @@ public class Moshi private constructor(builder: Builder) {
 
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
-   * hint for better adapter lookup error messages for nested structures.
+   *     hint for better adapter lookup error messages for nested structures.
    */
   @CheckReturnValue
   public fun <T> adapter(
@@ -174,18 +173,11 @@ public class Moshi private constructor(builder: Builder) {
   @CheckReturnValue
   public fun newBuilder(): Builder {
     val result = Builder()
-    // Runs to reuse var names
-    run {
-      val limit = lastOffset
-      for (i in 0 until limit) {
-        result.add(factories[i])
-      }
+    for (i in 0 until lastOffset) {
+      result.add(factories[i])
     }
-    run {
-      val limit = factories.size - BUILT_IN_FACTORIES.size
-      for (i in lastOffset until limit) {
-        result.addLast(factories[i])
-      }
+    for (i in lastOffset until factories.size - BUILT_IN_FACTORIES.size) {
+      result.addLast(factories[i])
     }
     return result
   }
@@ -280,17 +272,13 @@ public class Moshi private constructor(builder: Builder) {
      */
     fun <T> push(type: Type, fieldName: String?, cacheKey: Any): JsonAdapter<T>? {
       // Try to find a lookup with the same key for the same call.
-      var i = 0
-      val size = callLookups.size
-      while (i < size) {
-        val lookup = callLookups[i]
+      for (lookup in callLookups) {
         if (lookup.cacheKey == cacheKey) {
           @Suppress("UNCHECKED_CAST")
           val hit = lookup as Lookup<T>
           stack += hit
           return if (hit.adapter != null) hit.adapter else hit
         }
-        i++
       }
 
       // We might need to know about this cache key later in this call. Prepare for that.
@@ -318,17 +306,13 @@ public class Moshi private constructor(builder: Builder) {
       lookupChainThreadLocal.remove()
       if (success) {
         synchronized(adapterCache) {
-          var i = 0
-          val size = callLookups.size
-          while (i < size) {
-            val lookup = callLookups[i]
+          for (lookup in callLookups) {
             val replaced = adapterCache.put(lookup.cacheKey, lookup.adapter)
             if (replaced != null) {
               @Suppress("UNCHECKED_CAST")
               (lookup as Lookup<Any>).adapter = replaced as JsonAdapter<Any>
               adapterCache[lookup.cacheKey] = replaced
             }
-            i++
           }
         }
       }
@@ -338,8 +322,10 @@ public class Moshi private constructor(builder: Builder) {
       // Don't add the lookup stack to more than one exception; the deepest is sufficient.
       if (exceptionAnnotated) return e
       exceptionAnnotated = true
+
       val size = stack.size
       if (size == 1 && stack.first().fieldName == null) return e
+
       val errorMessage = buildString {
         append(e.message)
         for (lookup in stack.asReversed()) {
@@ -354,7 +340,11 @@ public class Moshi private constructor(builder: Builder) {
   }
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
-  private class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
+  private class Lookup<T>(
+    val type: Type,
+    val fieldName: String?,
+    val cacheKey: Any,
+  ) : JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
@@ -383,7 +373,7 @@ public class Moshi private constructor(builder: Builder) {
       jsonAdapter: JsonAdapter<T>,
     ): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (annotations.isEmpty() && typesMatch(type, targetType)) jsonAdapter else null
+        if (annotations.isEmpty() && Types.equals(type, targetType)) jsonAdapter else null
       }
     }
 
@@ -395,7 +385,7 @@ public class Moshi private constructor(builder: Builder) {
       require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
       require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (typesMatch(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
+        if (Types.equals(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
           jsonAdapter
         } else {
           null
