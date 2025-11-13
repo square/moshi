@@ -42,7 +42,7 @@ internal abstract class ClassFactory<T> {
 
           override fun toString() = rawType.name
         }
-      } catch (ignored: NoSuchMethodException) {
+      } catch (_: NoSuchMethodException) {
         // No no-args constructor. Fall back to something more magical...
       }
 
@@ -62,13 +62,13 @@ internal abstract class ClassFactory<T> {
 
           override fun toString() = rawType.name
         }
-      } catch (e: IllegalAccessException) {
+      } catch (_: IllegalAccessException) {
         throw AssertionError()
-      } catch (ignored: ClassNotFoundException) {
+      } catch (_: ClassNotFoundException) {
         // Not the expected version of the Oracle Java library!
-      } catch (ignored: NoSuchMethodException) {
+      } catch (_: NoSuchMethodException) {
         // Not the expected version of the Oracle Java library!
-      } catch (ignored: NoSuchFieldException) {
+      } catch (_: NoSuchFieldException) {
         // Not the expected version of the Oracle Java library!
       }
 
@@ -77,7 +77,6 @@ internal abstract class ClassFactory<T> {
       //   private static native int getConstructorId(Class<?> c);
       //   private static native Object newInstance(Class<?> instantiationClass, int methodId);
       // }
-
       try {
         val getConstructorId =
           ObjectStreamClass::class.java.getDeclaredMethod("getConstructorId", Class::class.java)
@@ -95,11 +94,11 @@ internal abstract class ClassFactory<T> {
 
           override fun toString() = rawType.name
         }
-      } catch (e: IllegalAccessException) {
+      } catch (_: IllegalAccessException) {
         throw AssertionError()
       } catch (e: InvocationTargetException) {
         throw e.rethrowCause()
-      } catch (ignored: NoSuchMethodException) {
+      } catch (_: NoSuchMethodException) {
         // Not the expected version of Dalvik/libcore!
       }
 
@@ -118,7 +117,7 @@ internal abstract class ClassFactory<T> {
 
           override fun toString() = rawType.name
         }
-      } catch (ignored: Exception) {
+      } catch (_: Exception) {
       }
 
       throw IllegalArgumentException("cannot construct instances of ${rawType.name}")

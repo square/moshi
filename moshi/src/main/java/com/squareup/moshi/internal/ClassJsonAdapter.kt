@@ -60,7 +60,7 @@ internal class ClassJsonAdapter<T>(
       throw RuntimeException(e)
     } catch (e: InvocationTargetException) {
       throw e.rethrowCause()
-    } catch (e: IllegalAccessException) {
+    } catch (_: IllegalAccessException) {
       throw AssertionError()
     }
 
@@ -77,7 +77,7 @@ internal class ClassJsonAdapter<T>(
       }
       reader.endObject()
       return result
-    } catch (e: IllegalAccessException) {
+    } catch (_: IllegalAccessException) {
       throw AssertionError()
     }
   }
@@ -90,7 +90,7 @@ internal class ClassJsonAdapter<T>(
         fieldBinding.write(writer, value)
       }
       writer.endObject()
-    } catch (e: IllegalAccessException) {
+    } catch (_: IllegalAccessException) {
       throw AssertionError()
     }
   }
