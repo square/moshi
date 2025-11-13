@@ -74,11 +74,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
     // Make sure our buffer has as many bytes as the source's buffer. This is necessary because
     // JsonUtf8Reader assumes any data it has peeked (like the peekedNumberLength) are buffered.
-    try {
-      sourcePeek.require(copyFrom.buffer.size)
-    } catch (e: IOException) {
-      throw AssertionError()
-    }
+    sourcePeek.require(copyFrom.buffer.size)
   }
 
   override fun beginArray() {
@@ -259,7 +255,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
       else -> check(peekStack != JsonScope.CLOSED) { "JsonReader is closed" }
     }
-    // "fallthrough" from previous `when`
+
     when (nextNonWhitespace(true).toChar()) {
       ']' -> {
         return when (peekStack) {
@@ -707,7 +703,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
     peeked = PEEKED_BUFFERED
     val result = try {
       next.toDouble()
-    } catch (e: NumberFormatException) {
+    } catch (_: NumberFormatException) {
       throw JsonDataException("Expected a double but was $next at path $path")
     }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
@@ -736,7 +732,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
           return result
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           // Fall back to parse as a BigDecimal below.
         }
       }
@@ -749,9 +745,9 @@ internal class `-JsonUtf8Reader` : JsonReader {
     val result = try {
       val asDecimal = BigDecimal(peekedString)
       asDecimal.longValueExact()
-    } catch (e: NumberFormatException) {
+    } catch (_: NumberFormatException) {
       throw JsonDataException("Expected a long but was $peekedString at path $path")
-    } catch (e: ArithmeticException) {
+    } catch (_: ArithmeticException) {
       throw JsonDataException("Expected a long but was $peekedString at path $path")
     }
     peekedString = null
@@ -765,7 +761,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
    * sequences encountered along the way. The opening quote should have already been read. This
    * consumes the closing quote, but does not include it in the returned string.
    *
-   * @throws IOException if any unicode escape sequences are malformed.
+   * @throws IOException if any Unicode escape sequences are malformed.
    */
   private fun nextQuotedValue(runTerminator: ByteString): String {
     var builder: StringBuilder? = null
@@ -848,7 +844,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
           peeked = PEEKED_NONE
           pathIndices[stackSize - 1]++
           return result
-        } catch (ignored: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           // Fall back to parse as a double below.
           next
         }
@@ -864,7 +860,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
     peeked = PEEKED_BUFFERED
     val asDouble = try {
       next.toDouble()
-    } catch (e: NumberFormatException) {
+    } catch (_: NumberFormatException) {
       throw JsonDataException("Expected an int but was $next at path $path")
     }
     val result = asDouble.toInt()

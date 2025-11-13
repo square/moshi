@@ -407,7 +407,7 @@ public sealed class JsonWriter :
         endArray()
       }
 
-      is String -> value(value as String?)
+      is String -> value(value)
 
       is Boolean -> value(value)
 

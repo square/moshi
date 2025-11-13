@@ -223,7 +223,7 @@ internal class `-JsonValueReader` : JsonReader {
       is String -> {
         try {
           peeked.toDouble()
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -245,10 +245,10 @@ internal class `-JsonValueReader` : JsonReader {
 
       is String -> try {
         peeked.toLong()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).longValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -265,10 +265,10 @@ internal class `-JsonValueReader` : JsonReader {
 
       is String -> try {
         peeked.toInt()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).intValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
