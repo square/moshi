@@ -17,9 +17,9 @@ package com.squareup.moshi
 
 import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.knownNotNull
-import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
+import java.math.BigDecimal
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
