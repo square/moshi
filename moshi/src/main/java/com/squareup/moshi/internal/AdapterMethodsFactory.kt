@@ -105,9 +105,7 @@ internal class AdapterMethodsFactory(
       val toAdapters = mutableListOf<AdapterMethod>()
       val fromAdapters = mutableListOf<AdapterMethod>()
 
-      val classAndSuperclasses = generateSequence(adapter.javaClass) { it.superclass }.iterator()
-      while (classAndSuperclasses.hasNext()) {
-        val clazz = classAndSuperclasses.next()
+      for (clazz in generateSequence(adapter.javaClass) { it.superclass }) {
         for (declaredMethod in clazz.declaredMethods) {
           if (declaredMethod.isAnnotationPresent(ToJson::class.java)) {
             val toAdapter = toAdapter(adapter, declaredMethod)
@@ -360,7 +358,7 @@ internal class AdapterMethodsFactory(
 
       return try {
         method.invoke(adapter, *args)
-      } catch (e: IllegalAccessException) {
+      } catch (_: IllegalAccessException) {
         throw AssertionError()
       }
     }
@@ -374,7 +372,7 @@ internal class AdapterMethodsFactory(
 
       return try {
         method.invoke(adapter, *args)
-      } catch (e: IllegalAccessException) {
+      } catch (_: IllegalAccessException) {
         throw AssertionError()
       }
     }
