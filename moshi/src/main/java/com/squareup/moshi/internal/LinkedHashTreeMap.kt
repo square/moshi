@@ -54,15 +54,15 @@ internal class LinkedHashTreeMap<K, V>(
 
     // Clear all links to help GC
     val header = header
-    var e = header.next
+    var e = header.next!!
     while (e !== header) {
-      val next = e!!.next
+      val next = e.next
       e.prev = null
       e.next = null
-      e = next
+      e = next!!
     }
     header.prev = header
-    header.next = header.prev
+    header.next = header
   }
 
   override fun remove(key: K) = removeInternalByKey(key)?.value
@@ -85,7 +85,8 @@ internal class LinkedHashTreeMap<K, V>(
 
     private var realKey: K? = null
 
-    override val key: K get() = knownNotNull(realKey)
+    override val key: K
+      get() = knownNotNull(realKey)
 
     @JvmField
     val hash: Int
@@ -137,7 +138,7 @@ internal class LinkedHashTreeMap<K, V>(
     }
 
     override fun hashCode(): Int {
-      return (realKey?.hashCode() ?: 0) xor if (value == null) 0 else value.hashCode()
+      return (realKey?.hashCode() ?: 0) xor (value?.hashCode() ?: 0)
     }
 
     override fun toString() = "$key=$value"
@@ -188,7 +189,7 @@ internal class LinkedHashTreeMap<K, V>(
     val comparator: Comparator<in K?> = comparator
     val table = table
     val hash = secondaryHash(key.hashCode())
-    val index = hash and table.size - 1
+    val index = hash and (table.size - 1)
     var nearest = table[index]
     var comparison = 0
     if (nearest != null) {
@@ -246,7 +247,7 @@ internal class LinkedHashTreeMap<K, V>(
     return try {
       @Suppress("UNCHECKED_CAST")
       if (key != null) find(key as K, false) else null
-    } catch (e: ClassCastException) {
+    } catch (_: ClassCastException) {
       null
     }
   }
@@ -363,7 +364,7 @@ internal class LinkedHashTreeMap<K, V>(
         parent.right = replacement
       }
     } else {
-      val index = node.hash and table.size - 1
+      val index = node.hash and (table.size - 1)
       table[index] = replacement
     }
   }
@@ -437,8 +438,8 @@ internal class LinkedHashTreeMap<K, V>(
   /** Rotates the subtree so that its root's right child is the new root.  */
   private fun rotateLeft(root: Node<K, V>) {
     val left = root.left
-    val pivot = root.right
-    val pivotLeft = pivot!!.left
+    val pivot = root.right!!
+    val pivotLeft = pivot.left
     val pivotRight = pivot.right
 
     // move the pivot's left child to the root's right
@@ -446,8 +447,10 @@ internal class LinkedHashTreeMap<K, V>(
     if (pivotLeft != null) {
       pivotLeft.parent = root
     }
+
     replaceInParent(root, pivot)
 
+    // move the root to the pivot's left
     pivot.left = root
     root.parent = pivot
 
@@ -458,9 +461,9 @@ internal class LinkedHashTreeMap<K, V>(
 
   /** Rotates the subtree so that its root's left child is the new root.  */
   private fun rotateRight(root: Node<K, V>) {
-    val pivot = root.left
+    val pivot = root.left!!
     val right = root.right
-    val pivotLeft = pivot!!.left
+    val pivotLeft = pivot.left
     val pivotRight = pivot.right
 
     // move the pivot's right child to the root's left
@@ -468,6 +471,7 @@ internal class LinkedHashTreeMap<K, V>(
     if (pivotRight != null) {
       pivotRight.parent = root
     }
+
     replaceInParent(root, pivot)
 
     // move the root to the pivot's right
@@ -480,7 +484,7 @@ internal class LinkedHashTreeMap<K, V>(
   }
 
   abstract inner class LinkedTreeMapIterator<T> : MutableIterator<T> {
-    var next = header.next
+    var next: Node<K, V> = header.next!!
     private var lastReturned: Node<K, V>? = null
     private var expectedModCount: Int = modCount
     override fun hasNext(): Boolean = next !== header
@@ -493,7 +497,7 @@ internal class LinkedHashTreeMap<K, V>(
       if (modCount != expectedModCount) {
         throw ConcurrentModificationException()
       }
-      next = e!!.next
+      next = e.next!!
       return e.also { lastReturned = it }
     }
 
@@ -639,6 +643,7 @@ internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, 
 internal class AvlIterator<K, V> {
   /** This stack is a singly linked list, linked by the 'parent' field.  */
   private var stackTop: Node<K, V>? = null
+
   fun reset(root: Node<K, V>?) {
     var stackTop: Node<K, V>? = null
     var n = root
@@ -652,8 +657,8 @@ internal class AvlIterator<K, V> {
 
   operator fun next(): Node<K, V>? {
     var stackTop: Node<K, V>? = stackTop ?: return null
-    val result = stackTop
-    stackTop = result!!.parent
+    val result = stackTop!!
+    stackTop = result.parent
     result.parent = null
     var n = result.right
     while (n != null) {
@@ -682,9 +687,11 @@ internal class AvlIterator<K, V> {
 internal class AvlBuilder<K, V> {
   /** This stack is a singly linked list, linked by the 'parent' field.  */
   private var stack: Node<K, V>? = null
+
   private var leavesToSkip = 0
   private var leavesSkipped = 0
   private var size = 0
+
   fun reset(targetSize: Int) {
     // compute the target tree size. This is a power of 2 minus one, like 15 or 31.
     val treeCapacity = Integer.highestOneBit(targetSize) * 2 - 1
@@ -701,7 +708,7 @@ internal class AvlBuilder<K, V> {
     node.height = 1
 
     // Skip a leaf if necessary.
-    if (leavesToSkip > 0 && size and 1 == 0) {
+    if (leavesToSkip > 0 && (size and 1) == 0) {
       size++
       leavesToSkip--
       leavesSkipped++
@@ -711,7 +718,7 @@ internal class AvlBuilder<K, V> {
     size++
 
     // Skip a leaf if necessary.
-    if (leavesToSkip > 0 && size and 1 == 0) {
+    if (leavesToSkip > 0 && (size and 1) == 0) {
       size++
       leavesToSkip--
       leavesSkipped++
@@ -731,14 +738,14 @@ internal class AvlBuilder<K, V> {
      * size (N-1) whenever the total size is 2N-1 whenever N is a power of 2.
      */
     var scale = 4
-    while (size and scale - 1 == scale - 1) {
+    while (size and (scale - 1) == scale - 1) {
       when (leavesSkipped) {
         0 -> {
           // Pop right, center and left, then make center the top of the stack.
-          val right = stack
-          val center = right!!.parent
-          val left = center!!.parent
-          center.parent = left!!.parent
+          val right = stack!!
+          val center = right.parent!!
+          val left = center.parent!!
+          center.parent = left.parent
           stack = center
           // Construct a tree.
           center.left = left
@@ -750,9 +757,9 @@ internal class AvlBuilder<K, V> {
 
         1 -> {
           // Pop right and center, then make center the top of the stack.
-          val right = stack
-          val center = right!!.parent
-          stack = center!!
+          val right = stack!!
+          val center = right.parent!!
+          stack = center
           // Construct a tree with no left child.
           center.right = right
           center.height = right.height + 1
