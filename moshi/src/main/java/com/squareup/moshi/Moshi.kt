@@ -84,7 +84,6 @@ public class Moshi private constructor(builder: Builder) {
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
   /**
@@ -92,7 +91,6 @@ public class Moshi private constructor(builder: Builder) {
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType)
     return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
