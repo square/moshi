@@ -28,12 +28,12 @@ import com.squareup.moshi.internal.StandardJsonAdapters
 import com.squareup.moshi.internal.canonicalize
 import com.squareup.moshi.internal.createJsonQualifierImplementation
 import com.squareup.moshi.internal.isAnnotationPresent
+import com.squareup.moshi.internal.javaType
 import com.squareup.moshi.internal.removeSubtypeWildcard
 import com.squareup.moshi.internal.toStringWithAnnotations
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.reflect.KType
-import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -84,7 +84,6 @@ public class Moshi private constructor(builder: Builder) {
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
   /**
@@ -92,7 +91,6 @@ public class Moshi private constructor(builder: Builder) {
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType)
     return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
@@ -192,12 +190,13 @@ public class Moshi private constructor(builder: Builder) {
     internal var lastOffset = 0
 
     @CheckReturnValue
-    @ExperimentalStdlibApi
-    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
+    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>(), adapter)
 
-    public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
+    public fun <T> add(type: KType, jsonAdapter: JsonAdapter<T>): Builder =
+      add(type.javaType, jsonAdapter)
+
+    public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder =
       add(newAdapterFactory(type, jsonAdapter))
-    }
 
     public fun <T> add(
       type: Type,
