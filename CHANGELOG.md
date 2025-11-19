@@ -6,6 +6,60 @@ Change Log
 * Refuse `j$.*` types from Android library desugaring as platform types.
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
 
+
+## Upgrading to Moshi 2.x
+
+In 2.x, we upgraded Moshi’s source code from .java to .kt. This update is binary-compatible with
+Moshi 1.x, and so you can safely upgrade without recompiling your libraries.
+
+The update is not source-compatible for Kotlin users.
+
+### JsonAdapter.Factory MutableSet
+
+Kotlin defines both a `Set` and a `MutableSet` type, but Java has only `Set`. Implementations of
+Moshi’s `JsonAdapter.Factory` interface may declare a function that accepts a `MutableSet`:
+
+```kotlin
+  override fun create(type: Type, annotations: MutableSet<out Annotation>, moshi: Moshi): JsonAdapter<*>? {
+    ...
+  }
+```
+
+Moshi 2.x requires the `annotations` argument be a `Set`:
+
+```kotlin
+  override fun create(type: Type, annotations: Set<out Annotation>, moshi: Moshi): JsonAdapter<*>? {
+    ...
+  }
+```
+
+We used this shell script to migrate our code:
+
+```shell
+find . \
+  -name "*.kt" \
+  -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<out Annotation>/g' {} \;
+```
+
+### Explicit Nullability
+
+Moshi has functions like `JsonAdapter.fromJson(String)` that have always been _documented_ to
+require non-null parameters. With Moshi 2.x that requirement is enforced by the compiler.
+
+You may need to manually make parameters non-null (such as with `!!`) when you upgrade to Moshi 2.x.
+
+### Properties
+
+We promoted `JsonWriter.setIndent()` to be a property. If you aren't already, you must use property
+syntax:
+
+```diff
+  val jsonWriter = JsonWriter.of(buffer)
+- jsonWriter.setIndent("  ")
++ jsonWriter.indent = "  "
+```
+
+
 ## Version 1.15.2
 
 _2024-12-05_
