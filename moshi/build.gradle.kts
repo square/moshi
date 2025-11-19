@@ -64,7 +64,9 @@ dependencies {
   api(libs.okio)
 
   testCompileOnly(libs.jsr305)
+  testImplementation(libs.assertk)
   testImplementation(libs.junit)
+  testImplementation(libs.kotlin.reflect)
   testImplementation(libs.truth)
 }
 

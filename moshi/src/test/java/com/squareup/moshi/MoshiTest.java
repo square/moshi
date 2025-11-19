@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.crypto.KeyGenerator;
+import kotlin.reflect.KType;
 import okio.Buffer;
 import org.junit.Test;
 
@@ -615,7 +616,7 @@ public final class MoshiTest {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");
     }
     try {
-      builder.add(null, null);
+      builder.add((KType) null, null);
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");

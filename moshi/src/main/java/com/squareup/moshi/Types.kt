@@ -22,6 +22,7 @@ import com.squareup.moshi.internal.GenericArrayTypeImpl
 import com.squareup.moshi.internal.ParameterizedTypeImpl
 import com.squareup.moshi.internal.WildcardTypeImpl
 import com.squareup.moshi.internal.getSupertype
+import java.lang.reflect.Array
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -99,7 +100,7 @@ public object Types {
     require(typeArguments.isNotEmpty()) {
       "Missing type arguments for $rawType"
     }
-    return ParameterizedTypeImpl(null, rawType, *typeArguments)
+    return ParameterizedTypeImpl(null, rawType, typeArguments)
   }
 
   /**
@@ -115,7 +116,7 @@ public object Types {
     require(typeArguments.isNotEmpty()) {
       "Missing type arguments for $rawType"
     }
-    return ParameterizedTypeImpl(ownerType, rawType, *typeArguments)
+    return ParameterizedTypeImpl(ownerType, rawType, typeArguments)
   }
 
   /** Returns an array type whose elements are all instances of `componentType`. */
@@ -170,7 +171,7 @@ public object Types {
 
       is GenericArrayType -> {
         val componentType = type.genericComponentType
-        java.lang.reflect.Array.newInstance(getRawType(componentType), 0).javaClass
+        Array.newInstance(getRawType(componentType), 0).javaClass
       }
 
       is TypeVariable<*> -> {

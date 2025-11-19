@@ -164,12 +164,12 @@ internal fun InvocationTargetException.rethrowCause(): RuntimeException {
 internal fun Type.canonicalize(): Type {
   return when (this) {
     is Class<*> -> {
-      if (isArray) GenericArrayTypeImpl(this@canonicalize.componentType.canonicalize()) else this
+      if (isArray) GenericArrayTypeImpl(componentType.canonicalize()) else this
     }
 
     is ParameterizedType -> {
       if (this is ParameterizedTypeImpl) return this
-      ParameterizedTypeImpl(ownerType, rawType, *actualTypeArguments)
+      ParameterizedTypeImpl(ownerType, rawType, actualTypeArguments)
     }
 
     is GenericArrayType -> {
@@ -253,7 +253,7 @@ private fun Type.resolve(
             args[t] = resolvedTypeArgument
           }
         }
-        return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, *args) else original
+        return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, args) else original
       }
 
       toResolve is WildcardType -> {
@@ -587,12 +587,33 @@ internal inline fun <T : Any> checkNull(value: T?, lazyMessage: (T) -> Any) {
   }
 }
 
-internal class ParameterizedTypeImpl private constructor(
-  private val ownerType: Type?,
-  private val rawType: Type,
-  @JvmField
-  val typeArguments: Array<Type>,
+internal class ParameterizedTypeImpl(
+  ownerType: Type?,
+  rawType: Type,
+  typeArguments: Array<out Type>,
 ) : ParameterizedType {
+  private val ownerType: Type? = ownerType?.canonicalize()
+  private val rawType: Type = rawType.canonicalize()
+
+  @JvmField
+  val typeArguments: Array<Type> = Array(typeArguments.size) { index ->
+    typeArguments[index].canonicalize()
+      .also { it.checkNotPrimitive() }
+  }
+
+  init {
+    // Require an owner type if the raw type needs it.
+    if (rawType is Class<*>) {
+      if (ownerType != null) {
+        require(ownerType.rawType == rawType.enclosingClass) {
+          "unexpected owner type for $rawType: $ownerType"
+        }
+      } else {
+        require(rawType.enclosingClass == null) { "unexpected owner type for $rawType: null" }
+      }
+    }
+  }
+
   override fun getActualTypeArguments() = typeArguments.clone()
 
   override fun getRawType() = rawType
@@ -608,6 +629,7 @@ internal class ParameterizedTypeImpl private constructor(
   }
 
   override fun toString(): String {
+    // TODO(jwilson): include the owner type if it's non-null.
     val result = StringBuilder(30 * (typeArguments.size + 1))
     result.append(rawType.typeToString())
     if (typeArguments.isEmpty()) {
@@ -619,36 +641,13 @@ internal class ParameterizedTypeImpl private constructor(
     }
     return result.append(">").toString()
   }
-
-  companion object {
-    @JvmName("create")
-    @JvmStatic
-    operator fun invoke(
-      ownerType: Type?,
-      rawType: Type,
-      vararg typeArguments: Type,
-    ): ParameterizedTypeImpl {
-      // Require an owner type if the raw type needs it.
-      if (rawType is Class<*>) {
-        val enclosingClass = rawType.enclosingClass
-        if (ownerType != null) {
-          require(enclosingClass != null && ownerType.rawType == enclosingClass) { "unexpected owner type for $rawType: $ownerType" }
-        } else {
-          require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
-        }
-      }
-      @Suppress("UNCHECKED_CAST")
-      val finalTypeArgs = typeArguments.clone() as Array<Type>
-      for (t in finalTypeArgs.indices) {
-        finalTypeArgs[t].checkNotPrimitive()
-        finalTypeArgs[t] = finalTypeArgs[t].canonicalize()
-      }
-      return ParameterizedTypeImpl(ownerType?.canonicalize(), rawType.canonicalize(), finalTypeArgs)
-    }
-  }
 }
 
-internal class GenericArrayTypeImpl private constructor(private val componentType: Type) : GenericArrayType {
+internal class GenericArrayTypeImpl(
+  componentType: Type,
+) : GenericArrayType {
+  private val componentType: Type = componentType.canonicalize()
+
   override fun getGenericComponentType() = componentType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -657,15 +656,7 @@ internal class GenericArrayTypeImpl private constructor(private val componentTyp
 
   override fun hashCode() = componentType.hashCode()
 
-  override fun toString() = componentType.typeToString() + "[]"
-
-  companion object {
-    @JvmName("create")
-    @JvmStatic
-    operator fun invoke(componentType: Type): GenericArrayTypeImpl {
-      return GenericArrayTypeImpl(componentType.canonicalize())
-    }
-  }
+  override fun toString() = "${componentType.typeToString()}[]"
 }
 
 /**
@@ -673,10 +664,25 @@ internal class GenericArrayTypeImpl private constructor(private val componentTyp
  * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
  * bound must be Object.class.
  */
-internal class WildcardTypeImpl private constructor(
-  private val upperBound: Type,
-  private val lowerBound: Type?,
+internal class WildcardTypeImpl(
+  upperBound: Type,
+  lowerBound: Type?,
 ) : WildcardType {
+  private val upperBound: Type = upperBound.canonicalize()
+  private val lowerBound: Type? = lowerBound?.canonicalize()
+
+  constructor(
+    upperBounds: Array<Type>,
+    lowerBounds: Array<Type>,
+  ) : this(upperBounds.single(), lowerBounds.getOrNull(0)) {
+    require(lowerBounds.size <= 1)
+  }
+
+  init {
+    require(lowerBound == null || upperBound === Any::class.java)
+    upperBound.checkNotPrimitive()
+    lowerBound?.checkNotPrimitive()
+  }
 
   override fun getUpperBounds() = arrayOf(upperBound)
 
@@ -695,32 +701,6 @@ internal class WildcardTypeImpl private constructor(
       lowerBound != null -> "? super ${lowerBound.typeToString()}"
       upperBound === Any::class.java -> "?"
       else -> "? extends ${upperBound.typeToString()}"
-    }
-  }
-
-  companion object {
-    @JvmStatic
-    @JvmName("create")
-    operator fun invoke(
-      upperBounds: Array<Type>,
-      lowerBounds: Array<Type>,
-    ): WildcardTypeImpl {
-      require(lowerBounds.size <= 1)
-      require(upperBounds.size == 1)
-      return if (lowerBounds.size == 1) {
-        lowerBounds[0].checkNotPrimitive()
-        require(upperBounds[0] === Any::class.java)
-        WildcardTypeImpl(
-          lowerBound = lowerBounds[0].canonicalize(),
-          upperBound = Any::class.java,
-        )
-      } else {
-        upperBounds[0].checkNotPrimitive()
-        WildcardTypeImpl(
-          lowerBound = null,
-          upperBound = upperBounds[0].canonicalize(),
-        )
-      }
     }
   }
 }
