@@ -49,7 +49,7 @@ import kotlin.contracts.contract
 @Suppress("UNCHECKED_CAST")
 private val METADATA: Class<out Annotation>? = try {
   Class.forName(kotlinMetadataClassName) as Class<out Annotation>
-} catch (ignored: ClassNotFoundException) {
+} catch (_: ClassNotFoundException) {
   null
 }
 
@@ -58,7 +58,7 @@ private val METADATA: Class<out Annotation>? = try {
 @JvmField
 public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
   Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
-} catch (ignored: ClassNotFoundException) {
+} catch (_: ClassNotFoundException) {
   null
 }
 
@@ -345,15 +345,18 @@ internal fun Type.typeToString(): String {
  */
 internal fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
   val genericDeclaration = typeVariable.genericDeclaration
-  return if (genericDeclaration is Class<*>) genericDeclaration else null
+  return genericDeclaration as? Class<*>
 }
 
 internal fun Type.checkNotPrimitive() {
-  require(!(this is Class<*> && isPrimitive)) { "Unexpected primitive $this. Use the boxed type." }
+  require(this !is Class<*> || !isPrimitive) { "Unexpected primitive $this. Use the boxed type." }
 }
 
 internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String {
-  return toString() + if (annotations.isEmpty()) " (with no annotations)" else " annotated $annotations"
+  return when {
+    annotations.isEmpty() -> "$this (with no annotations)"
+    else -> "$this annotated $annotations"
+  }
 }
 
 /**
@@ -394,8 +397,8 @@ internal fun mapKeyAndValueTypes(context: Type, contextRawType: Class<*>): Array
  * @param supertype a superclass of, or interface implemented by, this.
  */
 internal fun getSupertype(context: Type, contextRawType: Class<*>, supertype: Class<*>): Type {
-  if (!supertype.isAssignableFrom(contextRawType)) throw IllegalArgumentException()
-  return getGenericSupertype(context, contextRawType, supertype).resolve((context), (contextRawType))
+  require(supertype.isAssignableFrom(contextRawType))
+  return getGenericSupertype(context, contextRawType, supertype).resolve(context, contextRawType)
 }
 
 internal fun <T : Annotation?> createJsonQualifierImplementation(annotationType: Class<T>): T {
@@ -456,7 +459,7 @@ public fun Moshi.generatedAdapter(
         // Common case first
         constructor = adapterClass.getDeclaredConstructor(Moshi::class.java, Array<Type>::class.java)
         args = arrayOf(this, typeArgs)
-      } catch (e: NoSuchMethodException) {
+      } catch (_: NoSuchMethodException) {
         constructor = adapterClass.getDeclaredConstructor(Array<Type>::class.java)
         args = arrayOf(typeArgs)
       }
@@ -465,7 +468,7 @@ public fun Moshi.generatedAdapter(
         // Common case first
         constructor = adapterClass.getDeclaredConstructor(Moshi::class.java)
         args = arrayOf(this)
-      } catch (e: NoSuchMethodException) {
+      } catch (_: NoSuchMethodException) {
         constructor = adapterClass.getDeclaredConstructor()
         args = emptyArray()
       }
@@ -629,7 +632,7 @@ internal class ParameterizedTypeImpl private constructor(
       if (rawType is Class<*>) {
         val enclosingClass = rawType.enclosingClass
         if (ownerType != null) {
-          require(!(enclosingClass == null || ownerType.rawType != enclosingClass)) { "unexpected owner type for $rawType: $ownerType" }
+          require(enclosingClass != null && ownerType.rawType == enclosingClass) { "unexpected owner type for $rawType: $ownerType" }
         } else {
           require(enclosingClass == null) { "unexpected owner type for $rawType: null" }
         }
@@ -706,7 +709,7 @@ internal class WildcardTypeImpl private constructor(
       require(upperBounds.size == 1)
       return if (lowerBounds.size == 1) {
         lowerBounds[0].checkNotPrimitive()
-        require(!(upperBounds[0] !== Any::class.java))
+        require(upperBounds[0] === Any::class.java)
         WildcardTypeImpl(
           lowerBound = lowerBounds[0].canonicalize(),
           upperBound = Any::class.java,
