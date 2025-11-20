@@ -122,7 +122,7 @@ internal data class KtConstructor(
     jvm.isAccessible = true
   }
 
-  fun <R> callBy(argumentsMap: Map<KtParameter, Any?>): R {
+  fun <R> callBy(argumentsMap: IndexedParameterMap): R {
     val arguments = ArrayList<Any?>(parameters.size)
     var mask = 0
     val masks = ArrayList<Int>(1)

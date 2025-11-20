@@ -53,7 +53,7 @@ private val KOTLIN_METADATA = Metadata::class.java
  * Placeholder value used when a field is absent from the JSON. Note that this code
  * distinguishes between absent values and present-but-null values.
  */
-private val ABSENT_VALUE = Any()
+internal val ABSENT_VALUE = Any()
 
 /**
  * This class encodes Kotlin classes using their properties. It decodes them by first invoking the
@@ -170,30 +170,6 @@ internal class KotlinJsonAdapter<T>(
     }
   }
 
-  /** A simple [Map] that uses parameter indexes instead of sorting or hashing. */
-  class IndexedParameterMap(
-    private val parameterKeys: List<KtParameter>,
-    private val parameterValues: Array<Any?>,
-  ) : AbstractMutableMap<KtParameter, Any?>() {
-
-    override fun put(key: KtParameter, value: Any?): Any? = null
-
-    override val entries: MutableSet<MutableMap.MutableEntry<KtParameter, Any?>>
-      get() {
-        val allPossibleEntries =
-          parameterKeys.mapIndexed { index, value ->
-            SimpleEntry<KtParameter, Any?>(value, parameterValues[index])
-          }
-        return allPossibleEntries.filterTo(mutableSetOf()) { it.value !== ABSENT_VALUE }
-      }
-
-    override fun containsKey(key: KtParameter) = parameterValues[key.index] !== ABSENT_VALUE
-
-    override fun get(key: KtParameter): Any? {
-      val value = parameterValues[key.index]
-      return if (value !== ABSENT_VALUE) value else null
-    }
-  }
 }
 
 public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
