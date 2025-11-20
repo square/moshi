@@ -43,22 +43,12 @@ public class EnumJsonAdapter<T : Enum<T>> internal constructor(
   private val useFallbackValue: Boolean,
 ) : JsonAdapter<T>() {
 
-  private val constants: Array<T>
-  private val options: Options
-  private val nameStrings: Array<String>
-
-  init {
-    try {
-      constants = enumType.enumConstants
-      nameStrings = Array(constants.size) { i ->
-        val constantName = constants[i].name
-        enumType.getField(constantName).jsonName(constantName)
-      }
-      options = Options.of(*nameStrings)
-    } catch (e: NoSuchFieldException) {
-      throw AssertionError("Missing field in ${enumType.name}", e)
-    }
+  private val constants = enumType.enumConstants
+  private val nameStrings = Array(constants.size) { i ->
+    val constantName = constants[i].name
+    enumType.getField(constantName).jsonName(constantName)
   }
+  private val options = Options.of(*nameStrings)
 
   /**
    * Create a new adapter for this enum with a fallback value to use when the JSON string does not

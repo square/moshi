@@ -15,15 +15,16 @@
  */
 package com.squareup.moshi.adapters;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonDataException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 public final class Rfc3339DateJsonAdapterTest {
   private final JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter().lenient();
@@ -72,11 +73,55 @@ public final class Rfc3339DateJsonAdapterTest {
     assertThat(adapter.fromJson("null")).isNull();
   }
 
+  @Test
+  public void presentOrAbsentTime() throws Exception {
+    assertThat(adapter.fromJson("\"1970-01-01T12:34:56.789Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 12, 34, 56, 789, 0));
+    assertThat(adapter.fromJson("\"1970-01-01Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+    assertThat(adapter.fromJson("\"1970-01-01-08:00\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, -8 * 60));
+  }
+
+  @Test
+  public void variableFractionDigits() throws Exception {
+    assertThat(adapter.fromJson("\"1970-01-01T00:00:00.1Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 100, 0));
+    assertThat(adapter.fromJson("\"1970-01-01T00:00:00.12Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 120, 0));
+    assertThat(adapter.fromJson("\"1970-01-01T00:00:00.123Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 123, 0));
+  }
+
+  @Test
+  public void absentTimeZone() throws Exception {
+    assertThat(adapter.fromJson("\"1970-01-01\""))
+      .isEqualTo(newDateWithHostZone(1970, 1, 1));
+    assertThat(adapter.fromJson("\"1970-01-01Z\""))
+      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+    try {
+      adapter.fromJson("\"1970-01-01T00:00:00.000\"");
+      fail();
+    } catch (JsonDataException expected) {
+    }
+  }
+
   private Date newDate(
       int year, int month, int day, int hour, int minute, int second, int millis, int offset) {
     Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
     calendar.set(year, month - 1, day, hour, minute, second);
     calendar.set(Calendar.MILLISECOND, millis);
     return new Date(calendar.getTimeInMillis() - TimeUnit.MINUTES.toMillis(offset));
+  }
+
+  /**
+   * Dates specified without any time or timezone (like "1970-01-01") are returned in the host
+   * computer's time zone. This is a longstanding bug that we're attempting to stay consistent with.
+   */
+  private Date newDateWithHostZone(int year, int month, int day) {
+    Calendar calendar = new GregorianCalendar();
+    calendar.set(year, month - 1, day, 0, 0, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    return new Date(calendar.getTimeInMillis());
   }
 }
