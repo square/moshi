@@ -1,7 +1,8 @@
-import com.vanniktech.maven.publish.JavadocJar.Dokka
+import com.vanniktech.maven.publish.JavadocJar.None
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
@@ -63,7 +64,9 @@ dependencies {
   api(libs.okio)
 
   testCompileOnly(libs.jsr305)
+  testImplementation(libs.assertk)
   testImplementation(libs.junit)
+  testImplementation(libs.kotlin.reflect)
   testImplementation(libs.truth)
 }
 
@@ -74,5 +77,5 @@ tasks.withType<Jar>().configureEach {
 }
 
 configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = Dokka("dokkaGfm")))
+  configure(KotlinJvm(javadocJar = None()))
 }

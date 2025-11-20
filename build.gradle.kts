@@ -1,7 +1,7 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import com.google.devtools.ksp.gradle.KspTaskJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -22,7 +22,7 @@ buildscript {
 
 plugins {
   alias(libs.plugins.mavenPublish) apply false
-  alias(libs.plugins.dokka) apply false
+  alias(libs.plugins.dokka)
   alias(libs.plugins.spotless)
   alias(libs.plugins.japicmp) apply false
   alias(libs.plugins.ksp) apply false
@@ -105,29 +105,76 @@ subprojects {
   }
 }
 
-allprojects {
-  tasks.withType<DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
-      reportUndocumented.set(false)
-      skipDeprecated.set(true)
-      jdkVersion.set(8)
-      perPackageOption {
-        matchingRegex.set("com\\.squareup.moshi\\.internal.*")
-        suppress.set(true)
-      }
-    }
-    if (name == "dokkaHtml") {
-      outputDirectory.set(rootDir.resolve("docs/1.x"))
+dependencies {
+  dokka(project(":moshi"))
+  dokka(project(":moshi-adapters"))
+  dokka(project(":moshi-kotlin"))
+  dokka(project(":moshi-kotlin-codegen"))
+}
+
+dokka {
+  dokkaPublications.html {
+    outputDirectory.set(layout.projectDirectory.dir("docs/2.x"))
+  }
+}
+
+subprojects {
+  plugins.withId("org.jetbrains.dokka") {
+    configure<DokkaExtension> {
+      basePublicationsDirectory.set(layout.buildDirectory.dir("dokkaDir"))
       dokkaSourceSets.configureEach {
         skipDeprecated.set(true)
-        externalDocumentationLink {
-          url.set(URI("https://square.github.io/okio/2.x/okio/").toURL())
+        reportUndocumented.set(true)
+        jdkVersion.set(8)
+        perPackageOption {
+          matchingRegex.set("com\\.squareup\\.moshi\\.internal.*")
+          suppress.set(true)
+        }
+        externalDocumentationLinks.register("Okio") {
+          packageListUrl("https://square.github.io/okio/3.x/okio/okio/package-list")
+          url("https://square.github.io/okio/3.x/okio")
+        }
+        sourceLink {
+          localDirectory.set(layout.projectDirectory.dir("src"))
+          val relPath =
+            rootProject.isolated.projectDirectory.asFile
+              .toPath()
+              .relativize(projectDir.toPath())
+          remoteUrl("https://github.com/square/moshi/tree/main/$relPath/src")
+          remoteLineSuffix.set("#L")
         }
       }
     }
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {
+    configure<PublishingExtension> {
+      repositories {
+        /*
+         * Want to push to an internal repository for testing?
+         * Set the following properties in ~/.gradle/gradle.properties.
+         *
+         * internalUrl=YOUR_INTERNAL_URL
+         * internalUsername=YOUR_USERNAME
+         * internalPassword=YOUR_PASSWORD
+         *
+         * Then run the following command to publish a new internal release:
+         *
+         * ./gradlew publishAllPublicationsToInternalRepository -DRELEASE_SIGNING_ENABLED=false
+         */
+        val internalUrl = providers.gradleProperty("internalUrl").orNull
+        if (internalUrl != null) {
+          maven {
+            name = "internal"
+            url = URI(internalUrl)
+            credentials {
+              username = providers.gradleProperty("internalUsername").get()
+              password = providers.gradleProperty("internalPassword").get()
+            }
+          }
+        }
+      }
+    }
     configure<MavenPublishBaseExtension> {
       publishToMavenCentral(automaticRelease = true)
       signAllPublications()
