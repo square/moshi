@@ -51,6 +51,7 @@ val japicmp =
       "com.squareup.moshi.internal.Util#jsonName(java.lang.String, java.lang.reflect.AnnotatedElement)",
       "com.squareup.moshi.internal.Util#resolve(java.lang.reflect.Type, java.lang.Class, java.lang.reflect.Type)",
       "com.squareup.moshi.internal.Util#typeAnnotatedWithAnnotations(java.lang.reflect.Type, java.util.Set)",
+      "com.squareup.moshi.internal.Util#typesMatch(java.lang.reflect.Type, java.lang.reflect.Type)",
     )
     fieldExcludes.addAll(
       // False-positive, class is not public anyway

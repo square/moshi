@@ -116,7 +116,7 @@ public final class JsonUtf8WriterTest {
   @Test
   public void valueFromSource() throws IOException {
     Buffer buffer = new Buffer();
-    JsonWriter writer = JsonUtf8Writer.of(buffer);
+    JsonWriter writer = JsonWriter.of(buffer);
     writer.beginObject();
     writer.name("a");
     writer.value(new Buffer().writeUtf8("[\"value\"]"));

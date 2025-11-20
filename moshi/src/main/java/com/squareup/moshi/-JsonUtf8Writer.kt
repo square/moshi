@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.JsonScope
 import okio.Buffer
 import okio.BufferedSink
 import okio.Sink
@@ -35,7 +36,8 @@ import kotlin.check
 import kotlin.code
 import kotlin.require
 
-internal class JsonUtf8Writer(
+@Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
+internal class `-JsonUtf8Writer`(
   /** The output data, containing at most one top-level array or object. */
   private val sink: BufferedSink,
 ) : JsonWriter() {
@@ -172,7 +174,10 @@ internal class JsonUtf8Writer(
   }
 
   override fun value(value: Boolean?): JsonWriter {
-    return value?.let(::value) ?: nullValue()
+    return when {
+      value != null -> value(value) // Call the non-nullable overload.
+      else -> nullValue()
+    }
   }
 
   override fun value(value: Double): JsonWriter = apply {
@@ -262,15 +267,10 @@ internal class JsonUtf8Writer(
   }
 
   private fun newline() {
-    if (_indent == null) {
-      return
-    }
+    val indent = _indent ?: return
     sink.writeByte('\n'.code)
-    var i = 1
-    val size = stackSize
-    while (i < size) {
+    repeat(stackSize - 1) {
       sink.writeUtf8(indent)
-      i++
     }
   }
 
@@ -300,9 +300,7 @@ internal class JsonUtf8Writer(
     val nextTop: Int
     when (peekScope()) {
       JsonScope.NONEMPTY_DOCUMENT -> {
-        if (!isLenient) {
-          throw IllegalStateException("JSON must have only one top-level value.")
-        }
+        check(isLenient) { "JSON must have only one top-level value." }
         nextTop = JsonScope.NONEMPTY_DOCUMENT
       }
 
@@ -354,7 +352,6 @@ internal class JsonUtf8Writer(
       REPLACEMENT_CHARS['\b'.code] = "\\b"
       REPLACEMENT_CHARS['\n'.code] = "\\n"
       REPLACEMENT_CHARS['\r'.code] = "\\r"
-      // Kotlin does not support '\f' so we have to use unicode escape
       REPLACEMENT_CHARS['\u000C'.code] = "\\f"
     }
 

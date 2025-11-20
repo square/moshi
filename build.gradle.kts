@@ -5,6 +5,7 @@ import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.URI
 
 buildscript {
   dependencies {
@@ -129,10 +130,9 @@ subprojects {
           matchingRegex.set("com\\.squareup\\.moshi\\.internal.*")
           suppress.set(true)
         }
-        externalDocumentationLinks {
-          maybeCreate("okio").apply {
-            url("https://square.github.io/okio/3.x/okio/")
-          }
+        externalDocumentationLinks.register("Okio") {
+          packageListUrl("https://square.github.io/okio/3.x/okio/okio/package-list")
+          url("https://square.github.io/okio/3.x/okio")
         }
         sourceLink {
           localDirectory.set(layout.projectDirectory.dir("src"))
@@ -148,6 +148,33 @@ subprojects {
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {
+    configure<PublishingExtension> {
+      repositories {
+        /*
+         * Want to push to an internal repository for testing?
+         * Set the following properties in ~/.gradle/gradle.properties.
+         *
+         * internalUrl=YOUR_INTERNAL_URL
+         * internalUsername=YOUR_USERNAME
+         * internalPassword=YOUR_PASSWORD
+         *
+         * Then run the following command to publish a new internal release:
+         *
+         * ./gradlew publishAllPublicationsToInternalRepository -DRELEASE_SIGNING_ENABLED=false
+         */
+        val internalUrl = providers.gradleProperty("internalUrl").orNull
+        if (internalUrl != null) {
+          maven {
+            name = "internal"
+            url = URI(internalUrl)
+            credentials {
+              username = providers.gradleProperty("internalUsername").get()
+              password = providers.gradleProperty("internalPassword").get()
+            }
+          }
+        }
+      }
+    }
     configure<MavenPublishBaseExtension> {
       publishToMavenCentral(automaticRelease = true)
       signAllPublications()

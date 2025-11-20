@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.internal
 
 /** Lexical scoping elements within a JSON reader or writer. */
 internal object JsonScope {

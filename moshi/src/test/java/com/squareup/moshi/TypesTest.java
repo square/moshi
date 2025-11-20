@@ -21,10 +21,10 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.fail;
 
+import com.squareup.moshi.internal.Util;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import kotlin.NotImplementedError;
 import org.junit.Test;
 
 public final class TypesTest {
@@ -67,7 +66,7 @@ public final class TypesTest {
   @Test
   public void nextAnnotationsDoesNotContainReturnsNull() throws Exception {
     Set<? extends Annotation> annotations =
-        Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+        Collections.singleton(Util.createJsonQualifierImplementation(AnotherTestQualifier.class));
     assertThat(Types.nextAnnotations(annotations, TestQualifier.class)).isNull();
     assertThat(Types.nextAnnotations(Collections.<Annotation>emptySet(), TestQualifier.class))
         .isNull();
@@ -76,10 +75,10 @@ public final class TypesTest {
   @Test
   public void nextAnnotationsReturnsDelegateAnnotations() throws Exception {
     Set<Annotation> annotations = new LinkedHashSet<>(2);
-    annotations.add(Types.createJsonQualifierImplementation(TestQualifier.class));
-    annotations.add(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+    annotations.add(Util.createJsonQualifierImplementation(TestQualifier.class));
+    annotations.add(Util.createJsonQualifierImplementation(AnotherTestQualifier.class));
     Set<AnotherTestQualifier> expected =
-        Collections.singleton(Types.createJsonQualifierImplementation(AnotherTestQualifier.class));
+        Collections.singleton(Util.createJsonQualifierImplementation(AnotherTestQualifier.class));
     assertThat(Types.nextAnnotations(Collections.unmodifiableSet(annotations), TestQualifier.class))
         .isEqualTo(expected);
   }
@@ -228,14 +227,14 @@ public final class TypesTest {
 
   @Test
   public void arrayComponentType() throws Exception {
-    assertThat(Types.arrayComponentType(String[][].class)).isEqualTo(String[].class);
-    assertThat(Types.arrayComponentType(String[].class)).isEqualTo(String.class);
+    assertThat(Util.arrayComponentType(String[][].class)).isEqualTo(String[].class);
+    assertThat(Util.arrayComponentType(String[].class)).isEqualTo(String.class);
 
     Type arrayOfMapOfStringIntegerType =
         TypesTest.class.getDeclaredField("arrayOfMapOfStringInteger").getGenericType();
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
-    assertThat(Types.arrayComponentType(arrayOfMapOfStringIntegerType))
+    assertThat(Util.arrayComponentType(arrayOfMapOfStringIntegerType))
         .isEqualTo(mapOfStringIntegerType);
   }
 
@@ -253,7 +252,7 @@ public final class TypesTest {
   public void mapKeyAndValueTypes() throws Exception {
     Type mapOfStringIntegerType =
         TypesTest.class.getDeclaredField("mapOfStringInteger").getGenericType();
-    assertThat(Types.mapKeyAndValueTypes(mapOfStringIntegerType, Map.class))
+    assertThat(Util.mapKeyAndValueTypes(mapOfStringIntegerType, Map.class))
         .asList()
         .containsExactly(String.class, Integer.class)
         .inOrder();
@@ -261,7 +260,7 @@ public final class TypesTest {
 
   @Test
   public void propertiesTypes() throws Exception {
-    assertThat(Types.mapKeyAndValueTypes(Properties.class, Properties.class))
+    assertThat(Util.mapKeyAndValueTypes(Properties.class, Properties.class))
         .asList()
         .containsExactly(String.class, String.class)
         .inOrder();
@@ -269,7 +268,7 @@ public final class TypesTest {
 
   @Test
   public void fixedVariablesTypes() throws Exception {
-    assertThat(Types.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class))
+    assertThat(Util.mapKeyAndValueTypes(StringIntegerMap.class, StringIntegerMap.class))
         .asList()
         .containsExactly(String.class, Integer.class)
         .inOrder();
@@ -278,7 +277,7 @@ public final class TypesTest {
   @SuppressWarnings("GetClassOnAnnotation") // Explicitly checking for proxy implementation.
   @Test
   public void createJsonQualifierImplementation() throws Exception {
-    TestQualifier actual = Types.createJsonQualifierImplementation(TestQualifier.class);
+    TestQualifier actual = Util.createJsonQualifierImplementation(TestQualifier.class);
     TestQualifier expected =
         (TestQualifier) TypesTest.class.getDeclaredField("hasTestQualifier").getAnnotations()[0];
     assertThat(actual.annotationType()).isEqualTo(TestQualifier.class);
@@ -296,23 +295,23 @@ public final class TypesTest {
     assertThat(Types.equals(Types.arrayOf(String.class), String[].class)).isTrue();
   }
 
-  private E<A, B> methodReturningE() {
-    throw new NotImplementedError(); // Intentionally not implemented
-  }
-
   @Test
   public void parameterizedTypeMatchesClassWithGenericInfoFromReturn() {
-    Type type = Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, A.class, B.class);
-    Method returningE = null;
-    for (Method method : TypesTest.class.getDeclaredMethods()) {
-      if (method.getName().contains("methodReturningE")) {
-        returningE = method;
-        break;
-      }
-    }
-    Type rawType = Types.getRawType(returningE.getGenericReturnType());
-    assertThat(Types.equals(type, rawType)).isTrue();
-    assertThat(Types.equals(rawType, type)).isTrue();
+    Type parameterizedEAB =
+        Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, A.class, B.class);
+    Class<E> eClass = E.class;
+    assertThat(Types.equals(parameterizedEAB, eClass)).isTrue();
+    assertThat(Types.equals(eClass, parameterizedEAB)).isTrue();
+
+    Type parameterizedEBA =
+        Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, B.class, A.class);
+    assertThat(Types.equals(parameterizedEBA, eClass)).isFalse();
+    assertThat(Types.equals(eClass, parameterizedEBA)).isFalse();
+
+    Type parameterizedEObjectObject =
+        Types.newParameterizedTypeWithOwner(TypesTest.class, E.class, Object.class, Object.class);
+    assertThat(Types.equals(parameterizedEObjectObject, eClass)).isFalse();
+    assertThat(Types.equals(eClass, parameterizedEObjectObject)).isFalse();
   }
 
   @Test

@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.internal
 
-import com.squareup.moshi.internal.canonicalize
-import com.squareup.moshi.internal.checkNull
-import com.squareup.moshi.internal.hasNullable
-import com.squareup.moshi.internal.jsonAnnotations
-import com.squareup.moshi.internal.knownNotNull
-import com.squareup.moshi.internal.toStringWithAnnotations
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.ToJson
+import com.squareup.moshi.Types
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
