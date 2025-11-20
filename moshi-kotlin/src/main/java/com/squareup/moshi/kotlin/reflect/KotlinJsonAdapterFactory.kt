@@ -28,14 +28,11 @@ import com.squareup.moshi.internal.missingProperty
 import com.squareup.moshi.internal.resolve
 import com.squareup.moshi.internal.unexpectedNull
 import com.squareup.moshi.rawType
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
 import kotlin.metadata.ClassKind
 import kotlin.metadata.KmClass
 import kotlin.metadata.KmFlexibleTypeUpperBound
-import kotlin.metadata.KmProperty
 import kotlin.metadata.KmType
 import kotlin.metadata.KmTypeProjection
 import kotlin.metadata.Modality
@@ -43,14 +40,8 @@ import kotlin.metadata.Visibility
 import kotlin.metadata.isInner
 import kotlin.metadata.isNullable
 import kotlin.metadata.isVar
-import kotlin.metadata.jvm.JvmFieldSignature
-import kotlin.metadata.jvm.JvmMethodSignature
 import kotlin.metadata.jvm.KotlinClassMetadata
 import kotlin.metadata.jvm.Metadata
-import kotlin.metadata.jvm.fieldSignature
-import kotlin.metadata.jvm.getterSignature
-import kotlin.metadata.jvm.setterSignature
-import kotlin.metadata.jvm.syntheticMethodForAnnotations
 import kotlin.metadata.kind
 import kotlin.metadata.modality
 import kotlin.metadata.visibility
@@ -414,51 +405,4 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     return classMetadata.kmClass
   }
 
-  private class JvmSignatureSearcher(private val clazz: Class<*>) {
-    fun syntheticMethodForAnnotations(kmProperty: KmProperty): Method? =
-      kmProperty.syntheticMethodForAnnotations?.let { signature -> findMethod(clazz, signature) }
-
-    fun getter(kmProperty: KmProperty): Method? =
-      kmProperty.getterSignature?.let { signature -> findMethod(clazz, signature) }
-
-    fun setter(kmProperty: KmProperty): Method? =
-      kmProperty.setterSignature?.let { signature -> findMethod(clazz, signature) }
-
-    fun field(kmProperty: KmProperty): Field? =
-      kmProperty.fieldSignature?.let { signature -> findField(clazz, signature) }
-
-    private fun findMethod(sourceClass: Class<*>, signature: JvmMethodSignature): Method {
-      val parameterTypes = signature.decodeParameterTypes()
-      return try {
-        if (parameterTypes.isEmpty()) {
-          // Save the empty copy
-          sourceClass.getDeclaredMethod(signature.name)
-        } else {
-          sourceClass.getDeclaredMethod(signature.name, *parameterTypes.toTypedArray())
-        }
-      } catch (e: NoSuchMethodException) {
-        // Try finding the superclass method
-        val superClass = sourceClass.superclass
-        if (superClass != Any::class.java) {
-          return findMethod(superClass, signature)
-        } else {
-          throw e
-        }
-      }
-    }
-
-    private fun findField(sourceClass: Class<*>, signature: JvmFieldSignature): Field {
-      return try {
-        sourceClass.getDeclaredField(signature.name)
-      } catch (e: NoSuchFieldException) {
-        // Try finding the superclass field
-        val superClass = sourceClass.superclass
-        if (superClass != Any::class.java) {
-          return findField(superClass, signature)
-        } else {
-          throw e
-        }
-      }
-    }
-  }
 }
