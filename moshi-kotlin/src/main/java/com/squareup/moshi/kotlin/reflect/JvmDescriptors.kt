@@ -42,99 +42,99 @@ internal val Class<*>.descriptor: String
     }
   }
 
-private class State(var index: Int)
-
-private fun readType(state: State, desc: String): Class<*> {
-  return when (val c = desc[state.index]) {
-    '[' -> {
-      // It's an array
-      state.index++
-      val start = state.index
-      readType(state, desc)
-      // We ignore the read class because we just want to reuse the descriptor name in the string
-      // since that's how array component lookups work
-      val descriptorName = buildString {
-        for (i in start until state.index) {
-          var subc = desc[i]
-          if (subc == '/') {
-            subc = '.'
+private class TypeSignatureReader(var index: Int) {
+  fun readType(desc: String): Class<*> {
+    return when (val c = desc[index]) {
+      '[' -> {
+        // It's an array
+        index++
+        val start = index
+        this.readType(desc)
+        // We ignore the read class because we just want to reuse the descriptor name in the string
+        // since that's how array component lookups work
+        val descriptorName = buildString {
+          for (i in start until index) {
+            var subc = desc[i]
+            if (subc == '/') {
+              subc = '.'
+            }
+            this.append(subc)
           }
-          append(subc)
         }
+        Class.forName("[$descriptorName")
       }
-      Class.forName("[$descriptorName")
-    }
-    'B' -> {
-      state.index++
-      Byte::class.javaPrimitiveType!!
-    }
-    'C' -> {
-      state.index++
-      Char::class.javaPrimitiveType!!
-    }
-    'D' -> {
-      state.index++
-      Double::class.javaPrimitiveType!!
-    }
-    'F' -> {
-      state.index++
-      Float::class.javaPrimitiveType!!
-    }
-    'I' -> {
-      state.index++
-      Int::class.javaPrimitiveType!!
-    }
-    'J' -> {
-      state.index++
-      Long::class.javaPrimitiveType!!
-    }
-    'S' -> {
-      state.index++
-      Short::class.javaPrimitiveType!!
-    }
-    'Z' -> {
-      state.index++
-      Boolean::class.javaPrimitiveType!!
-    }
-    'V' -> {
-      state.index++
-      Void::class.javaPrimitiveType!!
-    }
-    'L' -> {
-      // It's a ClassName, read it until ';'
-      state.index++
-      var c2 = desc[state.index]
-      val className = buildString {
-        while (c2 != ';') {
-          if (c2 == '/') {
-            // convert package splits to '.'
-            c2 = '.'
+      'B' -> {
+        index++
+        Byte::class.javaPrimitiveType!!
+      }
+      'C' -> {
+        index++
+        Char::class.javaPrimitiveType!!
+      }
+      'D' -> {
+        index++
+        Double::class.javaPrimitiveType!!
+      }
+      'F' -> {
+        index++
+        Float::class.javaPrimitiveType!!
+      }
+      'I' -> {
+        index++
+        Int::class.javaPrimitiveType!!
+      }
+      'J' -> {
+        index++
+        Long::class.javaPrimitiveType!!
+      }
+      'S' -> {
+        index++
+        Short::class.javaPrimitiveType!!
+      }
+      'Z' -> {
+        index++
+        Boolean::class.javaPrimitiveType!!
+      }
+      'V' -> {
+        index++
+        Void::class.javaPrimitiveType!!
+      }
+      'L' -> {
+        // It's a ClassName, read it until ';'
+        index++
+        var c2 = desc[index]
+        val className = buildString {
+          while (c2 != ';') {
+            if (c2 == '/') {
+              // convert package splits to '.'
+              c2 = '.'
+            }
+            this.append(c2)
+            index++
+            c2 = desc[index]
           }
-          append(c2)
-          state.index++
-          c2 = desc[state.index]
         }
-      }
 
-      state.index++ // Read off the ';'
-      Class.forName(className)
+        index++ // Read off the ';'
+        Class.forName(className)
+      }
+      else -> error("Unknown character $c")
     }
-    else -> error("Unknown character $c")
   }
 }
 
 internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {
   val classList = mutableListOf<Class<*>>()
-  val state = State(0)
-  while (state.index < descriptor.length) {
-    when (descriptor[state.index]) {
+  val typeSignatureReader = TypeSignatureReader(0)
+  while (typeSignatureReader.index < descriptor.length) {
+    when (descriptor[typeSignatureReader.index]) {
       '(' -> {
-        state.index++
+        typeSignatureReader.index++
         continue
       }
       ')' -> break
     }
-    classList += readType(state, descriptor)
+    classList += typeSignatureReader.readType(descriptor)
   }
   return classList
 }
