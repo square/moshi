@@ -3,9 +3,9 @@ autoService = "1.1.1"
 jdk = "21"
 jvmTarget = "1.8"
 kotlin = "2.2.21"
-kotlinCompileTesting = "0.9.0"
+kotlinCompileTesting = "0.11.1"
 kotlinpoet = "2.2.0"
-ksp = "2.2.20-2.0.4"
+ksp = "2.3.2"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "2.1.0" }

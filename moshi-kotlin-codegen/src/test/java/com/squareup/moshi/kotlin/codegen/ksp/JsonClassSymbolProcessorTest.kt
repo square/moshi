@@ -836,7 +836,7 @@ class JsonClassSymbolProcessorTest {
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
-        configureKsp(useKsp2 = true) {
+        configureKsp {
           symbolProcessorProviders += JsonClassSymbolProcessorProvider()
         }
       }

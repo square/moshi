@@ -1,5 +1,4 @@
 import com.diffplug.gradle.spotless.JavaExtension
-import com.google.devtools.ksp.gradle.KspTaskJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -90,9 +89,8 @@ subprojects {
 
   pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
     tasks.withType<KotlinCompile>().configureEach {
-      val isKsp1Task = this is KspTaskJvm
       compilerOptions {
-        progressiveMode.set(!isKsp1Task)
+        progressiveMode.set(true)
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvmTarget.get()))
       }
     }
