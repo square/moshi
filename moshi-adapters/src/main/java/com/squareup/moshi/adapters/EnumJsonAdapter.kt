@@ -23,7 +23,6 @@ import com.squareup.moshi.JsonReader.Token.STRING
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.internal.jsonName
 import okio.IOException
-import java.lang.NoSuchFieldException
 
 /**
  * A JsonAdapter for enums that allows having a fallback enum value when a deserialized string does

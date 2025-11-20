@@ -15,6 +15,9 @@
  */
 package com.squareup.moshi.adapters;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonDataException;
 import java.util.Calendar;
@@ -23,8 +26,6 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 public final class Rfc3339DateJsonAdapterTest {
   private final JsonAdapter<Date> adapter = new Rfc3339DateJsonAdapter().lenient();
@@ -76,29 +77,26 @@ public final class Rfc3339DateJsonAdapterTest {
   @Test
   public void presentOrAbsentTime() throws Exception {
     assertThat(adapter.fromJson("\"1970-01-01T12:34:56.789Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 12, 34, 56, 789, 0));
-    assertThat(adapter.fromJson("\"1970-01-01Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+        .isEqualTo(newDate(1970, 1, 1, 12, 34, 56, 789, 0));
+    assertThat(adapter.fromJson("\"1970-01-01Z\"")).isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
     assertThat(adapter.fromJson("\"1970-01-01-08:00\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, -8 * 60));
+        .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, -8 * 60));
   }
 
   @Test
   public void variableFractionDigits() throws Exception {
     assertThat(adapter.fromJson("\"1970-01-01T00:00:00.1Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 100, 0));
+        .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 100, 0));
     assertThat(adapter.fromJson("\"1970-01-01T00:00:00.12Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 120, 0));
+        .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 120, 0));
     assertThat(adapter.fromJson("\"1970-01-01T00:00:00.123Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 123, 0));
+        .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 123, 0));
   }
 
   @Test
   public void absentTimeZone() throws Exception {
-    assertThat(adapter.fromJson("\"1970-01-01\""))
-      .isEqualTo(newDateWithHostZone(1970, 1, 1));
-    assertThat(adapter.fromJson("\"1970-01-01Z\""))
-      .isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+    assertThat(adapter.fromJson("\"1970-01-01\"")).isEqualTo(newDateWithHostZone(1970, 1, 1));
+    assertThat(adapter.fromJson("\"1970-01-01Z\"")).isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
     try {
       adapter.fromJson("\"1970-01-01T00:00:00.000\"");
       fail();
