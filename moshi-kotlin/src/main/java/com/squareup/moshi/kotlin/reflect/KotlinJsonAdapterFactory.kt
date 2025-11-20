@@ -169,7 +169,8 @@ internal class KotlinJsonAdapter<T>(
 
     fun set(result: K, value: P) {
       if (value !== ABSENT_VALUE) {
-        property.jvmSetter?.let { setter ->
+        val setter = property.jvmSetter
+        if (setter != null) {
           setter.invoke(result, value)
           return
         }
