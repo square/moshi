@@ -15,8 +15,6 @@
  */
 package com.squareup.moshi.kotlin.reflect
 
-import com.squareup.moshi.internal.DEFAULT_CONSTRUCTOR_MARKER
-import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Type
@@ -24,19 +22,12 @@ import kotlin.metadata.KmClass
 import kotlin.metadata.KmClassifier
 import kotlin.metadata.KmClassifier.TypeAlias
 import kotlin.metadata.KmClassifier.TypeParameter
-import kotlin.metadata.KmConstructor
 import kotlin.metadata.KmProperty
 import kotlin.metadata.KmType
 import kotlin.metadata.KmValueParameter
 import kotlin.metadata.declaresDefaultValue
 import kotlin.metadata.isLocalClassName
 import kotlin.metadata.isNullable
-import kotlin.metadata.isSecondary
-import kotlin.metadata.jvm.signature
-
-private val DEFAULT_CONSTRUCTOR_SIGNATURE by lazy(LazyThreadSafetyMode.NONE) {
-  DEFAULT_CONSTRUCTOR_MARKER!!.descriptor
-}
 
 private fun defaultPrimitiveValue(type: Type): Any? =
   if (type is Class<*> && type.isPrimitive) {
@@ -113,14 +104,10 @@ internal data class KtParameter(
 
 internal data class KtConstructor(
   val type: Class<*>,
-  val km: KmConstructor,
-  val jvm: Constructor<*>,
-  val parameters: List<KtParameter>,
-  val isDefault: Boolean,
+  val kmExecutable: KmExecutable<*>,
 ) {
-  init {
-    jvm.isAccessible = true
-  }
+  val isDefault: Boolean get() = kmExecutable.isDefault
+  val parameters: List<KtParameter> get() = kmExecutable.parameters
 
   fun <R> callBy(argumentsMap: IndexedParameterMap): R {
     val arguments = ArrayList<Any?>(parameters.size)
@@ -141,10 +128,12 @@ internal data class KtConstructor(
         usePossibleArg -> {
           arguments += possibleArg
         }
+
         parameter.declaresDefaultValue -> {
           arguments += defaultPrimitiveValue(parameter.rawType)
           mask = mask or (1 shl (index % Integer.SIZE))
         }
+
         else -> {
           throw IllegalArgumentException(
             "No argument provided for a required parameter: $parameter",
@@ -157,7 +146,7 @@ internal data class KtConstructor(
 
     if (!isDefault) {
       @Suppress("UNCHECKED_CAST")
-      return jvm.newInstance(*arguments.toTypedArray()) as R
+      return kmExecutable.newInstance(*arguments.toTypedArray()) as R
     }
 
     masks += mask
@@ -167,41 +156,13 @@ internal data class KtConstructor(
     arguments += null
 
     @Suppress("UNCHECKED_CAST")
-    return jvm.newInstance(*arguments.toTypedArray()) as R
+    return kmExecutable.newInstance(*arguments.toTypedArray()) as R
   }
 
   companion object {
     fun primary(rawType: Class<*>, kmClass: KmClass): KtConstructor? {
-      val kmConstructor = kmClass.constructors.find { !it.isSecondary } ?: return null
-      val kmConstructorSignature = kmConstructor.signature?.toString() ?: return null
-      val constructorsBySignature =
-        rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
-      val jvmConstructor = constructorsBySignature[kmConstructorSignature] ?: return null
-      val parameterAnnotations = jvmConstructor.parameterAnnotations
-      val parameterTypes = jvmConstructor.parameterTypes
-      val parameters =
-        kmConstructor.valueParameters.withIndex().map { (index, kmParam) ->
-          KtParameter(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
-        }
-
-      val anyOptional = parameters.any { it.declaresDefaultValue }
-      val actualConstructor =
-        if (anyOptional) {
-          val prefix = jvmConstructor.jvmMethodSignature.removeSuffix(")V")
-          val parameterCount = jvmConstructor.parameterTypes.size
-          val maskParamsToAdd = (parameterCount + 31) / 32
-          val defaultConstructorSignature = buildString {
-            append(prefix)
-            repeat(maskParamsToAdd) { append("I") }
-            append(DEFAULT_CONSTRUCTOR_SIGNATURE)
-            append(")V")
-          }
-          constructorsBySignature[defaultConstructorSignature] ?: return null
-        } else {
-          jvmConstructor
-        }
-
-      return KtConstructor(rawType, kmConstructor, actualConstructor, parameters, anyOptional)
+      val kmExecutable = KmExecutable(rawType, kmClass) ?: return null
+      return KtConstructor(rawType, kmExecutable)
     }
   }
 }

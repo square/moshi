@@ -169,7 +169,6 @@ internal class KotlinJsonAdapter<T>(
       }
     }
   }
-
 }
 
 public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
@@ -380,5 +379,4 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     return classMetadata.kmClass
   }
-
 }

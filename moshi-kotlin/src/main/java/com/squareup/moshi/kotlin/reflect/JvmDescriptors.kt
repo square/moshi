@@ -16,6 +16,8 @@
 package com.squareup.moshi.kotlin.reflect
 
 import java.lang.reflect.Constructor
+import java.lang.reflect.Executable
+import java.lang.reflect.Method
 import kotlin.metadata.jvm.JvmMethodSignature
 
 private val PRIMITIVE_CLASS_TO_SYMBOL =
@@ -37,6 +39,7 @@ internal val Class<*>.descriptor: String
       isPrimitive ->
         PRIMITIVE_CLASS_TO_SYMBOL[this]?.toString()
           ?: throw RuntimeException("Unrecognized primitive $this")
+
       isArray -> "[${componentType.descriptor}"
       else -> "L$name;".replace('.', '/')
     }
@@ -63,42 +66,52 @@ private class TypeSignatureReader(var index: Int) {
         }
         Class.forName("[$descriptorName")
       }
+
       'B' -> {
         index++
         Byte::class.javaPrimitiveType!!
       }
+
       'C' -> {
         index++
         Char::class.javaPrimitiveType!!
       }
+
       'D' -> {
         index++
         Double::class.javaPrimitiveType!!
       }
+
       'F' -> {
         index++
         Float::class.javaPrimitiveType!!
       }
+
       'I' -> {
         index++
         Int::class.javaPrimitiveType!!
       }
+
       'J' -> {
         index++
         Long::class.javaPrimitiveType!!
       }
+
       'S' -> {
         index++
         Short::class.javaPrimitiveType!!
       }
+
       'Z' -> {
         index++
         Boolean::class.javaPrimitiveType!!
       }
+
       'V' -> {
         index++
         Void::class.javaPrimitiveType!!
       }
+
       'L' -> {
         // It's a ClassName, read it until ';'
         index++
@@ -118,6 +131,7 @@ private class TypeSignatureReader(var index: Int) {
         index++ // Read off the ';'
         Class.forName(className)
       }
+
       else -> error("Unknown character $c")
     }
   }
@@ -132,6 +146,7 @@ internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {
         typeSignatureReader.index++
         continue
       }
+
       ')' -> break
     }
     classList += typeSignatureReader.readType(descriptor)
@@ -147,8 +162,15 @@ internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3">JVM specification, section 4.3</a>
  */
-internal val Constructor<*>.jvmMethodSignature: String
+internal val Executable.jvmMethodSignature: String
   get() = buildString {
-    append("<init>")
-    parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")V") { it.descriptor }
+    when (this@jvmMethodSignature) {
+      is Constructor<*> -> append("<init>")
+      is Method -> append(name)
+    }
+    parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")") { it.descriptor }
+    when (this@jvmMethodSignature) {
+      is Constructor<*> -> append("V")
+      is Method -> append(returnType.descriptor)
+    }
   }
