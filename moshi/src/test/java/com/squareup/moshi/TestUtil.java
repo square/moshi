@@ -18,21 +18,21 @@ package com.squareup.moshi;
 import java.util.Arrays;
 import okio.Buffer;
 
-final class TestUtil {
+public final class TestUtil {
   static final int MAX_DEPTH = 255;
 
-  static JsonReader newReader(String json) {
+  public static JsonReader newReader(String json) {
     Buffer buffer = new Buffer().writeUtf8(json);
     return JsonReader.of(buffer);
   }
 
-  static String repeat(char c, int count) {
+  public static String repeat(char c, int count) {
     char[] array = new char[count];
     Arrays.fill(array, c);
     return new String(array);
   }
 
-  static String repeat(String s, int count) {
+  public static String repeat(String s, int count) {
     StringBuilder result = new StringBuilder(s.length() * count);
     for (int i = 0; i < count; i++) {
       result.append(s);

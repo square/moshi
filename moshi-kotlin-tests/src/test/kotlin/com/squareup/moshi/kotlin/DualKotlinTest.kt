@@ -20,6 +20,7 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.Types
@@ -257,17 +258,16 @@ class DualKotlinTest {
     val result = adapter.fromJson(testJson)!!
     assertThat(result.i).isEqualTo(6)
 
-    // TODO doesn't work yet. https://github.com/square/moshi/issues/1170
-    //  need to invoke the constructor_impl$default static method, invoke constructor with result
-//    val testEmptyJson =
-//      """{}"""
-//    val result2 = adapter.fromJson(testEmptyJson)!!
-//    assertThat(result2.i).isEqualTo(0)
+    val testEmptyJson =
+      """{}"""
+    val result2 = adapter.fromJson(testEmptyJson)!!
+    assertThat(result2.i).isEqualTo(0)
   }
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class InlineConsumer(val inline: ValueClass)
 
+  // TODO this produces {"inline":23} now
   @Test fun inlineClassConsumer() {
     val adapter = moshi.adapter<InlineConsumer>()
 
@@ -487,7 +487,7 @@ class DualKotlinTest {
     val parameterized: GenericClass<TypeAlias>,
     val wildcardIn: GenericClass<in TypeAlias>,
     val wildcardOut: GenericClass<out TypeAlias>,
-    val complex: GenericClass<GenericTypeAlias>?,
+    val complex: GenericClass<GenericTypeAlias?>?,
   )
 
   // Regression test for https://github.com/square/moshi/issues/991
@@ -763,6 +763,41 @@ class DualKotlinTest {
     val `$a`: String,
     @Json(name = "\$b") val b: String,
   )
+
+  @Retention(RUNTIME)
+  @JsonQualifier
+  annotation class NestedEnum(val nested: Nested = Nested.A) {
+    enum class Nested { A, B, C }
+  }
+
+  @Test fun nestedEnumAnnotation() {
+    val moshi = Moshi.Builder()
+      .add(
+        object {
+          @FromJson
+          @NestedEnum
+          fun fromJson(string: String): String? = string
+
+          @ToJson
+          fun toJson(@NestedEnum @Nullable value: String?): String {
+            return value ?: "fallback"
+          }
+        },
+      )
+      .add(KotlinJsonAdapterFactory()).build()
+    val jsonAdapter = moshi.adapter<PropertyWithNestedEnumAnnotation>()
+
+    val value = PropertyWithNestedEnumAnnotation("apple")
+    val json = """{"value":"apple"}"""
+    assertThat(jsonAdapter.toJson(value)).isEqualTo(json)
+    assertThat(jsonAdapter.fromJson(json)).isEqualTo(value)
+  }
+
+  @JsonClass(generateAdapter = true)
+  data class PropertyWithNestedEnumAnnotation(
+    @NestedEnum
+    val value: String,
+  )
 }
 
 typealias TypeAlias = Int
@@ -775,8 +810,10 @@ data class GenericClass<T>(val value: T)
 
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
-@JsonClass(generateAdapter = true)
-value class ValueClass(val i: Int = 0)
+@JsonClass(generateAdapter = false) // TODO revisit code gen support separately
+value class ValueClass(
+  val i: Int = 0,
+)
 
 typealias A = Int
 typealias NullableA = A?

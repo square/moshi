@@ -183,10 +183,10 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val jsonAdapters: List<JsonAdapter<Any>>,
     private val fallbackJsonAdapter: JsonAdapter<Any>?,
   ) : JsonAdapter<Any>() {
-    /** Single-element options containing the label's key only.  */
+    /** Single-element options containing the label's key only. */
     private val labelKeyOptions: Options = Options.of(labelKey)
 
-    /** Corresponds to subtypes.  */
+    /** Corresponds to subtypes. */
     private val labelOptions: Options = Options.of(*labels.toTypedArray())
 
     override fun fromJson(reader: JsonReader): Any? {

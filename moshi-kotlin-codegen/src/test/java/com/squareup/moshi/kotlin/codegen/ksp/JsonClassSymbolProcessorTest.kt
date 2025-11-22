@@ -32,25 +32,13 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.typeOf
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-@RunWith(Parameterized::class)
-class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
-
-  companion object {
-    @JvmStatic
-    @Parameterized.Parameters(name = "useKSP2={0}")
-    fun data(): Collection<Array<Any>> = listOf(
-      arrayOf(false),
-      arrayOf(true),
-    )
-  }
+class JsonClassSymbolProcessorTest {
 
   @Rule
   @JvmField
@@ -727,7 +715,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
       when (generatedFile.nameWithoutExtension) {
         "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Aliases
           -keepnames class testPackage.Aliases
           -if class testPackage.Aliases
           -keep class testPackage.AliasesJsonAdapter {
@@ -738,7 +725,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
 
         "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Simple
           -keepnames class testPackage.Simple
           -if class testPackage.Simple
           -keep class testPackage.SimpleJsonAdapter {
@@ -749,7 +735,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
 
         "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.Generic
           -keepnames class testPackage.Generic
           -if class testPackage.Generic
           -keep class testPackage.GenericJsonAdapter {
@@ -761,7 +746,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
         "moshi-testPackage.UsingQualifiers" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.UsingQualifiers
             -keepnames class testPackage.UsingQualifiers
             -if class testPackage.UsingQualifiers
             -keep class testPackage.UsingQualifiersJsonAdapter {
@@ -773,7 +757,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
 
         "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.MixedTypes
           -keepnames class testPackage.MixedTypes
           -if class testPackage.MixedTypes
           -keep class testPackage.MixedTypesJsonAdapter {
@@ -784,7 +767,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
 
         "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.DefaultParams
           -keepnames class testPackage.DefaultParams
           -if class testPackage.DefaultParams
           -keep class testPackage.DefaultParamsJsonAdapter {
@@ -792,7 +774,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
           }
           -if class testPackage.DefaultParams
           -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -if class testPackage.DefaultParams
           -keepclassmembers class testPackage.DefaultParams {
               public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
@@ -802,7 +783,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
         "moshi-testPackage.Complex" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.Complex
             -keepnames class testPackage.Complex
             -if class testPackage.Complex
             -keep class testPackage.ComplexJsonAdapter {
@@ -810,7 +790,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
             }
             -if class testPackage.Complex
             -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-            -if class testPackage.Complex
             -keepclassmembers class testPackage.Complex {
                 public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
             }
@@ -820,7 +799,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
 
         "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
           """
-          -if class testPackage.MultipleMasks
           -keepnames class testPackage.MultipleMasks
           -if class testPackage.MultipleMasks
           -keep class testPackage.MultipleMasksJsonAdapter {
@@ -828,7 +806,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
           }
           -if class testPackage.MultipleMasks
           -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -if class testPackage.MultipleMasks
           -keepclassmembers class testPackage.MultipleMasks {
               public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
           }
@@ -838,7 +815,6 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
         "moshi-testPackage.NestedType.NestedSimple" -> {
           assertThat(generatedFile.readText()).contains(
             """
-            -if class testPackage.NestedType${'$'}NestedSimple
             -keepnames class testPackage.NestedType${'$'}NestedSimple
             -if class testPackage.NestedType${'$'}NestedSimple
             -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
@@ -860,13 +836,8 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
-        configureKsp(useKsp2 = useKSP2) {
+        configureKsp {
           symbolProcessorProviders += JsonClassSymbolProcessorProvider()
-          incremental = true // The default now
-          if (!useKSP2) {
-            withCompilation = true // Only necessary for KSP1
-            languageVersion = "1.9"
-          }
         }
       }
   }

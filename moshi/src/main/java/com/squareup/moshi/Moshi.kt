@@ -15,19 +15,25 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.Types.createJsonQualifierImplementation
+import com.squareup.moshi.internal.AdapterMethodsFactory
+import com.squareup.moshi.internal.ArrayJsonAdapter
+import com.squareup.moshi.internal.ClassJsonAdapter
+import com.squareup.moshi.internal.CollectionJsonAdapter
+import com.squareup.moshi.internal.MapJsonAdapter
 import com.squareup.moshi.internal.NO_ANNOTATIONS
 import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
+import com.squareup.moshi.internal.RecordJsonAdapter
+import com.squareup.moshi.internal.StandardJsonAdapters
 import com.squareup.moshi.internal.canonicalize
+import com.squareup.moshi.internal.createJsonQualifierImplementation
 import com.squareup.moshi.internal.isAnnotationPresent
+import com.squareup.moshi.internal.javaType
 import com.squareup.moshi.internal.removeSubtypeWildcard
 import com.squareup.moshi.internal.toStringWithAnnotations
-import com.squareup.moshi.internal.typesMatch
 import java.lang.reflect.Type
 import javax.annotation.CheckReturnValue
 import kotlin.reflect.KType
-import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /**
@@ -36,7 +42,7 @@ import kotlin.reflect.typeOf
  * Moshi instances are thread-safe, meaning multiple threads can safely use a single instance
  * concurrently.
  */
-public class Moshi internal constructor(builder: Builder) {
+public class Moshi private constructor(builder: Builder) {
   private val factories = buildList {
     addAll(builder.factories)
     addAll(BUILT_IN_FACTORIES)
@@ -76,7 +82,6 @@ public class Moshi internal constructor(builder: Builder) {
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
   /**
@@ -84,7 +89,6 @@ public class Moshi internal constructor(builder: Builder) {
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @CheckReturnValue
-  @ExperimentalStdlibApi
   public fun <T> adapter(ktype: KType): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType)
     return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
@@ -99,7 +103,7 @@ public class Moshi internal constructor(builder: Builder) {
 
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
-   * hint for better adapter lookup error messages for nested structures.
+   *     hint for better adapter lookup error messages for nested structures.
    */
   @CheckReturnValue
   public fun <T> adapter(
@@ -165,18 +169,11 @@ public class Moshi internal constructor(builder: Builder) {
   @CheckReturnValue
   public fun newBuilder(): Builder {
     val result = Builder()
-    // Runs to reuse var names
-    run {
-      val limit = lastOffset
-      for (i in 0 until limit) {
-        result.add(factories[i])
-      }
+    for (i in 0 until lastOffset) {
+      result.add(factories[i])
     }
-    run {
-      val limit = factories.size - BUILT_IN_FACTORIES.size
-      for (i in lastOffset until limit) {
-        result.addLast(factories[i])
-      }
+    for (i in lastOffset until factories.size - BUILT_IN_FACTORIES.size) {
+      result.addLast(factories[i])
     }
     return result
   }
@@ -191,12 +188,13 @@ public class Moshi internal constructor(builder: Builder) {
     internal var lastOffset = 0
 
     @CheckReturnValue
-    @ExperimentalStdlibApi
-    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>().javaType, adapter)
+    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>(), adapter)
 
-    public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
+    public fun <T> add(type: KType, jsonAdapter: JsonAdapter<T>): Builder =
+      add(type.javaType, jsonAdapter)
+
+    public fun <T> add(type: Type, jsonAdapter: JsonAdapter<T>): Builder =
       add(newAdapterFactory(type, jsonAdapter))
-    }
 
     public fun <T> add(
       type: Type,
@@ -259,7 +257,7 @@ public class Moshi internal constructor(builder: Builder) {
    * successfully been computed. That way we don't pollute the cache with incomplete stubs, or
    * adapters that may transitively depend on incomplete stubs.
    */
-  internal inner class LookupChain {
+  private inner class LookupChain {
     private val callLookups = mutableListOf<Lookup<*>>()
     private val stack = ArrayDeque<Lookup<*>>()
     private var exceptionAnnotated = false
@@ -271,17 +269,13 @@ public class Moshi internal constructor(builder: Builder) {
      */
     fun <T> push(type: Type, fieldName: String?, cacheKey: Any): JsonAdapter<T>? {
       // Try to find a lookup with the same key for the same call.
-      var i = 0
-      val size = callLookups.size
-      while (i < size) {
-        val lookup = callLookups[i]
+      for (lookup in callLookups) {
         if (lookup.cacheKey == cacheKey) {
           @Suppress("UNCHECKED_CAST")
           val hit = lookup as Lookup<T>
           stack += hit
           return if (hit.adapter != null) hit.adapter else hit
         }
-        i++
       }
 
       // We might need to know about this cache key later in this call. Prepare for that.
@@ -309,17 +303,13 @@ public class Moshi internal constructor(builder: Builder) {
       lookupChainThreadLocal.remove()
       if (success) {
         synchronized(adapterCache) {
-          var i = 0
-          val size = callLookups.size
-          while (i < size) {
-            val lookup = callLookups[i]
+          for (lookup in callLookups) {
             val replaced = adapterCache.put(lookup.cacheKey, lookup.adapter)
             if (replaced != null) {
               @Suppress("UNCHECKED_CAST")
               (lookup as Lookup<Any>).adapter = replaced as JsonAdapter<Any>
               adapterCache[lookup.cacheKey] = replaced
             }
-            i++
           }
         }
       }
@@ -329,8 +319,10 @@ public class Moshi internal constructor(builder: Builder) {
       // Don't add the lookup stack to more than one exception; the deepest is sufficient.
       if (exceptionAnnotated) return e
       exceptionAnnotated = true
+
       val size = stack.size
       if (size == 1 && stack.first().fieldName == null) return e
+
       val errorMessage = buildString {
         append(e.message)
         for (lookup in stack.asReversed()) {
@@ -345,7 +337,11 @@ public class Moshi internal constructor(builder: Builder) {
   }
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
-  internal class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) : JsonAdapter<T>() {
+  private class Lookup<T>(
+    val type: Type,
+    val fieldName: String?,
+    val cacheKey: Any,
+  ) : JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
@@ -373,7 +369,7 @@ public class Moshi internal constructor(builder: Builder) {
       jsonAdapter: JsonAdapter<T>,
     ): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (annotations.isEmpty() && typesMatch(type, targetType)) jsonAdapter else null
+        if (annotations.isEmpty() && Types.equals(type, targetType)) jsonAdapter else null
       }
     }
 
@@ -385,7 +381,7 @@ public class Moshi internal constructor(builder: Builder) {
       require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
       require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (typesMatch(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
+        if (Types.equals(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
           jsonAdapter
         } else {
           null

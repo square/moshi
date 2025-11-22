@@ -15,11 +15,12 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonScope.EMPTY_ARRAY
-import com.squareup.moshi.JsonScope.EMPTY_DOCUMENT
-import com.squareup.moshi.JsonScope.EMPTY_OBJECT
-import com.squareup.moshi.JsonScope.NONEMPTY_DOCUMENT
-import com.squareup.moshi.JsonScope.STREAMING_VALUE
+import com.squareup.moshi.internal.JsonScope.EMPTY_ARRAY
+import com.squareup.moshi.internal.JsonScope.EMPTY_DOCUMENT
+import com.squareup.moshi.internal.JsonScope.EMPTY_OBJECT
+import com.squareup.moshi.internal.JsonScope.NONEMPTY_DOCUMENT
+import com.squareup.moshi.internal.JsonScope.STREAMING_VALUE
+import com.squareup.moshi.internal.LinkedHashTreeMap
 import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSink
@@ -29,7 +30,8 @@ import okio.buffer
 import java.math.BigDecimal
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
-internal class JsonValueWriter : JsonWriter() {
+@Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
+internal class `-JsonValueWriter` : JsonWriter() {
   var stack = arrayOfNulls<Any>(32)
   private var deferredName: String? = null
 
@@ -201,11 +203,11 @@ internal class JsonValueWriter : JsonWriter() {
         stackSize-- // Remove STREAMING_VALUE from the stack.
         val value = JsonReader.of(buffer).readJsonValue()
         val serializeNulls = serializeNulls
-        this@JsonValueWriter.serializeNulls = true
+        this@`-JsonValueWriter`.serializeNulls = true
         try {
           add(value)
         } finally {
-          this@JsonValueWriter.serializeNulls = serializeNulls
+          this@`-JsonValueWriter`.serializeNulls = serializeNulls
         }
         pathIndices[stackSize - 1]++
       }
@@ -224,7 +226,7 @@ internal class JsonValueWriter : JsonWriter() {
     check(stackSize != 0) { "JsonWriter is closed." }
   }
 
-  private fun add(newTop: Any?): JsonValueWriter {
+  private fun add(newTop: Any?): `-JsonValueWriter` {
     val scope = peekScope()
     when {
       stackSize == 1 -> {

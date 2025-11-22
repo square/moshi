@@ -1,5 +1,5 @@
-import Build_gradle.TestMode.KSP
-import Build_gradle.TestMode.REFLECT
+import TestMode.KSP
+import TestMode.REFLECT
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -35,8 +35,9 @@ tasks.withType<Test>().configureEach {
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions {
     allWarningsAsErrors.set(true)
-    freeCompilerArgs.add(
+    freeCompilerArgs.addAll(
       "-opt-in=kotlin.ExperimentalStdlibApi",
+      "-Xannotation-default-target=param-property",
     )
   }
 }

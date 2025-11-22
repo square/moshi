@@ -1,7 +1,8 @@
-import com.vanniktech.maven.publish.JavadocJar.Dokka
+import com.vanniktech.maven.publish.JavadocJar.None
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.configure
 
 plugins {
   kotlin("jvm")
@@ -11,7 +12,7 @@ plugins {
 
 dependencies {
   api(project(":moshi"))
-  api(kotlin("reflect"))
+  implementation(libs.kotlin.metadata)
 
   testImplementation(kotlin("test"))
   testImplementation(libs.junit)
@@ -25,5 +26,5 @@ tasks.withType<Jar>().configureEach {
 }
 
 configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = Dokka("dokkaGfm")))
+  configure(KotlinJvm(javadocJar = None()))
 }

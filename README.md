@@ -1063,12 +1063,12 @@ The reflection adapter requires the following additional dependency:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi-kotlin</artifactId>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
 </dependency>
 ```
 
 ```kotlin
-implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
 ```
 
 Note that the reflection adapter transitively depends on the `kotlin-reflect` library which is a
@@ -1103,7 +1103,7 @@ plugins {
 }
 
 dependencies {
-  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
+  ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
 }
 
 ```
@@ -1129,15 +1129,15 @@ Download [the latest JAR][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup.moshi</groupId>
   <artifactId>moshi</artifactId>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
 </dependency>
 ```
 or Gradle:
 ```kotlin
-implementation("com.squareup.moshi:moshi:1.15.1")
+implementation("com.squareup.moshi:moshi:1.15.2")
 ```
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+Snapshots of the development version are available in [the Central Portal Snapshots repository][snap].
 
 
 R8 / ProGuard
@@ -1168,7 +1168,7 @@ License
 
 
  [dl]: https://search.maven.org/classic/remote_content?g=com.squareup.moshi&a=moshi&v=LATEST
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/moshi/
+ [snap]: https://central.sonatype.com/repository/maven-snapshots/
  [okio]: https://github.com/square/okio/
  [okhttp]: https://github.com/square/okhttp/
  [gson]: https://github.com/google/gson/

@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi;
 
+import static com.squareup.moshi.MoshiTesting.jsonValueReader;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +41,7 @@ abstract class JsonCodecFactory {
           @Override
           JsonWriter newWriter() {
             buffer = new Buffer();
-            return new JsonUtf8Writer(buffer);
+            return JsonWriter.of(buffer);
           }
 
           @Override
@@ -62,13 +64,13 @@ abstract class JsonCodecFactory {
 
     final JsonCodecFactory value =
         new JsonCodecFactory() {
-          JsonValueWriter writer;
+          JsonWriter writer;
 
           @Override
           public JsonReader newReader(String json) throws IOException {
             Moshi moshi = new Moshi.Builder().build();
             Object object = moshi.adapter(Object.class).lenient().fromJson(json);
-            return new JsonValueReader(object);
+            return jsonValueReader(object);
           }
 
           // TODO(jwilson): fix precision checks and delete his method.
@@ -79,7 +81,7 @@ abstract class JsonCodecFactory {
 
           @Override
           JsonWriter newWriter() {
-            writer = new JsonValueWriter();
+            writer = MoshiTesting.jsonValueWriter();
             return writer;
           }
 
@@ -91,7 +93,7 @@ abstract class JsonCodecFactory {
               JsonWriter bufferedSinkWriter = JsonWriter.of(buffer);
               bufferedSinkWriter.setSerializeNulls(true);
               bufferedSinkWriter.setLenient(true);
-              OBJECT_ADAPTER.toJson(bufferedSinkWriter, writer.root());
+              OBJECT_ADAPTER.toJson(bufferedSinkWriter, MoshiTesting.root(writer));
               return buffer.readUtf8();
             } catch (IOException e) {
               throw new AssertionError();
