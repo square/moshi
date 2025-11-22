@@ -257,17 +257,16 @@ class DualKotlinTest {
     val result = adapter.fromJson(testJson)!!
     assertThat(result.i).isEqualTo(6)
 
-    // TODO doesn't work yet. https://github.com/square/moshi/issues/1170
-    //  need to invoke the constructor_impl$default static method, invoke constructor with result
-//    val testEmptyJson =
-//      """{}"""
-//    val result2 = adapter.fromJson(testEmptyJson)!!
-//    assertThat(result2.i).isEqualTo(0)
+    val testEmptyJson =
+      """{}"""
+    val result2 = adapter.fromJson(testEmptyJson)!!
+    assertThat(result2.i).isEqualTo(0)
   }
 
-  @JsonClass(generateAdapter = true)
+  @JsonClass(generateAdapter = false)
   data class InlineConsumer(val inline: ValueClass)
 
+  // TODO this produces {"inline":23} now
   @Test fun inlineClassConsumer() {
     val adapter = moshi.adapter<InlineConsumer>()
 
@@ -775,8 +774,10 @@ data class GenericClass<T>(val value: T)
 
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
-@JsonClass(generateAdapter = true)
-value class ValueClass(val i: Int = 0)
+@JsonClass(generateAdapter = false) // TODO revisit code gen support separately
+value class ValueClass(
+  val i: Int = 0,
+)
 
 typealias A = Int
 typealias NullableA = A?

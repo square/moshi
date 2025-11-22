@@ -12,7 +12,7 @@ plugins {
 
 dependencies {
   api(project(":moshi"))
-  api(kotlin("reflect"))
+  implementation(libs.kotlin.metadata)
 
   testImplementation(kotlin("test"))
   testImplementation(libs.junit)
