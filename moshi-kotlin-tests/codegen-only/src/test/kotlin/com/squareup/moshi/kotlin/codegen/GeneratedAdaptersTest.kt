@@ -225,10 +225,7 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class NullabeTypes(
-    val foo: String,
-    val nullableString: String?,
-  )
+  data class NullabeTypes(val foo: String, val nullableString: String?)
 
   @Test
   fun collections() {
@@ -526,7 +523,9 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class ConstructorParameterWithQualifierInAnnotationPackage(@UppercaseInAnnotationPackage var a: String)
+  class ConstructorParameterWithQualifierInAnnotationPackage(
+    @UppercaseInAnnotationPackage var a: String,
+  )
 
   @Test fun propertyWithQualifier() {
     val moshi = Moshi.Builder()
@@ -622,7 +621,11 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
+  class MultipleTransientConstructorParameters(
+    @Transient var a: Int = -1,
+    var b: Int = -1,
+    @Transient var c: Int = -1,
+  )
 
   @Test fun transientProperty() {
     val moshi = Moshi.Builder().build()
@@ -1196,7 +1199,11 @@ class GeneratedAdaptersTest {
   }
 
   @JsonQualifier
-  annotation class Uppercase(val inFrench: Boolean, val onSundays: Boolean = false, val temperature: Temperature = Temperature.COLD) {
+  annotation class Uppercase(
+    val inFrench: Boolean,
+    val onSundays: Boolean = false,
+    val temperature: Temperature = Temperature.COLD,
+  ) {
     enum class Temperature {
       WARM,
       COLD,
@@ -1328,9 +1335,7 @@ class GeneratedAdaptersTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class ClassWithFieldJson(
-    @field:Json(name = "_links") val links: String,
-  ) {
+  data class ClassWithFieldJson(@field:Json(name = "_links") val links: String) {
     @field:Json(name = "_ids")
     var ids: String? = null
   }
@@ -1366,7 +1371,11 @@ class GeneratedAdaptersTest {
       moshi.adapter(MultipleGenerics::class.java)
       fail("Should have failed to construct the adapter due to missing generics")
     } catch (e: RuntimeException) {
-      assertThat(e).hasMessageThat().isEqualTo("Failed to find the generated JsonAdapter constructor for 'class com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest\$MultipleGenerics'. Suspiciously, the type was not parameterized but the target class 'com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultipleGenericsJsonAdapter' is generic. Consider using Types#newParameterizedType() to define these missing type variables.")
+      assertThat(
+        e,
+      ).hasMessageThat().isEqualTo(
+        "Failed to find the generated JsonAdapter constructor for 'class com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest\$MultipleGenerics'. Suspiciously, the type was not parameterized but the target class 'com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest_MultipleGenericsJsonAdapter' is generic. Consider using Types#newParameterizedType() to define these missing type variables.",
+      )
     }
   }
 
@@ -1378,7 +1387,11 @@ class GeneratedAdaptersTest {
       )
       fail("Should have failed to construct the adapter due to wrong number of generics")
     } catch (e: IllegalArgumentException) {
-      assertThat(e).hasMessageThat().isEqualTo("TypeVariable mismatch: Expecting 4 types for generic type variables [A, B, C, D], but received 1")
+      assertThat(
+        e,
+      ).hasMessageThat().isEqualTo(
+        "TypeVariable mismatch: Expecting 4 types for generic type variables [A, B, C, D], but received 1",
+      )
     }
   }
 
@@ -1402,7 +1415,32 @@ class GeneratedAdaptersTest {
     val receiver: (String.(String) -> Boolean)? = null,
     // Tests that we use `FunctionN` since it has more than 23 params
     @Transient
-    val arity: (String.(String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> Boolean)? = null,
+    val arity: (
+      String.(
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+      ) -> Boolean
+    )? = null,
   )
 }
 

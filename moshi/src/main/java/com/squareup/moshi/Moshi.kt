@@ -63,7 +63,10 @@ public class Moshi private constructor(builder: Builder) {
     adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, vararg annotationTypes: Class<out Annotation>): JsonAdapter<T> {
+  public fun <T> adapter(
+    type: Type,
+    vararg annotationTypes: Class<out Annotation>,
+  ): JsonAdapter<T> {
     if (annotationTypes.size == 1) {
       return adapter(type, annotationTypes[0])
     }
@@ -135,14 +138,17 @@ public class Moshi private constructor(builder: Builder) {
       // Ask each factory to create the JSON adapter.
       for (i in factories.indices) {
         @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
-        val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>? ?: continue
+        val result =
+          factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>? ?: continue
 
         // Success! Notify the LookupChain so it is cached and can be used by re-entrant calls.
         lookupChain.adapterFound(result)
         success = true
         return result
       }
-      throw IllegalArgumentException("No JsonAdapter for ${type.toStringWithAnnotations(annotations)}")
+      throw IllegalArgumentException(
+        "No JsonAdapter for ${type.toStringWithAnnotations(annotations)}",
+      )
     } catch (e: IllegalArgumentException) {
       throw lookupChain.exceptionWithLookupStack(e)
     } finally {
@@ -164,7 +170,9 @@ public class Moshi private constructor(builder: Builder) {
       val result = factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>?
       if (result != null) return result
     }
-    throw IllegalArgumentException("No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}")
+    throw IllegalArgumentException(
+      "No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}",
+    )
   }
 
   /** Returns a new builder containing all custom factories used by the current instance. */
@@ -190,7 +198,8 @@ public class Moshi private constructor(builder: Builder) {
     internal var lastOffset = 0
 
     @CheckReturnValue
-    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder = add(typeOf<T>(), adapter)
+    public inline fun <reified T> addAdapter(adapter: JsonAdapter<T>): Builder =
+      add(typeOf<T>(), adapter)
 
     public fun <T> add(type: KType, jsonAdapter: JsonAdapter<T>): Builder =
       add(type.javaType, jsonAdapter)
@@ -339,19 +348,17 @@ public class Moshi private constructor(builder: Builder) {
   }
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
-  private class Lookup<T>(
-    val type: Type,
-    val fieldName: String?,
-    val cacheKey: Any,
-  ) : JsonAdapter<T>() {
+  private class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) :
+    JsonAdapter<T>() {
     var adapter: JsonAdapter<T>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
 
     override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
-    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R =
-      checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
+    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R = checkNotNull(adapter) {
+      "JsonAdapter isn't ready"
+    }.body()
 
     override fun toString() = adapter?.toString() ?: super.toString()
   }
@@ -367,10 +374,7 @@ public class Moshi private constructor(builder: Builder) {
       add(ClassJsonAdapter.Factory)
     }
 
-    fun <T> newAdapterFactory(
-      type: Type,
-      jsonAdapter: JsonAdapter<T>,
-    ): JsonAdapter.Factory {
+    fun <T> newAdapterFactory(type: Type, jsonAdapter: JsonAdapter<T>): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
         if (annotations.isEmpty() && Types.equals(type, targetType)) jsonAdapter else null
       }
@@ -381,10 +385,17 @@ public class Moshi private constructor(builder: Builder) {
       annotation: Class<out Annotation>,
       jsonAdapter: JsonAdapter<T>,
     ): JsonAdapter.Factory {
-      require(annotation.isAnnotationPresent(JsonQualifier::class.java)) { "$annotation does not have @JsonQualifier" }
-      require(annotation.declaredMethods.isEmpty()) { "Use JsonAdapter.Factory for annotations with elements" }
+      require(annotation.isAnnotationPresent(JsonQualifier::class.java)) {
+        "$annotation does not have @JsonQualifier"
+      }
+      require(annotation.declaredMethods.isEmpty()) {
+        "Use JsonAdapter.Factory for annotations with elements"
+      }
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (Types.equals(type, targetType) && annotations.size == 1 && annotations.isAnnotationPresent(annotation)) {
+        if (Types.equals(type, targetType) &&
+          annotations.size == 1 &&
+          annotations.isAnnotationPresent(annotation)
+        ) {
           jsonAdapter
         } else {
           null

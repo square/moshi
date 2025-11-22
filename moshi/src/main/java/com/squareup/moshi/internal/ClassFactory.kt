@@ -110,7 +110,11 @@ internal abstract class ClassFactory<T> {
       // }
       try {
         val newInstance =
-          ObjectInputStream::class.java.getDeclaredMethod("newInstance", Class::class.java, Class::class.java)
+          ObjectInputStream::class.java.getDeclaredMethod(
+            "newInstance",
+            Class::class.java,
+            Class::class.java,
+          )
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")

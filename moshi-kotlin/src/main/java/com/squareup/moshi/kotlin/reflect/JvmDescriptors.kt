@@ -41,6 +41,7 @@ internal val Class<*>.descriptor: String
           ?: throw RuntimeException("Unrecognized primitive $this")
 
       isArray -> "[${componentType.descriptor}"
+
       else -> "L$name;".replace('.', '/')
     }
   }
@@ -168,7 +169,9 @@ internal val Executable.jvmMethodSignature: String
       is Constructor<*> -> append("<init>")
       is Method -> append(name)
     }
-    parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")") { it.descriptor }
+    parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")") {
+      it.descriptor
+    }
     when (this@jvmMethodSignature) {
       is Constructor<*> -> append("V")
       is Method -> append(returnType.descriptor)

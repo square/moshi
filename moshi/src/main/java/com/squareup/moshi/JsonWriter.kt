@@ -363,7 +363,9 @@ public sealed class JsonWriter :
    */
   @Throws(IOException::class)
   public fun value(source: BufferedSource): JsonWriter {
-    check(!promoteValueToName) { "BufferedSource cannot be used as a map key in JSON at path $path" }
+    check(!promoteValueToName) {
+      "BufferedSource cannot be used as a map key in JSON at path $path"
+    }
     valueSink().use(source::readAll)
     return this
   }
@@ -506,7 +508,12 @@ public sealed class JsonWriter :
   @CheckReturnValue
   public fun beginFlatten(): Int {
     val context = peekScope()
-    check(context == NONEMPTY_OBJECT || context == EMPTY_OBJECT || context == NONEMPTY_ARRAY || context == EMPTY_ARRAY) {
+    check(
+      context == NONEMPTY_OBJECT ||
+        context == EMPTY_OBJECT ||
+        context == NONEMPTY_ARRAY ||
+        context == EMPTY_ARRAY,
+    ) {
       "Nesting problem."
     }
     val token = flattenStackSize

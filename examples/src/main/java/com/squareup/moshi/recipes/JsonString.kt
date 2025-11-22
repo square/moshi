@@ -28,10 +28,7 @@ import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 @JsonClass(generateAdapter = true)
-data class ExampleClass(
-  val type: Int,
-  @JsonString val rawJson: String,
-)
+data class ExampleClass(val type: Int, @JsonString val rawJson: String)
 
 @Retention(RUNTIME)
 @JsonQualifier

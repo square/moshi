@@ -31,7 +31,8 @@ public val Type.rawType: Class<*> get() = Types.getRawType(this)
  * Checks if [this] contains [T]. Returns the subset of [this] without [T], or null if
  * [this] does not contain [T].
  */
-public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? = Types.nextAnnotations(this, T::class.java)
+public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? =
+  Types.nextAnnotations(this, T::class.java)
 
 /**
  * Returns a type that represents an unknown type that extends [T]. For example, if [T] is

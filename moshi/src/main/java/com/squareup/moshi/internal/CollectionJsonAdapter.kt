@@ -67,7 +67,10 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
       }
     }
 
-    private fun <T> newArrayListAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableCollection<T?>> {
+    private fun <T> newArrayListAdapter(
+      type: Type,
+      moshi: Moshi,
+    ): JsonAdapter<MutableCollection<T?>> {
       val elementType = Types.collectionElementType(type, Collection::class.java)
       val elementAdapter = moshi.adapter<T>(elementType)
       return object : CollectionJsonAdapter<MutableCollection<T?>, T>(elementAdapter) {

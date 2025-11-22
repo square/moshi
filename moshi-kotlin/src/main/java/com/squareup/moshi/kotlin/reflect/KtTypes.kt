@@ -29,23 +29,22 @@ import kotlin.metadata.declaresDefaultValue
 import kotlin.metadata.isLocalClassName
 import kotlin.metadata.isNullable
 
-private fun defaultPrimitiveValue(type: Type): Any? =
-  if (type is Class<*> && type.isPrimitive) {
-    when (type) {
-      Boolean::class.java -> false
-      Char::class.java -> 0.toChar()
-      Byte::class.java -> 0.toByte()
-      Short::class.java -> 0.toShort()
-      Int::class.java -> 0
-      Float::class.java -> 0f
-      Long::class.java -> 0L
-      Double::class.java -> 0.0
-      Void.TYPE -> throw IllegalStateException("Parameter with void type is illegal")
-      else -> throw UnsupportedOperationException("Unknown primitive: $type")
-    }
-  } else {
-    null
+private fun defaultPrimitiveValue(type: Type): Any? = if (type is Class<*> && type.isPrimitive) {
+  when (type) {
+    Boolean::class.java -> false
+    Char::class.java -> 0.toChar()
+    Byte::class.java -> 0.toByte()
+    Short::class.java -> 0.toShort()
+    Int::class.java -> 0
+    Float::class.java -> 0f
+    Long::class.java -> 0L
+    Double::class.java -> 0.0
+    Void.TYPE -> throw IllegalStateException("Parameter with void type is illegal")
+    else -> throw UnsupportedOperationException("Unknown primitive: $type")
   }
+} else {
+  null
+}
 
 internal val KmType.canonicalName: String
   get() {
@@ -107,10 +106,7 @@ internal data class KtParameter(
     get() = valueClassBoxer != null
 }
 
-internal data class KtConstructor(
-  val type: Class<*>,
-  val kmExecutable: KmExecutable<*>,
-) {
+internal data class KtConstructor(val type: Class<*>, val kmExecutable: KmExecutable<*>) {
   val isDefault: Boolean get() = kmExecutable.isDefault
   val parameters: List<KtParameter> get() = kmExecutable.parameters
 

@@ -114,9 +114,8 @@ interface Personable
 data class Person(val name: String) : Personable
 
 @JsonClass(generateAdapter = true)
-data class PersonResponse(
-  val extra: String? = null,
-) : ResponseWithSettableProperty<Person, String>()
+data class PersonResponse(val extra: String? = null) :
+  ResponseWithSettableProperty<Person, String>()
 
 abstract class NestedResponse<T : Personable> : ResponseWithSettableProperty<T, String>()
 
@@ -124,9 +123,8 @@ abstract class NestedResponse<T : Personable> : ResponseWithSettableProperty<T, 
 data class NestedPersonResponse(val extra: String? = null) : NestedResponse<Person>()
 
 @JsonClass(generateAdapter = true)
-data class UntypedNestedPersonResponse<T : Personable>(
-  val extra: String? = null,
-) : NestedResponse<T>()
+data class UntypedNestedPersonResponse<T : Personable>(val extra: String? = null) :
+  NestedResponse<T>()
 
 interface LayerInterface<I>
 
@@ -146,8 +144,6 @@ abstract class Layer3<C, D> : Layer2<D>() {
 }
 
 @JsonClass(generateAdapter = true)
-data class Layer4<E : Personable, F>(
-  val layer4E: E,
-  val layer4F: F? = null,
-) : Layer3<List<Int>, String>(),
+data class Layer4<E : Personable, F>(val layer4E: E, val layer4F: F? = null) :
+  Layer3<List<Int>, String>(),
   LayerInterface<String>

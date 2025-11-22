@@ -276,7 +276,9 @@ public sealed class JsonReader : Closeable {
     return if (value == null) {
       JsonDataException("Expected $expected but was null at path $path")
     } else {
-      JsonDataException("Expected $expected but was $value, a ${value.javaClass.name}, at path $path")
+      JsonDataException(
+        "Expected $expected but was $value, a ${value.javaClass.name}, at path $path",
+      )
     }
   }
 
@@ -492,7 +494,9 @@ public sealed class JsonReader : Closeable {
             val value = readJsonValue()
             val replaced = put(name, value)
             if (replaced != null) {
-              throw JsonDataException("Map key '$name' has multiple values at path $path: $replaced and $value")
+              throw JsonDataException(
+                "Map key '$name' has multiple values at path $path: $replaced and $value",
+              )
             }
           }
           endObject()

@@ -36,9 +36,7 @@ internal class AppliedType private constructor(
 ) {
 
   /** Returns all super classes of this, recursively. Only [CLASS] is used as we can't really use other types. */
-  fun superclasses(
-    resolver: Resolver,
-  ): LinkedHashSet<AppliedType> {
+  fun superclasses(resolver: Resolver): LinkedHashSet<AppliedType> {
     val result: LinkedHashSet<AppliedType> = LinkedHashSet()
     result.add(this)
     for (supertype in type.getAllSuperTypes()) {

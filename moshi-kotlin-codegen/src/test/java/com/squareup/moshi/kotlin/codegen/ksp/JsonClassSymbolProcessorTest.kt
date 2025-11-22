@@ -416,7 +416,11 @@ class JsonClassSymbolProcessorTest {
     }
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-    assertThat(compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.toList()).isEmpty()
+    assertThat(
+      compilation.kspSourcesDir.walkTopDown().filter {
+        it.extension == "pro"
+      }.toList(),
+    ).isEmpty()
   }
 
   @Test
@@ -711,7 +715,9 @@ class JsonClassSymbolProcessorTest {
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.forEach { generatedFile ->
+    compilation.kspSourcesDir.walkTopDown().filter {
+      it.extension == "pro"
+    }.forEach { generatedFile ->
       when (generatedFile.nameWithoutExtension) {
         "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
           """

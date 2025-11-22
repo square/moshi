@@ -107,7 +107,9 @@ internal class `-JsonValueWriter` : JsonWriter() {
 
   override fun name(name: String): JsonWriter {
     check(stackSize != 0) { "JsonWriter is closed." }
-    check(peekScope() == EMPTY_OBJECT && deferredName == null && !promoteValueToName) { "Nesting problem." }
+    check(peekScope() == EMPTY_OBJECT && deferredName == null && !promoteValueToName) {
+      "Nesting problem."
+    }
     deferredName = name
     pathNames[stackSize - 1] = name
     return this
@@ -145,7 +147,14 @@ internal class `-JsonValueWriter` : JsonWriter() {
   }
 
   override fun value(value: Double): JsonWriter {
-    require(isLenient || !value.isNaN() && value != Double.NEGATIVE_INFINITY && value != Double.POSITIVE_INFINITY) {
+    require(
+      isLenient ||
+        (
+          !value.isNaN() &&
+            (value != Double.NEGATIVE_INFINITY) &&
+            (value != Double.POSITIVE_INFINITY)
+          ),
+    ) {
       "Numeric values must be finite, but was $value"
     }
     if (promoteValueToName) {
@@ -216,7 +225,7 @@ internal class `-JsonValueWriter` : JsonWriter() {
 
   override fun close() {
     val size = stackSize
-    if (size > 1 || size == 1 && scopes[0] != NONEMPTY_DOCUMENT) {
+    if ((size > 1) || ((size == 1) && (scopes[0] != NONEMPTY_DOCUMENT))) {
       throw IOException("Incomplete document")
     }
     stackSize = 0
@@ -256,7 +265,9 @@ internal class `-JsonValueWriter` : JsonWriter() {
         list.add(newTop)
       }
 
-      scope == STREAMING_VALUE -> throw IllegalStateException("Sink from valueSink() was not closed")
+      scope == STREAMING_VALUE -> throw IllegalStateException(
+        "Sink from valueSink() was not closed",
+      )
 
       else -> throw IllegalStateException("Nesting problem.")
     }
