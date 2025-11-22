@@ -7,8 +7,9 @@ Change Log
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
 * Switch `KotlinJsonAdapterFactory` to use `kotlin-metadata` instead of `kotlin-reflect`.
   * This is a lightweight alternative to kotlin-reflect and satisfies moshi-kotlin's requirements. It is also ~20% more performant at runtime.
-  * This is not a breaking API change but if you were relying on the transitive `kotlin-reflect` dependency you will need to add it explicitly.
-
+  * This is not a source or ABI breaking change but if you were relying on the transitive `kotlin-reflect` dependency you will need to add it explicitly.
+  * No longer encodes properties/fields from supertypes that are platform types.
+  * Fully supports encoding/decoding of value classes. Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
 
 ## Upgrading to Moshi 2.x
 
