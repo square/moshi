@@ -63,6 +63,9 @@ syntax:
 + jsonWriter.indent = "  "
 ```
 
+### moshi-kotlin-codegen
+
+The KSP code generator now supports (and requires) KSP2.
 
 ## Version 1.15.2
 

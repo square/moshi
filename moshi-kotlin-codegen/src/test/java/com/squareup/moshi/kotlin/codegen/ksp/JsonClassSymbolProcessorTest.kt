@@ -32,25 +32,13 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.typeOf
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
-@RunWith(Parameterized::class)
-class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
-
-  companion object {
-    @JvmStatic
-    @Parameterized.Parameters(name = "useKSP2={0}")
-    fun data(): Collection<Array<Any>> = listOf(
-      arrayOf(false),
-      arrayOf(true),
-    )
-  }
+class JsonClassSymbolProcessorTest {
 
   @Rule
   @JvmField
@@ -848,13 +836,8 @@ class JsonClassSymbolProcessorTest(private val useKSP2: Boolean) {
         inheritClassPath = true
         sources = sourceFiles.asList()
         verbose = false
-        configureKsp(useKsp2 = useKSP2) {
+        configureKsp {
           symbolProcessorProviders += JsonClassSymbolProcessorProvider()
-          incremental = true // The default now
-          if (!useKSP2) {
-            withCompilation = true // Only necessary for KSP1
-            languageVersion = "1.9"
-          }
         }
       }
   }
