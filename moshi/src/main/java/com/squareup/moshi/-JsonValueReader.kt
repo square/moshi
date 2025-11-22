@@ -341,7 +341,8 @@ internal class `-JsonValueReader` : JsonReader {
     stack[stackSize++] = newTop
   }
 
-  private inline fun <reified T> require(expected: Token): T = knownNotNull(require(T::class.java, expected))
+  private inline fun <reified T> require(expected: Token): T =
+    knownNotNull(require(T::class.java, expected))
 
   private fun requireNull() = require(Void::class.java, Token.NULL)
 
@@ -392,11 +393,8 @@ internal class `-JsonValueReader` : JsonReader {
     }
   }
 
-  internal class JsonIterator(
-    val endToken: Token,
-    val array: Array<Any?>,
-    var next: Int,
-  ) : Iterator<Any?>,
+  internal class JsonIterator(val endToken: Token, val array: Array<Any?>, var next: Int) :
+    Iterator<Any?>,
     Cloneable {
     override fun hasNext() = next < array.size
 

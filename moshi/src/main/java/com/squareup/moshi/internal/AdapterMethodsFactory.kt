@@ -33,11 +33,7 @@ internal class AdapterMethodsFactory(
   private val toAdapters: List<AdapterMethod>,
   private val fromAdapters: List<AdapterMethod>,
 ) : JsonAdapter.Factory {
-  override fun create(
-    type: Type,
-    annotations: Set<Annotation>,
-    moshi: Moshi,
-  ): JsonAdapter<*>? {
+  override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
     val toAdapter = get(toAdapters, type, annotations)
     val fromAdapter = get(fromAdapters, type, annotations)
     if (toAdapter == null && fromAdapter == null) return null
@@ -275,11 +271,14 @@ internal class AdapterMethodsFactory(
 
             override fun bind(moshi: Moshi, factory: JsonAdapter.Factory) {
               super.bind(moshi, factory)
-              delegate = if (Types.equals(parameterTypes[0], returnType) && qualifierAnnotations == returnTypeAnnotations) {
-                moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
-              } else {
-                moshi.adapter(parameterTypes[0], qualifierAnnotations)
-              }
+              delegate =
+                if (Types.equals(parameterTypes[0], returnType) &&
+                  qualifierAnnotations == returnTypeAnnotations
+                ) {
+                  moshi.nextAdapter(factory, parameterTypes[0], qualifierAnnotations)
+                } else {
+                  moshi.adapter(parameterTypes[0], qualifierAnnotations)
+                }
             }
 
             override fun fromJson(moshi: Moshi, reader: JsonReader): Any? {

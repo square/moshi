@@ -16,9 +16,8 @@ private val NATURAL_ORDER = Comparator<Any> { o1, o2 -> (o1 as Comparable<Any>).
  *
  * @param comparator the comparator to order elements with, or null to use the natural ordering.
  */
-internal class LinkedHashTreeMap<K, V>(
-  comparator: Comparator<Any?>? = null,
-) : AbstractMutableMap<K, V>(),
+internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
+  AbstractMutableMap<K, V>(),
   Serializable {
   @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
@@ -199,7 +198,9 @@ internal class LinkedHashTreeMap<K, V>(
       val comparableKey =
         if (comparator === NATURAL_ORDER) key as Comparable<Any?> else null
       while (true) {
-        comparison = comparableKey?.compareTo(knownNotNull(nearest).key) ?: comparator.compare(key, knownNotNull(nearest).key)
+        comparison =
+          comparableKey?.compareTo(knownNotNull(nearest).key)
+            ?: comparator.compare(key, knownNotNull(nearest).key)
 
         // We found the requested key.
         if (comparison == 0) {
@@ -207,7 +208,8 @@ internal class LinkedHashTreeMap<K, V>(
         }
 
         // If it exists, the key is in a subtree. Go deeper.
-        val child = (if (comparison < 0) knownNotNull(nearest).left else knownNotNull(nearest).right) ?: break
+        val child =
+          (if (comparison < 0) knownNotNull(nearest).left else knownNotNull(nearest).right) ?: break
         nearest = child
       }
     }

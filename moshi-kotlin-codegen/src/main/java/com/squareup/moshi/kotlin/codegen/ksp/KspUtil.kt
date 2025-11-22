@@ -63,7 +63,12 @@ internal fun KSAnnotation.toAnnotationSpec(resolver: Resolver): AnnotationSpec {
   return builder.build()
 }
 
-private fun addValueToBlock(value: Any, resolver: Resolver, member: CodeBlock.Builder, annotationContext: KSClassDeclaration? = null) {
+private fun addValueToBlock(
+  value: Any,
+  resolver: Resolver,
+  member: CodeBlock.Builder,
+  annotationContext: KSClassDeclaration? = null,
+) {
   when (value) {
     is List<*> -> {
       // Array type

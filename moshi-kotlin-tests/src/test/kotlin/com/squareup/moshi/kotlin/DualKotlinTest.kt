@@ -62,7 +62,9 @@ class DualKotlinTest {
       jsonAdapter.fromJson("""{"a":4}""")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$")
+      assertThat(
+        expected,
+      ).hasMessageThat().isEqualTo("Required value 'b' (JSON name 'bPrime') missing at \$")
     }
   }
 
@@ -115,7 +117,9 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":null}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(
+        expected,
+      ).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
     }
   }
 
@@ -136,7 +140,9 @@ class DualKotlinTest {
       jsonAdapter.fromJson("{\"aPrime\":\"hello\"}")
       fail()
     } catch (expected: JsonDataException) {
-      assertThat(expected).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
+      assertThat(
+        expected,
+      ).hasMessageThat().isEqualTo("Non-null value 'a' (JSON name 'aPrime') was null at \$.aPrime")
     }
   }
 
@@ -416,11 +422,7 @@ class DualKotlinTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class MultipleNonPropertyParameters(
-    val prop: Int,
-    param1: Int = 1,
-    param2: Int = 2,
-  ) {
+  class MultipleNonPropertyParameters(val prop: Int, param1: Int = 1, param2: Int = 2) {
     init {
       // Ensure the params always uses their default value
       require(param1 == 1)
@@ -444,10 +446,7 @@ class DualKotlinTest {
   }
 
   @JsonClass(generateAdapter = true)
-  class OnlyMultipleNonPropertyParameters(
-    param1: Int = 1,
-    param2: Int = 2,
-  ) {
+  class OnlyMultipleNonPropertyParameters(param1: Int = 1, param2: Int = 2) {
     init {
       // Ensure the params always uses their default value
       require(param1 == 1)
@@ -622,9 +621,7 @@ class DualKotlinTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class IntersectionTypes<E>(
-    val value: E,
-  ) where E : Enum<E>, E : IntersectionTypeInterface<E>
+  data class IntersectionTypes<E>(val value: E) where E : Enum<E>, E : IntersectionTypeInterface<E>
 
   @Test fun transientConstructorParameter() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -653,7 +650,11 @@ class DualKotlinTest {
     assertThat(decoded.c).isEqualTo(-1)
   }
 
-  class MultipleTransientConstructorParameters(@Transient var a: Int = -1, var b: Int = -1, @Transient var c: Int = -1)
+  class MultipleTransientConstructorParameters(
+    @Transient var a: Int = -1,
+    var b: Int = -1,
+    @Transient var c: Int = -1,
+  )
 
   @Test fun transientProperty() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -759,10 +760,7 @@ class DualKotlinTest {
   }
 
   @JsonClass(generateAdapter = true)
-  data class PropertyWithDollarSign(
-    val `$a`: String,
-    @Json(name = "\$b") val b: String,
-  )
+  data class PropertyWithDollarSign(val `$a`: String, @Json(name = "\$b") val b: String)
 
   @Retention(RUNTIME)
   @JsonQualifier
@@ -811,9 +809,7 @@ data class GenericClass<T>(val value: T)
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
 @JsonClass(generateAdapter = false) // TODO revisit code gen support separately
-value class ValueClass(
-  val i: Int = 0,
-)
+value class ValueClass(val i: Int = 0)
 
 typealias A = Int
 typealias NullableA = A?

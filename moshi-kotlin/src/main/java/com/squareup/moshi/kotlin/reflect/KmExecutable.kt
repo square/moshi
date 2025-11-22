@@ -103,10 +103,7 @@ internal sealed class KmExecutable<T : Executable> {
       return defaultConstructorSignature
     }
 
-    operator fun invoke(
-      rawType: Class<*>,
-      kmClass: KmClass,
-    ): KmExecutable<*>? {
+    operator fun invoke(rawType: Class<*>, kmClass: KmClass): KmExecutable<*>? {
       // If this is a value class, the "constructor" will actually be a static creator function
       val constructorsBySignature = if (kmClass.isValue) {
         // kmConstructorSignature is something like constructor-impl(I)I
@@ -189,10 +186,7 @@ internal sealed class KmExecutable<T : Executable> {
   }
 
   @Suppress("UNCHECKED_CAST")
-  fun <T> newInstance(
-    arguments: Array<Any?>,
-    masks: List<Int>,
-  ): T {
+  fun <T> newInstance(arguments: Array<Any?>, masks: List<Int>): T {
     return when (this) {
       is KmExecutableConstructor -> {
         val finalArgs = prepareFinalArgs(arguments, masks)

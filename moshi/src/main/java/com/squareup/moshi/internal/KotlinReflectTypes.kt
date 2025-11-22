@@ -41,7 +41,9 @@ private fun KType.computeJavaType(forceWrapper: Boolean = false): Type {
         if (jClass.componentType.isPrimitive) return jClass
 
         val (variance, elementType) = arguments.singleOrNull()
-          ?: throw IllegalArgumentException("kotlin.Array must have exactly one type argument: $this")
+          ?: throw IllegalArgumentException(
+            "kotlin.Array must have exactly one type argument: $this",
+          )
         return when (variance) {
           // Array<in ...> is always erased to Object[], and Array<*> is Object[].
           null, KVariance.IN -> jClass
@@ -58,10 +60,7 @@ private fun KType.computeJavaType(forceWrapper: Boolean = false): Type {
   }
 }
 
-private fun createPossiblyInnerType(
-  jClass: Class<*>,
-  arguments: List<KTypeProjection>,
-): Type {
+private fun createPossiblyInnerType(jClass: Class<*>, arguments: List<KTypeProjection>): Type {
   val ownerClass = jClass.declaringClass
     ?: return ParameterizedTypeImpl(
       ownerType = null,
@@ -113,21 +112,22 @@ private val KTypeProjection.javaType: Type
 // Suppression of the error is needed for `AnnotatedType[] getAnnotatedBounds()` which is impossible to implement on JDK 6
 // because `AnnotatedType` has only appeared in JDK 8.
 @Suppress("ABSTRACT_MEMBER_NOT_IMPLEMENTED")
-private class TypeVariableImpl(
-  private val typeParameter: KTypeParameter,
-) : TypeVariable<GenericDeclaration> {
+private class TypeVariableImpl(private val typeParameter: KTypeParameter) :
+  TypeVariable<GenericDeclaration> {
   override fun getName(): String = typeParameter.name
 
-  override fun getGenericDeclaration(): GenericDeclaration =
-    TODO("getGenericDeclaration() is not yet supported for type variables created from KType: $typeParameter")
+  override fun getGenericDeclaration(): GenericDeclaration = TODO(
+    "getGenericDeclaration() is not yet supported for type variables created from KType: $typeParameter",
+  )
 
-  override fun getBounds(): Array<Type> = typeParameter.upperBounds.map { it.computeJavaType(forceWrapper = true) }.toTypedArray()
+  override fun getBounds(): Array<Type> = typeParameter.upperBounds.map {
+    it.computeJavaType(forceWrapper = true)
+  }.toTypedArray()
 
   override fun equals(other: Any?): Boolean =
     other is TypeVariable<*> && name == other.name && genericDeclaration == other.genericDeclaration
 
-  override fun hashCode(): Int =
-    name.hashCode() xor genericDeclaration.hashCode()
+  override fun hashCode(): Int = name.hashCode() xor genericDeclaration.hashCode()
 
   override fun toString(): String = name
 }

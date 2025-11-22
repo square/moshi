@@ -56,13 +56,12 @@ import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 
 /** Returns a target type for [type] or null if it cannot be used with code gen. */
-internal fun targetType(
-  type: KSDeclaration,
-  resolver: Resolver,
-  logger: KSPLogger,
-): TargetType? {
+internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogger): TargetType? {
   if (type !is KSClassDeclaration) {
-    logger.error("@JsonClass can't be applied to ${type.qualifiedName?.asString()}: must be a Kotlin class", type)
+    logger.error(
+      "@JsonClass can't be applied to ${type.qualifiedName?.asString()}: must be a Kotlin class",
+      type,
+    )
     return null
   }
   logger.check(type.classKind != ClassKind.ENUM_CLASS, type) {
@@ -117,7 +116,9 @@ internal fun targetType(
         """
         @JsonClass can't be applied to $type: supertype $superclass is not a Kotlin type.
         Origin=${classDecl.origin}
-        Annotations=${classDecl.annotations.joinToString(prefix = "[", postfix = "]") { it.shortName.getShortName() }}
+        Annotations=${classDecl.annotations.joinToString(prefix = "[", postfix = "]") {
+          it.shortName.getShortName()
+        }}
         """.trimIndent(),
         type,
       )
@@ -269,8 +270,10 @@ private fun KSPropertyDeclaration.toPropertySpec(
       addAnnotations(
         this@toPropertySpec.annotations
           .mapNotNull {
-            if ((it.annotationType.resolve().unwrapTypeAlias().declaration as KSClassDeclaration).isJsonQualifier
-            ) {
+            val isJsonQualifier =
+              (it.annotationType.resolve().unwrapTypeAlias().declaration as KSClassDeclaration)
+                .isJsonQualifier
+            if (isJsonQualifier) {
               it.toAnnotationSpec(resolver)
             } else {
               null

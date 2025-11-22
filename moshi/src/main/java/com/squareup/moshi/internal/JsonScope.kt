@@ -53,7 +53,12 @@ internal object JsonScope {
    * pathIndices when doing so isn't useful.
    */
   @JvmStatic
-  fun getPath(stackSize: Int, stack: IntArray, pathNames: Array<String?>, pathIndices: IntArray): String {
+  fun getPath(
+    stackSize: Int,
+    stack: IntArray,
+    pathNames: Array<String?>,
+    pathIndices: IntArray,
+  ): String {
     return buildString {
       append('$')
       for (i in 0 until stackSize) {

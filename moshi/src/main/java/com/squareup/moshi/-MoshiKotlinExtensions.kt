@@ -31,7 +31,8 @@ import kotlin.reflect.typeOf
 public inline fun <reified T> Moshi.adapter(): JsonAdapter<T> = adapter(typeOf<T>())
 
 @Deprecated("Use the Moshi instance version instead", level = DeprecationLevel.HIDDEN)
-public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder = add(typeOf<T>(), adapter)
+public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>): Moshi.Builder =
+  add(typeOf<T>(), adapter)
 
 /**
  * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
