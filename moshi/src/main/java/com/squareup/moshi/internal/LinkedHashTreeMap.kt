@@ -270,7 +270,7 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
 
   private fun equal(a: Any?, b: Any?): Boolean {
     @Suppress("SuspiciousEqualsCombination")
-    return a === b || a != null && a == b
+    return (a === b) || ((a != null) && (a == b))
   }
 
   /**

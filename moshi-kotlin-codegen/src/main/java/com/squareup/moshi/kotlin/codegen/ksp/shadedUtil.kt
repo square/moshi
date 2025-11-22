@@ -71,10 +71,12 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
       val argument = arguments.first { it.name?.asString() == method.name }
       when (val result = argument.value ?: method.defaultValue) {
         is Proxy -> result
+
         is List<*> -> {
           val value = { result.asArray(method, clazz) }
           cache.getOrPut(Pair(method.returnType, result), value)
         }
+
         else -> {
           when {
             // Workaround for java annotation value array type
@@ -89,18 +91,22 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                 )
               }
             }
+
             method.returnType.isEnum -> {
               val value = { result.asEnum(method.returnType) }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.isAnnotation -> {
               val value = { (result as KSAnnotation).asAnnotation(method.returnType) }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "java.lang.Class" -> {
               cache.getOrPut(Pair(method.returnType, result)) {
                 when (result) {
                   is KSType -> result.asClass(clazz)
+
                   // Handles com.intellij.psi.impl.source.PsiImmediateClassType using reflection
                   // since api doesn't contain a reference to this
                   else -> Class.forName(
@@ -111,26 +117,32 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                 }
               }
             }
+
             method.returnType.name == "byte" -> {
               val value = { result.asByte() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "short" -> {
               val value = { result.asShort() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "long" -> {
               val value = { result.asLong() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "float" -> {
               val value = { result.asFloat() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             method.returnType.name == "double" -> {
               val value = { result.asDouble() }
               cache.getOrPut(Pair(method.returnType, result), value)
             }
+
             else -> result // original value
           }
         }
@@ -176,11 +188,13 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
         method.returnType.componentType.isEnum -> {
           this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
         }
+
         method.returnType.componentType.isAnnotation -> {
           this.toArray(method) { result ->
             (result as KSAnnotation).asAnnotation(method.returnType.componentType)
           }
         }
+
         else -> throw IllegalStateException(
           "Unable to process type ${method.returnType.componentType.name}",
         )

@@ -192,6 +192,7 @@ internal sealed class KmExecutable<T : Executable> {
         val finalArgs = prepareFinalArgs(arguments, masks)
         defaultsExecutable.newInstance(*finalArgs)
       }
+
       is KmExecutableFunction -> {
         val finalArgs = prepareFinalArgs(arguments, masks)
         // First get the instance returned by the constructor-impl

@@ -23,6 +23,7 @@ when (testMode) {
     // Default to KSP. This is a CI-only thing
     apply(plugin = "com.google.devtools.ksp")
   }
+
   KSP -> {
     apply(plugin = "com.google.devtools.ksp")
   }
@@ -49,6 +50,7 @@ dependencies {
       // Default to KSP in this case, this is a CI-only thing
       "kspTest"(project(":moshi-kotlin-codegen"))
     }
+
     KSP -> {
       "kspTest"(project(":moshi-kotlin-codegen"))
     }

@@ -32,6 +32,7 @@ internal val KType.javaType: Type
 private fun KType.computeJavaType(forceWrapper: Boolean = false): Type {
   when (val classifier = classifier) {
     is KTypeParameter -> return TypeVariableImpl(classifier)
+
     is KClass<*> -> {
       val jClass = if (forceWrapper) classifier.javaObjectType else classifier.java
       val arguments = arguments
@@ -47,6 +48,7 @@ private fun KType.computeJavaType(forceWrapper: Boolean = false): Type {
         return when (variance) {
           // Array<in ...> is always erased to Object[], and Array<*> is Object[].
           null, KVariance.IN -> jClass
+
           KVariance.INVARIANT, KVariance.OUT -> {
             val javaElementType = elementType!!.computeJavaType()
             if (javaElementType is Class<*>) jClass else GenericArrayTypeImpl(javaElementType)
@@ -56,6 +58,7 @@ private fun KType.computeJavaType(forceWrapper: Boolean = false): Type {
 
       return createPossiblyInnerType(jClass, arguments)
     }
+
     else -> throw UnsupportedOperationException("Unsupported type classifier: $this")
   }
 }
@@ -98,10 +101,12 @@ private val KTypeProjection.javaType: Type
         // TODO: declaration-site variance
         type.computeJavaType(forceWrapper = true)
       }
+
       KVariance.IN -> WildcardTypeImpl(
         upperBound = Any::class.java,
         lowerBound = type.computeJavaType(forceWrapper = true),
       )
+
       KVariance.OUT -> WildcardTypeImpl(
         upperBound = type.computeJavaType(forceWrapper = true),
         lowerBound = null,

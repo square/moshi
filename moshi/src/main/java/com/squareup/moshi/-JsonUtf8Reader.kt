@@ -129,19 +129,29 @@ internal class `-JsonUtf8Reader` : JsonReader {
   override fun peek(): Token {
     return when (peekIfNone()) {
       PEEKED_BEGIN_OBJECT -> Token.BEGIN_OBJECT
+
       PEEKED_END_OBJECT -> Token.END_OBJECT
+
       PEEKED_BEGIN_ARRAY -> Token.BEGIN_ARRAY
+
       PEEKED_END_ARRAY -> Token.END_ARRAY
+
       PEEKED_SINGLE_QUOTED_NAME,
       PEEKED_DOUBLE_QUOTED_NAME,
       PEEKED_UNQUOTED_NAME,
       PEEKED_BUFFERED_NAME,
       -> Token.NAME
+
       PEEKED_TRUE, PEEKED_FALSE -> Token.BOOLEAN
+
       PEEKED_NULL -> Token.NULL
+
       PEEKED_SINGLE_QUOTED, PEEKED_DOUBLE_QUOTED, PEEKED_UNQUOTED, PEEKED_BUFFERED -> Token.STRING
+
       PEEKED_LONG, PEEKED_NUMBER -> Token.NUMBER
+
       PEEKED_EOF -> Token.END_DOCUMENT
+
       else -> throw AssertionError()
     }
   }
@@ -449,9 +459,11 @@ internal class `-JsonUtf8Reader` : JsonReader {
               val newValue = value * 10 - (c - '0').toLong()
               fitsInLong = fitsInLong and
                 (
-                  value > MIN_INCOMPLETE_INTEGER ||
-                    value == MIN_INCOMPLETE_INTEGER &&
-                    newValue < value
+                  (value > MIN_INCOMPLETE_INTEGER) ||
+                    (
+                      (value == MIN_INCOMPLETE_INTEGER) &&
+                        (newValue < value)
+                      )
                   )
               value = newValue
             }
@@ -565,8 +577,11 @@ internal class `-JsonUtf8Reader` : JsonReader {
     val p = peekIfNone()
     when {
       p == PEEKED_UNQUOTED_NAME -> skipUnquotedValue()
+
       p == PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+
       p == PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
+
       p != PEEKED_BUFFERED_NAME -> throw JsonDataException(
         "Expected a name but was ${peek()} at path $path",
       )

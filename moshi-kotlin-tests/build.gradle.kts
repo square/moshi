@@ -22,6 +22,7 @@ when (testMode) {
   REFLECT -> {
     // Do nothing!
   }
+
   KSP -> {
     apply(plugin = "com.google.devtools.ksp")
   }
@@ -47,6 +48,7 @@ dependencies {
     REFLECT -> {
       // Do nothing
     }
+
     KSP -> {
       "kspTest"(project(":moshi-kotlin-codegen"))
     }

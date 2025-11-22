@@ -149,9 +149,11 @@ internal class `-JsonValueWriter` : JsonWriter() {
   override fun value(value: Double): JsonWriter {
     require(
       isLenient ||
-        !value.isNaN() &&
-        value != Double.NEGATIVE_INFINITY &&
-        value != Double.POSITIVE_INFINITY,
+        (
+          !value.isNaN() &&
+            (value != Double.NEGATIVE_INFINITY) &&
+            (value != Double.POSITIVE_INFINITY)
+          ),
     ) {
       "Numeric values must be finite, but was $value"
     }
@@ -223,7 +225,7 @@ internal class `-JsonValueWriter` : JsonWriter() {
 
   override fun close() {
     val size = stackSize
-    if (size > 1 || size == 1 && scopes[0] != NONEMPTY_DOCUMENT) {
+    if ((size > 1) || ((size == 1) && (scopes[0] != NONEMPTY_DOCUMENT))) {
       throw IOException("Incomplete document")
     }
     stackSize = 0
