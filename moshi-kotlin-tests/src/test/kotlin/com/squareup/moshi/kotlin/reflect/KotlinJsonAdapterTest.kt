@@ -26,14 +26,14 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
+import org.assertj.core.api.Assertions
+import org.junit.Assert.fail
+import org.junit.Test
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.WildcardType
 import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
-import org.assertj.core.api.Assertions
-import org.junit.Assert.fail
-import org.junit.Test
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
 class KotlinJsonAdapterTest {
