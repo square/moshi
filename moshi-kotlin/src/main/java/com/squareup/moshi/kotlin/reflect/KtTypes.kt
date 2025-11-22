@@ -91,6 +91,8 @@ internal data class KtParameter(
   val index: Int,
   val rawType: Class<*>,
   val annotations: List<Annotation>,
+  val valueClassBoxer: Method? = null,
+  val valueClassUnboxer: Method? = null,
 ) {
   val name
     get() = km.name
@@ -100,6 +102,9 @@ internal data class KtParameter(
 
   val isNullable
     get() = km.type.isNullable
+
+  val isValueClass
+    get() = valueClassBoxer != null
 }
 
 internal data class KtConstructor(
@@ -126,7 +131,16 @@ internal data class KtConstructor(
       val usePossibleArg = possibleArg != null || parameter in argumentsMap
       when {
         usePossibleArg -> {
-          arguments += possibleArg
+          // If this parameter is a value class, we need to unbox it
+          val actualArg =
+            if (parameter.isValueClass && possibleArg != null) {
+              // The possibleArg is the boxed value class instance
+              // Call unbox-impl on the instance to get the underlying primitive value
+              parameter.valueClassUnboxer!!.invoke(possibleArg)
+            } else {
+              possibleArg
+            }
+          arguments += actualArg
         }
 
         parameter.declaresDefaultValue -> {
@@ -144,19 +158,13 @@ internal data class KtConstructor(
       index++
     }
 
-    if (!isDefault) {
-      @Suppress("UNCHECKED_CAST")
-      return kmExecutable.newInstance(*arguments.toTypedArray()) as R
+    // Add the final mask if we have default parameters
+    if (isDefault) {
+      masks += mask
     }
 
-    masks += mask
-    arguments.addAll(masks)
-
-    // DefaultConstructorMarker
-    arguments += null
-
     @Suppress("UNCHECKED_CAST")
-    return kmExecutable.newInstance(*arguments.toTypedArray()) as R
+    return kmExecutable.newInstance(arguments.toTypedArray(), masks) as R
   }
 
   companion object {
@@ -174,6 +182,8 @@ internal data class KtProperty(
   val jvmSetter: Method?,
   val jvmAnnotationsMethod: Method?,
   val parameter: KtParameter?,
+  val valueClassBoxer: Method? = null,
+  val valueClassUnboxer: Method? = null,
 ) {
   init {
     jvmField?.isAccessible = true
@@ -184,13 +194,29 @@ internal data class KtProperty(
   val name
     get() = km.name
 
-  val javaType =
+  private val rawJavaType =
     jvmField?.genericType
       ?: jvmGetter?.genericReturnType
       ?: jvmSetter?.genericParameterTypes[0]
       ?: error(
         "No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'.",
       )
+
+  /**
+   * The Java type for this property. For value classes, this returns the boxed value class type,
+   * not the underlying primitive type.
+   */
+  val javaType: Type
+    get() = if (isValueClass) {
+      // For value classes, return the value class type, not the primitive type
+      val boxerClass = valueClassBoxer!!.declaringClass
+      boxerClass
+    } else {
+      rawJavaType
+    }
+
+  val isValueClass
+    get() = valueClassBoxer != null
 
   val annotations: Set<Annotation> by lazy {
     val set = LinkedHashSet<Annotation>()

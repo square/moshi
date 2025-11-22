@@ -148,24 +148,38 @@ internal class KotlinJsonAdapter<T>(
   ) {
 
     fun get(value: K): Any? {
-      property.jvmGetter?.let { getter ->
-        return getter.invoke(value)
-      }
-      property.jvmField?.let {
-        return it.get(value)
+      val rawValue = if (property.jvmGetter != null) {
+        property.jvmGetter.invoke(value)
+      } else if (property.jvmField != null) {
+        property.jvmField.get(value)
+      } else {
+        error("Could not get JVM field or invoke JVM getter for property '$name'")
       }
 
-      error("Could not get JVM field or invoke JVM getter for property '$name'")
+      // If this property is a value class, box the raw value
+      return if (property.isValueClass && rawValue != null) {
+        property.valueClassBoxer!!.invoke(null, rawValue)
+      } else {
+        rawValue
+      }
     }
 
     fun set(result: K, value: P) {
       if (value !== ABSENT_VALUE) {
+        // If this property is a value class, unbox the value before setting
+        val actualValue =
+          if (property.isValueClass && value != null) {
+            property.valueClassUnboxer!!.invoke(value)
+          } else {
+            value
+          }
+
         val setter = property.jvmSetter
         if (setter != null) {
-          setter.invoke(result, value)
+          setter.invoke(result, actualValue)
           return
         }
-        property.jvmField?.set(result, value)
+        property.jvmField?.set(result, actualValue)
       }
     }
   }
@@ -245,6 +259,10 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       val setterMethod = signatureSearcher.setter(property)
       val annotationsMethod = signatureSearcher.syntheticMethodForAnnotations(property)
 
+      // Check if the property's return type is a value class
+      val (propertyValueClassBoxer, propertyValueClassUnboxer) =
+        KmExecutable.findValueClassMethods(property.returnType.classifier, rawType.classLoader)
+
       val ktProperty =
         KtProperty(
           km = property,
@@ -253,6 +271,8 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           jvmSetter = setterMethod,
           jvmAnnotationsMethod = annotationsMethod,
           parameter = ktParameter,
+          valueClassBoxer = propertyValueClassBoxer,
+          valueClassUnboxer = propertyValueClassUnboxer,
         )
       val allAnnotations = ktProperty.annotations.toMutableList()
       val jsonAnnotation = allAnnotations.filterIsInstance<Json>().firstOrNull()

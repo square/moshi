@@ -6,8 +6,10 @@ import java.lang.reflect.Executable
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import kotlin.metadata.KmClass
+import kotlin.metadata.KmClassifier
 import kotlin.metadata.isSecondary
 import kotlin.metadata.isValue
+import kotlin.metadata.jvm.KotlinClassMetadata
 import kotlin.metadata.jvm.signature
 
 private val DEFAULT_CONSTRUCTOR_SIGNATURE by lazy(LazyThreadSafetyMode.NONE) {
@@ -20,8 +22,56 @@ private val DEFAULT_CONSTRUCTOR_SIGNATURE by lazy(LazyThreadSafetyMode.NONE) {
 internal sealed class KmExecutable<T : Executable> {
   abstract val parameters: List<KtParameter>
   abstract val isDefault: Boolean
+  abstract val needsDefaultMarker: Boolean
 
   companion object {
+    /**
+     * Checks if a type (from KM metadata) is a value class and returns its box-impl and unbox-impl methods if so.
+     *
+     * Returns two nulls if this isn't a value class.
+     */
+    internal fun findValueClassMethods(
+      classifier: KmClassifier,
+      classLoader: ClassLoader,
+    ): Pair<Method?, Method?> {
+      if (classifier !is KmClassifier.Class) {
+        // Not a class type (could be type parameter, etc.)
+        return null to null
+      }
+
+      // Convert kotlin metadata class name to Java class name
+      val className = classifier.name.replace('/', '.')
+      val clazz = try {
+        classLoader.loadClass(className)
+      } catch (_: ClassNotFoundException) {
+        return null to null
+      }
+
+      // Check if it's a value class using Kotlin metadata
+      val metadata = clazz.getAnnotation(Metadata::class.java) ?: return null to null
+      val classMetadata = KotlinClassMetadata.readLenient(metadata)
+      if (classMetadata !is KotlinClassMetadata.Class) {
+        return null to null
+      }
+      val kmClass = classMetadata.kmClass
+      if (!kmClass.isValue) {
+        return null to null
+      }
+
+      // Find the box-impl and unbox-impl methods
+      val boxImplMethod = clazz.declaredMethods
+        .firstOrNull { it.name == "box-impl" }
+        ?: return null to null
+
+      val unboxImplMethod = clazz.declaredMethods
+        .firstOrNull { it.name == "unbox-impl" }
+        ?: return null to null
+
+      boxImplMethod.isAccessible = true
+      unboxImplMethod.isAccessible = true
+      return boxImplMethod to unboxImplMethod
+    }
+
     private fun Executable.defaultsSignature(): String {
       val suffixDescriptor = when (this) {
         is Constructor<*> -> "V"
@@ -76,7 +126,17 @@ internal sealed class KmExecutable<T : Executable> {
       val parameterTypes = jvmConstructor.parameterTypes
       val parameters =
         kmConstructor.valueParameters.withIndex().map { (index, kmParam) ->
-          KtParameter(kmParam, index, parameterTypes[index], parameterAnnotations[index].toList())
+          // Check if this parameter's type is a value class
+          val (parameterValueClassBoxer, parameterValueClassUnboxer) =
+            findValueClassMethods(kmParam.type.classifier, rawType.classLoader)
+          KtParameter(
+            kmParam,
+            index,
+            parameterTypes[index],
+            parameterAnnotations[index].toList(),
+            parameterValueClassBoxer,
+            parameterValueClassUnboxer,
+          )
         }
       val anyOptional = parameters.any { it.declaresDefaultValue }
       val actualConstructor =
@@ -116,15 +176,32 @@ internal sealed class KmExecutable<T : Executable> {
     }
   }
 
+  private fun prepareFinalArgs(arguments: Array<Any?>, masks: List<Int>): Array<Any?> {
+    if (!needsDefaultMarker) return arguments
+
+    val allArgs = ArrayList<Any?>(arguments.size + masks.size + 1)
+    allArgs.addAll(arguments)
+    if (isDefault) {
+      allArgs.addAll(masks)
+    }
+    allArgs.add(null) // DefaultConstructorMarker
+    return allArgs.toTypedArray()
+  }
+
   @Suppress("UNCHECKED_CAST")
   fun <T> newInstance(
-    vararg initArgs: Any?,
+    arguments: Array<Any?>,
+    masks: List<Int>,
   ): T {
     return when (this) {
-      is KmExecutableConstructor -> defaultsExecutable.newInstance(*initArgs)
+      is KmExecutableConstructor -> {
+        val finalArgs = prepareFinalArgs(arguments, masks)
+        defaultsExecutable.newInstance(*finalArgs)
+      }
       is KmExecutableFunction -> {
+        val finalArgs = prepareFinalArgs(arguments, masks)
         // First get the instance returned by the constructor-impl
-        val instance = defaultsExecutable.invoke(null, *initArgs)
+        val instance = defaultsExecutable.invoke(null, *finalArgs)
         // Then box it
         boxImpl.invoke(null, instance)
       }
@@ -135,12 +212,16 @@ internal sealed class KmExecutable<T : Executable> {
     val defaultsExecutable: Constructor<*>,
     override val parameters: List<KtParameter>,
     override val isDefault: Boolean,
-  ) : KmExecutable<Constructor<*>>()
+  ) : KmExecutable<Constructor<*>>() {
+    override val needsDefaultMarker = isDefault || parameters.any { it.isValueClass }
+  }
 
   class KmExecutableFunction(
     val defaultsExecutable: Method,
     override val parameters: List<KtParameter>,
     override val isDefault: Boolean,
     val boxImpl: Method,
-  ) : KmExecutable<Method>()
+  ) : KmExecutable<Method>() {
+    override val needsDefaultMarker = isDefault || parameters.any { it.isValueClass }
+  }
 }
