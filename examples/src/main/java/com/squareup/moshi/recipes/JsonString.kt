@@ -28,10 +28,7 @@ import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
 
 @JsonClass(generateAdapter = true)
-data class ExampleClass(
-  val type: Int,
-  @JsonString val rawJson: String,
-)
+data class ExampleClass(val type: Int, @JsonString val rawJson: String)
 
 @Retention(RUNTIME)
 @JsonQualifier
@@ -45,7 +42,8 @@ class JsonStringJsonAdapterFactory : JsonAdapter.Factory {
   }
 
   private class JsonStringJsonAdapter : JsonAdapter<String>() {
-    override fun fromJson(reader: JsonReader): String = reader.nextSource().use(BufferedSource::readUtf8)
+    override fun fromJson(reader: JsonReader): String =
+      reader.nextSource().use(BufferedSource::readUtf8)
 
     override fun toJson(writer: JsonWriter, value: String?) {
       writer.valueSink().use { sink -> sink.writeUtf8(checkNotNull(value)) }

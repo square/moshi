@@ -322,7 +322,9 @@ internal class `-JsonUtf8Writer`(
         sink.writeUtf8(separator)
       }
 
-      JsonScope.STREAMING_VALUE -> throw IllegalStateException("Sink from valueSink() was not closed")
+      JsonScope.STREAMING_VALUE -> throw IllegalStateException(
+        "Sink from valueSink() was not closed",
+      )
 
       else -> throw IllegalStateException("Nesting problem.")
     }

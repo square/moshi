@@ -32,7 +32,9 @@ import kotlin.reflect.KClass
  * Copied experimental utilities from KSP.
  */
 
-internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass: KClass<T>): Sequence<T> {
+internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(
+  annotationKClass: KClass<T>,
+): Sequence<T> {
   return this.annotations.filter {
     it.shortName.getShortName() == annotationKClass.simpleName &&
       it.annotationType.resolve().declaration
@@ -40,7 +42,9 @@ internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(annotationKClass:
   }.map { it.toAnnotation(annotationKClass.java) }
 }
 
-internal fun <T : Annotation> KSAnnotated.isAnnotationPresent(annotationKClass: KClass<T>): Boolean = getAnnotationsByType(annotationKClass).firstOrNull() != null
+internal fun <T : Annotation> KSAnnotated.isAnnotationPresent(
+  annotationKClass: KClass<T>,
+): Boolean = getAnnotationsByType(annotationKClass).firstOrNull() != null
 
 @Suppress("UNCHECKED_CAST")
 private fun <T : Annotation> KSAnnotation.toAnnotation(annotationClass: Class<T>): T {
@@ -80,7 +84,9 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                 val value = { result.asArray(method, clazz) }
                 cache.getOrPut(Pair(method.returnType, value), value)
               } else {
-                throw IllegalStateException("unhandled value type, please file a bug at https://github.com/google/ksp/issues/new")
+                throw IllegalStateException(
+                  "unhandled value type, please file a bug at https://github.com/google/ksp/issues/new",
+                )
               }
             }
             method.returnType.isEnum -> {
@@ -134,9 +140,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun KSAnnotation.asAnnotation(
-  annotationInterface: Class<*>,
-): Any {
+private fun KSAnnotation.asAnnotation(annotationInterface: Class<*>): Any {
   return Proxy.newProxyInstance(
     this.javaClass.classLoader,
     arrayOf(annotationInterface),
@@ -145,43 +149,44 @@ private fun KSAnnotation.asAnnotation(
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun List<*>.asArray(method: Method, proxyClass: Class<*>) = when (method.returnType.componentType.name) {
-  "boolean" -> (this as List<Boolean>).toBooleanArray()
+private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
+  when (method.returnType.componentType.name) {
+    "boolean" -> (this as List<Boolean>).toBooleanArray()
 
-  "byte" -> (this as List<Byte>).toByteArray()
+    "byte" -> (this as List<Byte>).toByteArray()
 
-  "short" -> (this as List<Short>).toShortArray()
+    "short" -> (this as List<Short>).toShortArray()
 
-  "char" -> (this as List<Char>).toCharArray()
+    "char" -> (this as List<Char>).toCharArray()
 
-  "double" -> (this as List<Double>).toDoubleArray()
+    "double" -> (this as List<Double>).toDoubleArray()
 
-  "float" -> (this as List<Float>).toFloatArray()
+    "float" -> (this as List<Float>).toFloatArray()
 
-  "int" -> (this as List<Int>).toIntArray()
+    "int" -> (this as List<Int>).toIntArray()
 
-  "long" -> (this as List<Long>).toLongArray()
+    "long" -> (this as List<Long>).toLongArray()
 
-  "java.lang.Class" -> (this as List<KSType>).asClasses(proxyClass).toTypedArray()
+    "java.lang.Class" -> (this as List<KSType>).asClasses(proxyClass).toTypedArray()
 
-  "java.lang.String" -> (this as List<String>).toTypedArray()
+    "java.lang.String" -> (this as List<String>).toTypedArray()
 
-  else -> { // arrays of enums or annotations
-    when {
-      method.returnType.componentType.isEnum -> {
-        this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
-
+    else -> { // arrays of enums or annotations
+      when {
+        method.returnType.componentType.isEnum -> {
+          this.toArray(method) { result -> result.asEnum(method.returnType.componentType) }
         }
-      method.returnType.componentType.isAnnotation -> {
-        this.toArray(method) { result ->
-          (result as KSAnnotation).asAnnotation(method.returnType.componentType)
-
+        method.returnType.componentType.isAnnotation -> {
+          this.toArray(method) { result ->
+            (result as KSAnnotation).asAnnotation(method.returnType.componentType)
+          }
+        }
+        else -> throw IllegalStateException(
+          "Unable to process type ${method.returnType.componentType.name}",
+        )
       }
-}
-      else -> throw IllegalStateException("Unable to process type ${method.returnType.componentType.name}")
     }
   }
-}
 
 @Suppress("UNCHECKED_CAST")
 private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any?> {
@@ -196,17 +201,19 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun <T> Any.asEnum(returnType: Class<T>): T = returnType.getDeclaredMethod("valueOf", String::class.java)
-  .invoke(
-    null,
+private fun <T> Any.asEnum(returnType: Class<T>): T =
+  returnType.getDeclaredMethod("valueOf", String::class.java)
+    .invoke(
+      null,
 
-    if (this is KSType) {
-      this.declaration.simpleName.getShortName()} else if (this is KSClassDeclaration) {
+      if (this is KSType) {
+        this.declaration.simpleName.getShortName()
+      } else if (this is KSClassDeclaration) {
         this.simpleName.getShortName()
-    } else {
-      this.toString()
-    },
-  ) as T
+      } else {
+        this.toString()
+      },
+    ) as T
 
 private fun Any.asByte(): Byte = if (this is Int) this.toByte() else this as Byte
 
@@ -219,10 +226,12 @@ private fun Any.asFloat(): Float = if (this is Int) this.toFloat() else this as 
 private fun Any.asDouble(): Double = if (this is Int) this.toDouble() else this as Double
 
 // for Class/KClass member
-internal class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) : RuntimeException(cause)
+internal class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) :
+  RuntimeException(cause)
 
 // for Class[]/Array<KClass<*>> member.
-internal class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) : RuntimeException(cause)
+internal class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) :
+  RuntimeException(cause)
 
 private fun KSType.asClass(proxyClass: Class<*>) = try {
   Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
@@ -236,7 +245,8 @@ private fun List<KSType>.asClasses(proxyClass: Class<*>) = try {
   throw KSTypesNotPresentException(this, e)
 }
 
-private fun Any.asArray(method: Method, proxyClass: Class<*>) = listOf(this).asArray(method, proxyClass)
+private fun Any.asArray(method: Method, proxyClass: Class<*>) =
+  listOf(this).asArray(method, proxyClass)
 
 private fun KSDeclaration.toJavaClassName(): String {
   val nameDelimiter = '.'

@@ -61,6 +61,8 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
       unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
 
-    Dynamic -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+    Dynamic -> throw UnsupportedOperationException(
+      "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.",
+    )
   }
 }

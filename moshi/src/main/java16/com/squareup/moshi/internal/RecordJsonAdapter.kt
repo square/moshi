@@ -72,7 +72,9 @@ internal class RecordJsonAdapter<T>(
     } catch (e: Throwable) {
       // Don't throw a fatal error if it's just an absent primitive.
       for (i in componentBindingsArray.indices) {
-        if (resultsArray[i] == null && componentBindingsArray[i].accessor.type().returnType().isPrimitive) {
+        if (resultsArray[i] == null &&
+          componentBindingsArray[i].accessor.type().returnType().isPrimitive
+        ) {
           throw missingProperty(
             propertyName = componentBindingsArray[i].componentName,
             jsonName = componentBindingsArray[i].jsonName,

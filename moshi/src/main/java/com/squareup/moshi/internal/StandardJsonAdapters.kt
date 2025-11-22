@@ -168,7 +168,12 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
 
   private val SHORT_JSON_ADAPTER: JsonAdapter<Short> = object : JsonAdapter<Short>() {
     override fun fromJson(reader: JsonReader): Short {
-      return rangeCheckNextInt(reader, "a short", Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
+      return rangeCheckNextInt(
+        reader,
+        "a short",
+        Short.MIN_VALUE.toInt(),
+        Short.MAX_VALUE.toInt(),
+      ).toShort()
     }
 
     override fun toJson(writer: JsonWriter, value: Short?) {
@@ -277,7 +282,14 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
      */
     private fun toJsonType(valueClass: Class<*>): Class<*> {
       if (Map::class.java.isAssignableFrom(valueClass)) return Map::class.java
-      return if (Collection::class.java.isAssignableFrom(valueClass)) Collection::class.java else valueClass
+      return if (Collection::class.java.isAssignableFrom(
+          valueClass,
+        )
+      ) {
+        Collection::class.java
+      } else {
+        valueClass
+      }
     }
 
     override fun toString() = "JsonAdapter(Object)"

@@ -47,9 +47,7 @@ public class JsonClassSymbolProcessorProvider : SymbolProcessorProvider {
   }
 }
 
-private class JsonClassSymbolProcessor(
-  environment: SymbolProcessorEnvironment,
-) : SymbolProcessor {
+private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
   private companion object {
     val JSON_CLASS_NAME = JsonClass::class.qualifiedName!!
@@ -62,7 +60,8 @@ private class JsonClassSymbolProcessor(
       "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are ${POSSIBLE_GENERATED_NAMES.keys}."
     }
   }
-  private val generateProguardRules = environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
+  private val generateProguardRules =
+    environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
     val generatedAnnotation = generatedOption?.let {

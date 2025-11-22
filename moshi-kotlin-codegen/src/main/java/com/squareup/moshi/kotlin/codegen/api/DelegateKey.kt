@@ -52,7 +52,9 @@ public data class DelegateKey(
       "At${it.typeName.rawType().simpleName}"
     }
     val adapterName = nameAllocator.newName(
-      "${type.toVariableName().replaceFirstChar { it.lowercase(Locale.US) }}${qualifierNames}Adapter",
+      "${type.toVariableName().replaceFirstChar {
+        it.lowercase(Locale.US)
+      }}${qualifierNames}Adapter",
       this,
     )
 

@@ -28,10 +28,7 @@ import kotlin.annotation.AnnotationTarget.TYPE
 
 // Regression test for https://github.com/square/moshi/issues/905
 @JsonClass(generateAdapter = true)
-data class GenericTestClassWithDefaults<T>(
-  val input: String = "",
-  val genericInput: T,
-)
+data class GenericTestClassWithDefaults<T>(val input: String = "", val genericInput: T)
 
 @Target(TYPE)
 annotation class TypeAnnotation
@@ -51,10 +48,7 @@ data class TypeAnnotationClass(
 data class OtherTestModel(val TestModel: TestModel? = null)
 
 @JsonClass(generateAdapter = true)
-data class TestModel(
-  val someVariable: Int,
-  val anotherVariable: String,
-)
+data class TestModel(val someVariable: Int, val anotherVariable: String)
 
 // Regression test for https://github.com/square/moshi/issues/1022
 @JsonClass(generateAdapter = true)
@@ -64,9 +58,7 @@ internal data class MismatchParentAndNestedClassVisibility(
 ) {
 
   @JsonClass(generateAdapter = true)
-  data class NestedClass(
-    val nestedProperty: String,
-  )
+  data class NestedClass(val nestedProperty: String)
 }
 
 // Regression test for https://github.com/square/moshi/issues/1052
@@ -82,9 +74,7 @@ data class KeysWithSpaces(
 
 // Regression test for https://github.com/square/moshi/issues/848
 @JsonClass(generateAdapter = true)
-data class Hotwords(
-  val `class`: List<String>?,
-)
+data class Hotwords(val `class`: List<String>?)
 
 /**
  * This is here mostly just to ensure it still compiles. Covers variance, @Json, default values,
@@ -112,7 +102,8 @@ data class SmokeTestType(
   val favoriteThreeNumbers: IntArray,
   val favoriteArrayValues: Array<String>,
   val favoriteNullableArrayValues: Array<String?>,
-  val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? = null,
+  val nullableSetListMapArrayNullableIntWithDefault: Set<List<Map<String, Array<IntArray?>>>>? =
+    null,
   val aliasedName: TypeAliasName = "Woah",
   val genericAlias: GenericTypeAlias = listOf("Woah"),
   // Regression test for https://github.com/square/moshi/issues/1272
@@ -138,6 +129,4 @@ data class ClassWithQualifier(
 
 // Regression for https://github.com/ZacSweers/MoshiX/issues/120
 @JsonClass(generateAdapter = true)
-data class DataClassInModuleB(
-  val id: String,
-) : AbstractClassInModuleA()
+data class DataClassInModuleB(val id: String) : AbstractClassInModuleA()

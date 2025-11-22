@@ -78,7 +78,9 @@ internal fun TypeName.defaultPrimitiveValue(): CodeBlock = when (this) {
   FLOAT -> CodeBlock.of("0f")
   LONG -> CodeBlock.of("0L")
   DOUBLE -> CodeBlock.of("0.0")
-  UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+  UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException(
+    "Parameter with void, Unit, or Nothing type is illegal",
+  )
   else -> CodeBlock.of("null")
 }
 
@@ -127,19 +129,25 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
           }
         }
 
-        UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
+        UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException(
+          "Parameter with void, Unit, or Nothing type is illegal",
+        )
 
         else -> CodeBlock.of("%T::class.java", copy(nullable = false))
       }
     }
 
-    else -> throw UnsupportedOperationException("Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.")
+    else -> throw UnsupportedOperationException(
+      "Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.",
+    )
   }
 }
 
 internal fun KModifier.checkIsVisibility() {
   require(ordinal <= ordinal) {
-    "Visibility must be one of ${(0..ordinal).joinToString { KModifier.values()[it].name }}. Is $name"
+    "Visibility must be one of ${(0..ordinal).joinToString {
+      KModifier.values()[it].name
+    }}. Is $name"
   }
 }
 
@@ -155,7 +163,9 @@ internal fun TypeName.stripTypeVarVariance(resolver: TypeVariableResolver): Type
 
     is WildcardTypeName -> deepCopy { it.stripTypeVarVariance(resolver) }
 
-    else -> throw UnsupportedOperationException("Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.")
+    else -> throw UnsupportedOperationException(
+      "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.",
+    )
   }
 }
 

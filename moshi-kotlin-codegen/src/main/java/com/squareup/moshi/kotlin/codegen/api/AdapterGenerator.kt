@@ -171,7 +171,12 @@ public class AdapterGenerator(
     .initializer("null")
     .build()
 
-  public fun prepare(generateProguardRules: Boolean, typeHook: (TypeSpec) -> TypeSpec = { it }): PreparedAdapter {
+  public fun prepare(
+    generateProguardRules: Boolean,
+    typeHook: (TypeSpec) -> TypeSpec = {
+      it
+    },
+  ): PreparedAdapter {
     val reservedSimpleNames = mutableSetOf<String>()
     for (property in nonTransientProperties) {
       // Allocate names for simple property types first to avoid collisions
@@ -234,7 +239,11 @@ public class AdapterGenerator(
     result.superclass(jsonAdapterTypeName)
 
     if (typeVariables.isNotEmpty()) {
-      result.addTypeVariables(typeVariables.map { it.stripTypeVarVariance(typeVariableResolver) as TypeVariableName })
+      result.addTypeVariables(
+        typeVariables.map {
+          it.stripTypeVarVariance(typeVariableResolver) as TypeVariableName
+        },
+      )
       // require(types.size == 1) {
       //   "TypeVariable mismatch: Expecting 1 type(s) for generic type variables [T], but received ${types.size} with values $types"
       // }
@@ -709,7 +718,10 @@ public class AdapterGenerator(
   }
 }
 
-private fun FunSpec.Builder.addMissingPropertyCheck(property: PropertyGenerator, readerParam: ParameterSpec) {
+private fun FunSpec.Builder.addMissingPropertyCheck(
+  property: PropertyGenerator,
+  readerParam: ParameterSpec,
+) {
   val missingPropertyBlock =
     CodeBlock.of(
       "%M(%S, %S, %N)",
@@ -772,16 +784,14 @@ private sealed class FromJsonComponent {
 
   abstract val type: TypeName
 
-  data class ParameterOnly(
-    override val parameter: TargetParameter,
-  ) : FromJsonComponent(),
+  data class ParameterOnly(override val parameter: TargetParameter) :
+    FromJsonComponent(),
     ParameterComponent {
     override val type: TypeName = parameter.type
   }
 
-  data class PropertyOnly(
-    override val property: PropertyGenerator,
-  ) : FromJsonComponent(),
+  data class PropertyOnly(override val property: PropertyGenerator) :
+    FromJsonComponent(),
     PropertyComponent {
     override val type: TypeName = property.target.type
   }

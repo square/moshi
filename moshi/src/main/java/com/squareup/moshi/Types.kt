@@ -184,7 +184,9 @@ public object Types {
 
       else -> {
         val className = type?.javaClass?.name?.toString()
-        throw IllegalArgumentException("Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className")
+        throw IllegalArgumentException(
+          "Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className",
+        )
       }
     }
   }
@@ -229,11 +231,20 @@ public object Types {
       is ParameterizedType -> {
         // Class instance with generic info, from method return types
         if (b is Class<*> && a.rawType == b.rawType) {
-          return b.typeParameters.map { it.bounds }.toTypedArray().flatten() == a.actualTypeArguments.toList()
+          return b.typeParameters.map { it.bounds }.toTypedArray().flatten() ==
+            a.actualTypeArguments.toList()
         }
         if (b !is ParameterizedType) return false
-        val aTypeArguments = if (a is ParameterizedTypeImpl) a.typeArguments else a.actualTypeArguments
-        val bTypeArguments = if (b is ParameterizedTypeImpl) b.typeArguments else b.actualTypeArguments
+        val aTypeArguments = if (a is ParameterizedTypeImpl) {
+          a.typeArguments
+        } else {
+          a.actualTypeArguments
+        }
+        val bTypeArguments = if (b is ParameterizedTypeImpl) {
+          b.typeArguments
+        } else {
+          b.actualTypeArguments
+        }
         return (
           equals(a.ownerType, b.ownerType) &&
             (a.rawType == b.rawType) &&
@@ -251,7 +262,10 @@ public object Types {
 
       is WildcardType -> {
         if (b !is WildcardType) return false
-        return (a.upperBounds.contentEquals(b.upperBounds) && a.lowerBounds.contentEquals(b.lowerBounds))
+        return (
+          a.upperBounds.contentEquals(b.upperBounds) &&
+            a.lowerBounds.contentEquals(b.lowerBounds)
+          )
       }
 
       is TypeVariable<*> -> {
@@ -269,7 +283,9 @@ public object Types {
    * @return a set of [JsonQualifier]-annotated [Annotation] instances retrieved from
    * the targeted field. Can be empty if none are found.
    */
-  @Deprecated("This is no longer needed in Kotlin 1.6.0 (which has direct annotation instantiation) and is obsolete.")
+  @Deprecated(
+    "This is no longer needed in Kotlin 1.6.0 (which has direct annotation instantiation) and is obsolete.",
+  )
   @JvmStatic
   public fun getFieldJsonQualifierAnnotations(
     clazz: Class<*>,

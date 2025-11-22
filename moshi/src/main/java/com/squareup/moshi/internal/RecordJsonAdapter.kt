@@ -31,6 +31,7 @@ internal class RecordJsonAdapter<T> : JsonAdapter<T>() {
   override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()
 
   companion object Factory : JsonAdapter.Factory {
-    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? = null
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? =
+      null
   }
 }

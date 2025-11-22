@@ -132,7 +132,11 @@ internal class `-JsonUtf8Reader` : JsonReader {
       PEEKED_END_OBJECT -> Token.END_OBJECT
       PEEKED_BEGIN_ARRAY -> Token.BEGIN_ARRAY
       PEEKED_END_ARRAY -> Token.END_ARRAY
-      PEEKED_SINGLE_QUOTED_NAME, PEEKED_DOUBLE_QUOTED_NAME, PEEKED_UNQUOTED_NAME, PEEKED_BUFFERED_NAME -> Token.NAME
+      PEEKED_SINGLE_QUOTED_NAME,
+      PEEKED_DOUBLE_QUOTED_NAME,
+      PEEKED_UNQUOTED_NAME,
+      PEEKED_BUFFERED_NAME,
+      -> Token.NAME
       PEEKED_TRUE, PEEKED_FALSE -> Token.BOOLEAN
       PEEKED_NULL -> Token.NULL
       PEEKED_SINGLE_QUOTED, PEEKED_DOUBLE_QUOTED, PEEKED_UNQUOTED, PEEKED_BUFFERED -> Token.STRING
@@ -563,7 +567,9 @@ internal class `-JsonUtf8Reader` : JsonReader {
       p == PEEKED_UNQUOTED_NAME -> skipUnquotedValue()
       p == PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
       p == PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
-      p != PEEKED_BUFFERED_NAME -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
+      p != PEEKED_BUFFERED_NAME -> throw JsonDataException(
+        "Expected a name but was ${peek()} at path $path",
+      )
     }
     peeked = PEEKED_NONE
     pathNames[stackSize - 1] = "null"
@@ -726,7 +732,14 @@ internal class `-JsonUtf8Reader` : JsonReader {
       p == PEEKED_NUMBER -> peekedString = buffer.readUtf8(peekedNumberLength.toLong())
 
       p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED -> {
-        peekedString = if (p == PEEKED_DOUBLE_QUOTED) nextQuotedValue(DOUBLE_QUOTE_OR_SLASH) else nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        peekedString =
+          if (p ==
+            PEEKED_DOUBLE_QUOTED
+          ) {
+            nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+          } else {
+            nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+          }
         try {
           val result = peekedString!!.toLong()
           peeked = PEEKED_NONE

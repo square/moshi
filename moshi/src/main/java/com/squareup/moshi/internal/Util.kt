@@ -107,13 +107,15 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
     return if (result != null) Collections.unmodifiableSet(result) else NO_ANNOTATIONS
   }
 
-internal fun Set<Annotation>.isAnnotationPresent(
-  annotationClass: Class<out Annotation>,
-): Boolean {
+internal fun Set<Annotation>.isAnnotationPresent(annotationClass: Class<out Annotation>): Boolean {
   if (isEmpty()) return false // Save an iterator in the common case.
   for (annotation in this) {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-    if ((annotation as java.lang.annotation.Annotation).annotationType() == annotationClass) return true
+    if ((annotation as java.lang.annotation.Annotation).annotationType() ==
+      annotationClass
+    ) {
+      return true
+    }
   }
   return false
 }
@@ -123,7 +125,9 @@ internal val Array<Annotation>.hasNullable: Boolean
   get() {
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-      if ((annotation as java.lang.annotation.Annotation).annotationType().simpleName == "Nullable") {
+      if ((annotation as java.lang.annotation.Annotation).annotationType().simpleName ==
+        "Nullable"
+      ) {
         return true
       }
     }
@@ -253,7 +257,15 @@ private fun Type.resolve(
             args[t] = resolvedTypeArgument
           }
         }
-        return if (changed) ParameterizedTypeImpl(newOwnerType, original.rawType, args) else original
+        return if (changed) {
+          ParameterizedTypeImpl(
+            newOwnerType,
+            original.rawType,
+            args,
+          )
+        } else {
+          original
+        }
       }
 
       toResolve is WildcardType -> {
@@ -261,12 +273,20 @@ private fun Type.resolve(
         val originalLowerBound = original.lowerBounds
         val originalUpperBound = original.upperBounds
         if (originalLowerBound.size == 1) {
-          val lowerBound = originalLowerBound[0].resolve(context, contextRawType, visitedTypeVariables)
+          val lowerBound = originalLowerBound[0].resolve(
+            context,
+            contextRawType,
+            visitedTypeVariables,
+          )
           if (lowerBound !== originalLowerBound[0]) {
             return Types.supertypeOf(lowerBound)
           }
         } else if (originalUpperBound.size == 1) {
-          val upperBound = originalUpperBound[0].resolve(context, contextRawType, visitedTypeVariables)
+          val upperBound = originalUpperBound[0].resolve(
+            context,
+            contextRawType,
+            visitedTypeVariables,
+          )
           if (upperBound !== originalUpperBound[0]) {
             return Types.subtypeOf(upperBound)
           }
@@ -279,7 +299,11 @@ private fun Type.resolve(
   }
 }
 
-internal fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknown: TypeVariable<*>): Type {
+internal fun resolveTypeVariable(
+  context: Type,
+  contextRawType: Class<*>,
+  unknown: TypeVariable<*>,
+): Type {
   val declaredByRaw = declaringClassOf(unknown) ?: return unknown
 
   // We can't reduce this further.
@@ -295,7 +319,11 @@ internal fun resolveTypeVariable(context: Type, contextRawType: Class<*>, unknow
  * Returns the generic supertype for `supertype`. For example, given a class `IntegerSet`, the result for when supertype is `Set.class` is `Set<Integer>` and the
  * result when the supertype is `Collection.class` is `Collection<Integer>`.
  */
-internal fun getGenericSupertype(context: Type, rawTypeInitial: Class<*>, toResolve: Class<*>): Type {
+internal fun getGenericSupertype(
+  context: Type,
+  rawTypeInitial: Class<*>,
+  toResolve: Class<*>,
+): Type {
   var rawType = rawTypeInitial
   if (toResolve == rawType) {
     return context
@@ -437,10 +465,7 @@ internal fun <T : Annotation?> createJsonQualifierImplementation(annotationType:
  * Loads the generated JsonAdapter for classes annotated [JsonClass]. This works because it
  * uses the same naming conventions as `JsonClassCodeGenProcessor`.
  */
-public fun Moshi.generatedAdapter(
-  type: Type,
-  rawType: Class<*>,
-): JsonAdapter<*>? {
+public fun Moshi.generatedAdapter(type: Type, rawType: Class<*>): JsonAdapter<*>? {
   val jsonClass = rawType.getAnnotation(JsonClass::class.java)
   if (jsonClass == null || !jsonClass.generateAdapter) {
     return null
@@ -449,7 +474,11 @@ public fun Moshi.generatedAdapter(
   var possiblyFoundAdapter: Class<out JsonAdapter<*>>? = null
   return try {
     @Suppress("UNCHECKED_CAST")
-    val adapterClass = Class.forName(adapterClassName, true, rawType.classLoader) as Class<out JsonAdapter<*>>
+    val adapterClass = Class.forName(
+      adapterClassName,
+      true,
+      rawType.classLoader,
+    ) as Class<out JsonAdapter<*>>
     possiblyFoundAdapter = adapterClass
     var constructor: Constructor<out JsonAdapter<*>>
     var args: Array<Any>
@@ -457,7 +486,8 @@ public fun Moshi.generatedAdapter(
       val typeArgs = type.actualTypeArguments
       try {
         // Common case first
-        constructor = adapterClass.getDeclaredConstructor(Moshi::class.java, Array<Type>::class.java)
+        constructor =
+          adapterClass.getDeclaredConstructor(Moshi::class.java, Array<Type>::class.java)
         args = arrayOf(this, typeArgs)
       } catch (_: NoSuchMethodException) {
         constructor = adapterClass.getDeclaredConstructor(Array<Type>::class.java)
@@ -478,7 +508,10 @@ public fun Moshi.generatedAdapter(
   } catch (e: ClassNotFoundException) {
     throw RuntimeException("Failed to find the generated JsonAdapter class for $type", e)
   } catch (e: NoSuchMethodException) {
-    if (possiblyFoundAdapter != null && type !is ParameterizedType && possiblyFoundAdapter.typeParameters.isNotEmpty()) {
+    if (possiblyFoundAdapter != null &&
+      type !is ParameterizedType &&
+      possiblyFoundAdapter.typeParameters.isNotEmpty()
+    ) {
       throw RuntimeException(
         "Failed to find the generated JsonAdapter constructor for '$type'. Suspiciously, the type was not parameterized but the target class '${possiblyFoundAdapter.canonicalName}' is generic. Consider using Types#newParameterizedType() to define these missing type variables.",
         e,
@@ -621,7 +654,8 @@ internal class ParameterizedTypeImpl(
   override fun getOwnerType() = ownerType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  override fun equals(other: Any?) = other is ParameterizedType && Types.equals(this, other as ParameterizedType?)
+  override fun equals(other: Any?) =
+    other is ParameterizedType && Types.equals(this, other as ParameterizedType?)
 
   override fun hashCode(): Int {
     return typeArguments.contentHashCode() xor rawType.hashCode() xor ownerType.hashCodeOrZero
@@ -642,15 +676,14 @@ internal class ParameterizedTypeImpl(
   }
 }
 
-internal class GenericArrayTypeImpl(
-  componentType: Type,
-) : GenericArrayType {
+internal class GenericArrayTypeImpl(componentType: Type) : GenericArrayType {
   private val componentType: Type = componentType.canonicalize()
 
   override fun getGenericComponentType() = componentType
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  override fun equals(other: Any?) = other is GenericArrayType && Types.equals(this, other as GenericArrayType?)
+  override fun equals(other: Any?) =
+    other is GenericArrayType && Types.equals(this, other as GenericArrayType?)
 
   override fun hashCode() = componentType.hashCode()
 
@@ -662,10 +695,7 @@ internal class GenericArrayTypeImpl(
  * support what the Java 6 language needs - at most one bound. If a lower bound is set, the upper
  * bound must be Object.class.
  */
-internal class WildcardTypeImpl(
-  upperBound: Type,
-  lowerBound: Type?,
-) : WildcardType {
+internal class WildcardTypeImpl(upperBound: Type, lowerBound: Type?) : WildcardType {
   private val upperBound: Type = upperBound.canonicalize()
   private val lowerBound: Type? = lowerBound?.canonicalize()
 
@@ -687,11 +717,13 @@ internal class WildcardTypeImpl(
   override fun getLowerBounds() = lowerBound?.let { arrayOf(it) } ?: EMPTY_TYPE_ARRAY
 
   @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-  override fun equals(other: Any?) = other is WildcardType && Types.equals(this, other as WildcardType?)
+  override fun equals(other: Any?) =
+    other is WildcardType && Types.equals(this, other as WildcardType?)
 
   override fun hashCode(): Int {
     // This equals Arrays.hashCode(getLowerBounds()) ^ Arrays.hashCode(getUpperBounds()).
-    return (if (lowerBound != null) 31 + lowerBound.hashCode() else 1) xor 31 + upperBound.hashCode()
+    return (if (lowerBound != null) 31 + lowerBound.hashCode() else 1) xor
+      31 + upperBound.hashCode()
   }
 
   override fun toString(): String {

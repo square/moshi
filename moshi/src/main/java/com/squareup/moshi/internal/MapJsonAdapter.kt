@@ -28,7 +28,8 @@ import java.lang.reflect.Type
  *
  * TODO: support maps with other key types and convert to/from strings.
  */
-internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type) : JsonAdapter<Map<K, V?>>() {
+internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type) :
+  JsonAdapter<Map<K, V?>>() {
   private val keyAdapter: JsonAdapter<K> = moshi.adapter(keyType)
   private val valueAdapter: JsonAdapter<V> = moshi.adapter(valueType)
 
@@ -51,7 +52,8 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
     reader.beginObject()
     while (reader.hasNext()) {
       reader.promoteNameToValue()
-      val name = keyAdapter.fromJson(reader) ?: throw JsonDataException("Map key is null at ${reader.path}")
+      val name =
+        keyAdapter.fromJson(reader) ?: throw JsonDataException("Map key is null at ${reader.path}")
       val value = valueAdapter.fromJson(reader)
       val replaced = result.put(name, value)
       if (replaced != null) {

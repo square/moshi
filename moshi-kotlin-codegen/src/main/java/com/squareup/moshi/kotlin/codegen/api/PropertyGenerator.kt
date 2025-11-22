@@ -47,7 +47,8 @@ public class PropertyGenerator(
    * This is used to indicate that presence should be checked first before possible assigning null
    * to an absent value
    */
-  public val hasLocalIsPresentName: Boolean = !isTransient && hasDefault && !hasConstructorParameter && delegateKey.nullable
+  public val hasLocalIsPresentName: Boolean =
+    !isTransient && hasDefault && !hasConstructorParameter && delegateKey.nullable
   public val hasConstructorDefault: Boolean = hasDefault && hasConstructorParameter
 
   internal fun allocateNames(nameAllocator: NameAllocator) {

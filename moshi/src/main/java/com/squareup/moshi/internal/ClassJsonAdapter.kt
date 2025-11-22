@@ -111,11 +111,7 @@ internal class ClassJsonAdapter<T>(
   }
 
   companion object Factory : JsonAdapter.Factory {
-    override fun create(
-      type: Type,
-      annotations: Set<Annotation>,
-      moshi: Moshi,
-    ): JsonAdapter<*>? {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
       if (type !is Class<*> && type !is ParameterizedType) {
         return null
       }
