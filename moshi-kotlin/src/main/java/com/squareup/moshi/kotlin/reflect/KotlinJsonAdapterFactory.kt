@@ -228,7 +228,6 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
 
     val ktConstructor = KtConstructor.primary(rawType, kmClass) ?: return null
 
-    // TODO CR this doesn't cover platform types
     val allPropertiesSequence =
       kmClass.properties.asSequence() +
         generateSequence(rawType) { it.superclass }

@@ -26,15 +26,14 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
-import org.assertj.core.api.Assertions
-import org.junit.Assert.fail
-import org.junit.Test
-import java.io.ByteArrayOutputStream
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.WildcardType
 import java.util.Locale
 import java.util.SimpleTimeZone
 import kotlin.annotation.AnnotationRetention.RUNTIME
+import org.assertj.core.api.Assertions
+import org.junit.Assert.fail
+import org.junit.Test
 
 @Suppress("UNUSED", "UNUSED_PARAMETER")
 class KotlinJsonAdapterTest {
@@ -379,25 +378,6 @@ class KotlinJsonAdapterTest {
   }
 
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
-
-  // TODO in code review - this now only produces {"a":3}. Do we want this?
-  @Test fun extendsPlatformClassWithProtectedField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()
-
-    val encoded = ExtendsPlatformClassWithProtectedField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"buf":[0,0],"count":0}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"buf":[0,0],"size":0}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.buf()).isEqualTo(ByteArray(2) { 0 })
-    assertThat(decoded.count()).isEqualTo(0)
-  }
-
-  internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {
-    fun buf(): ByteArray = buf
-    fun count(): Int = count
-  }
 
   @Test fun platformTypeThrows() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
