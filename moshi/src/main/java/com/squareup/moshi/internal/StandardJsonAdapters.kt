@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.moshi
+package com.squareup.moshi.internal
 
-import com.squareup.moshi.internal.NO_ANNOTATIONS
-import com.squareup.moshi.internal.generatedAdapter
-import com.squareup.moshi.internal.jsonName
-import com.squareup.moshi.internal.knownNotNull
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.JsonWriter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.rawType
 import java.lang.reflect.Type
 
 internal object StandardJsonAdapters : JsonAdapter.Factory {
@@ -146,7 +148,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Int?) {
-      writer.value(knownNotNull(value).toInt().toLong())
+      writer.value(knownNotNull(value).toLong())
     }
 
     override fun toString() = "JsonAdapter(Integer)"
@@ -158,7 +160,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     override fun toJson(writer: JsonWriter, value: Long?) {
-      writer.value(knownNotNull(value).toLong())
+      writer.value(knownNotNull(value))
     }
 
     override fun toString() = "JsonAdapter(Long)"
@@ -177,7 +179,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
   }
 
   private val STRING_JSON_ADAPTER: JsonAdapter<String> = object : JsonAdapter<String>() {
-    override fun fromJson(reader: JsonReader): String? {
+    override fun fromJson(reader: JsonReader): String {
       return reader.nextString()
     }
 

@@ -105,7 +105,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public fun toJsonValue(value: T?): Any? {
-    val writer = JsonValueWriter()
+    val writer = `-JsonValueWriter`()
     return try {
       toJson(writer, value)
       writer.root()
@@ -120,7 +120,7 @@ public abstract class JsonAdapter<T> {
    */
   @CheckReturnValue
   public fun fromJsonValue(value: Any?): T? {
-    val reader = JsonValueReader(value)
+    val reader = `-JsonValueReader`(value)
     return try {
       fromJson(reader)
     } catch (e: IOException) {
@@ -278,7 +278,7 @@ public abstract class JsonAdapter<T> {
     }
   }
 
-  public open val isLenient: Boolean
+  internal open val isLenient: Boolean
     get() = false
 
   public fun interface Factory {

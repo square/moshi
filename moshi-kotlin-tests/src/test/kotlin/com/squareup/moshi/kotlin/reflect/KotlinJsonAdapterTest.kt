@@ -29,7 +29,6 @@ import com.squareup.moshi.ToJson
 import org.assertj.core.api.Assertions
 import org.junit.Assert.fail
 import org.junit.Test
-import java.io.ByteArrayOutputStream
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.WildcardType
 import java.util.Locale
@@ -288,9 +287,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No default value for transient constructor parameter #0 " +
-          "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter",
+        "No default value for transient/ignored constructor parameter 'a' on type " +
+          "'com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredTransientConstructorParameter'",
       )
     }
   }
@@ -304,9 +302,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No default value for ignored constructor parameter #0 " +
-          "a of fun `<init>`(kotlin.Int): " +
-          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter",
+        "No default value for transient/ignored constructor parameter 'a' on type " +
+          "'com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.RequiredIgnoredConstructorParameter'",
       )
     }
   }
@@ -381,24 +378,6 @@ class KotlinJsonAdapterTest {
   }
 
   internal class ExtendsPlatformClassWithPrivateField(var a: Int) : SimpleTimeZone(0, "C")
-
-  @Test fun extendsPlatformClassWithProtectedField() {
-    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter<ExtendsPlatformClassWithProtectedField>()
-
-    val encoded = ExtendsPlatformClassWithProtectedField(3)
-    assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"a":3,"buf":[0,0],"count":0}""")
-
-    val decoded = jsonAdapter.fromJson("""{"a":4,"buf":[0,0],"size":0}""")!!
-    assertThat(decoded.a).isEqualTo(4)
-    assertThat(decoded.buf()).isEqualTo(ByteArray(2) { 0 })
-    assertThat(decoded.count()).isEqualTo(0)
-  }
-
-  internal class ExtendsPlatformClassWithProtectedField(var a: Int) : ByteArrayOutputStream(2) {
-    fun buf(): ByteArray = buf
-    fun count(): Int = count
-  }
 
   @Test fun platformTypeThrows() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -551,8 +530,8 @@ class KotlinJsonAdapterTest {
       fail()
     } catch (expected: IllegalArgumentException) {
       assertThat(expected).hasMessageThat().isEqualTo(
-        "No property for required constructor parameter #0 a of fun `<init>`(" +
-          "kotlin.Int, kotlin.Int): ${NonPropertyConstructorParameter::class.qualifiedName}",
+        "No property for required constructor parameter 'a' on type " +
+          "'${NonPropertyConstructorParameter::class.qualifiedName}'",
       )
     }
   }

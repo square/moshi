@@ -21,16 +21,14 @@ import com.squareup.moshi.internal.EMPTY_TYPE_ARRAY
 import com.squareup.moshi.internal.GenericArrayTypeImpl
 import com.squareup.moshi.internal.ParameterizedTypeImpl
 import com.squareup.moshi.internal.WildcardTypeImpl
-import com.squareup.moshi.internal.getGenericSupertype
-import com.squareup.moshi.internal.resolve
+import com.squareup.moshi.internal.getSupertype
+import java.lang.reflect.Array
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Proxy
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
-import java.util.Properties
 import javax.annotation.CheckReturnValue
 import java.lang.annotation.Annotation as JavaAnnotation
 
@@ -102,7 +100,7 @@ public object Types {
     require(typeArguments.isNotEmpty()) {
       "Missing type arguments for $rawType"
     }
-    return ParameterizedTypeImpl(null, rawType, *typeArguments)
+    return ParameterizedTypeImpl(null, rawType, typeArguments)
   }
 
   /**
@@ -118,7 +116,7 @@ public object Types {
     require(typeArguments.isNotEmpty()) {
       "Missing type arguments for $rawType"
     }
-    return ParameterizedTypeImpl(ownerType, rawType, *typeArguments)
+    return ParameterizedTypeImpl(ownerType, rawType, typeArguments)
   }
 
   /** Returns an array type whose elements are all instances of `componentType`. */
@@ -173,7 +171,7 @@ public object Types {
 
       is GenericArrayType -> {
         val componentType = type.genericComponentType
-        java.lang.reflect.Array.newInstance(getRawType(componentType), 0).javaClass
+        Array.newInstance(getRawType(componentType), 0).javaClass
       }
 
       is TypeVariable<*> -> {
@@ -295,85 +293,6 @@ public object Types {
         "Could not access field $fieldName on class ${clazz.canonicalName}",
         e,
       )
-    }
-  }
-
-  @JvmStatic
-  public fun <T : Annotation?> createJsonQualifierImplementation(annotationType: Class<T>): T {
-    require(annotationType.isAnnotation) {
-      "$annotationType must be an annotation."
-    }
-    require(annotationType.isAnnotationPresent(JsonQualifier::class.java)) {
-      "$annotationType must have @JsonQualifier."
-    }
-    require(annotationType.declaredMethods.isEmpty()) {
-      "$annotationType must not declare methods."
-    }
-    @Suppress("UNCHECKED_CAST")
-    return Proxy.newProxyInstance(
-      annotationType.classLoader,
-      arrayOf<Class<*>>(annotationType),
-    ) { proxy, method, args ->
-      when (method.name) {
-        "annotationType" -> annotationType
-
-        "equals" -> {
-          val o = args[0]
-          annotationType.isInstance(o)
-        }
-
-        "hashCode" -> 0
-
-        "toString" -> "@${annotationType.name}()"
-
-        else -> method.invoke(proxy, *args)
-      }
-    } as T
-  }
-
-  /**
-   * Returns a two element array containing this map's key and value types in positions 0 and 1
-   * respectively.
-   */
-  @JvmStatic
-  public fun mapKeyAndValueTypes(context: Type, contextRawType: Class<*>): Array<Type> {
-    // Work around a problem with the declaration of java.util.Properties. That class should extend
-    // Hashtable<String, String>, but it's declared to extend Hashtable<Object, Object>.
-    if (context === Properties::class.java) return arrayOf(String::class.java, String::class.java)
-    val mapType = getSupertype(context, contextRawType, MutableMap::class.java)
-    if (mapType is ParameterizedType) {
-      return mapType.actualTypeArguments
-    }
-    return arrayOf(Any::class.java, Any::class.java)
-  }
-
-  /**
-   * Returns the generic form of `supertype`. For example, if this is `ArrayList<String>`, this returns `Iterable<String>` given the input `Iterable.class`.
-   *
-   * @param supertype a superclass of, or interface implemented by, this.
-   */
-  @JvmStatic
-  public fun getSupertype(context: Type, contextRawType: Class<*>, supertype: Class<*>): Type {
-    if (!supertype.isAssignableFrom(contextRawType)) throw IllegalArgumentException()
-    return getGenericSupertype(context, contextRawType, supertype).resolve((context), (contextRawType))
-  }
-
-  @JvmStatic
-  public fun getGenericSuperclass(type: Type): Type {
-    val rawType = getRawType(type)
-    return rawType.genericSuperclass.resolve(type, rawType)
-  }
-
-  /**
-   * Returns the element type of `type` if it is an array type, or null if it is not an array
-   * type.
-   */
-  @JvmStatic
-  public fun arrayComponentType(type: Type): Type? {
-    return when (type) {
-      is GenericArrayType -> type.genericComponentType
-      is Class<*> -> type.componentType
-      else -> null
     }
   }
 }

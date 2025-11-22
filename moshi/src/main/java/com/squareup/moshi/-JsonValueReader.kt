@@ -15,14 +15,11 @@
  */
 package com.squareup.moshi
 
-import com.squareup.moshi.JsonValueReader.JsonIterator
+import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.knownNotNull
 import okio.Buffer
 import okio.BufferedSource
 import java.math.BigDecimal
-
-/** Sentinel object pushed on [JsonValueReader.stack] when the reader is closed. */
-private val JSON_READER_CLOSED = Any()
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
@@ -39,7 +36,8 @@ private val JSON_READER_CLOSED = Any()
  *  element of that iterator is pushed.
  *  * If the top of the stack is an exhausted iterator, calling [endArray] or [endObject] will pop it.
  */
-internal class JsonValueReader : JsonReader {
+@Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
+internal class `-JsonValueReader` : JsonReader {
   private var stack: Array<Any?>
 
   constructor(root: Any?) {
@@ -49,7 +47,7 @@ internal class JsonValueReader : JsonReader {
   }
 
   /** Copy-constructor makes a deep copy for peeking. */
-  constructor(copyFrom: JsonValueReader) : super(copyFrom) {
+  constructor(copyFrom: `-JsonValueReader`) : super(copyFrom) {
     stack = copyFrom.stack.clone()
     for (i in 0 until stackSize) {
       val element = stack[i]
@@ -225,7 +223,7 @@ internal class JsonValueReader : JsonReader {
       is String -> {
         try {
           peeked.toDouble()
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -247,10 +245,10 @@ internal class JsonValueReader : JsonReader {
 
       is String -> try {
         peeked.toLong()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).longValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -267,10 +265,10 @@ internal class JsonValueReader : JsonReader {
 
       is String -> try {
         peeked.toInt()
-      } catch (e: NumberFormatException) {
+      } catch (_: NumberFormatException) {
         try {
           BigDecimal(peeked).intValueExact()
-        } catch (e2: NumberFormatException) {
+        } catch (_: NumberFormatException) {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
@@ -314,7 +312,7 @@ internal class JsonValueReader : JsonReader {
     return result
   }
 
-  override fun peekJson(): JsonReader = JsonValueReader(this)
+  override fun peekJson(): JsonReader = `-JsonValueReader`(this)
 
   override fun promoteNameToValue() {
     if (hasNext()) {
@@ -406,5 +404,10 @@ internal class JsonValueReader : JsonReader {
 
     // No need to copy the array; it's read-only.
     public override fun clone() = JsonIterator(endToken, array, next)
+  }
+
+  private companion object {
+    /** Sentinel object pushed on [JsonValueReader.stack] when the reader is closed. */
+    val JSON_READER_CLOSED = Any()
   }
 }

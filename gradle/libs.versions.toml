@@ -2,37 +2,39 @@
 autoService = "1.1.1"
 jdk = "21"
 jvmTarget = "1.8"
-kotlin = "2.2.20"
-kotlinCompileTesting = "0.9.0"
+kotlin = "2.2.21"
+kotlinCompileTesting = "0.11.1"
 kotlinpoet = "2.2.0"
-ksp = "2.2.20-2.0.3"
+ksp = "2.3.3"
 
 [plugins]
-dokka = { id = "org.jetbrains.dokka", version = "2.1.0-Beta" }
+dokka = { id = "org.jetbrains.dokka", version = "2.1.0" }
 japicmp = { id = "me.champeau.gradle.japicmp", version = "0.4.6" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.34.0" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.35.0" }
 mavenShadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
-spotless = { id = "com.diffplug.spotless", version = "8.0.0" }
+spotless = { id = "com.diffplug.spotless", version = "8.1.0" }
 
 [libraries]
-asm = "org.ow2.asm:asm:9.8"
+asm = "org.ow2.asm:asm:9.9"
 autoCommon = "com.google.auto:auto-common:1.2.2"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.2.0"
 jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 kotlin-annotationProcessingEmbeddable = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-embeddable", version.ref = "kotlin" }
 kotlin-compilerEmbeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin" }
+kotlin-metadata = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
 ksp = { module = "com.google.devtools.ksp:symbol-processing", version.ref = "ksp" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
-okio = "com.squareup.okio:okio:3.16.0"
+okio = "com.squareup.okio:okio:3.16.4"
 assertj = "org.assertj:assertj-core:3.27.6"
+assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.4.5"
-googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.28.0"
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.32.0"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.3.1"

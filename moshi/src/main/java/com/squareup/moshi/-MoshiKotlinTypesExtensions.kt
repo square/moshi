@@ -16,12 +16,12 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.boxIfPrimitive
+import com.squareup.moshi.internal.javaType
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
-import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 
 /** Returns the raw [Class] type of this type. */
@@ -34,34 +34,44 @@ public val Type.rawType: Class<*> get() = Types.getRawType(this)
 public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? = Types.nextAnnotations(this, T::class.java)
 
 /**
- * Returns a type that represents an unknown type that extends [T]. For example, if
- * [T] is [CharSequence], this returns `out CharSequence`. If
- * [T] is [Any], this returns `*`, which is shorthand for `out Any?`.
+ * Returns a type that represents an unknown type that extends [T]. For example, if [T] is
+ * [CharSequence], this returns `out CharSequence`. If [T] is [Any], this returns `*`, which is
+ * shorthand for `out Any?`.
  */
-@ExperimentalStdlibApi
-public inline fun <reified T> subtypeOf(): WildcardType {
-  var type = typeOf<T>().javaType
-  if (type is Class<*>) {
-    type = type.boxIfPrimitive()
+public inline fun <reified T> subtypeOf(): WildcardType = subtypeOf(typeOf<T>())
+
+/**
+ * Returns a type that represents an unknown type that extends [type]. For example, if [type] is
+ * [CharSequence], this returns `out CharSequence`. If [type] is [Any], this returns `*`, which is
+ * shorthand for `out Any?`.
+ */
+public fun subtypeOf(type: KType): WildcardType {
+  var javaType = type.javaType
+  if (javaType is Class<*>) {
+    javaType = javaType.boxIfPrimitive()
   }
-  return Types.subtypeOf(type)
+  return Types.subtypeOf(javaType)
 }
 
 /**
  * Returns a type that represents an unknown supertype of [T] bound. For example, if [T] is
  * [String], this returns `in String`.
  */
-@ExperimentalStdlibApi
-public inline fun <reified T> supertypeOf(): WildcardType {
-  var type = typeOf<T>().javaType
-  if (type is Class<*>) {
-    type = type.boxIfPrimitive()
+public inline fun <reified T> supertypeOf(): WildcardType = supertypeOf(typeOf<T>())
+
+/**
+ * Returns a type that represents an unknown supertype of [type] bound. For example, if [type] is
+ * [String], this returns `in String`.
+ */
+public fun supertypeOf(type: KType): WildcardType {
+  var javaType = type.javaType
+  if (javaType is Class<*>) {
+    javaType = javaType.boxIfPrimitive()
   }
-  return Types.supertypeOf(type)
+  return Types.supertypeOf(javaType)
 }
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
-@ExperimentalStdlibApi
 public fun KType.asArrayType(): GenericArrayType = javaType.asArrayType()
 
 /** Returns a [GenericArrayType] with [this] as its [GenericArrayType.getGenericComponentType]. */
