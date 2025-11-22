@@ -326,6 +326,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   private infix fun KmType?.valueEquals(other: KmType?): Boolean {
     return when {
       this === other -> true
+
       this != null && other != null -> {
         // Note we don't check abbreviatedType because typealiases and their backing types are equal
         // for our purposes.
@@ -335,6 +336,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           flexibleTypeUpperBound valueEquals other.flexibleTypeUpperBound &&
           outerType valueEquals other.outerType
       }
+
       else -> false
     }
   }
@@ -359,9 +361,11 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   private infix fun KmTypeProjection?.valueEquals(other: KmTypeProjection?): Boolean {
     return when {
       this === other -> true
+
       this != null && other != null -> {
         variance == other.variance && type valueEquals other.type
       }
+
       else -> false
     }
   }
@@ -371,9 +375,11 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   ): Boolean {
     return when {
       this === other -> true
+
       this != null && other != null -> {
         typeFlexibilityId == other.typeFlexibilityId && type valueEquals other.type
       }
+
       else -> false
     }
   }

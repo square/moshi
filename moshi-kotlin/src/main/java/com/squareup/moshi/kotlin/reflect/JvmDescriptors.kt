@@ -41,6 +41,7 @@ internal val Class<*>.descriptor: String
           ?: throw RuntimeException("Unrecognized primitive $this")
 
       isArray -> "[${componentType.descriptor}"
+
       else -> "L$name;".replace('.', '/')
     }
   }

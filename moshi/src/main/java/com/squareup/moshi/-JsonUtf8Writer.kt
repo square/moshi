@@ -117,10 +117,14 @@ internal class `-JsonUtf8Writer`(
     check(stackSize != 0) { "JsonWriter is closed." }
     val context = peekScope()
     val isWritingObject = !(
-      context != JsonScope.EMPTY_OBJECT &&
-        context != JsonScope.NONEMPTY_OBJECT ||
-        deferredName != null ||
-        promoteValueToName
+      (
+        (
+          (context != JsonScope.EMPTY_OBJECT) &&
+            (context != JsonScope.NONEMPTY_OBJECT)
+          ) ||
+          (deferredName != null) ||
+          promoteValueToName
+        )
       )
     check(isWritingObject) { "Nesting problem." }
     deferredName = name
@@ -175,13 +179,15 @@ internal class `-JsonUtf8Writer`(
 
   override fun value(value: Boolean?): JsonWriter {
     return when {
-      value != null -> value(value) // Call the non-nullable overload.
+      value != null -> value(value)
+
+      // Call the non-nullable overload.
       else -> nullValue()
     }
   }
 
   override fun value(value: Double): JsonWriter = apply {
-    require(isLenient || !value.isNaN() && !value.isInfinite()) {
+    require(isLenient || (!value.isNaN() && !value.isInfinite())) {
       "Numeric values must be finite, but was $value"
     }
     if (promoteValueToName) {
@@ -210,7 +216,8 @@ internal class `-JsonUtf8Writer`(
       return nullValue()
     }
     val string = value.toString()
-    val isFinite = isLenient || string != "-Infinity" && string != "Infinity" && string != "NaN"
+    val isFinite =
+      isLenient || ((string != "-Infinity") && (string != "Infinity") && (string != "NaN"))
     require(isFinite) { "Numeric values must be finite, but was $value" }
     if (promoteValueToName) {
       promoteValueToName = false
@@ -260,7 +267,7 @@ internal class `-JsonUtf8Writer`(
   override fun close() {
     sink.close()
     val size = stackSize
-    if (size > 1 || size == 1 && scopes[0] != JsonScope.NONEMPTY_DOCUMENT) {
+    if ((size > 1) || ((size == 1) && (scopes[0] != JsonScope.NONEMPTY_DOCUMENT))) {
       throw IOException("Incomplete document")
     }
     stackSize = 0
