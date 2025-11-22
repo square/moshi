@@ -42,7 +42,7 @@ We used this shell script to migrate our code:
 ```shell
 find . \
   -name "*.kt" \
-  -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<out Annotation>/g' {} \;
+  -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<Annotation>/g' {} \;
 ```
 
 ### Explicit Nullability
