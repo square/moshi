@@ -524,77 +524,109 @@ public class AdapterGenerator(
     var closeNextControlFlowInAssignment = false
 
     if (useDefaultsConstructor) {
-      // Happy path - all parameters with defaults are set
-      val allMasksAreSetBlock = maskNames.withIndex()
-        .map { (index, maskName) ->
-          CodeBlock.of("$maskName·== 0x${Integer.toHexString(maskAllSetValues[index])}.toInt()")
-        }
-        .joinToCode("·&& ")
-      result.beginControlFlow("if (%L)", allMasksAreSetBlock)
-      result.addComment("All parameters with defaults are set, invoke the constructor directly")
-      result.addCode("«%L·%T(", returnOrResultAssignment, originalTypeName)
-      var localSeparator = "\n"
-      val paramsToSet = components.filterIsInstance<ParameterProperty>()
-        .filterNot { it.property.isTransient }
-
-      // Set all non-transient property parameters
-      for (input in paramsToSet) {
-        result.addCode(localSeparator)
-        val property = input.property
-        result.addCode("%N = %N", property.name, property.localName)
-        if (property.isRequired) {
-          result.addMissingPropertyCheck(property, readerParam)
-        } else if (!input.type.isNullable) {
-          // Unfortunately incurs an intrinsic null-check even though we know it's set, but
-          // maybe in the future we can use contracts to omit them.
-          result.addCode("·as·%T", input.type)
-        }
-        localSeparator = ",\n"
-      }
-      result.addCode("\n»)\n")
-      result.nextControlFlow("else")
-      closeNextControlFlowInAssignment = true
-
-      classBuilder.addProperty(constructorProperty)
-      result.addComment("Reflectively invoke the synthetic defaults constructor")
-      // Dynamic default constructor call
-      val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
-      val args = constructorPropertyTypes
-        .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
-        .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
-        .joinToCode(", ")
-      val coreLookupBlock = CodeBlock.of(
-        "%T::class.java.getDeclaredConstructor(%L)",
-        originalRawTypeName,
-        args,
-      )
-      val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
-        CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
-      } else {
-        coreLookupBlock
-      }
-      val initializerBlock = CodeBlock.of(
-        "this.%1N·?: %2L.also·{ this.%1N·= it }",
-        constructorProperty,
-        lookupBlock,
-      )
-      val localConstructorProperty = PropertySpec.builder(
-        nameAllocator.newName("localConstructor"),
-        nonNullConstructorType,
-      )
-        .addAnnotation(
-          AnnotationSpec.builder(Suppress::class)
-            .addMember("%S", "UNCHECKED_CAST")
-            .build(),
+      if (target.isValueClass) {
+        // Special case for value classes with defaults
+        // For value classes, we want to call the constructor directly, omitting arguments when
+        // they weren't present in the JSON (according to the mask) so defaults can be used.
+        val paramProperty = components.filterIsInstance<ParameterProperty>().single()
+        val maskName = maskNames[0] // Value classes only have one parameter
+        val maskSetValue = maskAllSetValues[0]
+        // return if (mask == allSetValue) Constructor(value) else Constructor()
+        result.addCode(
+          "return·if·(%L·== 0x%L.toInt())·{\n",
+          maskName,
+          Integer.toHexString(maskSetValue),
         )
-        .initializer(initializerBlock)
-        .build()
-      result.addCode("%L", localConstructorProperty)
-      result.addCode(
-        "«%L%N.newInstance(",
-        returnOrResultAssignment,
-        localConstructorProperty,
-      )
+        result.addCode("⇥")
+        result.addComment("Property was present, invoke constructor with the value")
+        result.addCode("%T(\n", originalTypeName)
+        result.addCode("⇥%N = %N", paramProperty.property.name, paramProperty.property.localName)
+        if (paramProperty.property.isRequired) {
+          result.addMissingPropertyCheck(paramProperty.property, readerParam)
+        } else if (!paramProperty.type.isNullable) {
+          result.addCode("·as·%T", paramProperty.type)
+        }
+        result.addCode("\n⇤)\n")
+        result.addCode("⇤}·else·{\n")
+        result.addCode("⇥")
+        result.addComment("Property was absent, invoke constructor without argument to use default")
+        result.addCode("%T()\n", originalTypeName)
+        result.addCode("⇤}\n")
+        // Early return for value classes, skip the rest of the constructor logic
+        return result.build()
+      } else {
+        // Happy path - all parameters with defaults are set
+        val allMasksAreSetBlock = maskNames.withIndex()
+          .map { (index, maskName) ->
+            CodeBlock.of("$maskName·== 0x${Integer.toHexString(maskAllSetValues[index])}.toInt()")
+          }
+          .joinToCode("·&& ")
+        result.beginControlFlow("if (%L)", allMasksAreSetBlock)
+        result.addComment("All parameters with defaults are set, invoke the constructor directly")
+        result.addCode("«%L·%T(", returnOrResultAssignment, originalTypeName)
+        var localSeparator = "\n"
+        val paramsToSet = components.filterIsInstance<ParameterProperty>()
+          .filterNot { it.property.isTransient }
+
+        // Set all non-transient property parameters
+        for (input in paramsToSet) {
+          result.addCode(localSeparator)
+          val property = input.property
+          result.addCode("%N = %N", property.name, property.localName)
+          if (property.isRequired) {
+            result.addMissingPropertyCheck(property, readerParam)
+          } else if (!input.type.isNullable) {
+            // Unfortunately incurs an intrinsic null-check even though we know it's set, but
+            // maybe in the future we can use contracts to omit them.
+            result.addCode("·as·%T", input.type)
+          }
+          localSeparator = ",\n"
+        }
+        result.addCode("\n»)\n")
+        result.nextControlFlow("else")
+        closeNextControlFlowInAssignment = true
+
+        classBuilder.addProperty(constructorProperty)
+        result.addComment("Reflectively invoke the synthetic defaults constructor")
+        // Dynamic default constructor call
+        val nonNullConstructorType = constructorProperty.type.copy(nullable = false)
+        val args = constructorPropertyTypes
+          .plus(0.until(maskCount).map { INT_TYPE_BLOCK }) // Masks, one every 32 params
+          .plus(DEFAULT_CONSTRUCTOR_MARKER_TYPE_BLOCK) // Default constructor marker is always last
+          .joinToCode(", ")
+        val coreLookupBlock = CodeBlock.of(
+          "%T::class.java.getDeclaredConstructor(%L)",
+          originalRawTypeName,
+          args,
+        )
+        val lookupBlock = if (originalTypeName is ParameterizedTypeName) {
+          CodeBlock.of("(%L·as·%T)", coreLookupBlock, nonNullConstructorType)
+        } else {
+          coreLookupBlock
+        }
+        val initializerBlock = CodeBlock.of(
+          "this.%1N·?: %2L.also·{ this.%1N·= it }",
+          constructorProperty,
+          lookupBlock,
+        )
+        val localConstructorProperty = PropertySpec.builder(
+          nameAllocator.newName("localConstructor"),
+          nonNullConstructorType,
+        )
+          .addAnnotation(
+            AnnotationSpec.builder(Suppress::class)
+              .addMember("%S", "UNCHECKED_CAST")
+              .build(),
+          )
+          .initializer(initializerBlock)
+          .build()
+        result.addCode("%L", localConstructorProperty)
+        result.addCode(
+          "«%L%N.newInstance(",
+          returnOrResultAssignment,
+          localConstructorProperty,
+        )
+      }
     } else {
       // Standard constructor call. Don't omit generics for parameterized types even if they can be
       // inferred, as calculating the right condition for inference exceeds the value gained from
