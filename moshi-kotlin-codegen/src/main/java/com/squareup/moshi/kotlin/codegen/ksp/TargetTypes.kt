@@ -56,7 +56,12 @@ import com.squareup.moshi.kotlin.codegen.api.TargetType
 import com.squareup.moshi.kotlin.codegen.api.unwrapTypeAlias
 
 /** Returns a target type for [type] or null if it cannot be used with code gen. */
-internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogger): TargetType? {
+internal fun targetType(
+  type: KSDeclaration,
+  resolver: Resolver,
+  logger: KSPLogger,
+  isInline: Boolean = false,
+): TargetType? {
   if (type !is KSClassDeclaration) {
     logger.error(
       "@JsonClass can't be applied to ${type.qualifiedName?.asString()}: must be a Kotlin class",
@@ -157,6 +162,7 @@ internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogg
     isDataClass = Modifier.DATA in type.modifiers,
     visibility = resolvedVisibility,
     isValueClass = Modifier.VALUE in type.modifiers,
+    isInline = isInline,
   )
 }
 

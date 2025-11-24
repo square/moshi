@@ -283,7 +283,11 @@ public class AdapterGenerator(
       }
     }
 
-    result.addProperty(optionsProperty)
+    // For inline types, we don't need the options property since we read the value directly
+    if (!target.isInline) {
+      result.addProperty(optionsProperty)
+    }
+
     for (uniqueAdapter in nonTransientProperties.distinctBy { it.delegateKey }) {
       result.addProperty(
         uniqueAdapter.delegateKey.generateProperty(
@@ -296,8 +300,8 @@ public class AdapterGenerator(
     }
 
     result.addFunction(generateToStringFun())
-    result.addFunction(generateFromJsonFun(result))
-    result.addFunction(generateToJsonFun())
+    result.addFunction(generateFromJsonFun(target.isInline, result))
+    result.addFunction(generateToJson(target.isInline))
 
     return result.build()
   }
@@ -330,12 +334,26 @@ public class AdapterGenerator(
       .build()
   }
 
-  private fun generateFromJsonFun(classBuilder: TypeSpec.Builder): FunSpec {
+  private fun generateFromJsonFun(
+    isInline: Boolean,
+    classBuilder: TypeSpec.Builder,
+  ): FunSpec {
     val result = FunSpec.builder("fromJson")
       .addModifiers(KModifier.OVERRIDE)
       .addParameter(readerParam)
       .returns(originalTypeName)
 
+    return if (isInline) {
+      generateFromJsonInline(result)
+    } else {
+      generateFromJsonRegular(classBuilder, result)
+    }
+  }
+
+  private fun generateFromJsonRegular(
+    classBuilder: TypeSpec.Builder,
+    result: FunSpec.Builder,
+  ): FunSpec {
     for (property in nonTransientProperties) {
       result.addCode("%L", property.generateLocalProperty())
       if (property.hasLocalIsPresentName) {
@@ -718,25 +736,35 @@ public class AdapterGenerator(
     )
   }
 
-  private fun generateToJsonFun(): FunSpec {
-    val result = FunSpec.builder("toJson")
+  private fun generateToJson(isInline: Boolean): FunSpec {
+    val builder = FunSpec.builder("toJson")
       .addModifiers(KModifier.OVERRIDE)
       .addParameter(writerParam)
       .addParameter(valueParam)
 
-    result.beginControlFlow("if (%N == null)", valueParam)
-    result.addStatement(
+    return if (isInline) {
+      generateToJsonInline(builder)
+    } else {
+      generateToJsonRegular(builder)
+    }
+  }
+
+  private fun generateToJsonRegular(
+    builder: FunSpec.Builder,
+  ): FunSpec {
+    builder.beginControlFlow("if (%N == null)", valueParam)
+    builder.addStatement(
       "throw·%T(%S)",
       NullPointerException::class,
       "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.",
     )
-    result.endControlFlow()
+    builder.endControlFlow()
 
-    result.addStatement("%N.beginObject()", writerParam)
+    builder.addStatement("%N.beginObject()", writerParam)
     nonTransientProperties.forEach { property ->
       // We manually put in quotes because we know the jsonName is already escaped
-      result.addStatement("%N.name(%S)", writerParam, property.jsonName)
-      result.addStatement(
+      builder.addStatement("%N.name(%S)", writerParam, property.jsonName)
+      builder.addStatement(
         "%N.toJson(%N, %N.%N)",
         nameAllocator[property.delegateKey],
         writerParam,
@@ -744,9 +772,62 @@ public class AdapterGenerator(
         property.name,
       )
     }
-    result.addStatement("%N.endObject()", writerParam)
+    builder.addStatement("%N.endObject()", writerParam)
 
-    return result.build()
+    return builder.build()
+  }
+
+  /** Generates a fromJson function for inline types that reads the value directly. */
+  private fun generateFromJsonInline(
+    builder: FunSpec.Builder,
+  ): FunSpec {
+    val property = nonTransientProperties.single()
+
+    // Read the value directly
+    if (property.delegateKey.nullable) {
+      builder.addStatement(
+        "val %N = %N.fromJson(%N)",
+        property.localName,
+        nameAllocator[property.delegateKey],
+        readerParam,
+      )
+    } else {
+      val exception = unexpectedNull(property, readerParam)
+      builder.addStatement(
+        "val %N = %N.fromJson(%N) ?: throw·%L",
+        property.localName,
+        nameAllocator[property.delegateKey],
+        readerParam,
+        exception,
+      )
+    }
+    builder.addStatement("return %T(%N = %N)", originalTypeName, property.name, property.localName)
+
+    return builder.build()
+  }
+
+  /** Generates a toJson function for inline types that writes the value directly. */
+  private fun generateToJsonInline(
+    builder: FunSpec.Builder,
+  ): FunSpec {
+    builder.beginControlFlow("if (%N == null)", valueParam)
+    builder.addStatement(
+      "throw·%T(%S)",
+      NullPointerException::class,
+      "${valueParam.name} was null! Wrap in .nullSafe() to write nullable values.",
+    )
+    builder.endControlFlow()
+
+    val property = nonTransientProperties.single()
+    builder.addStatement(
+      "%N.toJson(%N, %N.%N)",
+      nameAllocator[property.delegateKey],
+      writerParam,
+      valueParam,
+      property.name,
+    )
+
+    return builder.build()
   }
 }
 
