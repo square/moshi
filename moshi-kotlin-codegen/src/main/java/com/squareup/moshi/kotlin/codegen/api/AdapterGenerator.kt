@@ -530,7 +530,7 @@ public class AdapterGenerator(
         // they weren't present in the JSON (according to the mask) so defaults can be used.
         val paramProperty = components.filterIsInstance<ParameterProperty>().single()
         val maskName = maskNames.single() // Value classes only have one parameter
-        val maskSetValue = maskAllSetValues[0]
+        val maskSetValue = maskAllSetValues.single()
         // return if (mask == allSetValue) Constructor(value) else Constructor()
         result.addCode(
           "return·if·(%L·== 0x%L.toInt())·{\n",
