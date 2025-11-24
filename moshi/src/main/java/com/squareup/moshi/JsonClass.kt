@@ -64,4 +64,18 @@ public annotation class JsonClass(
    * expected signature.
    */
   val generator: String = "",
+  /**
+   * Set to true to generate an adapter that "inlines" the single property's value directly in JSON
+   * rather than wrapping it in an object. This is primarily useful for Kotlin value classes but
+   * can technically be used with any classes that wrap a single value.
+   *
+   * For example, a class `@JvmInline value class UserId(val id: Int)` with `inline = true` will
+   * serialize as just `123` rather than `{"id": 123}`.
+   *
+   * Requirements:
+   * - The class must have exactly one non-transient/non-ignored property.
+   * - During deserialization, if the JSON is an object with more than one key, a
+   *   [JsonDataException] will be thrown.
+   */
+  val inline: Boolean = false,
 )
