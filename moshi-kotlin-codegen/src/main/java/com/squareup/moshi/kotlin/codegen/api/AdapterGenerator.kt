@@ -101,7 +101,7 @@ public class AdapterGenerator(
     }
   }
 
-  private val nonTransientProperties = propertyList.filterNot { it.isTransient }
+  private val nonTransientProperties = propertyList.filterNot { it.isIgnored }
   private val className = target.typeName.rawType()
   private val visibility = target.visibility
   private val typeVariables = target.typeVariables
@@ -334,10 +334,7 @@ public class AdapterGenerator(
       .build()
   }
 
-  private fun generateFromJsonFun(
-    isInline: Boolean,
-    classBuilder: TypeSpec.Builder,
-  ): FunSpec {
+  private fun generateFromJsonFun(isInline: Boolean, classBuilder: TypeSpec.Builder): FunSpec {
     val result = FunSpec.builder("fromJson")
       .addModifiers(KModifier.OVERRIDE)
       .addParameter(readerParam)
@@ -381,7 +378,7 @@ public class AdapterGenerator(
       if (property.target.parameterIndex in targetConstructorParams) {
         continue // Already handled
       }
-      if (property.isTransient) {
+      if (property.isIgnored) {
         continue // We don't care about these outside of constructor parameters
       }
       components += PropertyOnly(property)
@@ -439,12 +436,12 @@ public class AdapterGenerator(
 
     for (input in components) {
       if (input is ParameterOnly ||
-        (input is ParameterProperty && input.property.isTransient)
+        (input is ParameterProperty && input.property.isIgnored)
       ) {
         updateMaskIndexes()
         constructorPropertyTypes += input.type.asTypeBlock()
         continue
-      } else if (input is PropertyOnly && input.property.isTransient) {
+      } else if (input is PropertyOnly && input.property.isIgnored) {
         continue
       }
 
@@ -584,7 +581,7 @@ public class AdapterGenerator(
         result.addCode("«%L·%T(", returnOrResultAssignment, originalTypeName)
         var localSeparator = "\n"
         val paramsToSet = components.filterIsInstance<ParameterProperty>()
-          .filterNot { it.property.isTransient }
+          .filterNot { it.property.isIgnored }
 
         // Set all non-transient property parameters
         for (input in paramsToSet) {
@@ -655,7 +652,7 @@ public class AdapterGenerator(
     for (input in components.filterIsInstance<ParameterComponent>()) {
       result.addCode(separator)
       if (useDefaultsConstructor) {
-        if (input is ParameterOnly || (input is ParameterProperty && input.property.isTransient)) {
+        if (input is ParameterOnly || (input is ParameterProperty && input.property.isIgnored)) {
           // We have to use the default primitive for the available type in order for
           // invokeDefaultConstructor to properly invoke it. Just using "null" isn't safe because
           // the transient type may be a primitive type.
@@ -674,7 +671,7 @@ public class AdapterGenerator(
       }
       if (input is PropertyComponent) {
         val property = input.property
-        if (!property.isTransient && property.isRequired) {
+        if (!property.isIgnored && property.isRequired) {
           result.addMissingPropertyCheck(property, readerParam)
         }
       }
@@ -749,9 +746,7 @@ public class AdapterGenerator(
     }
   }
 
-  private fun generateToJsonRegular(
-    builder: FunSpec.Builder,
-  ): FunSpec {
+  private fun generateToJsonRegular(builder: FunSpec.Builder): FunSpec {
     builder.beginControlFlow("if (%N == null)", valueParam)
     builder.addStatement(
       "throw·%T(%S)",
@@ -778,9 +773,7 @@ public class AdapterGenerator(
   }
 
   /** Generates a fromJson function for inline types that reads the value directly. */
-  private fun generateFromJsonInline(
-    builder: FunSpec.Builder,
-  ): FunSpec {
+  private fun generateFromJsonInline(builder: FunSpec.Builder): FunSpec {
     val property = nonTransientProperties.single()
 
     // Read the value directly
@@ -807,9 +800,7 @@ public class AdapterGenerator(
   }
 
   /** Generates a toJson function for inline types that writes the value directly. */
-  private fun generateToJsonInline(
-    builder: FunSpec.Builder,
-  ): FunSpec {
+  private fun generateToJsonInline(builder: FunSpec.Builder): FunSpec {
     builder.beginControlFlow("if (%N == null)", valueParam)
     builder.addStatement(
       "throw·%T(%S)",

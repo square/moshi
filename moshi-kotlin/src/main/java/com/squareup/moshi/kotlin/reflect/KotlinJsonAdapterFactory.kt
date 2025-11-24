@@ -354,7 +354,8 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     if (jsonClassAnnotation?.inline == true) {
       require(nonIgnoredBindings.size == 1) {
         "@JsonClass with inline = true requires exactly one non-transient property, " +
-          "but ${rawType.canonicalName} has ${nonIgnoredBindings.size}: ${nonIgnoredBindings.joinToString { it.name }}."
+          "but ${rawType.canonicalName} has ${nonIgnoredBindings.size}: " +
+          "${nonIgnoredBindings.joinToString { it.name }}."
       }
       @Suppress("UNCHECKED_CAST")
       return InlineKotlinJsonAdapter(

@@ -90,7 +90,8 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
       try {
         val originatingFile = type.containingFile!!
-        val adapterGenerator = adapterGenerator(logger, resolver, type, isInline) ?: return emptyList()
+        val adapterGenerator =
+          adapterGenerator(logger, resolver, type, isInline) ?: return emptyList()
         val preparedAdapter = adapterGenerator
           .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
@@ -129,11 +130,13 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
     // Validate inline types have exactly one non-transient property
     if (isInline) {
-      val nonTransientProperties = properties.values.filterNot { it.isTransient }
-      if (nonTransientProperties.size != 1) {
+      val nonIgnoredBindings = properties.values
+        .filterNot { it.isIgnored }
+      if (nonIgnoredBindings.size != 1) {
         logger.error(
           "@JsonClass with inline = true requires exactly one non-transient property, " +
-            "but ${originalType.simpleName.asString()} has ${nonTransientProperties.size}",
+            "but ${originalType.simpleName.asString()} has ${nonIgnoredBindings.size}: " +
+            "${nonIgnoredBindings.joinToString { it.name }}.",
           originalType,
         )
         return null
