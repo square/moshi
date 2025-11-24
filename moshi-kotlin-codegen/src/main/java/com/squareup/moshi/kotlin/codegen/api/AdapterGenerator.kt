@@ -529,7 +529,7 @@ public class AdapterGenerator(
         // For value classes, we want to call the constructor directly, omitting arguments when
         // they weren't present in the JSON (according to the mask) so defaults can be used.
         val paramProperty = components.filterIsInstance<ParameterProperty>().single()
-        val maskName = maskNames[0] // Value classes only have one parameter
+        val maskName = maskNames.single() // Value classes only have one parameter
         val maskSetValue = maskAllSetValues[0]
         // return if (mask == allSetValue) Constructor(value) else Constructor()
         result.addCode(
