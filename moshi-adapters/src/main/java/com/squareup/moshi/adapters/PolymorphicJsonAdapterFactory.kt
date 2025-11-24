@@ -22,6 +22,7 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonReader.Options
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.rawType
 import okio.IOException
 import java.lang.reflect.Type
@@ -172,11 +173,12 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       return null
     }
     val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
-    return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
+    return PolymorphicJsonAdapter(baseType, labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
       .nullSafe()
   }
 
   internal class PolymorphicJsonAdapter(
+    private val baseType: Class<*>,
     private val labelKey: String,
     private val labels: List<String>,
     private val subtypes: List<Type>,
@@ -223,16 +225,21 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     override fun toJson(writer: JsonWriter, value: Any?) {
       val type: Class<*> = value!!.javaClass
       val labelIndex = subtypes.indexOf(type)
+      val descendantInfo: DescendantInfo?
       val adapter: JsonAdapter<Any> = if (labelIndex == -1) {
-        requireNotNull(fallbackJsonAdapter) {
+        descendantInfo = findDescendantInfo(type, emptyList())
+        descendantInfo?.descendantJsonAdapter ?: requireNotNull(fallbackJsonAdapter) {
           "Expected one of $subtypes but found $value, a ${value.javaClass}. Register this subtype."
         }
       } else {
+        descendantInfo = null
         jsonAdapters[labelIndex]
       }
       writer.beginObject()
-      if (adapter !== fallbackJsonAdapter) {
+      if (descendantInfo == null && adapter !== fallbackJsonAdapter) {
         writer.name(labelKey).value(labels[labelIndex])
+      } else {
+        descendantInfo?.writeLabels(writer)
       }
       val flattenToken = writer.beginFlatten()
       adapter.toJson(writer, value)
@@ -240,8 +247,63 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
       writer.endObject()
     }
 
+    /**
+     * When [type] is not a direct child of [baseType], recursively search for the descendant.
+     *
+     * @param history This method runs a depth-first search through the type hierarchy. Once it reaches a
+     * [PolymorphicJsonAdapter], it continues the search from that adapter. This parameter tracks the pair of that
+     * [PolymorphicJsonAdapter] and the index of the subtype [PolymorphicJsonAdapter] of it.
+     */
+    private fun findDescendantInfo(type: Type, history: List<Pair<PolymorphicJsonAdapter, Int>>): DescendantInfo? =
+      jsonAdapters
+        .asSequence()
+        // The pairs of [PolymorphicJsonAdapter]-compatible [JsonAdapter], and the index of it in the [jsonAdapters] list.
+        .mapIndexedNotNull { index, adapter ->
+          if (adapter is PolymorphicJsonAdapter) {
+            index to adapter
+          } else if (adapter is NullSafeJsonAdapter<*>) {
+            val delegate = adapter.delegate
+            if (delegate is PolymorphicJsonAdapter) {
+              index to delegate
+            } else {
+              null
+            }
+          } else {
+            null
+          }
+        }
+        // Traverse the [PolymorphicJsonAdapter] and its index and find a direct descendant or continue the search.
+        .firstNotNullOfOrNull { (index, adapter) ->
+          val typeIndex = adapter.subtypes.indexOf(type)
+          if (typeIndex != -1) {
+            DescendantInfo(
+              history = history
+                .plus(this to index)
+                .mapNotNull { (baseTypeAdapter, directAncestorIndex) ->
+                  (baseTypeAdapter.labelKey to baseTypeAdapter.labels[directAncestorIndex])
+                    .takeIf { baseTypeAdapter.baseType.isInterface }
+                },
+              descendantJsonAdapter = adapter.jsonAdapters[typeIndex],
+            )
+          } else {
+            adapter.findDescendantInfo(type, history.plus(this to index))
+          }
+        }
+
     override fun toString(): String {
       return "PolymorphicJsonAdapter($labelKey)"
+    }
+  }
+
+  private class DescendantInfo(
+    val history: List<Pair<String, String>>,
+    val descendantJsonAdapter: JsonAdapter<Any>,
+  ) {
+
+    fun writeLabels(writer: JsonWriter) {
+      history.forEach { (key, label) ->
+        writer.name(key).value(label)
+      }
     }
   }
 
