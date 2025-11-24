@@ -568,6 +568,27 @@ class JsonClassSymbolProcessorTest {
   }
 
   @Test
+  fun inlineClassWithMultiplePropertiesFails() {
+    val result = compile(
+      kotlin(
+        "source.kt",
+        """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true, inline = true)
+          class MultipleProperties(val a: Int, val b: Int)
+          """,
+      ),
+    )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages).contains(
+      "@JsonClass with inline = true requires exactly one non-transient property, but " +
+        "MultipleProperties has 2: a, b.",
+    )
+  }
+
+  @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
     val result = compile(
       kotlin(

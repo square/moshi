@@ -1053,6 +1053,27 @@ class KotlinJsonAdapterTest {
 
   sealed class SealedClass
 
+  @Test fun inlineClassWithMultiplePropertiesFails() {
+    val moshi = Moshi.Builder()
+      .add(KotlinJsonAdapterFactory())
+      .build()
+
+    try {
+      moshi.adapter<InlineWithMultipleProperties>()
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageThat().isEqualTo(
+        "@JsonClass with inline = true requires exactly one non-transient property, " +
+          "but " +
+          "com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.InlineWithMultipleProperties " +
+          "has 2: a, b.",
+      )
+    }
+  }
+
+  @JsonClass(generateAdapter = false, inline = true)
+  class InlineWithMultipleProperties(val a: Int, val b: Int)
+
   private fun <T> mapWildcardsParameterizedTest(type: Class<T>, json: String, value: T) {
     // Ensure the map was created with the expected wildcards of a Kotlin map.
     val fieldType = type.getDeclaredField("map").genericType
