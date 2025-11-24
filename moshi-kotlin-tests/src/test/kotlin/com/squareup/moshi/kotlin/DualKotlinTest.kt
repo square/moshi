@@ -807,7 +807,7 @@ data class GenericClass<T>(val value: T)
 
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
-@JsonClass(generateAdapter = false) // TODO revisit code gen support separately
+@JsonClass(generateAdapter = true)
 value class ValueClass(val i: Int = 0)
 
 typealias A = Int

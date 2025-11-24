@@ -156,6 +156,7 @@ internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogg
     typeVariables = typeVariables,
     isDataClass = Modifier.DATA in type.modifiers,
     visibility = resolvedVisibility,
+    isValueClass = Modifier.VALUE in type.modifiers,
   )
 }
 

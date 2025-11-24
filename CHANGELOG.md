@@ -5,6 +5,8 @@ Change Log
 
 * Refuse `j$.*` types from Android library desugaring as platform types.
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
+* Fully supports encoding/decoding of value classes in both moshi-kotlin and code gen.
+  * Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
 
 ## Upgrading to Moshi 2.x
 
@@ -68,7 +70,6 @@ This release switches `KotlinJsonAdapterFactory` to use `kotlin-metadata` instea
 
 * This is not a source or ABI breaking change but if you were relying on the transitive `kotlin-reflect` dependency you will need to add it explicitly.
 * No longer encodes properties/fields from supertypes that are platform types.
-* Fully supports encoding/decoding of value classes. Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
 
 ## Version 1.15.2
 
