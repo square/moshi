@@ -357,10 +357,15 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           "but ${rawType.canonicalName} has ${nonIgnoredBindings.size}: " +
           "${nonIgnoredBindings.joinToString { it.name }}."
       }
+      val inlineBinding = nonIgnoredBindings[0]
+      require(!inlineBinding.property.km.returnType.isNullable) {
+        "@JsonClass with inline = true requires a non-nullable property, " +
+          "but ${rawType.canonicalName}.${inlineBinding.name} is nullable."
+      }
       @Suppress("UNCHECKED_CAST")
       return InlineKotlinJsonAdapter(
         ktConstructor,
-        nonIgnoredBindings[0],
+        inlineBinding,
       ).nullSafe()
     }
 

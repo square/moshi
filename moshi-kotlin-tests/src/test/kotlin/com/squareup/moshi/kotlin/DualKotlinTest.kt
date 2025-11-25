@@ -808,19 +808,6 @@ class DualKotlinTest {
     assertThat(decoded.value).isEqualTo(123)
   }
 
-  @Test fun inlineClassWithNullableProperty() {
-    val adapter = moshi.adapter<InlineValueClassNullable>()
-
-    // Test encoding non-null
-    assertThat(adapter.toJson(InlineValueClassNullable("value"))).isEqualTo("\"value\"")
-
-    // Test decoding non-null
-    assertThat(adapter.fromJson("\"test\"")!!.value).isEqualTo("test")
-
-    // Test decoding null - the adapter is nullSafe so null JSON returns null object
-    assertThat(adapter.fromJson("null")).isNull()
-  }
-
   @Test fun delegateClassWithMultiplePropertiesAreFine() {
     val adapter = moshi.adapter<List<Location>>()
     val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")!!
@@ -851,10 +838,6 @@ value class ValueClass(val i: Int = 0)
 @JvmInline
 @JsonClass(generateAdapter = true, inline = true)
 value class InlineValueClass(val value: Int)
-
-@JvmInline
-@JsonClass(generateAdapter = true, inline = true)
-value class InlineValueClassNullable(val value: String?)
 
 typealias A = Int
 typealias NullableA = A?

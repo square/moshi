@@ -1074,6 +1074,25 @@ class KotlinJsonAdapterTest {
   @JsonClass(generateAdapter = false, inline = true)
   class InlineWithMultipleProperties(val a: Int, val b: Int)
 
+  @Test fun inlineClassWithNullablePropertyFails() {
+    val moshi = Moshi.Builder()
+      .add(KotlinJsonAdapterFactory())
+      .build()
+
+    try {
+      moshi.adapter<InlineWithNullableProperty>()
+      fail()
+    } catch (e: IllegalArgumentException) {
+      assertThat(e).hasMessageThat().isEqualTo(
+        "@JsonClass with inline = true requires a non-nullable property, " +
+          "but com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.InlineWithNullableProperty.a is nullable.",
+      )
+    }
+  }
+
+  @JsonClass(generateAdapter = false, inline = true)
+  class InlineWithNullableProperty(val a: Int?)
+
   private fun <T> mapWildcardsParameterizedTest(type: Class<T>, json: String, value: T) {
     // Ensure the map was created with the expected wildcards of a Kotlin map.
     val fieldType = type.getDeclaredField("map").genericType

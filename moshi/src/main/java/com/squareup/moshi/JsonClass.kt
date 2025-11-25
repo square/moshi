@@ -74,6 +74,7 @@ public annotation class JsonClass(
    *
    * Requirements:
    * - The class must have exactly one non-transient/non-ignored property.
+   * - The property cannot be nullable.
    */
   val inline: Boolean = false,
 )

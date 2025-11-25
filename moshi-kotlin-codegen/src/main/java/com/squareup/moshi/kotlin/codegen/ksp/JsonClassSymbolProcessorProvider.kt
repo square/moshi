@@ -128,7 +128,7 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
       }
     }
 
-    // Validate inline types have exactly one non-transient property
+    // Validate inline types have exactly one non-transient property that is not nullable
     if (isInline) {
       val nonIgnoredBindings = properties.values
         .filterNot { it.isIgnored }
@@ -137,6 +137,15 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
           "@JsonClass with inline = true requires exactly one non-transient property, " +
             "but ${originalType.simpleName.asString()} has ${nonIgnoredBindings.size}: " +
             "${nonIgnoredBindings.joinToString { it.name }}.",
+          originalType,
+        )
+        return null
+      }
+      val inlineProperty = nonIgnoredBindings[0]
+      if (inlineProperty.delegateKey.nullable) {
+        logger.error(
+          "@JsonClass with inline = true requires a non-nullable property, " +
+            "but ${originalType.simpleName.asString()}.${inlineProperty.name} is nullable.",
           originalType,
         )
         return null
