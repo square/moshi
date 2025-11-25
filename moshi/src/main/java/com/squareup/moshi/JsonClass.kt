@@ -74,8 +74,6 @@ public annotation class JsonClass(
    *
    * Requirements:
    * - The class must have exactly one non-transient/non-ignored property.
-   * - During deserialization, if the JSON is an object with more than one key, a
-   *   [JsonDataException] will be thrown.
    */
   val inline: Boolean = false,
 )

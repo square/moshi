@@ -820,6 +820,18 @@ class DualKotlinTest {
     // Test decoding null - the adapter is nullSafe so null JSON returns null object
     assertThat(adapter.fromJson("null")).isNull()
   }
+
+  @Test fun delegateClassWithMultiplePropertiesAreFine() {
+    val adapter = moshi.adapter<List<Location>>()
+    val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")!!
+    assertThat(location).isEqualTo(listOf(Location(Point(3, 5))))
+  }
+
+  @JsonClass(generateAdapter = true, inline = true)
+  data class Location(val point: Point)
+
+  @JsonClass(generateAdapter = true)
+  data class Point(val x: Int, val y: Int)
 }
 
 typealias TypeAlias = Int
