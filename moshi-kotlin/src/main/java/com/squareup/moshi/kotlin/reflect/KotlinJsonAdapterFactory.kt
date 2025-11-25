@@ -193,7 +193,7 @@ internal class KotlinJsonAdapter<T>(
 private class InlineKotlinJsonAdapter<T>(
   private val constructor: KtConstructor,
   private val binding: KotlinJsonAdapter.Binding<T, Any?>,
-) : JsonAdapter<T>() {
+) : JsonAdapter<T?>() {
 
   override fun fromJson(reader: JsonReader): T {
     // Read the value directly

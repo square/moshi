@@ -804,7 +804,7 @@ class DualKotlinTest {
     assertThat(adapter.toJson(instance)).isEqualTo("42")
 
     // Test decoding from raw value
-    val decoded = adapter.fromJson("123")!!
+    val decoded = adapter.fromJson("123")
     assertThat(decoded.value).isEqualTo(123)
   }
 
@@ -818,7 +818,7 @@ class DualKotlinTest {
 
   @Test fun delegateClassWithMultiplePropertiesAreFine() {
     val adapter = moshi.adapter<List<Location>>()
-    val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")!!
+    val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")
     assertThat(location).isEqualTo(listOf(Location(Point(3, 5))))
   }
 
