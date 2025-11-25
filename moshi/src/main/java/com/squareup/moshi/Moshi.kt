@@ -53,20 +53,20 @@ public class Moshi private constructor(builder: Builder) {
 
   /** Returns a JSON adapter for `type`, creating it if necessary. */
   @CheckReturnValue
-  public fun <T> adapter(type: Type): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
+  public fun <T> adapter(type: Type): JsonAdapter<T?> = adapter(type, NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Class<T>): JsonAdapter<T> = adapter(type, NO_ANNOTATIONS)
+  public fun <T> adapter(type: Class<T>): JsonAdapter<T?> = adapter(type, NO_ANNOTATIONS)
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T> =
+  public fun <T> adapter(type: Type, annotationType: Class<out Annotation>): JsonAdapter<T?> =
     adapter(type, setOf(createJsonQualifierImplementation(annotationType)))
 
   @CheckReturnValue
   public fun <T> adapter(
     type: Type,
     vararg annotationTypes: Class<out Annotation>,
-  ): JsonAdapter<T> {
+  ): JsonAdapter<T?> {
     if (annotationTypes.size == 1) {
       return adapter(type, annotationTypes[0])
     }
@@ -79,31 +79,41 @@ public class Moshi private constructor(builder: Builder) {
   }
 
   @CheckReturnValue
-  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T> =
+  public fun <T> adapter(type: Type, annotations: Set<Annotation>): JsonAdapter<T?> =
     adapter(type, annotations, fieldName = null)
 
   /**
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
    *         itself is handled, nested types (such as in generics) are not resolved.
    */
+  @JvmOverloads
   @CheckReturnValue
-  public inline fun <reified T> adapter(): JsonAdapter<T> = adapter(typeOf<T>())
+  public inline fun <reified T> adapter(
+    annotations: Set<Annotation> = emptySet(),
+    fieldName: String? = null,
+  ): JsonAdapter<T> = adapter(typeOf<T>(), annotations, fieldName)
 
   /**
    * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
    *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
+  @JvmOverloads
   @CheckReturnValue
-  public fun <T> adapter(ktype: KType): JsonAdapter<T> {
-    val adapter = adapter<T>(ktype.javaType)
-    return if (adapter is NullSafeJsonAdapter || adapter is NonNullJsonAdapter) {
-      // TODO CR - Assume that these know what they're doing? Or should we defensively avoid wrapping for matching nullability?
+  public fun <T> adapter(
+    ktype: KType,
+    annotations: Set<Annotation> = emptySet(),
+    fieldName: String? = null,
+  ): JsonAdapter<T> {
+    val adapter = adapter<T>(ktype.javaType, annotations, fieldName)
+    val finalizedAdapter = if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
       adapter
     } else if (ktype.isMarkedNullable) {
       adapter.nullSafe()
     } else {
       adapter.nonNull()
     }
+    @Suppress("UNCHECKED_CAST")
+    return finalizedAdapter as JsonAdapter<T>
   }
 
   /**
@@ -115,7 +125,7 @@ public class Moshi private constructor(builder: Builder) {
     type: Type,
     annotations: Set<Annotation>,
     fieldName: String?,
-  ): JsonAdapter<T> {
+  ): JsonAdapter<T?> {
     val cleanedType = type.canonicalize().removeSubtypeWildcard()
 
     // If there's an equivalent adapter in the cache, we're done!
@@ -123,7 +133,7 @@ public class Moshi private constructor(builder: Builder) {
     synchronized(adapterCache) {
       val result = adapterCache[cacheKey]
       @Suppress("UNCHECKED_CAST")
-      if (result != null) return result as JsonAdapter<T>
+      if (result != null) return result as JsonAdapter<T?>
     }
     var lookupChain = lookupChainThreadLocal.get()
     if (lookupChain == null) {
@@ -139,7 +149,7 @@ public class Moshi private constructor(builder: Builder) {
       for (i in factories.indices) {
         @Suppress("UNCHECKED_CAST") // Factories are required to return only matching JsonAdapters.
         val result =
-          factories[i].create(cleanedType, annotations, this) as JsonAdapter<T>? ?: continue
+          factories[i].create(cleanedType, annotations, this) as JsonAdapter<T?>? ?: continue
 
         // Success! Notify the LookupChain so it is cached and can be used by re-entrant calls.
         lookupChain.adapterFound(result)
@@ -278,7 +288,7 @@ public class Moshi private constructor(builder: Builder) {
      * time in this call that the cache key has been requested in this call. This may return a
      * lookup that isn't yet ready if this lookup is reentrant.
      */
-    fun <T> push(type: Type, fieldName: String?, cacheKey: Any): JsonAdapter<T>? {
+    fun <T> push(type: Type, fieldName: String?, cacheKey: Any): JsonAdapter<T?>? {
       // Try to find a lookup with the same key for the same call.
       for (lookup in callLookups) {
         if (lookup.cacheKey == cacheKey) {
@@ -297,7 +307,7 @@ public class Moshi private constructor(builder: Builder) {
     }
 
     /** Sets the adapter result of the current lookup. */
-    fun <T> adapterFound(result: JsonAdapter<T>) {
+    fun <T> adapterFound(result: JsonAdapter<T?>) {
       @Suppress("UNCHECKED_CAST")
       val currentLookup = stack.last() as Lookup<T>
       currentLookup.adapter = result
@@ -318,7 +328,7 @@ public class Moshi private constructor(builder: Builder) {
             val replaced = adapterCache.put(lookup.cacheKey, lookup.adapter)
             if (replaced != null) {
               @Suppress("UNCHECKED_CAST")
-              (lookup as Lookup<Any>).adapter = replaced as JsonAdapter<Any>
+              (lookup as Lookup<Any>).adapter = replaced as JsonAdapter<Any?>
               adapterCache[lookup.cacheKey] = replaced
             }
           }
@@ -349,14 +359,14 @@ public class Moshi private constructor(builder: Builder) {
 
   /** This class implements `JsonAdapter` so it can be used as a stub for re-entrant calls. */
   private class Lookup<T>(val type: Type, val fieldName: String?, val cacheKey: Any) :
-    JsonAdapter<T>() {
-    var adapter: JsonAdapter<T>? = null
+    JsonAdapter<T?>() {
+    var adapter: JsonAdapter<T?>? = null
 
     override fun fromJson(reader: JsonReader) = withAdapter { fromJson(reader) }
 
     override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
-    private inline fun <R> withAdapter(body: JsonAdapter<T>.() -> R): R = checkNotNull(adapter) {
+    private inline fun <R> withAdapter(body: JsonAdapter<T?>.() -> R): R = checkNotNull(adapter) {
       "JsonAdapter isn't ready"
     }.body()
 

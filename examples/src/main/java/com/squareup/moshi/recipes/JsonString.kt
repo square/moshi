@@ -45,7 +45,7 @@ class JsonStringJsonAdapterFactory : JsonAdapter.Factory {
     override fun fromJson(reader: JsonReader): String =
       reader.nextSource().use(BufferedSource::readUtf8)
 
-    override fun toJson(writer: JsonWriter, value: String?) {
+    override fun toJson(writer: JsonWriter, value: String) {
       writer.valueSink().use { sink -> sink.writeUtf8(checkNotNull(value)) }
     }
   }

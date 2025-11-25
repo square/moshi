@@ -1261,7 +1261,7 @@ class GeneratedAdaptersTest {
 
   @Test fun adaptersAreNullSafe() {
     val moshi = Moshi.Builder().build()
-    val adapter = moshi.adapter<HasNullableBoolean>()
+    val adapter = moshi.adapter<HasNullableBoolean?>()
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
   }
@@ -1291,7 +1291,7 @@ class GeneratedAdaptersTest {
 
   @Test fun customGenerator_withClassPresent() {
     val moshi = Moshi.Builder().build()
-    val adapter = moshi.adapter<CustomGeneratedClass>()
+    val adapter = moshi.adapter<CustomGeneratedClass?>()
     val unwrapped = (adapter as NullSafeJsonAdapter<CustomGeneratedClass>).delegate
     assertThat(unwrapped).isInstanceOf(
       GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter::class.java,

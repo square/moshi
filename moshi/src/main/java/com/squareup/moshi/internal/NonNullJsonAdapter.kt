@@ -20,8 +20,8 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 
-public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T>() {
-  override fun fromJson(reader: JsonReader): T {
+public class NonNullJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T?>() {
+  override fun fromJson(reader: JsonReader): T & Any {
     return if (reader.peek() == JsonReader.Token.NULL) {
       throw JsonDataException("Unexpected null at " + reader.path)
     } else {

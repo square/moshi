@@ -66,7 +66,7 @@ class KotlinExtensionsTest {
         return -1
       }
 
-      override fun toJson(writer: JsonWriter, value: Int?) {
+      override fun toJson(writer: JsonWriter, value: Int) {
         throw NotImplementedError()
       }
     }
@@ -86,7 +86,7 @@ class KotlinExtensionsTest {
         return listOf(-1)
       }
 
-      override fun toJson(writer: JsonWriter, value: List<Int>?) {
+      override fun toJson(writer: JsonWriter, value: List<Int>) {
         throw NotImplementedError()
       }
     }

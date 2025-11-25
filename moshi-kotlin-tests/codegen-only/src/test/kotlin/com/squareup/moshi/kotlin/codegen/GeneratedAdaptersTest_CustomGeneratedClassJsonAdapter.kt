@@ -22,7 +22,7 @@ import com.squareup.moshi.kotlin.codegen.GeneratedAdaptersTest.CustomGeneratedCl
 
 // This also tests custom generated types with no moshi constructor
 @Suppress("ktlint:standard:class-naming")
-class GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter : JsonAdapter<CustomGeneratedClass>() {
+class GeneratedAdaptersTest_CustomGeneratedClassJsonAdapter : JsonAdapter<CustomGeneratedClass?>() {
   override fun fromJson(reader: JsonReader): CustomGeneratedClass? {
     TODO()
   }
