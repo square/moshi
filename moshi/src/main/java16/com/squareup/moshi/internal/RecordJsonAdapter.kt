@@ -36,8 +36,8 @@ import java.lang.reflect.Type
 internal class RecordJsonAdapter<T>(
   private val constructor: MethodHandle,
   private val targetClass: String,
-  componentBindings: Map<String, ComponentBinding<Any>>,
-) : JsonAdapter<T>() {
+  componentBindings: Map<String, ComponentBinding<Any?>>,
+) : JsonAdapter<T?>() {
 
   data class ComponentBinding<T>(
     val componentName: String,
@@ -125,7 +125,7 @@ internal class RecordJsonAdapter<T>(
       }
 
       val components = rawType.recordComponents
-      val bindings = LinkedHashMap<String, ComponentBinding<Any>>()
+      val bindings = LinkedHashMap<String, ComponentBinding<Any?>>()
       val lookup = MethodHandles.lookup()
       val componentRawTypes = Array<Class<*>>(components.size) { i ->
         val component = components[i]
@@ -157,7 +157,7 @@ internal class RecordJsonAdapter<T>(
       moshi: Moshi,
       lookup: MethodHandles.Lookup,
       component: RecordComponent,
-    ): ComponentBinding<Any> {
+    ): ComponentBinding<Any?> {
       val componentName = component.name
       val jsonName = component.jsonName(componentName)
 

@@ -33,7 +33,7 @@ import java.util.Date
  *   .build();
  * ```
  */
-public class Rfc3339DateJsonAdapter : JsonAdapter<Date>() {
+public class Rfc3339DateJsonAdapter : JsonAdapter<Date?>() {
 
   /** The underlying deserialization logic is thread-safe and does not require synchronization. **/
   @Throws(IOException::class)

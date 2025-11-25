@@ -143,7 +143,7 @@ public class AdapterGenerator(
   )
     .build()
   private val jsonAdapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(
-    originalTypeName,
+    originalTypeName.copy(nullable = true),
   )
 
   // selectName() API setup

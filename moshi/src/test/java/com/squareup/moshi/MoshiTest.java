@@ -771,7 +771,7 @@ public final class MoshiTest {
   public void adapterLookupDisallowsNullType() {
     Moshi moshi = new Moshi.Builder().build();
     try {
-      moshi.adapter(null, Collections.<Annotation>emptySet());
+      moshi.adapter(((Type) null), Collections.<Annotation>emptySet());
       fail();
     } catch (NullPointerException expected) {
       assertThat(expected).hasMessageThat().contains("Parameter specified as non-null is null");

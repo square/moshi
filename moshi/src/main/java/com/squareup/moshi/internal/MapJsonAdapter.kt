@@ -29,9 +29,10 @@ import java.lang.reflect.Type
  * TODO: support maps with other key types and convert to/from strings.
  */
 internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type) :
-  JsonAdapter<Map<K, V?>>() {
-  private val keyAdapter: JsonAdapter<K> = moshi.adapter(keyType)
-  private val valueAdapter: JsonAdapter<V> = moshi.adapter(valueType)
+  JsonAdapter<Map<K, V?>?>() {
+  @Suppress("UNCHECKED_CAST")
+  private val keyAdapter: JsonAdapter<K> = moshi.adapter<K>(keyType).nonNull() as JsonAdapter<K>
+  private val valueAdapter: JsonAdapter<V?> = moshi.adapter(valueType)
 
   override fun toJson(writer: JsonWriter, value: Map<K, V?>?) {
     writer.beginObject()

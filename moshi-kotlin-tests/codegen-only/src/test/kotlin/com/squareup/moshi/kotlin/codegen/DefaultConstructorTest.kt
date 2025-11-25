@@ -26,7 +26,7 @@ class DefaultConstructorTest {
     val json =
       """{"required":"requiredClass"}"""
     val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)!!
+      .fromJson(json)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
@@ -37,7 +37,7 @@ class DefaultConstructorTest {
     val json =
       """{"required":"requiredClass","optional":"customOptional","optional2":4,"dynamicSelfReferenceOptional":"setDynamic","dynamicOptional":5,"dynamicInlineOptional":6}"""
     val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)!!
+      .fromJson(json)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }
@@ -48,7 +48,7 @@ class DefaultConstructorTest {
     val json =
       """{"required":"requiredClass","optional":"customOptional"}"""
     val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)!!
+      .fromJson(json)
     check(instance == expected) {
       "No match:\nActual  : $instance\nExpected: $expected"
     }

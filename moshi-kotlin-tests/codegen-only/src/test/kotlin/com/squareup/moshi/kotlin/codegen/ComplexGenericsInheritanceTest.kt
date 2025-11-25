@@ -35,7 +35,7 @@ class ComplexGenericsInheritanceTest {
     val json =
       """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
-    val instance = adapter.fromJson(json)!!
+    val instance = adapter.fromJson(json)
     val testInstance = PersonResponse().apply {
       data = Person("foo")
     }
@@ -51,7 +51,7 @@ class ComplexGenericsInheritanceTest {
     val json =
       """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
-    val instance = adapter.fromJson(json)!!
+    val instance = adapter.fromJson(json)
     val testInstance = NestedPersonResponse().apply {
       data = Person("foo")
     }
@@ -67,7 +67,7 @@ class ComplexGenericsInheritanceTest {
     val json =
       """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
-    val instance = adapter.fromJson(json)!!
+    val instance = adapter.fromJson(json)
     val testInstance = UntypedNestedPersonResponse<Person>().apply {
       data = Person("foo")
     }
@@ -83,7 +83,7 @@ class ComplexGenericsInheritanceTest {
     val json =
       """{"layer4E":{"name":"layer4E"},"layer4F":{"data":{"name":"layer4F"},"data2":"layer4F","data3":"layer4F"},"layer3C":[1,2,3],"layer3D":"layer3D","layer2":"layer2","layer1":"layer1"}"""
 
-    val instance = adapter.fromJson(json)!!
+    val instance = adapter.fromJson(json)
     val testInstance = Layer4(
       layer4E = Person("layer4E"),
       layer4F = UntypedNestedPersonResponse<Person>().apply {

@@ -633,7 +633,7 @@ class JsonClassSymbolProcessorTest {
     val adapterClass = result.classLoader.loadClass("test.PersonJsonAdapter").kotlin
     assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
       JsonReader.Options::class.createType(),
-      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String>()))),
+      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String?>()))),
     )
   }
 

@@ -58,7 +58,8 @@ public data class DelegateKey(
       this,
     )
 
-    val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(type)
+    val nullableType = type.copy(nullable = true)
+    val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(nullableType)
     val standardArgs = arrayOf(
       moshiParameter,
       typeRenderer.render(type),
