@@ -808,6 +808,14 @@ class DualKotlinTest {
     assertThat(decoded.value).isEqualTo(123)
   }
 
+  @Test fun inlineClassNullSafe() {
+    val adapter = moshi.adapter<InlineValueClass?>()
+
+    // The adapter is wrapped with nullSafe(), so null JSON returns null object
+    assertThat(adapter.fromJson("null")).isNull()
+    assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
+
   @Test fun delegateClassWithMultiplePropertiesAreFine() {
     val adapter = moshi.adapter<List<Location>>()
     val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")!!
