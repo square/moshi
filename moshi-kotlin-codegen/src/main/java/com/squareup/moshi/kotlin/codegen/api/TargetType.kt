@@ -29,6 +29,7 @@ public data class TargetType(
   val isDataClass: Boolean,
   val visibility: KModifier,
   val isValueClass: Boolean,
+  val isInline: Boolean = false,
 ) {
 
   init {

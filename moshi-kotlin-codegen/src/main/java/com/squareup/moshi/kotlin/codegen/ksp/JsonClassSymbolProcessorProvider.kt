@@ -86,9 +86,12 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
       if (!jsonClassAnnotation.generateAdapter) continue
 
+      val isInline = jsonClassAnnotation.inline
+
       try {
         val originatingFile = type.containingFile!!
-        val adapterGenerator = adapterGenerator(logger, resolver, type) ?: return emptyList()
+        val adapterGenerator =
+          adapterGenerator(logger, resolver, type, isInline) ?: return emptyList()
         val preparedAdapter = adapterGenerator
           .prepare(generateProguardRules) { spec ->
             spec.toBuilder()
@@ -113,14 +116,39 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
     logger: KSPLogger,
     resolver: Resolver,
     originalType: KSDeclaration,
+    isInline: Boolean,
   ): AdapterGenerator? {
-    val type = targetType(originalType, resolver, logger) ?: return null
+    val type = targetType(originalType, resolver, logger, isInline) ?: return null
 
     val properties = mutableMapOf<String, PropertyGenerator>()
     for (property in type.properties.values) {
       val generator = property.generator(logger, resolver, originalType)
       if (generator != null) {
         properties[property.name] = generator
+      }
+    }
+
+    // Validate inline types have exactly one non-transient property that is not nullable
+    if (isInline) {
+      val nonIgnoredBindings = properties.values
+        .filterNot { it.isIgnored }
+      if (nonIgnoredBindings.size != 1) {
+        logger.error(
+          "@JsonClass with inline = true requires exactly one non-transient property, " +
+            "but ${originalType.simpleName.asString()} has ${nonIgnoredBindings.size}: " +
+            "${nonIgnoredBindings.joinToString { it.name }}.",
+          originalType,
+        )
+        return null
+      }
+      val inlineProperty = nonIgnoredBindings[0]
+      if (inlineProperty.delegateKey.nullable) {
+        logger.error(
+          "@JsonClass with inline = true requires a non-nullable property, " +
+            "but ${originalType.simpleName.asString()}.${inlineProperty.name} is nullable.",
+          originalType,
+        )
+        return null
       }
     }
 
