@@ -6,8 +6,8 @@ Change Log
 * Refuse `j$.*` types from Android library desugaring as platform types.
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
 * Fully supports encoding/decoding of value classes in both moshi-kotlin and code gen.
-  * Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
-* New `@JsonClass.inline` property to allow encoding/decoding single-property JSON classes "inline".
+  * Note that Moshi does not propagate inlining to JSON by default. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
+* New `@JsonClass.inline` property to allow inlining single-property JSON classes during encoding/decoding.
   * This is particularly useful for value classes.
   * For example, a class `@JvmInline value class UserId(val id: Int)` with `inline = true` will serialize as just `123` rather than `{"id": 123}`.
 
