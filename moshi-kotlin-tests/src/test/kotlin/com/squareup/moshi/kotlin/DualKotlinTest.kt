@@ -811,7 +811,7 @@ class DualKotlinTest {
   @Test fun inlineClassNullSafe() {
     val adapter = moshi.adapter<InlineValueClass?>()
 
-    // The adapter is wrapped with nullSafe(), so null JSON returns null object
+    // The adapter is wrapped with nullSafe(), so null JSON returns a null object
     assertThat(adapter.fromJson("null")).isNull()
     assertThat(adapter.toJson(null)).isEqualTo("null")
   }
