@@ -25,8 +25,8 @@ import java.lang.reflect.Type
 
 /** Converts collection types to JSON arrays containing their converted contents. */
 internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> private constructor(
-  private val elementAdapter: JsonAdapter<T>,
-) : JsonAdapter<C>() {
+  private val elementAdapter: JsonAdapter<T?>,
+) : JsonAdapter<C?>() {
 
   abstract fun newCollection(): C
 
@@ -70,7 +70,7 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
     private fun <T> newArrayListAdapter(
       type: Type,
       moshi: Moshi,
-    ): JsonAdapter<MutableCollection<T?>> {
+    ): JsonAdapter<MutableCollection<T?>?> {
       val elementType = Types.collectionElementType(type, Collection::class.java)
       val elementAdapter = moshi.adapter<T>(elementType)
       return object : CollectionJsonAdapter<MutableCollection<T?>, T>(elementAdapter) {
@@ -78,7 +78,10 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
       }
     }
 
-    private fun <T> newLinkedHashSetAdapter(type: Type, moshi: Moshi): JsonAdapter<MutableSet<T?>> {
+    private fun <T> newLinkedHashSetAdapter(
+      type: Type,
+      moshi: Moshi,
+    ): JsonAdapter<MutableSet<T?>?> {
       val elementType = Types.collectionElementType(type, Collection::class.java)
       val elementAdapter = moshi.adapter<T>(elementType)
       return object : CollectionJsonAdapter<MutableSet<T?>, T>(elementAdapter) {

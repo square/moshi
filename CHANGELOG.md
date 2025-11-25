@@ -42,6 +42,25 @@ find . \
   -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<Annotation>/g' {} \;
 ```
 
+### Propagated Nullability in `JsonAdapter`
+
+Previously, due to limitations of the Java type system, Moshi would always treat the type as
+nullable. Kotlin's type system supports nullability natively, and Moshi now propagates nullability
+information from the generic type of `JsonAdapter`.
+
+- Calling `nullSafe()` on any `JsonAdapter` returns a `JsonAdapter<T?>` where `T` is the original type.
+- Calling `nonNull()` on any `JsonAdapter` returns a `JsonAdapter<T & Any>` where `T` is the original type.
+- Calling the reified `Moshi.adapter<T>()` function overloads returns a `JsonAdapter<T>` where `T` matches
+ and respects the nullability of the reified type.
+- Calling the `Moshi.adapter(KType)` function overloads return a `JsonAdapter` that respects the
+ nullability of the `KType` but trusts that the caller specifies the correct nullability on the
+ generic type argument.
+- Calling any of the other `Moshi.adapter()` functions (that accept either `Type`, `Class`, or
+ `KClass` types) always return nullable `JsonAdapter`s.
+
+This is often going to be a source-breaking change for Kotlin users, but ABI-compatible. All of
+Moshi's internals and code gen continue to function the same way.
+
 ### Explicit Nullability
 
 Moshi has functions like `JsonAdapter.fromJson(String)` that have always been _documented_ to

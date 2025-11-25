@@ -64,7 +64,7 @@ internal class KotlinJsonAdapter<T>(
   private val allBindings: List<Binding<T, Any?>?>,
   private val nonIgnoredBindings: List<Binding<T, Any?>>,
   private val options: JsonReader.Options,
-) : JsonAdapter<T>() {
+) : JsonAdapter<T?>() {
 
   override fun fromJson(reader: JsonReader): T {
     val constructorSize = constructor.parameters.size
