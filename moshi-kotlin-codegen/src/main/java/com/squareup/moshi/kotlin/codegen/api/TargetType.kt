@@ -15,6 +15,7 @@
  */
 package com.squareup.moshi.kotlin.codegen.api
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeVariableName
@@ -29,6 +30,7 @@ public data class TargetType(
   val isDataClass: Boolean,
   val visibility: KModifier,
   val isValueClass: Boolean,
+  val optInAnnotations: Set<AnnotationSpec> = emptySet(),
 ) {
 
   init {

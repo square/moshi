@@ -238,6 +238,8 @@ public class AdapterGenerator(
 
     result.superclass(jsonAdapterTypeName)
 
+    result.addAnnotations(target.optInAnnotations)
+
     if (typeVariables.isNotEmpty()) {
       result.addTypeVariables(
         typeVariables.map {
