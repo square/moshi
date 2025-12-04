@@ -7,6 +7,7 @@ Change Log
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
 * Fully supports encoding/decoding of value classes in both moshi-kotlin and code gen.
   * Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
+* `PolymorphicJsonAdapterFactory` now invokes the fallback adapter when the label key is missing entirely from the JSON, not just when the label value is unrecognized.
 
 ## Upgrading to Moshi 2.x
 
