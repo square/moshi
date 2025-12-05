@@ -57,7 +57,7 @@ class KotlinReflectTypesTest {
     val kotlinType = typeOf<Array<in String>>()
     val javaType = kotlinType.moshiJavaType
     assertThat(javaType).isSymmetricEqualTo(kotlinType.kotlinJavaType)
-    assertThat(javaType).isEqualTo(Array<String>::class.java)
+    assertThat(javaType).isEqualTo(Array<Any>::class.java)
   }
 
   @Test

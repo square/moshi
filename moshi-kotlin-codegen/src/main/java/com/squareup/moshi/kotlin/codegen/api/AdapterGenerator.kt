@@ -90,6 +90,9 @@ public class AdapterGenerator(
       // Cover for calling fromJson() on a Nothing property type. Theoretically nonsensical but we
       // support it
       "IMPLICIT_NOTHING_TYPE_ARGUMENT_IN_RETURN_POSITION",
+      // Default values use bits to track assignment, and sometimes call toInt() on something which
+      // is already an int.
+      "REDUNDANT_CALL_OF_CONVERSION_METHOD",
     ).let { suppressions ->
       AnnotationSpec.builder(Suppress::class)
         .useSiteTarget(FILE)
