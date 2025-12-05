@@ -17,6 +17,7 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
@@ -185,6 +186,34 @@ internal class KotlinJsonAdapter<T>(
   }
 }
 
+/**
+ * A JsonAdapter for inline types that reads/writes the single property value directly
+ * without wrapping it in a JSON object.
+ */
+private class InlineKotlinJsonAdapter<T>(
+  private val constructor: KtConstructor,
+  private val binding: KotlinJsonAdapter.Binding<T, Any?>,
+) : JsonAdapter<T?>() {
+
+  override fun fromJson(reader: JsonReader): T {
+    // Read the value directly
+    val value = binding.adapter.fromJson(reader)
+    if (value == null && !binding.property.km.returnType.isNullable) {
+      throw unexpectedNull(binding.property.name, binding.jsonName, reader)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    return constructor.callBy(IndexedParameterMap(constructor.parameters, arrayOf(value)))
+  }
+
+  override fun toJson(writer: JsonWriter, value: T?) {
+    if (value == null) throw NullPointerException("value == null")
+    binding.adapter.toJson(writer, binding.get(value))
+  }
+
+  override fun toString() = "InlineKotlinJsonAdapter(${constructor.type.canonicalName})"
+}
+
 public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
     if (annotations.isNotEmpty()) return null
@@ -319,6 +348,27 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
     }
 
     val nonIgnoredBindings = bindings.filterNotNull()
+
+    // Check if this is an inline type
+    val jsonClassAnnotation = rawType.getAnnotation(JsonClass::class.java)
+    if (jsonClassAnnotation?.inline == true) {
+      require(nonIgnoredBindings.size == 1) {
+        "@JsonClass with inline = true requires exactly one non-transient property, " +
+          "but ${rawType.canonicalName} has ${nonIgnoredBindings.size}: " +
+          "${nonIgnoredBindings.joinToString { it.name }}."
+      }
+      val inlineBinding = nonIgnoredBindings[0]
+      require(!inlineBinding.property.km.returnType.isNullable) {
+        "@JsonClass with inline = true requires a non-nullable property, " +
+          "but ${rawType.canonicalName}.${inlineBinding.name} is nullable."
+      }
+      @Suppress("UNCHECKED_CAST")
+      return InlineKotlinJsonAdapter(
+        ktConstructor,
+        inlineBinding,
+      ).nullSafe()
+    }
+
     val options = JsonReader.Options.of(*nonIgnoredBindings.map { it.name }.toTypedArray())
     return KotlinJsonAdapter(ktConstructor, bindings, nonIgnoredBindings, options).nullSafe()
   }
