@@ -149,6 +149,20 @@ internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogg
       .any { it.isInternal() }
     if (forceInternal) KModifier.INTERNAL else visibility
   }
+
+  val optInAnnotations = type.annotations
+    .filter { annotation ->
+      val annotationType = annotation.annotationType.resolve()
+      val declaration = annotationType.declaration
+      declaration.annotations.any { metaAnnotation ->
+        // Check for kotlin.RequiresOptIn (or the older kotlin.Experimental)
+        val qName = metaAnnotation.annotationType.resolve().declaration.qualifiedName?.asString()
+        qName == "kotlin.RequiresOptIn" || qName == "kotlin.Experimental"
+      }
+    }
+    .map { it.toAnnotationSpec(resolver) }
+    .toSet()
+
   return TargetType(
     typeName = type.toClassName().withTypeArguments(typeVariables),
     constructor = constructor,
@@ -157,6 +171,7 @@ internal fun targetType(type: KSDeclaration, resolver: Resolver, logger: KSPLogg
     isDataClass = Modifier.DATA in type.modifiers,
     visibility = resolvedVisibility,
     isValueClass = Modifier.VALUE in type.modifiers,
+    optInAnnotations = optInAnnotations,
   )
 }
 
