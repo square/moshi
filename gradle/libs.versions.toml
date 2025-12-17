@@ -5,7 +5,7 @@ jvmTarget = "1.8"
 kotlin = "2.2.21"
 kotlinCompileTesting = "0.11.1"
 kotlinpoet = "2.2.0"
-ksp = "2.3.3"
+ksp = "2.3.4"
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version = "2.1.0" }
@@ -16,7 +16,7 @@ mavenShadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 spotless = { id = "com.diffplug.spotless", version = "8.1.0" }
 
 [libraries]
-asm = "org.ow2.asm:asm:9.9"
+asm = "org.ow2.asm:asm:9.9.1"
 autoCommon = "com.google.auto:auto-common:1.2.2"
 autoService = { module = "com.google.auto.service:auto-service-annotations", version.ref = "autoService" }
 autoService-ksp = "dev.zacsweers.autoservice:auto-service-ksp:1.2.0"
@@ -36,5 +36,5 @@ junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.4.5"
-googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.32.0"
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.33.0"
 ktlint = "com.pinterest.ktlint:ktlint-cli:1.8.0"
