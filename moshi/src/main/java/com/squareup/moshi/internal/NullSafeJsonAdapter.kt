@@ -19,7 +19,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 
-public class NullSafeJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T>() {
+public class NullSafeJsonAdapter<T>(public val delegate: JsonAdapter<T>) : JsonAdapter<T?>() {
   override fun fromJson(reader: JsonReader): T? {
     return if (reader.peek() == JsonReader.Token.NULL) {
       reader.nextNull()

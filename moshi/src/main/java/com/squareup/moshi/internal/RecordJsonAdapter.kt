@@ -25,7 +25,7 @@ import java.lang.reflect.Type
  * This is just a simple shim for linking in [StandardJsonAdapters] and swapped with a real
  * implementation in Java 16 via MR Jar.
  */
-internal class RecordJsonAdapter<T> : JsonAdapter<T>() {
+internal class RecordJsonAdapter<T> : JsonAdapter<T?>() {
   override fun fromJson(reader: JsonReader) = throw AssertionError()
 
   override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()

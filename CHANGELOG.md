@@ -4,6 +4,12 @@
 
 * Refuse `j$.*` types from Android library desugaring as platform types.
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
+* Fully supports encoding/decoding of value classes in both moshi-kotlin and code gen.
+  * Note that Moshi does not propagate inlining to JSON by default. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
+* New `@JsonClass.inline` property to allow inlining single-property JSON classes during encoding/decoding.
+  * This is particularly useful for value classes.
+  * For example, a class `@JvmInline value class UserId(val id: Int)` with `inline = true` will serialize as just `123` rather than `{"id": 123}`.
+* `PolymorphicJsonAdapterFactory` now invokes the fallback adapter when the label key is missing entirely from the JSON, not just when the label value is unrecognized.
 
 ### Upgrading to Moshi 2.x
 
@@ -39,6 +45,25 @@ find . \
   -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<Annotation>/g' {} \;
 ```
 
+#### Propagated Nullability in `JsonAdapter`
+
+Previously, due to limitations of the Java type system, Moshi would always treat the type as
+nullable. Kotlin's type system supports nullability natively, and Moshi now propagates nullability
+information from the generic type of `JsonAdapter`.
+
+- Calling `nullSafe()` on any `JsonAdapter` returns a `JsonAdapter<T?>` where `T` is the original type.
+- Calling `nonNull()` on any `JsonAdapter` returns a `JsonAdapter<T & Any>` where `T` is the original type.
+- Calling the reified `Moshi.adapter<T>()` function overloads returns a `JsonAdapter<T>` where `T` matches
+ and respects the nullability of the reified type.
+- Calling the `Moshi.adapter(KType)` function overloads return a `JsonAdapter` that respects the
+ nullability of the `KType` but trusts that the caller specifies the correct nullability on the
+ generic type argument.
+- Calling any of the other `Moshi.adapter()` functions (that accept either `Type`, `Class`, or
+ `KClass` types) always return nullable `JsonAdapter`s.
+
+This is often going to be a source-breaking change for Kotlin users, but ABI-compatible. All of
+Moshi's internals and code gen continue to function the same way.
+
 #### Explicit Nullability
 
 Moshi has functions like `JsonAdapter.fromJson(String)` that have always been _documented_ to
@@ -67,7 +92,6 @@ This release switches `KotlinJsonAdapterFactory` to use `kotlin-metadata` instea
 
 * This is not a source or ABI breaking change but if you were relying on the transitive `kotlin-reflect` dependency you will need to add it explicitly.
 * No longer encodes properties/fields from supertypes that are platform types.
-* Fully supports encoding/decoding of value classes. Note that Moshi does not propagate inlining to JSON. For example: `@JvmInline value class Color(val raw: Int)` is serialized to `{"raw": 12345}`.
 
 ## [1.15.2] - 2024-12-05
 

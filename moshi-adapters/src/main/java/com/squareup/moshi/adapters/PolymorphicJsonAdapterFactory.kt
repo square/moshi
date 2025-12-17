@@ -87,7 +87,7 @@ import javax.annotation.CheckReturnValue
  * For best performance type information should be the first field in the object. Otherwise Moshi
  * must reprocess the JSON stream once it knows the object's type.
  *
- * If an unknown subtype is encountered when decoding:
+ * If an unknown subtype label is encountered when decoding, or if the label key is missing entirely:
  *  * If [withDefaultValue] is used, then `defaultValue` will be returned.
  *  * If [withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.fromJson(reader)` result will be returned.
  *  * Otherwise a [JsonDataException] will be thrown.
@@ -103,7 +103,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
   private val labelKey: String,
   private val labels: List<String>,
   private val subtypes: List<Type>,
-  private val fallbackJsonAdapter: JsonAdapter<Any>?,
+  private val fallbackJsonAdapter: JsonAdapter<Any?>?,
 ) : Factory {
   /** Returns a new factory that decodes instances of `subtype`. */
   public fun withSubtype(subtype: Class<out T>, label: String): PolymorphicJsonAdapterFactory<T> {
@@ -127,13 +127,13 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
   /**
    * Returns a new factory that with default to `fallbackJsonAdapter.fromJson(reader)` upon
-   * decoding of unrecognized labels.
+   * decoding of unrecognized labels or when the label key is missing entirely.
    *
    * The [JsonReader] instance will not be automatically consumed, so make sure to consume
    * it within your implementation of [JsonAdapter.fromJson]
    */
   public fun withFallbackJsonAdapter(
-    fallbackJsonAdapter: JsonAdapter<Any>?,
+    fallbackJsonAdapter: JsonAdapter<Any?>?,
   ): PolymorphicJsonAdapterFactory<T> {
     return PolymorphicJsonAdapterFactory(
       baseType = baseType,
@@ -146,14 +146,14 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
   /**
    * Returns a new factory that will default to `defaultValue` upon decoding of unrecognized
-   * labels. The default value should be immutable.
+   * labels or when the label key is missing entirely. The default value should be immutable.
    */
   public fun withDefaultValue(defaultValue: T?): PolymorphicJsonAdapterFactory<T> {
     return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
   }
 
-  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any> {
-    return object : JsonAdapter<Any>() {
+  private fun buildFallbackJsonAdapter(defaultValue: T?): JsonAdapter<Any?> {
+    return object : JsonAdapter<Any?>() {
       override fun fromJson(reader: JsonReader): Any? {
         reader.skipValue()
         return defaultValue
@@ -171,7 +171,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     if (type.rawType != baseType || annotations.isNotEmpty()) {
       return null
     }
-    val jsonAdapters: List<JsonAdapter<Any>> = subtypes.map(moshi::adapter)
+    val jsonAdapters: List<JsonAdapter<Any?>> = subtypes.map(moshi::adapter)
     return PolymorphicJsonAdapter(labelKey, labels, subtypes, jsonAdapters, fallbackJsonAdapter)
       .nullSafe()
   }
@@ -180,9 +180,9 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     private val labelKey: String,
     private val labels: List<String>,
     private val subtypes: List<Type>,
-    private val jsonAdapters: List<JsonAdapter<Any>>,
-    private val fallbackJsonAdapter: JsonAdapter<Any>?,
-  ) : JsonAdapter<Any>() {
+    private val jsonAdapters: List<JsonAdapter<Any?>>,
+    private val fallbackJsonAdapter: JsonAdapter<Any?>?,
+  ) : JsonAdapter<Any?>() {
     /** Single-element options containing the label's key only. */
     private val labelKeyOptions: Options = Options.of(labelKey)
 
@@ -216,6 +216,9 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
         }
         return labelIndex
       }
+      if (fallbackJsonAdapter != null) {
+        return -1
+      }
       throw JsonDataException("Missing label for $labelKey")
     }
 
@@ -223,7 +226,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
     override fun toJson(writer: JsonWriter, value: Any?) {
       val type: Class<*> = value!!.javaClass
       val labelIndex = subtypes.indexOf(type)
-      val adapter: JsonAdapter<Any> = if (labelIndex == -1) {
+      val adapter: JsonAdapter<Any?> = if (labelIndex == -1) {
         requireNotNull(fallbackJsonAdapter) {
           "Expected one of $subtypes but found $value, a ${value.javaClass}. Register this subtype."
         }

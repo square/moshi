@@ -36,7 +36,7 @@ class ReadJsonListKt {
 
   fun readJsonList() {
     val jsonAdapter = Moshi.Builder().build().adapter<List<Card>>()
-    val cards = jsonAdapter.fromJson(jsonString)!!
+    val cards = jsonAdapter.fromJson(jsonString)
     println(cards)
     cards[0].run {
       println(rank)

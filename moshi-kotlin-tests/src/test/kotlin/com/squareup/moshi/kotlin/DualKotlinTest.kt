@@ -246,7 +246,7 @@ class DualKotlinTest {
     assertThat(adapter.serializeNulls().toJson(encoded)).isEqualTo("""{"a":null}""")
 
     //language=JSON
-    val decoded = adapter.fromJson("""{"a":null}""")!!
+    val decoded = adapter.fromJson("""{"a":null}""")
     assertThat(decoded.a).isEqualTo(null)
   }
 
@@ -261,12 +261,12 @@ class DualKotlinTest {
 
     val testJson =
       """{"i":6}"""
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.i).isEqualTo(6)
 
     val testEmptyJson =
       """{}"""
-    val result2 = adapter.fromJson(testEmptyJson)!!
+    val result2 = adapter.fromJson(testEmptyJson)
     assertThat(result2.i).isEqualTo(0)
   }
 
@@ -286,7 +286,7 @@ class DualKotlinTest {
     @Language("JSON")
     val testJson =
       """{"inline":{"i":42}}"""
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.inline.i).isEqualTo(42)
   }
 
@@ -300,7 +300,7 @@ class DualKotlinTest {
 
     assertThat(adapter.toJson(TextAssetMetaData("text"))).isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.text).isEqualTo("text")
   }
 
@@ -367,7 +367,7 @@ class DualKotlinTest {
 
     assertThat(adapter.toJson(InternalAbstractProperty("text"))).isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.test).isEqualTo("text")
   }
 
@@ -395,7 +395,7 @@ class DualKotlinTest {
     @Language("JSON")
     val testJson =
       """{"b":6}"""
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.b).isEqualTo(6)
   }
 
@@ -416,7 +416,7 @@ class DualKotlinTest {
 
     assertThat(adapter.toJson(MultipleNonPropertyParameters(7))).isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.prop).isEqualTo(7)
   }
 
@@ -440,7 +440,7 @@ class DualKotlinTest {
     assertThat(adapter.toJson(OnlyMultipleNonPropertyParameters().apply { prop = 7 }))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.prop).isEqualTo(7)
   }
 
@@ -475,7 +475,7 @@ class DualKotlinTest {
     )
     assertThat(adapter.toJson(testValue)).isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result).isEqualTo(testValue)
   }
 
@@ -510,7 +510,7 @@ class DualKotlinTest {
     assertThat(adapter.toJson(instance))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result).isEqualTo(instance)
   }
 
@@ -546,7 +546,7 @@ class DualKotlinTest {
     assertThat(adapter.serializeNulls().toJson(NullableList(null)))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result.nullableList).isNull()
   }
 
@@ -564,7 +564,7 @@ class DualKotlinTest {
     assertThat(adapter.serializeNulls().toJson(instance))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result).isEqualTo(instance)
   }
 
@@ -591,7 +591,7 @@ class DualKotlinTest {
     assertThat(adapter.serializeNulls().toJson(instance))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result).isEqualTo(instance)
   }
 
@@ -609,7 +609,7 @@ class DualKotlinTest {
     assertThat(adapter.serializeNulls().toJson(instance))
       .isEqualTo(testJson)
 
-    val result = adapter.fromJson(testJson)!!
+    val result = adapter.fromJson(testJson)
     assertThat(result).isEqualTo(instance)
   }
 
@@ -629,7 +629,7 @@ class DualKotlinTest {
     val encoded = TransientConstructorParameter(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -638,12 +638,12 @@ class DualKotlinTest {
 
   @Test fun multipleTransientConstructorParameters() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(MultipleTransientConstructorParameters::class.java)
+    val jsonAdapter = moshi.adapter<MultipleTransientConstructorParameters>()
 
     val encoded = MultipleTransientConstructorParameters(3, 5, 7)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
     assertThat(decoded.c).isEqualTo(-1)
@@ -665,7 +665,7 @@ class DualKotlinTest {
     encoded.c = 5
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.getB()).isEqualTo(-1)
     assertThat(decoded.c).isEqualTo(6)
@@ -691,7 +691,7 @@ class DualKotlinTest {
     val encoded = IgnoredConstructorParameter(3, 5)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
   }
@@ -700,12 +700,12 @@ class DualKotlinTest {
 
   @Test fun multipleIgnoredConstructorParameters() {
     val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
-    val jsonAdapter = moshi.adapter(MultipleIgnoredConstructorParameters::class.java)
+    val jsonAdapter = moshi.adapter<MultipleIgnoredConstructorParameters>()
 
     val encoded = MultipleIgnoredConstructorParameters(3, 5, 7)
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"b":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.b).isEqualTo(6)
     assertThat(decoded.c).isEqualTo(-1)
@@ -727,7 +727,7 @@ class DualKotlinTest {
     encoded.c = 5
     assertThat(jsonAdapter.toJson(encoded)).isEqualTo("""{"c":5}""")
 
-    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")!!
+    val decoded = jsonAdapter.fromJson("""{"a":4,"b":5,"c":6}""")
     assertThat(decoded.a).isEqualTo(-1)
     assertThat(decoded.getB()).isEqualTo(-1)
     assertThat(decoded.c).isEqualTo(6)
@@ -773,7 +773,7 @@ class DualKotlinTest {
         object {
           @FromJson
           @NestedEnum
-          fun fromJson(string: String): String? = string
+          fun fromJson(string: String): String = string
 
           @ToJson
           fun toJson(@NestedEnum @Nullable value: String?): String {
@@ -795,6 +795,38 @@ class DualKotlinTest {
     @NestedEnum
     val value: String,
   )
+
+  @Test fun inlineClass() {
+    val adapter = moshi.adapter<InlineValueClass>()
+
+    // Test encoding - should output raw value, not wrapped in object
+    val instance = InlineValueClass(42)
+    assertThat(adapter.toJson(instance)).isEqualTo("42")
+
+    // Test decoding from raw value
+    val decoded = adapter.fromJson("123")
+    assertThat(decoded.value).isEqualTo(123)
+  }
+
+  @Test fun inlineClassNullSafe() {
+    val adapter = moshi.adapter<InlineValueClass?>()
+
+    // The adapter is wrapped with nullSafe(), so null JSON returns a null object
+    assertThat(adapter.fromJson("null")).isNull()
+    assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
+
+  @Test fun delegateClassWithMultiplePropertiesAreFine() {
+    val adapter = moshi.adapter<List<Location>>()
+    val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")
+    assertThat(location).isEqualTo(listOf(Location(Point(3, 5))))
+  }
+
+  @JsonClass(generateAdapter = true, inline = true)
+  data class Location(val point: Point)
+
+  @JsonClass(generateAdapter = true)
+  data class Point(val x: Int, val y: Int)
 }
 
 typealias TypeAlias = Int
@@ -807,8 +839,13 @@ data class GenericClass<T>(val value: T)
 
 // Has to be outside since value classes are only allowed on top level
 @JvmInline
-@JsonClass(generateAdapter = false) // TODO revisit code gen support separately
+@JsonClass(generateAdapter = true)
 value class ValueClass(val i: Int = 0)
+
+// Inline value classes for testing @JsonClass(inline = true)
+@JvmInline
+@JsonClass(generateAdapter = true, inline = true)
+value class InlineValueClass(val value: Int)
 
 typealias A = Int
 typealias NullableA = A?

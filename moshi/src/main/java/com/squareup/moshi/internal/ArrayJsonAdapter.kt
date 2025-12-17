@@ -29,10 +29,10 @@ import java.lang.reflect.Array as JavaArray
  */
 internal class ArrayJsonAdapter(
   private val elementClass: Class<*>,
-  private val elementAdapter: JsonAdapter<Any>,
+  private val elementAdapter: JsonAdapter<Any?>,
 ) : JsonAdapter<Any?>() {
   override fun fromJson(reader: JsonReader): Any {
-    val list = buildList<Any?> {
+    val list = buildList {
       reader.beginArray()
       while (reader.hasNext()) {
         add(elementAdapter.fromJson(reader))
@@ -113,7 +113,7 @@ internal class ArrayJsonAdapter(
       val elementType = arrayComponentType(type) ?: return null
       if (annotations.isNotEmpty()) return null
       val elementClass = elementType.rawType
-      val elementAdapter = moshi.adapter<Any>(elementType)
+      val elementAdapter = moshi.adapter<Any?>(elementType)
       return ArrayJsonAdapter(elementClass, elementAdapter).nullSafe()
     }
   }
