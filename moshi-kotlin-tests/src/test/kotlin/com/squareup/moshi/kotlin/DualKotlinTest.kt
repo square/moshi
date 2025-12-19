@@ -485,6 +485,7 @@ class DualKotlinTest {
     val parameterized: GenericClass<TypeAlias>,
     val wildcardIn: GenericClass<in TypeAlias>,
     val wildcardOut: GenericClass<out TypeAlias>,
+    @Suppress("REDUNDANT_NULLABLE")
     val complex: GenericClass<GenericTypeAlias?>?,
   )
 
@@ -850,6 +851,8 @@ value class InlineValueClass(val value: Int)
 typealias A = Int
 typealias NullableA = A?
 typealias B = NullableA
+
+@Suppress("REDUNDANT_NULLABLE")
 typealias NullableB = B?
 typealias C = NullableA
 typealias D = C
