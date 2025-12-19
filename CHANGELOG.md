@@ -1,5 +1,4 @@
-Change Log
-==========
+# Change Log
 
 ## Unreleased
 
@@ -12,14 +11,14 @@ Change Log
   * For example, a class `@JvmInline value class UserId(val id: Int)` with `inline = true` will serialize as just `123` rather than `{"id": 123}`.
 * `PolymorphicJsonAdapterFactory` now invokes the fallback adapter when the label key is missing entirely from the JSON, not just when the label value is unrecognized.
 
-## Upgrading to Moshi 2.x
+### Upgrading to Moshi 2.x
 
 In 2.x, we upgraded Moshi’s source code from .java to .kt. This update is binary-compatible with
 Moshi 1.x, and so you can safely upgrade without recompiling your libraries.
 
 The update is not source-compatible for Kotlin users.
 
-### JsonAdapter.Factory MutableSet
+#### JsonAdapter.Factory MutableSet
 
 Kotlin defines both a `Set` and a `MutableSet` type, but Java has only `Set`. Implementations of
 Moshi’s `JsonAdapter.Factory` interface may declare a function that accepts a `MutableSet`:
@@ -46,7 +45,7 @@ find . \
   -exec sed -i "" 's/annotations: MutableSet<out Annotation>/annotations: Set<Annotation>/g' {} \;
 ```
 
-### Propagated Nullability in `JsonAdapter`
+#### Propagated Nullability in `JsonAdapter`
 
 Previously, due to limitations of the Java type system, Moshi would always treat the type as
 nullable. Kotlin's type system supports nullability natively, and Moshi now propagates nullability
@@ -65,14 +64,14 @@ information from the generic type of `JsonAdapter`.
 This is often going to be a source-breaking change for Kotlin users, but ABI-compatible. All of
 Moshi's internals and code gen continue to function the same way.
 
-### Explicit Nullability
+#### Explicit Nullability
 
 Moshi has functions like `JsonAdapter.fromJson(String)` that have always been _documented_ to
 require non-null parameters. With Moshi 2.x that requirement is enforced by the compiler.
 
 You may need to manually make parameters non-null (such as with `!!`) when you upgrade to Moshi 2.x.
 
-### Properties
+#### Properties
 
 We promoted `JsonWriter.setIndent()` to be a property. If you aren't already, you must use property
 syntax:
@@ -83,35 +82,29 @@ syntax:
 + jsonWriter.indent = "  "
 ```
 
-### moshi-kotlin-codegen
+#### moshi-kotlin-codegen
 
 The KSP code generator now supports (and requires) KSP2.
 
-### moshi-kotlin
+#### moshi-kotlin
 
 This release switches `KotlinJsonAdapterFactory` to use `kotlin-metadata` instead of `kotlin-reflect`. This is a lightweight alternative to kotlin-reflect and satisfies moshi-kotlin's requirements. It is also ~20% more performant at runtime.
 
 * This is not a source or ABI breaking change but if you were relying on the transitive `kotlin-reflect` dependency you will need to add it explicitly.
 * No longer encodes properties/fields from supertypes that are platform types.
 
-## Version 1.15.2
-
-_2024-12-05_
+## [1.15.2] - 2024-12-05
 
  * Do not generate conditional shrinker rules (i.e., `-if`) when the rule is already predicated on the presence of the target type (as `-keepnames` and `-keepclassmembers` are).
    This will improve shrinker performance for projects with hundreds of model types, as conditional rules are more expensive to evaluate.
 
 
-## Version 1.15.1
-
-_2024-01-30_
+## [1.15.1] - 2024-01-30
 
  * Upgrade to Okio `3.7.0`
 
 
-## Version 1.15.0
-
-_2023-05-12_
+## [1.15.0] - 2023-05-12
 
  * Upgrade to Kotlin `1.8.21`.
  * Upgrade to KSP `1.8.21-1.0.11`.
@@ -122,9 +115,7 @@ _2023-05-12_
  * Suppress `UNUSED_PARAMETER` in generated code.
  * Deprecate KAPT code gen. Please migrate to KSP, we will remove KAPT support in a future release. This release will also print an annoying noisy warning in KAPT processing if you use it.
 
-## Version 1.14.0
-
-_2022-09-06_
+## [1.14.0] - 2022-09-06
 
  * Upgrade: [Kotlin 1.7.0][kotlin_1_7_0].
  * Upgrade [KotlinPoet 1.12.0][kotlinpoet_1_12_0].
@@ -133,9 +124,7 @@ _2022-09-06_
  * Upgrade: [kotlinx-metadata 0.5.0][kotlinx_metadata_0_5_0], allowing reading of kotlin 1.8 APIs too.
 
 
-## Version 1.13.0
-
-_2021-12-08_
+## [1.13.0] - 2021-12-08
 
  * New: Support for [Kotlin Symbol Processing (KSP)][ksp]. KSP is an alternative to annotation
    processing code gen. It's builds faster and better supports Kotlin language features.
@@ -172,9 +161,7 @@ _2021-12-08_
 
  * Upgrade: [Kotlin 1.6.0][kotlin_1_6_0].
 
-## Version 1.12.0
-
-_2021-04-01_
+## [1.12.0] - 2021-04-01
 
  * New: Improve generated code performance when all properties are set.
  * Fix: Don't crash on a missing type element like `@SuppressLint`.
@@ -184,9 +171,7 @@ _2021-04-01_
  * Upgrade: [Okio 2.10.0][okio_2_10_0].
  * Upgrade: [Kotlin 1.4.31][kotlin_1_4_31].
 
-## Version 1.11.0
-
-_2020-10-04_
+## [1.11.0] - 2020-10-04
 
  * New: Kotlin extension functions and properties. Use of these extensions is only possible from
    Kotlin, and requires the Kotlin stdlib dependency. This release does not have any Kotlin
@@ -245,9 +230,7 @@ _2020-10-04_
  * Upgrade: [Okio 1.17.5][okio_1_7_5].
  * Upgrade: [Kotlin 1.4.10][kotlin_1_4_10].
 
-## Version 1.10.0
-
-_2020-08-26_
+## [1.10.0] - 2020-08-26
 
  * New: Upgrade to Kotlin 1.4.0.
  * New: `JsonReader.promoteNameToValue()` makes it easier to build custom `Map` adapters.
