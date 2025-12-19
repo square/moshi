@@ -87,7 +87,7 @@ import javax.annotation.CheckReturnValue
  * For best performance type information should be the first field in the object. Otherwise Moshi
  * must reprocess the JSON stream once it knows the object's type.
  *
- * If an unknown subtype is encountered when decoding:
+ * If an unknown subtype label is encountered when decoding, or if the label key is missing entirely:
  *  * If [withDefaultValue] is used, then `defaultValue` will be returned.
  *  * If [withFallbackJsonAdapter] is used, then the `fallbackJsonAdapter.fromJson(reader)` result will be returned.
  *  * Otherwise a [JsonDataException] will be thrown.
@@ -127,7 +127,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
   /**
    * Returns a new factory that with default to `fallbackJsonAdapter.fromJson(reader)` upon
-   * decoding of unrecognized labels.
+   * decoding of unrecognized labels or when the label key is missing entirely.
    *
    * The [JsonReader] instance will not be automatically consumed, so make sure to consume
    * it within your implementation of [JsonAdapter.fromJson]
@@ -146,7 +146,7 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
 
   /**
    * Returns a new factory that will default to `defaultValue` upon decoding of unrecognized
-   * labels. The default value should be immutable.
+   * labels or when the label key is missing entirely. The default value should be immutable.
    */
   public fun withDefaultValue(defaultValue: T?): PolymorphicJsonAdapterFactory<T> {
     return withFallbackJsonAdapter(buildFallbackJsonAdapter(defaultValue))
@@ -215,6 +215,9 @@ public class PolymorphicJsonAdapterFactory<T> internal constructor(
           )
         }
         return labelIndex
+      }
+      if (fallbackJsonAdapter != null) {
+        return -1
       }
       throw JsonDataException("Missing label for $labelKey")
     }

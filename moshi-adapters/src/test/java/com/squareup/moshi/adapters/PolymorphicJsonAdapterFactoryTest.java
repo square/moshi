@@ -377,6 +377,78 @@ public final class PolymorphicJsonAdapterFactoryTest {
     assertThat(decoded.value).isEqualTo("Okay!");
   }
 
+  @Test
+  public void missingLabelKey() throws IOException {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(Success.class, "success")
+                    .withSubtype(Error.class, "error"))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"value\":\"Okay!\"}"));
+    try {
+      adapter.fromJson(reader);
+      fail();
+    } catch (JsonDataException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Missing label for type");
+    }
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.BEGIN_OBJECT);
+  }
+
+  @Test
+  public void missingLabelKeyWithSpecifiedFallbackJsonAdapter() throws IOException {
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(Success.class, "success")
+                    .withSubtype(Error.class, "error")
+                    .withFallbackJsonAdapter(
+                        new JsonAdapter<Object>() {
+                          @Override
+                          public Object fromJson(JsonReader reader) throws IOException {
+                            reader.beginObject();
+                            assertThat(reader.nextName()).isEqualTo("value");
+                            assertThat(reader.nextString()).isEqualTo("Okay!");
+                            reader.endObject();
+                            return new EmptyMessage();
+                          }
+
+                          @Override
+                          public void toJson(JsonWriter writer, @Nullable Object value) {
+                            throw new AssertionError();
+                          }
+                        }))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    JsonReader reader = JsonReader.of(new Buffer().writeUtf8("{\"value\":\"Okay!\"}"));
+
+    Message message = adapter.fromJson(reader);
+    assertThat(message).isInstanceOf(EmptyMessage.class);
+    assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
+  }
+
+  @Test
+  public void missingLabelKeyWithSpecifiedDefaultValue() throws IOException {
+    Error fallbackError = new Error(Collections.<String, Object>emptyMap());
+    Moshi moshi =
+        new Moshi.Builder()
+            .add(
+                PolymorphicJsonAdapterFactory.of(Message.class, "type")
+                    .withSubtype(Success.class, "success")
+                    .withSubtype(Error.class, "error")
+                    .withDefaultValue(fallbackError))
+            .build();
+    JsonAdapter<Message> adapter = moshi.adapter(Message.class);
+
+    Message message = adapter.fromJson("{\"value\":\"Okay!\"}");
+    assertThat(message).isSameInstanceAs(fallbackError);
+  }
+
   interface Message {}
 
   static final class Success implements Message {

@@ -796,6 +796,38 @@ class DualKotlinTest {
     @NestedEnum
     val value: String,
   )
+
+  @Test fun inlineClass() {
+    val adapter = moshi.adapter<InlineValueClass>()
+
+    // Test encoding - should output raw value, not wrapped in object
+    val instance = InlineValueClass(42)
+    assertThat(adapter.toJson(instance)).isEqualTo("42")
+
+    // Test decoding from raw value
+    val decoded = adapter.fromJson("123")
+    assertThat(decoded.value).isEqualTo(123)
+  }
+
+  @Test fun inlineClassNullSafe() {
+    val adapter = moshi.adapter<InlineValueClass?>()
+
+    // The adapter is wrapped with nullSafe(), so null JSON returns a null object
+    assertThat(adapter.fromJson("null")).isNull()
+    assertThat(adapter.toJson(null)).isEqualTo("null")
+  }
+
+  @Test fun delegateClassWithMultiplePropertiesAreFine() {
+    val adapter = moshi.adapter<List<Location>>()
+    val location = adapter.fromJson("[{\"x\":3,\"y\":\"5\"}]")
+    assertThat(location).isEqualTo(listOf(Location(Point(3, 5))))
+  }
+
+  @JsonClass(generateAdapter = true, inline = true)
+  data class Location(val point: Point)
+
+  @JsonClass(generateAdapter = true)
+  data class Point(val x: Int, val y: Int)
 }
 
 typealias TypeAlias = Int
@@ -810,6 +842,11 @@ data class GenericClass<T>(val value: T)
 @JvmInline
 @JsonClass(generateAdapter = true)
 value class ValueClass(val i: Int = 0)
+
+// Inline value classes for testing @JsonClass(inline = true)
+@JvmInline
+@JsonClass(generateAdapter = true, inline = true)
+value class InlineValueClass(val value: Int)
 
 typealias A = Int
 typealias NullableA = A?
