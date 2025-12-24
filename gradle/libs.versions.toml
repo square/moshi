@@ -37,4 +37,4 @@ kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "k
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.4.5"
 googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.33.0"
-ktfmt = "com.facebook:ktfmt:0.59"
+ktfmt = "com.facebook:ktfmt:0.60"
