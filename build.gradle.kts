@@ -52,20 +52,14 @@ spotless {
     targetExclude("**/build/**")
   }
   kotlin {
-    ktlint(libs.ktlint.get().version).editorConfigOverride(
-      mapOf(
-        "ktlint_standard_filename" to "disabled",
-        // Making something an expression body should be a choice around readability.
-        "ktlint_standard_function-expression-body" to "disabled",
-      ),
-    )
+    ktfmt(libs.ktfmt.get().version).googleStyle()
     target("**/*.kt")
     trimTrailingWhitespace()
     endWithNewline()
     targetExclude("**/Dependencies.kt", "**/build/**")
   }
   kotlinGradle {
-    ktlint(libs.ktlint.get().version)
+    ktfmt(libs.ktfmt.get().version).googleStyle()
     target("**/*.gradle.kts")
     trimTrailingWhitespace()
     endWithNewline()
