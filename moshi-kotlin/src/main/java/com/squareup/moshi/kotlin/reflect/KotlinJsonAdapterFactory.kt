@@ -51,8 +51,8 @@ import kotlin.metadata.visibility
 private val KOTLIN_METADATA = Metadata::class.java
 
 /**
- * Placeholder value used when a field is absent from the JSON. Note that this code
- * distinguishes between absent values and present-but-null values.
+ * Placeholder value used when a field is absent from the JSON. Note that this code distinguishes
+ * between absent values and present-but-null values.
  */
 internal val ABSENT_VALUE = Any()
 
@@ -101,11 +101,7 @@ internal class KotlinJsonAdapter<T>(
         val param = constructor.parameters[i]
         if (!param.declaresDefaultValue) {
           if (!param.isNullable) {
-            throw missingProperty(
-              constructor.parameters[i].name,
-              allBindings[i]?.jsonName,
-              reader,
-            )
+            throw missingProperty(constructor.parameters[i].name, allBindings[i]?.jsonName, reader)
           }
           values[i] = null // Replace absent with null.
         }
@@ -149,13 +145,14 @@ internal class KotlinJsonAdapter<T>(
   ) {
 
     fun get(value: K): Any? {
-      val rawValue = if (property.jvmGetter != null) {
-        property.jvmGetter.invoke(value)
-      } else if (property.jvmField != null) {
-        property.jvmField.get(value)
-      } else {
-        error("Could not get JVM field or invoke JVM getter for property '$name'")
-      }
+      val rawValue =
+        if (property.jvmGetter != null) {
+          property.jvmGetter.invoke(value)
+        } else if (property.jvmField != null) {
+          property.jvmField.get(value)
+        } else {
+          error("Could not get JVM field or invoke JVM getter for property '$name'")
+        }
 
       // If this property is a value class, box the raw value
       return if (property.isValueClass && rawValue != null) {
@@ -187,8 +184,8 @@ internal class KotlinJsonAdapter<T>(
 }
 
 /**
- * A JsonAdapter for inline types that reads/writes the single property value directly
- * without wrapping it in a JSON object.
+ * A JsonAdapter for inline types that reads/writes the single property value directly without
+ * wrapping it in a JSON object.
  */
 private class InlineKotlinJsonAdapter<T>(
   private val constructor: KtConstructor,
@@ -363,10 +360,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
           "but ${rawType.canonicalName}.${inlineBinding.name} is nullable."
       }
       @Suppress("UNCHECKED_CAST")
-      return InlineKotlinJsonAdapter(
-        ktConstructor,
-        inlineBinding,
-      ).nullSafe()
+      return InlineKotlinJsonAdapter(ktConstructor, inlineBinding).nullSafe()
     }
 
     val options = JsonReader.Options.of(*nonIgnoredBindings.map { it.name }.toTypedArray())
@@ -421,7 +415,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
   }
 
   private infix fun KmFlexibleTypeUpperBound?.valueEquals(
-    other: KmFlexibleTypeUpperBound?,
+    other: KmFlexibleTypeUpperBound?
   ): Boolean {
     return when {
       this === other -> true
@@ -433,6 +427,7 @@ public class KotlinJsonAdapterFactory : JsonAdapter.Factory {
       else -> false
     }
   }
+
   private fun Class<*>.header(): Metadata? {
     val metadata = getAnnotation(KOTLIN_METADATA) ?: return null
     return with(metadata) {

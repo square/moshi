@@ -12,11 +12,7 @@ enum class TestMode {
   KSP,
 }
 
-val testMode =
-  findProperty("kotlinTestMode")
-    ?.toString()
-    ?.let(TestMode::valueOf)
-    ?: KSP
+val testMode = findProperty("kotlinTestMode")?.toString()?.let(TestMode::valueOf) ?: KSP
 
 when (testMode) {
   REFLECT -> {
@@ -30,7 +26,8 @@ when (testMode) {
 }
 
 tasks.withType<Test>().configureEach {
-  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected ByteArrayOutputStream.buf field
+  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected
+  // ByteArrayOutputStream.buf field
   jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 

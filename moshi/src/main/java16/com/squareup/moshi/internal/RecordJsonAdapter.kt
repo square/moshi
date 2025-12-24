@@ -72,8 +72,9 @@ internal class RecordJsonAdapter<T>(
     } catch (e: Throwable) {
       // Don't throw a fatal error if it's just an absent primitive.
       for (i in componentBindingsArray.indices) {
-        if (resultsArray[i] == null &&
-          componentBindingsArray[i].accessor.type().returnType().isPrimitive
+        if (
+          resultsArray[i] == null &&
+            componentBindingsArray[i].accessor.type().returnType().isPrimitive
         ) {
           throw missingProperty(
             propertyName = componentBindingsArray[i].componentName,
@@ -91,13 +92,14 @@ internal class RecordJsonAdapter<T>(
 
     for (binding in componentBindingsArray) {
       writer.name(binding.jsonName)
-      val componentValue = try {
-        binding.accessor.invoke(value)
-      } catch (e: InvocationTargetException) {
-        throw e.rethrowCause()
-      } catch (e: Throwable) {
-        throw AssertionError(e)
-      }
+      val componentValue =
+        try {
+          binding.accessor.invoke(value)
+        } catch (e: InvocationTargetException) {
+          throw e.rethrowCause()
+        } catch (e: Throwable) {
+          throw AssertionError(e)
+        }
       binding.adapter.toJson(writer, componentValue)
     }
 
@@ -127,26 +129,27 @@ internal class RecordJsonAdapter<T>(
       val components = rawType.recordComponents
       val bindings = LinkedHashMap<String, ComponentBinding<Any?>>()
       val lookup = MethodHandles.lookup()
-      val componentRawTypes = Array<Class<*>>(components.size) { i ->
-        val component = components[i]
-        val componentBinding =
-          createComponentBinding(type, rawType, moshi, lookup, component)
-        val replaced = bindings.put(componentBinding.jsonName, componentBinding)
-        if (replaced != null) {
-          throw IllegalArgumentException(
-            "Conflicting components:\n    ${replaced.componentName}\n    ${componentBinding.componentName}",
-          )
+      val componentRawTypes =
+        Array<Class<*>>(components.size) { i ->
+          val component = components[i]
+          val componentBinding = createComponentBinding(type, rawType, moshi, lookup, component)
+          val replaced = bindings.put(componentBinding.jsonName, componentBinding)
+          if (replaced != null) {
+            throw IllegalArgumentException(
+              "Conflicting components:\n    ${replaced.componentName}\n    ${componentBinding.componentName}"
+            )
+          }
+          component.type
         }
-        component.type
-      }
 
-      val constructor = try {
-        lookup.findConstructor(rawType, methodType(VOID_CLASS, componentRawTypes))
-      } catch (e: NoSuchMethodException) {
-        throw AssertionError(e)
-      } catch (e: IllegalAccessException) {
-        throw AssertionError(e)
-      }
+      val constructor =
+        try {
+          lookup.findConstructor(rawType, methodType(VOID_CLASS, componentRawTypes))
+        } catch (e: NoSuchMethodException) {
+          throw AssertionError(e)
+        } catch (e: IllegalAccessException) {
+          throw AssertionError(e)
+        }
 
       return RecordJsonAdapter<Any>(constructor, rawType.simpleName, bindings).nullSafe()
     }
@@ -165,11 +168,12 @@ internal class RecordJsonAdapter<T>(
       val qualifiers = component.jsonAnnotations
       val adapter = moshi.adapter<Any>(componentType, qualifiers)
 
-      val accessor = try {
-        lookup.unreflect(component.accessor)
-      } catch (e: IllegalAccessException) {
-        throw AssertionError(e)
-      }
+      val accessor =
+        try {
+          lookup.unreflect(component.accessor)
+        } catch (e: IllegalAccessException) {
+          throw AssertionError(e)
+        }
 
       return ComponentBinding(componentName, jsonName, adapter, accessor)
     }

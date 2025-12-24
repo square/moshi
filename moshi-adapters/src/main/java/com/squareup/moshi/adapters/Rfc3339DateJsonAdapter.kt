@@ -19,14 +19,13 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonReader.Token.NULL
 import com.squareup.moshi.JsonWriter
-import okio.IOException
 import java.util.Date
+import okio.IOException
 
 /**
- * Formats dates using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt), which is
- * formatted like `2015-09-26T18:23:50.250Z`. This adapter is null-safe. To use, add this as
- * an adapter for `Date.class` on your [Moshi.Builder][com.squareup.moshi.Moshi.Builder]:
- *
+ * Formats dates using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt), which is formatted like
+ * `2015-09-26T18:23:50.250Z`. This adapter is null-safe. To use, add this as an adapter for
+ * `Date.class` on your [Moshi.Builder][com.squareup.moshi.Moshi.Builder]:
  * ```
  * Moshi moshi = new Moshi.Builder()
  *   .add(Date.class, new Rfc3339DateJsonAdapter())
@@ -35,7 +34,7 @@ import java.util.Date
  */
 public class Rfc3339DateJsonAdapter : JsonAdapter<Date?>() {
 
-  /** The underlying deserialization logic is thread-safe and does not require synchronization. **/
+  /** The underlying deserialization logic is thread-safe and does not require synchronization. * */
   @Throws(IOException::class)
   override fun fromJson(reader: JsonReader): Date? {
     if (reader.peek() == NULL) {
@@ -45,7 +44,7 @@ public class Rfc3339DateJsonAdapter : JsonAdapter<Date?>() {
     return string.parseIsoDate()
   }
 
-  /*** The underlying serialization logic is thread-safe and does not require synchronization. **/
+  /** * The underlying serialization logic is thread-safe and does not require synchronization. * */
   @Throws(IOException::class)
   override fun toJson(writer: JsonWriter, value: Date?) {
     if (value == null) {

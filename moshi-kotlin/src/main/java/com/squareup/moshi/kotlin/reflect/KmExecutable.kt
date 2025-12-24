@@ -12,12 +12,12 @@ import kotlin.metadata.isValue
 import kotlin.metadata.jvm.KotlinClassMetadata
 import kotlin.metadata.jvm.signature
 
-private val DEFAULT_CONSTRUCTOR_SIGNATURE by lazy(LazyThreadSafetyMode.NONE) {
-  DEFAULT_CONSTRUCTOR_MARKER!!.descriptor
-}
+private val DEFAULT_CONSTRUCTOR_SIGNATURE by
+  lazy(LazyThreadSafetyMode.NONE) { DEFAULT_CONSTRUCTOR_MARKER!!.descriptor }
 
 /**
- * Simple facade over KM constructor-ish types, which could be a constructor or a static creator method (value classes).
+ * Simple facade over KM constructor-ish types, which could be a constructor or a static creator
+ * method (value classes).
  */
 internal sealed class KmExecutable<T : Executable> {
   abstract val parameters: List<KtParameter>
@@ -26,7 +26,8 @@ internal sealed class KmExecutable<T : Executable> {
 
   companion object {
     /**
-     * Checks if a type (from KM metadata) is a value class and returns its box-impl and unbox-impl methods if so.
+     * Checks if a type (from KM metadata) is a value class and returns its box-impl and unbox-impl
+     * methods if so.
      *
      * Returns two nulls if this isn't a value class.
      */
@@ -41,11 +42,12 @@ internal sealed class KmExecutable<T : Executable> {
 
       // Convert kotlin metadata class name to Java class name
       val className = classifier.name.replace('/', '.')
-      val clazz = try {
-        classLoader.loadClass(className)
-      } catch (_: ClassNotFoundException) {
-        return null to null
-      }
+      val clazz =
+        try {
+          classLoader.loadClass(className)
+        } catch (_: ClassNotFoundException) {
+          return null to null
+        }
 
       // Check if it's a value class using Kotlin metadata
       val metadata = clazz.getAnnotation(Metadata::class.java) ?: return null to null
@@ -59,13 +61,11 @@ internal sealed class KmExecutable<T : Executable> {
       }
 
       // Find the box-impl and unbox-impl methods
-      val boxImplMethod = clazz.declaredMethods
-        .firstOrNull { it.name == "box-impl" }
-        ?: return null to null
+      val boxImplMethod =
+        clazz.declaredMethods.firstOrNull { it.name == "box-impl" } ?: return null to null
 
-      val unboxImplMethod = clazz.declaredMethods
-        .firstOrNull { it.name == "unbox-impl" }
-        ?: return null to null
+      val unboxImplMethod =
+        clazz.declaredMethods.firstOrNull { it.name == "unbox-impl" } ?: return null to null
 
       boxImplMethod.isAccessible = true
       unboxImplMethod.isAccessible = true
@@ -73,24 +73,25 @@ internal sealed class KmExecutable<T : Executable> {
     }
 
     private fun Executable.defaultsSignature(): String {
-      val suffixDescriptor = when (this) {
-        is Constructor<*> -> "V"
-        is Method -> returnType.descriptor
-      }
+      val suffixDescriptor =
+        when (this) {
+          is Constructor<*> -> "V"
+          is Method -> returnType.descriptor
+        }
       val rawPrefix = jvmMethodSignature.removeSuffix(suffixDescriptor).removeSuffix(")")
-      val prefix = when (this) {
-        is Constructor<*> -> {
-          rawPrefix
-        }
+      val prefix =
+        when (this) {
+          is Constructor<*> -> {
+            rawPrefix
+          }
 
-        is Method -> {
-          // Need to add $default to the end of the method name
-          val (name, rest) = rawPrefix.split("(", limit = 2)
-          // ktlint doesn't support multi-dollar prefixes
-          @Suppress("CanConvertToMultiDollarString")
-          "$name\$default($rest"
+          is Method -> {
+            // Need to add $default to the end of the method name
+            val (name, rest) = rawPrefix.split("(", limit = 2)
+            // ktlint doesn't support multi-dollar prefixes
+            @Suppress("CanConvertToMultiDollarString") "$name\$default($rest"
+          }
         }
-      }
       val parameterCount = parameterTypes.size
       val maskParamsToAdd = (parameterCount + 31) / 32
       val defaultConstructorSignature = buildString {
@@ -105,17 +106,17 @@ internal sealed class KmExecutable<T : Executable> {
 
     operator fun invoke(rawType: Class<*>, kmClass: KmClass): KmExecutable<*>? {
       // If this is a value class, the "constructor" will actually be a static creator function
-      val constructorsBySignature = if (kmClass.isValue) {
-        // kmConstructorSignature is something like constructor-impl(I)I
-        // Need to look up the matching static function
-        rawType.declaredMethods
-          .filter { Modifier.isStatic(it.modifiers) }
-          .associateBy { it.jvmMethodSignature }
-      } else {
-        rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
-      }
-      val kmConstructor = kmClass.constructors.find { !it.isSecondary }
-        ?: return null
+      val constructorsBySignature =
+        if (kmClass.isValue) {
+          // kmConstructorSignature is something like constructor-impl(I)I
+          // Need to look up the matching static function
+          rawType.declaredMethods
+            .filter { Modifier.isStatic(it.modifiers) }
+            .associateBy { it.jvmMethodSignature }
+        } else {
+          rawType.declaredConstructors.associateBy { it.jvmMethodSignature }
+        }
+      val kmConstructor = kmClass.constructors.find { !it.isSecondary } ?: return null
       val kmConstructorSignature = kmConstructor.signature?.toString() ?: return null
       val jvmConstructor = constructorsBySignature[kmConstructorSignature] ?: return null
 
@@ -148,15 +149,14 @@ internal sealed class KmExecutable<T : Executable> {
 
       return if (kmClass.isValue) {
         // Things get quirky here. KM will return the primary constructor for the value class
-        // as a constructor-impl static function, BUT this function always only returns the underlying
+        // as a constructor-impl static function, BUT this function always only returns the
+        // underlying
         // type. What we want is the boxed type, so we need to be able to invoke the constructor and
         // then be able to pass it on to the box-impl function to get the full instance.
         // We can't just skip ahead and use only the box-impl function because the constructor is
         // the only one that handles default values
 
-        val boxImpl = constructorsBySignature.entries
-          .first { it.key.startsWith("box-impl") }
-          .value
+        val boxImpl = constructorsBySignature.entries.first { it.key.startsWith("box-impl") }.value
         KmExecutableFunction(
           actualConstructor as Method,
           parameters,
@@ -164,11 +164,7 @@ internal sealed class KmExecutable<T : Executable> {
           boxImpl as Method,
         )
       } else {
-        KmExecutableConstructor(
-          actualConstructor as Constructor<*>,
-          parameters,
-          anyOptional,
-        )
+        KmExecutableConstructor(actualConstructor as Constructor<*>, parameters, anyOptional)
       }
     }
   }
@@ -200,7 +196,8 @@ internal sealed class KmExecutable<T : Executable> {
         // Then box it
         boxImpl.invoke(null, instance)
       }
-    } as T
+    }
+      as T
   }
 
   class KmExecutableConstructor(

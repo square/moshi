@@ -28,10 +28,17 @@ public data class TargetProperty(
   val jsonName: String?,
   val jsonIgnore: Boolean,
 ) {
-  val name: String get() = propertySpec.name
-  val type: TypeName get() = propertySpec.type
-  val parameterIndex: Int get() = parameter?.index ?: -1
-  val hasDefault: Boolean get() = parameter?.hasDefault ?: true
+  val name: String
+    get() = propertySpec.name
+
+  val type: TypeName
+    get() = propertySpec.type
+
+  val parameterIndex: Int
+    get() = parameter?.index ?: -1
+
+  val hasDefault: Boolean
+    get() = parameter?.hasDefault ?: true
 
   override fun toString(): String = name
 }

@@ -15,19 +15,15 @@
  */
 package com.squareup.moshi
 
+import kotlin.annotation.AnnotationRetention.RUNTIME
+import kotlin.reflect.typeOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.annotation.AnnotationRetention.RUNTIME
-import kotlin.reflect.typeOf
 
-@JsonQualifier
-@Retention(RUNTIME)
-annotation class TestAnnotation1
+@JsonQualifier @Retention(RUNTIME) annotation class TestAnnotation1
 
-@JsonQualifier
-@Retention(RUNTIME)
-annotation class TestAnnotation2
+@JsonQualifier @Retention(RUNTIME) annotation class TestAnnotation2
 
 @TestAnnotation1
 @TestAnnotation2
@@ -35,8 +31,8 @@ class KotlinExtensionsTest {
 
   @Test
   fun nextAnnotationsShouldWork() {
-    val annotations = KotlinExtensionsTest::class.java.annotations
-      .filterTo(mutableSetOf()) {
+    val annotations =
+      KotlinExtensionsTest::class.java.annotations.filterTo(mutableSetOf()) {
         it.annotationClass.java.isAnnotationPresent(JsonQualifier::class.java)
       }
     assertEquals(2, annotations.size)
@@ -60,19 +56,18 @@ class KotlinExtensionsTest {
   @Test
   fun addAdapterInferred() {
     // An adapter that always returns -1
-    val customIntdapter = object : JsonAdapter<Int>() {
-      override fun fromJson(reader: JsonReader): Int {
-        reader.skipValue()
-        return -1
-      }
+    val customIntdapter =
+      object : JsonAdapter<Int>() {
+        override fun fromJson(reader: JsonReader): Int {
+          reader.skipValue()
+          return -1
+        }
 
-      override fun toJson(writer: JsonWriter, value: Int) {
-        throw NotImplementedError()
+        override fun toJson(writer: JsonWriter, value: Int) {
+          throw NotImplementedError()
+        }
       }
-    }
-    val moshi = Moshi.Builder()
-      .addAdapter(customIntdapter)
-      .build()
+    val moshi = Moshi.Builder().addAdapter(customIntdapter).build()
 
     assertEquals(-1, moshi.adapter<Int>().fromJson("5"))
   }
@@ -80,19 +75,18 @@ class KotlinExtensionsTest {
   @Test
   fun addAdapterInferred_parameterized() {
     // An adapter that always returns listOf(-1)
-    val customIntListAdapter = object : JsonAdapter<List<Int>>() {
-      override fun fromJson(reader: JsonReader): List<Int> {
-        reader.skipValue()
-        return listOf(-1)
-      }
+    val customIntListAdapter =
+      object : JsonAdapter<List<Int>>() {
+        override fun fromJson(reader: JsonReader): List<Int> {
+          reader.skipValue()
+          return listOf(-1)
+        }
 
-      override fun toJson(writer: JsonWriter, value: List<Int>) {
-        throw NotImplementedError()
+        override fun toJson(writer: JsonWriter, value: List<Int>) {
+          throw NotImplementedError()
+        }
       }
-    }
-    val moshi = Moshi.Builder()
-      .addAdapter(customIntListAdapter)
-      .build()
+    val moshi = Moshi.Builder().addAdapter(customIntListAdapter).build()
 
     assertEquals(listOf(-1), moshi.adapter<List<Int>>().fromJson("[5]"))
   }

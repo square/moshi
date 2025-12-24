@@ -70,11 +70,12 @@ public class Moshi private constructor(builder: Builder) {
     if (annotationTypes.size == 1) {
       return adapter(type, annotationTypes[0])
     }
-    val annotations = buildSet(annotationTypes.size) {
-      for (annotationType in annotationTypes) {
-        add(createJsonQualifierImplementation(annotationType))
+    val annotations =
+      buildSet(annotationTypes.size) {
+        for (annotationType in annotationTypes) {
+          add(createJsonQualifierImplementation(annotationType))
+        }
       }
-    }
     return adapter(type, annotations)
   }
 
@@ -84,7 +85,7 @@ public class Moshi private constructor(builder: Builder) {
 
   /**
    * @return a [JsonAdapter] for [T], creating it if necessary. Note that while nullability of [T]
-   *         itself is handled, nested types (such as in generics) are not resolved.
+   *   itself is handled, nested types (such as in generics) are not resolved.
    */
   @JvmOverloads
   @CheckReturnValue
@@ -95,7 +96,7 @@ public class Moshi private constructor(builder: Builder) {
 
   /**
    * @return a [JsonAdapter] for [ktype], creating it if necessary. Note that while nullability of
-   *         [ktype] itself is handled, nested types (such as in generics) are not resolved.
+   *   [ktype] itself is handled, nested types (such as in generics) are not resolved.
    */
   @JvmOverloads
   @CheckReturnValue
@@ -105,20 +106,21 @@ public class Moshi private constructor(builder: Builder) {
     fieldName: String? = null,
   ): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType, annotations, fieldName)
-    val finalizedAdapter = if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
-      adapter
-    } else if (ktype.isMarkedNullable) {
-      adapter.nullSafe()
-    } else {
-      adapter.nonNull()
-    }
+    val finalizedAdapter =
+      if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
+        adapter
+      } else if (ktype.isMarkedNullable) {
+        adapter.nullSafe()
+      } else {
+        adapter.nonNull()
+      }
     @Suppress("UNCHECKED_CAST")
     return finalizedAdapter as JsonAdapter<T>
   }
 
   /**
    * @param fieldName An optional field name associated with this type. The field name is used as a
-   *     hint for better adapter lookup error messages for nested structures.
+   *   hint for better adapter lookup error messages for nested structures.
    */
   @CheckReturnValue
   public fun <T> adapter(
@@ -132,8 +134,7 @@ public class Moshi private constructor(builder: Builder) {
     val cacheKey = cacheKey(cleanedType, annotations)
     synchronized(adapterCache) {
       val result = adapterCache[cacheKey]
-      @Suppress("UNCHECKED_CAST")
-      if (result != null) return result as JsonAdapter<T?>
+      @Suppress("UNCHECKED_CAST") if (result != null) return result as JsonAdapter<T?>
     }
     var lookupChain = lookupChainThreadLocal.get()
     if (lookupChain == null) {
@@ -157,7 +158,7 @@ public class Moshi private constructor(builder: Builder) {
         return result
       }
       throw IllegalArgumentException(
-        "No JsonAdapter for ${type.toStringWithAnnotations(annotations)}",
+        "No JsonAdapter for ${type.toStringWithAnnotations(annotations)}"
       )
     } catch (e: IllegalArgumentException) {
       throw lookupChain.exceptionWithLookupStack(e)
@@ -181,7 +182,7 @@ public class Moshi private constructor(builder: Builder) {
       if (result != null) return result
     }
     throw IllegalArgumentException(
-      "No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}",
+      "No next JsonAdapter for ${cleanedType.toStringWithAnnotations(annotations)}"
     )
   }
 
@@ -221,17 +222,13 @@ public class Moshi private constructor(builder: Builder) {
       type: Type,
       annotation: Class<out Annotation>,
       jsonAdapter: JsonAdapter<T>,
-    ): Builder = apply {
-      add(newAdapterFactory(type, annotation, jsonAdapter))
-    }
+    ): Builder = apply { add(newAdapterFactory(type, annotation, jsonAdapter)) }
 
     public fun add(factory: JsonAdapter.Factory): Builder = apply {
       factories.add(lastOffset++, factory)
     }
 
-    public fun add(adapter: Any): Builder = apply {
-      add(AdapterMethodsFactory(adapter))
-    }
+    public fun add(adapter: Any): Builder = apply { add(AdapterMethodsFactory(adapter)) }
 
     @Suppress("unused")
     public fun <T> addLast(type: Type, jsonAdapter: JsonAdapter<T>): Builder = apply {
@@ -243,34 +240,27 @@ public class Moshi private constructor(builder: Builder) {
       type: Type,
       annotation: Class<out Annotation>,
       jsonAdapter: JsonAdapter<T>,
-    ): Builder = apply {
-      addLast(newAdapterFactory(type, annotation, jsonAdapter))
-    }
+    ): Builder = apply { addLast(newAdapterFactory(type, annotation, jsonAdapter)) }
 
-    public fun addLast(factory: JsonAdapter.Factory): Builder = apply {
-      factories.add(factory)
-    }
+    public fun addLast(factory: JsonAdapter.Factory): Builder = apply { factories.add(factory) }
 
     @Suppress("unused")
-    public fun addLast(adapter: Any): Builder = apply {
-      addLast(AdapterMethodsFactory(adapter))
-    }
+    public fun addLast(adapter: Any): Builder = apply { addLast(AdapterMethodsFactory(adapter)) }
 
-    @CheckReturnValue
-    public fun build(): Moshi = Moshi(this)
+    @CheckReturnValue public fun build(): Moshi = Moshi(this)
   }
 
   /**
    * A possibly-reentrant chain of lookups for JSON adapters.
    *
-   * We keep track of the current stack of lookups: we may start by looking up the JSON adapter
-   * for Employee, re-enter looking for the JSON adapter of HomeAddress, and re-enter again looking
-   * up the JSON adapter of PostalCode. If any of these lookups fail we can provide a stack trace
-   * with all of the lookups.
+   * We keep track of the current stack of lookups: we may start by looking up the JSON adapter for
+   * Employee, re-enter looking for the JSON adapter of HomeAddress, and re-enter again looking up
+   * the JSON adapter of PostalCode. If any of these lookups fail we can provide a stack trace with
+   * all of the lookups.
    *
-   * Sometimes a JSON adapter factory depends on its own product; either directly or indirectly.
-   * To make this work, we offer a JSON adapter stub while the final adapter is being computed. When
-   * it is ready, we wire the stub to that finished adapter. This is necessary in self-referential
+   * Sometimes a JSON adapter factory depends on its own product; either directly or indirectly. To
+   * make this work, we offer a JSON adapter stub while the final adapter is being computed. When it
+   * is ready, we wire the stub to that finished adapter. This is necessary in self-referential
    * object models, such as an `Employee` class that has a `List<Employee>` field for an
    * organization's management hierarchy.
    *
@@ -292,8 +282,7 @@ public class Moshi private constructor(builder: Builder) {
       // Try to find a lookup with the same key for the same call.
       for (lookup in callLookups) {
         if (lookup.cacheKey == cacheKey) {
-          @Suppress("UNCHECKED_CAST")
-          val hit = lookup as Lookup<T>
+          @Suppress("UNCHECKED_CAST") val hit = lookup as Lookup<T>
           stack += hit
           return if (hit.adapter != null) hit.adapter else hit
         }
@@ -308,8 +297,7 @@ public class Moshi private constructor(builder: Builder) {
 
     /** Sets the adapter result of the current lookup. */
     fun <T> adapterFound(result: JsonAdapter<T?>) {
-      @Suppress("UNCHECKED_CAST")
-      val currentLookup = stack.last() as Lookup<T>
+      @Suppress("UNCHECKED_CAST") val currentLookup = stack.last() as Lookup<T>
       currentLookup.adapter = result
     }
 
@@ -366,23 +354,23 @@ public class Moshi private constructor(builder: Builder) {
 
     override fun toJson(writer: JsonWriter, value: T?) = withAdapter { toJson(writer, value) }
 
-    private inline fun <R> withAdapter(body: JsonAdapter<T?>.() -> R): R = checkNotNull(adapter) {
-      "JsonAdapter isn't ready"
-    }.body()
+    private inline fun <R> withAdapter(body: JsonAdapter<T?>.() -> R): R =
+      checkNotNull(adapter) { "JsonAdapter isn't ready" }.body()
 
     override fun toString() = adapter?.toString() ?: super.toString()
   }
 
   internal companion object {
     @JvmField
-    val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> = buildList(6) {
-      add(StandardJsonAdapters)
-      add(CollectionJsonAdapter.Factory)
-      add(MapJsonAdapter.Factory)
-      add(ArrayJsonAdapter.Factory)
-      add(RecordJsonAdapter.Factory)
-      add(ClassJsonAdapter.Factory)
-    }
+    val BUILT_IN_FACTORIES: List<JsonAdapter.Factory> =
+      buildList(6) {
+        add(StandardJsonAdapters)
+        add(CollectionJsonAdapter.Factory)
+        add(MapJsonAdapter.Factory)
+        add(ArrayJsonAdapter.Factory)
+        add(RecordJsonAdapter.Factory)
+        add(ClassJsonAdapter.Factory)
+      }
 
     fun <T> newAdapterFactory(type: Type, jsonAdapter: JsonAdapter<T>): JsonAdapter.Factory {
       return JsonAdapter.Factory { targetType, annotations, _ ->
@@ -402,9 +390,10 @@ public class Moshi private constructor(builder: Builder) {
         "Use JsonAdapter.Factory for annotations with elements"
       }
       return JsonAdapter.Factory { targetType, annotations, _ ->
-        if (Types.equals(type, targetType) &&
-          annotations.size == 1 &&
-          annotations.isAnnotationPresent(annotation)
+        if (
+          Types.equals(type, targetType) &&
+            annotations.size == 1 &&
+            annotations.isAnnotationPresent(annotation)
         ) {
           jsonAdapter
         } else {

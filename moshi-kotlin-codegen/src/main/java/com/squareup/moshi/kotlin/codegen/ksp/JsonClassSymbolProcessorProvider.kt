@@ -55,21 +55,23 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
   private val codeGenerator = environment.codeGenerator
   private val logger = environment.logger
-  private val generatedOption = environment.options[OPTION_GENERATED]?.also {
-    logger.check(it in POSSIBLE_GENERATED_NAMES) {
-      "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are ${POSSIBLE_GENERATED_NAMES.keys}."
+  private val generatedOption =
+    environment.options[OPTION_GENERATED]?.also {
+      logger.check(it in POSSIBLE_GENERATED_NAMES) {
+        "Invalid option value for $OPTION_GENERATED. Found $it, allowable values are ${POSSIBLE_GENERATED_NAMES.keys}."
+      }
     }
-  }
   private val generateProguardRules =
     environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
-    val generatedAnnotation = generatedOption?.let {
-      AnnotationSpec.builder(ClassName.bestGuess(it))
-        .addMember("value = [%S]", JsonClassSymbolProcessor::class.java.canonicalName)
-        .addMember("comments = %S", "https://github.com/square/moshi")
-        .build()
-    }
+    val generatedAnnotation =
+      generatedOption?.let {
+        AnnotationSpec.builder(ClassName.bestGuess(it))
+          .addMember("value = [%S]", JsonClassSymbolProcessor::class.java.canonicalName)
+          .addMember("comments = %S", "https://github.com/square/moshi")
+          .build()
+      }
 
     for (type in resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)) {
       // For the smart cast
@@ -92,12 +94,11 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
         val originatingFile = type.containingFile!!
         val adapterGenerator =
           adapterGenerator(logger, resolver, type, isInline) ?: return emptyList()
-        val preparedAdapter = adapterGenerator
-          .prepare(generateProguardRules) { spec ->
-            spec.toBuilder()
-              .apply {
-                generatedAnnotation?.let(::addAnnotation)
-              }
+        val preparedAdapter =
+          adapterGenerator.prepare(generateProguardRules) { spec ->
+            spec
+              .toBuilder()
+              .apply { generatedAnnotation?.let(::addAnnotation) }
               .addOriginatingKSFile(originatingFile)
               .build()
           }
@@ -105,7 +106,7 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
         preparedAdapter.proguardConfig?.writeTo(codeGenerator, originatingFile)
       } catch (e: Exception) {
         logger.error(
-          "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}",
+          "Error preparing ${type.simpleName.asString()}: ${e.stackTrace.joinToString("\n")}"
         )
       }
     }
@@ -130,8 +131,7 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
     // Validate inline types have exactly one non-transient property that is not nullable
     if (isInline) {
-      val nonIgnoredBindings = properties.values
-        .filterNot { it.isIgnored }
+      val nonIgnoredBindings = properties.values.filterNot { it.isIgnored }
       if (nonIgnoredBindings.size != 1) {
         logger.error(
           "@JsonClass with inline = true requires exactly one non-transient property, " +
@@ -161,13 +161,14 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
     }
 
     // Sort properties so that those with constructor parameters come first.
-    val sortedProperties = properties.values.sortedBy {
-      if (it.hasConstructorParameter) {
-        it.target.parameterIndex
-      } else {
-        Integer.MAX_VALUE
+    val sortedProperties =
+      properties.values.sortedBy {
+        if (it.hasConstructorParameter) {
+          it.target.parameterIndex
+        } else {
+          Integer.MAX_VALUE
+        }
       }
-    }
 
     return AdapterGenerator(type, sortedProperties)
   }
@@ -175,13 +176,13 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
 
 /** Writes this config to a [codeGenerator]. */
 private fun ProguardConfig.writeTo(codeGenerator: CodeGenerator, originatingKSFile: KSFile) {
-  val file = codeGenerator.createNewFile(
-    dependencies = Dependencies(aggregating = false, originatingKSFile),
-    packageName = "",
-    fileName = outputFilePathWithoutExtension(targetClass.canonicalName),
-    extensionName = "pro",
-  )
+  val file =
+    codeGenerator.createNewFile(
+      dependencies = Dependencies(aggregating = false, originatingKSFile),
+      packageName = "",
+      fileName = outputFilePathWithoutExtension(targetClass.canonicalName),
+      extensionName = "pro",
+    )
   // Don't use writeTo(file) because that tries to handle directories under the hood
-  OutputStreamWriter(file, StandardCharsets.UTF_8)
-    .use(::writeTo)
+  OutputStreamWriter(file, StandardCharsets.UTF_8).use(::writeTo)
 }

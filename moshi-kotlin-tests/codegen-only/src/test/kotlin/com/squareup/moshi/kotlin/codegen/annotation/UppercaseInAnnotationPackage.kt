@@ -20,8 +20,7 @@ import com.squareup.moshi.JsonQualifier
 import com.squareup.moshi.ToJson
 import java.util.Locale
 
-@JsonQualifier
-annotation class UppercaseInAnnotationPackage
+@JsonQualifier annotation class UppercaseInAnnotationPackage
 
 class UppercaseInAnnotationPackageJsonAdapter {
   @ToJson

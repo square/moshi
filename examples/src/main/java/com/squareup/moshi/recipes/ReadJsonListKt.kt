@@ -21,8 +21,9 @@ import com.squareup.moshi.recipes.models.Card
 
 class ReadJsonListKt {
 
-  //language=JSON
-  private val jsonString = """
+  // language=JSON
+  private val jsonString =
+    """
     [{"rank": "4",
        "suit": "CLUBS"
      },
@@ -32,7 +33,8 @@ class ReadJsonListKt {
      {"rank": "J",
       "suit": "SPADES"
      }]
-  """.trimIndent()
+    """
+      .trimIndent()
 
   fun readJsonList() {
     val jsonAdapter = Moshi.Builder().build().adapter<List<Card>>()

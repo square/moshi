@@ -20,20 +20,20 @@ import com.squareup.kotlinpoet.ClassName
 @InternalMoshiCodegenApi
 public object Options {
   /**
-   * This processing option can be specified to have a `@Generated` annotation
-   * included in the generated code. It is not encouraged unless you need it for static analysis
-   * reasons and not enabled by default.
+   * This processing option can be specified to have a `@Generated` annotation included in the
+   * generated code. It is not encouraged unless you need it for static analysis reasons and not
+   * enabled by default.
    *
    * Note that this can only be one of the following values:
-   *   * `"javax.annotation.processing.Generated"` (JRE 9+)
-   *   * `"javax.annotation.Generated"` (JRE <9)
+   * * `"javax.annotation.processing.Generated"` (JRE 9+)
+   * * `"javax.annotation.Generated"` (JRE <9)
    */
   public const val OPTION_GENERATED: String = "moshi.generated"
 
   /**
-   * This boolean processing option can disable proguard rule generation.
-   * Normally, this is not recommended unless end-users build their own JsonAdapter look-up tool.
-   * This is enabled by default.
+   * This boolean processing option can disable proguard rule generation. Normally, this is not
+   * recommended unless end-users build their own JsonAdapter look-up tool. This is enabled by
+   * default.
    */
   public const val OPTION_GENERATE_PROGUARD_RULES: String = "moshi.generateProguardRules"
 
@@ -45,8 +45,10 @@ public object Options {
    */
   public const val OPTION_INSTANTIATE_ANNOTATIONS: String = "moshi.instantiateAnnotations"
 
-  public val POSSIBLE_GENERATED_NAMES: Map<String, ClassName> = arrayOf(
-    ClassName("javax.annotation.processing", "Generated"),
-    ClassName("javax.annotation", "Generated"),
-  ).associateBy { it.canonicalName }
+  public val POSSIBLE_GENERATED_NAMES: Map<String, ClassName> =
+    arrayOf(
+        ClassName("javax.annotation.processing", "Generated"),
+        ClassName("javax.annotation", "Generated"),
+      )
+      .associateBy { it.canonicalName }
 }

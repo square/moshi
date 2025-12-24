@@ -25,14 +25,12 @@ public annotation class JsonClass(
   /**
    * True to trigger the annotation processor to generate an adapter for this type.
    *
-   * There are currently some restrictions on which types that can be used with generated
-   * adapters:
+   * There are currently some restrictions on which types that can be used with generated adapters:
    * - The class must be implemented in Kotlin (unless using a custom generator, see [generator]).
    * - The class may not be an abstract class, an inner class, or a local class.
    * - All superclasses must be implemented in Kotlin.
    * - All properties must be public, protected, or internal.
    * - All properties must be either non-transient or have a default value.
-   *
    */
   val generateAdapter: Boolean,
   /**
@@ -43,16 +41,14 @@ public annotation class JsonClass(
    * outputs.
    *
    * Requirements for generated adapter class signatures:
-   * - The generated adapter must subclass [JsonAdapter] and be parameterized by this
-   * type.
-   * - [Types.generatedJsonAdapterName] should be used for the fully qualified class name
-   * in order for Moshi to correctly resolve and load the generated JsonAdapter.
+   * - The generated adapter must subclass [JsonAdapter] and be parameterized by this type.
+   * - [Types.generatedJsonAdapterName] should be used for the fully qualified class name in order
+   *   for Moshi to correctly resolve and load the generated JsonAdapter.
    * - The first parameter must be a [Moshi] instance.
    * - If generic, a second [Array<Type>][Type] parameter should be declared to accept type
-   * arguments.
+   *   arguments.
    *
    * Example for a class "CustomType":
-   *
    * ```
    * class CustomTypeJsonAdapter(moshi: Moshi, types: Array<Type>) : JsonAdapter<CustomType>() {
    * // ...
@@ -66,8 +62,8 @@ public annotation class JsonClass(
   val generator: String = "",
   /**
    * Set to true to generate an adapter that "inlines" the single property's value directly in JSON
-   * rather than wrapping it in an object. This is primarily useful for Kotlin value classes but
-   * can technically be used with any classes that wrap a single value.
+   * rather than wrapping it in an object. This is primarily useful for Kotlin value classes but can
+   * technically be used with any classes that wrap a single value.
    *
    * For example, a class `@JvmInline value class UserId(val id: Int)` with `inline = true` will
    * serialize as just `123` rather than `{"id": 123}`.

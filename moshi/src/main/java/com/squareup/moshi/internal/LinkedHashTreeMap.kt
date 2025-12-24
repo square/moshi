@@ -8,17 +8,15 @@ import kotlin.math.max
 private val NATURAL_ORDER = Comparator<Any> { o1, o2 -> (o1 as Comparable<Any>).compareTo(o2) }
 
 /**
- * A map of comparable keys to values. Unlike TreeMap, this class uses insertion order for
- * iteration order. Comparison order is only used as an optimization for efficient insertion and
- * removal.
+ * A map of comparable keys to values. Unlike TreeMap, this class uses insertion order for iteration
+ * order. Comparison order is only used as an optimization for efficient insertion and removal.
  *
  * This implementation was derived from Android 4.1's TreeMap and LinkedHashMap classes.
  *
  * @param comparator the comparator to order elements with, or null to use the natural ordering.
  */
 internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
-  AbstractMutableMap<K, V>(),
-  Serializable {
+  AbstractMutableMap<K, V>(), Serializable {
   @Suppress("UNCHECKED_CAST")
   private val comparator: Comparator<Any?> = (comparator ?: NATURAL_ORDER) as Comparator<Any?>
   private var table: Array<Node<K, V>?> = arrayOfNulls(16) // TODO: sizing/resizing policies
@@ -67,37 +65,29 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
   override fun remove(key: K) = removeInternalByKey(key)?.value
 
   class Node<K, V> : MutableMap.MutableEntry<K, V?> {
-    @JvmField
-    var parent: Node<K, V>? = null
+    @JvmField var parent: Node<K, V>? = null
 
-    @JvmField
-    var left: Node<K, V>? = null
+    @JvmField var left: Node<K, V>? = null
 
-    @JvmField
-    var right: Node<K, V>? = null
+    @JvmField var right: Node<K, V>? = null
 
-    @JvmField
-    var next: Node<K, V>?
+    @JvmField var next: Node<K, V>?
 
-    @JvmField
-    var prev: Node<K, V>?
+    @JvmField var prev: Node<K, V>?
 
     private var realKey: K? = null
 
     override val key: K
       get() = knownNotNull(realKey)
 
-    @JvmField
-    val hash: Int
+    @JvmField val hash: Int
 
-    @JvmField
-    var mutableValue: V? = null
+    @JvmField var mutableValue: V? = null
 
     override val value: V?
       get() = mutableValue
 
-    @JvmField
-    var height = 0
+    @JvmField var height = 0
 
     /** Create the header entry. */
     constructor() {
@@ -128,10 +118,8 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
     override fun equals(other: Any?): Boolean {
       if (other is Map.Entry<*, *>) {
         val (key1, value1) = other
-        return (
-          (if (realKey == null) key1 == null else realKey == key1) &&
-            if (value == null) value1 == null else value == value1
-          )
+        return ((if (realKey == null) key1 == null else realKey == key1) &&
+          if (value == null) value1 == null else value == value1)
       }
       return false
     }
@@ -195,8 +183,7 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
       // Micro-optimization: avoid polymorphic calls to Comparator.compare().
       // Throws a ClassCastException below if there's trouble.
       @Suppress("UNCHECKED_CAST")
-      val comparableKey =
-        if (comparator === NATURAL_ORDER) key as Comparable<Any?> else null
+      val comparableKey = if (comparator === NATURAL_ORDER) key as Comparable<Any?> else null
       while (true) {
         comparison =
           comparableKey?.compareTo(knownNotNull(nearest).key)
@@ -247,20 +234,19 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
 
   private fun findByObject(key: Any?): Node<K, V>? {
     return try {
-      @Suppress("UNCHECKED_CAST")
-      if (key != null) find(key as K, false) else null
+      @Suppress("UNCHECKED_CAST") if (key != null) find(key as K, false) else null
     } catch (_: ClassCastException) {
       null
     }
   }
 
   /**
-   * Returns this map's entry that has the same key and value as `entry`, or null if this map
-   * has no such entry.
+   * Returns this map's entry that has the same key and value as `entry`, or null if this map has no
+   * such entry.
    *
-   * This method uses the comparator for key equality rather than `equals`. If this map's
-   * comparator isn't consistent with equals (such as `String.CASE_INSENSITIVE_ORDER`), then
-   * `remove()` and `contains()` will violate the collections API.
+   * This method uses the comparator for key equality rather than `equals`. If this map's comparator
+   * isn't consistent with equals (such as `String.CASE_INSENSITIVE_ORDER`), then `remove()` and
+   * `contains()` will violate the collections API.
    */
   fun findByEntry(entry: Map.Entry<*, *>): Node<K, V>? {
     val mine = findByObject(entry.key)
@@ -437,7 +423,7 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
     }
   }
 
-  /** Rotates the subtree so that its root's right child is the new root.  */
+  /** Rotates the subtree so that its root's right child is the new root. */
   private fun rotateLeft(root: Node<K, V>) {
     val left = root.left
     val pivot = root.right!!
@@ -461,7 +447,7 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
     pivot.height = max(root.height, pivotRight?.height ?: 0) + 1
   }
 
-  /** Rotates the subtree so that its root's left child is the new root.  */
+  /** Rotates the subtree so that its root's left child is the new root. */
   private fun rotateRight(root: Node<K, V>) {
     val pivot = root.left!!
     val right = root.right
@@ -489,6 +475,7 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
     var next: Node<K, V> = header.next!!
     private var lastReturned: Node<K, V>? = null
     private var expectedModCount: Int = modCount
+
     override fun hasNext(): Boolean = next !== header
 
     fun nextNode(): Node<K, V> {
@@ -583,8 +570,8 @@ internal class LinkedHashTreeMap<K, V>(comparator: Comparator<Any?>? = null) :
 }
 
 /**
- * Returns a new array containing the same nodes as `oldTable`, but with twice as many
- * trees, each of (approximately) half the previous size.
+ * Returns a new array containing the same nodes as `oldTable`, but with twice as many trees, each
+ * of (approximately) half the previous size.
  */
 internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, V>?> {
   // TODO: don't do anything if we're already at MAX_CAPACITY
@@ -636,14 +623,14 @@ internal fun <K, V> doubleCapacity(oldTable: Array<Node<K, V>?>): Array<Node<K, 
 
 /**
  * Walks an AVL tree in iteration order. Once a node has been returned, its left, right and parent
- * links are **no longer used**. For this reason it is safe to transform these links
- * as you walk a tree.
+ * links are **no longer used**. For this reason it is safe to transform these links as you walk a
+ * tree.
  *
- * **Warning:** this iterator is destructive. It clears the parent node of all
- * nodes in the tree. It is an error to make a partial iteration of a tree.
+ * **Warning:** this iterator is destructive. It clears the parent node of all nodes in the tree. It
+ * is an error to make a partial iteration of a tree.
  */
 internal class AvlIterator<K, V> {
-  /** This stack is a singly linked list, linked by the 'parent' field.  */
+  /** This stack is a singly linked list, linked by the 'parent' field. */
   private var stackTop: Node<K, V>? = null
 
   fun reset(root: Node<K, V>?) {
@@ -675,19 +662,19 @@ internal class AvlIterator<K, V> {
 
 /**
  * Builds AVL trees of a predetermined size by accepting nodes of increasing value. To use:
- *  1. Call [reset] to initialize the target size *size*.
- *  2. Call [add] *size* times with increasing values.
- *  3. Call [root] to get the root of the balanced tree.
+ * 1. Call [reset] to initialize the target size *size*.
+ * 2. Call [add] *size* times with increasing values.
+ * 3. Call [root] to get the root of the balanced tree.
  *
- * The returned tree will satisfy the AVL constraint: for every node *N*, the height of
- * *N.left* and *N.right* is different by at most 1. It accomplishes this by omitting
- * deepest-level leaf nodes when building trees whose size isn't a power of 2 minus 1.
+ * The returned tree will satisfy the AVL constraint: for every node *N*, the height of *N.left* and
+ * *N.right* is different by at most 1. It accomplishes this by omitting deepest-level leaf nodes
+ * when building trees whose size isn't a power of 2 minus 1.
  *
- * Unlike rebuilding a tree from scratch, this approach requires no value comparisons. Using
- * this class to create a tree of size *S* is `O(S)`.
+ * Unlike rebuilding a tree from scratch, this approach requires no value comparisons. Using this
+ * class to create a tree of size *S* is `O(S)`.
  */
 internal class AvlBuilder<K, V> {
-  /** This stack is a singly linked list, linked by the 'parent' field.  */
+  /** This stack is a singly linked list, linked by the 'parent' field. */
   private var stack: Node<K, V>? = null
 
   private var leavesToSkip = 0

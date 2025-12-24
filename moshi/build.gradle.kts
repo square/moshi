@@ -20,9 +20,7 @@ kotlin.target {
     compilations.create("java16") {
       associateWith(main)
       defaultSourceSet.kotlin.srcDir("src/main/java16")
-      compileJavaTaskProvider.configure {
-        options.release = 16
-      }
+      compileJavaTaskProvider.configure { options.release = 16 }
       compileTaskProvider.configure {
         (compilerOptions as KotlinJvmCompilerOptions).jvmTarget = JvmTarget.JVM_16
       }
@@ -34,30 +32,24 @@ kotlin.target {
       into("META-INF/versions/16")
       exclude("META-INF")
     }
-    manifest {
-      attributes("Multi-Release" to "true")
-    }
+    manifest { attributes("Multi-Release" to "true") }
   }
 }
 
 tasks.withType<Test>().configureEach {
-  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected ByteArrayOutputStream.buf field
+  // ExtendsPlatformClassWithProtectedField tests a case where we set a protected
+  // ByteArrayOutputStream.buf field
   jvmArgs("--add-opens=java.base/java.io=ALL-UNNAMED")
 }
 
-tasks
-  .withType<KotlinCompile>()
-  .configureEach {
-    compilerOptions {
-      freeCompilerArgs.addAll(
-        "-opt-in=kotlin.contracts.ExperimentalContracts",
-        "-Xjvm-default=all",
-      )
-      if (name.contains("test", true)) {
-        freeCompilerArgs.add("-opt-in=kotlin.ExperimentalStdlibApi")
-      }
+tasks.withType<KotlinCompile>().configureEach {
+  compilerOptions {
+    freeCompilerArgs.addAll("-opt-in=kotlin.contracts.ExperimentalContracts", "-Xjvm-default=all")
+    if (name.contains("test", true)) {
+      freeCompilerArgs.add("-opt-in=kotlin.ExperimentalStdlibApi")
     }
   }
+}
 
 dependencies {
   compileOnly(libs.jsr305)
@@ -71,11 +63,7 @@ dependencies {
 }
 
 tasks.withType<Jar>().configureEach {
-  manifest {
-    attributes("Automatic-Module-Name" to "com.squareup.moshi")
-  }
+  manifest { attributes("Automatic-Module-Name" to "com.squareup.moshi") }
 }
 
-configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = None()))
-}
+configure<MavenPublishBaseExtension> { configure(KotlinJvm(javadocJar = None())) }

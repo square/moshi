@@ -18,6 +18,4 @@ package com.squareup.moshi
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.annotation.AnnotationTarget.FUNCTION
 
-@Retention(RUNTIME)
-@Target(FUNCTION)
-public annotation class ToJson
+@Retention(RUNTIME) @Target(FUNCTION) public annotation class ToJson

@@ -53,8 +53,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       return generatedAdapter
     }
     return if (rawType.isEnum) {
-      @Suppress("UNCHECKED_CAST")
-      EnumJsonAdapter(rawType as Class<out Enum<*>>).nullSafe()
+      @Suppress("UNCHECKED_CAST") EnumJsonAdapter(rawType as Class<out Enum<*>>).nullSafe()
     } else {
       null
     }
@@ -68,144 +67,156 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     return value
   }
 
-  val BOOLEAN_JSON_ADAPTER: JsonAdapter<Boolean> = object : JsonAdapter<Boolean>() {
-    override fun fromJson(reader: JsonReader) = reader.nextBoolean()
+  val BOOLEAN_JSON_ADAPTER: JsonAdapter<Boolean> =
+    object : JsonAdapter<Boolean>() {
+      override fun fromJson(reader: JsonReader) = reader.nextBoolean()
 
-    override fun toJson(writer: JsonWriter, value: Boolean) {
-      writer.value(value)
-    }
-
-    override fun toString() = "JsonAdapter(Boolean)"
-  }
-
-  private val BYTE_JSON_ADAPTER: JsonAdapter<Byte> = object : JsonAdapter<Byte>() {
-    override fun fromJson(reader: JsonReader): Byte {
-      return rangeCheckNextInt(reader, "a byte", Byte.MIN_VALUE.toInt(), 0xff).toByte()
-    }
-
-    override fun toJson(writer: JsonWriter, value: Byte) {
-      writer.value((value.toInt() and 0xff).toLong())
-    }
-
-    override fun toString() = "JsonAdapter(Byte)"
-  }
-
-  private val CHARACTER_JSON_ADAPTER: JsonAdapter<Char> = object : JsonAdapter<Char>() {
-    override fun fromJson(reader: JsonReader): Char {
-      val value = reader.nextString()
-      if (value.length > 1) {
-        throw JsonDataException(ERROR_FORMAT.format("a char", "\"$value\"", reader.path))
+      override fun toJson(writer: JsonWriter, value: Boolean) {
+        writer.value(value)
       }
-      return value[0]
+
+      override fun toString() = "JsonAdapter(Boolean)"
     }
 
-    override fun toJson(writer: JsonWriter, value: Char) {
-      writer.value(value.toString())
-    }
-
-    override fun toString() = "JsonAdapter(Character)"
-  }
-
-  private val DOUBLE_JSON_ADAPTER: JsonAdapter<Double> = object : JsonAdapter<Double>() {
-    override fun fromJson(reader: JsonReader): Double {
-      return reader.nextDouble()
-    }
-
-    override fun toJson(writer: JsonWriter, value: Double) {
-      writer.value(value)
-    }
-
-    override fun toString() = "JsonAdapter(Double)"
-  }
-
-  private val FLOAT_JSON_ADAPTER: JsonAdapter<Float> = object : JsonAdapter<Float?>() {
-    override fun fromJson(reader: JsonReader): Float {
-      val value = reader.nextDouble().toFloat()
-      // Double check for infinity after float conversion; many doubles > Float.MAX
-      if (!reader.lenient && value.isInfinite()) {
-        throw JsonDataException(
-          "JSON forbids NaN and infinities: $value at path ${reader.path}",
-        )
+  private val BYTE_JSON_ADAPTER: JsonAdapter<Byte> =
+    object : JsonAdapter<Byte>() {
+      override fun fromJson(reader: JsonReader): Byte {
+        return rangeCheckNextInt(reader, "a byte", Byte.MIN_VALUE.toInt(), 0xff).toByte()
       }
-      return value
-    }
 
-    override fun toJson(writer: JsonWriter, value: Float?) {
-      // Manual null pointer check for the float.class adapter.
-      if (value == null) {
-        throw NullPointerException()
+      override fun toJson(writer: JsonWriter, value: Byte) {
+        writer.value((value.toInt() and 0xff).toLong())
       }
-      // Use the Number overload so we write out float precision instead of double precision.
-      writer.value(value)
+
+      override fun toString() = "JsonAdapter(Byte)"
     }
 
-    override fun toString() = "JsonAdapter(Float)"
-  }.unsafeNonNull()
+  private val CHARACTER_JSON_ADAPTER: JsonAdapter<Char> =
+    object : JsonAdapter<Char>() {
+      override fun fromJson(reader: JsonReader): Char {
+        val value = reader.nextString()
+        if (value.length > 1) {
+          throw JsonDataException(ERROR_FORMAT.format("a char", "\"$value\"", reader.path))
+        }
+        return value[0]
+      }
 
-  private val INTEGER_JSON_ADAPTER: JsonAdapter<Int> = object : JsonAdapter<Int>() {
-    override fun fromJson(reader: JsonReader): Int {
-      return reader.nextInt()
+      override fun toJson(writer: JsonWriter, value: Char) {
+        writer.value(value.toString())
+      }
+
+      override fun toString() = "JsonAdapter(Character)"
     }
 
-    override fun toJson(writer: JsonWriter, value: Int) {
-      writer.value(value.toLong())
+  private val DOUBLE_JSON_ADAPTER: JsonAdapter<Double> =
+    object : JsonAdapter<Double>() {
+      override fun fromJson(reader: JsonReader): Double {
+        return reader.nextDouble()
+      }
+
+      override fun toJson(writer: JsonWriter, value: Double) {
+        writer.value(value)
+      }
+
+      override fun toString() = "JsonAdapter(Double)"
     }
 
-    override fun toString() = "JsonAdapter(Integer)"
-  }
+  private val FLOAT_JSON_ADAPTER: JsonAdapter<Float> =
+    object : JsonAdapter<Float?>() {
+        override fun fromJson(reader: JsonReader): Float {
+          val value = reader.nextDouble().toFloat()
+          // Double check for infinity after float conversion; many doubles > Float.MAX
+          if (!reader.lenient && value.isInfinite()) {
+            throw JsonDataException(
+              "JSON forbids NaN and infinities: $value at path ${reader.path}"
+            )
+          }
+          return value
+        }
 
-  private val LONG_JSON_ADAPTER: JsonAdapter<Long> = object : JsonAdapter<Long>() {
-    override fun fromJson(reader: JsonReader): Long {
-      return reader.nextLong()
+        override fun toJson(writer: JsonWriter, value: Float?) {
+          // Manual null pointer check for the float.class adapter.
+          if (value == null) {
+            throw NullPointerException()
+          }
+          // Use the Number overload so we write out float precision instead of double precision.
+          writer.value(value)
+        }
+
+        override fun toString() = "JsonAdapter(Float)"
+      }
+      .unsafeNonNull()
+
+  private val INTEGER_JSON_ADAPTER: JsonAdapter<Int> =
+    object : JsonAdapter<Int>() {
+      override fun fromJson(reader: JsonReader): Int {
+        return reader.nextInt()
+      }
+
+      override fun toJson(writer: JsonWriter, value: Int) {
+        writer.value(value.toLong())
+      }
+
+      override fun toString() = "JsonAdapter(Integer)"
     }
 
-    override fun toJson(writer: JsonWriter, value: Long) {
-      writer.value(value)
+  private val LONG_JSON_ADAPTER: JsonAdapter<Long> =
+    object : JsonAdapter<Long>() {
+      override fun fromJson(reader: JsonReader): Long {
+        return reader.nextLong()
+      }
+
+      override fun toJson(writer: JsonWriter, value: Long) {
+        writer.value(value)
+      }
+
+      override fun toString() = "JsonAdapter(Long)"
     }
 
-    override fun toString() = "JsonAdapter(Long)"
-  }
+  private val SHORT_JSON_ADAPTER: JsonAdapter<Short> =
+    object : JsonAdapter<Short>() {
+      override fun fromJson(reader: JsonReader): Short {
+        return rangeCheckNextInt(
+            reader,
+            "a short",
+            Short.MIN_VALUE.toInt(),
+            Short.MAX_VALUE.toInt(),
+          )
+          .toShort()
+      }
 
-  private val SHORT_JSON_ADAPTER: JsonAdapter<Short> = object : JsonAdapter<Short>() {
-    override fun fromJson(reader: JsonReader): Short {
-      return rangeCheckNextInt(
-        reader,
-        "a short",
-        Short.MIN_VALUE.toInt(),
-        Short.MAX_VALUE.toInt(),
-      ).toShort()
+      override fun toJson(writer: JsonWriter, value: Short) {
+        writer.value(value.toLong())
+      }
+
+      override fun toString() = "JsonAdapter(Short)"
     }
 
-    override fun toJson(writer: JsonWriter, value: Short) {
-      writer.value(value.toLong())
+  private val STRING_JSON_ADAPTER: JsonAdapter<String> =
+    object : JsonAdapter<String>() {
+      override fun fromJson(reader: JsonReader): String {
+        return reader.nextString()
+      }
+
+      override fun toJson(writer: JsonWriter, value: String) {
+        writer.value(value)
+      }
+
+      override fun toString() = "JsonAdapter(String)"
     }
-
-    override fun toString() = "JsonAdapter(Short)"
-  }
-
-  private val STRING_JSON_ADAPTER: JsonAdapter<String> = object : JsonAdapter<String>() {
-    override fun fromJson(reader: JsonReader): String {
-      return reader.nextString()
-    }
-
-    override fun toJson(writer: JsonWriter, value: String) {
-      writer.value(value)
-    }
-
-    override fun toString() = "JsonAdapter(String)"
-  }
 
   internal class EnumJsonAdapter<T : Enum<T>>(private val enumType: Class<T>) : JsonAdapter<T>() {
     private val constants: Array<T> = enumType.enumConstants
-    private val nameStrings: Array<String> = Array(constants.size) { i ->
-      val constant = constants[i]
-      val constantName = constant.name
-      try {
-        enumType.getField(constantName).jsonName(constantName)
-      } catch (e: NoSuchFieldException) {
-        throw AssertionError("Missing field in ${enumType.name}", e)
+    private val nameStrings: Array<String> =
+      Array(constants.size) { i ->
+        val constant = constants[i]
+        val constantName = constant.name
+        try {
+          enumType.getField(constantName).jsonName(constantName)
+        } catch (e: NoSuchFieldException) {
+          throw AssertionError("Missing field in ${enumType.name}", e)
+        }
       }
-    }
     private var options: JsonReader.Options = JsonReader.Options.of(*nameStrings)
 
     override fun fromJson(reader: JsonReader): T {
@@ -215,9 +226,7 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
       // We can consume the string safely, we are terminating anyway.
       val path = reader.path
       val name = reader.nextString()
-      throw JsonDataException(
-        "Expected one of ${nameStrings.toList()} but was $name at path $path",
-      )
+      throw JsonDataException("Expected one of ${nameStrings.toList()} but was $name at path $path")
     }
 
     override fun toJson(writer: JsonWriter, value: T) {
@@ -228,9 +237,9 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
   }
 
   /**
-   * This adapter is used when the declared type is [Any]. Typically the runtime
-   * type is something else, and when encoding JSON this delegates to the runtime type's adapter.
-   * For decoding (where there is no runtime type to inspect), this uses maps and lists.
+   * This adapter is used when the declared type is [Any]. Typically the runtime type is something
+   * else, and when encoding JSON this delegates to the runtime type's adapter. For decoding (where
+   * there is no runtime type to inspect), this uses maps and lists.
    *
    * This adapter needs a Moshi instance to look up the appropriate adapter for runtime types as
    * they are encountered.
@@ -256,9 +265,10 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
 
         JsonReader.Token.NULL -> reader.nextNull()
 
-        else -> throw IllegalStateException(
-          "Expected a value but was ${reader.peek()} at path ${reader.path}",
-        )
+        else ->
+          throw IllegalStateException(
+            "Expected a value but was ${reader.peek()} at path ${reader.path}"
+          )
       }
     }
 
@@ -281,18 +291,14 @@ internal object StandardJsonAdapters : JsonAdapter.Factory {
     }
 
     /**
-     * Returns the type to look up a type adapter for when writing `value` to JSON. Without
-     * this, attempts to emit standard types like `LinkedHashMap` would fail because Moshi doesn't
-     * provide built-in adapters for implementation types. It knows how to **write**
-     * those types, but lacks a mechanism to read them because it doesn't know how to find the
-     * appropriate constructor.
+     * Returns the type to look up a type adapter for when writing `value` to JSON. Without this,
+     * attempts to emit standard types like `LinkedHashMap` would fail because Moshi doesn't provide
+     * built-in adapters for implementation types. It knows how to **write** those types, but lacks
+     * a mechanism to read them because it doesn't know how to find the appropriate constructor.
      */
     private fun toJsonType(valueClass: Class<*>): Class<*> {
       if (Map::class.java.isAssignableFrom(valueClass)) return Map::class.java
-      return if (Collection::class.java.isAssignableFrom(
-          valueClass,
-        )
-      ) {
+      return if (Collection::class.java.isAssignableFrom(valueClass)) {
         Collection::class.java
       } else {
         valueClass

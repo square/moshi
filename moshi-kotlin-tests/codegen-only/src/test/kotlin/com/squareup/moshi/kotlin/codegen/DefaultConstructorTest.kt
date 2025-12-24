@@ -21,37 +21,29 @@ import org.junit.Test
 
 class DefaultConstructorTest {
 
-  @Test fun minimal() {
+  @Test
+  fun minimal() {
     val expected = TestClass("requiredClass")
-    val json =
-      """{"required":"requiredClass"}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)
-    check(instance == expected) {
-      "No match:\nActual  : $instance\nExpected: $expected"
-    }
+    val json = """{"required":"requiredClass"}"""
+    val instance = Moshi.Builder().build().adapter<TestClass>().fromJson(json)
+    check(instance == expected) { "No match:\nActual  : $instance\nExpected: $expected" }
   }
 
-  @Test fun allSet() {
+  @Test
+  fun allSet() {
     val expected = TestClass("requiredClass", "customOptional", 4, "setDynamic", 5, 6)
     val json =
       """{"required":"requiredClass","optional":"customOptional","optional2":4,"dynamicSelfReferenceOptional":"setDynamic","dynamicOptional":5,"dynamicInlineOptional":6}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)
-    check(instance == expected) {
-      "No match:\nActual  : $instance\nExpected: $expected"
-    }
+    val instance = Moshi.Builder().build().adapter<TestClass>().fromJson(json)
+    check(instance == expected) { "No match:\nActual  : $instance\nExpected: $expected" }
   }
 
-  @Test fun customDynamic() {
+  @Test
+  fun customDynamic() {
     val expected = TestClass("requiredClass", "customOptional")
-    val json =
-      """{"required":"requiredClass","optional":"customOptional"}"""
-    val instance = Moshi.Builder().build().adapter<TestClass>()
-      .fromJson(json)
-    check(instance == expected) {
-      "No match:\nActual  : $instance\nExpected: $expected"
-    }
+    val json = """{"required":"requiredClass","optional":"customOptional"}"""
+    val instance = Moshi.Builder().build().adapter<TestClass>().fromJson(json)
+    check(instance == expected) { "No match:\nActual  : $instance\nExpected: $expected" }
   }
 }
 

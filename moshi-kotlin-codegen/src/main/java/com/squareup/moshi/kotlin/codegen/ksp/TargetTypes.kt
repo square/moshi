@@ -91,21 +91,20 @@ internal fun targetType(
     "@JsonClass can't be applied to ${type.qualifiedName?.asString()}: must be internal or public"
   }
 
-  val classTypeParamsResolver = type.typeParameters.toTypeParameterResolver(
-    sourceTypeHint = type.qualifiedName!!.asString(),
-  )
+  val classTypeParamsResolver =
+    type.typeParameters.toTypeParameterResolver(sourceTypeHint = type.qualifiedName!!.asString())
   val typeVariables = type.typeParameters.map { it.toTypeVariableName(classTypeParamsResolver) }
   val appliedType = AppliedType(type)
 
-  val constructor = primaryConstructor(resolver, type, classTypeParamsResolver, logger)
-    ?: run {
-      logger.error("No primary constructor found on $type", type)
-      return null
-    }
+  val constructor =
+    primaryConstructor(resolver, type, classTypeParamsResolver, logger)
+      ?: run {
+        logger.error("No primary constructor found on $type", type)
+        return null
+      }
   if (constructor.visibility != KModifier.INTERNAL && constructor.visibility != KModifier.PUBLIC) {
     logger.error(
-      "@JsonClass can't be applied to $type: " +
-        "primary constructor is not internal or public",
+      "@JsonClass can't be applied to $type: " + "primary constructor is not internal or public",
       type,
     )
     return null
@@ -124,19 +123,21 @@ internal fun targetType(
         Annotations=${classDecl.annotations.joinToString(prefix = "[", postfix = "]") {
           it.shortName.getShortName()
         }}
-        """.trimIndent(),
+        """
+          .trimIndent(),
         type,
       )
       return null
     }
-    val supertypeProperties = declaredProperties(
-      constructor = constructor,
-      originalType = originalType,
-      classDecl = classDecl,
-      resolver = resolver,
-      typeParameterResolver = classDecl.typeParameters
-        .toTypeParameterResolver(classTypeParamsResolver),
-    )
+    val supertypeProperties =
+      declaredProperties(
+        constructor = constructor,
+        originalType = originalType,
+        classDecl = classDecl,
+        resolver = resolver,
+        typeParameterResolver =
+          classDecl.typeParameters.toTypeParameterResolver(classTypeParamsResolver),
+      )
     for ((name, property) in supertypeProperties) {
       properties.putIfAbsent(name, property)
     }
@@ -144,16 +145,18 @@ internal fun targetType(
   val visibility = type.getVisibility().toKModifier() ?: KModifier.PUBLIC
   // If any class in the enclosing class hierarchy is internal, they must all have internal
   // generated adapters.
-  val resolvedVisibility = if (visibility == KModifier.INTERNAL) {
-    // Our nested type is already internal, no need to search
-    visibility
-  } else {
-    // Implicitly public, so now look up the hierarchy
-    val forceInternal = generateSequence<KSDeclaration>(type) { it.parentDeclaration }
-      .filterIsInstance<KSClassDeclaration>()
-      .any { it.isInternal() }
-    if (forceInternal) KModifier.INTERNAL else visibility
-  }
+  val resolvedVisibility =
+    if (visibility == KModifier.INTERNAL) {
+      // Our nested type is already internal, no need to search
+      visibility
+    } else {
+      // Implicitly public, so now look up the hierarchy
+      val forceInternal =
+        generateSequence<KSDeclaration>(type) { it.parentDeclaration }
+          .filterIsInstance<KSClassDeclaration>()
+          .any { it.isInternal() }
+      if (forceInternal) KModifier.INTERNAL else visibility
+    }
   return TargetType(
     typeName = type.toClassName().withTypeArguments(typeVariables),
     constructor = constructor,
@@ -186,21 +189,23 @@ internal fun primaryConstructor(
   val parameters = LinkedHashMap<String, TargetParameter>()
   for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
     val name = parameter.name!!.getShortName()
-    parameters[name] = TargetParameter(
-      name = name,
-      index = index,
-      type = parameter.type.toTypeName(typeParameterResolver),
-      hasDefault = parameter.hasDefault,
-      qualifiers = parameter.qualifiers(resolver),
-      jsonName = parameter.jsonName(),
-    )
+    parameters[name] =
+      TargetParameter(
+        name = name,
+        index = index,
+        type = parameter.type.toTypeName(typeParameterResolver),
+        hasDefault = parameter.hasDefault,
+        qualifiers = parameter.qualifiers(resolver),
+        jsonName = parameter.jsonName(),
+      )
   }
 
-  val kmConstructorSignature: String = resolver.mapToJvmSignature(primaryConstructor)
-    ?: run {
-      logger.error("No primary constructor found.", primaryConstructor)
-      return null
-    }
+  val kmConstructorSignature: String =
+    resolver.mapToJvmSignature(primaryConstructor)
+      ?: run {
+        logger.error("No primary constructor found.", primaryConstructor)
+        return null
+      }
   return TargetConstructor(
     parameters,
     primaryConstructor.getVisibility().toKModifier() ?: KModifier.PUBLIC,
@@ -211,12 +216,8 @@ internal fun primaryConstructor(
 private fun KSAnnotated?.qualifiers(resolver: Resolver): Set<AnnotationSpec> {
   if (this == null) return setOf()
   return annotations
-    .filter {
-      it.annotationType.resolve().declaration.isAnnotationPresent(JsonQualifier::class)
-    }
-    .mapTo(mutableSetOf()) {
-      it.toAnnotationSpec(resolver)
-    }
+    .filter { it.annotationType.resolve().declaration.isAnnotationPresent(JsonQualifier::class) }
+    .mapTo(mutableSetOf()) { it.toAnnotationSpec(resolver) }
 }
 
 private fun KSAnnotated?.jsonName(): String? {
@@ -238,24 +239,27 @@ private fun declaredProperties(
   val result = mutableMapOf<String, TargetProperty>()
   for (property in classDecl.getDeclaredProperties()) {
     val initialType = property.type.resolve()
-    val resolvedType = if (initialType.declaration is KSTypeParameter) {
-      property.asMemberOf(originalType.asType())
-    } else {
-      initialType
-    }
+    val resolvedType =
+      if (initialType.declaration is KSTypeParameter) {
+        property.asMemberOf(originalType.asType())
+      } else {
+        initialType
+      }
     val propertySpec = property.toPropertySpec(resolver, resolvedType, typeParameterResolver)
     val name = propertySpec.name
     val parameter = constructor.parameters[name]
-    val isTransient = Modifier.JAVA_TRANSIENT in property.modifiers ||
-      property.isAnnotationPresent(Transient::class) ||
-      Modifier.JAVA_TRANSIENT in resolver.effectiveJavaModifiers(property)
-    result[name] = TargetProperty(
-      propertySpec = propertySpec,
-      parameter = parameter,
-      visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
-      jsonName = parameter?.jsonName ?: property.jsonName() ?: name,
-      jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore(),
-    )
+    val isTransient =
+      Modifier.JAVA_TRANSIENT in property.modifiers ||
+        property.isAnnotationPresent(Transient::class) ||
+        Modifier.JAVA_TRANSIENT in resolver.effectiveJavaModifiers(property)
+    result[name] =
+      TargetProperty(
+        propertySpec = propertySpec,
+        parameter = parameter,
+        visibility = property.getVisibility().toKModifier() ?: KModifier.PUBLIC,
+        jsonName = parameter?.jsonName ?: property.jsonName() ?: name,
+        jsonIgnore = isTransient || parameter?.jsonIgnore == true || property.jsonIgnore(),
+      )
   }
 
   return result
@@ -267,10 +271,13 @@ private fun KSPropertyDeclaration.toPropertySpec(
   typeParameterResolver: TypeParameterResolver,
 ): PropertySpec {
   return PropertySpec.builder(
-    name = simpleName.getShortName(),
-    type = resolvedType.toTypeName(typeParameterResolver).unwrapTypeAlias()
-      .fixTypeAliasNullability(resolvedType),
-  )
+      name = simpleName.getShortName(),
+      type =
+        resolvedType
+          .toTypeName(typeParameterResolver)
+          .unwrapTypeAlias()
+          .fixTypeAliasNullability(resolvedType),
+    )
     .mutable(isMutable)
     .addModifiers(modifiers.map { KModifier.valueOf(it.name) })
     .apply {
@@ -286,7 +293,7 @@ private fun KSPropertyDeclaration.toPropertySpec(
               null
             }
           }
-          .asIterable(),
+          .asIterable()
       )
     }
     .build()
@@ -294,9 +301,7 @@ private fun KSPropertyDeclaration.toPropertySpec(
 
 private fun TypeName.fixTypeAliasNullability(resolvedType: KSType): TypeName {
   return if (resolvedType.declaration is KSTypeAlias) {
-    copy(
-      nullable = resolvedType.nullability == Nullability.NULLABLE,
-    )
+    copy(nullable = resolvedType.nullability == Nullability.NULLABLE)
   } else {
     this
   }

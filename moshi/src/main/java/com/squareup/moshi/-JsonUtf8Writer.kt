@@ -16,11 +16,6 @@
 package com.squareup.moshi
 
 import com.squareup.moshi.internal.JsonScope
-import okio.Buffer
-import okio.BufferedSink
-import okio.Sink
-import okio.Timeout
-import okio.buffer
 import java.io.IOException
 import kotlin.Array
 import kotlin.AssertionError
@@ -35,11 +30,16 @@ import kotlin.arrayOfNulls
 import kotlin.check
 import kotlin.code
 import kotlin.require
+import okio.Buffer
+import okio.BufferedSink
+import okio.Sink
+import okio.Timeout
+import okio.buffer
 
 @Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
 internal class `-JsonUtf8Writer`(
   /** The output data, containing at most one top-level array or object. */
-  private val sink: BufferedSink,
+  private val sink: BufferedSink
 ) : JsonWriter() {
 
   /** The name/value separator; either ":" or ": ". */
@@ -78,8 +78,9 @@ internal class `-JsonUtf8Writer`(
 
   /** Enters a new scope by appending any necessary whitespace and the given bracket. */
   private fun open(empty: Int, nonempty: Int, openBracket: Char): JsonWriter {
-    val shouldCancelOpen = stackSize == flattenStackSize &&
-      (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)
+    val shouldCancelOpen =
+      stackSize == flattenStackSize &&
+        (scopes[stackSize - 1] == empty || scopes[stackSize - 1] == nonempty)
     if (shouldCancelOpen) {
       // Cancel this open. Invert the flatten stack size until this is closed.
       flattenStackSize = flattenStackSize.inv()
@@ -116,16 +117,10 @@ internal class `-JsonUtf8Writer`(
   override fun name(name: String): JsonWriter {
     check(stackSize != 0) { "JsonWriter is closed." }
     val context = peekScope()
-    val isWritingObject = !(
-      (
-        (
-          (context != JsonScope.EMPTY_OBJECT) &&
-            (context != JsonScope.NONEMPTY_OBJECT)
-          ) ||
-          (deferredName != null) ||
-          promoteValueToName
-        )
-      )
+    val isWritingObject =
+      !((((context != JsonScope.EMPTY_OBJECT) && (context != JsonScope.NONEMPTY_OBJECT)) ||
+        (deferredName != null) ||
+        promoteValueToName))
     check(isWritingObject) { "Nesting problem." }
     deferredName = name
     pathNames[stackSize - 1] = name
@@ -235,22 +230,23 @@ internal class `-JsonUtf8Writer`(
     beforeValue()
     pushScope(JsonScope.STREAMING_VALUE)
     return object : Sink {
-      override fun write(source: Buffer, byteCount: Long) {
-        sink.write(source, byteCount)
-      }
-
-      override fun close() {
-        if (peekScope() != JsonScope.STREAMING_VALUE) {
-          throw AssertionError()
+        override fun write(source: Buffer, byteCount: Long) {
+          sink.write(source, byteCount)
         }
-        stackSize-- // Remove STREAMING_VALUE from the stack.
-        pathIndices[stackSize - 1]++
+
+        override fun close() {
+          if (peekScope() != JsonScope.STREAMING_VALUE) {
+            throw AssertionError()
+          }
+          stackSize-- // Remove STREAMING_VALUE from the stack.
+          pathIndices[stackSize - 1]++
+        }
+
+        override fun flush() = sink.flush()
+
+        override fun timeout() = Timeout.NONE
       }
-
-      override fun flush() = sink.flush()
-
-      override fun timeout() = Timeout.NONE
-    }.buffer()
+      .buffer()
   }
 
   /** Ensures all buffered data is written to the underlying [Sink] and flushes that writer. */
@@ -276,9 +272,7 @@ internal class `-JsonUtf8Writer`(
   private fun newline() {
     val indent = _indent ?: return
     sink.writeByte('\n'.code)
-    repeat(stackSize - 1) {
-      sink.writeUtf8(indent)
-    }
+    repeat(stackSize - 1) { sink.writeUtf8(indent) }
   }
 
   /**
@@ -329,9 +323,8 @@ internal class `-JsonUtf8Writer`(
         sink.writeUtf8(separator)
       }
 
-      JsonScope.STREAMING_VALUE -> throw IllegalStateException(
-        "Sink from valueSink() was not closed",
-      )
+      JsonScope.STREAMING_VALUE ->
+        throw IllegalStateException("Sink from valueSink() was not closed")
 
       else -> throw IllegalStateException("Nesting problem.")
     }
@@ -340,14 +333,13 @@ internal class `-JsonUtf8Writer`(
 
   companion object {
     /**
-     * From RFC 7159, "All Unicode characters may be placed within the
-     * quotation marks except for the characters that must be escaped:
-     * quotation mark, reverse solidus, and the control characters
-     * (U+0000 through U+001F)."
+     * From RFC 7159, "All Unicode characters may be placed within the quotation marks except for
+     * the characters that must be escaped: quotation mark, reverse solidus, and the control
+     * characters (U+0000 through U+001F)."
      *
-     * We also escape '\u2028' and '\u2029', which JavaScript interprets as
-     * newline characters. This prevents eval() from failing with a syntax
-     * error. http://code.google.com/p/google-gson/issues/detail?id=341
+     * We also escape '\u2028' and '\u2029', which JavaScript interprets as newline characters. This
+     * prevents eval() from failing with a syntax error.
+     * http://code.google.com/p/google-gson/issues/detail?id=341
      */
     private val REPLACEMENT_CHARS: Array<String?> = arrayOfNulls(128)
 
@@ -365,8 +357,8 @@ internal class `-JsonUtf8Writer`(
     }
 
     /**
-     * Writes `value` as a string literal to `sink`. This wraps the value in double quotes
-     * and escapes those characters that require it.
+     * Writes `value` as a string literal to `sink`. This wraps the value in double quotes and
+     * escapes those characters that require it.
      */
     @JvmStatic
     fun BufferedSink.string(value: String) {

@@ -21,17 +21,15 @@ import com.squareup.moshi.Moshi
 import org.junit.Test
 
 class KotlinJsonAdapterTest {
-  @JsonClass(generateAdapter = true)
-  class Data
+  @JsonClass(generateAdapter = true) class Data
 
   @Test
   fun fallsBackToReflectiveAdapterWithoutCodegen() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val adapter = moshi.adapter(Data::class.java)
-    assertThat(adapter.toString()).isEqualTo(
-      "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()",
-    )
+    assertThat(adapter.toString())
+      .isEqualTo(
+        "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
+      )
   }
 }

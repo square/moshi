@@ -33,9 +33,11 @@ public class PropertyGenerator(
   public lateinit var localName: String
   public lateinit var localIsPresentName: String
 
-  public val isRequired: Boolean get() = !delegateKey.nullable && !hasDefault
+  public val isRequired: Boolean
+    get() = !delegateKey.nullable && !hasDefault
 
-  public val hasConstructorParameter: Boolean get() = target.parameterIndex != -1
+  public val hasConstructorParameter: Boolean
+    get() = target.parameterIndex != -1
 
   /**
    * IsPresent is required if the following conditions are met:

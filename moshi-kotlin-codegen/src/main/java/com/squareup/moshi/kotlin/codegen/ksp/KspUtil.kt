@@ -33,9 +33,7 @@ import com.squareup.kotlinpoet.ksp.toClassName
 internal fun KSClassDeclaration.asType() = asType(emptyList())
 
 internal fun KSClassDeclaration.isKotlinClass(): Boolean {
-  return origin == KOTLIN ||
-    origin == KOTLIN_LIB ||
-    isAnnotationPresent(Metadata::class)
+  return origin == KOTLIN || origin == KOTLIN_LIB || isAnnotationPresent(Metadata::class)
 }
 
 internal inline fun <reified T : Annotation> KSAnnotated.findAnnotationWithType(): T? {
@@ -115,30 +113,30 @@ private fun addValueToBlock(
 }
 
 /**
- * Creates a [CodeBlock] with parameter `format` depending on the given `value` object.
- * Handles a number of special cases, such as appending "f" to `Float` values, and uses
- * `%L` for other types.
+ * Creates a [CodeBlock] with parameter `format` depending on the given `value` object. Handles a
+ * number of special cases, such as appending "f" to `Float` values, and uses `%L` for other types.
  */
-internal fun memberForValue(value: Any) = when (value) {
-  is Class<*> -> CodeBlock.of("%T::class", value)
+internal fun memberForValue(value: Any) =
+  when (value) {
+    is Class<*> -> CodeBlock.of("%T::class", value)
 
-  is Enum<*> -> CodeBlock.of("%T.%L", value.javaClass, value.name)
+    is Enum<*> -> CodeBlock.of("%T.%L", value.javaClass, value.name)
 
-  is String -> CodeBlock.of("%S", value)
+    is String -> CodeBlock.of("%S", value)
 
-  is Float -> CodeBlock.of("%Lf", value)
+    is Float -> CodeBlock.of("%Lf", value)
 
-  is Double -> CodeBlock.of("%L", value)
+    is Double -> CodeBlock.of("%L", value)
 
-  is Char -> CodeBlock.of("$value.toChar()")
+    is Char -> CodeBlock.of("$value.toChar()")
 
-  is Byte -> CodeBlock.of("$value.toByte()")
+    is Byte -> CodeBlock.of("$value.toByte()")
 
-  is Short -> CodeBlock.of("$value.toShort()")
+    is Short -> CodeBlock.of("$value.toShort()")
 
-  // Int or Boolean
-  else -> CodeBlock.of("%L", value)
-}
+    // Int or Boolean
+    else -> CodeBlock.of("%L", value)
+  }
 
 internal inline fun KSPLogger.check(condition: Boolean, message: () -> String) {
   check(condition, null, message)

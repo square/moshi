@@ -24,9 +24,7 @@ import org.junit.Test
 class MixingReflectAndCodeGen {
   @Test
   fun mixingReflectionAndCodegen() {
-    val moshi = Moshi.Builder()
-      .add(KotlinJsonAdapterFactory())
-      .build()
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     val generatedAdapter = moshi.adapter<UsesGeneratedAdapter>()
     val reflectionAdapter = moshi.adapter<UsesReflectionAdapter>()
 
@@ -35,13 +33,11 @@ class MixingReflectAndCodeGen {
     assertThat(reflectionAdapter.toString())
       .isEqualTo(
         "KotlinJsonAdapter(com.squareup.moshi.kotlin.codegen.MixingReflectAndCodeGen" +
-          ".UsesReflectionAdapter).nullSafe()",
+          ".UsesReflectionAdapter).nullSafe()"
       )
   }
 
-  @JsonClass(generateAdapter = true)
-  class UsesGeneratedAdapter(var a: Int, var b: Int)
+  @JsonClass(generateAdapter = true) class UsesGeneratedAdapter(var a: Int, var b: Int)
 
-  @JsonClass(generateAdapter = false)
-  class UsesReflectionAdapter(var a: Int, var b: Int)
+  @JsonClass(generateAdapter = false) class UsesReflectionAdapter(var a: Int, var b: Int)
 }
