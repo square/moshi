@@ -23,17 +23,17 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNull
+import com.squareup.moshi.internal.javaType as moshiJavaType
 import com.squareup.moshi.rawType
-import org.junit.Test
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.GenericDeclaration
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import kotlin.reflect.KFunction0
-import kotlin.reflect.typeOf
-import com.squareup.moshi.internal.javaType as moshiJavaType
 import kotlin.reflect.javaType as kotlinJavaType
+import kotlin.reflect.typeOf
+import org.junit.Test
 
 class KotlinReflectTypesTest {
   @Test

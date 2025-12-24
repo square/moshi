@@ -38,13 +38,13 @@ import kotlin.math.pow
  * @see [this specification](http://www.w3.org/TR/NOTE-datetime)
  */
 
-/** ID to represent the 'GMT' string  */
+/** ID to represent the 'GMT' string */
 private const val GMT_ID = "GMT"
 
-/** The GMT timezone, prefetched to avoid more lookups.  */
+/** The GMT timezone, prefetched to avoid more lookups. */
 private val TIMEZONE_Z: TimeZone = TimeZone.getTimeZone(GMT_ID)
 
-/** Returns `date` formatted as yyyy-MM-ddThh:mm:ss.sssZ  */
+/** Returns `date` formatted as yyyy-MM-ddThh:mm:ss.sssZ */
 internal fun Date.formatIsoDate(): String {
   val calendar: Calendar = GregorianCalendar(TIMEZONE_Z, Locale.US)
   calendar.time = this
@@ -73,45 +73,48 @@ internal fun Date.formatIsoDate(): String {
  * Parse a date from ISO-8601 formatted string. It expects a format
  * `[yyyy-MM-dd|yyyyMMdd][T(hh:mm[:ss[.sss]]|hhmm[ss[.sss]])]?[Z|[+-]hh:mm]]`
  *
- * @receiver ISO string to parse in the appropriate format.
  * @return the parsed date
+ * @receiver ISO string to parse in the appropriate format.
  */
 internal fun String.parseIsoDate(): Date {
   return try {
     var offset = 0
 
     // extract year
-    val year = readInt(
-      offset,
-      run {
-        offset += 4
-        offset
-      },
-    )
+    val year =
+      readInt(
+        offset,
+        run {
+          offset += 4
+          offset
+        },
+      )
     if (readChar(this, offset, '-')) {
       offset += 1
     }
 
     // extract month
-    val month = readInt(
-      offset,
-      run {
-        offset += 2
-        offset
-      },
-    )
+    val month =
+      readInt(
+        offset,
+        run {
+          offset += 2
+          offset
+        },
+      )
     if (readChar(this, offset, '-')) {
       offset += 1
     }
 
     // extract day
-    val day = readInt(
-      offset,
-      run {
-        offset += 2
-        offset
-      },
-    )
+    val day =
+      readInt(
+        offset,
+        run {
+          offset += 2
+          offset
+        },
+      )
     // default time value
     var hour = 0
     var minutes = 0
@@ -128,23 +131,25 @@ internal fun String.parseIsoDate(): Date {
     if (hasT) {
       offset++
       // extract hours, minutes, seconds and milliseconds
-      hour = readInt(
-        offset,
-        run {
-          offset += 2
-          offset
-        },
-      )
+      hour =
+        readInt(
+          offset,
+          run {
+            offset += 2
+            offset
+          },
+        )
       if (readChar(this, offset, ':')) {
         offset += 1
       }
-      minutes = readInt(
-        offset,
-        run {
-          offset += 2
-          offset
-        },
-      )
+      minutes =
+        readInt(
+          offset,
+          run {
+            offset += 2
+            offset
+          },
+        )
       if (readChar(this, offset, ':')) {
         offset += 1
       }
@@ -152,13 +157,14 @@ internal fun String.parseIsoDate(): Date {
       if (this.length > offset) {
         val c = this[offset]
         if (c != 'Z' && c != '+' && c != '-') {
-          seconds = readInt(
-            offset,
-            run {
-              offset += 2
-              offset
-            },
-          )
+          seconds =
+            readInt(
+              offset,
+              run {
+                offset += 2
+                offset
+              },
+            )
           if (seconds in 60..62) seconds = 59 // truncate up to 3 leap seconds
           // milliseconds can be optional in the format
           if (readChar(this, offset, '.')) {
@@ -166,8 +172,7 @@ internal fun String.parseIsoDate(): Date {
             val endOffset = this.indexOfNonDigit(offset + 1) // assume at least one digit
             val parseEndOffset = min(endOffset, offset + 3) // parse up to 3 digits
             val fraction = readInt(offset, parseEndOffset)
-            milliseconds =
-              (10.0.pow((3 - (parseEndOffset - offset)).toDouble()) * fraction).toInt()
+            milliseconds = (10.0.pow((3 - (parseEndOffset - offset)).toDouble()) * fraction).toInt()
             offset = endOffset
           }
         }
@@ -201,15 +206,13 @@ internal fun String.parseIsoDate(): Date {
           val cleaned = act.replace(":", "")
           if (cleaned != timezoneId) {
             throw IndexOutOfBoundsException(
-              "Mismatching time zone indicator: $timezoneId given, resolves to ${timezone.id}",
+              "Mismatching time zone indicator: $timezoneId given, resolves to ${timezone.id}"
             )
           }
         }
       }
     } else {
-      throw IndexOutOfBoundsException(
-        "Invalid time zone indicator '$timezoneIndicator'",
-      )
+      throw IndexOutOfBoundsException("Invalid time zone indicator '$timezoneIndicator'")
     }
     val calendar: Calendar = GregorianCalendar(timezone)
     calendar.isLenient = false

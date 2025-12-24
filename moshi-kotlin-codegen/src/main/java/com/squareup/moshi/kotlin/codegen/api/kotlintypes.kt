@@ -57,11 +57,12 @@ internal fun TypeName.findRawType(): ClassName? {
       if (receiver != null) {
         count++
       }
-      val functionSimpleName = if (count >= 23) {
-        "FunctionN"
-      } else {
-        "Function$count"
-      }
+      val functionSimpleName =
+        if (count >= 23) {
+          "FunctionN"
+        } else {
+          "Function$count"
+        }
       ClassName("kotlin.jvm.functions", functionSimpleName)
     }
 
@@ -69,29 +70,30 @@ internal fun TypeName.findRawType(): ClassName? {
   }
 }
 
-internal fun TypeName.defaultPrimitiveValue(): CodeBlock = when (this) {
-  BOOLEAN -> CodeBlock.of("false")
+internal fun TypeName.defaultPrimitiveValue(): CodeBlock =
+  when (this) {
+    BOOLEAN -> CodeBlock.of("false")
 
-  CHAR -> CodeBlock.of("0.toChar()")
+    CHAR -> CodeBlock.of("0.toChar()")
 
-  BYTE -> CodeBlock.of("0.toByte()")
+    BYTE -> CodeBlock.of("0.toByte()")
 
-  SHORT -> CodeBlock.of("0.toShort()")
+    SHORT -> CodeBlock.of("0.toShort()")
 
-  INT -> CodeBlock.of("0")
+    INT -> CodeBlock.of("0")
 
-  FLOAT -> CodeBlock.of("0f")
+    FLOAT -> CodeBlock.of("0f")
 
-  LONG -> CodeBlock.of("0L")
+    LONG -> CodeBlock.of("0L")
 
-  DOUBLE -> CodeBlock.of("0.0")
+    DOUBLE -> CodeBlock.of("0.0")
 
-  UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException(
-    "Parameter with void, Unit, or Nothing type is illegal",
-  )
+    UNIT,
+    Void::class.asTypeName(),
+    NOTHING -> throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
 
-  else -> CodeBlock.of("null")
-}
+    else -> CodeBlock.of("null")
+  }
 
 @OptIn(DelicateKotlinPoetApi::class)
 internal fun TypeName.asTypeBlock(): CodeBlock {
@@ -129,7 +131,14 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
       // Check against the non-nullable version for equality, but we'll keep the nullability in
       // consideration when creating the CodeBlock if needed.
       return when (copy(nullable = false)) {
-        BOOLEAN, CHAR, BYTE, SHORT, INT, FLOAT, LONG, DOUBLE -> {
+        BOOLEAN,
+        CHAR,
+        BYTE,
+        SHORT,
+        INT,
+        FLOAT,
+        LONG,
+        DOUBLE -> {
           if (isNullable) {
             // Remove nullable but keep the java object type
             CodeBlock.of("%T::class.javaObjectType", copy(nullable = false))
@@ -138,17 +147,19 @@ internal fun TypeName.asTypeBlock(): CodeBlock {
           }
         }
 
-        UNIT, Void::class.asTypeName(), NOTHING -> throw IllegalStateException(
-          "Parameter with void, Unit, or Nothing type is illegal",
-        )
+        UNIT,
+        Void::class.asTypeName(),
+        NOTHING ->
+          throw IllegalStateException("Parameter with void, Unit, or Nothing type is illegal")
 
         else -> CodeBlock.of("%T::class.java", copy(nullable = false))
       }
     }
 
-    else -> throw UnsupportedOperationException(
-      "Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed.",
-    )
+    else ->
+      throw UnsupportedOperationException(
+        "Parameter with type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, or type variables are allowed."
+      )
   }
 }
 
@@ -172,16 +183,18 @@ internal fun TypeName.stripTypeVarVariance(resolver: TypeVariableResolver): Type
 
     is WildcardTypeName -> deepCopy { it.stripTypeVarVariance(resolver) }
 
-    else -> throw UnsupportedOperationException(
-      "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.",
-    )
+    else ->
+      throw UnsupportedOperationException(
+        "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed."
+      )
   }
 }
 
 internal fun ParameterizedTypeName.deepCopy(
-  transform: (TypeName) -> TypeName,
+  transform: (TypeName) -> TypeName
 ): ParameterizedTypeName {
-  return rawType.parameterizedBy(typeArguments.map { transform(it) })
+  return rawType
+    .parameterizedBy(typeArguments.map { transform(it) })
     .copy(nullable = isNullable, annotations = annotations, tags = tags)
 }
 
@@ -216,14 +229,16 @@ internal fun WildcardTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeN
 
 internal fun LambdaTypeName.deepCopy(transform: (TypeName) -> TypeName): TypeName {
   return LambdaTypeName.get(
-    receiver?.let(transform),
-    parameters.map { it.toBuilder(type = transform(it.type)).build() },
-    transform(returnType),
-  ).copy(nullable = isNullable, annotations = annotations, suspending = isSuspending)
+      receiver?.let(transform),
+      parameters.map { it.toBuilder(type = transform(it.type)).build() },
+      transform(returnType),
+    )
+    .copy(nullable = isNullable, annotations = annotations, suspending = isSuspending)
 }
 
 internal interface TypeVariableResolver {
   val parametersMap: Map<String, TypeVariableName>
+
   operator fun get(index: String): TypeVariableName
 }
 
@@ -238,13 +253,15 @@ internal fun List<TypeName>.toTypeVariableResolver(
       ?: throw IllegalStateException("No type argument found for $id! Anaylzing $sourceType")
   }
 
-  val resolver = object : TypeVariableResolver {
-    override val parametersMap: Map<String, TypeVariableName> = parametersMap
+  val resolver =
+    object : TypeVariableResolver {
+      override val parametersMap: Map<String, TypeVariableName> = parametersMap
 
-    override operator fun get(index: String): TypeVariableName = typeParamResolver(index)
-  }
+      override operator fun get(index: String): TypeVariableName = typeParamResolver(index)
+    }
 
-  // Fill the parametersMap. Need to do sequentially and allow for referencing previously defined params
+  // Fill the parametersMap. Need to do sequentially and allow for referencing previously defined
+  // params
   for (typeVar in this) {
     check(typeVar is TypeVariableName)
     // Put the simple typevar in first, then it can be referenced in the full toTypeVariable()

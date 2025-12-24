@@ -34,14 +34,12 @@ import org.junit.Test
  * Regression test for https://github.com/square/moshi/issues/977
  */
 class MultipleMasksTest {
-  @Test fun testMultipleMasks() {
+  @Test
+  fun testMultipleMasks() {
     // Set some arbitrary values to make sure offsets are aligning correctly
-    @Language("JSON")
-    val json =
-      """{"arg50":500,"arg3":34,"arg11":11,"arg65":67}"""
+    @Language("JSON") val json = """{"arg50":500,"arg3":34,"arg11":11,"arg65":67}"""
 
-    val instance = Moshi.Builder().build().adapter<MultipleMasks>()
-      .fromJson(json)
+    val instance = Moshi.Builder().build().adapter<MultipleMasks>().fromJson(json)
 
     assertEquals(instance.arg2, 2)
     assertEquals(instance.arg3, 34)

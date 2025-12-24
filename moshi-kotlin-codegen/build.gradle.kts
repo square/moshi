@@ -10,15 +10,11 @@ plugins {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-  compilerOptions {
-    optIn.add("com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi")
-  }
+  compilerOptions { optIn.add("com.squareup.moshi.kotlin.codegen.api.InternalMoshiCodegenApi") }
 }
 
 tasks.compileTestKotlin {
-  compilerOptions {
-    optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi")
-  }
+  compilerOptions { optIn.add("org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi") }
 }
 
 tasks.test {
@@ -58,6 +54,4 @@ dependencies {
   testImplementation(libs.kotlinCompileTesting)
 }
 
-configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = None()))
-}
+configure<MavenPublishBaseExtension> { configure(KotlinJvm(javadocJar = None())) }

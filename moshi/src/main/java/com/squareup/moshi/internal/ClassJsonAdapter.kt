@@ -38,13 +38,13 @@ import java.lang.reflect.Type
  *
  * Fields from platform classes are omitted from both serialization and deserialization unless they
  * are either public or protected. This includes the following packages and their subpackages:
- *  * `android.*`
- *  * `androidx.*`
- *  * `java.*`
- *  * `javax.*`
- *  * `kotlin.*`
- *  * `kotlinx.*`
- *  * `scala.*`
+ * * `android.*`
+ * * `androidx.*`
+ * * `java.*`
+ * * `javax.*`
+ * * `kotlin.*`
+ * * `kotlinx.*`
+ * * `scala.*`
  */
 internal class ClassJsonAdapter<T>(
   private val classFactory: ClassFactory<T>,
@@ -54,15 +54,16 @@ internal class ClassJsonAdapter<T>(
   private val options = JsonReader.Options.of(*fieldsMap.keys.toTypedArray())
 
   override fun fromJson(reader: JsonReader): T {
-    val result: T = try {
-      classFactory.newInstance()
-    } catch (e: InstantiationException) {
-      throw RuntimeException(e)
-    } catch (e: InvocationTargetException) {
-      throw e.rethrowCause()
-    } catch (_: IllegalAccessException) {
-      throw AssertionError()
-    }
+    val result: T =
+      try {
+        classFactory.newInstance()
+      } catch (e: InstantiationException) {
+        throw RuntimeException(e)
+      } catch (e: InvocationTargetException) {
+        throw e.rethrowCause()
+      } catch (_: IllegalAccessException) {
+        throw AssertionError()
+      }
 
     try {
       reader.beginObject()
@@ -131,26 +132,20 @@ internal class ClassJsonAdapter<T>(
           }
         }
         throw IllegalArgumentException(
-          "$messagePrefix requires explicit JsonAdapter to be registered",
+          "$messagePrefix requires explicit JsonAdapter to be registered"
         )
       }
 
-      require(!rawType.isAnonymousClass) {
-        "Cannot serialize anonymous class ${rawType.name}"
-      }
+      require(!rawType.isAnonymousClass) { "Cannot serialize anonymous class ${rawType.name}" }
 
-      require(!rawType.isLocalClass) {
-        "Cannot serialize local class ${rawType.name}"
-      }
+      require(!rawType.isLocalClass) { "Cannot serialize local class ${rawType.name}" }
 
       val isNonStaticNestedClass = rawType.enclosingClass != null && !isStatic(rawType.modifiers)
       require(!isNonStaticNestedClass) {
         "Cannot serialize non-static nested class ${rawType.name}"
       }
 
-      require(!isAbstract(rawType.modifiers)) {
-        "Cannot serialize abstract class ${rawType.name}"
-      }
+      require(!isAbstract(rawType.modifiers)) { "Cannot serialize abstract class ${rawType.name}" }
 
       require(!rawType.isKotlin) {
         "Cannot serialize Kotlin type ${rawType.name}. Reflective serialization of Kotlin classes without using kotlin-reflect has undefined and unexpected behavior. Please use KotlinJsonAdapterFactory from the moshi-kotlin artifact or use code gen from the moshi-kotlin-codegen artifact."
@@ -167,8 +162,8 @@ internal class ClassJsonAdapter<T>(
     }
 
     /**
-     * Throw clear error messages for the common beginner mistake of using the concrete
-     * collection classes instead of the collection interfaces, eg: ArrayList instead of List.
+     * Throw clear error messages for the common beginner mistake of using the concrete collection
+     * classes instead of the collection interfaces, eg: ArrayList instead of List.
      */
     private fun Type.throwIfIsCollectionClass(collectionInterface: Class<*>) {
       require(!collectionInterface.isAssignableFrom(rawType)) {
@@ -176,7 +171,7 @@ internal class ClassJsonAdapter<T>(
       }
     }
 
-    /** Creates a field binding for each of declared field of `type`.  */
+    /** Creates a field binding for each of declared field of `type`. */
     private fun createFieldBindings(
       moshi: Moshi,
       type: Type,
@@ -193,11 +188,8 @@ internal class ClassJsonAdapter<T>(
         val fieldType = field.genericType.resolve(type, rawType)
         val annotations = field.jsonAnnotations
         val fieldName = field.name
-        val adapter = moshi.adapter<Any>(
-          type = fieldType,
-          annotations = annotations,
-          fieldName = fieldName,
-        )
+        val adapter =
+          moshi.adapter<Any>(type = fieldType, annotations = annotations, fieldName = fieldName)
 
         // Create the binding between field and JSON.
         field.isAccessible = true
@@ -206,13 +198,11 @@ internal class ClassJsonAdapter<T>(
         val jsonName = jsonAnnotation.jsonName(fieldName)
         val fieldBinding = FieldBinding(jsonName, field, adapter)
         val replaced = fieldBindings.put(jsonName, fieldBinding)
-        checkNull(replaced) {
-          "Conflicting fields:\n    ${it.field}\n    ${fieldBinding.field}"
-        }
+        checkNull(replaced) { "Conflicting fields:\n    ${it.field}\n    ${fieldBinding.field}" }
       }
     }
 
-    /** Returns true if fields with `modifiers` are included in the emitted JSON.  */
+    /** Returns true if fields with `modifiers` are included in the emitted JSON. */
     private fun includeField(platformType: Boolean, modifiers: Int): Boolean {
       return if (isStatic(modifiers) || isTransient(modifiers)) {
         false

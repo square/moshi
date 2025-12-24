@@ -29,22 +29,23 @@ import kotlin.metadata.declaresDefaultValue
 import kotlin.metadata.isLocalClassName
 import kotlin.metadata.isNullable
 
-private fun defaultPrimitiveValue(type: Type): Any? = if (type is Class<*> && type.isPrimitive) {
-  when (type) {
-    Boolean::class.java -> false
-    Char::class.java -> 0.toChar()
-    Byte::class.java -> 0.toByte()
-    Short::class.java -> 0.toShort()
-    Int::class.java -> 0
-    Float::class.java -> 0f
-    Long::class.java -> 0L
-    Double::class.java -> 0.0
-    Void.TYPE -> throw IllegalStateException("Parameter with void type is illegal")
-    else -> throw UnsupportedOperationException("Unknown primitive: $type")
+private fun defaultPrimitiveValue(type: Type): Any? =
+  if (type is Class<*> && type.isPrimitive) {
+    when (type) {
+      Boolean::class.java -> false
+      Char::class.java -> 0.toChar()
+      Byte::class.java -> 0.toByte()
+      Short::class.java -> 0.toShort()
+      Int::class.java -> 0
+      Float::class.java -> 0f
+      Long::class.java -> 0L
+      Double::class.java -> 0.0
+      Void.TYPE -> throw IllegalStateException("Parameter with void type is illegal")
+      else -> throw UnsupportedOperationException("Unknown primitive: $type")
+    }
+  } else {
+    null
   }
-} else {
-  null
-}
 
 internal val KmType.canonicalName: String
   get() {
@@ -107,8 +108,11 @@ internal data class KtParameter(
 }
 
 internal data class KtConstructor(val type: Class<*>, val kmExecutable: KmExecutable<*>) {
-  val isDefault: Boolean get() = kmExecutable.isDefault
-  val parameters: List<KtParameter> get() = kmExecutable.parameters
+  val isDefault: Boolean
+    get() = kmExecutable.isDefault
+
+  val parameters: List<KtParameter>
+    get() = kmExecutable.parameters
 
   fun <R> callBy(argumentsMap: IndexedParameterMap): R {
     val arguments = ArrayList<Any?>(parameters.size)
@@ -146,7 +150,7 @@ internal data class KtConstructor(val type: Class<*>, val kmExecutable: KmExecut
 
         else -> {
           throw IllegalArgumentException(
-            "No argument provided for a required parameter: $parameter",
+            "No argument provided for a required parameter: $parameter"
           )
         }
       }
@@ -195,7 +199,7 @@ internal data class KtProperty(
       ?: jvmGetter?.genericReturnType
       ?: jvmSetter?.genericParameterTypes[0]
       ?: error(
-        "No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'.",
+        "No type information available for property '${km.name}' with type '${km.returnType.canonicalName}'."
       )
 
   /**
@@ -203,13 +207,14 @@ internal data class KtProperty(
    * not the underlying primitive type.
    */
   val javaType: Type
-    get() = if (isValueClass) {
-      // For value classes, return the value class type, not the primitive type
-      val boxerClass = valueClassBoxer!!.declaringClass
-      boxerClass
-    } else {
-      rawJavaType
-    }
+    get() =
+      if (isValueClass) {
+        // For value classes, return the value class type, not the primitive type
+        val boxerClass = valueClassBoxer!!.declaringClass
+        boxerClass
+      } else {
+        rawJavaType
+      }
 
   val isValueClass
     get() = valueClassBoxer != null

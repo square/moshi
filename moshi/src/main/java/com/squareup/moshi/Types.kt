@@ -22,6 +22,7 @@ import com.squareup.moshi.internal.GenericArrayTypeImpl
 import com.squareup.moshi.internal.ParameterizedTypeImpl
 import com.squareup.moshi.internal.WildcardTypeImpl
 import com.squareup.moshi.internal.getSupertype
+import java.lang.annotation.Annotation as JavaAnnotation
 import java.lang.reflect.Array
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
@@ -30,19 +31,19 @@ import java.lang.reflect.TypeVariable
 import java.lang.reflect.WildcardType
 import java.util.Collections
 import javax.annotation.CheckReturnValue
-import java.lang.annotation.Annotation as JavaAnnotation
 
 /** Factory methods for types. */
 @CheckReturnValue
 public object Types {
   /**
-   * Resolves the generated [JsonAdapter] fully qualified class name for a given [clazz]. This is the same lookup logic
-   * used by both the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can be useful
-   * if generating your own JsonAdapters without using Moshi's first party code gen.
+   * Resolves the generated [JsonAdapter] fully qualified class name for a given [clazz]. This is
+   * the same lookup logic used by both the Moshi code generation as well as lookup for any
+   * JsonClass-annotated classes. This can be useful if generating your own JsonAdapters without
+   * using Moshi's first party code gen.
    *
    * @param clazz the class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
-   * Note that this name will always be a top-level class name and not a nested class.
+   *   Note that this name will always be a top-level class name and not a nested class.
    */
   @JvmStatic
   public fun generatedJsonAdapterName(clazz: Class<*>): String {
@@ -53,13 +54,14 @@ public object Types {
   }
 
   /**
-   * Resolves the generated [JsonAdapter] fully qualified class name for a given [ ] `className`. This is the same lookup logic used by both
-   * the Moshi code generation as well as lookup for any JsonClass-annotated classes. This can be
-   * useful if generating your own JsonAdapters without using Moshi's first party code gen.
+   * Resolves the generated [JsonAdapter] fully qualified class name for a given [ ] `className`.
+   * This is the same lookup logic used by both the Moshi code generation as well as lookup for any
+   * JsonClass-annotated classes. This can be useful if generating your own JsonAdapters without
+   * using Moshi's first party code gen.
    *
    * @param className the fully qualified class to calculate a generated JsonAdapter name for.
    * @return the resolved fully qualified class name to the expected generated JsonAdapter class.
-   * Note that this name will always be a top-level class name and not a nested class.
+   *   Note that this name will always be a top-level class name and not a nested class.
    */
   @JvmStatic
   public fun generatedJsonAdapterName(className: String): String {
@@ -67,8 +69,8 @@ public object Types {
   }
 
   /**
-   * Checks if `annotations` contains `jsonQualifier`. Returns the subset of `annotations` without `jsonQualifier`, or null if `annotations` does not contain
-   * `jsonQualifier`.
+   * Checks if `annotations` contains `jsonQualifier`. Returns the subset of `annotations` without
+   * `jsonQualifier`, or null if `annotations` does not contain `jsonQualifier`.
    */
   @JvmStatic
   public fun nextAnnotations(
@@ -92,20 +94,18 @@ public object Types {
   }
 
   /**
-   * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this
-   * method if `rawType` is not enclosed in another type.
+   * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this method if
+   * `rawType` is not enclosed in another type.
    */
   @JvmStatic
   public fun newParameterizedType(rawType: Type, vararg typeArguments: Type): ParameterizedType {
-    require(typeArguments.isNotEmpty()) {
-      "Missing type arguments for $rawType"
-    }
+    require(typeArguments.isNotEmpty()) { "Missing type arguments for $rawType" }
     return ParameterizedTypeImpl(null, rawType, typeArguments)
   }
 
   /**
-   * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this
-   * method if `rawType` is enclosed in `ownerType`.
+   * Returns a new parameterized type, applying `typeArguments` to `rawType`. Use this method if
+   * `rawType` is enclosed in `ownerType`.
    */
   @JvmStatic
   public fun newParameterizedTypeWithOwner(
@@ -113,9 +113,7 @@ public object Types {
     rawType: Type,
     vararg typeArguments: Type,
   ): ParameterizedType {
-    require(typeArguments.isNotEmpty()) {
-      "Missing type arguments for $rawType"
-    }
+    require(typeArguments.isNotEmpty()) { "Missing type arguments for $rawType" }
     return ParameterizedTypeImpl(ownerType, rawType, typeArguments)
   }
 
@@ -126,31 +124,33 @@ public object Types {
   }
 
   /**
-   * Returns a type that represents an unknown type that extends `bound`. For example, if
-   * `bound` is `CharSequence.class`, this returns `? extends CharSequence`. If
-   * `bound` is `Object.class`, this returns `?`, which is shorthand for `?
-   * extends Object`.
+   * Returns a type that represents an unknown type that extends `bound`. For example, if `bound` is
+   * `CharSequence.class`, this returns `? extends CharSequence`. If `bound` is `Object.class`, this
+   * returns `?`, which is shorthand for `? extends Object`.
    */
   @JvmStatic
   public fun subtypeOf(bound: Type): WildcardType {
-    val upperBounds = if (bound is WildcardType) {
-      bound.upperBounds
-    } else {
-      arrayOf<Type>(bound)
-    }
+    val upperBounds =
+      if (bound is WildcardType) {
+        bound.upperBounds
+      } else {
+        arrayOf<Type>(bound)
+      }
     return WildcardTypeImpl(upperBounds, EMPTY_TYPE_ARRAY)
   }
 
   /**
-   * Returns a type that represents an unknown supertype of `bound`. For example, if `bound` is `String.class`, this returns `? super String`.
+   * Returns a type that represents an unknown supertype of `bound`. For example, if `bound` is
+   * `String.class`, this returns `? super String`.
    */
   @JvmStatic
   public fun supertypeOf(bound: Type): WildcardType {
-    val lowerBounds = if (bound is WildcardType) {
-      bound.lowerBounds
-    } else {
-      arrayOf<Type>(bound)
-    }
+    val lowerBounds =
+      if (bound is WildcardType) {
+        bound.lowerBounds
+      } else {
+        arrayOf<Type>(bound)
+      }
     return WildcardTypeImpl(arrayOf<Type>(Any::class.java), lowerBounds)
   }
 
@@ -163,7 +163,8 @@ public object Types {
       }
 
       is ParameterizedType -> {
-        // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
+        // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either
+        // but
         // suspects some pathological case related to nested classes exists.
         val rawType = type.rawType
         rawType as Class<*>
@@ -175,7 +176,8 @@ public object Types {
       }
 
       is TypeVariable<*> -> {
-        // We could use the variable's bounds, but that won't work if there are multiple. having a raw
+        // We could use the variable's bounds, but that won't work if there are multiple. having a
+        // raw
         // type that's more general than necessary is okay.
         Any::class.java
       }
@@ -185,7 +187,7 @@ public object Types {
       else -> {
         val className = type?.javaClass?.name?.toString()
         throw IllegalArgumentException(
-          "Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className",
+          "Expected a Class, ParameterizedType, or GenericArrayType, but <$type> is of type $className"
         )
       }
     }
@@ -235,21 +237,21 @@ public object Types {
             a.actualTypeArguments.toList()
         }
         if (b !is ParameterizedType) return false
-        val aTypeArguments = if (a is ParameterizedTypeImpl) {
-          a.typeArguments
-        } else {
-          a.actualTypeArguments
-        }
-        val bTypeArguments = if (b is ParameterizedTypeImpl) {
-          b.typeArguments
-        } else {
-          b.actualTypeArguments
-        }
-        return (
-          equals(a.ownerType, b.ownerType) &&
-            (a.rawType == b.rawType) &&
-            aTypeArguments.contentEquals(bTypeArguments)
-          )
+        val aTypeArguments =
+          if (a is ParameterizedTypeImpl) {
+            a.typeArguments
+          } else {
+            a.actualTypeArguments
+          }
+        val bTypeArguments =
+          if (b is ParameterizedTypeImpl) {
+            b.typeArguments
+          } else {
+            b.actualTypeArguments
+          }
+        return (equals(a.ownerType, b.ownerType) &&
+          (a.rawType == b.rawType) &&
+          aTypeArguments.contentEquals(bTypeArguments))
       }
 
       is GenericArrayType -> {
@@ -262,10 +264,8 @@ public object Types {
 
       is WildcardType -> {
         if (b !is WildcardType) return false
-        return (
-          a.upperBounds.contentEquals(b.upperBounds) &&
-            a.lowerBounds.contentEquals(b.lowerBounds)
-          )
+        return (a.upperBounds.contentEquals(b.upperBounds) &&
+          a.lowerBounds.contentEquals(b.lowerBounds))
       }
 
       is TypeVariable<*> -> {
@@ -280,25 +280,24 @@ public object Types {
   /**
    * @param clazz the target class to read the `fieldName` field annotations from.
    * @param fieldName the target field name on `clazz`.
-   * @return a set of [JsonQualifier]-annotated [Annotation] instances retrieved from
-   * the targeted field. Can be empty if none are found.
+   * @return a set of [JsonQualifier]-annotated [Annotation] instances retrieved from the targeted
+   *   field. Can be empty if none are found.
    */
   @Deprecated(
-    "This is no longer needed in Kotlin 1.6.0 (which has direct annotation instantiation) and is obsolete.",
+    "This is no longer needed in Kotlin 1.6.0 (which has direct annotation instantiation) and is obsolete."
   )
   @JvmStatic
-  public fun getFieldJsonQualifierAnnotations(
-    clazz: Class<*>,
-    fieldName: String,
-  ): Set<Annotation> {
+  public fun getFieldJsonQualifierAnnotations(clazz: Class<*>, fieldName: String): Set<Annotation> {
     try {
       val field = clazz.getDeclaredField(fieldName)
       field.isAccessible = true
       val fieldAnnotations = field.declaredAnnotations
       return buildSet(fieldAnnotations.size) {
         for (annotation in fieldAnnotations) {
-          val hasJsonQualifier = (annotation as JavaAnnotation).annotationType()
-            .isAnnotationPresent(JsonQualifier::class.java)
+          val hasJsonQualifier =
+            (annotation as JavaAnnotation)
+              .annotationType()
+              .isAnnotationPresent(JsonQualifier::class.java)
           if (hasJsonQualifier) {
             add(annotation)
           }

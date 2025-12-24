@@ -23,11 +23,11 @@ import kotlin.annotation.AnnotationRetention.RUNTIME
  * Although this annotation doesn't declare a [Target], it is only honored in the following
  * elements:
  * - **Java class fields**
- * - **Kotlin properties** for use with `moshi-kotlin` or `moshi-kotlin-codegen`. This includes both properties
- * declared in the constructor and properties declared as members.
+ * - **Kotlin properties** for use with `moshi-kotlin` or `moshi-kotlin-codegen`. This includes both
+ *   properties declared in the constructor and properties declared as members.
  *
- * Users of the [AutoValue: Moshi Extension](https://github.com/rharter/auto-value-moshi) may also use this
- * annotation on abstract getters.
+ * Users of the [AutoValue: Moshi Extension](https://github.com/rharter/auto-value-moshi) may also
+ * use this annotation on abstract getters.
  */
 @Retention(RUNTIME)
 @MustBeDocumented
@@ -35,7 +35,8 @@ public annotation class Json(
   /** The name of the field when encoded as JSON. */
   val name: String = UNSET_NAME,
   /**
-   * If true, this field/property will be ignored. This is semantically similar to use of `transient` on the JVM.
+   * If true, this field/property will be ignored. This is semantically similar to use of
+   * `transient` on the JVM.
    *
    * **Note:** this has no effect in `enum` or `record` classes.
    */

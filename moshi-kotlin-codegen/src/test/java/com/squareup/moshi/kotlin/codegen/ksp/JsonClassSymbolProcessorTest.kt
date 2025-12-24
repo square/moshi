@@ -28,28 +28,27 @@ import com.tschuchort.compiletesting.SourceFile.Companion.kotlin
 import com.tschuchort.compiletesting.configureKsp
 import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
-import org.junit.Ignore
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.typeOf
+import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /** Execute kotlinc to confirm that either files are generated or errors are printed. */
 class JsonClassSymbolProcessorTest {
 
-  @Rule
-  @JvmField
-  val temporaryFolder: TemporaryFolder = TemporaryFolder()
+  @Rule @JvmField val temporaryFolder: TemporaryFolder = TemporaryFolder()
 
   @Test
   fun privateConstructor() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -62,36 +61,38 @@ class JsonClassSymbolProcessorTest {
             }
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("constructor is not internal or public")
   }
 
   @Test
   fun privateConstructorParameter() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           class PrivateConstructorParameter(private var a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
   }
 
   @Test
   fun privateProperties() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -101,95 +102,97 @@ class JsonClassSymbolProcessorTest {
             private var b: Int = -1
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
   }
 
   @Test
   fun interfacesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           interface Interface
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Interface: must be a Kotlin class",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.Interface: must be a Kotlin class")
   }
 
   @Test
   fun interfacesDoNotErrorWhenGeneratorNotSet() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true, generator="customGenerator")
           interface Interface
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
   @Test
   fun abstractClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           abstract class AbstractClass(val a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.AbstractClass: must not be abstract",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.AbstractClass: must not be abstract")
   }
 
   @Test
   fun sealedClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           sealed class SealedClass(val a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.SealedClass: must not be sealed",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.SealedClass: must not be sealed")
   }
 
   @Test
   fun innerClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -198,20 +201,20 @@ class JsonClassSymbolProcessorTest {
             inner class InnerClass(val a: Int)
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.Outer.InnerClass: must not be an inner class")
   }
 
   @Test
   fun enumClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -220,22 +223,24 @@ class JsonClassSymbolProcessorTest {
             A, B
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary",
-    )
+    assertThat(result.messages)
+      .contains(
+        "@JsonClass with 'generateAdapter = \"true\"' can't be applied to test.KotlinEnum: code gen for enums is not supported or necessary"
+      )
   }
 
   // Annotation processors don't get called for local classes, so we don't have the opportunity to
   @Ignore
   @Test
   fun localClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -244,40 +249,40 @@ class JsonClassSymbolProcessorTest {
             class LocalClass(val a: Int)
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to LocalClass: must not be local",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to LocalClass: must not be local")
   }
 
   @Test
   fun privateClassesNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           private class PrivateClass(val a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.PrivateClass: must be internal or public",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.PrivateClass: must be internal or public")
   }
 
   @Test
   fun objectDeclarationsNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -286,20 +291,20 @@ class JsonClassSymbolProcessorTest {
             var a = 5
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.ObjectDeclaration: must be a Kotlin class")
   }
 
   @Test
   fun objectExpressionsNotSupported() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -308,40 +313,39 @@ class JsonClassSymbolProcessorTest {
             var a = 5
           }
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass can't be applied to test.expression: must be a Kotlin class",
-    )
+    assertThat(result.messages)
+      .contains("@JsonClass can't be applied to test.expression: must be a Kotlin class")
   }
 
   @Test
   fun requiredTransientConstructorParameterFails() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Transient var a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No default value for transient/ignored property a",
-    )
+    assertThat(result.messages).contains("No default value for transient/ignored property a")
   }
 
   @Test
   fun requiredIgnoredConstructorParameterFails() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.Json
           import com.squareup.moshi.JsonClass
@@ -349,86 +353,80 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class RequiredTransientConstructorParameter(@Json(ignore = true) var a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No default value for transient/ignored property a",
-    )
+    assertThat(result.messages).contains("No default value for transient/ignored property a")
   }
 
   @Test
   fun nonPropertyConstructorParameter() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           class NonPropertyConstructorParameter(a: Int, val b: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "No property for required constructor parameter a",
-    )
+    assertThat(result.messages).contains("No property for required constructor parameter a")
   }
 
   @Test
   fun badGeneratedAnnotation() {
-    val result = prepareCompilation(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      prepareCompilation(
+          kotlin(
+            "source.kt",
+            """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
           """,
-      ),
-    ).apply {
-      kspProcessorOptions[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg"
-    }.compile()
-    assertThat(result.messages).contains(
-      "Invalid option value for $OPTION_GENERATED",
-    )
+          )
+        )
+        .apply { kspProcessorOptions[OPTION_GENERATED] = "javax.annotation.GeneratedBlerg" }
+        .compile()
+    assertThat(result.messages).contains("Invalid option value for $OPTION_GENERATED")
   }
 
   @Test
   fun disableProguardGeneration() {
-    val compilation = prepareCompilation(
-      kotlin(
-        "source.kt",
-        """
+    val compilation =
+      prepareCompilation(
+          kotlin(
+            "source.kt",
+            """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           data class Foo(val a: Int)
           """,
-      ),
-    ).apply {
-      kspProcessorOptions[OPTION_GENERATE_PROGUARD_RULES] = "false"
-    }
+          )
+        )
+        .apply { kspProcessorOptions[OPTION_GENERATE_PROGUARD_RULES] = "false" }
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
-    assertThat(
-      compilation.kspSourcesDir.walkTopDown().filter {
-        it.extension == "pro"
-      }.toList(),
-    ).isEmpty()
+    assertThat(compilation.kspSourcesDir.walkTopDown().filter { it.extension == "pro" }.toList())
+      .isEmpty()
   }
 
   @Test
   fun multipleErrors() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -438,8 +436,8 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class Class2(private var c: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("property a is not visible")
     assertThat(result.messages).contains("property c is not visible")
@@ -447,10 +445,11 @@ class JsonClassSymbolProcessorTest {
 
   @Test
   fun extendPlatformType() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
           import java.util.Date
@@ -458,17 +457,18 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class ExtendsPlatformClass(var a: Int) : Date()
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.messages).contains("supertype java.util.Date is not a Kotlin type")
   }
 
   @Test
   fun extendJavaType() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.kotlin.codegen.JavaSuperclass
@@ -476,17 +476,17 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class ExtendsJavaType(var b: Int) : JavaSuperclass()
           """,
-      ),
-      java(
-        "JavaSuperclass.java",
-        """
+        ),
+        java(
+          "JavaSuperclass.java",
+          """
         package com.squareup.moshi.kotlin.codegen;
         public class JavaSuperclass {
           public int a = 1;
         }
         """,
-      ),
-    )
+        ),
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages)
       .contains("supertype com.squareup.moshi.kotlin.codegen.JavaSuperclass is not a Kotlin type")
@@ -494,10 +494,11 @@ class JsonClassSymbolProcessorTest {
 
   @Test
   fun nonFieldApplicableQualifier() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
@@ -514,18 +515,19 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
           """,
-      ),
-    )
+        )
+      )
     // We instantiate directly, no FIELD site target necessary
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
   }
 
   @Test
   fun nonRuntimeQualifier() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
@@ -543,78 +545,84 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           class ClassWithQualifier(@UpperCase val a: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("JsonQualifier @UpperCase must have RUNTIME retention")
   }
 
   @Test
   fun invalidGenericSyntaxErrorMessaging() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true)
           data class ElementEnvelope(val elements: List)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
     assertThat(result.messages).contains("Error preparing ElementEnvelope")
   }
 
   @Test
   fun inlineClassWithMultiplePropertiesFails() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true, inline = true)
           class MultipleProperties(val a: Int, val b: Int)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass with inline = true requires exactly one non-transient property, but " +
-        "MultipleProperties has 2: a, b.",
-    )
+    assertThat(result.messages)
+      .contains(
+        "@JsonClass with inline = true requires exactly one non-transient property, but " +
+          "MultipleProperties has 2: a, b."
+      )
   }
 
   @Test
   fun inlineClassWithNullablePropertyFails() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
           @JsonClass(generateAdapter = true, inline = true)
           class NullableProperty(val a: Int?)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
-    assertThat(result.messages).contains(
-      "@JsonClass with inline = true requires a non-nullable property, " +
-        "but NullableProperty.a is nullable.",
-    )
+    assertThat(result.messages)
+      .contains(
+        "@JsonClass with inline = true requires a non-nullable property, " +
+          "but NullableProperty.a is nullable."
+      )
   }
 
   @Test
   fun `TypeAliases with the same backing type should share the same adapter`() {
-    val result = compile(
-      kotlin(
-        "source.kt",
-        """
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
           package test
           import com.squareup.moshi.JsonClass
 
@@ -624,25 +632,27 @@ class JsonClassSymbolProcessorTest {
           @JsonClass(generateAdapter = true)
           data class Person(val firstName: FirstName, val lastName: LastName, val hairColor: String)
           """,
-      ),
-    )
+        )
+      )
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
     // We're checking here that we only generate one `stringAdapter` that's used for both the
     // regular string properties as well as the aliased ones.
     val adapterClass = result.classLoader.loadClass("test.PersonJsonAdapter").kotlin
-    assertThat(adapterClass.declaredMemberProperties.map { it.returnType }).containsExactly(
-      JsonReader.Options::class.createType(),
-      JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String?>()))),
-    )
+    assertThat(adapterClass.declaredMemberProperties.map { it.returnType })
+      .containsExactly(
+        JsonReader.Options::class.createType(),
+        JsonAdapter::class.createType(listOf(KTypeProjection.invariant(typeOf<String?>()))),
+      )
   }
 
   @Test
   fun `Processor should generate comprehensive proguard rules`() {
-    val compilation = prepareCompilation(
-      kotlin(
-        "source.kt",
-        """
+    val compilation =
+      prepareCompilation(
+        kotlin(
+          "source.kt",
+          """
           package testPackage
           import com.squareup.moshi.JsonClass
           import com.squareup.moshi.JsonQualifier
@@ -752,142 +762,164 @@ class JsonClassSymbolProcessorTest {
               val arg65: Long = 65
           )
           """,
-      ),
-    )
+        )
+      )
     val result = compilation.compile()
     assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
 
-    compilation.kspSourcesDir.walkTopDown().filter {
-      it.extension == "pro"
-    }.forEach { generatedFile ->
-      when (generatedFile.nameWithoutExtension) {
-        "moshi-testPackage.Aliases" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.Aliases
-          -if class testPackage.Aliases
-          -keep class testPackage.AliasesJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi);
-          }
-          """.trimIndent(),
-        )
+    compilation.kspSourcesDir
+      .walkTopDown()
+      .filter { it.extension == "pro" }
+      .forEach { generatedFile ->
+        when (generatedFile.nameWithoutExtension) {
+          "moshi-testPackage.Aliases" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.Aliases
+                -if class testPackage.Aliases
+                -keep class testPackage.AliasesJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                """
+                  .trimIndent()
+              )
 
-        "moshi-testPackage.Simple" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.Simple
-          -if class testPackage.Simple
-          -keep class testPackage.SimpleJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi);
-          }
-          """.trimIndent(),
-        )
+          "moshi-testPackage.Simple" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.Simple
+                -if class testPackage.Simple
+                -keep class testPackage.SimpleJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                """
+                  .trimIndent()
+              )
 
-        "moshi-testPackage.Generic" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.Generic
-          -if class testPackage.Generic
-          -keep class testPackage.GenericJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-          }
-          """.trimIndent(),
-        )
+          "moshi-testPackage.Generic" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.Generic
+                -if class testPackage.Generic
+                -keep class testPackage.GenericJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
+                }
+                """
+                  .trimIndent()
+              )
 
-        "moshi-testPackage.UsingQualifiers" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
-            -keepnames class testPackage.UsingQualifiers
-            -if class testPackage.UsingQualifiers
-            -keep class testPackage.UsingQualifiersJsonAdapter {
-                public <init>(com.squareup.moshi.Moshi);
-            }
-            """.trimIndent(),
-          )
+          "moshi-testPackage.UsingQualifiers" -> {
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.UsingQualifiers
+                -if class testPackage.UsingQualifiers
+                -keep class testPackage.UsingQualifiersJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                """
+                  .trimIndent()
+              )
+          }
+
+          "moshi-testPackage.MixedTypes" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.MixedTypes
+                -if class testPackage.MixedTypes
+                -keep class testPackage.MixedTypesJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                """
+                  .trimIndent()
+              )
+
+          "moshi-testPackage.DefaultParams" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.DefaultParams
+                -if class testPackage.DefaultParams
+                -keep class testPackage.DefaultParamsJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                -if class testPackage.DefaultParams
+                -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+                -keepclassmembers class testPackage.DefaultParams {
+                    public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
+                }
+                """
+                  .trimIndent()
+              )
+
+          "moshi-testPackage.Complex" -> {
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.Complex
+                -if class testPackage.Complex
+                -keep class testPackage.ComplexJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
+                }
+                -if class testPackage.Complex
+                -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+                -keepclassmembers class testPackage.Complex {
+                    public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
+                }
+                """
+                  .trimIndent()
+              )
+          }
+
+          "moshi-testPackage.MultipleMasks" ->
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.MultipleMasks
+                -if class testPackage.MultipleMasks
+                -keep class testPackage.MultipleMasksJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                -if class testPackage.MultipleMasks
+                -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+                -keepclassmembers class testPackage.MultipleMasks {
+                    public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
+                }
+                """
+                  .trimIndent()
+              )
+
+          "moshi-testPackage.NestedType.NestedSimple" -> {
+            assertThat(generatedFile.readText())
+              .contains(
+                """
+                -keepnames class testPackage.NestedType${'$'}NestedSimple
+                -if class testPackage.NestedType${'$'}NestedSimple
+                -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
+                    public <init>(com.squareup.moshi.Moshi);
+                }
+                """
+                  .trimIndent()
+              )
+          }
+
+          else -> error("Unexpected proguard file! ${generatedFile.name}")
         }
-
-        "moshi-testPackage.MixedTypes" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.MixedTypes
-          -if class testPackage.MixedTypes
-          -keep class testPackage.MixedTypesJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi);
-          }
-          """.trimIndent(),
-        )
-
-        "moshi-testPackage.DefaultParams" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.DefaultParams
-          -if class testPackage.DefaultParams
-          -keep class testPackage.DefaultParamsJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi);
-          }
-          -if class testPackage.DefaultParams
-          -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -keepclassmembers class testPackage.DefaultParams {
-              public synthetic <init>(java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
-          }
-          """.trimIndent(),
-        )
-
-        "moshi-testPackage.Complex" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
-            -keepnames class testPackage.Complex
-            -if class testPackage.Complex
-            -keep class testPackage.ComplexJsonAdapter {
-                public <init>(com.squareup.moshi.Moshi,java.lang.reflect.Type[]);
-            }
-            -if class testPackage.Complex
-            -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-            -keepclassmembers class testPackage.Complex {
-                public synthetic <init>(java.lang.String,java.util.List,java.lang.Object,int,kotlin.jvm.internal.DefaultConstructorMarker);
-            }
-            """.trimIndent(),
-          )
-        }
-
-        "moshi-testPackage.MultipleMasks" -> assertThat(generatedFile.readText()).contains(
-          """
-          -keepnames class testPackage.MultipleMasks
-          -if class testPackage.MultipleMasks
-          -keep class testPackage.MultipleMasksJsonAdapter {
-              public <init>(com.squareup.moshi.Moshi);
-          }
-          -if class testPackage.MultipleMasks
-          -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-          -keepclassmembers class testPackage.MultipleMasks {
-              public synthetic <init>(long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,long,int,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
-          }
-          """.trimIndent(),
-        )
-
-        "moshi-testPackage.NestedType.NestedSimple" -> {
-          assertThat(generatedFile.readText()).contains(
-            """
-            -keepnames class testPackage.NestedType${'$'}NestedSimple
-            -if class testPackage.NestedType${'$'}NestedSimple
-            -keep class testPackage.NestedType_NestedSimpleJsonAdapter {
-                public <init>(com.squareup.moshi.Moshi);
-            }
-            """.trimIndent(),
-          )
-        }
-
-        else -> error("Unexpected proguard file! ${generatedFile.name}")
       }
-    }
   }
 
   private fun prepareCompilation(vararg sourceFiles: SourceFile): KotlinCompilation {
-    return KotlinCompilation()
-      .apply {
-        workingDir = temporaryFolder.root
-        inheritClassPath = true
-        sources = sourceFiles.asList()
-        verbose = false
-        configureKsp {
-          symbolProcessorProviders += JsonClassSymbolProcessorProvider()
-        }
-      }
+    return KotlinCompilation().apply {
+      workingDir = temporaryFolder.root
+      inheritClassPath = true
+      sources = sourceFiles.asList()
+      verbose = false
+      configureKsp { symbolProcessorProviders += JsonClassSymbolProcessorProvider() }
+    }
   }
 
   private fun compile(vararg sourceFiles: SourceFile): JvmCompilationResult {

@@ -22,12 +22,12 @@ import com.squareup.moshi.internal.JsonScope.NONEMPTY_DOCUMENT
 import com.squareup.moshi.internal.JsonScope.STREAMING_VALUE
 import com.squareup.moshi.internal.LinkedHashTreeMap
 import com.squareup.moshi.internal.knownNotNull
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSink
 import okio.ForwardingSink
 import okio.IOException
 import okio.buffer
-import java.math.BigDecimal
 
 /** Writes JSON by building a Java object comprising maps, lists, and JSON primitives. */
 @Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
@@ -149,11 +149,9 @@ internal class `-JsonValueWriter` : JsonWriter() {
   override fun value(value: Double): JsonWriter {
     require(
       isLenient ||
-        (
-          !value.isNaN() &&
-            (value != Double.NEGATIVE_INFINITY) &&
-            (value != Double.POSITIVE_INFINITY)
-          ),
+        (!value.isNaN() &&
+          (value != Double.NEGATIVE_INFINITY) &&
+          (value != Double.POSITIVE_INFINITY))
     ) {
       "Numeric values must be finite, but was $value"
     }
@@ -181,10 +179,14 @@ internal class `-JsonValueWriter` : JsonWriter() {
       null -> nullValue()
 
       // If it's trivially converted to a long, do that.
-      is Byte, is Short, is Int, is Long -> value(value.toLong())
+      is Byte,
+      is Short,
+      is Int,
+      is Long -> value(value.toLong())
 
       // If it's trivially converted to a double, do that.
-      is Float, is Double -> value(value.toDouble())
+      is Float,
+      is Double -> value(value.toDouble())
 
       else -> {
         // Everything else gets converted to a BigDecimal.
@@ -205,22 +207,23 @@ internal class `-JsonValueWriter` : JsonWriter() {
     pushScope(STREAMING_VALUE)
     val buffer = Buffer()
     return object : ForwardingSink(buffer) {
-      override fun close() {
-        if (peekScope() != STREAMING_VALUE || stack[stackSize] != null) {
-          throw AssertionError()
+        override fun close() {
+          if (peekScope() != STREAMING_VALUE || stack[stackSize] != null) {
+            throw AssertionError()
+          }
+          stackSize-- // Remove STREAMING_VALUE from the stack.
+          val value = JsonReader.of(buffer).readJsonValue()
+          val serializeNulls = serializeNulls
+          this@`-JsonValueWriter`.serializeNulls = true
+          try {
+            add(value)
+          } finally {
+            this@`-JsonValueWriter`.serializeNulls = serializeNulls
+          }
+          pathIndices[stackSize - 1]++
         }
-        stackSize-- // Remove STREAMING_VALUE from the stack.
-        val value = JsonReader.of(buffer).readJsonValue()
-        val serializeNulls = serializeNulls
-        this@`-JsonValueWriter`.serializeNulls = true
-        try {
-          add(value)
-        } finally {
-          this@`-JsonValueWriter`.serializeNulls = serializeNulls
-        }
-        pathIndices[stackSize - 1]++
       }
-    }.buffer()
+      .buffer()
   }
 
   override fun close() {
@@ -247,8 +250,7 @@ internal class `-JsonValueWriter` : JsonWriter() {
       scope == EMPTY_OBJECT && deferredName != null -> {
         if (newTop != null || serializeNulls) {
           // Our maps always have string keys and object values.
-          @Suppress("UNCHECKED_CAST")
-          val map = stack[stackSize - 1] as MutableMap<String, Any?>
+          @Suppress("UNCHECKED_CAST") val map = stack[stackSize - 1] as MutableMap<String, Any?>
           // Safe to assume not null as this is single-threaded and smartcast just can't handle it
           val replaced = map.put(knownNotNull(deferredName), newTop)
           require(replaced == null) {
@@ -260,14 +262,12 @@ internal class `-JsonValueWriter` : JsonWriter() {
 
       scope == EMPTY_ARRAY -> {
         // Our lists always have object values.
-        @Suppress("UNCHECKED_CAST")
-        val list = stack[stackSize - 1] as MutableList<Any?>
+        @Suppress("UNCHECKED_CAST") val list = stack[stackSize - 1] as MutableList<Any?>
         list.add(newTop)
       }
 
-      scope == STREAMING_VALUE -> throw IllegalStateException(
-        "Sink from valueSink() was not closed",
-      )
+      scope == STREAMING_VALUE ->
+        throw IllegalStateException("Sink from valueSink() was not closed")
 
       else -> throw IllegalStateException("Nesting problem.")
     }

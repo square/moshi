@@ -17,24 +17,26 @@ package com.squareup.moshi
 
 import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.knownNotNull
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
-import java.math.BigDecimal
 
 /**
  * This class reads a JSON document by traversing a Java object comprising maps, lists, and JSON
  * primitives. It does depth-first traversal keeping a stack starting with the root object. During
  * traversal a stack tracks the current position in the document:
- *  * The next element to act upon is on the top of the stack.
- *  * When the top of the stack is a [List], calling [beginArray] replaces the list with a [JsonIterator]. The first
- *  element of the iterator is pushed on top of the iterator.
- *  * Similarly, when the top of the stack is a [Map], calling [beginObject] replaces the map with an [JsonIterator]
- *  of its entries. The first element of the iterator is pushed on top of the iterator.
- *  * When the top of the stack is a [Map.Entry], calling [nextName] returns the entry's key and replaces the entry
- *  with its value on the stack.
- *  * When an element is consumed it is popped. If the new top of the stack has a non-exhausted iterator, the next
- *  element of that iterator is pushed.
- *  * If the top of the stack is an exhausted iterator, calling [endArray] or [endObject] will pop it.
+ * * The next element to act upon is on the top of the stack.
+ * * When the top of the stack is a [List], calling [beginArray] replaces the list with a
+ *   [JsonIterator]. The first element of the iterator is pushed on top of the iterator.
+ * * Similarly, when the top of the stack is a [Map], calling [beginObject] replaces the map with an
+ *   [JsonIterator] of its entries. The first element of the iterator is pushed on top of the
+ *   iterator.
+ * * When the top of the stack is a [Map.Entry], calling [nextName] returns the entry's key and
+ *   replaces the entry with its value on the stack.
+ * * When an element is consumed it is popped. If the new top of the stack has a non-exhausted
+ *   iterator, the next element of that iterator is pushed.
+ * * If the top of the stack is an exhausted iterator, calling [endArray] or [endObject] will pop
+ *   it.
  */
 @Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
 internal class `-JsonValueReader` : JsonReader {
@@ -126,9 +128,7 @@ internal class `-JsonValueReader` : JsonReader {
 
       null -> Token.NULL
 
-      else -> ifNotClosed(peeked) {
-        throw typeMismatch(peeked, "a JSON value")
-      }
+      else -> ifNotClosed(peeked) { throw typeMismatch(peeked, "a JSON value") }
     }
   }
 
@@ -182,18 +182,14 @@ internal class `-JsonValueReader` : JsonReader {
         peeked.toString()
       }
 
-      else -> ifNotClosed(peeked) {
-        throw typeMismatch(peeked, Token.STRING)
-      }
+      else -> ifNotClosed(peeked) { throw typeMismatch(peeked, Token.STRING) }
     }
   }
 
   override fun selectString(options: Options): Int {
     val peeked = if (stackSize != 0) stack[stackSize - 1] else null
     if (peeked !is String) {
-      ifNotClosed(peeked) {
-        -1
-      }
+      ifNotClosed(peeked) { -1 }
     }
     for (i in options.strings.indices) {
       if (options.strings[i] == peeked) {
@@ -217,21 +213,22 @@ internal class `-JsonValueReader` : JsonReader {
   }
 
   override fun nextDouble(): Double {
-    val result = when (val peeked = require<Any>(Token.NUMBER)) {
-      is Number -> peeked.toDouble()
+    val result =
+      when (val peeked = require<Any>(Token.NUMBER)) {
+        is Number -> peeked.toDouble()
 
-      is String -> {
-        try {
-          peeked.toDouble()
-        } catch (_: NumberFormatException) {
+        is String -> {
+          try {
+            peeked.toDouble()
+          } catch (_: NumberFormatException) {
+            throw typeMismatch(peeked, Token.NUMBER)
+          }
+        }
+
+        else -> {
           throw typeMismatch(peeked, Token.NUMBER)
         }
       }
-
-      else -> {
-        throw typeMismatch(peeked, Token.NUMBER)
-      }
-    }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
     }
@@ -240,41 +237,45 @@ internal class `-JsonValueReader` : JsonReader {
   }
 
   override fun nextLong(): Long {
-    val result: Long = when (val peeked = require<Any>(Token.NUMBER)) {
-      is Number -> peeked.toLong()
+    val result: Long =
+      when (val peeked = require<Any>(Token.NUMBER)) {
+        is Number -> peeked.toLong()
 
-      is String -> try {
-        peeked.toLong()
-      } catch (_: NumberFormatException) {
-        try {
-          BigDecimal(peeked).longValueExact()
-        } catch (_: NumberFormatException) {
-          throw typeMismatch(peeked, Token.NUMBER)
-        }
+        is String ->
+          try {
+            peeked.toLong()
+          } catch (_: NumberFormatException) {
+            try {
+              BigDecimal(peeked).longValueExact()
+            } catch (_: NumberFormatException) {
+              throw typeMismatch(peeked, Token.NUMBER)
+            }
+          }
+
+        else -> throw typeMismatch(peeked, Token.NUMBER)
       }
-
-      else -> throw typeMismatch(peeked, Token.NUMBER)
-    }
     remove()
     return result
   }
 
   override fun nextInt(): Int {
-    val result = when (val peeked = require<Any>(Token.NUMBER)) {
-      is Number -> peeked.toInt()
+    val result =
+      when (val peeked = require<Any>(Token.NUMBER)) {
+        is Number -> peeked.toInt()
 
-      is String -> try {
-        peeked.toInt()
-      } catch (_: NumberFormatException) {
-        try {
-          BigDecimal(peeked).intValueExact()
-        } catch (_: NumberFormatException) {
-          throw typeMismatch(peeked, Token.NUMBER)
-        }
+        is String ->
+          try {
+            peeked.toInt()
+          } catch (_: NumberFormatException) {
+            try {
+              BigDecimal(peeked).intValueExact()
+            } catch (_: NumberFormatException) {
+              throw typeMismatch(peeked, Token.NUMBER)
+            }
+          }
+
+        else -> throw typeMismatch(peeked, Token.NUMBER)
       }
-
-      else -> throw typeMismatch(peeked, Token.NUMBER)
-    }
     remove()
     return result
   }
@@ -347,8 +348,8 @@ internal class `-JsonValueReader` : JsonReader {
   private fun requireNull() = require(Void::class.java, Token.NULL)
 
   /**
-   * Returns the top of the stack which is required to be a `type`. Throws if this reader is
-   * closed, or if the type isn't what was expected.
+   * Returns the top of the stack which is required to be a `type`. Throws if this reader is closed,
+   * or if the type isn't what was expected.
    */
   private fun <T> require(type: Class<T>, expected: Token): T? {
     val peeked = if (stackSize != 0) stack[stackSize - 1] else null
@@ -358,9 +359,7 @@ internal class `-JsonValueReader` : JsonReader {
     if (peeked == null && expected == Token.NULL) {
       return null
     }
-    ifNotClosed(peeked) {
-      throw typeMismatch(peeked, expected)
-    }
+    ifNotClosed(peeked) { throw typeMismatch(peeked, expected) }
   }
 
   private fun stringKey(entry: Map.Entry<*, *>): String {
@@ -394,8 +393,7 @@ internal class `-JsonValueReader` : JsonReader {
   }
 
   internal class JsonIterator(val endToken: Token, val array: Array<Any?>, var next: Int) :
-    Iterator<Any?>,
-    Cloneable {
+    Iterator<Any?>, Cloneable {
     override fun hasNext() = next < array.size
 
     override fun next() = array[next++]

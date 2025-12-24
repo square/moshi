@@ -24,9 +24,8 @@ import com.squareup.moshi.rawType
 import java.lang.reflect.Type
 
 /** Converts collection types to JSON arrays containing their converted contents. */
-internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> private constructor(
-  private val elementAdapter: JsonAdapter<T?>,
-) : JsonAdapter<C?>() {
+internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T>
+private constructor(private val elementAdapter: JsonAdapter<T?>) : JsonAdapter<C?>() {
 
   abstract fun newCollection(): C
 
@@ -55,7 +54,8 @@ internal abstract class CollectionJsonAdapter<C : MutableCollection<T?>, T> priv
     override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
       if (annotations.isNotEmpty()) return null
       return when (type.rawType) {
-        List::class.java, Collection::class.java -> {
+        List::class.java,
+        Collection::class.java -> {
           newArrayListAdapter<Any>(type, moshi).nullSafe()
         }
 

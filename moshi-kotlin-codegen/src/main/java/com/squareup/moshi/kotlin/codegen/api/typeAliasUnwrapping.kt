@@ -30,9 +30,8 @@ import java.util.TreeSet
 private fun TypeName.unwrapTypeAliasInternal(): TypeName? {
   return tag<TypeAliasTag>()?.abbreviatedType?.let { unwrappedType ->
     // Keep track of all annotations across type levels. Sort them too for consistency.
-    val runningAnnotations = TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply {
-      addAll(annotations)
-    }
+    val runningAnnotations =
+      TreeSet<AnnotationSpec>(compareBy { it.toString() }).apply { addAll(annotations) }
     val nestedUnwrappedType = unwrappedType.unwrapTypeAlias()
     runningAnnotations.addAll(nestedUnwrappedType.annotations)
     // If any type is nullable, then the whole thing is nullable
@@ -61,8 +60,9 @@ internal fun TypeName.unwrapTypeAlias(): TypeName {
       unwrapTypeAliasInternal() ?: deepCopy(TypeName::unwrapTypeAlias)
     }
 
-    Dynamic -> throw UnsupportedOperationException(
-      "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed.",
-    )
+    Dynamic ->
+      throw UnsupportedOperationException(
+        "Type '${javaClass.simpleName}' is illegal. Only classes, parameterized types, wildcard types, or type variables are allowed."
+      )
   }
 }

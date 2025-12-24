@@ -33,17 +33,19 @@ import kotlin.reflect.KClass
  */
 
 internal fun <T : Annotation> KSAnnotated.getAnnotationsByType(
-  annotationKClass: KClass<T>,
+  annotationKClass: KClass<T>
 ): Sequence<T> {
-  return this.annotations.filter {
-    it.shortName.getShortName() == annotationKClass.simpleName &&
-      it.annotationType.resolve().declaration
-        .qualifiedName?.asString() == annotationKClass.qualifiedName
-  }.map { it.toAnnotation(annotationKClass.java) }
+  return this.annotations
+    .filter {
+      it.shortName.getShortName() == annotationKClass.simpleName &&
+        it.annotationType.resolve().declaration.qualifiedName?.asString() ==
+          annotationKClass.qualifiedName
+    }
+    .map { it.toAnnotation(annotationKClass.java) }
 }
 
 internal fun <T : Annotation> KSAnnotated.isAnnotationPresent(
-  annotationKClass: KClass<T>,
+  annotationKClass: KClass<T>
 ): Boolean = getAnnotationsByType(annotationKClass).firstOrNull() != null
 
 @Suppress("UNCHECKED_CAST")
@@ -61,12 +63,14 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
   return InvocationHandler { proxy, method, _ ->
     if (method.name == "toString" && arguments.none { it.name?.asString() == "toString" }) {
       clazz.canonicalName +
-        arguments.map { argument: KSValueArgument ->
-          // handles default values for enums otherwise returns null
-          val methodName = argument.name?.asString()
-          val value = proxy.javaClass.methods.find { m -> m.name == methodName }?.invoke(proxy)
-          "$methodName=$value"
-        }.toList()
+        arguments
+          .map { argument: KSValueArgument ->
+            // handles default values for enums otherwise returns null
+            val methodName = argument.name?.asString()
+            val value = proxy.javaClass.methods.find { m -> m.name == methodName }?.invoke(proxy)
+            "$methodName=$value"
+          }
+          .toList()
     } else {
       val argument = arguments.first { it.name?.asString() == method.name }
       when (val result = argument.value ?: method.defaultValue) {
@@ -87,7 +91,7 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
                 cache.getOrPut(Pair(method.returnType, value), value)
               } else {
                 throw IllegalStateException(
-                  "unhandled value type, please file a bug at https://github.com/google/ksp/issues/new",
+                  "unhandled value type, please file a bug at https://github.com/google/ksp/issues/new"
                 )
               }
             }
@@ -109,11 +113,12 @@ private fun KSAnnotation.createInvocationHandler(clazz: Class<*>): InvocationHan
 
                   // Handles com.intellij.psi.impl.source.PsiImmediateClassType using reflection
                   // since api doesn't contain a reference to this
-                  else -> Class.forName(
-                    result.javaClass.methods
-                      .first { it.name == "getCanonicalText" }
-                      .invoke(result, false) as String,
-                  )
+                  else ->
+                    Class.forName(
+                      result.javaClass.methods
+                        .first { it.name == "getCanonicalText" }
+                        .invoke(result, false) as String
+                    )
                 }
               }
             }
@@ -195,19 +200,18 @@ private fun List<*>.asArray(method: Method, proxyClass: Class<*>) =
           }
         }
 
-        else -> throw IllegalStateException(
-          "Unable to process type ${method.returnType.componentType.name}",
-        )
+        else ->
+          throw IllegalStateException(
+            "Unable to process type ${method.returnType.componentType.name}"
+          )
       }
     }
   }
 
 @Suppress("UNCHECKED_CAST")
 private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<Any?> {
-  val array: Array<Any?> = java.lang.reflect.Array.newInstance(
-    method.returnType.componentType,
-    this.size,
-  ) as Array<Any?>
+  val array: Array<Any?> =
+    java.lang.reflect.Array.newInstance(method.returnType.componentType, this.size) as Array<Any?>
   for (r in 0 until this.size) {
     array[r] = this[r]?.let { valueProvider.invoke(it) }
   }
@@ -216,10 +220,10 @@ private fun List<*>.toArray(method: Method, valueProvider: (Any) -> Any): Array<
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Any.asEnum(returnType: Class<T>): T =
-  returnType.getDeclaredMethod("valueOf", String::class.java)
+  returnType
+    .getDeclaredMethod("valueOf", String::class.java)
     .invoke(
       null,
-
       if (this is KSType) {
         this.declaration.simpleName.getShortName()
       } else if (this is KSClassDeclaration) {
@@ -247,17 +251,19 @@ internal class KSTypeNotPresentException(val ksType: KSType, cause: Throwable) :
 internal class KSTypesNotPresentException(val ksTypes: List<KSType>, cause: Throwable) :
   RuntimeException(cause)
 
-private fun KSType.asClass(proxyClass: Class<*>) = try {
-  Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
-} catch (e: Exception) {
-  throw KSTypeNotPresentException(this, e)
-}
+private fun KSType.asClass(proxyClass: Class<*>) =
+  try {
+    Class.forName(this.declaration.toJavaClassName(), true, proxyClass.classLoader)
+  } catch (e: Exception) {
+    throw KSTypeNotPresentException(this, e)
+  }
 
-private fun List<KSType>.asClasses(proxyClass: Class<*>) = try {
-  this.map { type -> type.asClass(proxyClass) }
-} catch (e: Exception) {
-  throw KSTypesNotPresentException(this, e)
-}
+private fun List<KSType>.asClasses(proxyClass: Class<*>) =
+  try {
+    this.map { type -> type.asClass(proxyClass) }
+  } catch (e: Exception) {
+    throw KSTypesNotPresentException(this, e)
+  }
 
 private fun Any.asArray(method: Method, proxyClass: Class<*>) =
   listOf(this).asArray(method, proxyClass)
@@ -266,9 +272,8 @@ private fun KSDeclaration.toJavaClassName(): String {
   val nameDelimiter = '.'
   val packageNameString = packageName.asString()
   val qualifiedNameString = qualifiedName!!.asString()
-  val simpleNames = qualifiedNameString
-    .removePrefix("${packageNameString}$nameDelimiter")
-    .split(nameDelimiter)
+  val simpleNames =
+    qualifiedNameString.removePrefix("${packageNameString}$nameDelimiter").split(nameDelimiter)
 
   return if (simpleNames.size > 1) {
     buildString {

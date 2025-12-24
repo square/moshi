@@ -1,19 +1,15 @@
 import com.diffplug.gradle.spotless.JavaExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import java.net.URI
 import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
 
 buildscript {
   dependencies {
-    val kotlinVersion =
-      System.getenv("MOSHI_KOTLIN_VERSION")
-        ?: libs.versions.kotlin.get()
-    val kspVersion =
-      System.getenv("MOSHI_KSP_VERSION")
-        ?: libs.versions.ksp.get()
+    val kotlinVersion = System.getenv("MOSHI_KOTLIN_VERSION") ?: libs.versions.kotlin.get()
+    val kspVersion = System.getenv("MOSHI_KSP_VERSION") ?: libs.versions.ksp.get()
     classpath(kotlin("gradle-plugin", version = kotlinVersion))
     classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:$kspVersion")
   }
@@ -31,9 +27,7 @@ allprojects {
   group = "com.squareup.moshi"
   version = "2.0.0-SNAPSHOT"
 
-  repositories {
-    mavenCentral()
-  }
+  repositories { mavenCentral() }
 }
 
 spotless {
@@ -70,14 +64,10 @@ subprojects {
   // Apply with "java" instead of just "java-library" so kotlin projects get it too
   pluginManager.withPlugin("java") {
     configure<JavaPluginExtension> {
-      toolchain {
-        languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of))
-      }
+      toolchain { languageVersion.set(libs.versions.jdk.map(JavaLanguageVersion::of)) }
     }
     if (project.name != "records-tests") {
-      tasks.withType<JavaCompile>().configureEach {
-        options.release.set(8)
-      }
+      tasks.withType<JavaCompile>().configureEach { options.release.set(8) }
     }
   }
 
@@ -104,11 +94,7 @@ dependencies {
   dokka(project(":moshi-kotlin-codegen"))
 }
 
-dokka {
-  dokkaPublications.html {
-    outputDirectory.set(layout.projectDirectory.dir("docs/2.x"))
-  }
-}
+dokka { dokkaPublications.html { outputDirectory.set(layout.projectDirectory.dir("docs/2.x")) } }
 
 subprojects {
   plugins.withId("org.jetbrains.dokka") {
@@ -129,9 +115,7 @@ subprojects {
         sourceLink {
           localDirectory.set(layout.projectDirectory.dir("src"))
           val relPath =
-            rootProject.isolated.projectDirectory.asFile
-              .toPath()
-              .relativize(projectDir.toPath())
+            rootProject.isolated.projectDirectory.asFile.toPath().relativize(projectDir.toPath())
           remoteUrl("https://github.com/square/moshi/tree/main/$relPath/src")
           remoteLineSuffix.set("#L")
         }

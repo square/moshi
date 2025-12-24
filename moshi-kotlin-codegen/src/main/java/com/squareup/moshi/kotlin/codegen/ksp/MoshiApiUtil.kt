@@ -28,7 +28,8 @@ import com.squareup.moshi.kotlin.codegen.api.PropertyGenerator
 import com.squareup.moshi.kotlin.codegen.api.TargetProperty
 import com.squareup.moshi.kotlin.codegen.api.rawType
 
-private val TargetProperty.isSettable get() = propertySpec.mutable || parameter != null
+private val TargetProperty.isSettable
+  get() = propertySpec.mutable || parameter != null
 private val TargetProperty.isVisible: Boolean
   get() {
     return visibility == KModifier.INTERNAL ||
@@ -47,20 +48,14 @@ internal fun TargetProperty.generator(
 ): PropertyGenerator? {
   if (jsonIgnore) {
     if (!hasDefault) {
-      logger.error(
-        "No default value for transient/ignored property $name",
-        originalType,
-      )
+      logger.error("No default value for transient/ignored property $name", originalType)
       return null
     }
     return PropertyGenerator(this, DelegateKey(type, emptyList()), true)
   }
 
   if (!isVisible) {
-    logger.error(
-      "property $name is not visible",
-      originalType,
-    )
+    logger.error("property $name is not visible", originalType)
     return null
   }
 
@@ -76,24 +71,16 @@ internal fun TargetProperty.generator(
     resolver.getClassDeclarationByName(qualifierRawType.canonicalName)?.let { annotationElement ->
       annotationElement.findAnnotationWithType<Retention>()?.let {
         if (it.value != AnnotationRetention.RUNTIME) {
-          logger.error(
-            "JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention",
-          )
+          logger.error("JsonQualifier @${qualifierRawType.simpleName} must have RUNTIME retention")
         }
       }
     }
   }
 
-  val jsonQualifierSpecs = qualifiers.map {
-    it.toBuilder()
-      .useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD)
-      .build()
-  }
+  val jsonQualifierSpecs =
+    qualifiers.map { it.toBuilder().useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD).build() }
 
-  return PropertyGenerator(
-    this,
-    DelegateKey(type, jsonQualifierSpecs),
-  )
+  return PropertyGenerator(this, DelegateKey(type, jsonQualifierSpecs))
 }
 
 internal val KSClassDeclaration.isJsonQualifier: Boolean

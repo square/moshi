@@ -47,33 +47,36 @@ import kotlin.contracts.contract
 @JvmField internal val EMPTY_TYPE_ARRAY: Array<Type> = arrayOf()
 
 @Suppress("UNCHECKED_CAST")
-private val METADATA: Class<out Annotation>? = try {
-  Class.forName(kotlinMetadataClassName) as Class<out Annotation>
-} catch (_: ClassNotFoundException) {
-  null
-}
+private val METADATA: Class<out Annotation>? =
+  try {
+    Class.forName(kotlinMetadataClassName) as Class<out Annotation>
+  } catch (_: ClassNotFoundException) {
+    null
+  }
 
 // We look up the constructor marker separately because Metadata might be (justifiably)
 // stripped by R8/Proguard but the DefaultConstructorMarker is still present.
 @JvmField
-public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? = try {
-  Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
-} catch (_: ClassNotFoundException) {
-  null
-}
+public val DEFAULT_CONSTRUCTOR_MARKER: Class<*>? =
+  try {
+    Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
+  } catch (_: ClassNotFoundException) {
+    null
+  }
 
 /** A map from primitive types to their corresponding wrapper types. */
-private val PRIMITIVE_TO_WRAPPER_TYPE: Map<Class<*>, Class<*>> = buildMap(16) {
-  put(knownNotNull(Boolean::class.javaPrimitiveType), Boolean::class.java)
-  put(knownNotNull(Byte::class.javaPrimitiveType), Byte::class.java)
-  put(knownNotNull(Char::class.javaPrimitiveType), Char::class.java)
-  put(knownNotNull(Double::class.javaPrimitiveType), Double::class.java)
-  put(knownNotNull(Float::class.javaPrimitiveType), Float::class.java)
-  put(knownNotNull(Int::class.javaPrimitiveType), Int::class.java)
-  put(knownNotNull(Long::class.javaPrimitiveType), Long::class.java)
-  put(knownNotNull(Short::class.javaPrimitiveType), Short::class.java)
-  put(Void.TYPE, Void::class.java)
-}
+private val PRIMITIVE_TO_WRAPPER_TYPE: Map<Class<*>, Class<*>> =
+  buildMap(16) {
+    put(knownNotNull(Boolean::class.javaPrimitiveType), Boolean::class.java)
+    put(knownNotNull(Byte::class.javaPrimitiveType), Byte::class.java)
+    put(knownNotNull(Char::class.javaPrimitiveType), Char::class.java)
+    put(knownNotNull(Double::class.javaPrimitiveType), Double::class.java)
+    put(knownNotNull(Float::class.javaPrimitiveType), Float::class.java)
+    put(knownNotNull(Int::class.javaPrimitiveType), Int::class.java)
+    put(knownNotNull(Long::class.javaPrimitiveType), Long::class.java)
+    put(knownNotNull(Short::class.javaPrimitiveType), Short::class.java)
+    put(Void.TYPE, Void::class.java)
+  }
 
 // Extracted as a method with a keep rule to prevent R8 from keeping Kotlin Metadata
 private val kotlinMetadataClassName: String
@@ -97,7 +100,9 @@ public val Array<Annotation>.jsonAnnotations: Set<Annotation>
     var result: MutableSet<Annotation>? = null
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-      if ((annotation as java.lang.annotation.Annotation).annotationType()
+      if (
+        (annotation as java.lang.annotation.Annotation)
+          .annotationType()
           .isAnnotationPresent(JsonQualifier::class.java)
       ) {
         if (result == null) result = LinkedHashSet()
@@ -111,9 +116,7 @@ internal fun Set<Annotation>.isAnnotationPresent(annotationClass: Class<out Anno
   if (isEmpty()) return false // Save an iterator in the common case.
   for (annotation in this) {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-    if ((annotation as java.lang.annotation.Annotation).annotationType() ==
-      annotationClass
-    ) {
+    if ((annotation as java.lang.annotation.Annotation).annotationType() == annotationClass) {
       return true
     }
   }
@@ -125,8 +128,8 @@ internal val Array<Annotation>.hasNullable: Boolean
   get() {
     for (annotation in this) {
       @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-      if ((annotation as java.lang.annotation.Annotation).annotationType().simpleName ==
-        "Nullable"
+      if (
+        (annotation as java.lang.annotation.Annotation).annotationType().simpleName == "Nullable"
       ) {
         return true
       }
@@ -135,23 +138,21 @@ internal val Array<Annotation>.hasNullable: Boolean
   }
 
 /**
- * Returns true if `rawType` is built in. We don't reflect on private fields of platform
- * types because they're unspecified and likely to be different on Java vs. Android.
+ * Returns true if `rawType` is built in. We don't reflect on private fields of platform types
+ * because they're unspecified and likely to be different on Java vs. Android.
  */
 public val Class<*>.isPlatformType: Boolean
   get() {
     val name = name
-    return (
-      name.startsWith("android.") ||
-        name.startsWith("androidx.") ||
-        name.startsWith("java.") ||
-        name.startsWith("javax.") ||
-        // L8 desugared APIs
-        name.startsWith("j$.") ||
-        name.startsWith("kotlin.") ||
-        name.startsWith("kotlinx.") ||
-        name.startsWith("scala.")
-      )
+    return (name.startsWith("android.") ||
+      name.startsWith("androidx.") ||
+      name.startsWith("java.") ||
+      name.startsWith("javax.") ||
+      // L8 desugared APIs
+      name.startsWith("j$.") ||
+      name.startsWith("kotlin.") ||
+      name.startsWith("kotlinx.") ||
+      name.startsWith("scala."))
   }
 
 /** Throws the cause of `e`, wrapping it if it is checked. */
@@ -163,7 +164,8 @@ internal fun InvocationTargetException.rethrowCause(): RuntimeException {
 }
 
 /**
- * Returns a type that is functionally equal but not necessarily equal according to [[Object.equals()]][Object.equals].
+ * Returns a type that is functionally equal but not necessarily equal according to
+ * [[Object.equals()]][Object.equals].
  */
 internal fun Type.canonicalize(): Type {
   return when (this) {
@@ -242,9 +244,8 @@ private fun Type.resolve(
       toResolve is ParameterizedType -> {
         val original = toResolve
         val ownerType: Type? = original.ownerType
-        val newOwnerType = ownerType?.let {
-          ownerType.resolve(context, contextRawType, visitedTypeVariables)
-        }
+        val newOwnerType =
+          ownerType?.let { ownerType.resolve(context, contextRawType, visitedTypeVariables) }
         var changed = newOwnerType !== ownerType
         var args = original.actualTypeArguments
         for (t in args.indices) {
@@ -258,11 +259,7 @@ private fun Type.resolve(
           }
         }
         return if (changed) {
-          ParameterizedTypeImpl(
-            newOwnerType,
-            original.rawType,
-            args,
-          )
+          ParameterizedTypeImpl(newOwnerType, original.rawType, args)
         } else {
           original
         }
@@ -273,20 +270,14 @@ private fun Type.resolve(
         val originalLowerBound = original.lowerBounds
         val originalUpperBound = original.upperBounds
         if (originalLowerBound.size == 1) {
-          val lowerBound = originalLowerBound[0].resolve(
-            context,
-            contextRawType,
-            visitedTypeVariables,
-          )
+          val lowerBound =
+            originalLowerBound[0].resolve(context, contextRawType, visitedTypeVariables)
           if (lowerBound !== originalLowerBound[0]) {
             return Types.supertypeOf(lowerBound)
           }
         } else if (originalUpperBound.size == 1) {
-          val upperBound = originalUpperBound[0].resolve(
-            context,
-            contextRawType,
-            visitedTypeVariables,
-          )
+          val upperBound =
+            originalUpperBound[0].resolve(context, contextRawType, visitedTypeVariables)
           if (upperBound !== originalUpperBound[0]) {
             return Types.subtypeOf(upperBound)
           }
@@ -316,8 +307,9 @@ internal fun resolveTypeVariable(
 }
 
 /**
- * Returns the generic supertype for `supertype`. For example, given a class `IntegerSet`, the result for when supertype is `Set.class` is `Set<Integer>` and the
- * result when the supertype is `Collection.class` is `Collection<Integer>`.
+ * Returns the generic supertype for `supertype`. For example, given a class `IntegerSet`, the
+ * result for when supertype is `Set.class` is `Set<Integer>` and the result when the supertype is
+ * `Collection.class` is `Collection<Integer>`.
  */
 internal fun getGenericSupertype(
   context: Type,
@@ -367,10 +359,7 @@ internal fun Type.typeToString(): String {
   return if (this is Class<*>) name else toString()
 }
 
-/**
- * Returns the declaring class of `typeVariable`, or `null` if it was not declared by
- * a class.
- */
+/** Returns the declaring class of `typeVariable`, or `null` if it was not declared by a class. */
 internal fun declaringClassOf(typeVariable: TypeVariable<*>): Class<*>? {
   val genericDeclaration = typeVariable.genericDeclaration
   return genericDeclaration as? Class<*>
@@ -388,8 +377,7 @@ internal fun Type.toStringWithAnnotations(annotations: Set<Annotation>): String 
 }
 
 /**
- * Returns the element type of `type` if it is an array type, or null if it is not an array
- * type.
+ * Returns the element type of `type` if it is an array type, or null if it is not an array type.
  */
 internal fun arrayComponentType(type: Type): Type? {
   return when (type) {
@@ -420,7 +408,8 @@ internal fun mapKeyAndValueTypes(context: Type, contextRawType: Class<*>): Array
 }
 
 /**
- * Returns the generic form of `supertype`. For example, if this is `ArrayList<String>`, this returns `Iterable<String>` given the input `Iterable.class`.
+ * Returns the generic form of `supertype`. For example, if this is `ArrayList<String>`, this
+ * returns `Iterable<String>` given the input `Iterable.class`.
  *
  * @param supertype a superclass of, or interface implemented by, this.
  */
@@ -430,20 +419,16 @@ internal fun getSupertype(context: Type, contextRawType: Class<*>, supertype: Cl
 }
 
 internal fun <T : Annotation?> createJsonQualifierImplementation(annotationType: Class<T>): T {
-  require(annotationType.isAnnotation) {
-    "$annotationType must be an annotation."
-  }
+  require(annotationType.isAnnotation) { "$annotationType must be an annotation." }
   require(annotationType.isAnnotationPresent(JsonQualifier::class.java)) {
     "$annotationType must have @JsonQualifier."
   }
-  require(annotationType.declaredMethods.isEmpty()) {
-    "$annotationType must not declare methods."
-  }
+  require(annotationType.declaredMethods.isEmpty()) { "$annotationType must not declare methods." }
   @Suppress("UNCHECKED_CAST")
-  return Proxy.newProxyInstance(
-    annotationType.classLoader,
-    arrayOf<Class<*>>(annotationType),
-  ) { proxy, method, args ->
+  return Proxy.newProxyInstance(annotationType.classLoader, arrayOf<Class<*>>(annotationType)) {
+    proxy,
+    method,
+    args ->
     when (method.name) {
       "annotationType" -> annotationType
 
@@ -462,8 +447,8 @@ internal fun <T : Annotation?> createJsonQualifierImplementation(annotationType:
 }
 
 /**
- * Loads the generated JsonAdapter for classes annotated [JsonClass]. This works because it
- * uses the same naming conventions as `JsonClassCodeGenProcessor`.
+ * Loads the generated JsonAdapter for classes annotated [JsonClass]. This works because it uses the
+ * same naming conventions as `JsonClassCodeGenProcessor`.
  */
 public fun Moshi.generatedAdapter(type: Type, rawType: Class<*>): JsonAdapter<*>? {
   val jsonClass = rawType.getAnnotation(JsonClass::class.java)
@@ -474,11 +459,8 @@ public fun Moshi.generatedAdapter(type: Type, rawType: Class<*>): JsonAdapter<*>
   var possiblyFoundAdapter: Class<out JsonAdapter<*>>? = null
   return try {
     @Suppress("UNCHECKED_CAST")
-    val adapterClass = Class.forName(
-      adapterClassName,
-      true,
-      rawType.classLoader,
-    ) as Class<out JsonAdapter<*>>
+    val adapterClass =
+      Class.forName(adapterClassName, true, rawType.classLoader) as Class<out JsonAdapter<*>>
     possiblyFoundAdapter = adapterClass
     var constructor: Constructor<out JsonAdapter<*>>
     var args: Array<Any>
@@ -508,19 +490,17 @@ public fun Moshi.generatedAdapter(type: Type, rawType: Class<*>): JsonAdapter<*>
   } catch (e: ClassNotFoundException) {
     throw RuntimeException("Failed to find the generated JsonAdapter class for $type", e)
   } catch (e: NoSuchMethodException) {
-    if (possiblyFoundAdapter != null &&
-      type !is ParameterizedType &&
-      possiblyFoundAdapter.typeParameters.isNotEmpty()
+    if (
+      possiblyFoundAdapter != null &&
+        type !is ParameterizedType &&
+        possiblyFoundAdapter.typeParameters.isNotEmpty()
     ) {
       throw RuntimeException(
         "Failed to find the generated JsonAdapter constructor for '$type'. Suspiciously, the type was not parameterized but the target class '${possiblyFoundAdapter.canonicalName}' is generic. Consider using Types#newParameterizedType() to define these missing type variables.",
         e,
       )
     } else {
-      throw RuntimeException(
-        "Failed to find the generated JsonAdapter constructor for $type",
-        e,
-      )
+      throw RuntimeException("Failed to find the generated JsonAdapter constructor for $type", e)
     }
   } catch (e: IllegalAccessException) {
     throw RuntimeException("Failed to access the generated JsonAdapter for $type", e)
@@ -537,9 +517,9 @@ internal val Class<*>.isKotlin: Boolean
 /**
  * Reflectively looks up the defaults constructor of a kotlin class.
  *
- * @receiver the target kotlin class to instantiate.
  * @param T the type of `targetClass`.
  * @return the instantiated `targetClass` instance.
+ * @receiver the target kotlin class to instantiate.
  */
 internal fun <T> Class<T>.lookupDefaultsConstructor(): Constructor<T> {
   checkNotNull(DEFAULT_CONSTRUCTOR_MARKER) {
@@ -567,11 +547,12 @@ public fun missingProperty(
   reader: JsonReader,
 ): JsonDataException {
   val path = reader.path
-  val message = if (jsonName == propertyName) {
-    "Required value '$propertyName' missing at $path"
-  } else {
-    "Required value '$propertyName' (JSON name '$jsonName') missing at $path"
-  }
+  val message =
+    if (jsonName == propertyName) {
+      "Required value '$propertyName' missing at $path"
+    } else {
+      "Required value '$propertyName' (JSON name '$jsonName') missing at $path"
+    }
   return JsonDataException(message)
 }
 
@@ -581,21 +562,21 @@ public fun unexpectedNull(
   reader: JsonReader,
 ): JsonDataException {
   val path = reader.path
-  val message: String = if (jsonName == propertyName) {
-    "Non-null value '$propertyName' was null at $path"
-  } else {
-    "Non-null value '$propertyName' (JSON name '$jsonName') was null at $path"
-  }
+  val message: String =
+    if (jsonName == propertyName) {
+      "Non-null value '$propertyName' was null at $path"
+    } else {
+      "Non-null value '$propertyName' (JSON name '$jsonName') was null at $path"
+    }
   return JsonDataException(message)
 }
 
-// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check intrinsic.
+// Sneaky backdoor way of marking a value as non-null to the compiler and skip the null-check
+// intrinsic.
 // Safe to use (unstable) contracts since they're gone in the final bytecode
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun <T> markNotNull(value: T?) {
-  contract {
-    returns() implies (value != null)
-  }
+  contract { returns() implies (value != null) }
 }
 
 @Suppress("NOTHING_TO_INLINE")
@@ -608,8 +589,7 @@ internal inline fun <T> knownNotNull(value: T?): T {
 @PublishedApi
 internal fun <T> Class<T>.boxIfPrimitive(): Class<T> {
   // cast is safe: long.class and Long.class are both of type Class<Long>
-  @Suppress("UNCHECKED_CAST")
-  val wrapped = PRIMITIVE_TO_WRAPPER_TYPE[this] as Class<T>?
+  @Suppress("UNCHECKED_CAST") val wrapped = PRIMITIVE_TO_WRAPPER_TYPE[this] as Class<T>?
   return wrapped ?: this
 }
 
@@ -629,10 +609,10 @@ internal class ParameterizedTypeImpl(
   private val rawType: Type = rawType.canonicalize()
 
   @JvmField
-  val typeArguments: Array<Type> = Array(typeArguments.size) { index ->
-    typeArguments[index].canonicalize()
-      .also { it.checkNotPrimitive() }
-  }
+  val typeArguments: Array<Type> =
+    Array(typeArguments.size) { index ->
+      typeArguments[index].canonicalize().also { it.checkNotPrimitive() }
+    }
 
   init {
     // Require an owner type if the raw type needs it.

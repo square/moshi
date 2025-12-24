@@ -45,54 +45,54 @@ public data class ProguardConfig(
     return "META-INF/proguard/moshi-$canonicalName"
   }
 
-  public fun writeTo(out: Appendable): Unit = out.run {
-    //
-    // -keepnames class {the target class}
-    // -if class {the target class}
-    // -keep class {the generated adapter} {
-    //    <init>(...);
-    //    private final {adapter fields}
-    // }
-    //
-    val targetName = targetClass.reflectionName()
-    val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
-    // Keep the class name for Moshi's reflective lookup based on it
-    appendLine("-keepnames class $targetName")
-
-    appendLine("-if class $targetName")
-    appendLine("-keep class $adapterCanonicalName {")
-    // Keep the constructor for Moshi's reflective lookup
-    val constructorArgs = adapterConstructorParams.joinToString(",")
-    appendLine("    public <init>($constructorArgs);")
-    appendLine("}")
-
-    if (targetConstructorHasDefaults) {
-      // If the target class has default parameter values, keep its synthetic constructor
+  public fun writeTo(out: Appendable): Unit =
+    out.run {
       //
+      // -keepnames class {the target class}
       // -if class {the target class}
-      // -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
-      // -keepclassmembers @com.squareup.moshi.JsonClass @kotlin.Metadata class * {
-      //     synthetic <init>(...);
+      // -keep class {the generated adapter} {
+      //    <init>(...);
+      //    private final {adapter fields}
       // }
       //
+      val targetName = targetClass.reflectionName()
+      val adapterCanonicalName = ClassName(targetClass.packageName, adapterName).canonicalName
+      // Keep the class name for Moshi's reflective lookup based on it
+      appendLine("-keepnames class $targetName")
+
       appendLine("-if class $targetName")
-      appendLine("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
-      appendLine("-keepclassmembers class $targetName {")
-      val allParams = targetConstructorParams.toMutableList()
-      val maskCount = if (targetConstructorParams.isEmpty()) {
-        0
-      } else {
-        (targetConstructorParams.size + 31) / 32
-      }
-      repeat(maskCount) {
-        allParams += "int"
-      }
-      allParams += "kotlin.jvm.internal.DefaultConstructorMarker"
-      val params = allParams.joinToString(",")
-      appendLine("    public synthetic <init>($params);")
+      appendLine("-keep class $adapterCanonicalName {")
+      // Keep the constructor for Moshi's reflective lookup
+      val constructorArgs = adapterConstructorParams.joinToString(",")
+      appendLine("    public <init>($constructorArgs);")
       appendLine("}")
+
+      if (targetConstructorHasDefaults) {
+        // If the target class has default parameter values, keep its synthetic constructor
+        //
+        // -if class {the target class}
+        // -keepnames class kotlin.jvm.internal.DefaultConstructorMarker
+        // -keepclassmembers @com.squareup.moshi.JsonClass @kotlin.Metadata class * {
+        //     synthetic <init>(...);
+        // }
+        //
+        appendLine("-if class $targetName")
+        appendLine("-keepnames class kotlin.jvm.internal.DefaultConstructorMarker")
+        appendLine("-keepclassmembers class $targetName {")
+        val allParams = targetConstructorParams.toMutableList()
+        val maskCount =
+          if (targetConstructorParams.isEmpty()) {
+            0
+          } else {
+            (targetConstructorParams.size + 31) / 32
+          }
+        repeat(maskCount) { allParams += "int" }
+        allParams += "kotlin.jvm.internal.DefaultConstructorMarker"
+        val params = allParams.joinToString(",")
+        appendLine("    public synthetic <init>($params);")
+        appendLine("}")
+      }
     }
-  }
 }
 
 /**

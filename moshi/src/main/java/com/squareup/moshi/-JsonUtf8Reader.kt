@@ -18,6 +18,7 @@ package com.squareup.moshi
 import com.squareup.moshi.internal.JsonScope
 import com.squareup.moshi.internal.JsonValueSource
 import com.squareup.moshi.internal.knownNotNull
+import java.math.BigDecimal
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -25,7 +26,6 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.IOException
 import okio.buffer
-import java.math.BigDecimal
 
 @Suppress("ktlint:standard:class-naming") // Hide this symbol from Java callers.
 internal class `-JsonUtf8Reader` : JsonReader {
@@ -50,9 +50,9 @@ internal class `-JsonUtf8Reader` : JsonReader {
   private var peekedString: String? = null
 
   /**
-   * If non-null, the most recent value read was [nextSource]. The caller may be
-   * mid-stream so it is necessary to call [JsonValueSource.discard] to get to the end of the
-   * current JSON value before proceeding.
+   * If non-null, the most recent value read was [nextSource]. The caller may be mid-stream so it is
+   * necessary to call [JsonValueSource.discard] to get to the end of the current JSON value before
+   * proceeding.
    */
   private var valueSource: JsonValueSource? = null
 
@@ -139,16 +139,20 @@ internal class `-JsonUtf8Reader` : JsonReader {
       PEEKED_SINGLE_QUOTED_NAME,
       PEEKED_DOUBLE_QUOTED_NAME,
       PEEKED_UNQUOTED_NAME,
-      PEEKED_BUFFERED_NAME,
-      -> Token.NAME
+      PEEKED_BUFFERED_NAME -> Token.NAME
 
-      PEEKED_TRUE, PEEKED_FALSE -> Token.BOOLEAN
+      PEEKED_TRUE,
+      PEEKED_FALSE -> Token.BOOLEAN
 
       PEEKED_NULL -> Token.NULL
 
-      PEEKED_SINGLE_QUOTED, PEEKED_DOUBLE_QUOTED, PEEKED_UNQUOTED, PEEKED_BUFFERED -> Token.STRING
+      PEEKED_SINGLE_QUOTED,
+      PEEKED_DOUBLE_QUOTED,
+      PEEKED_UNQUOTED,
+      PEEKED_BUFFERED -> Token.STRING
 
-      PEEKED_LONG, PEEKED_NUMBER -> Token.NUMBER
+      PEEKED_LONG,
+      PEEKED_NUMBER -> Token.NUMBER
 
       PEEKED_EOF -> Token.END_DOCUMENT
 
@@ -179,7 +183,8 @@ internal class `-JsonUtf8Reader` : JsonReader {
         }
       }
 
-      JsonScope.EMPTY_OBJECT, JsonScope.NONEMPTY_OBJECT -> {
+      JsonScope.EMPTY_OBJECT,
+      JsonScope.NONEMPTY_OBJECT -> {
         scopes[stackSize - 1] = JsonScope.DANGLING_NAME
         // Look for a comma before the next element.
         if (peekStack == JsonScope.NONEMPTY_OBJECT) {
@@ -198,34 +203,36 @@ internal class `-JsonUtf8Reader` : JsonReader {
             else -> throw syntaxError("Unterminated object")
           }
         }
-        val next = when (val c = nextNonWhitespace(true).toChar()) {
-          '"' -> {
-            buffer.readByte() // consume the '\"'.
-            PEEKED_DOUBLE_QUOTED_NAME
-          }
+        val next =
+          when (val c = nextNonWhitespace(true).toChar()) {
+            '"' -> {
+              buffer.readByte() // consume the '\"'.
+              PEEKED_DOUBLE_QUOTED_NAME
+            }
 
-          '\'' -> {
-            buffer.readByte() // consume the '\''.
-            checkLenient()
-            PEEKED_SINGLE_QUOTED_NAME
-          }
+            '\'' -> {
+              buffer.readByte() // consume the '\''.
+              checkLenient()
+              PEEKED_SINGLE_QUOTED_NAME
+            }
 
-          '}' -> if (peekStack != JsonScope.NONEMPTY_OBJECT) {
-            buffer.readByte() // consume the '}'.
-            PEEKED_END_OBJECT
-          } else {
-            throw syntaxError("Expected name")
-          }
+            '}' ->
+              if (peekStack != JsonScope.NONEMPTY_OBJECT) {
+                buffer.readByte() // consume the '}'.
+                PEEKED_END_OBJECT
+              } else {
+                throw syntaxError("Expected name")
+              }
 
-          else -> {
-            checkLenient()
-            if (isLiteral(c.code)) {
-              PEEKED_UNQUOTED_NAME
-            } else {
-              throw syntaxError("Expected name")
+            else -> {
+              checkLenient()
+              if (isLiteral(c.code)) {
+                PEEKED_UNQUOTED_NAME
+              } else {
+                throw syntaxError("Expected name")
+              }
             }
           }
-        }
         peeked = next
         return next
       }
@@ -289,14 +296,17 @@ internal class `-JsonUtf8Reader` : JsonReader {
       }
 
       // In lenient mode, a 0-length literal in an array means 'null'.
-      ';', ',' -> return when (peekStack) {
-        JsonScope.EMPTY_ARRAY, JsonScope.NONEMPTY_ARRAY -> {
-          checkLenient()
-          setPeeked(PEEKED_NULL)
-        }
+      ';',
+      ',' ->
+        return when (peekStack) {
+          JsonScope.EMPTY_ARRAY,
+          JsonScope.NONEMPTY_ARRAY -> {
+            checkLenient()
+            setPeeked(PEEKED_NULL)
+          }
 
-        else -> throw syntaxError("Unexpected value")
-      }
+          else -> throw syntaxError("Unexpected value")
+        }
 
       '\'' -> {
         checkLenient()
@@ -343,19 +353,22 @@ internal class `-JsonUtf8Reader` : JsonReader {
     val keywordUpper: String
     val peeking: Int
     when (c) {
-      't', 'T' -> {
+      't',
+      'T' -> {
         keyword = "true"
         keywordUpper = "TRUE"
         peeking = PEEKED_TRUE
       }
 
-      'f', 'F' -> {
+      'f',
+      'F' -> {
         keyword = "false"
         keywordUpper = "FALSE"
         peeking = PEEKED_FALSE
       }
 
-      'n', 'N' -> {
+      'n',
+      'N' -> {
         keyword = "null"
         keywordUpper = "NULL"
         peeking = PEEKED_NULL
@@ -423,7 +436,8 @@ internal class `-JsonUtf8Reader` : JsonReader {
           return PEEKED_NONE
         }
 
-        'e', 'E' -> {
+        'e',
+        'E' -> {
           if (last == NUMBER_CHAR_DIGIT || last == NUMBER_CHAR_FRACTION_DIGIT) {
             last = NUMBER_CHAR_EXP_E
             i++
@@ -447,7 +461,8 @@ internal class `-JsonUtf8Reader` : JsonReader {
             return PEEKED_NONE
           }
           when (last) {
-            NUMBER_CHAR_SIGN, NUMBER_CHAR_NONE -> {
+            NUMBER_CHAR_SIGN,
+            NUMBER_CHAR_NONE -> {
               value = -(c - '0').toLong()
               last = NUMBER_CHAR_DIGIT
             }
@@ -457,20 +472,17 @@ internal class `-JsonUtf8Reader` : JsonReader {
                 return PEEKED_NONE // Leading '0' prefix is not allowed (since it could be octal).
               }
               val newValue = value * 10 - (c - '0').toLong()
-              fitsInLong = fitsInLong and
-                (
-                  (value > MIN_INCOMPLETE_INTEGER) ||
-                    (
-                      (value == MIN_INCOMPLETE_INTEGER) &&
-                        (newValue < value)
-                      )
-                  )
+              fitsInLong =
+                fitsInLong and
+                  ((value > MIN_INCOMPLETE_INTEGER) ||
+                    ((value == MIN_INCOMPLETE_INTEGER) && (newValue < value)))
               value = newValue
             }
 
             NUMBER_CHAR_DECIMAL -> last = NUMBER_CHAR_FRACTION_DIGIT
 
-            NUMBER_CHAR_EXP_E, NUMBER_CHAR_EXP_SIGN -> last = NUMBER_CHAR_EXP_DIGIT
+            NUMBER_CHAR_EXP_E,
+            NUMBER_CHAR_EXP_SIGN -> last = NUMBER_CHAR_EXP_DIGIT
           }
         }
       }
@@ -502,13 +514,27 @@ internal class `-JsonUtf8Reader` : JsonReader {
   @Throws(IOException::class)
   private fun isLiteral(c: Int): Boolean {
     return when (c.toChar()) {
-      '/', '\\', ';', '#', '=' -> {
+      '/',
+      '\\',
+      ';',
+      '#',
+      '=' -> {
         checkLenient() // fall-through
         false
       }
 
       // 0x000C = \f
-      '{', '}', '[', ']', ':', ',', ' ', '\t', '\u000C', '\r', '\n' -> false
+      '{',
+      '}',
+      '[',
+      ']',
+      ':',
+      ',',
+      ' ',
+      '\t',
+      '\u000C',
+      '\r',
+      '\n' -> false
 
       else -> true
     }
@@ -516,21 +542,22 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
   @Throws(IOException::class)
   override fun nextName(): String {
-    val result = when (peekIfNone()) {
-      PEEKED_UNQUOTED_NAME -> nextUnquotedValue()
+    val result =
+      when (peekIfNone()) {
+        PEEKED_UNQUOTED_NAME -> nextUnquotedValue()
 
-      PEEKED_DOUBLE_QUOTED_NAME -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+        PEEKED_DOUBLE_QUOTED_NAME -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
 
-      PEEKED_SINGLE_QUOTED_NAME -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        PEEKED_SINGLE_QUOTED_NAME -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
 
-      PEEKED_BUFFERED_NAME -> {
-        val name = peekedString!!
-        peekedString = null
-        name
+        PEEKED_BUFFERED_NAME -> {
+          val name = peekedString!!
+          peekedString = null
+          name
+        }
+
+        else -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
       }
-
-      else -> throw JsonDataException("Expected a name but was ${peek()} at path $path")
-    }
     peeked = PEEKED_NONE
     pathNames[stackSize - 1] = result
     return result
@@ -582,17 +609,16 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
       p == PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
 
-      p != PEEKED_BUFFERED_NAME -> throw JsonDataException(
-        "Expected a name but was ${peek()} at path $path",
-      )
+      p != PEEKED_BUFFERED_NAME ->
+        throw JsonDataException("Expected a name but was ${peek()} at path $path")
     }
     peeked = PEEKED_NONE
     pathNames[stackSize - 1] = "null"
   }
 
   /**
-   * If `name` is in `options` this consumes it and returns its index. Otherwise this
-   * returns -1 and no name is consumed.
+   * If `name` is in `options` this consumes it and returns its index. Otherwise this returns -1 and
+   * no name is consumed.
    */
   private fun findName(name: String?, options: Options): Int {
     val i = options.strings.indexOfFirst { it == name }
@@ -606,25 +632,26 @@ internal class `-JsonUtf8Reader` : JsonReader {
   }
 
   override fun nextString(): String {
-    val result = when (peekIfNone()) {
-      PEEKED_UNQUOTED -> nextUnquotedValue()
+    val result =
+      when (peekIfNone()) {
+        PEEKED_UNQUOTED -> nextUnquotedValue()
 
-      PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+        PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
 
-      PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
 
-      PEEKED_BUFFERED -> {
-        val buffered = peekedString!!
-        peekedString = null
-        buffered
+        PEEKED_BUFFERED -> {
+          val buffered = peekedString!!
+          peekedString = null
+          buffered
+        }
+
+        PEEKED_LONG -> peekedLong.toString()
+
+        PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
+
+        else -> throw JsonDataException("Expected a string but was ${peek()} at path $path")
       }
-
-      PEEKED_LONG -> peekedLong.toString()
-
-      PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong())
-
-      else -> throw JsonDataException("Expected a string but was ${peek()} at path $path")
-    }
     peeked = PEEKED_NONE
     pathIndices[stackSize - 1]++
     return result
@@ -655,8 +682,8 @@ internal class `-JsonUtf8Reader` : JsonReader {
   }
 
   /**
-   * If `string` is in `options` this consumes it and returns its index. Otherwise this
-   * returns -1 and no string is consumed.
+   * If `string` is in `options` this consumes it and returns its index. Otherwise this returns -1
+   * and no string is consumed.
    */
   private fun findString(string: String?, options: Options): Int {
     val i = options.strings.indexOfFirst { it == string }
@@ -705,28 +732,30 @@ internal class `-JsonUtf8Reader` : JsonReader {
       pathIndices[stackSize - 1]++
       return peekedLong.toDouble()
     }
-    val next = when (p) {
-      PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
+    val next =
+      when (p) {
+        PEEKED_NUMBER -> buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
 
-      PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH).also { peekedString = it }
+        PEEKED_DOUBLE_QUOTED -> nextQuotedValue(DOUBLE_QUOTE_OR_SLASH).also { peekedString = it }
 
-      PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH).also { peekedString = it }
+        PEEKED_SINGLE_QUOTED -> nextQuotedValue(SINGLE_QUOTE_OR_SLASH).also { peekedString = it }
 
-      PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
+        PEEKED_UNQUOTED -> nextUnquotedValue().also { peekedString = it }
 
-      PEEKED_BUFFERED -> {
-        // PEEKED_BUFFERED means the value's been stored in peekedString
-        knownNotNull(peekedString)
+        PEEKED_BUFFERED -> {
+          // PEEKED_BUFFERED means the value's been stored in peekedString
+          knownNotNull(peekedString)
+        }
+
+        else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
       }
-
-      else -> throw JsonDataException("Expected a double but was " + peek() + " at path " + path)
-    }
     peeked = PEEKED_BUFFERED
-    val result = try {
-      next.toDouble()
-    } catch (_: NumberFormatException) {
-      throw JsonDataException("Expected a double but was $next at path $path")
-    }
+    val result =
+      try {
+        next.toDouble()
+      } catch (_: NumberFormatException) {
+        throw JsonDataException("Expected a double but was $next at path $path")
+      }
     if (!lenient && (result.isNaN() || result.isInfinite())) {
       throw JsonEncodingException("JSON forbids NaN and infinities: $result at path $path")
     }
@@ -748,9 +777,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
       p == PEEKED_DOUBLE_QUOTED || p == PEEKED_SINGLE_QUOTED -> {
         peekedString =
-          if (p ==
-            PEEKED_DOUBLE_QUOTED
-          ) {
+          if (p == PEEKED_DOUBLE_QUOTED) {
             nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
           } else {
             nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
@@ -770,14 +797,15 @@ internal class `-JsonUtf8Reader` : JsonReader {
       }
     }
     peeked = PEEKED_BUFFERED
-    val result = try {
-      val asDecimal = BigDecimal(peekedString)
-      asDecimal.longValueExact()
-    } catch (_: NumberFormatException) {
-      throw JsonDataException("Expected a long but was $peekedString at path $path")
-    } catch (_: ArithmeticException) {
-      throw JsonDataException("Expected a long but was $peekedString at path $path")
-    }
+    val result =
+      try {
+        val asDecimal = BigDecimal(peekedString)
+        asDecimal.longValueExact()
+      } catch (_: NumberFormatException) {
+        throw JsonDataException("Expected a long but was $peekedString at path $path")
+      } catch (_: ArithmeticException) {
+        throw JsonDataException("Expected a long but was $peekedString at path $path")
+      }
     peekedString = null
     peeked = PEEKED_NONE
     pathIndices[stackSize - 1]++
@@ -785,9 +813,9 @@ internal class `-JsonUtf8Reader` : JsonReader {
   }
 
   /**
-   * Returns the string up to but not including `quote`, unescaping any character escape
-   * sequences encountered along the way. The opening quote should have already been read. This
-   * consumes the closing quote, but does not include it in the returned string.
+   * Returns the string up to but not including `quote`, unescaping any character escape sequences
+   * encountered along the way. The opening quote should have already been read. This consumes the
+   * closing quote, but does not include it in the returned string.
    *
    * @throws IOException if any Unicode escape sequences are malformed.
    */
@@ -819,7 +847,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
     }
   }
 
-  /** Returns an unquoted value as a string.  */
+  /** Returns an unquoted value as a string. */
   private fun nextUnquotedValue(): String {
     val i = source.indexOfElement(UNQUOTED_STRING_TERMINALS)
     return if (i != -1L) buffer.readUtf8(i) else buffer.readUtf8()
@@ -855,42 +883,46 @@ internal class `-JsonUtf8Reader` : JsonReader {
       pathIndices[stackSize - 1]++
       return result
     }
-    val next: String = when (p) {
-      PEEKED_NUMBER -> {
-        buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
-      }
-
-      PEEKED_DOUBLE_QUOTED, PEEKED_SINGLE_QUOTED -> {
-        val next = if (p == PEEKED_DOUBLE_QUOTED) {
-          nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
-        } else {
-          nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+    val next: String =
+      when (p) {
+        PEEKED_NUMBER -> {
+          buffer.readUtf8(peekedNumberLength.toLong()).also { peekedString = it }
         }
-        peekedString = next
-        try {
-          val result = next.toInt()
-          peeked = PEEKED_NONE
-          pathIndices[stackSize - 1]++
-          return result
-        } catch (_: NumberFormatException) {
-          // Fall back to parse as a double below.
-          next
+
+        PEEKED_DOUBLE_QUOTED,
+        PEEKED_SINGLE_QUOTED -> {
+          val next =
+            if (p == PEEKED_DOUBLE_QUOTED) {
+              nextQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+            } else {
+              nextQuotedValue(SINGLE_QUOTE_OR_SLASH)
+            }
+          peekedString = next
+          try {
+            val result = next.toInt()
+            peeked = PEEKED_NONE
+            pathIndices[stackSize - 1]++
+            return result
+          } catch (_: NumberFormatException) {
+            // Fall back to parse as a double below.
+            next
+          }
         }
-      }
 
-      PEEKED_BUFFERED -> {
-        // PEEKED_BUFFERED means the value's been stored in peekedString
-        knownNotNull(peekedString)
-      }
+        PEEKED_BUFFERED -> {
+          // PEEKED_BUFFERED means the value's been stored in peekedString
+          knownNotNull(peekedString)
+        }
 
-      else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
-    }
+        else -> throw JsonDataException("Expected an int but was ${peek()} at path $path")
+      }
     peeked = PEEKED_BUFFERED
-    val asDouble = try {
-      next.toDouble()
-    } catch (_: NumberFormatException) {
-      throw JsonDataException("Expected an int but was $next at path $path")
-    }
+    val asDouble =
+      try {
+        next.toDouble()
+      } catch (_: NumberFormatException) {
+        throw JsonDataException("Expected an int but was $next at path $path")
+      }
     val result = asDouble.toInt()
     if (result.toDouble() != asDouble) { // Make sure no precision was lost casting to 'int'.
       throw JsonDataException("Expected an int but was $next at path $path")
@@ -942,11 +974,14 @@ internal class `-JsonUtf8Reader` : JsonReader {
           stackSize--
         }
 
-        PEEKED_UNQUOTED_NAME, PEEKED_UNQUOTED -> skipUnquotedValue()
+        PEEKED_UNQUOTED_NAME,
+        PEEKED_UNQUOTED -> skipUnquotedValue()
 
-        PEEKED_DOUBLE_QUOTED, PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
+        PEEKED_DOUBLE_QUOTED,
+        PEEKED_DOUBLE_QUOTED_NAME -> skipQuotedValue(DOUBLE_QUOTE_OR_SLASH)
 
-        PEEKED_SINGLE_QUOTED, PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
+        PEEKED_SINGLE_QUOTED,
+        PEEKED_SINGLE_QUOTED_NAME -> skipQuotedValue(SINGLE_QUOTE_OR_SLASH)
 
         PEEKED_NUMBER -> buffer.skip(peekedNumberLength.toLong())
 
@@ -986,7 +1021,9 @@ internal class `-JsonUtf8Reader` : JsonReader {
         state = JsonValueSource.STATE_SINGLE_QUOTED
       }
 
-      PEEKED_NUMBER, PEEKED_LONG, PEEKED_UNQUOTED -> prefix.writeUtf8(nextString())
+      PEEKED_NUMBER,
+      PEEKED_LONG,
+      PEEKED_UNQUOTED -> prefix.writeUtf8(nextString())
 
       PEEKED_TRUE -> prefix.writeUtf8("true")
 
@@ -996,9 +1033,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
 
       PEEKED_BUFFERED -> {
         val string = nextString()
-        JsonWriter.of(prefix).use { jsonWriter ->
-          jsonWriter.value(string)
-        }
+        JsonWriter.of(prefix).use { jsonWriter -> jsonWriter.value(string) }
       }
 
       else -> throw JsonDataException("Expected a value but was ${peek()} at path $path")
@@ -1032,7 +1067,10 @@ internal class `-JsonUtf8Reader` : JsonReader {
     while (source.request(p + 1)) {
       val c = buffer[p++].asChar()
       when (c) {
-        '\n', ' ', '\r', '\t' -> continue
+        '\n',
+        ' ',
+        '\r',
+        '\t' -> continue
       }
       buffer.skip(p - 1)
       when (c) {
@@ -1068,7 +1106,8 @@ internal class `-JsonUtf8Reader` : JsonReader {
         }
 
         '#' -> {
-          // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but it's
+          // Skip a # hash end-of-line comment. The JSON RFC doesn't specify this behaviour, but
+          // it's
           // required to parse existing documents.
           checkLenient()
           skipToEndOfLine()
@@ -1131,12 +1170,13 @@ internal class `-JsonUtf8Reader` : JsonReader {
         var result = 0.toChar()
         for (i in 0 until 4) {
           result = (result.code shl 4).toChar()
-          result += when (val c = buffer[i.toLong()].asChar()) {
-            in '0'..'9' -> c - '0'
-            in 'a'..'f' -> c - 'a' + 10
-            in 'A'..'F' -> c - 'A' + 10
-            else -> throw syntaxError("\\u" + buffer.readUtf8(4))
-          }
+          result +=
+            when (val c = buffer[i.toLong()].asChar()) {
+              in '0'..'9' -> c - '0'
+              in 'a'..'f' -> c - 'a' + 10
+              in 'A'..'F' -> c - 'A' + 10
+              else -> throw syntaxError("\\u" + buffer.readUtf8(4))
+            }
         }
         buffer.skip(4)
         result
@@ -1153,7 +1193,11 @@ internal class `-JsonUtf8Reader` : JsonReader {
       /*\f*/
       'f' -> '\u000C'
 
-      '\n', '\'', '"', '\\', '/' -> escaped
+      '\n',
+      '\'',
+      '"',
+      '\\',
+      '/' -> escaped
 
       else -> {
         if (!lenient) throw syntaxError("Invalid escape sequence: \\$escaped")
@@ -1200,14 +1244,14 @@ internal class `-JsonUtf8Reader` : JsonReader {
     private const val PEEKED_DOUBLE_QUOTED = 9
     private const val PEEKED_UNQUOTED = 10
 
-    /** When this is returned, the string value is stored in peekedString.  */
+    /** When this is returned, the string value is stored in peekedString. */
     private const val PEEKED_BUFFERED = 11
     private const val PEEKED_SINGLE_QUOTED_NAME = 12
     private const val PEEKED_DOUBLE_QUOTED_NAME = 13
     private const val PEEKED_UNQUOTED_NAME = 14
     private const val PEEKED_BUFFERED_NAME = 15
 
-    /** When this is returned, the integer value is stored in peekedLong.  */
+    /** When this is returned, the integer value is stored in peekedLong. */
     private const val PEEKED_LONG = 16
     private const val PEEKED_NUMBER = 17
     private const val PEEKED_EOF = 18
@@ -1222,7 +1266,6 @@ internal class `-JsonUtf8Reader` : JsonReader {
     private const val NUMBER_CHAR_EXP_SIGN = 6
     private const val NUMBER_CHAR_EXP_DIGIT = 7
 
-    @Suppress("NOTHING_TO_INLINE")
-    private inline fun Byte.asChar(): Char = toInt().toChar()
+    @Suppress("NOTHING_TO_INLINE") private inline fun Byte.asChar(): Char = toInt().toChar()
   }
 }

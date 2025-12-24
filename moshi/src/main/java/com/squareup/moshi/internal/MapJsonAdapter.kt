@@ -59,7 +59,7 @@ internal class MapJsonAdapter<K, V>(moshi: Moshi, keyType: Type, valueType: Type
       val replaced = result.put(name, value)
       if (replaced != null) {
         throw JsonDataException(
-          "Map key '$name' has multiple values at path ${reader.path}: $replaced and $value",
+          "Map key '$name' has multiple values at path ${reader.path}: $replaced and $value"
         )
       }
     }

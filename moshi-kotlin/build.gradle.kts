@@ -20,11 +20,7 @@ dependencies {
 }
 
 tasks.withType<Jar>().configureEach {
-  manifest {
-    attributes("Automatic-Module-Name" to "com.squareup.moshi.kotlin")
-  }
+  manifest { attributes("Automatic-Module-Name" to "com.squareup.moshi.kotlin") }
 }
 
-configure<MavenPublishBaseExtension> {
-  configure(KotlinJvm(javadocJar = None()))
-}
+configure<MavenPublishBaseExtension> { configure(KotlinJvm(javadocJar = None())) }

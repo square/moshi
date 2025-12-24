@@ -1,7 +1,3 @@
-plugins {
-  kotlin("jvm")
-}
+plugins { kotlin("jvm") }
 
-dependencies {
-  implementation(project(":moshi"))
-}
+dependencies { implementation(project(":moshi")) }

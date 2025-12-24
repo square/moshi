@@ -60,26 +60,23 @@ internal abstract class TypeRenderer {
       is ParameterizedTypeName -> {
         // If it's an Array type, we shortcut this to return Types.arrayOf()
         if (typeName.rawType == ARRAY) {
-          CodeBlock.of(
-            "%T.arrayOf(%L)",
-            Types::class,
-            renderObjectType(typeName.typeArguments[0]),
-          )
+          CodeBlock.of("%T.arrayOf(%L)", Types::class, renderObjectType(typeName.typeArguments[0]))
         } else {
-          val builder = CodeBlock.builder().apply {
-            add("%T.", Types::class)
-            val enclosingClassName = typeName.rawType.enclosingClassName()
-            if (enclosingClassName != null) {
-              add("newParameterizedTypeWithOwner(%L, ", render(enclosingClassName))
-            } else {
-              add("newParameterizedType(")
+          val builder =
+            CodeBlock.builder().apply {
+              add("%T.", Types::class)
+              val enclosingClassName = typeName.rawType.enclosingClassName()
+              if (enclosingClassName != null) {
+                add("newParameterizedTypeWithOwner(%L, ", render(enclosingClassName))
+              } else {
+                add("newParameterizedType(")
+              }
+              add("%T::class.java", typeName.rawType)
+              for (typeArgument in typeName.typeArguments) {
+                add(", %L", renderObjectType(typeArgument))
+              }
+              add(")")
             }
-            add("%T::class.java", typeName.rawType)
-            for (typeArgument in typeName.typeArguments) {
-              add(", %L", renderObjectType(typeArgument))
-            }
-            add(")")
-          }
           builder.build()
         }
       }
@@ -98,9 +95,10 @@ internal abstract class TypeRenderer {
             method = "subtypeOf"
           }
 
-          else -> throw IllegalArgumentException(
-            "Unrepresentable wildcard type. Cannot have more than one bound: $typeName",
-          )
+          else ->
+            throw IllegalArgumentException(
+              "Unrepresentable wildcard type. Cannot have more than one bound: $typeName"
+            )
         }
         CodeBlock.of("%T.%L(%L)", Types::class, method, render(target, forceBox = true))
       }
@@ -121,7 +119,14 @@ internal abstract class TypeRenderer {
 
   private fun TypeName.isPrimitive(): Boolean {
     return when (this) {
-      BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE -> true
+      BOOLEAN,
+      BYTE,
+      SHORT,
+      INT,
+      LONG,
+      CHAR,
+      FLOAT,
+      DOUBLE -> true
       else -> false
     }
   }

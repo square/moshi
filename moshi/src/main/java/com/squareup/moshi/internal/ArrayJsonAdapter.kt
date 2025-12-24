@@ -20,8 +20,8 @@ import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
-import java.lang.reflect.Type
 import java.lang.reflect.Array as JavaArray
+import java.lang.reflect.Type
 
 /**
  * Converts arrays to JSON arrays containing their converted contents. This supports both primitive
@@ -40,9 +40,7 @@ internal class ArrayJsonAdapter(
       reader.endArray()
     }
     val array = JavaArray.newInstance(elementClass, list.size)
-    list.forEachIndexed { i, item ->
-      JavaArray.set(array, i, item)
-    }
+    list.forEachIndexed { i, item -> JavaArray.set(array, i, item) }
     return array
   }
 

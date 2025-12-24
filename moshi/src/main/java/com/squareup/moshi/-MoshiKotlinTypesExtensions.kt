@@ -25,11 +25,12 @@ import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
 /** Returns the raw [Class] type of this type. */
-public val Type.rawType: Class<*> get() = Types.getRawType(this)
+public val Type.rawType: Class<*>
+  get() = Types.getRawType(this)
 
 /**
- * Checks if [this] contains [T]. Returns the subset of [this] without [T], or null if
- * [this] does not contain [T].
+ * Checks if [this] contains [T]. Returns the subset of [this] without [T], or null if [this] does
+ * not contain [T].
  */
 public inline fun <reified T : Annotation> Set<Annotation>.nextAnnotations(): Set<Annotation>? =
   Types.nextAnnotations(this, T::class.java)

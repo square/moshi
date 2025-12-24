@@ -28,7 +28,7 @@ class MoshiKspTest {
   @Test
   fun onlyInterfaceSupertypes() {
     val adapter = moshi.adapter<SimpleImpl>()
-    //language=JSON
+    // language=JSON
     val json = """{"a":"aValue","b":"bValue"}"""
     val expected = SimpleImpl("aValue", "bValue")
     val instance = adapter.fromJson(json)
@@ -44,7 +44,5 @@ class MoshiKspTest {
   // NOTE the Any() superclass is important to test that we're detecting the farthest parent class
   // correct.y
   @JsonClass(generateAdapter = true)
-  data class SimpleImpl(override val a: String, val b: String) :
-    Any(),
-    SimpleInterface
+  data class SimpleImpl(override val a: String, val b: String) : Any(), SimpleInterface
 }

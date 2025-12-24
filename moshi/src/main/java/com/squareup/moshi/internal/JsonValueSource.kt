@@ -16,6 +16,7 @@
 package com.squareup.moshi.internal
 
 import com.squareup.moshi.JsonReader
+import kotlin.math.min
 import okio.Buffer
 import okio.BufferedSource
 import okio.ByteString
@@ -23,23 +24,23 @@ import okio.ByteString.Companion.EMPTY
 import okio.ByteString.Companion.encodeUtf8
 import okio.EOFException
 import okio.Source
-import kotlin.math.min
 
 /**
  * This source reads a prefix of another source as a JSON value and then terminates. It can read
  * top-level arrays, objects, or strings only.
  *
- * It implements [lenient parsing][JsonReader.setLenient] and has no mechanism to
- * enforce strict parsing. If the input is not valid or lenient JSON the behavior of this source is
- * unspecified.
+ * It implements [lenient parsing][JsonReader.setLenient] and has no mechanism to enforce strict
+ * parsing. If the input is not valid or lenient JSON the behavior of this source is unspecified.
  */
-internal class JsonValueSource @JvmOverloads constructor(
+internal class JsonValueSource
+@JvmOverloads
+constructor(
   private val source: BufferedSource,
   /** If non-empty, data from this should be returned before data from [source]. */
   private val prefix: Buffer = Buffer(),
   /**
-   * The state indicates what kind of data is readable at [limit]. This also serves
-   * double-duty as the type of bytes we're interested in while in this state.
+   * The state indicates what kind of data is readable at [limit]. This also serves double-duty as
+   * the type of bytes we're interested in while in this state.
    */
   private var state: ByteString = STATE_JSON,
   /**
@@ -57,10 +58,10 @@ internal class JsonValueSource @JvmOverloads constructor(
 
   /**
    * Advance [limit] until any of these conditions are met:
-   *  * Limit is at least `byteCount`. We can satisfy the caller's request!
-   *  * The JSON value is complete. This stream is exhausted.
-   *  * We have some data to return and returning more would require reloading the buffer. We prefer to return some
-   *  data immediately when more data requires blocking.
+   * * Limit is at least `byteCount`. We can satisfy the caller's request!
+   * * The JSON value is complete. This stream is exhausted.
+   * * We have some data to return and returning more would require reloading the buffer. We prefer
+   *   to return some data immediately when more data requires blocking.
    *
    * @throws EOFException if the stream is exhausted before the JSON object completes.
    */
@@ -86,52 +87,55 @@ internal class JsonValueSource @JvmOverloads constructor(
       }
       val b = buffer[index]
       when {
-        state === STATE_JSON -> when (b.toInt().toChar()) {
-          '[', '{' -> {
-            stackSize++
-            limit = index + 1
-          }
+        state === STATE_JSON ->
+          when (b.toInt().toChar()) {
+            '[',
+            '{' -> {
+              stackSize++
+              limit = index + 1
+            }
 
-          ']', '}' -> {
-            stackSize--
-            if (stackSize == 0) state = STATE_END_OF_JSON
-            limit = index + 1
-          }
+            ']',
+            '}' -> {
+              stackSize--
+              if (stackSize == 0) state = STATE_END_OF_JSON
+              limit = index + 1
+            }
 
-          '\"' -> {
-            state = STATE_DOUBLE_QUOTED
-            limit = index + 1
-          }
+            '\"' -> {
+              state = STATE_DOUBLE_QUOTED
+              limit = index + 1
+            }
 
-          '\'' -> {
-            state = STATE_SINGLE_QUOTED
-            limit = index + 1
-          }
+            '\'' -> {
+              state = STATE_SINGLE_QUOTED
+              limit = index + 1
+            }
 
-          '/' -> {
-            source.require(index + 2)
-            when (buffer[index + 1]) {
-              '/'.code.toByte() -> {
-                state = STATE_END_OF_LINE_COMMENT
-                limit = index + 2
-              }
+            '/' -> {
+              source.require(index + 2)
+              when (buffer[index + 1]) {
+                '/'.code.toByte() -> {
+                  state = STATE_END_OF_LINE_COMMENT
+                  limit = index + 2
+                }
 
-              '*'.code.toByte() -> {
-                state = STATE_C_STYLE_COMMENT
-                limit = index + 2
-              }
+                '*'.code.toByte() -> {
+                  state = STATE_C_STYLE_COMMENT
+                  limit = index + 2
+                }
 
-              else -> {
-                limit = index + 1
+                else -> {
+                  limit = index + 1
+                }
               }
             }
-          }
 
-          '#' -> {
-            state = STATE_END_OF_LINE_COMMENT
-            limit = index + 1
+            '#' -> {
+              state = STATE_END_OF_LINE_COMMENT
+              limit = index + 1
+            }
           }
-        }
 
         state === STATE_SINGLE_QUOTED || state === STATE_DOUBLE_QUOTED -> {
           if (b == '\\'.code.toByte()) {

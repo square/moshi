@@ -31,14 +31,10 @@ class ComplexGenericsInheritanceTest {
   fun simple() {
     val adapter = moshi.adapter<PersonResponse>()
 
-    @Language("JSON")
-    val json =
-      """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
+    @Language("JSON") val json = """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
     val instance = adapter.fromJson(json)
-    val testInstance = PersonResponse().apply {
-      data = Person("foo")
-    }
+    val testInstance = PersonResponse().apply { data = Person("foo") }
     assertThat(instance).isEqualTo(testInstance)
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
@@ -47,14 +43,10 @@ class ComplexGenericsInheritanceTest {
   fun nested() {
     val adapter = moshi.adapter<NestedPersonResponse>()
 
-    @Language("JSON")
-    val json =
-      """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
+    @Language("JSON") val json = """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
     val instance = adapter.fromJson(json)
-    val testInstance = NestedPersonResponse().apply {
-      data = Person("foo")
-    }
+    val testInstance = NestedPersonResponse().apply { data = Person("foo") }
     assertThat(instance).isEqualTo(testInstance)
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
@@ -63,14 +55,10 @@ class ComplexGenericsInheritanceTest {
   fun untyped() {
     val adapter = moshi.adapter<UntypedNestedPersonResponse<Person>>()
 
-    @Language("JSON")
-    val json =
-      """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
+    @Language("JSON") val json = """{"data":{"name":"foo"},"data2":"bar","data3":"baz"}"""
 
     val instance = adapter.fromJson(json)
-    val testInstance = UntypedNestedPersonResponse<Person>().apply {
-      data = Person("foo")
-    }
+    val testInstance = UntypedNestedPersonResponse<Person>().apply { data = Person("foo") }
     assertThat(instance).isEqualTo(testInstance)
     assertThat(adapter.toJson(instance)).isEqualTo(json)
   }
@@ -84,19 +72,22 @@ class ComplexGenericsInheritanceTest {
       """{"layer4E":{"name":"layer4E"},"layer4F":{"data":{"name":"layer4F"},"data2":"layer4F","data3":"layer4F"},"layer3C":[1,2,3],"layer3D":"layer3D","layer2":"layer2","layer1":"layer1"}"""
 
     val instance = adapter.fromJson(json)
-    val testInstance = Layer4(
-      layer4E = Person("layer4E"),
-      layer4F = UntypedNestedPersonResponse<Person>().apply {
-        data = Person("layer4F")
-        data2 = "layer4F"
-        data3 = "layer4F"
-      },
-    ).apply {
-      layer3C = listOf(1, 2, 3)
-      layer3D = "layer3D"
-      layer2 = "layer2"
-      layer1 = "layer1"
-    }
+    val testInstance =
+      Layer4(
+          layer4E = Person("layer4E"),
+          layer4F =
+            UntypedNestedPersonResponse<Person>().apply {
+              data = Person("layer4F")
+              data2 = "layer4F"
+              data3 = "layer4F"
+            },
+        )
+        .apply {
+          layer3C = listOf(1, 2, 3)
+          layer3D = "layer3D"
+          layer2 = "layer2"
+          layer1 = "layer1"
+        }
     assertThat(instance).isEqualTo(testInstance)
     assertThat(adapter.toJson(testInstance)).isEqualTo(json)
   }
@@ -110,8 +101,7 @@ open class ResponseWithSettableProperty<T, R> {
 
 interface Personable
 
-@JsonClass(generateAdapter = true)
-data class Person(val name: String) : Personable
+@JsonClass(generateAdapter = true) data class Person(val name: String) : Personable
 
 @JsonClass(generateAdapter = true)
 data class PersonResponse(val extra: String? = null) :
@@ -132,9 +122,7 @@ abstract class Layer1<A> {
   var layer1: A? = null
 }
 
-abstract class Layer2<B> :
-  Layer1<B>(),
-  LayerInterface<B> {
+abstract class Layer2<B> : Layer1<B>(), LayerInterface<B> {
   var layer2: B? = null
 }
 
@@ -145,5 +133,4 @@ abstract class Layer3<C, D> : Layer2<D>() {
 
 @JsonClass(generateAdapter = true)
 data class Layer4<E : Personable, F>(val layer4E: E, val layer4F: F? = null) :
-  Layer3<List<Int>, String>(),
-  LayerInterface<String>
+  Layer3<List<Int>, String>(), LayerInterface<String>

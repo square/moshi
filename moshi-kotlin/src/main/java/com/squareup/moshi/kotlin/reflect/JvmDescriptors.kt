@@ -161,7 +161,8 @@ internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {
  *
  * Useful for comparing with [JvmMethodSignature].
  *
- * @see <a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3">JVM specification, section 4.3</a>
+ * @see <a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3">JVM
+ *   specification, section 4.3</a>
  */
 internal val Executable.jvmMethodSignature: String
   get() = buildString {

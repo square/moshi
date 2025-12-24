@@ -39,7 +39,8 @@ public data class DelegateKey(
   private val type: TypeName,
   private val jsonQualifiers: List<AnnotationSpec>,
 ) {
-  public val nullable: Boolean get() = type.isNullable
+  public val nullable: Boolean
+    get() = type.isNullable
 
   /** Returns an adapter to use when encoding and decoding this property. */
   internal fun generateProperty(
@@ -48,30 +49,29 @@ public data class DelegateKey(
     moshiParameter: ParameterSpec,
     propertyName: String,
   ): PropertySpec {
-    val qualifierNames = jsonQualifiers.joinToString("") {
-      "At${it.typeName.rawType().simpleName}"
-    }
-    val adapterName = nameAllocator.newName(
-      "${type.toVariableName().replaceFirstChar {
+    val qualifierNames = jsonQualifiers.joinToString("") { "At${it.typeName.rawType().simpleName}" }
+    val adapterName =
+      nameAllocator.newName(
+        "${type.toVariableName().replaceFirstChar {
         it.lowercase(Locale.US)
       }}${qualifierNames}Adapter",
-      this,
-    )
+        this,
+      )
 
     val nullableType = type.copy(nullable = true)
     val adapterTypeName = JsonAdapter::class.asClassName().parameterizedBy(nullableType)
-    val standardArgs = arrayOf(
-      moshiParameter,
-      typeRenderer.render(type),
-    )
+    val standardArgs = arrayOf(moshiParameter, typeRenderer.render(type))
 
-    val (initializerString, args) = when {
-      jsonQualifiers.isEmpty() -> ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
+    val (initializerString, args) =
+      when {
+        jsonQualifiers.isEmpty() ->
+          ", %M()" to arrayOf(MemberName("kotlin.collections", "emptySet"))
 
-      else -> {
-        ", setOf(%L)" to arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
+        else -> {
+          ", setOf(%L)" to
+            arrayOf(jsonQualifiers.map { it.asInstantiationExpression() }.joinToCode())
+        }
       }
-    }
     val finalArgs = arrayOf(*standardArgs, *args, propertyName)
 
     return PropertySpec.builder(adapterName, adapterTypeName, KModifier.PRIVATE)
@@ -82,11 +82,7 @@ public data class DelegateKey(
 
 private fun AnnotationSpec.asInstantiationExpression(): CodeBlock {
   // <Type>(args)
-  return CodeBlock.of(
-    "%T(%L)",
-    typeName,
-    members.joinToCode(),
-  )
+  return CodeBlock.of("%T(%L)", typeName, members.joinToCode())
 }
 
 /**
@@ -97,13 +93,14 @@ private fun List<TypeName>.toVariableNames() = joinToString("") { it.toVariableN
 
 /** Returns a suggested variable name derived from a type name, like nullableListOfString. */
 private fun TypeName.toVariableName(): String {
-  val base = when (this) {
-    is ClassName -> simpleName
-    is ParameterizedTypeName -> rawType.simpleName + "Of" + typeArguments.toVariableNames()
-    is WildcardTypeName -> (inTypes + outTypes).toVariableNames()
-    is TypeVariableName -> name + bounds.toVariableNames()
-    else -> throw IllegalArgumentException("Unrecognized type! $this")
-  }
+  val base =
+    when (this) {
+      is ClassName -> simpleName
+      is ParameterizedTypeName -> rawType.simpleName + "Of" + typeArguments.toVariableNames()
+      is WildcardTypeName -> (inTypes + outTypes).toVariableNames()
+      is TypeVariableName -> name + bounds.toVariableNames()
+      else -> throw IllegalArgumentException("Unrecognized type! $this")
+    }
 
   return if (isNullable) {
     "Nullable$base"

@@ -37,8 +37,7 @@ internal abstract class ClassFactory<T> {
         val constructor = rawType.getDeclaredConstructor()
         constructor.isAccessible = true
         return object : ClassFactory<T>() {
-          @Suppress("UNCHECKED_CAST")
-          override fun newInstance() = constructor.newInstance() as T
+          @Suppress("UNCHECKED_CAST") override fun newInstance() = constructor.newInstance() as T
 
           override fun toString() = rawType.name
         }
@@ -83,11 +82,10 @@ internal abstract class ClassFactory<T> {
           ObjectStreamClass::class.java.getDeclaredMethod("getConstructorId", Class::class.java)
         getConstructorId.isAccessible = true
         val constructorId = getConstructorId.invoke(null, Any::class.java) as Int
-        val newInstance = ObjectStreamClass::class.java.getDeclaredMethod(
-          "newInstance",
-          Class::class.java,
-          Int::class.javaPrimitiveType,
-        )
+        val newInstance =
+          ObjectStreamClass::class
+            .java
+            .getDeclaredMethod("newInstance", Class::class.java, Int::class.javaPrimitiveType)
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
@@ -110,11 +108,9 @@ internal abstract class ClassFactory<T> {
       // }
       try {
         val newInstance =
-          ObjectInputStream::class.java.getDeclaredMethod(
-            "newInstance",
-            Class::class.java,
-            Class::class.java,
-          )
+          ObjectInputStream::class
+            .java
+            .getDeclaredMethod("newInstance", Class::class.java, Class::class.java)
         newInstance.isAccessible = true
         return object : ClassFactory<T>() {
           @Suppress("UNCHECKED_CAST")
@@ -122,8 +118,7 @@ internal abstract class ClassFactory<T> {
 
           override fun toString() = rawType.name
         }
-      } catch (ignored: Exception) {
-      }
+      } catch (ignored: Exception) {}
 
       throw IllegalArgumentException("cannot construct instances of ${rawType.name}")
     }

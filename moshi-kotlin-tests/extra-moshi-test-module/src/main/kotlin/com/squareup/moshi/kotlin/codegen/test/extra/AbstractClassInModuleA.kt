@@ -25,9 +25,7 @@ public abstract class AbstractClassInModuleA {
 
   // Note that we target the field because otherwise it is stored on the synthetic holder method for
   // annotations, which isn't visible from kapt
-  @field:Json(ignore = true)
-  private lateinit var lateinitIgnored: String
+  @field:Json(ignore = true) private lateinit var lateinitIgnored: String
 
-  @field:Json(ignore = true)
-  private var regularIgnored: String = "regularIgnored"
+  @field:Json(ignore = true) private var regularIgnored: String = "regularIgnored"
 }

@@ -23,16 +23,14 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Moshi.Builder
 import com.squareup.moshi.Types
-import okio.BufferedSource
 import java.lang.reflect.Type
 import kotlin.annotation.AnnotationRetention.RUNTIME
+import okio.BufferedSource
 
 @JsonClass(generateAdapter = true)
 data class ExampleClass(val type: Int, @JsonString val rawJson: String)
 
-@Retention(RUNTIME)
-@JsonQualifier
-annotation class JsonString
+@Retention(RUNTIME) @JsonQualifier annotation class JsonString
 
 class JsonStringJsonAdapterFactory : JsonAdapter.Factory {
   override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
@@ -52,17 +50,15 @@ class JsonStringJsonAdapterFactory : JsonAdapter.Factory {
 }
 
 fun main() {
-  //language=JSON
+  // language=JSON
   val json = "{\"type\":1,\"rawJson\":{\"a\":2,\"b\":3,\"c\":[1,2,3]}}"
 
-  val moshi = Builder()
-    .add(JsonStringJsonAdapterFactory())
-    .build()
+  val moshi = Builder().add(JsonStringJsonAdapterFactory()).build()
 
   val example: ExampleClass = moshi.adapter<ExampleClass>().fromJson(json)
 
   check(example.type == 1)
 
-  //language=JSON
+  // language=JSON
   check(example.rawJson == "{\"a\":2,\"b\":3,\"c\":[1,2,3]}")
 }
