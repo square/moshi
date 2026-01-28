@@ -16,7 +16,6 @@
 package com.squareup.moshi.kotlin.reflect
 
 import java.lang.reflect.Constructor
-import java.lang.reflect.Executable
 import java.lang.reflect.Method
 import kotlin.metadata.jvm.JvmMethodSignature
 
@@ -156,25 +155,28 @@ internal fun JvmMethodSignature.decodeParameterTypes(): List<Class<*>> {
 }
 
 /**
- * Returns the JVM signature in the form "<init>$MethodDescriptor", for example:
- * `"<init>(Ljava/lang/Object;)V")`.
+ * Returns the JVM signature in the form "name$MethodDescriptor", for example:
+ * `"<init>(Ljava/lang/Object;)V"` or `"foo(Ljava/lang/Object;)V"`.
  *
  * Useful for comparing with [JvmMethodSignature].
  *
  * @see <a href="https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3">JVM
  *   specification, section 4.3</a>
  */
-internal val Executable.jvmMethodSignature: String
-  get() = buildString {
-    when (this@jvmMethodSignature) {
-      is Constructor<*> -> append("<init>")
-      is Method -> append(name)
-    }
-    parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")") {
-      it.descriptor
-    }
-    when (this@jvmMethodSignature) {
-      is Constructor<*> -> append("V")
-      is Method -> append(returnType.descriptor)
-    }
+private fun jvmMethodSignature(
+  name: String,
+  parameterTypes: Array<Class<*>>,
+  returnDescriptor: String,
+): String = buildString {
+  append(name)
+  parameterTypes.joinTo(buffer = this, separator = "", prefix = "(", postfix = ")") {
+    it.descriptor
   }
+  append(returnDescriptor)
+}
+
+internal val Constructor<*>.jvmMethodSignature: String
+  get() = jvmMethodSignature("<init>", parameterTypes, "V")
+
+internal val Method.jvmMethodSignature: String
+  get() = jvmMethodSignature(name, parameterTypes, returnType.descriptor)
