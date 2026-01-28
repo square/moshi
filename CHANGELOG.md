@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* None yet.
+
+
+## [2.0.0-alpha.1] - 2026-01-28
+
 * Refuse `j$.*` types from Android library desugaring as platform types.
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
 * Fully supports encoding/decoding of value classes in both moshi-kotlin and code gen.
