@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
   kotlin("jvm")
   id("com.google.devtools.ksp")
-  id("com.vanniktech.maven.publish.base")
+  id("com.vanniktech.maven.publish")
 }
 
 tasks.withType<KotlinCompile>().configureEach {

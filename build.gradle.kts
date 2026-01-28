@@ -123,7 +123,7 @@ subprojects {
     }
   }
 
-  plugins.withId("com.vanniktech.maven.publish.base") {
+  plugins.withId("com.vanniktech.maven.publish") {
     configure<PublishingExtension> {
       repositories {
         /*
