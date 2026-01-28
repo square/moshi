@@ -1,6 +1,3 @@
-import com.vanniktech.maven.publish.JavadocJar.None
-import com.vanniktech.maven.publish.KotlinJvm
-import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -53,5 +50,3 @@ dependencies {
   testImplementation(libs.truth)
   testImplementation(libs.kotlinCompileTesting)
 }
-
-configure<MavenPublishBaseExtension> { configure(KotlinJvm(javadocJar = None())) }
