@@ -16,7 +16,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
       - uses: gradle/actions/setup-gradle@v5
-      - run: ./gradlew publish dokkaGenerate
+      - run: ./gradlew publish dokkaGenerate -PmavenCentralDeploymentValidation=PUBLISHED
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_CENTRAL_PASSWORD }}
