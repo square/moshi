@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm")
-  id("com.vanniktech.maven.publish.base")
+  id("com.vanniktech.maven.publish")
   id("org.jetbrains.dokka")
 }
 
