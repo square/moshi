@@ -35,5 +35,5 @@ junit = "junit:junit:4.13.2"
 kotlinCompileTesting = { module = "dev.zacsweers.kctfork:core", version.ref = "kotlinCompileTesting" }
 kotlinCompileTesting-ksp = { module = "dev.zacsweers.kctfork:ksp", version.ref ="kotlinCompileTesting" }
 truth = "com.google.truth:truth:1.4.5"
-googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.33.0"
+googleJavaFormat = "com.google.googlejavaformat:google-java-format:1.34.1"
 ktfmt = "com.facebook:ktfmt:0.61"
