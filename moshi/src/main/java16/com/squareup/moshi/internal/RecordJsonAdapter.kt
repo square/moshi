@@ -22,7 +22,6 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.rawType
 import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
-import java.lang.invoke.MethodType.methodType
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.RecordComponent
@@ -144,7 +143,9 @@ internal class RecordJsonAdapter<T>(
 
       val constructor =
         try {
-          lookup.findConstructor(rawType, methodType(VOID_CLASS, componentRawTypes))
+          lookup.unreflectConstructor(
+            rawType.getDeclaredConstructor(*componentRawTypes).apply { isAccessible = true }
+          )
         } catch (e: NoSuchMethodException) {
           throw AssertionError(e)
         } catch (e: IllegalAccessException) {
@@ -170,6 +171,7 @@ internal class RecordJsonAdapter<T>(
 
       val accessor =
         try {
+          component.accessor.isAccessible = true
           lookup.unreflect(component.accessor)
         } catch (e: IllegalAccessException) {
           throw AssertionError(e)
