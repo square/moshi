@@ -10,10 +10,9 @@ internal class IndexedParameterMap(
 
   override val entries: MutableSet<MutableMap.MutableEntry<KtParameter, Any?>>
     get() {
-      val allPossibleEntries =
-        parameterKeys.mapIndexed { index, value ->
-          SimpleEntry<KtParameter, Any?>(value, parameterValues[index])
-        }
+      val allPossibleEntries = parameterKeys.mapIndexed { index, value ->
+        SimpleEntry<KtParameter, Any?>(value, parameterValues[index])
+      }
       return allPossibleEntries.filterTo(mutableSetOf()) { it.value !== ABSENT_VALUE }
     }
 

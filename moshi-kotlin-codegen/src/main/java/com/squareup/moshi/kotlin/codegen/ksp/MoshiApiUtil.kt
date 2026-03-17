@@ -77,8 +77,9 @@ internal fun TargetProperty.generator(
     }
   }
 
-  val jsonQualifierSpecs =
-    qualifiers.map { it.toBuilder().useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD).build() }
+  val jsonQualifierSpecs = qualifiers.map {
+    it.toBuilder().useSiteTarget(AnnotationSpec.UseSiteTarget.FIELD).build()
+  }
 
   return PropertyGenerator(this, DelegateKey(type, jsonQualifierSpecs))
 }
