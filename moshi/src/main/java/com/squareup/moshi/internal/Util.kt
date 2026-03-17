@@ -244,8 +244,9 @@ private fun Type.resolve(
       toResolve is ParameterizedType -> {
         val original = toResolve
         val ownerType: Type? = original.ownerType
-        val newOwnerType =
-          ownerType?.let { ownerType.resolve(context, contextRawType, visitedTypeVariables) }
+        val newOwnerType = ownerType?.let {
+          ownerType.resolve(context, contextRawType, visitedTypeVariables)
+        }
         var changed = newOwnerType !== ownerType
         var args = original.actualTypeArguments
         for (t in args.indices) {

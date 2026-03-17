@@ -65,13 +65,12 @@ private class JsonClassSymbolProcessor(environment: SymbolProcessorEnvironment) 
     environment.options[OPTION_GENERATE_PROGUARD_RULES]?.toBooleanStrictOrNull() ?: true
 
   override fun process(resolver: Resolver): List<KSAnnotated> {
-    val generatedAnnotation =
-      generatedOption?.let {
-        AnnotationSpec.builder(ClassName.bestGuess(it))
-          .addMember("value = [%S]", JsonClassSymbolProcessor::class.java.canonicalName)
-          .addMember("comments = %S", "https://github.com/square/moshi")
-          .build()
-      }
+    val generatedAnnotation = generatedOption?.let {
+      AnnotationSpec.builder(ClassName.bestGuess(it))
+        .addMember("value = [%S]", JsonClassSymbolProcessor::class.java.canonicalName)
+        .addMember("comments = %S", "https://github.com/square/moshi")
+        .build()
+    }
 
     for (type in resolver.getSymbolsWithAnnotation(JSON_CLASS_NAME)) {
       // For the smart cast
