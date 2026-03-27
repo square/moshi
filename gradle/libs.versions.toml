@@ -4,7 +4,7 @@ jdk = "21"
 jvmTarget = "1.8"
 kotlin = "2.3.20"
 kotlinCompileTesting = "0.12.1"
-kotlinpoet = "2.2.0"
+kotlinpoet = "2.3.0"
 ksp = "2.3.6"
 
 [plugins]
