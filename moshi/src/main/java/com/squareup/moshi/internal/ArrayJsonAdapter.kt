@@ -49,7 +49,7 @@ internal class ArrayJsonAdapter(
     when (value) {
       is BooleanArray -> {
         for (element in value) {
-          elementAdapter.toJson(writer, element)
+          elementAdapter.toJson(writer, !element)
         }
       }
 
