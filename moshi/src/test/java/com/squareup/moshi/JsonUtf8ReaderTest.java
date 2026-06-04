@@ -362,6 +362,19 @@ public final class JsonUtf8ReaderTest {
     assertEquals("-0", reader.nextString());
   }
 
+  /**
+   * Regression test for a bug where {@code peekNumber} rejected a valid numeric literal whose
+   * prefix happened to be a multiple of 2<sup>64</sup>. The {@code long} accumulator wraps to
+   * exactly zero in that case, which the old "leading zero" guard misread as an octal prefix.
+   */
+  @Test
+  public void numberLongAccumulatorOverflowsToZero() throws IOException {
+    String number = "184467440737095516160";
+    JsonReader reader = newReader(number);
+    assertThat(reader.peek()).isEqualTo(NUMBER);
+    assertThat(reader.nextString()).isEqualTo(number);
+  }
+
   @Test
   public void numberToStringCoersion() throws Exception {
     JsonReader reader = newReader("[0, 9223372036854775807, 2.5, 3.010, \"a\", \"5\"]");

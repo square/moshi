@@ -468,7 +468,7 @@ internal class `-JsonUtf8Reader` : JsonReader {
             }
 
             NUMBER_CHAR_DIGIT -> {
-              if (value == 0L) {
+              if (fitsInLong && value == 0L) {
                 return PEEKED_NONE // Leading '0' prefix is not allowed (since it could be octal).
               }
               val newValue = value * 10 - (c - '0').toLong()
