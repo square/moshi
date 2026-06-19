@@ -128,7 +128,12 @@ internal class RecordJsonAdapter<T>(
 
       val components = rawType.recordComponents
       val bindings = LinkedHashMap<String, ComponentBinding<Any?>>()
-      val lookup = MethodHandles.lookup()
+      var lookup = MethodHandles.lookup()
+      try {
+        lookup = MethodHandles.privateLookupIn(rawType, lookup)
+      } catch (_: IllegalAccessException) {
+        // fallback to standard lookup
+      }
       val componentRawTypes =
         Array<Class<*>>(components.size) { i ->
           val component = components[i]

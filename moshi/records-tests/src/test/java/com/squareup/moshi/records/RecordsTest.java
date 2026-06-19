@@ -290,5 +290,16 @@ public final class RecordsTest {
     assertThat(adapter.toJson(value)).isEqualTo("{\"i\":5}");
   }
 
+  @Test
+  public void privateRecordSerializesCorrectly() throws IOException {
+    var adapter = moshi.adapter(PrivateRecord.class);
+    String json = "{\"id\":\"1\",\"value\":123}";
+    PrivateRecord privateRecord = new PrivateRecord("1", 123);
+    assertThat(adapter.fromJson(json)).isEqualTo(privateRecord);
+    assertThat(adapter.toJson(privateRecord)).isEqualTo(json);
+  }
+
+  private record PrivateRecord(String id, int value) {}
+
   public record AbsentValues(String s, int i) {}
 }
