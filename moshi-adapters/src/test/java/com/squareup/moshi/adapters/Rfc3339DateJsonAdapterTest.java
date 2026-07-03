@@ -95,7 +95,9 @@ public final class Rfc3339DateJsonAdapterTest {
 
   @Test
   public void absentTimeZone() throws Exception {
-    assertThat(adapter.fromJson("\"1970-01-01\"")).isEqualTo(newDateWithHostZone(1970, 1, 1));
+    // A date-only string with no time zone is interpreted as midnight UTC.
+    assertThat(adapter.fromJson("\"1970-01-01\"")).isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
+    assertThat(adapter.fromJson("\"2025-11-20\"")).isEqualTo(newDate(2025, 11, 20, 0, 0, 0, 0, 0));
     assertThat(adapter.fromJson("\"1970-01-01Z\"")).isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
     try {
       adapter.fromJson("\"1970-01-01T00:00:00.000\"");
@@ -112,14 +114,5 @@ public final class Rfc3339DateJsonAdapterTest {
     return new Date(calendar.getTimeInMillis() - TimeUnit.MINUTES.toMillis(offset));
   }
 
-  /**
-   * Dates specified without any time or timezone (like "1970-01-01") are returned in the host
-   * computer's time zone. This is a longstanding bug that we're attempting to stay consistent with.
-   */
-  private Date newDateWithHostZone(int year, int month, int day) {
-    Calendar calendar = new GregorianCalendar();
-    calendar.set(year, month - 1, day, 0, 0, 0);
-    calendar.set(Calendar.MILLISECOND, 0);
-    return new Date(calendar.getTimeInMillis());
-  }
 }
+

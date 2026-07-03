@@ -125,8 +125,16 @@ internal fun String.parseIsoDate(): Date {
     // if the value has no time component (and no time zone), we are done
     val hasT = readChar(this, offset, 'T')
     if (!hasT && this.length <= offset) {
-      // Note that this uses the host machine's time zone. That's a bug.
-      return GregorianCalendar(year, month - 1, day).time
+      val calendar: Calendar = GregorianCalendar(TIMEZONE_Z, Locale.US)
+      calendar.isLenient = false
+      calendar[Calendar.YEAR] = year
+      calendar[Calendar.MONTH] = month - 1
+      calendar[Calendar.DAY_OF_MONTH] = day
+      calendar[Calendar.HOUR_OF_DAY] = 0
+      calendar[Calendar.MINUTE] = 0
+      calendar[Calendar.SECOND] = 0
+      calendar[Calendar.MILLISECOND] = 0
+      return calendar.time
     }
     if (hasT) {
       offset++
