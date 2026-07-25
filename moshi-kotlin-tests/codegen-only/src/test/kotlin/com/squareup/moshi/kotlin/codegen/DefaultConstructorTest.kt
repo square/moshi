@@ -45,7 +45,16 @@ class DefaultConstructorTest {
     val instance = Moshi.Builder().build().adapter<TestClass>().fromJson(json)
     check(instance == expected) { "No match:\nActual  : $instance\nExpected: $expected" }
   }
+
+  @Test
+  fun nestedArrayWithDefault() {
+    val instance = Moshi.Builder().build().adapter<NestedArrayTestClass>().fromJson("{}")
+    check(instance.nestedArray.isEmpty())
+  }
 }
+
+@JsonClass(generateAdapter = true)
+data class NestedArrayTestClass(val nestedArray: Array<Array<String>> = emptyArray())
 
 @JsonClass(generateAdapter = true)
 data class TestClass(
