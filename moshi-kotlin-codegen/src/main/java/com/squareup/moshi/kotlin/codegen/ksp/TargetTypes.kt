@@ -38,9 +38,12 @@ import com.google.devtools.ksp.symbol.Origin
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.NOTHING
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.toKModifier
@@ -97,11 +100,7 @@ internal fun targetType(
   val appliedType = AppliedType(type)
 
   val constructor =
-    primaryConstructor(resolver, type, classTypeParamsResolver, logger)
-      ?: run {
-        logger.error("No primary constructor found on $type", type)
-        return null
-      }
+    primaryConstructor(resolver, type, classTypeParamsResolver, logger) ?: return null
   if (constructor.visibility != KModifier.INTERNAL && constructor.visibility != KModifier.PUBLIC) {
     logger.error(
       "@JsonClass can't be applied to $type: " + "primary constructor is not internal or public",
@@ -184,16 +183,32 @@ internal fun primaryConstructor(
   typeParameterResolver: TypeParameterResolver,
   logger: KSPLogger,
 ): TargetConstructor? {
-  val primaryConstructor = targetType.primaryConstructor ?: return null
+  val primaryConstructor =
+    targetType.primaryConstructor
+      ?: run {
+        logger.error("No primary constructor found on $targetType", targetType)
+        return null
+      }
 
   val parameters = LinkedHashMap<String, TargetParameter>()
   for ((index, parameter) in primaryConstructor.parameters.withIndex()) {
     val name = parameter.name!!.getShortName()
+    val typeName = parameter.type.toTypeName(typeParameterResolver)
+    val normalizedTypeName =
+      typeName.unwrapTypeAlias().copy(nullable = false, annotations = emptyList())
+    if (
+      normalizedTypeName == UNIT ||
+        normalizedTypeName == NOTHING ||
+        normalizedTypeName == Void::class.asTypeName()
+    ) {
+      logger.error("Parameter $name with void, Unit, or Nothing type is illegal", parameter)
+      return null
+    }
     parameters[name] =
       TargetParameter(
         name = name,
         index = index,
-        type = parameter.type.toTypeName(typeParameterResolver),
+        type = typeName,
         hasDefault = parameter.hasDefault,
         qualifiers = parameter.qualifiers(resolver),
         jsonName = parameter.jsonName(),
