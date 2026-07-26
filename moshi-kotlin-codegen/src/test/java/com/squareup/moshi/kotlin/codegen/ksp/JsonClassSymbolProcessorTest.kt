@@ -571,6 +571,60 @@ class JsonClassSymbolProcessorTest {
   }
 
   @Test
+  fun nullableUnitConstructorParameter() {
+    assertIllegalConstructorParameter("unit", "kotlin.Unit?")
+  }
+
+  @Test
+  fun nullableNothingConstructorParameter() {
+    assertIllegalConstructorParameter("nothing", "kotlin.Nothing?")
+  }
+
+  @Test
+  fun nullableVoidConstructorParameter() {
+    assertIllegalConstructorParameter("void", "java.lang.Void?")
+  }
+
+  @Test
+  fun nestedUnitConstructorParameter() {
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class NestedUnit(val units: List<kotlin.Unit>)
+          """,
+        )
+      )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+  }
+
+  @Test
+  fun chainedUnitTypeAliasConstructorParameter() {
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          typealias UnitAlias = kotlin.Unit?
+          typealias ChainedUnitAlias = UnitAlias
+
+          @JsonClass(generateAdapter = true)
+          data class AliasedParameter(val aliasedUnit: ChainedUnitAlias)
+          """,
+        )
+      )
+    assertIllegalConstructorParameter(result, "aliasedUnit")
+  }
+
+  @Test
   fun inlineClassWithMultiplePropertiesFails() {
     val result =
       compile(
@@ -924,5 +978,34 @@ class JsonClassSymbolProcessorTest {
 
   private fun compile(vararg sourceFiles: SourceFile): JvmCompilationResult {
     return prepareCompilation(*sourceFiles).compile()
+  }
+
+  private fun assertIllegalConstructorParameter(parameterName: String, typeName: String) {
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
+          package test
+          import com.squareup.moshi.JsonClass
+
+          @JsonClass(generateAdapter = true)
+          data class IllegalParameter(val $parameterName: $typeName)
+          """,
+        )
+      )
+    assertIllegalConstructorParameter(result, parameterName)
+  }
+
+  private fun assertIllegalConstructorParameter(
+    result: JvmCompilationResult,
+    parameterName: String,
+  ) {
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.COMPILATION_ERROR)
+    assertThat(result.messages)
+      .contains("Parameter $parameterName with void, Unit, or Nothing type is illegal")
+    assertThat(result.messages).doesNotContain("Error preparing")
+    assertThat(result.messages).doesNotContain("IllegalStateException")
+    assertThat(result.messages).doesNotContain("No primary constructor found")
   }
 }

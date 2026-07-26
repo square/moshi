@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* None yet.
+* Report illegal `Unit`, `Nothing`, and `Void` codegen constructor parameters on the parameter.
 
 
 ## [2.0.0-alpha.1] - 2026-01-28
