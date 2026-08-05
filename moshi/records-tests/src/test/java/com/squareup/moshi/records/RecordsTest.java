@@ -291,4 +291,20 @@ public final class RecordsTest {
   }
 
   public record AbsentValues(String s, int i) {}
+
+  /**
+   * Regression for https://github.com/square/moshi/issues/2117 — simple public records must
+   * round-trip. Previously, tools that drop the Multi-Release jar manifest (e.g. maven-shade
+   * without {@code Multi-Release: true}) fell through to {@code ClassJsonAdapter} and threw an
+   * {@link AssertionError}. The base {@code RecordJsonAdapter} now uses reflective record APIs so
+   * it still works when the Multi-Release implementation is not selected.
+   */
+  @Test
+  public void simpleRecordFromJson() throws IOException {
+    var adapter = moshi.adapter(SimpleFoo.class);
+    assertThat(adapter.fromJson("{\"bar\": \"baz\"}")).isEqualTo(new SimpleFoo("baz"));
+    assertThat(adapter.toJson(new SimpleFoo("baz"))).isEqualTo("{\"bar\":\"baz\"}");
+  }
+
+  public record SimpleFoo(String bar) {}
 }

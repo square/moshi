@@ -19,19 +19,239 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.rawType
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType.methodType
+import java.lang.reflect.AnnotatedElement
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 /**
- * This is just a simple shim for linking in [StandardJsonAdapters] and swapped with a real
- * implementation in Java 16 via MR Jar.
+ * A [JsonAdapter] that supports Java `record` classes via reflection.
+ *
+ * This base implementation uses reflective access to JDK 16 record APIs so records work even when
+ * Multi-Release JAR classes are unavailable — for example after `maven-shade-plugin` rewrites the
+ * jar manifest and drops the `Multi-Release: true` attribute (see
+ * [square/moshi#2117](https://github.com/square/moshi/issues/2117)). When Multi-Release classes are
+ * present on JDK 16+, the JVM prefers the typed implementation under `META-INF/versions/16`.
+ *
+ * **NOTE:** Java records require JDK 16 or higher. On older runtimes this factory returns null.
  */
-internal class RecordJsonAdapter<T> : JsonAdapter<T?>() {
-  override fun fromJson(reader: JsonReader) = throw AssertionError()
+internal class RecordJsonAdapter<T>(
+  private val constructor: MethodHandle,
+  private val targetClass: String,
+  componentBindings: Map<String, ComponentBinding<Any?>>,
+) : JsonAdapter<T?>() {
 
-  override fun toJson(writer: JsonWriter, value: T?) = throw AssertionError()
+  data class ComponentBinding<T>(
+    val componentName: String,
+    val jsonName: String,
+    val adapter: JsonAdapter<T>,
+    val accessor: MethodHandle,
+  )
+
+  private val componentBindingsArray = componentBindings.values.toTypedArray()
+  private val options = JsonReader.Options.of(*componentBindings.keys.toTypedArray())
+
+  override fun fromJson(reader: JsonReader): T? {
+    val resultsArray = arrayOfNulls<Any>(componentBindingsArray.size)
+
+    reader.beginObject()
+    while (reader.hasNext()) {
+      val index = reader.selectName(options)
+      if (index == -1) {
+        reader.skipName()
+        reader.skipValue()
+        continue
+      }
+      resultsArray[index] = componentBindingsArray[index].adapter.fromJson(reader)
+    }
+    reader.endObject()
+
+    return try {
+      @Suppress("UNCHECKED_CAST")
+      constructor.invokeWithArguments(*resultsArray) as T
+    } catch (e: InvocationTargetException) {
+      throw e.rethrowCause()
+    } catch (e: Throwable) {
+      // Don't throw a fatal error if it's just an absent primitive.
+      for (i in componentBindingsArray.indices) {
+        if (
+          resultsArray[i] == null &&
+            componentBindingsArray[i].accessor.type().returnType().isPrimitive
+        ) {
+          throw missingProperty(
+            propertyName = componentBindingsArray[i].componentName,
+            jsonName = componentBindingsArray[i].jsonName,
+            reader = reader,
+          )
+        }
+      }
+      throw AssertionError(e)
+    }
+  }
+
+  override fun toJson(writer: JsonWriter, value: T?) {
+    writer.beginObject()
+
+    for (binding in componentBindingsArray) {
+      writer.name(binding.jsonName)
+      val componentValue =
+        try {
+          binding.accessor.invoke(value)
+        } catch (e: InvocationTargetException) {
+          throw e.rethrowCause()
+        } catch (e: Throwable) {
+          throw AssertionError(e)
+        }
+      binding.adapter.toJson(writer, componentValue)
+    }
+
+    writer.endObject()
+  }
+
+  override fun toString() = "JsonAdapter($targetClass)"
 
   companion object Factory : JsonAdapter.Factory {
-    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? =
-      null
+
+    private val VOID_CLASS = knownNotNull(Void::class.javaPrimitiveType)
+
+    /**
+     * Record APIs are only present on JDK 16+. Look them up reflectively so this class can be
+     * compiled with `--release 8` and still work when Multi-Release classes are missing at runtime.
+     */
+    private val CLASS_IS_RECORD: Method? =
+      try {
+        Class::class.java.getMethod("isRecord")
+      } catch (_: NoSuchMethodException) {
+        null
+      }
+
+    private val CLASS_GET_RECORD_COMPONENTS: Method? =
+      try {
+        Class::class.java.getMethod("getRecordComponents")
+      } catch (_: NoSuchMethodException) {
+        null
+      }
+
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+      val isRecordMethod = CLASS_IS_RECORD ?: return null
+      val getRecordComponentsMethod = CLASS_GET_RECORD_COMPONENTS ?: return null
+
+      if (annotations.isNotEmpty()) {
+        return null
+      }
+
+      if (type !is Class<*> && type !is ParameterizedType) {
+        return null
+      }
+
+      val rawType = type.rawType
+      val isRecord =
+        try {
+          isRecordMethod.invoke(rawType) as Boolean
+        } catch (_: ReflectiveOperationException) {
+          return null
+        }
+      if (!isRecord) {
+        return null
+      }
+
+      val components =
+        try {
+          @Suppress("UNCHECKED_CAST")
+          getRecordComponentsMethod.invoke(rawType) as Array<Any>
+        } catch (e: ReflectiveOperationException) {
+          throw AssertionError(e)
+        }
+
+      val bindings = LinkedHashMap<String, ComponentBinding<Any?>>()
+      val lookup = MethodHandles.lookup()
+      val componentRawTypes =
+        Array<Class<*>>(components.size) { i ->
+          val component = components[i]
+          val componentBinding = createComponentBinding(type, rawType, moshi, lookup, component)
+          val replaced = bindings.put(componentBinding.jsonName, componentBinding)
+          if (replaced != null) {
+            throw IllegalArgumentException(
+              "Conflicting components:\n    ${replaced.componentName}\n    ${componentBinding.componentName}"
+            )
+          }
+          componentType(component)
+        }
+
+      val constructor =
+        try {
+          lookup.findConstructor(rawType, methodType(VOID_CLASS, componentRawTypes))
+        } catch (e: NoSuchMethodException) {
+          throw AssertionError(e)
+        } catch (e: IllegalAccessException) {
+          throw AssertionError(e)
+        }
+
+      return RecordJsonAdapter<Any>(constructor, rawType.simpleName, bindings).nullSafe()
+    }
+
+    private fun createComponentBinding(
+      type: Type,
+      rawType: Class<*>,
+      moshi: Moshi,
+      lookup: MethodHandles.Lookup,
+      component: Any,
+    ): ComponentBinding<Any?> {
+      val componentName = componentName(component)
+      // RecordComponent implements AnnotatedElement on JDK 16+.
+      val annotatedComponent = component as AnnotatedElement
+      val jsonName = annotatedComponent.jsonName(componentName)
+
+      val componentType = componentGenericType(component).resolve(type, rawType)
+      val qualifiers = annotatedComponent.jsonAnnotations
+      val adapter = moshi.adapter<Any>(componentType, qualifiers)
+
+      val accessor =
+        try {
+          lookup.unreflect(componentAccessor(component))
+        } catch (e: IllegalAccessException) {
+          throw AssertionError(e)
+        }
+
+      return ComponentBinding(componentName, jsonName, adapter, accessor)
+    }
+
+    private fun componentName(component: Any): String {
+      return try {
+        component.javaClass.getMethod("getName").invoke(component) as String
+      } catch (e: ReflectiveOperationException) {
+        throw AssertionError(e)
+      }
+    }
+
+    private fun componentType(component: Any): Class<*> {
+      return try {
+        @Suppress("UNCHECKED_CAST")
+        component.javaClass.getMethod("getType").invoke(component) as Class<*>
+      } catch (e: ReflectiveOperationException) {
+        throw AssertionError(e)
+      }
+    }
+
+    private fun componentGenericType(component: Any): Type {
+      return try {
+        component.javaClass.getMethod("getGenericType").invoke(component) as Type
+      } catch (e: ReflectiveOperationException) {
+        throw AssertionError(e)
+      }
+    }
+
+    private fun componentAccessor(component: Any): Method {
+      return try {
+        component.javaClass.getMethod("getAccessor").invoke(component) as Method
+      } catch (e: ReflectiveOperationException) {
+        throw AssertionError(e)
+      }
+    }
   }
 }
