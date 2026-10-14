@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* None yet.
+* Keep `JsonAdapter`'s generic signature in the embedded R8 rules so `@ToJson` and `@FromJson` delegate parameters stay parameterized under R8 full mode.
 
 
 ## [2.0.0-alpha.1] - 2026-01-28
