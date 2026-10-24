@@ -522,6 +522,47 @@ class JsonClassSymbolProcessorTest {
   }
 
   @Test
+  fun qualifierWithNestedAnnotations() {
+    val result =
+      compile(
+        kotlin(
+          "source.kt",
+          """
+          package test
+          import com.squareup.moshi.JsonClass
+          import com.squareup.moshi.JsonQualifier
+          import kotlin.annotation.AnnotationRetention.RUNTIME
+          import kotlin.annotation.AnnotationTarget.FIELD
+          import kotlin.annotation.Retention
+          import kotlin.annotation.Target
+
+          @JsonClass(generateAdapter = true)
+          class TestAdapterClass(
+            @OuterAnnotation(
+              InnerAnnotation("first"),
+              InnerAnnotation("second"),
+              InnerAnnotation("third"),
+            )
+            var param: String
+          )
+
+          @JsonQualifier
+          @Retention(RUNTIME)
+          @Target(FIELD)
+          annotation class OuterAnnotation(
+            vararg val values: InnerAnnotation
+          )
+
+          @Retention(RUNTIME)
+          @Target(FIELD)
+          annotation class InnerAnnotation(val name: String)
+          """,
+        )
+      )
+    assertThat(result.exitCode).isEqualTo(KotlinCompilation.ExitCode.OK)
+  }
+
+  @Test
   fun nonRuntimeQualifier() {
     val result =
       compile(

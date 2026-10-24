@@ -80,7 +80,7 @@ public data class DelegateKey(
   }
 }
 
-private fun AnnotationSpec.asInstantiationExpression(): CodeBlock {
+internal fun AnnotationSpec.asInstantiationExpression(): CodeBlock {
   // <Type>(args)
   return CodeBlock.of("%T(%L)", typeName, members.joinToCode())
 }
