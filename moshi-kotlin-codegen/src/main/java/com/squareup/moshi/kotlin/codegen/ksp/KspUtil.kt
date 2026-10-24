@@ -29,6 +29,7 @@ import com.google.devtools.ksp.symbol.Origin.KOTLIN_LIB
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.moshi.kotlin.codegen.api.asInstantiationExpression
 
 internal fun KSClassDeclaration.asType() = asType(emptyList())
 
@@ -106,7 +107,8 @@ private fun addValueToBlock(
       }
     }
 
-    is KSAnnotation -> member.add("%L", value.toAnnotationSpec(resolver))
+    is KSAnnotation ->
+      member.add("%L", value.toAnnotationSpec(resolver).asInstantiationExpression())
 
     else -> member.add(memberForValue(value))
   }
