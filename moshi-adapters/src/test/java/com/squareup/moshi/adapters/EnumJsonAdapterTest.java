@@ -16,6 +16,7 @@
 package com.squareup.moshi.adapters;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.Json;
@@ -44,14 +45,11 @@ public final class EnumJsonAdapterTest {
   public void withoutFallbackValue() throws Exception {
     EnumJsonAdapter<Roshambo> adapter = EnumJsonAdapter.create(Roshambo.class);
     JsonReader reader = JsonReader.of(new Buffer().writeUtf8("\"SPOCK\""));
-    try {
-      adapter.fromJson(reader);
-      fail();
-    } catch (JsonDataException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
-    }
+    JsonDataException expected =
+        assertThrows(JsonDataException.class, () -> adapter.fromJson(reader));
+    assertThat(expected)
+        .hasMessageThat()
+        .isEqualTo("Expected one of [ROCK, PAPER, scr] but was SPOCK at path $");
     assertThat(reader.peek()).isEqualTo(JsonReader.Token.END_DOCUMENT);
   }
 

@@ -16,6 +16,7 @@
 package com.squareup.moshi.adapters;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
 import com.squareup.moshi.JsonAdapter;
@@ -97,11 +98,8 @@ public final class Rfc3339DateJsonAdapterTest {
   public void absentTimeZone() throws Exception {
     assertThat(adapter.fromJson("\"1970-01-01\"")).isEqualTo(newDateWithHostZone(1970, 1, 1));
     assertThat(adapter.fromJson("\"1970-01-01Z\"")).isEqualTo(newDate(1970, 1, 1, 0, 0, 0, 0, 0));
-    try {
-      adapter.fromJson("\"1970-01-01T00:00:00.000\"");
-      fail();
-    } catch (JsonDataException expected) {
-    }
+    assertThrows(
+        JsonDataException.class, () -> adapter.fromJson("\"1970-01-01T00:00:00.000\""));
   }
 
   private Date newDate(
