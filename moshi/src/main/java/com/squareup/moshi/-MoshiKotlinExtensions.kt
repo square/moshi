@@ -17,7 +17,6 @@
 
 package com.squareup.moshi
 
-import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.javaType
 import kotlin.reflect.KType
@@ -42,10 +41,10 @@ public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>):
 public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.javaType)
   val finalizedAdapter =
-    if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
-      adapter
-    } else if (ktype.isMarkedNullable) {
+    if (ktype.isMarkedNullable) {
       adapter.nullSafe()
+    } else if (adapter is NullSafeJsonAdapter<*>) {
+      adapter.delegate.nonNull()
     } else {
       adapter.nonNull()
     }

@@ -17,7 +17,10 @@ package com.squareup.moshi.kotlin.reflect
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class KotlinJsonAdapterTest {
@@ -31,5 +34,23 @@ class KotlinJsonAdapterTest {
       .isEqualTo(
         "KotlinJsonAdapter(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterTest.Data).nullSafe()"
       )
+  }
+
+  @Test
+  fun nonNullTypeRejectsNull() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<Data>()
+
+    val exception = assertThrows(JsonDataException::class.java) { adapter.fromJson("null") }
+    assertThat(exception).hasMessageThat().isEqualTo("Unexpected null at $")
+  }
+
+  @Test
+  fun nullableTypeAllowsNull() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<Data?>()
+
+    assertNull(adapter.fromJson("null"))
+    assertThat(adapter.toJson(null)).isEqualTo("null")
   }
 }

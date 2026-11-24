@@ -18,6 +18,8 @@ package com.squareup.moshi
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.typeOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -89,5 +91,21 @@ class KotlinExtensionsTest {
     val moshi = Moshi.Builder().addAdapter(customIntListAdapter).build()
 
     assertEquals(listOf(-1), moshi.adapter<List<Int>>().fromJson("[5]"))
+  }
+
+  @Test
+  fun nonNullTypeRejectsNull() {
+    val adapter = Moshi.Builder().build().adapter<String>()
+
+    val exception = assertThrows(JsonDataException::class.java) { adapter.fromJson("null") }
+    assertEquals("Unexpected null at $", exception.message)
+  }
+
+  @Test
+  fun nullableTypeAllowsNull() {
+    val adapter = Moshi.Builder().build().adapter<String?>()
+
+    assertNull(adapter.fromJson("null"))
+    assertEquals("null", adapter.toJson(null))
   }
 }
