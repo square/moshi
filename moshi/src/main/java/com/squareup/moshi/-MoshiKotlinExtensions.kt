@@ -42,10 +42,14 @@ public inline fun <reified T> Moshi.Builder.addAdapter(adapter: JsonAdapter<T>):
 public fun <T> Moshi.adapter(ktype: KType): JsonAdapter<T> {
   val adapter = adapter<T>(ktype.javaType)
   val finalizedAdapter =
-    if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
-      adapter
-    } else if (ktype.isMarkedNullable) {
-      adapter.nullSafe()
+    if (ktype.isMarkedNullable) {
+      if (adapter is NonNullJsonAdapter<*>) {
+        adapter.delegate.nullSafe()
+      } else {
+        adapter.nullSafe()
+      }
+    } else if (adapter is NullSafeJsonAdapter<*>) {
+      adapter.delegate.nonNull()
     } else {
       adapter.nonNull()
     }

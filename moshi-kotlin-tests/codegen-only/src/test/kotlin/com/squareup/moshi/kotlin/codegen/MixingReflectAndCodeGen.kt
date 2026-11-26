@@ -17,8 +17,11 @@ package com.squareup.moshi.kotlin.codegen
 
 import com.google.common.truth.Truth.assertThat
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class MixingReflectAndCodeGen {
@@ -29,12 +32,30 @@ class MixingReflectAndCodeGen {
     val reflectionAdapter = moshi.adapter<UsesReflectionAdapter>()
 
     assertThat(generatedAdapter.toString())
-      .isEqualTo("GeneratedJsonAdapter(MixingReflectAndCodeGen.UsesGeneratedAdapter).nullSafe()")
+      .isEqualTo("GeneratedJsonAdapter(MixingReflectAndCodeGen.UsesGeneratedAdapter).nonNull()")
     assertThat(reflectionAdapter.toString())
       .isEqualTo(
         "KotlinJsonAdapter(com.squareup.moshi.kotlin.codegen.MixingReflectAndCodeGen" +
-          ".UsesReflectionAdapter).nullSafe()"
+          ".UsesReflectionAdapter).nonNull()"
       )
+  }
+
+  @Test
+  fun nonNullTypeRejectsNull() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<UsesGeneratedAdapter>()
+
+    val exception = assertThrows(JsonDataException::class.java) { adapter.fromJson("null") }
+    assertThat(exception).hasMessageThat().isEqualTo("Unexpected null at $")
+  }
+
+  @Test
+  fun nullableTypeAllowsNull() {
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val adapter = moshi.adapter<UsesGeneratedAdapter?>()
+
+    assertNull(adapter.fromJson("null"))
+    assertThat(adapter.toJson(null)).isEqualTo("null")
   }
 
   @JsonClass(generateAdapter = true) class UsesGeneratedAdapter(var a: Int, var b: Int)

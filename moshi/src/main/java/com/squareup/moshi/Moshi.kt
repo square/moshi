@@ -107,10 +107,14 @@ public class Moshi private constructor(builder: Builder) {
   ): JsonAdapter<T> {
     val adapter = adapter<T>(ktype.javaType, annotations, fieldName)
     val finalizedAdapter =
-      if (adapter is NullSafeJsonAdapter<*> || adapter is NonNullJsonAdapter) {
-        adapter
-      } else if (ktype.isMarkedNullable) {
-        adapter.nullSafe()
+      if (ktype.isMarkedNullable) {
+        if (adapter is NonNullJsonAdapter<*>) {
+          adapter.delegate.nullSafe()
+        } else {
+          adapter.nullSafe()
+        }
+      } else if (adapter is NullSafeJsonAdapter<*>) {
+        adapter.delegate.nonNull()
       } else {
         adapter.nonNull()
       }
