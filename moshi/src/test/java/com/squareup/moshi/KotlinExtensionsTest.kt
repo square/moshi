@@ -15,6 +15,8 @@
  */
 package com.squareup.moshi
 
+import com.squareup.moshi.internal.NonNullJsonAdapter
+import com.squareup.moshi.internal.NullSafeJsonAdapter
 import kotlin.annotation.AnnotationRetention.RUNTIME
 import kotlin.reflect.typeOf
 import org.junit.Assert.assertEquals
@@ -107,5 +109,55 @@ class KotlinExtensionsTest {
 
     assertNull(adapter.fromJson("null"))
     assertEquals("null", adapter.toJson(null))
+  }
+
+  @Test
+  fun nullableTypeUnwrapsNonNullAdapter() {
+    val delegate =
+      object : JsonAdapter<String?>() {
+        override fun fromJson(reader: JsonReader): String? {
+          reader.skipValue()
+          return null
+        }
+
+        override fun toJson(writer: JsonWriter, value: String?) {
+          writer.jsonValue(value)
+        }
+
+        override fun toString(): String = "delegate"
+      }
+    val adapter =
+      Moshi.Builder()
+        .add(String::class.java, NonNullJsonAdapter(delegate))
+        .build()
+        .adapter<String?>()
+
+    assertNull(adapter.fromJson("\"value\""))
+    assertEquals("delegate.nullSafe()", adapter.toString())
+    assertEquals("null", adapter.toJson(null))
+  }
+
+  @Test
+  fun nonNullTypeUnwrapsNullSafeAdapter() {
+    val delegate =
+      object : JsonAdapter<String?>() {
+        override fun fromJson(reader: JsonReader): String? = reader.nextString()
+
+        override fun toJson(writer: JsonWriter, value: String?) {
+          writer.jsonValue(value)
+        }
+
+        override fun toString(): String = "delegate"
+      }
+    val adapter =
+      Moshi.Builder()
+        .add(String::class.java, NullSafeJsonAdapter(delegate))
+        .build()
+        .adapter<String>()
+
+    assertEquals("delegate.nonNull()", adapter.toString())
+    assertEquals("value", adapter.fromJson("\"value\""))
+    val exception = assertThrows(JsonDataException::class.java) { adapter.fromJson("null") }
+    assertEquals("Unexpected null at $", exception.message)
   }
 }

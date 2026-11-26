@@ -21,6 +21,7 @@ import com.squareup.moshi.internal.ClassJsonAdapter
 import com.squareup.moshi.internal.CollectionJsonAdapter
 import com.squareup.moshi.internal.MapJsonAdapter
 import com.squareup.moshi.internal.NO_ANNOTATIONS
+import com.squareup.moshi.internal.NonNullJsonAdapter
 import com.squareup.moshi.internal.NullSafeJsonAdapter
 import com.squareup.moshi.internal.RecordJsonAdapter
 import com.squareup.moshi.internal.StandardJsonAdapters
@@ -107,7 +108,11 @@ public class Moshi private constructor(builder: Builder) {
     val adapter = adapter<T>(ktype.javaType, annotations, fieldName)
     val finalizedAdapter =
       if (ktype.isMarkedNullable) {
-        adapter.nullSafe()
+        if (adapter is NonNullJsonAdapter<*>) {
+          adapter.delegate.nullSafe()
+        } else {
+          adapter.nullSafe()
+        }
       } else if (adapter is NullSafeJsonAdapter<*>) {
         adapter.delegate.nonNull()
       } else {
